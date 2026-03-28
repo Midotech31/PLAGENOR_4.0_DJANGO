@@ -196,6 +196,12 @@
                         <span>{{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Invité" %}{% endif %}</span>
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
+                    <div style="margin:8px 0;">
+                        <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline" style="margin-bottom:8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            {% trans "Télécharger la Note de Plateforme" %}
+                        </a>
+                    </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
                             {% csrf_token %}

@@ -106,7 +106,28 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     # Email notifications for key transitions
     _send_transition_emails(request_obj, old_status, to_status)
 
+    # Auto-generate documents on specific transitions
+    _auto_generate_documents(request_obj, to_status)
+
     return request_obj
+
+
+def _auto_generate_documents(request_obj, to_status):
+    """Automatically generate documents when reaching specific states."""
+    try:
+        if to_status == 'PLATFORM_NOTE_GENERATED':
+            from documents.generators import generate_platform_note
+            filepath = generate_platform_note(request_obj)
+            if filepath:
+                import logging
+                logging.getLogger('plagenor.workflow').info(
+                    "Platform note generated for %s: %s", request_obj.display_id, filepath
+                )
+    except Exception as e:
+        import logging
+        logging.getLogger('plagenor.workflow').error(
+            "Document generation failed for %s: %s", request_obj.display_id, e
+        )
 
 
 def _send_transition_emails(request_obj, old_status, to_status):
