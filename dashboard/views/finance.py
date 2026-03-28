@@ -7,6 +7,8 @@ from django.utils import timezone
 
 from core.models import Request, Invoice
 from core.workflow import transition
+from core.financial import get_budget_dashboard, get_revenue_summary
+from core.exceptions import InvalidTransitionError, AuthorizationError
 
 
 def finance_required(view_func):
@@ -20,13 +22,13 @@ def finance_required(view_func):
 
 @finance_required
 def index(request):
-    # KPIs
-    ibtikar_virtual = Request.objects.filter(channel='IBTIKAR').aggregate(
-        total=Sum('budget_amount')
-    )['total'] or 0
-    genoclab_real = Invoice.objects.aggregate(total=Sum('total_ttc'))['total'] or 0
-    total_invoices = Invoice.objects.count()
-    ibtikar_students = Request.objects.filter(channel='IBTIKAR').values('requester').distinct().count()
+    # KPIs from financial engine
+    budget_data = get_budget_dashboard()
+    revenue_summary = get_revenue_summary()
+    ibtikar_virtual = budget_data['ibtikar']['total']
+    genoclab_real = budget_data['genoclab']['total']
+    total_invoices = revenue_summary['count']
+    ibtikar_students = budget_data['ibtikar']['students']
 
     # IBTIKAR requests pending finance validation
     pending_validation = Request.objects.filter(
@@ -57,6 +59,7 @@ def index(request):
         'genoclab_real': genoclab_real,
         'total_invoices': total_invoices,
         'ibtikar_students': ibtikar_students,
+        'budget_data': budget_data,
         'pending_validation': pending_validation,
         'ibtikar_by_status': ibtikar_by_status,
         'invoices': invoices,
@@ -79,7 +82,7 @@ def validate_budget(request, pk):
         try:
             transition(req, 'PLATFORM_NOTE_GENERATED', request.user, notes='Budget validé par finance')
             messages.success(request, f"Budget validé pour {req.display_id}.")
-        except ValueError as e:
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
             messages.error(request, str(e))
     elif action == 'reject':
         reason = request.POST.get('reason', '')
@@ -88,6 +91,6 @@ def validate_budget(request, pk):
         try:
             transition(req, 'REJECTED', request.user, notes=f'Rejeté par finance: {reason}')
             messages.success(request, f"Demande {req.display_id} rejetée.")
-        except ValueError as e:
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
             messages.error(request, str(e))
     return redirect('dashboard:finance')

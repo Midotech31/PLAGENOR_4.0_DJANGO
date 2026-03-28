@@ -6,6 +6,8 @@ from django.utils import timezone
 
 from core.models import Service, Request, Invoice
 from core.workflow import transition
+from core.services.genoclab import submit_genoclab_request
+from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
 
 
@@ -69,19 +71,16 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    count = Request.objects.filter(channel='GENOCLAB').count() + 1
-    display_id = f"GCL-{count:05d}"
-
-    req = Request.objects.create(
-        display_id=display_id,
-        title=request.POST.get('title', f"Demande {service.name}"),
-        description=request.POST.get('description', ''),
-        channel='GENOCLAB',
-        status='REQUEST_CREATED',
-        urgency=request.POST.get('urgency', 'Normal'),
-        service=service,
-        requester=request.user,
-        quote_amount=service.genoclab_price,
+    # Use genoclab service to submit
+    req = submit_genoclab_request(
+        data={
+            'title': request.POST.get('title', f"Demande {service.name}"),
+            'description': request.POST.get('description', ''),
+            'urgency': request.POST.get('urgency', 'Normal'),
+            'service_id': str(service.pk),
+            'quote_amount': float(service.genoclab_price),
+        },
+        user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} créée avec succès.")
     return redirect('dashboard:client')
@@ -95,7 +94,7 @@ def accept_quote(request, pk):
     try:
         transition(req, 'QUOTE_VALIDATED_BY_CLIENT', request.user, notes='Devis accepté par client')
         messages.success(request, f"Devis accepté pour {req.display_id}.")
-    except ValueError as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:client')
 
@@ -108,7 +107,7 @@ def reject_quote(request, pk):
     try:
         transition(req, 'QUOTE_REJECTED_BY_CLIENT', request.user, notes='Devis refusé par client')
         messages.success(request, f"Devis refusé pour {req.display_id}.")
-    except ValueError as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:client')
 

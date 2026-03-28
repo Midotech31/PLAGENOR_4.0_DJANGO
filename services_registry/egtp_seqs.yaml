@@ -1,0 +1,96 @@
+# =====================================================
+# PLAGENOR / IBTIKAR — Service Registry
+# Service: EGTP-SeqS
+# =====================================================
+
+service_code: EGTP-SeqS
+service_name: DNA Sequencing via Sanger Method
+category: DNA Sequencing
+type: Analysis
+version: "1.0"
+
+description: >
+  High-quality DNA sequencing using the Sanger method for PCR amplicons.
+  The service supports sequencing of purified or non-purified PCR products
+  using forward, reverse, or bidirectional reads. Results are delivered
+  as chromatograms and FASTA sequence files. No identification or
+  interpretation is included.
+
+# -----------------------------------------------------
+# PARAMETERS
+# -----------------------------------------------------
+parameters:
+  - name: sequencing_mode
+    label: Sequencing direction
+    type: enum
+    required: true
+    options:
+      - Forward
+      - Reverse
+      - Forward + Reverse
+
+  - name: sample_purity
+    label: PCR product status
+    type: enum
+    required: true
+    options:
+      - Purified
+      - Non-purified
+
+# -----------------------------------------------------
+# SAMPLE TABLE (ONE ROW = ONE AMPLICON)
+# -----------------------------------------------------
+sample_table:
+  enabled: true
+  min_rows: 1
+
+  columns:
+    - name: sample_code
+      label: Amplicon identifier
+      type: string
+      required: true
+
+    - name: amplicon_size_bp
+      label: Amplicon size (bp)
+      type: integer
+      required: true
+
+# -----------------------------------------------------
+# PRICING (SUPPORTED MODEL)
+# -----------------------------------------------------
+pricing:
+  model: per_sample_table_row_with_multiplier
+  currency: DZD
+
+  base_price:
+    non_pathogenic: 5500
+    pathogenic: 5500
+
+  multipliers:
+    Forward: 1
+    Reverse: 1
+    Forward + Reverse: 1.9
+    Non-purified: 1.3
+
+# -----------------------------------------------------
+# REQUIRED BY REGISTRY LOADER
+# -----------------------------------------------------
+deliverables:
+  - ABI chromatogram file(s) (.ab1)
+  - FASTA sequence file(s)
+  - Basic sequencing quality check
+
+turnaround_time: >
+  Standard turnaround time is 10–15 working days from receipt
+  of compliant PCR products and primers.
+
+compliance:
+  - Minimum volume and concentration requirements must be respected
+  - PCR products must be clearly labeled
+  - Primers must be supplied separately
+  - Non-compliant samples may be rejected
+
+override_policy:
+  admin_override_allowed: true
+  justification_required: true
+  audit_required: true

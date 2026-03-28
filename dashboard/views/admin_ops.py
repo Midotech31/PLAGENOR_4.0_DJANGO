@@ -8,6 +8,8 @@ from django.utils import timezone
 from accounts.models import MemberProfile, Cheer, PointsHistory
 from core.models import Request, Invoice
 from core.workflow import get_allowed_transitions, transition
+from core.assignment import get_recommended_members
+from core.exceptions import InvalidTransitionError, AuthorizationError
 
 
 def admin_required(view_func):
@@ -53,16 +55,17 @@ def index(request):
         )
     all_requests = all_requests.order_by('-created_at')[:100]
 
-    # Available members for assignment
+    # Available members for assignment — scored by assignment engine
+    recommended_members = get_recommended_members(limit=20)
     available_members = MemberProfile.objects.filter(
         available=True
     ).select_related('user').order_by('current_load')
 
-    # Budget overview
-    ibtikar_budget = Request.objects.filter(channel='IBTIKAR').aggregate(
-        total=Sum('budget_amount')
-    )['total'] or 0
-    genoclab_revenue = Invoice.objects.aggregate(total=Sum('total_ttc'))['total'] or 0
+    # Budget overview from financial engine
+    from core.financial import get_budget_dashboard
+    budget_data = get_budget_dashboard()
+    ibtikar_budget = budget_data['ibtikar']['total']
+    genoclab_revenue = budget_data['genoclab']['total']
 
     context = {
         'total_requests': total_requests,
@@ -73,8 +76,10 @@ def index(request):
         'pending_requests': pending_requests,
         'all_requests': all_requests,
         'available_members': available_members,
+        'recommended_members': recommended_members,
         'ibtikar_budget': ibtikar_budget,
         'genoclab_revenue': genoclab_revenue,
+        'budget_data': budget_data,
         'channel_filter': channel_filter,
         'status_filter': status_filter,
         'search_q': search_q,
@@ -94,7 +99,7 @@ def transition_request(request, pk):
     try:
         transition(req, to_status, request.user, notes=notes)
         messages.success(request, f"Demande {req.display_id} transférée vers {to_status}.")
-    except ValueError as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:admin_ops')
 

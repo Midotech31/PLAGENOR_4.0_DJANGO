@@ -1,0 +1,109 @@
+# =====================================================
+# PLAGENOR / IBTIKAR — Service Registry
+# Service: EGTP-Seq02
+# =====================================================
+
+service_code: EGTP-Seq02
+service_name: Microbial Identification via Sequencing
+category: Microbial Identification
+type: Analysis
+version: "1.0"
+
+description: >
+  Accurate taxonomic identification of microorganisms using PCR amplicon
+  Sanger sequencing with universal genetic markers such as 16S rRNA, ITS,
+  and 18S rRNA. The workflow includes DNA extraction, PCR amplification,
+  amplicon cleanup, and Sanger sequencing. Identification is reported at
+  species level when sequence quality and database coverage allow.
+
+# -----------------------------------------------------
+# PARAMETERS
+# -----------------------------------------------------
+parameters:
+  - name: target_marker
+    label: Target genetic marker
+    type: enum
+    required: true
+    options:
+      - 16S rRNA
+      - ITS
+      - 18S rRNA
+
+  - name: sequencing_mode
+    label: Sequencing mode
+    type: enum
+    required: true
+    options:
+      - F
+      - F+R
+      - F+R-long
+
+  - name: sample_origin
+    label: Sample origin
+    type: enum
+    required: true
+    options:
+      - Environmental
+      - Food
+      - Hospital / Clinical
+
+# -----------------------------------------------------
+# SAMPLE TABLE (ONE ROW = ONE SAMPLE)
+# -----------------------------------------------------
+sample_table:
+  enabled: true
+  min_rows: 1
+
+  columns:
+    - name: sample_code
+      label: Sample identifier
+      type: string
+      required: true
+
+    - name: material_type
+      label: Biological material
+      type: enum
+      required: true
+      options:
+        - Culture
+        - Tissue
+        - Blood
+        - Biomass
+
+# -----------------------------------------------------
+# PRICING (SUPPORTED MODEL)
+# -----------------------------------------------------
+pricing:
+  model: per_sample_table_row_with_multiplier
+  currency: DZD
+
+  base_price:
+    non_pathogenic: 8000
+    pathogenic: 8000
+
+  multipliers:
+    F: 1
+    F+R: 1.6
+    F+R-long: 1.8
+
+# -----------------------------------------------------
+# REQUIRED BY REGISTRY LOADER
+# -----------------------------------------------------
+deliverables:
+  - ABI chromatogram file(s) (.ab1)
+  - FASTA sequence file(s)
+  - Sequencing quality control summary
+
+turnaround_time: >
+  Standard turnaround time is up to 15 working days from receipt
+  of compliant samples, depending on workload and complexity.
+
+compliance:
+  - Pure cultures or adequate biological material are mandatory
+  - Minimum input quantities must be respected
+  - Clinical or hospital samples require biosafety declaration
+
+override_policy:
+  admin_override_allowed: true
+  justification_required: true
+  audit_required: true

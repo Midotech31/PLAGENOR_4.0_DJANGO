@@ -7,6 +7,8 @@ from django.utils import timezone
 from accounts.models import MemberProfile
 from core.models import Request
 from core.workflow import get_allowed_transitions, transition
+from core.productivity import compute_member_productivity
+from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
 
 
@@ -60,6 +62,9 @@ def index(request):
     points_history = profile.points_history.order_by('-created_at')[:10]
     cheers = profile.cheers.order_by('-created_at')[:10]
 
+    # Productivity from engine
+    productivity_data = compute_member_productivity(profile)
+
     # Notifications
     notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
 
@@ -69,6 +74,7 @@ def index(request):
         'in_progress_count': in_progress_count,
         'completed_count': completed_count,
         'productivity': profile.productivity_score,
+        'productivity_data': productivity_data,
         'pending_tasks': pending_tasks,
         'in_progress': in_progress,
         'history': history,
@@ -93,10 +99,10 @@ def accept_task(request, pk):
     req.save(update_fields=['assignment_accepted', 'assignment_accepted_at'])
     try:
         transition(req, 'APPOINTMENT_SCHEDULED', request.user, notes='Tâche acceptée')
-    except ValueError:
+    except (InvalidTransitionError, AuthorizationError, ValueError):
         try:
             transition(req, 'PENDING_ACCEPTANCE', request.user, notes='Tâche acceptée')
-        except ValueError:
+        except (InvalidTransitionError, AuthorizationError, ValueError):
             pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
     return redirect('dashboard:analyst')
@@ -116,7 +122,7 @@ def decline_task(request, pk):
     req.save(update_fields=['assignment_declined', 'assignment_decline_reason', 'assigned_to'])
     try:
         transition(req, 'ASSIGNED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-    except ValueError:
+    except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Tâche {req.display_id} déclinée.")
     return redirect('dashboard:analyst')
@@ -135,7 +141,7 @@ def workflow_action(request, pk):
     try:
         transition(req, to_status, request.user, notes=notes)
         messages.success(request, f"Demande {req.display_id} mise à jour.")
-    except ValueError as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:analyst')
 
@@ -154,7 +160,7 @@ def upload_report(request, pk):
         try:
             transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
             messages.success(request, f"Rapport uploadé pour {req.display_id}.")
-        except ValueError as e:
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
             messages.error(request, str(e))
     else:
         messages.error(request, "Veuillez sélectionner un fichier.")

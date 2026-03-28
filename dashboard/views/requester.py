@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.utils import timezone
 
 from core.models import Service, Request
+from core.services.ibtikar import submit_ibtikar_request, get_ibtikar_request_context
+from core.financial import check_ibtikar_budget
 from notifications.models import Notification
 
 
@@ -41,6 +43,9 @@ def index(request):
         active=True, channel_availability__in=['BOTH', 'IBTIKAR']
     ).order_by('code')
 
+    # Budget context from IBTIKAR service
+    budget_context = get_ibtikar_request_context(request.user)
+
     # Notifications
     notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
 
@@ -52,6 +57,7 @@ def index(request):
         'active_requests': active_requests,
         'archived': archived,
         'services': services,
+        'budget_context': budget_context,
         'notifications': notifications,
         'now': timezone.now(),
     }
@@ -65,21 +71,27 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    # Generate display ID
-    count = Request.objects.filter(channel='IBTIKAR').count() + 1
-    display_id = f"IBT-{count:05d}"
+    # Budget check before submission
+    budget_check = check_ibtikar_budget(amount=service.ibtikar_price, requester=request.user)
+    if budget_check['exceeded']:
+        messages.error(
+            request,
+            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
+            f"Reste: {budget_check['remaining']:,.0f} DZD."
+        )
+        return redirect('dashboard:requester')
 
-    req = Request.objects.create(
-        display_id=display_id,
-        title=request.POST.get('title', f"Demande {service.name}"),
-        description=request.POST.get('description', ''),
-        channel='IBTIKAR',
-        status='SUBMITTED',
-        urgency=request.POST.get('urgency', 'Normal'),
-        service=service,
-        requester=request.user,
-        budget_amount=service.ibtikar_price,
-        declared_ibtikar_balance=request.POST.get('declared_balance', 0),
+    # Use ibtikar service to submit
+    req = submit_ibtikar_request(
+        data={
+            'title': request.POST.get('title', f"Demande {service.name}"),
+            'description': request.POST.get('description', ''),
+            'urgency': request.POST.get('urgency', 'Normal'),
+            'service_id': str(service.pk),
+            'budget_amount': float(service.ibtikar_price),
+            'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
+        },
+        user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} soumise avec succès.")
     return redirect('dashboard:requester')

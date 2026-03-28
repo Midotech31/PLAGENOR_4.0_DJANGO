@@ -7,6 +7,8 @@ from django.utils import timezone
 
 from accounts.models import User, MemberProfile, Technique
 from core.models import Service, Request, PlatformContent
+from core.financial import get_budget_dashboard
+from core.productivity import get_all_productivity_stats
 
 
 def superadmin_required(view_func):
@@ -44,6 +46,10 @@ def index(request):
         .order_by('-count')
     )
 
+    # Business logic from engines
+    budget_dashboard = get_budget_dashboard()
+    productivity_stats = get_all_productivity_stats()
+
     context = {
         'total_users': total_users,
         'total_members': total_members,
@@ -61,6 +67,8 @@ def index(request):
         'status_dist': status_dist,
         'recent_requests': recent_requests,
         'recent_users': recent_users,
+        'budget_dashboard': budget_dashboard,
+        'productivity_stats': productivity_stats,
         'now': timezone.now(),
     }
     return render(request, 'dashboard/superadmin/index.html', context)
