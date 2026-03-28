@@ -25,6 +25,12 @@ class RegistrationForm(UserCreationForm):
     )
     laboratory = forms.CharField(max_length=200, required=False, label='Laboratoire')
     supervisor = forms.CharField(max_length=200, required=False, label='Directeur de recherche')
+    ibtikar_id = forms.CharField(
+        max_length=20, required=False,
+        label='Identifiant IBTIKAR-DGRSDT',
+        help_text='Format: IDGRSTDXXXXX',
+        widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD12345', 'pattern': 'IDGRSTD[0-9]{5}'})
+    )
     phone = forms.CharField(
         max_length=50,
         required=False,
@@ -35,6 +41,6 @@ class RegistrationForm(UserCreationForm):
         model = User
         fields = (
             'username', 'first_name', 'last_name', 'email',
-            'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'phone',
+            'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
             'password1', 'password2',
         )

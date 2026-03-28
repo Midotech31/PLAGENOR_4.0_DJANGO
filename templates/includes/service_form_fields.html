@@ -53,7 +53,7 @@
         <thead>
             <tr>
                 {% for col in sample_table.columns %}
-                <th style="padding:8px; border:1px solid #e2e8f0; background:#fff;">{{ col.label|default:col.name }}</th>
+                <th data-col="{{ col.name }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">{{ col.label|default:col.name }}</th>
                 {% endfor %}
                 <th style="padding:8px; border:1px solid #e2e8f0; background:#fff; width:40px;"></th>
             </tr>
@@ -72,32 +72,6 @@
         </tbody>
     </table>
     <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow()" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
-
-    <script>
-    var sampleRowCount = 1;
-    var sampleColumns = [{% for col in sample_table.columns %}'{{ col.name }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-    function addSampleRow() {
-        var tbody = document.getElementById('sample-table-body');
-        var tr = document.createElement('tr');
-        sampleColumns.forEach(function(col) {
-            var td = document.createElement('td');
-            td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.name = 'sample_' + sampleRowCount + '_' + col;
-            input.className = 'form-control';
-            input.style.fontSize = '0.85rem';
-            td.appendChild(input);
-            tr.appendChild(td);
-        });
-        var tdBtn = document.createElement('td');
-        tdBtn.style.cssText = 'padding:4px; border:1px solid #e2e8f0; text-align:center;';
-        tdBtn.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="this.closest(\'tr\').remove()" style="padding:2px 8px;">&times;</button>';
-        tr.appendChild(tdBtn);
-        tbody.appendChild(tr);
-        sampleRowCount++;
-    }
-    </script>
 </div>
 {% endif %}
 
@@ -110,7 +84,7 @@
     {% elif pricing.model == 'per_sample_fixed' %}
         {{ pricing.price|default:"—" }} DA {% trans "par échantillon" %}
     {% else %}
-        {{ pricing.model|default:"Standard" }}
+        {% trans "Standard" %}
     {% endif %}
 </div>
 {% endif %}

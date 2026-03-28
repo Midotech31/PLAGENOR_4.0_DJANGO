@@ -42,34 +42,131 @@
                         <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                     </div>
                     <div class="data-card-row text-sm text-muted">
-                        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }} &middot; {{ req.requester.get_full_name|default:"Invité" }}</span>
+                        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Invité" %}{% endif %}</span>
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        {% if req.status == 'SUBMITTED' %}
                         <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <select name="to_status" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
-                                {% if req.status == 'SUBMITTED' %}
-                                <option value="VALIDATION_PEDAGOGIQUE">{% trans "Validation Pédagogique" %}</option>
-                                <option value="REJECTED">{% trans "Rejeter" %}</option>
-                                {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
-                                <option value="VALIDATION_FINANCE">{% trans "Validation Finance" %}</option>
-                                <option value="REJECTED">{% trans "Rejeter" %}</option>
-                                {% elif req.status == 'PLATFORM_NOTE_GENERATED' %}
-                                <option value="ASSIGNED">{% trans "Assigner" %}</option>
-                                {% elif req.status == 'ADMIN_REVIEW' or req.status == 'REPORT_UPLOADED' %}
-                                <option value="REPORT_VALIDATED">{% trans "Valider rapport" %}</option>
-                                <option value="ANALYSIS_STARTED">{% trans "Renvoyer pour révision" %}</option>
-                                {% elif req.status == 'REQUEST_CREATED' %}
-                                <option value="QUOTE_DRAFT">{% trans "Préparer devis" %}</option>
-                                <option value="REJECTED">{% trans "Rejeter" %}</option>
-                                {% elif req.status == 'QUOTE_DRAFT' %}
-                                <option value="QUOTE_SENT">{% trans "Envoyer devis" %}</option>
-                                {% endif %}
-                            </select>
-                            <input type="text" name="notes" placeholder="{% trans 'Notes...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Appliquer" %}</button>
+                            <input type="hidden" name="to_status" value="VALIDATION_PEDAGOGIQUE">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider (Pédagogique)" %}</button>
                         </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <input type="hidden" name="notes" value="Rejeté par admin">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="VALIDATION_FINANCE">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider (Finance)" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'VALIDATION_FINANCE' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="PLATFORM_NOTE_GENERATED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer Note" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'PLATFORM_NOTE_GENERATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="member_id" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                                <option value="">— {% trans "Assigner à" %} —</option>
+                                {% for m in available_members %}
+                                <option value="{{ m.pk }}">{{ m.user.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+                        </form>
+
+                        {% elif req.status == 'REPORT_UPLOADED' or req.status == 'ADMIN_REVIEW' %}
+                        <a href="{% url 'dashboard:admin_report_review' req.pk %}" class="btn btn-sm btn-primary">{% trans "Réviser rapport" %}</a>
+
+                        {% elif req.status == 'REPORT_VALIDATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="COMPLETED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Marquer complété" %}</button>
+                        </form>
+
+                        {% elif req.status == 'COMPLETED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="CLOSED">
+                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Clôturer" %}</button>
+                        </form>
+
+                        {% elif req.status == 'REQUEST_CREATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="QUOTE_DRAFT">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Préparer devis" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'QUOTE_DRAFT' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="QUOTE_SENT">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer devis" %}</button>
+                        </form>
+
+                        {% elif req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="INVOICE_GENERATED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer facture" %}</button>
+                        </form>
+
+                        {% elif req.status == 'INVOICE_GENERATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="PAYMENT_CONFIRMED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer paiement" %}</button>
+                        </form>
+
+                        {% elif req.status == 'PAYMENT_CONFIRMED' %}
+                        <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="member_id" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                                <option value="">— {% trans "Assigner à" %} —</option>
+                                {% for m in available_members %}
+                                <option value="{{ m.pk }}">{{ m.user.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+                        </form>
+
+                        {% elif req.status == 'APPOINTMENT_CONFIRMED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
+                        </form>
+
+                        {% else %}
+                        <span class="text-muted text-sm">{% trans "Aucune action disponible" %}</span>
+                        {% endif %}
                     </div>
                     <!-- Appointment modification (if APPOINTMENT_PROPOSED) -->
                     {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date and not req.appointment_confirmed %}

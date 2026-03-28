@@ -41,6 +41,7 @@ class User(AbstractUser):
     student_level = models.CharField(max_length=100, default='', blank=True)
     supervisor = models.CharField(max_length=200, default='', blank=True)
     laboratory = models.CharField(max_length=200, default='', blank=True)
+    ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
 
     # Login security
     login_attempts = models.IntegerField(default=0)

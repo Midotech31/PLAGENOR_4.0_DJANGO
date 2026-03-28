@@ -40,6 +40,17 @@
                         <option value="IBTIKAR">IBTIKAR ({% trans "académique" %})</option>
                     </select>
                 </div>
+                <div id="ibtikar-guest-fields" style="display:none;">
+                    <div class="form-group">
+                        <label>{% trans "Identifiant IBTIKAR-DGRSDT" %} *</label>
+                        <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
+                        <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
+                        <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>{% trans "Service" %} *</label>
                     <select name="service_id" class="form-control" required>
@@ -76,4 +87,39 @@
         {% trans "Vous avez déjà un compte?" %} <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
     </p>
 </section>
+
+<script>
+(function() {
+    var channelSelect = document.getElementById('id_channel');
+    var ibtFields = document.getElementById('ibtikar-guest-fields');
+    var ibtIdInput = document.getElementById('guest_ibtikar_id');
+
+    function toggleIbtFields() {
+        if (!channelSelect || !ibtFields) return;
+        if (channelSelect.value === 'IBTIKAR') {
+            ibtFields.style.display = '';
+            ibtIdInput.required = true;
+        } else {
+            ibtFields.style.display = 'none';
+            ibtIdInput.required = false;
+        }
+    }
+
+    if (channelSelect) {
+        channelSelect.addEventListener('change', toggleIbtFields);
+        toggleIbtFields();
+    }
+
+    // Validate ibtikar_id on submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (channelSelect && channelSelect.value === 'IBTIKAR') {
+            var ibtId = ibtIdInput.value.trim();
+            if (!/^IDGRSTD\d{5}$/.test(ibtId)) {
+                e.preventDefault();
+                alert('L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)');
+            }
+        }
+    });
+})();
+</script>
 {% endblock %}

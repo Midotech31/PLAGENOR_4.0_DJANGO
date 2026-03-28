@@ -73,9 +73,9 @@
                     <label for="id_student_level">{% trans "Niveau" %}</label>
                     <select name="student_level" id="id_student_level" class="form-control">
                         <option value="">— {% trans "Sélectionner" %} —</option>
-                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>Master (fin de cycle)</option>
-                        <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>Ingéniorat (fin de cycle)</option>
-                        <option value="doctorat" {% if form.student_level.value == 'doctorat' %}selected{% endif %}>Doctorat</option>
+                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master (fin de cycle)" %}</option>
+                        <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>{% trans "Ingéniorat (fin de cycle)" %}</option>
+                        <option value="doctorat" {% if form.student_level.value == 'doctorat' %}selected{% endif %}>{% trans "Doctorat" %}</option>
                     </select>
                     <small class="text-muted">{% trans "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités algériennes" %}</small>
                     {% if form.student_level.errors %}<div class="form-error">{{ form.student_level.errors.0 }}</div>{% endif %}
@@ -91,6 +91,13 @@
                     <label for="id_supervisor">{% trans "Directeur de recherche" %}</label>
                     <input type="text" name="supervisor" id="id_supervisor" class="form-control" value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
                     {% if form.supervisor.errors %}<div class="form-error">{{ form.supervisor.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %}</label>
+                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
+                    <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
+                    {% if form.ibtikar_id.errors %}<div class="form-error">{{ form.ibtikar_id.errors.0 }}</div>{% endif %}
                 </div>
             </div>
 
@@ -144,6 +151,25 @@
 
     roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
     toggleAcademic();
+
+    // Validate ibtikar_id on form submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        var selected = document.querySelector('input[name="role"]:checked');
+        if (selected && selected.value === 'REQUESTER') {
+            var ibtId = document.getElementById('id_ibtikar_id').value.trim();
+            if (ibtId && !/^IDGRSTD\d{5}$/.test(ibtId)) {
+                e.preventDefault();
+                var field = document.getElementById('id_ibtikar_id');
+                var err = field.parentElement.querySelector('.form-error');
+                if (!err) {
+                    err = document.createElement('div');
+                    err.className = 'form-error';
+                    field.parentElement.appendChild(err);
+                }
+                err.textContent = 'L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)';
+            }
+        }
+    });
 })();
 </script>
 {% endblock %}

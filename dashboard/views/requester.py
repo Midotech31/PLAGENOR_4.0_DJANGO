@@ -71,6 +71,14 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
+    # Declared balance validation
+    declared = float(request.POST.get('declared_balance', 0))
+    if declared < 0 or declared > 200000:
+        messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
+        return redirect('dashboard:requester')
+    if service.ibtikar_price and float(service.ibtikar_price) > declared:
+        messages.warning(request, f"Attention: le coût estimé ({service.ibtikar_price} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
+
     # Budget check before submission
     budget_check = check_ibtikar_budget(amount=service.ibtikar_price, requester=request.user)
     if budget_check['exceeded']:

@@ -66,11 +66,55 @@
                         </div>
                         <div class="form-group">
                             <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                            <input type="number" name="declared_balance" class="form-control" step="0.01" value="0" min="0">
+                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Soumettre la demande" %}</button>
+                    <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
+                    </div>
+                    <button type="submit" id="btn-submit-request" class="btn btn-primary">{% trans "Soumettre la demande" %}</button>
                 </form>
+                <script>
+                (function() {
+                    var serviceSelect = document.querySelector('select[name="service_id"]');
+                    var balanceInput = document.getElementById('declared_balance');
+                    var warning = document.getElementById('budget-warning');
+                    var submitBtn = document.getElementById('btn-submit-request');
+
+                    function checkBudget() {
+                        if (!serviceSelect || !balanceInput || !warning) return;
+                        var opt = serviceSelect.options[serviceSelect.selectedIndex];
+                        if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
+                        // Extract price from option text: "CODE — Name (PRICE DA)"
+                        var match = opt.textContent.match(/\(([\d.,]+)\s*DA\)/);
+                        var price = match ? parseFloat(match[1].replace(',', '')) : 0;
+                        var balance = parseFloat(balanceInput.value) || 0;
+                        // Count sample rows
+                        var tbody = document.getElementById('sample-table-body');
+                        var rows = tbody ? tbody.querySelectorAll('tr').length : 1;
+                        var estimated = price * Math.max(rows, 1);
+
+                        if (balance < 0 || balance > 200000) {
+                            warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
+                            warning.style.display = 'block';
+                            submitBtn.disabled = true;
+                        } else if (price > 0 && estimated > balance) {
+                            warning.innerHTML = '{% trans "Attention: le coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "dépasse votre solde déclaré" %} (' + balance.toLocaleString('fr-FR') + ' DA).';
+                            warning.style.display = 'block';
+                            submitBtn.disabled = true;
+                        } else {
+                            warning.style.display = 'none';
+                            submitBtn.disabled = false;
+                        }
+                    }
+
+                    if (serviceSelect) serviceSelect.addEventListener('change', checkBudget);
+                    if (balanceInput) balanceInput.addEventListener('input', checkBudget);
+                    // Re-check when sample rows change
+                    var observer = new MutationObserver(checkBudget);
+                    var tbody = document.getElementById('sample-table-body');
+                    if (tbody) observer.observe(tbody, {childList: true});
+                })();
+                </script>
             </div>
         </div>
     </div>

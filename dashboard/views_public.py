@@ -93,6 +93,17 @@ def guest_submit(request):
         if organization:
             requester_data['organization'] = organization
 
+        # IBTIKAR-specific fields
+        ibtikar_id = ''
+        declared_balance = 0
+        if channel == 'IBTIKAR':
+            ibtikar_id = request.POST.get('ibtikar_id', '').strip()
+            declared_balance = float(request.POST.get('declared_balance', 0) or 0)
+            if ibtikar_id:
+                requester_data['ibtikar_id'] = ibtikar_id
+            if declared_balance:
+                requester_data['declared_ibtikar_balance'] = declared_balance
+
         quote = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
 
         req = Request.objects.create(
