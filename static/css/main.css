@@ -1790,3 +1790,28 @@ a:has(.service-card):hover .service-card,
     width: 14px;
     height: 14px;
 }
+
+/* --- Topbar Action Buttons (Language / Logout) --- */
+.topbar-btn {
+    background: none;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted, #64748b);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.topbar-btn:hover {
+    background: var(--slate-100, #f1f5f9);
+    color: var(--text, #1e293b);
+}
+.topbar-logout:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}

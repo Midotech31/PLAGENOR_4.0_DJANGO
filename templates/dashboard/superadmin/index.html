@@ -17,7 +17,7 @@
     {% trans "Demandes actives" as lbl_active %}
     {% trans "Complétées" as lbl_completed %}
     {% include 'includes/kpi_card.html' with icon='users' value=total_users label=lbl_users color='indigo' %}
-    {% include 'includes/kpi_card.html' with icon='activity' value=total_members label=lbl_analysts color='green' %}
+    {% include 'includes/kpi_card.html' with icon='flask' value=total_members label=lbl_analysts color='green' %}
     {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label=lbl_active color='blue' %}
     {% include 'includes/kpi_card.html' with icon='check' value=completed_requests label=lbl_completed color='green' %}
 </div>
@@ -26,10 +26,10 @@
 <div class="kpi-grid" style="margin-bottom:32px;">
     {% trans "Services actifs" as lbl_services %}
     {% trans "Techniques" as lbl_tech %}
-    {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='file' value=genoclab_count label='GENOCLAB' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='layers' value=total_services label=lbl_services color='orange' %}
-    {% include 'includes/kpi_card.html' with icon='settings' value=total_techniques label=lbl_tech color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='graduation-cap' value=ibtikar_count label='IBTIKAR' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='building' value=genoclab_count label='GENOCLAB' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='dna' value=total_services label=lbl_services color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='beaker' value=total_techniques label=lbl_tech color='purple' %}
 </div>
 
 <!-- Financial & Rating KPI Cards -->
@@ -38,10 +38,10 @@
     {% trans "Revenue GENOCLAB (DA)" as lbl_gen_rev %}
     {% trans "Note moyenne / 5" as lbl_avg_rating %}
     {% with bd=budget_dashboard.ibtikar.total|default:0 %}
-    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=bd label=lbl_ibt_budget color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=bd label=lbl_ibt_budget color='blue' %}
     {% endwith %}
     {% with gd=budget_dashboard.genoclab.total|default:0 %}
-    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=gd label=lbl_gen_rev color='green' %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=gd label=lbl_gen_rev color='green' %}
     {% endwith %}
     {% include 'includes/kpi_card.html' with icon='star' value=avg_rating|floatformat:1 label=lbl_avg_rating color='orange' %}
 </div>

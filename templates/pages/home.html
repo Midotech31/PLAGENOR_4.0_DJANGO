@@ -19,9 +19,9 @@
     <p>{% trans "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
     <div class="btn-group">
         <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% trans "Soumettre une demande" %}</a>
-        <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">{% trans "Soumission invité" %}</a>
-        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">{% trans "Voir les services" %}</a>
-        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">{% trans "Suivi de demande" %}</a>
+        <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Soumission invité" %}</a>
+        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Voir les services" %}</a>
+        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Suivi de demande" %}</a>
     </div>
 </section>
 
@@ -36,6 +36,28 @@
         <p>{% trans "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques." %}</p>
     </div>
 </div>
+
+<!-- Institutional Partners -->
+<section class="section" style="background:#f8fafc; padding:48px 0;">
+    <div style="max-width:1100px; margin:0 auto; text-align:center; padding:0 32px;">
+        <h3 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:#94a3b8; margin-bottom:24px;">{% trans "Institutions & Partenaires" %}</h3>
+        <div style="display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap;">
+            <a href="https://www.dgrsdt.dz/" target="_blank" rel="noopener">
+                <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="max-height:70px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.85">
+            </a>
+            <a href="http://www.essb-oran.edu.dz/" target="_blank" rel="noopener">
+                <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="max-height:70px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.85">
+            </a>
+            <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="max-height:70px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.85">
+            <a href="https://ibtikar.dgrsdt.dz/" target="_blank" rel="noopener">
+                <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" style="max-height:70px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.85">
+            </a>
+            <a href="https://genoclab.my.canva.site/genoclab-essbo" target="_blank" rel="noopener">
+                <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" style="max-height:70px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.85">
+            </a>
+        </div>
+    </div>
+</section>
 
 <!-- Services -->
 {% if services %}
@@ -52,7 +74,7 @@
             </div>
             {% else %}
             <div class="service-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="M17 6l-2.5-2.5"/><path d="M14 8l-1-1"/><path d="M7 18l2.5 2.5"/><path d="M3.5 14.5l.5.5"/><path d="M20 9l.5.5"/><path d="M6.5 12.5l1 1"/><path d="M16.5 10.5l1 1"/></svg>
             </div>
             {% endif %}
             <div class="service-code">{{ service.code }}</div>
