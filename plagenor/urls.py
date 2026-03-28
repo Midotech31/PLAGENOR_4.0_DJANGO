@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('documents/', include('documents.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
     # Public report delivery
     path('report/<uuid:token>/', report_views.report_viewer, name='report_view'),

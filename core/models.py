@@ -224,3 +224,40 @@ class PaymentMethod(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Message(models.Model):
+    request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='messages')
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='messages_sent')
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='messages_received')
+    text = models.TextField()
+    read = models.BooleanField(default=False)
+    step = models.CharField(max_length=30, default='', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'messages'
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['request', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"Message {self.from_user} -> {self.to_user} ({self.request.display_id})"
+
+
+class RevenueArchive(models.Model):
+    month = models.IntegerField()
+    year = models.IntegerField()
+    channel = models.CharField(max_length=10)
+    total_revenue = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    request_count = models.IntegerField(default=0)
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'revenue_archives'
+        ordering = ['-year', '-month']
+        unique_together = ['month', 'year', 'channel']
+
+    def __str__(self):
+        return f"{self.channel} {self.month}/{self.year} — {self.total_revenue} DA"

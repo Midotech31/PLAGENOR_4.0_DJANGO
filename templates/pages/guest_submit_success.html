@@ -1,0 +1,41 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Demande soumise" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:600px; margin:60px auto; padding:0 32px; text-align:center;">
+    <div class="card">
+        <div class="card-body" style="padding: 48px 32px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2" style="width:64px; height:64px; margin-bottom:16px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+
+            <h2 style="color: var(--primary-700);">{% trans "Demande soumise avec succès!" %}</h2>
+
+            <div class="data-card" style="margin: 24px auto; max-width: 400px; text-align: left;">
+                <div class="data-card-row">
+                    <strong>{% trans "Code de suivi" %}</strong>
+                    <span class="font-mono" style="color: var(--primary-600); font-size: 1.1rem;">{{ req.display_id }}</span>
+                </div>
+                <div class="data-card-row">
+                    <strong>{% trans "Token de suivi" %}</strong>
+                    <span class="font-mono" style="font-size: 0.8rem;">{{ guest_token }}</span>
+                </div>
+                <div class="data-card-row">
+                    <strong>{% trans "Service" %}</strong>
+                    <span>{{ req.service.name|default:"—" }}</span>
+                </div>
+            </div>
+
+            <p class="text-muted" style="margin: 16px 0;">
+                {% trans "Conservez votre code de suivi pour suivre l'avancement de votre demande." %}
+            </p>
+
+            <div class="btn-group" style="justify-content:center; gap:12px; margin-top:24px;">
+                <a href="{% url 'track' %}?q={{ req.display_id }}" class="btn btn-primary">{% trans "Suivre ma demande" %}</a>
+                <a href="{% url 'home' %}" class="btn btn-outline">{% trans "Retour à l'accueil" %}</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

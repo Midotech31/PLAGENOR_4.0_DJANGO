@@ -162,3 +162,59 @@ def content_update(request):
     )
     messages.success(request, f"Contenu '{key}' mis à jour.")
     return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def audit_log(request):
+    """Paginated audit log viewer for SUPER_ADMIN."""
+    from core.models import RequestHistory
+    from django.core.paginator import Paginator
+
+    qs = RequestHistory.objects.select_related('request', 'actor').order_by('-created_at')
+
+    # Filters
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    action_filter = request.GET.get('action', '')
+    user_filter = request.GET.get('user', '')
+
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    if action_filter:
+        qs = qs.filter(to_status__icontains=action_filter)
+    if user_filter:
+        qs = qs.filter(
+            Q(actor__first_name__icontains=user_filter) |
+            Q(actor__last_name__icontains=user_filter) |
+            Q(actor__username__icontains=user_filter)
+        )
+
+    paginator = Paginator(qs, 50)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'date_from': date_from,
+        'date_to': date_to,
+        'action_filter': action_filter,
+        'user_filter': user_filter,
+        'now': timezone.now(),
+    }
+    return render(request, 'dashboard/superadmin/audit_log.html', context)
+
+
+@superadmin_required
+def revenue_archives(request):
+    """Display monthly revenue archives."""
+    from core.models import RevenueArchive
+
+    archives = RevenueArchive.objects.order_by('-year', '-month')
+
+    context = {
+        'archives': archives,
+        'now': timezone.now(),
+    }
+    return render(request, 'dashboard/superadmin/revenue_archives.html', context)

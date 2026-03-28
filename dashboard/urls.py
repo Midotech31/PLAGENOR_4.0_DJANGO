@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging
 from . import views
 
 app_name = 'dashboard'
@@ -32,6 +32,7 @@ urlpatterns = [
     path('analyst/decline/<uuid:pk>/', analyst.decline_task, name='analyst_decline'),
     path('analyst/action/<uuid:pk>/', analyst.workflow_action, name='analyst_action'),
     path('analyst/upload/<uuid:pk>/', analyst.upload_report, name='analyst_upload_report'),
+    path('analyst/appointment/<uuid:pk>/', analyst.suggest_appointment, name='analyst_suggest_appointment'),
 
     # Finance
     path('finance/', finance.index, name='finance'),
@@ -42,6 +43,7 @@ urlpatterns = [
     path('requester/create/', requester.create_request, name='requester_create'),
     path('requester/confirm/<uuid:pk>/', requester.confirm_receipt, name='requester_confirm'),
     path('requester/rate/<uuid:pk>/', requester.rate_service, name='requester_rate'),
+    path('requester/appointment/<uuid:pk>/confirm/', requester.confirm_appointment, name='requester_confirm_appointment'),
 
     # Client (GENOCLAB)
     path('client/', client.index, name='client'),
@@ -50,4 +52,13 @@ urlpatterns = [
     path('client/quote/<uuid:pk>/reject/', client.reject_quote, name='client_reject_quote'),
     path('client/confirm/<uuid:pk>/', client.confirm_receipt, name='client_confirm'),
     path('client/rate/<uuid:pk>/', client.rate_service, name='client_rate'),
+
+    # Messaging
+    path('message/<uuid:pk>/', messaging.send_message, name='send_message'),
+
+    # Audit Log (SUPER_ADMIN)
+    path('audit-log/', superadmin.audit_log, name='audit_log'),
+
+    # Revenue Archives (SUPER_ADMIN)
+    path('revenue-archives/', superadmin.revenue_archives, name='revenue_archives'),
 ]

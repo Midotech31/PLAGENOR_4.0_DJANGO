@@ -112,7 +112,35 @@
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
                         </form>
                         {% endif %}
+
+                        <!-- Suggest appointment date -->
+                        {% if req.status == 'ASSIGNED' or req.status == 'PENDING_ACCEPTANCE' or req.status == 'APPOINTMENT_SCHEDULED' %}
+                        <form method="post" action="{% url 'dashboard:analyst_suggest_appointment' req.pk %}" style="display:inline;" x-data="{show: false}">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Proposer RDV" %}</button>
+                            <div x-show="show" style="display:inline;">
+                                <input type="date" name="appointment_date" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                                <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                            </div>
+                        </form>
+                        {% endif %}
                     </div>
+                    <!-- Message / Reply form -->
+                    <div class="data-card-row mt-2" x-data="{showMsg: false}">
+                        <button type="button" class="btn btn-sm btn-outline" @click="showMsg = !showMsg">{% trans "Répondre" %}</button>
+                        <form x-show="showMsg" method="post" action="{% url 'dashboard:send_message' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="text" name="message_text" placeholder="{% trans 'Message...' %}" class="form-control" style="display:inline-block; width:250px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                        </form>
+                    </div>
+                    <!-- Messages display -->
+                    {% for msg in req.messages.all|slice:":3" %}
+                    <div class="data-card-row text-sm" style="background: var(--slate-50); padding: 4px 8px; border-radius: 4px; margin-top: 4px;">
+                        <span><strong>{{ msg.from_user.get_full_name }}</strong>: {{ msg.text|truncatechars:60 }}</span>
+                        <span class="text-xs text-muted">{{ msg.created_at|date:"d/m H:i" }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
                 {% empty %}
                 <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>

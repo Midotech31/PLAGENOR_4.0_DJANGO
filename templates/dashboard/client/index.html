@@ -140,19 +140,22 @@
 
                     <!-- Rating -->
                     {% if req.status == 'COMPLETED' and not req.service_rating %}
-                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;" x-data="{rating: 5}">
                         <form method="post" action="{% url 'dashboard:client_rate' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <select name="rating" class="form-control" style="width:auto; display:inline-block; font-size:0.85rem;">
-                                <option value="5">5 — {% trans "Excellent" %}</option>
-                                <option value="4">4 — {% trans "Très bien" %}</option>
-                                <option value="3">3 — {% trans "Bien" %}</option>
-                                <option value="2">2 — {% trans "Moyen" %}</option>
-                                <option value="1">1 — {% trans "Mauvais" %}</option>
-                            </select>
+                            <input type="hidden" name="rating" :value="rating">
+                            <div style="display:inline-flex; gap:4px; cursor:pointer;">
+                                {% for i in "12345" %}
+                                <span @click="rating = {{ i }}" :style="rating >= {{ i }} ? 'color: #f59e0b' : 'color: #d1d5db'" style="font-size:24px;">&#9733;</span>
+                                {% endfor %}
+                            </div>
                             <input type="text" name="comment" placeholder="{% trans 'Commentaire...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Évaluer" %}</button>
                         </form>
+                    </div>
+                    {% elif req.service_rating %}
+                    <div class="data-card-row mt-2 text-sm">
+                        <span>{% trans "Note" %}: {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b;">&#9733;</span>{% else %}<span style="color:#d1d5db;">&#9733;</span>{% endif %}{% endfor %}</span>
                     </div>
                     {% endif %}
                 </div>

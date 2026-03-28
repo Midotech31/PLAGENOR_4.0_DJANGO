@@ -42,7 +42,7 @@
                         <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }} &middot; {{ req.requester.get_full_name|default:"Invité" }}</span>
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
-                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
                             {% csrf_token %}
                             <select name="to_status" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
@@ -68,6 +68,34 @@
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Appliquer" %}</button>
                         </form>
                     </div>
+                    <!-- Document generation buttons -->
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        {% if req.channel == 'IBTIKAR' %}
+                        <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline">{% trans "Note plateforme" %}</a>
+                        <a href="{% url 'documents:reception_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Fiche réception" %}</a>
+                        {% else %}
+                        <a href="{% url 'documents:quote' req.pk %}" class="btn btn-sm btn-outline">{% trans "Devis" %}</a>
+                        <a href="{% url 'documents:reception_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Fiche réception" %}</a>
+                        {% endif %}
+                    </div>
+                    <!-- Message form -->
+                    {% if req.assigned_to %}
+                    <div class="data-card-row mt-2" x-data="{showMsg: false}">
+                        <button type="button" class="btn btn-sm btn-outline" @click="showMsg = !showMsg">{% trans "Envoyer message" %}</button>
+                        <form x-show="showMsg" method="post" action="{% url 'dashboard:send_message' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="text" name="message_text" placeholder="{% trans 'Message...' %}" class="form-control" style="display:inline-block; width:250px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    <!-- Messages display -->
+                    {% for msg in req.messages.all|slice:":3" %}
+                    <div class="data-card-row text-sm" style="background: var(--slate-50); padding: 4px 8px; border-radius: 4px; margin-top: 4px;">
+                        <span><strong>{{ msg.from_user.get_full_name }}</strong>: {{ msg.text|truncatechars:60 }}</span>
+                        <span class="text-xs text-muted">{{ msg.created_at|date:"d/m H:i" }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
                 {% empty %}
                 <div class="empty-state"><p>{% trans "Aucune demande en attente." %}</p></div>
@@ -212,6 +240,39 @@
         <div class="grid-2 mb-4">
             {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_budget label='Budget IBTIKAR (virtuel)' color='blue' %}
             {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label='Revenus GENOCLAB (réel)' color='green' %}
+        </div>
+
+        <!-- Performance comparison -->
+        <div class="card" style="margin-top:24px;">
+            <div class="card-header"><h3>{% trans "Comparaison performance analystes" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "Analyste" %}</th>
+                                <th>{% trans "Charge" %}</th>
+                                <th>{% trans "Productivité" %}</th>
+                                <th>{% trans "Points" %}</th>
+                                <th>{% trans "Disponible" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in available_members %}
+                        <tr>
+                            <td><strong>{{ m.user.get_full_name }}</strong></td>
+                            <td>{{ m.current_load }}/{{ m.max_load }} ({{ m.load_percentage }}%)</td>
+                            <td>{{ m.productivity_score }}%</td>
+                            <td>{{ m.total_points }}</td>
+                            <td>{% if m.available %}<span class="badge-status completed">{% trans "Oui" %}</span>{% else %}<span class="badge-status rejected">{% trans "Non" %}</span>{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted">{% trans "Aucun analyste." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 

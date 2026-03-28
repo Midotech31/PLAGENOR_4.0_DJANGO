@@ -101,7 +101,39 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     # Audit log
     log_workflow_transition(request_obj, old_status, to_status, actor, {'notes': notes, 'forced': force})
 
+    # Email notifications for key transitions
+    _send_transition_emails(request_obj, old_status, to_status)
+
     return request_obj
+
+
+def _send_transition_emails(request_obj, old_status, to_status):
+    """Fire email notifications for key workflow transitions."""
+    try:
+        from notifications.emails import (
+            notify_status_change,
+            notify_assignment,
+            notify_appointment,
+            notify_report_delivery,
+        )
+
+        # Status change notification to requester
+        notify_status_change(request_obj, old_status, to_status)
+
+        # Assignment notification to member
+        if to_status == 'ASSIGNED' and request_obj.assigned_to:
+            notify_assignment(request_obj, request_obj.assigned_to)
+
+        # Appointment notification
+        if to_status == 'APPOINTMENT_SCHEDULED' and request_obj.appointment_date:
+            notify_appointment(request_obj)
+
+        # Report delivery
+        if to_status in ('REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT', 'COMPLETED'):
+            if request_obj.report_token:
+                notify_report_delivery(request_obj)
+    except Exception:
+        pass  # Never break workflow due to email failure
 
 
 def force_transition(request_obj, to_status, actor, notes=''):

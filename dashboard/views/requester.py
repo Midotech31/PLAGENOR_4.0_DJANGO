@@ -110,6 +110,18 @@ def confirm_receipt(request, pk):
 
 
 @requester_required
+def confirm_appointment(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req.appointment_confirmed = True
+    req.appointment_confirmed_at = timezone.now()
+    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at'])
+    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+    return redirect('dashboard:requester')
+
+
+@requester_required
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

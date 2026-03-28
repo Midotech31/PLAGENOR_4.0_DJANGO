@@ -160,6 +160,56 @@ def get_revenue_summary() -> dict:
 # COMBINED DASHBOARD DATA
 # ═══════════════════════════════════════════════════════════════════════════
 
+def archive_monthly_revenue(month: int = None, year: int = None) -> list:
+    """Archive monthly revenue for both channels."""
+    from core.models import Request, RevenueArchive, Invoice
+
+    now = datetime.now()
+    if month is None:
+        month = now.month - 1 if now.month > 1 else 12
+    if year is None:
+        year = now.year if now.month > 1 else now.year - 1
+
+    results = []
+    for channel in ['IBTIKAR', 'GENOCLAB']:
+        if channel == 'IBTIKAR':
+            qs = Request.objects.filter(
+                channel='IBTIKAR',
+                created_at__month=month,
+                created_at__year=year,
+            ).exclude(status__in=REJECTION_STATES)
+            total = float(qs.aggregate(total=Sum('budget_amount'))['total'] or 0)
+            count = qs.count()
+        else:
+            qs = Invoice.objects.filter(
+                created_at__month=month,
+                created_at__year=year,
+            )
+            total = float(qs.aggregate(total=Sum('total_ttc'))['total'] or 0)
+            count = qs.count()
+
+        archive, created = RevenueArchive.objects.update_or_create(
+            month=month,
+            year=year,
+            channel=channel,
+            defaults={
+                'total_revenue': total,
+                'request_count': count,
+            },
+        )
+        results.append({
+            'channel': channel,
+            'month': month,
+            'year': year,
+            'total_revenue': total,
+            'request_count': count,
+            'created': created,
+        })
+
+    logger.info("Revenue archived for %s/%s: %s", month, year, results)
+    return results
+
+
 def get_budget_dashboard() -> dict:
     """Return symmetric data for both IBTIKAR and GENOCLAB revenue display."""
     ibtikar = get_ibtikar_virtual_revenue()

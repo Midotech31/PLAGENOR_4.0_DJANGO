@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="data-card">
     <div class="data-card-row">
         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</div>
@@ -9,7 +10,7 @@
     </div>
     {% if req.assigned_to %}
     <div class="data-card-row text-sm text-muted">
-        <span>Assigné: {{ req.assigned_to.user.get_full_name }}</span>
+        <span>{% trans "Assigné" %}: {{ req.assigned_to.user.get_full_name }}</span>
         <span>{{ req.get_urgency_display }}</span>
     </div>
     {% endif %}

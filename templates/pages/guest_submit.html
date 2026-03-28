@@ -1,0 +1,67 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Soumission invité" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:700px; margin:40px auto; padding:0 32px;">
+    <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
+    <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
+
+    <div class="card" style="margin-top: 24px;">
+        <div class="card-body" style="padding: 32px;">
+            <form method="post" action="{% url 'guest_submit' %}">
+                {% csrf_token %}
+
+                <h4 style="margin-bottom: 16px;">{% trans "Vos informations" %}</h4>
+                <div class="form-group">
+                    <label>{% trans "Nom complet" %} *</label>
+                    <input type="text" name="guest_name" class="form-control" required placeholder="{% trans 'Votre nom complet' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Email" %} *</label>
+                    <input type="email" name="guest_email" class="form-control" required placeholder="{% trans 'votre@email.com' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Téléphone" %}</label>
+                    <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Numéro de téléphone' %}">
+                </div>
+
+                <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
+                <div class="form-group">
+                    <label>{% trans "Service" %} *</label>
+                    <select name="service_id" class="form-control" required>
+                        <option value="">{% trans "Sélectionner un service..." %}</option>
+                        {% for s in services %}
+                        <option value="{{ s.pk }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Titre de la demande" %}</label>
+                    <input type="text" name="title" class="form-control" placeholder="{% trans 'Ex: Analyse DRX...' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Description" %}</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Urgence" %}</label>
+                    <select name="urgency" class="form-control">
+                        <option value="Normal">{% trans "Normal" %}</option>
+                        <option value="Urgent">{% trans "Urgent" %}</option>
+                        <option value="Très urgent">{% trans "Très urgent" %}</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Soumettre la demande" %}</button>
+            </form>
+        </div>
+    </div>
+
+    <p style="text-align:center; margin-top:16px;" class="text-muted">
+        {% trans "Vous avez déjà un compte?" %} <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
+    </p>
+</section>
+{% endblock %}

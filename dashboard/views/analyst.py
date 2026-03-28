@@ -147,6 +147,27 @@ def workflow_action(request, pk):
 
 
 @analyst_required
+def suggest_appointment(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    profile = request.user.member_profile
+    if req.assigned_to != profile:
+        return HttpResponseForbidden()
+    date_str = request.POST.get('appointment_date', '')
+    if date_str:
+        from datetime import datetime
+        try:
+            req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            req.appointment_proposed_by = request.user
+            req.save(update_fields=['appointment_date', 'appointment_proposed_by'])
+            messages.success(request, f"Date de RDV proposée: {req.appointment_date}")
+        except ValueError:
+            messages.error(request, "Date invalide.")
+    return redirect('dashboard:analyst')
+
+
+@analyst_required
 def upload_report(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

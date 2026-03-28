@@ -193,12 +193,21 @@
                                 <span class="badge-status rejected">{% trans "Non" %}</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td style="white-space:nowrap;">
                                 <form method="post" action="{% url 'dashboard:superadmin_member_toggle' m.pk %}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline">
                                         {% if m.available %}{% trans "Rendre indisponible" %}{% else %}{% trans "Rendre disponible" %}{% endif %}
                                     </button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline;" x-data="{show: false}">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Points" %}</button>
+                                    <div x-show="show" style="display:inline;">
+                                        <input type="number" name="points" value="10" min="1" max="100" class="form-control" style="width:60px; display:inline-block; font-size:0.85rem;">
+                                        <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:120px; display:inline-block; font-size:0.85rem;">
+                                        <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                    </div>
                                 </form>
                             </td>
                         </tr>
