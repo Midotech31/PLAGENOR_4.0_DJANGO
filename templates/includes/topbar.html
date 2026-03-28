@@ -32,14 +32,22 @@
                 <div class="dropdown-divider"></div>
                 <div style="max-height:300px; overflow-y:auto;">
                     {% for notif in recent_notifications %}
-                    <div class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; {% if not notif.read %}background:#f0f9ff;{% endif %}">
-                        <div style="font-size:0.85rem;">{{ notif.message|truncatechars:60 }}</div>
+                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
+                        <div style="font-size:0.85rem; color:#1e293b;">{{ notif.message|truncatechars:60 }}</div>
                         <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
-                    </div>
+                    </a>
                     {% empty %}
                     <div class="dropdown-item text-muted" style="display:flex; justify-content:center; padding:16px;">{% trans "Aucune notification" %}</div>
                     {% endfor %}
                 </div>
+                {% if unread_count %}
+                <div style="border-top:1px solid #e2e8f0; padding:8px 16px;">
+                    <form method="post" action="{% url 'notifications:mark_all_read' %}" style="text-align:center;">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none; border:none; color:#2563eb; cursor:pointer; font-size:0.8rem; font-weight:500;">{% trans "Tout marquer comme lu" %}</button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
         </div>
 
