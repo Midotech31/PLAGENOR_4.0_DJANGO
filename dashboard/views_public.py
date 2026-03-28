@@ -45,6 +45,17 @@ def contact(request):
     return render(request, 'pages/contact.html')
 
 
+def service_detail(request, service_code):
+    """Detailed service page showing full YAML definition."""
+    from core.registry import get_service_def
+    service = get_object_or_404(Service, code=service_code, active=True)
+    yaml_def = get_service_def(service_code)
+    return render(request, 'pages/service_detail.html', {
+        'service': service,
+        'yaml_def': yaml_def,
+    })
+
+
 def service_landing(request, service_code):
     """Landing page when a visitor clicks a service card."""
     service = get_object_or_404(Service, code=service_code, active=True)

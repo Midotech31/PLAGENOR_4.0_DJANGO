@@ -13,10 +13,36 @@
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" placeholder="{% trans 'Rechercher...' %}" />
         </div>
-        <button class="topbar-bell" onclick="refreshNotificationCount()" aria-label="Notifications">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="badge" id="notification-count" style="display:none">0</span>
-        </button>
+        <!-- Notification Bell -->
+        <div x-data="{ notifOpen: false }" style="position:relative; margin-right:8px;">
+            <button @click="notifOpen = !notifOpen" class="topbar-bell" style="position:relative; border:none; padding:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_count %}
+                <span class="badge" style="position:absolute; top:2px; right:2px;">{{ unread_count }}</span>
+                {% endif %}
+            </button>
+            <div x-show="notifOpen" @click.outside="notifOpen = false" class="notif-dropdown">
+                <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong>{% trans "Notifications" %}</strong>
+                    {% if unread_count %}<span class="badge-status" style="font-size:0.7rem;">{{ unread_count }} {% trans "non lues" %}</span>{% endif %}
+                </div>
+                <div class="dropdown-divider"></div>
+                <div style="max-height:300px; overflow-y:auto;">
+                    {% for notif in recent_notifications %}
+                    <div class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; {% if not notif.read %}background:#f0f9ff;{% endif %}">
+                        <div style="font-size:0.85rem;">{{ notif.message|truncatechars:60 }}</div>
+                        <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                    </div>
+                    {% empty %}
+                    <div class="dropdown-item text-muted" style="display:flex; justify-content:center; padding:16px;">{% trans "Aucune notification" %}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
         <div class="topbar-user">
             <div class="topbar-avatar">{{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}</div>
         </div>

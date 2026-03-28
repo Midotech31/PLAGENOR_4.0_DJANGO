@@ -6,46 +6,79 @@ import os
 from datetime import datetime
 
 
-def generate_ibtikar_form(request_obj) -> str:
-    """Generate an IBTIKAR form DOCX for a request by cloning a template."""
-    template_path = os.path.join(
-        settings.BASE_DIR, 'documents', 'docx_templates', 'ibtikar_form_template.docx'
-    )
-    if os.path.exists(template_path):
-        doc = Document(template_path)
-    else:
-        doc = Document()
-        doc.add_heading('Formulaire IBTIKAR — PLAGENOR', level=1)
-        doc.add_heading("ESSBO — École Supérieure en Sciences Biologiques d'Oran", level=2)
+# Service code to IBTIKAR DOCX template filename mapping
+IBTIKAR_TEMPLATE_MAP = {
+    'EGTP-CAN': 'egtp_can.docx',
+    'EGTP-IMT': 'egtp_imt.docx',
+    'EGTP-PCR': 'egtp_pcr.docx',
+    'EGTP-Lyoph': 'egtp_lyoph.docx',
+    'EGTP-PS': 'egtp_ps.docx',
+    'EGTP-Seq02': 'egtp_seq02.docx',
+    'EGTP-SeqS': 'egtp_seqs.docx',
+    'EGTP-GDE': 'egtp_gde.docx',
+    'EGTP-Illumina-Microbial-WGS': 'egtp_illumina_wgs.docx',
+}
 
-    # Replace placeholders in existing paragraphs
+
+def _replace_placeholders(doc, replacements):
+    """Replace placeholder text in all paragraphs and table cells of a Document."""
+    for paragraph in doc.paragraphs:
+        for key, value in replacements.items():
+            if key in paragraph.text:
+                paragraph.text = paragraph.text.replace(key, str(value or ''))
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for key, value in replacements.items():
+                    if key in cell.text:
+                        cell.text = cell.text.replace(key, str(value or ''))
+
+
+def generate_ibtikar_form(request_obj) -> str:
+    """Generate an IBTIKAR form DOCX for a request using service-specific official templates."""
     replacements = {
         '{{FULL_NAME}}': request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name,
         '{{ETABLISSEMENT}}': getattr(request_obj.requester, 'organization', '') if request_obj.requester else '',
         '{{LABORATORY}}': getattr(request_obj.requester, 'laboratory', '') if request_obj.requester else '',
         '{{PROJECT_TITLE}}': request_obj.title,
         '{{SERVICE_NAME}}': request_obj.service.name if request_obj.service else 'N/A',
+        '{{SERVICE_CODE}}': request_obj.service.code if request_obj.service else 'N/A',
         '{{DATE}}': datetime.now().strftime('%d/%m/%Y'),
         '{{DISPLAY_ID}}': request_obj.display_id,
         '{{BUDGET_AMOUNT}}': f"{request_obj.budget_amount} DZD",
         '{{URGENCY}}': request_obj.urgency,
+        '{{DESCRIPTION}}': request_obj.description or '',
+        '{{TITLE}}': request_obj.title,
     }
 
-    for paragraph in doc.paragraphs:
-        for key, value in replacements.items():
-            if key in paragraph.text:
-                paragraph.text = paragraph.text.replace(key, str(value))
+    doc = None
 
-    # Also replace in tables
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for key, value in replacements.items():
-                    if key in cell.text:
-                        cell.text = cell.text.replace(key, str(value))
+    # 1) Try service-specific official template from ibtikar/ directory
+    service_code = request_obj.service.code if request_obj.service else ''
+    template_name = IBTIKAR_TEMPLATE_MAP.get(service_code, '')
+    if template_name:
+        template_path = os.path.join(
+            settings.BASE_DIR, 'documents', 'docx_templates', 'ibtikar', template_name
+        )
+        if os.path.exists(template_path):
+            doc = Document(template_path)
+            _replace_placeholders(doc, replacements)
 
-    # If template was not found, add content manually
-    if not os.path.exists(template_path):
+    # 2) Fall back to generic ibtikar_form_template.docx
+    if doc is None:
+        generic_path = os.path.join(
+            settings.BASE_DIR, 'documents', 'docx_templates', 'ibtikar_form_template.docx'
+        )
+        if os.path.exists(generic_path):
+            doc = Document(generic_path)
+            _replace_placeholders(doc, replacements)
+
+    # 3) Fall back to programmatic generation
+    if doc is None:
+        doc = Document()
+        doc.add_heading('Formulaire IBTIKAR — PLAGENOR', level=1)
+        doc.add_heading("ESSBO — École Supérieure en Sciences Biologiques d'Oran", level=2)
+
         doc.add_paragraph(f"Référence: {request_obj.display_id}")
         doc.add_paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y')}")
         doc.add_paragraph('')
@@ -70,7 +103,6 @@ def generate_ibtikar_form(request_obj) -> str:
             table.rows[i].cells[0].text = label
             table.rows[i].cells[1].text = str(value)
 
-        # Add sample data table if available
         sample_data = request_obj.sample_table or []
         if sample_data and isinstance(sample_data, list) and len(sample_data) > 0:
             doc.add_paragraph('')
@@ -101,35 +133,40 @@ def generate_platform_note(request_obj) -> str:
 
     if os.path.exists(template_path):
         doc = Document(template_path)
-        # Replace placeholders in existing template
-        replacements = {
-            '{{DISPLAY_ID}}': request_obj.display_id,
-            '{{DATE}}': datetime.now().strftime('%d/%m/%Y'),
-            '{{FULL_NAME}}': request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name or 'N/A',
-            '{{ETABLISSEMENT}}': getattr(request_obj.requester, 'organization', '') if request_obj.requester else '',
-            '{{LABORATORY}}': getattr(request_obj.requester, 'laboratory', '') if request_obj.requester else '',
-            '{{SUPERVISOR}}': getattr(request_obj.requester, 'supervisor', '') if request_obj.requester else '',
-            '{{STUDENT_LEVEL}}': getattr(request_obj.requester, 'student_level', '') if request_obj.requester else '',
-            '{{SERVICE_CODE}}': request_obj.service.code if request_obj.service else 'N/A',
-            '{{SERVICE_NAME}}': request_obj.service.name if request_obj.service else 'N/A',
-            '{{SERVICE_DESCRIPTION}}': request_obj.service.description if request_obj.service else '',
-            '{{TURNAROUND}}': str(request_obj.service.turnaround_days) if request_obj.service else 'N/A',
-            '{{BUDGET_AMOUNT}}': f"{request_obj.budget_amount:,.0f} DZD",
-            '{{URGENCY}}': request_obj.urgency,
-            '{{CHANNEL}}': request_obj.channel,
-            '{{TITLE}}': request_obj.title,
-            '{{DESCRIPTION}}': request_obj.description or '',
+
+        requester_name = request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name or 'N/A'
+        requester_org = getattr(request_obj.requester, 'organization', '') if request_obj.requester else ''
+        requester_lab = getattr(request_obj.requester, 'laboratory', '') if request_obj.requester else ''
+        requester_supervisor = getattr(request_obj.requester, 'supervisor', '') if request_obj.requester else ''
+        requester_level = getattr(request_obj.requester, 'student_level', '') if request_obj.requester else ''
+
+        # Build replacements for multiple placeholder formats: {{...}} and [...]
+        field_map = {
+            'DISPLAY_ID': request_obj.display_id,
+            'DATE': datetime.now().strftime('%d/%m/%Y'),
+            'FULL_NAME': requester_name,
+            'ETABLISSEMENT': requester_org,
+            'LABORATORY': requester_lab,
+            'SUPERVISOR': requester_supervisor,
+            'STUDENT_LEVEL': requester_level,
+            'SERVICE_CODE': request_obj.service.code if request_obj.service else 'N/A',
+            'SERVICE_NAME': request_obj.service.name if request_obj.service else 'N/A',
+            'SERVICE_DESCRIPTION': request_obj.service.description if request_obj.service else '',
+            'TURNAROUND': str(request_obj.service.turnaround_days) if request_obj.service else 'N/A',
+            'BUDGET_AMOUNT': f"{request_obj.budget_amount:,.0f} DZD",
+            'URGENCY': request_obj.urgency,
+            'CHANNEL': request_obj.channel,
+            'TITLE': request_obj.title,
+            'DESCRIPTION': request_obj.description or '',
         }
-        for paragraph in doc.paragraphs:
-            for key, value in replacements.items():
-                if key in paragraph.text:
-                    paragraph.text = paragraph.text.replace(key, str(value or ''))
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    for key, value in replacements.items():
-                        if key in cell.text:
-                            cell.text = cell.text.replace(key, str(value or ''))
+
+        # Support {{KEY}}, [KEY], and bare KEY placeholder formats
+        replacements = {}
+        for key, value in field_map.items():
+            replacements[f'{{{{{key}}}}}'] = value   # {{KEY}}
+            replacements[f'[{key}]'] = value          # [KEY]
+
+        _replace_placeholders(doc, replacements)
     else:
         # Build document programmatically with FULL request data
         doc = Document()

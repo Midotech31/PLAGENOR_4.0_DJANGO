@@ -47,6 +47,7 @@ urlpatterns = [
     path('analyst/action/<uuid:pk>/', analyst.workflow_action, name='analyst_action'),
     path('analyst/upload/<uuid:pk>/', analyst.upload_report, name='analyst_upload_report'),
     path('analyst/appointment/<uuid:pk>/', analyst.suggest_appointment, name='analyst_suggest_appointment'),
+    path('analyst/request/<uuid:pk>/', analyst.request_detail, name='analyst_request_detail'),
 
     # Finance
     path('finance/', finance.index, name='finance'),
@@ -59,6 +60,7 @@ urlpatterns = [
     path('requester/confirm/<uuid:pk>/', requester.confirm_receipt, name='requester_confirm'),
     path('requester/rate/<uuid:pk>/', requester.rate_service, name='requester_rate'),
     path('requester/appointment/<uuid:pk>/confirm/', requester.confirm_appointment, name='requester_confirm_appointment'),
+    path('requester/alt-date/<uuid:pk>/', requester.suggest_alternative_date, name='requester_alt_date'),
 
     # Client (GENOCLAB)
     path('client/', client.index, name='client'),
@@ -68,6 +70,7 @@ urlpatterns = [
     path('client/appointment/<uuid:pk>/confirm/', client.confirm_appointment, name='client_confirm_appointment'),
     path('client/confirm/<uuid:pk>/', client.confirm_receipt, name='client_confirm'),
     path('client/rate/<uuid:pk>/', client.rate_service, name='client_rate'),
+    path('client/alt-date/<uuid:pk>/', client.suggest_alternative_date, name='client_alt_date'),
 
     # Service form API
     path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),

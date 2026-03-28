@@ -89,7 +89,18 @@
                         <span>{% trans "Notes de révision" %}: {{ req.admin_revision_notes }}</span>
                     </div>
                     {% endif %}
+                    <!-- Counter-proposals from requester -->
+                    {% if req.status == 'APPOINTMENT_PROPOSED' %}
+                    {% for comment in req.comments.all %}
+                    {% if 'Date alternative' in comment.text %}
+                    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:8px; margin-top:6px; font-size:0.85rem;">
+                        {{ comment.text }} <span class="text-muted">({{ comment.created_at|date:"d/m/Y H:i" }})</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'dashboard:analyst_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
                         <!-- Workflow action buttons based on status -->
                         {% if req.status == 'APPOINTMENT_SCHEDULED' %}
                         <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">

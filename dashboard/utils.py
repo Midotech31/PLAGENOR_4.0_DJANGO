@@ -6,4 +6,7 @@ def redirect_back(request, fallback_url='dashboard:router'):
     referer = request.META.get('HTTP_REFERER', '')
     if referer:
         return redirect(referer)
-    return redirect(fallback_url)
+    try:
+        return redirect(fallback_url)
+    except Exception:
+        return redirect('/')

@@ -1,0 +1,134 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+
+{% block title %}{{ service.name }} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:900px; margin:40px auto; padding:0 32px;">
+    <div style="margin-bottom:24px;">
+        <a href="{% url 'services' %}" class="text-muted" style="font-size:0.85rem;">&larr; {% trans "Retour aux services" %}</a>
+    </div>
+
+    <div style="text-align:center; margin-bottom:32px;">
+        <div class="service-code" style="font-size:0.85rem; color:var(--indigo-600, #4F46E5); font-weight:600; margin-bottom:8px;">{{ service.code }}</div>
+        <h2 class="section-title" style="margin-bottom:8px;">{{ service.name }}</h2>
+        <p class="text-muted" style="max-width:600px; margin:0 auto;">{{ service.description }}</p>
+        {% if service.channel_availability == 'BOTH' %}
+        <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+            <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span>
+            <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span>
+        </div>
+        {% elif service.channel_availability == 'IBTIKAR' %}
+        <div style="margin-top:12px;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
+        {% else %}
+        <div style="margin-top:12px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+        {% endif %}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
+        <!-- Pricing -->
+        <div class="card">
+            <div class="card-body" style="padding:20px;">
+                <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Tarification" %}</h4>
+                {% if service.ibtikar_price %}
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span class="text-muted text-sm">IBTIKAR</span>
+                    <strong>{{ service.ibtikar_price|floatformat:0 }} DA</strong>
+                </div>
+                {% endif %}
+                {% if service.genoclab_price %}
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="text-muted text-sm">GENOCLAB</span>
+                    <strong>{{ service.genoclab_price|floatformat:0 }} DA</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Turnaround -->
+        <div class="card">
+            <div class="card-body" style="padding:20px;">
+                <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Délai de traitement" %}</h4>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--primary, #4F46E5);">
+                    {{ service.turnaround_days }} {% trans "jours" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if yaml_def %}
+    <!-- Parameters -->
+    {% if yaml_def.parameters %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-body" style="padding:20px;">
+            <h4 style="font-size:0.95rem; margin-bottom:16px;">{% trans "Paramètres du service" %}</h4>
+            <div style="display:grid; gap:12px;">
+                {% for param in yaml_def.parameters %}
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border, #e2e8f0);">
+                    <div>
+                        <strong style="font-size:0.85rem;">{{ param.label|default:param.name }}</strong>
+                        {% if param.required %}<span style="color:#dc2626; font-size:0.75rem; margin-left:4px;">*</span>{% endif %}
+                    </div>
+                    <span class="text-muted text-sm">{{ param.type|default:"text" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sample Table Columns -->
+    {% if yaml_def.sample_table %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-body" style="padding:20px;">
+            <h4 style="font-size:0.95rem; margin-bottom:16px;">{% trans "Colonnes du tableau d'échantillons" %}</h4>
+            <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:var(--slate-50, #f8fafc);">
+                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Colonne" %}</th>
+                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Type" %}</th>
+                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Obligatoire" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col in yaml_def.sample_table %}
+                    <tr>
+                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{{ col.label|default:col.name }}</td>
+                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{{ col.type|default:"text" }}</td>
+                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% if col.required %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Compliance / Requirements -->
+    {% if yaml_def.compliance or yaml_def.requirements %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-body" style="padding:20px;">
+            <h4 style="font-size:0.95rem; margin-bottom:12px;">{% trans "Exigences & conformité" %}</h4>
+            {% if yaml_def.requirements %}
+            <ul style="padding-left:20px; font-size:0.85rem; color:var(--text-secondary);">
+                {% for req in yaml_def.requirements %}
+                <li style="margin-bottom:6px;">{{ req }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% if yaml_def.compliance %}
+            <p class="text-muted text-sm" style="margin-top:8px;">{{ yaml_def.compliance }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- CTA -->
+    <div style="text-align:center; margin-top:32px;">
+        <a href="{% url 'service_landing' service.code %}" class="btn btn-primary" style="padding:12px 40px; font-size:1rem;">
+            {% trans "Demander ce service" %}
+        </a>
+    </div>
+</section>
+{% endblock %}

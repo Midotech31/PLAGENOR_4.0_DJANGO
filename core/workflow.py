@@ -106,10 +106,51 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     # Email notifications for key transitions
     _send_transition_emails(request_obj, old_status, to_status)
 
+    # In-app notifications for key transitions
+    _create_notifications(request_obj, to_status)
+
     # Auto-generate documents on specific transitions
     _auto_generate_documents(request_obj, to_status)
 
     return request_obj
+
+
+def _create_notifications(request_obj, to_status):
+    """Create in-app notifications for key workflow transitions."""
+    try:
+        from notifications.models import Notification
+
+        if to_status == 'ASSIGNED' and request_obj.assigned_to:
+            Notification.objects.create(
+                user=request_obj.assigned_to.user,
+                message=f"Nouvelle assignation: {request_obj.display_id} - {request_obj.title}",
+                request=request_obj,
+                notification_type='WORKFLOW',
+            )
+        elif to_status == 'APPOINTMENT_PROPOSED' and request_obj.requester:
+            Notification.objects.create(
+                user=request_obj.requester,
+                message=f"RDV proposé pour {request_obj.display_id}: {request_obj.appointment_date}",
+                request=request_obj,
+                notification_type='WORKFLOW',
+            )
+        elif to_status == 'APPOINTMENT_CONFIRMED' and request_obj.assigned_to:
+            Notification.objects.create(
+                user=request_obj.assigned_to.user,
+                message=f"RDV confirmé pour {request_obj.display_id}",
+                request=request_obj,
+                notification_type='WORKFLOW',
+            )
+        elif to_status in ('REPORT_VALIDATED', 'COMPLETED') and request_obj.requester:
+            msg = 'Rapport validé' if to_status == 'REPORT_VALIDATED' else 'Demande complétée'
+            Notification.objects.create(
+                user=request_obj.requester,
+                message=f"{msg}: {request_obj.display_id}",
+                request=request_obj,
+                notification_type='WORKFLOW',
+            )
+    except Exception:
+        pass  # Never break workflow due to notification failure
 
 
 def _auto_generate_documents(request_obj, to_status):

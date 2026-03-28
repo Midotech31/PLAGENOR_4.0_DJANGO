@@ -87,4 +87,9 @@
         {% trans "Standard" %}
     {% endif %}
 </div>
+<div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
+     data-pricing='{{ pricing|safe }}'>
+    <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
+    <div class="text-muted text-xs" style="margin-top:4px;">{% trans "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse." %}</div>
+</div>
 {% endif %}

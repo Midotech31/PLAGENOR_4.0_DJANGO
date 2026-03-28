@@ -154,6 +154,30 @@ def confirm_receipt(request, pk):
 
 
 @client_required
+def suggest_alternative_date(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    alt_date = request.POST.get('alt_date', '')
+    alt_note = request.POST.get('alt_note', '')
+    if alt_date:
+        from core.models import RequestComment
+        RequestComment.objects.create(
+            request=req, author=request.user,
+            text=f"Date alternative proposée: {alt_date}. {alt_note}",
+            step=req.status
+        )
+        if req.assigned_to:
+            Notification.objects.create(
+                user=req.assigned_to.user,
+                message=f"Nouvelle date proposée pour {req.display_id}: {alt_date}",
+                request=req
+            )
+        messages.success(request, f"Date alternative proposée: {alt_date}")
+    return redirect_back(request, 'dashboard:client')
+
+
+@client_required
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

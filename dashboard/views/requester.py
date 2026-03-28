@@ -100,6 +100,19 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
+    # Calculate cost from YAML pricing if available
+    from core.pricing import calculate_price
+    from core.registry import get_service_def
+    yaml_def = get_service_def(service.code)
+    if yaml_def and sample_table_data:
+        try:
+            price_result = calculate_price(yaml_def, service_params, sample_table_data)
+            budget_amount = price_result.get('total', float(service.ibtikar_price))
+        except (ValueError, KeyError):
+            budget_amount = float(service.ibtikar_price)
+    else:
+        budget_amount = float(service.ibtikar_price)
+
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
         data={
@@ -107,7 +120,7 @@ def create_request(request):
             'description': request.POST.get('description', ''),
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
-            'budget_amount': float(service.ibtikar_price),
+            'budget_amount': budget_amount,
             'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
             'service_params': service_params,
             'sample_table': sample_table_data,
@@ -145,6 +158,30 @@ def confirm_appointment(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+    return redirect_back(request, 'dashboard:requester')
+
+
+@requester_required
+def suggest_alternative_date(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    alt_date = request.POST.get('alt_date', '')
+    alt_note = request.POST.get('alt_note', '')
+    if alt_date:
+        from core.models import RequestComment
+        RequestComment.objects.create(
+            request=req, author=request.user,
+            text=f"Date alternative proposée: {alt_date}. {alt_note}",
+            step=req.status
+        )
+        if req.assigned_to:
+            Notification.objects.create(
+                user=req.assigned_to.user,
+                message=f"Nouvelle date proposée pour {req.display_id}: {alt_date}",
+                request=req
+            )
+        messages.success(request, f"Date alternative proposée: {alt_date}")
     return redirect_back(request, 'dashboard:requester')
 
 

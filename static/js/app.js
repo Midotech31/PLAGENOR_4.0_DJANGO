@@ -124,6 +124,50 @@ function addSampleRow() {
     tbody.appendChild(tr);
 }
 
+// Cost estimation - update when samples change
+function updateCostEstimate() {
+    var box = document.getElementById('cost-estimate-box');
+    if (!box) return;
+    var pricingStr = box.getAttribute('data-pricing');
+    if (!pricingStr) return;
+
+    try {
+        var pricing = JSON.parse(pricingStr.replace(/'/g, '"'));
+        var rows = document.querySelectorAll('#sample-table-body tr').length || 1;
+        var basePrice = pricing.base_price;
+        var total = 0;
+
+        if (typeof basePrice === 'object') {
+            var unitPrice = basePrice.non_pathogenic || basePrice[Object.keys(basePrice)[0]] || 0;
+            total = rows * unitPrice;
+        } else {
+            total = rows * (basePrice || pricing.unit_price || 0);
+        }
+
+        var display = document.getElementById('cost-estimate');
+        if (display) display.textContent = total.toLocaleString('fr-FR') + ' DA';
+    } catch(e) { console.log('Cost calc error:', e); }
+}
+
+// Hook cost estimation into sample row management
+var _origAddSampleRow = window.addSampleRow;
+if (typeof _origAddSampleRow === 'function') {
+    window.addSampleRow = function() {
+        _origAddSampleRow();
+        updateCostEstimate();
+    };
+}
+
+// Observe DOM changes in sample table for cost updates
+document.addEventListener('DOMContentLoaded', function() {
+    var costObserverTbody = document.getElementById('sample-table-body');
+    if (costObserverTbody) {
+        var costObserver = new MutationObserver(updateCostEstimate);
+        costObserver.observe(costObserverTbody, { childList: true });
+        updateCostEstimate();
+    }
+});
+
 // EGTP-IMT: When pathogenic is checked, force Disposable target type
 document.addEventListener('change', function(e) {
     if (e.target.name === 'param_pathogenic') {

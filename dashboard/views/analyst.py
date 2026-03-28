@@ -51,7 +51,7 @@ def index(request):
             'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
             'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
         ]
-    ).select_related('service', 'requester').order_by('-updated_at')
+    ).select_related('service', 'requester').prefetch_related('comments').order_by('-updated_at')
 
     # Completed history
     history = Request.objects.filter(
@@ -178,6 +178,22 @@ def suggest_appointment(request, pk):
         except ValueError:
             messages.error(request, "Date invalide.")
     return redirect_back(request, 'dashboard:analyst')
+
+
+@analyst_required
+def request_detail(request, pk):
+    from core.models import RequestComment, Message
+    req = get_object_or_404(Request, pk=pk)
+    profile = request.user.member_profile
+    if req.assigned_to != profile:
+        return HttpResponseForbidden()
+    history = req.history.select_related('actor').order_by('created_at')
+    comments = req.comments.select_related('author').order_by('created_at')
+    messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
+    return render(request, 'dashboard/analyst/request_detail.html', {
+        'req': req, 'history': history, 'comments': comments,
+        'messages_list': messages_list, 'now': timezone.now(),
+    })
 
 
 @analyst_required

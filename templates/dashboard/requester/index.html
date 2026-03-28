@@ -136,7 +136,7 @@
                     </div>
                     {% if req.assigned_to %}
                     <div class="data-card-row text-sm text-muted">
-                        <span>{% trans "Assigné à" %}: {{ req.assigned_to.user.get_full_name }}</span>
+                        <span>{% trans "Analyste assigné" %}</span>
                         {% if req.appointment_date %}<span>{% trans "RDV" %}: {{ req.appointment_date|date:"d/m/Y" }}{% if req.appointment_confirmed %} ({% trans "confirmé" %}){% endif %}</span>{% endif %}
                     </div>
                     {% endif %}
@@ -148,8 +148,37 @@
                     </div>
                     {% endif %}
 
-                    <!-- Appointment confirm/change buttons -->
-                    {% if req.appointment_date and not req.appointment_confirmed %}
+                    <!-- Appointment section -->
+                    {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date %}
+                    <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-top:8px;">
+                        <div style="font-weight:600; margin-bottom:8px;">
+                            {% trans "Rendez-vous proposé" %}: {{ req.appointment_date|date:"d/m/Y" }}
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <!-- Confirm -->
+                            <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
+                            </form>
+                            <!-- Suggest alternative -->
+                            <form method="post" action="{% url 'dashboard:requester_alt_date' req.pk %}" style="display:inline;" x-data="{ showAlt: false }">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
+                                <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                    <div>
+                                        <label class="text-sm">{% trans "Date souhaitée" %}</label>
+                                        <input type="date" name="alt_date" class="form-control" required style="font-size:0.85rem;">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm">{% trans "Message" %}</label>
+                                        <input type="text" name="alt_note" class="form-control" placeholder="{% trans 'Raison du changement...' %}" style="font-size:0.85rem; width:200px;">
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% elif req.appointment_date and not req.appointment_confirmed %}
                     <div class="data-card-row mt-1" style="gap: 0.5rem;">
                         <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
                             {% csrf_token %}
