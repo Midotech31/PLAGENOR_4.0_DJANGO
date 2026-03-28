@@ -66,6 +66,46 @@ def index(request):
 
 
 @client_required
+def request_detail(request, pk):
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    from core.registry import get_service_def
+    yaml_def = get_service_def(req.service.code) if req.service else None
+
+    # Build parameter labels from YAML for better display
+    param_labels = {}
+    if yaml_def:
+        for p in yaml_def.get('parameters', []):
+            param_labels[p['name']] = p.get('label', p['name'])
+
+    # Build display-ready parameters list: [(label, value), ...]
+    params_display = []
+    if req.service_params:
+        for key, value in req.service_params.items():
+            label = param_labels.get(key, key.replace('_', ' ').title())
+            params_display.append((label, value))
+
+    # Build sample table column labels
+    sample_col_labels = {}
+    if yaml_def:
+        st = yaml_def.get('sample_table', {})
+        for col in st.get('columns', []):
+            sample_col_labels[col['name']] = col.get('label', col['name'])
+
+    # Build display-ready sample headers
+    sample_headers = []
+    if req.sample_table and len(req.sample_table) > 0:
+        for key in req.sample_table[0].keys():
+            sample_headers.append(sample_col_labels.get(key, key.replace('_', ' ').title()))
+
+    context = {
+        'req': req,
+        'params_display': params_display,
+        'sample_headers': sample_headers,
+    }
+    return render(request, 'dashboard/client/request_detail.html', context)
+
+
+@client_required
 def create_request(request):
     if request.method != 'POST':
         return HttpResponseForbidden()

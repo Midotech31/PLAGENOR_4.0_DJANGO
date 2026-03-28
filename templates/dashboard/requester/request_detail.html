@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1 style="margin-bottom:4px;">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</h1>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            {% if req.urgency != 'Normal' %}
+            <span class="badge-status" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">{{ req.get_urgency_display }}</span>
+            {% endif %}
+        </div>
+        <p class="text-sm text-muted" style="margin-top:6px;">
+            {% trans "Créée le" %} {{ req.created_at|date:"d/m/Y H:i" }}
+            {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
+        </p>
+    </div>
+    <a href="{% url 'dashboard:requester' %}" class="btn btn-outline">
+        &larr; {% trans "Retour au tableau de bord" %}
+    </a>
+</div>
+
+<div class="grid-2" style="gap:24px; margin-top:24px;">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- Service Details -->
+        {% if req.service %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails du service" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Code" %}</span><strong>{{ req.service.code }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom" %}</span><strong>{{ req.service.name }}</strong></div>
+                {% if req.service.description %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Description" %}</span><strong>{{ req.service.description|truncatechars:200 }}</strong></div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Request Details -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails de la demande" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Titre" %}</span><strong>{{ req.title }}</strong></div>
+                {% if req.description %}
+                <div style="margin-top:12px;">
+                    <span class="text-muted text-sm">{% trans "Description" %}</span>
+                    <div style="margin-top:4px; padding:12px; background:var(--slate-50, #f8fafc); border-radius:8px;">{{ req.description|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+                <div class="data-card-row" style="margin-top:8px;"><span class="text-muted">{% trans "Urgence" %}</span><strong>{{ req.get_urgency_display }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Service Parameters -->
+        {% if params_display %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Paramètres du service" %}</h3></div>
+            <div class="card-body">
+                {% for label, value in params_display %}
+                <div class="data-card-row">
+                    <span class="text-muted">{{ label }}</span>
+                    <strong>{{ value }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sample Table -->
+        {% if req.sample_table %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Tableau des échantillons" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        {% if sample_headers %}
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                {% for header in sample_headers %}
+                                <th>{{ header }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        {% endif %}
+                        <tbody>
+                            {% for row in req.sample_table %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                {% for key, val in row.items %}
+                                <td>{{ val|default:"—" }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+        <!-- Financial -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
+            <div class="card-body">
+                {% if req.budget_amount %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
+                {% endif %}
+                {% if req.declared_ibtikar_balance %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
+                {% endif %}
+                {% if not req.budget_amount and not req.declared_ibtikar_balance %}
+                <div class="text-muted">{% trans "Aucune information financière." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Status Info (no analyst identity — anonymity) -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Suivi" %}</h3></div>
+            <div class="card-body">
+                {% if req.assigned_to %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Analyste assigné" %}</span><strong>{% trans "Oui" %}</strong></div>
+                {% if req.assignment_accepted %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Tâche acceptée" %}</span><strong style="color:#059669;">{% trans "Oui" %}</strong></div>
+                {% endif %}
+                {% if req.appointment_date %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Date de RDV" %}</span><strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></div>
+                {% endif %}
+                <div class="data-card-row"><span class="text-muted">{% trans "RDV confirmé" %}</span><strong>{% if req.appointment_confirmed %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</strong></div>
+                {% else %}
+                <div class="text-muted">{% trans "En attente d'assignation." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pipeline visualization -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Pipeline" %}</h3></div>
+            <div class="card-body">
+                <div class="pipeline">
+                    {% with s=req.status %}
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
+                    </div>
+                    <div class="pipeline-line"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
+                    </div>
+                    <div class="pipeline-line"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
+                    </div>
+                    <div class="pipeline-line"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
+                    </div>
+                    <div class="pipeline-line"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
+                <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -71,7 +71,7 @@
                     </div>
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
                     </div>
-                    <button type="submit" id="btn-submit-request" class="btn btn-primary">{% trans "Soumettre la demande" %}</button>
+                    <button type="button" id="btn-submit-request" class="btn btn-primary" onclick="showFormPreview(this.closest('form'))">{% trans "Vérifier et soumettre" %}</button>
                 </form>
                 <script>
                 (function() {
@@ -133,6 +133,9 @@
                     <div class="data-card-row text-sm text-muted">
                         <span>{{ req.service.name|default:"—" }} &middot; {{ req.get_urgency_display }}</span>
                         <span>{{ req.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="data-card-row mt-1">
+                        <a href="{% url 'dashboard:requester_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
                     </div>
                     {% if req.assigned_to %}
                     <div class="data-card-row text-sm text-muted">

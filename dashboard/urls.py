@@ -56,6 +56,7 @@ urlpatterns = [
 
     # Requester (IBTIKAR)
     path('requester/', requester.index, name='requester'),
+    path('requester/request/<uuid:pk>/', requester.request_detail, name='requester_request_detail'),
     path('requester/create/', requester.create_request, name='requester_create'),
     path('requester/confirm/<uuid:pk>/', requester.confirm_receipt, name='requester_confirm'),
     path('requester/rate/<uuid:pk>/', requester.rate_service, name='requester_rate'),
@@ -64,6 +65,7 @@ urlpatterns = [
 
     # Client (GENOCLAB)
     path('client/', client.index, name='client'),
+    path('client/request/<uuid:pk>/', client.request_detail, name='client_request_detail'),
     path('client/create/', client.create_request, name='client_create'),
     path('client/quote/<uuid:pk>/accept/', client.accept_quote, name='client_accept_quote'),
     path('client/quote/<uuid:pk>/reject/', client.reject_quote, name='client_reject_quote'),

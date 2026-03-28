@@ -1,4 +1,5 @@
 """API endpoint that returns HTML form fragment for a service's YAML-defined parameters."""
+import json
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from core.registry import get_service_def
@@ -24,10 +25,13 @@ def service_form_fragment(request, service_code):
     except Exception:
         pass
 
+    pricing_json = json.dumps(pricing) if pricing else '{}'
+
     html = render_to_string('includes/service_form_fields.html', {
         'parameters': parameters,
         'sample_table': sample_table,
         'pricing': pricing,
+        'pricing_json': pricing_json,
         'service_code': service_code,
         'db_fields': db_fields,
     })
