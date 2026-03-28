@@ -1,5 +1,6 @@
 import uuid as uuid_lib
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from datetime import datetime
 
@@ -22,6 +23,7 @@ def services(request):
 
 def track(request):
     tracked_request = None
+    history = []
     q = request.GET.get('q', '').strip()
     if q:
         tracked_request = Request.objects.filter(display_id__iexact=q).first()
@@ -31,11 +33,29 @@ def track(request):
                 tracked_request = Request.objects.filter(guest_token=token).first()
             except (ValueError, AttributeError):
                 pass
-    return render(request, 'pages/track.html', {'tracked_request': tracked_request})
+        if tracked_request:
+            history = tracked_request.history.select_related('actor').order_by('created_at')
+    return render(request, 'pages/track.html', {
+        'tracked_request': tracked_request,
+        'history': history,
+    })
 
 
 def contact(request):
     return render(request, 'pages/contact.html')
+
+
+def service_landing(request, service_code):
+    """Landing page when a visitor clicks a service card."""
+    service = get_object_or_404(Service, code=service_code, active=True)
+    if request.user.is_authenticated:
+        if request.user.role == 'REQUESTER':
+            return redirect(f"{reverse('dashboard:requester')}?service={service.pk}")
+        elif request.user.role == 'CLIENT':
+            return redirect(f"{reverse('dashboard:client')}?service={service.pk}")
+        else:
+            return redirect('dashboard:router')
+    return render(request, 'pages/service_landing.html', {'service': service})
 
 
 def guest_submit(request):

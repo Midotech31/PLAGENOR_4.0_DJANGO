@@ -494,6 +494,36 @@ def reset_revenue(request):
     return redirect('dashboard:superadmin')
 
 
+# --- Email Export for Newsletter ---
+@superadmin_required
+def export_emails(request):
+    """Export all unique emails as CSV for newsletter."""
+    import csv
+    from django.http import HttpResponse
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="plagenor_contacts.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Nom', 'Email', 'Rôle', 'Source'])
+
+    # Registered users with emails
+    for u in User.objects.filter(is_active=True).exclude(email='').exclude(email__isnull=True):
+        writer.writerow([u.get_full_name(), u.email, u.get_role_display(), 'Compte enregistré'])
+
+    # Guest emails (deduplicated)
+    seen_emails = set(User.objects.values_list('email', flat=True))
+    guest_emails = Request.objects.filter(
+        submitted_as_guest=True
+    ).exclude(guest_email='').exclude(guest_email__isnull=True).values_list('guest_name', 'guest_email').distinct()
+    for name, email in guest_emails:
+        if email not in seen_emails:
+            writer.writerow([name, email, 'Invité', 'Soumission invité'])
+            seen_emails.add(email)
+
+    return response
+
+
 # --- Task 14: Restore from Backup ---
 @superadmin_required
 def restore_db(request):

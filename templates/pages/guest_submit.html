@@ -122,4 +122,22 @@
     });
 })();
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var preService = urlParams.get('service');
+    if (preService) {
+        var select = document.querySelector('[name="service_id"]');
+        if (select) {
+            for (var i = 0; i < select.options.length; i++) {
+                if (select.options[i].getAttribute('data-code') === preService) {
+                    select.value = select.options[i].value;
+                    select.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+        }
+    }
+});
+</script>
 {% endblock %}

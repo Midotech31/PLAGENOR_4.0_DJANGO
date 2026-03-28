@@ -8,4 +8,5 @@ urlpatterns = [
     path('contact/', views_public.contact, name='contact'),
     path('track/', views_public.track, name='track'),
     path('guest-submit/', views_public.guest_submit, name='guest_submit'),
+    path('service/<str:service_code>/', views_public.service_landing, name='service_landing'),
 ]

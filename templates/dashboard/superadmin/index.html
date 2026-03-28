@@ -893,6 +893,13 @@
     <!-- System Tab -->
     <div x-show="tab === 'system'">
         <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Contacts & Newsletter" %}</h3></div>
+            <div class="card-body">
+                <a href="{% url 'dashboard:superadmin_export_emails' %}" class="btn btn-primary">{% trans "Exporter tous les emails (CSV)" %}</a>
+                <p class="text-muted text-sm" style="margin-top:8px;">{% trans "Exporte tous les emails des utilisateurs enregistrés et des invités pour envoi de newsletters." %}</p>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Sauvegarde" %}</h3></div>
             <div class="card-body">
                 <form method="post" action="{% url 'dashboard:superadmin_backup' %}" style="display:inline;">

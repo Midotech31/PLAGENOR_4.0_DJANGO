@@ -19,6 +19,12 @@
 
         <form method="post">
             {% csrf_token %}
+            {% if request.GET.service %}
+            <input type="hidden" name="next_service" value="{{ request.GET.service }}">
+            <div class="alert alert-info" style="margin-bottom:16px;">
+                {% trans "Après inscription, vous serez redirigé vers le formulaire de soumission pour le service" %}: <strong>{{ request.GET.service }}</strong>
+            </div>
+            {% endif %}
 
             <!-- Role Selection -->
             <div class="role-selector">

@@ -44,6 +44,7 @@
     <p class="section-subtitle">{% trans "Analyses scientifiques et techniques proposées par le laboratoire ESSBO" %}</p>
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
+        <a href="{% url 'service_landing' service.code %}" style="text-decoration:none; color:inherit;">
         <div class="service-card">
             {% if service.image %}
             <div class="service-icon">
@@ -58,6 +59,7 @@
             <h4>{{ service.name }}</h4>
             <p>{{ service.description|truncatewords:20 }}</p>
         </div>
+        </a>
         {% endfor %}
     </div>
 </section>

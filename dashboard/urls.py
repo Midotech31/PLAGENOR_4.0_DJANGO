@@ -27,6 +27,7 @@ urlpatterns = [
     path('home/template-upload/', superadmin.upload_template, name='superadmin_template_upload'),
     path('home/reset-revenue/', superadmin.reset_revenue, name='superadmin_reset_revenue'),
     path('home/restore/', superadmin.restore_db, name='superadmin_restore'),
+    path('home/export-emails/', superadmin.export_emails, name='superadmin_export_emails'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),

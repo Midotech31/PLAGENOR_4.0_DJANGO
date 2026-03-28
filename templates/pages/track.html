@@ -31,6 +31,32 @@
                     {{ tracked_request.created_at|date:"d/m/Y" }}
                 </div>
             </div>
+            {% if tracked_request.service %}
+            <div style="margin-top:8px;"><span class="text-muted">{% trans "Service" %}:</span> {{ tracked_request.service.code }} — {{ tracked_request.service.name }}</div>
+            {% endif %}
+            {% if tracked_request.appointment_date %}
+            <div><span class="text-muted">{% trans "Rendez-vous" %}:</span> {{ tracked_request.appointment_date|date:"d/m/Y" }}</div>
+            {% endif %}
+            {% if tracked_request.assigned_to %}
+            <div><span class="text-muted">{% trans "Analyste" %}:</span> {{ tracked_request.assigned_to.user.first_name }}</div>
+            {% endif %}
+            {% if history %}
+            <div style="margin-top:16px;">
+                <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:8px;">{% trans "Historique" %}</h4>
+                <div style="border-left:2px solid #e2e8f0; padding-left:16px;">
+                    {% for h in history %}
+                    <div style="margin-bottom:12px; position:relative;">
+                        <div style="position:absolute; left:-21px; top:4px; width:8px; height:8px; border-radius:50%; background:var(--indigo-600);"></div>
+                        <div style="font-size:0.8rem; color:var(--slate-500);">{{ h.created_at|date:"d/m/Y H:i" }}</div>
+                        <div style="font-size:0.85rem;">
+                            <span class="badge-status" style="font-size:0.7rem;">{{ h.to_status }}</span>
+                            {% if h.notes %}<span class="text-muted"> — {{ h.notes }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             {% if tracked_request.submitted_as_guest and tracked_request.guest_email %}
             <div style="margin-top:12px;">
                 <a href="{% url 'accounts:convert_guest' %}?email={{ tracked_request.guest_email|urlencode }}" class="btn btn-sm btn-primary">{% trans "Créer un compte pour gérer vos demandes" %}</a>

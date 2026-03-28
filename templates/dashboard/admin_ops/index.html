@@ -167,6 +167,17 @@
                         {% else %}
                         <span class="text-muted text-sm">{% trans "Aucune action disponible" %}</span>
                         {% endif %}
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% elif req.guest_email %}
+                        <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" style="margin-left:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
                     </div>
                     <!-- Appointment modification (if APPOINTMENT_PROPOSED) -->
                     {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date and not req.appointment_confirmed %}
@@ -248,6 +259,7 @@
                                 <th>{% trans "Demandeur" %}</th>
                                 <th>{% trans "Assigné" %}</th>
                                 <th>{% trans "Date" %}</th>
+                                <th>{% trans "Contact" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -260,9 +272,20 @@
                             <td>{{ req.requester.get_full_name|default:"—" }}</td>
                             <td>{{ req.assigned_to.user.get_full_name|default:"—" }}</td>
                             <td>{{ req.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if req.requester and req.requester.email %}
+                                <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" title="{% trans 'Contacter par email' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </a>
+                                {% elif req.guest_email %}
+                                <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" title="{% trans 'Contacter par email' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </a>
+                                {% else %}—{% endif %}
+                            </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="7" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
