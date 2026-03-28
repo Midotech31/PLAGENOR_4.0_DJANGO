@@ -31,6 +31,7 @@ urlpatterns = [
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),
+    path('ops/request/<uuid:pk>/', admin_ops.request_detail, name='admin_request_detail'),
     path('ops/transition/<uuid:pk>/', admin_ops.transition_request, name='admin_transition'),
     path('ops/assign/<uuid:pk>/', admin_ops.assign_request, name='admin_assign'),
     path('ops/points/<int:pk>/', admin_ops.award_points, name='admin_award_points'),

@@ -119,12 +119,41 @@
 
                         <!-- Suggest appointment date -->
                         {% if req.status == 'ASSIGNED' or req.status == 'PENDING_ACCEPTANCE' or req.status == 'APPOINTMENT_SCHEDULED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_suggest_appointment' req.pk %}" style="display:inline;" x-data="{show: false}">
+                        <form method="post" action="{% url 'dashboard:analyst_suggest_appointment' req.pk %}" style="margin-top:12px; width:100%;">
                             {% csrf_token %}
-                            <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Proposer RDV" %}</button>
-                            <div x-show="show" style="display:inline;">
-                                <input type="date" name="appointment_date" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
-                                <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
+                                <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    {% trans "Proposer un rendez-vous" %}
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                    <div>
+                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Date proposée" %}</label>
+                                        <input type="date" name="appointment_date" class="form-control"
+                                               min="{{ now|date:'Y-m-d' }}"
+                                               required
+                                               style="font-size:0.85rem;">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Heure" %}</label>
+                                        <select name="appointment_time" class="form-control" style="font-size:0.85rem;">
+                                            <option value="08:00">08:00</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00" selected>14:00</option>
+                                            <option value="15:00">15:00</option>
+                                            <option value="16:00">16:00</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Message au demandeur" %}</label>
+                                        <input type="text" name="appointment_note" class="form-control" placeholder="{% trans 'Ex: Apportez vos échantillons frais' %}" style="font-size:0.85rem; width:250px;">
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer ce RDV" %}</button>
+                                </div>
+                                <p class="text-muted text-xs" style="margin-top:6px; font-size:0.7rem;">{% trans "Le demandeur recevra une notification pour confirmer ou demander un changement de date." %}</p>
                             </div>
                         </form>
                         {% endif %}

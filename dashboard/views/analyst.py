@@ -153,19 +153,28 @@ def suggest_appointment(request, pk):
     if req.assigned_to != profile:
         return HttpResponseForbidden()
     date_str = request.POST.get('appointment_date', '')
+    time_str = request.POST.get('appointment_time', '')
+    appointment_note = request.POST.get('appointment_note', '')
     if date_str:
         from datetime import datetime
         try:
             req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             req.appointment_proposed_by = request.user
             req.save(update_fields=['appointment_date', 'appointment_proposed_by'])
+            # Build transition notes with time and message
+            notes_parts = [f'RDV proposé: {req.appointment_date}']
+            if time_str:
+                notes_parts.append(f'Heure: {time_str}')
+            if appointment_note:
+                notes_parts.append(f'Note: {appointment_note}')
+            transition_notes = ' — '.join(notes_parts)
             # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED
             if req.status == 'ASSIGNED':
                 try:
-                    transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=f'RDV proposé: {req.appointment_date}')
+                    transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=transition_notes)
                 except (InvalidTransitionError, AuthorizationError, ValueError):
                     pass
-            messages.success(request, f"Date de RDV proposée: {req.appointment_date}")
+            messages.success(request, f"Date de RDV proposée: {req.appointment_date}" + (f" à {time_str}" if time_str else ""))
         except ValueError:
             messages.error(request, "Date invalide.")
     return redirect_back(request, 'dashboard:analyst')

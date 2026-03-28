@@ -7,9 +7,10 @@ from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
-from core.models import Request, Invoice
+from core.models import Request, RequestHistory, RequestComment, Invoice
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
+from core.registry import get_service_def
 from core.exceptions import InvalidTransitionError, AuthorizationError
 
 
@@ -130,6 +131,36 @@ def index(request):
         'now': timezone.now(),
     }
     return render(request, 'dashboard/admin_ops/index.html', context)
+
+
+@admin_required
+def request_detail(request, pk):
+    """Full request preview — shows all submitted data for review."""
+    from core.models import Message
+
+    req = get_object_or_404(Request, pk=pk)
+    history = req.history.select_related('actor').order_by('created_at')
+    comments = req.comments.select_related('author').order_by('created_at')
+    messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
+    allowed = get_allowed_transitions(req)
+
+    # Load YAML service definition for parameter labels
+    yaml_def = None
+    if req.service:
+        yaml_def = get_service_def(req.service.code)
+
+    context = {
+        'req': req,
+        'history': history,
+        'comments': comments,
+        'messages_list': messages_list,
+        'allowed_transitions': allowed,
+        'yaml_def': yaml_def,
+        'available_members': MemberProfile.objects.filter(available=True).select_related('user'),
+        'status_choices': Request.STATUS_CHOICES,
+        'now': timezone.now(),
+    }
+    return render(request, 'dashboard/admin_ops/request_detail.html', context)
 
 
 @admin_required

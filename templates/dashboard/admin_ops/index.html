@@ -42,6 +42,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -188,6 +189,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -240,7 +242,10 @@
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
-                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
                     </div>
                     <div class="data-card-row text-sm text-muted">
                         <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
@@ -274,6 +279,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -328,6 +334,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -427,6 +434,7 @@
                                 <th>{% trans "Assigné" %}</th>
                                 <th>{% trans "Date" %}</th>
                                 <th>{% trans "Contact" %}</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -450,9 +458,10 @@
                                 </a>
                                 {% else %}—{% endif %}
                             </td>
+                            <td><a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a></td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="8" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -518,6 +527,7 @@
                     <div class="data-card-row">
                         <span><strong>{{ req.display_id }}</strong> — {{ req.title|truncatechars:40 }}</span>
                         <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>

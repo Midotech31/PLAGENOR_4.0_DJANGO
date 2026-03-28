@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1 style="margin-bottom:4px;">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</h1>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+            {% if req.urgency != 'Normal' %}
+            <span class="badge-status" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">{{ req.get_urgency_display }}</span>
+            {% endif %}
+        </div>
+        <p class="text-sm text-muted" style="margin-top:6px;">
+            {% trans "Créée le" %} {{ req.created_at|date:"d/m/Y H:i" }}
+            {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
+        </p>
+    </div>
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
+        &larr; {% trans "Retour aux opérations" %}
+    </a>
+</div>
+
+<div class="grid-2" style="gap:24px; margin-top:24px;">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- Requester Information -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Informations du demandeur" %}</h3></div>
+            <div class="card-body">
+                {% if req.submitted_as_guest %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom" %}</span><strong>{{ req.guest_name|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Email" %}</span><strong>{{ req.guest_email|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Téléphone" %}</span><strong>{{ req.guest_phone|default:"—" }}</strong></div>
+                {% elif req.requester %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom complet" %}</span><strong>{{ req.requester.get_full_name }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Email" %}</span><strong>{{ req.requester.email|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Téléphone" %}</span><strong>{{ req.requester.phone|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Organisation" %}</span><strong>{{ req.requester.organization|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Laboratoire" %}</span><strong>{{ req.requester.laboratory|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Niveau" %}</span><strong>{{ req.requester.student_level|default:"—" }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Directeur de recherche" %}</span><strong>{{ req.requester.supervisor|default:"—" }}</strong></div>
+                {% if req.channel == 'IBTIKAR' and req.requester.ibtikar_id %}
+                <div class="data-card-row"><span class="text-muted">{% trans "ID IBTIKAR" %}</span><strong>{{ req.requester.ibtikar_id }}</strong></div>
+                {% endif %}
+                {% if req.declared_ibtikar_balance %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
+                {% endif %}
+                {% else %}
+                <div class="text-muted">{% trans "Aucun demandeur associé." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Service Details -->
+        {% if req.service %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails du service" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Code" %}</span><strong>{{ req.service.code }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom" %}</span><strong>{{ req.service.name }}</strong></div>
+                {% if req.service.description %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Description" %}</span><strong>{{ req.service.description|truncatechars:200 }}</strong></div>
+                {% endif %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Disponibilité" %}</span><strong>{{ req.service.get_channel_availability_display }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Délai estimé" %}</span><strong>{{ req.service.turnaround_days }} {% trans "jours" %}</strong></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Request Details -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails de la demande" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Titre" %}</span><strong>{{ req.title }}</strong></div>
+                {% if req.description %}
+                <div style="margin-top:12px;">
+                    <span class="text-muted text-sm">{% trans "Description" %}</span>
+                    <div style="margin-top:4px; padding:12px; background:var(--slate-50); border-radius:8px;">{{ req.description|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+                <div class="data-card-row" style="margin-top:8px;"><span class="text-muted">{% trans "Urgence" %}</span><strong>{{ req.get_urgency_display }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Service Parameters -->
+        {% if req.service_params %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Paramètres du service" %}</h3></div>
+            <div class="card-body">
+                {% for key, value in req.service_params.items %}
+                <div class="data-card-row">
+                    <span class="text-muted">{{ key|cut:"param_"|title }}</span>
+                    <strong>{{ value }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sample Table -->
+        {% if req.sample_table %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Tableau des échantillons" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        {% if req.sample_table.0 %}
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                {% for key, val in req.sample_table.0.items %}
+                                <th>{{ key|title }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        {% endif %}
+                        <tbody>
+                            {% for row in req.sample_table %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                {% for key, val in row.items %}
+                                <td>{{ val|default:"—" }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+        <!-- Financial -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
+            <div class="card-body">
+                {% if req.budget_amount %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
+                {% endif %}
+                {% if req.quote_amount %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Montant du devis" %}</span><strong>{{ req.quote_amount }} DA</strong></div>
+                {% endif %}
+                {% if req.admin_validated_price %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Prix validé par admin" %}</span><strong style="color:#059669;">{{ req.admin_validated_price }} DA</strong></div>
+                {% endif %}
+                {% if req.declared_ibtikar_balance %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
+                {% endif %}
+                {% if not req.budget_amount and not req.quote_amount and not req.admin_validated_price %}
+                <div class="text-muted">{% trans "Aucune information financière." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assignment -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Assignation" %}</h3></div>
+            <div class="card-body">
+                {% if req.assigned_to %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Analyste assigné" %}</span><strong>{{ req.assigned_to.user.get_full_name }}</strong></div>
+                {% if req.assignment_accepted %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Acceptée" %}</span><strong style="color:#059669;">{% trans "Oui" %} — {{ req.assignment_accepted_at|date:"d/m/Y H:i" }}</strong></div>
+                {% endif %}
+                {% if req.appointment_date %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Date de RDV" %}</span><strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></div>
+                {% endif %}
+                <div class="data-card-row"><span class="text-muted">{% trans "RDV confirmé" %}</span><strong>{% if req.appointment_confirmed %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</strong></div>
+                {% else %}
+                <div class="text-muted">{% trans "Non encore assigné." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
+                {% if req.channel == 'IBTIKAR' %}
+                <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    {% trans "Formulaire IBTIKAR" %}
+                </a>
+                {% endif %}
+                <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    {% trans "Note de Plateforme" %}
+                </a>
+                <a href="{% url 'documents:reception_form' req.pk %}" class="btn btn-sm btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    {% trans "Fiche de réception" %}
+                </a>
+                {% if req.report_file %}
+                <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Rapport d'analyse" %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages_list %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Messages" %} ({{ messages_list.count }})</h3></div>
+            <div class="card-body">
+                {% for msg in messages_list %}
+                <div style="padding:8px 12px; background:var(--slate-50); border-radius:6px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong class="text-sm">{{ msg.from_user.get_full_name }}</strong>
+                        <span class="text-xs text-muted">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="text-sm" style="margin-top:4px;">{{ msg.text }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Comments -->
+        {% if comments %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Commentaires" %} ({{ comments.count }})</h3></div>
+            <div class="card-body">
+                {% for c in comments %}
+                <div style="padding:8px 12px; background:var(--slate-50); border-radius:6px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong class="text-sm">{{ c.author.get_full_name|default:"Système" }}</strong>
+                        <span class="text-xs text-muted">{{ c.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="text-sm" style="margin-top:4px;">{{ c.text }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Workflow Timeline -->
+<div class="card mb-4" style="margin-top:24px;">
+    <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
+    <div class="card-body">
+        {% for h in history %}
+        <div style="display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--slate-100);">
+            <div style="min-width:120px;">
+                <span class="text-xs text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div style="flex:1;">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    {% if h.from_status %}
+                    <span class="badge-status {{ h.from_status|lower }}" style="font-size:0.7rem;">{{ h.from_status }}</span>
+                    <span>&rarr;</span>
+                    {% endif %}
+                    <span class="badge-status {{ h.to_status|lower }}" style="font-size:0.7rem;">{{ h.to_status }}</span>
+                    {% if h.forced %}<span class="badge-status" style="background:#fef2f2; color:#dc2626; font-size:0.65rem;">FORCÉ</span>{% endif %}
+                </div>
+                {% if h.notes %}
+                <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
+                {% endif %}
+            </div>
+            <div style="min-width:140px; text-align:right;">
+                <span class="text-sm">{{ h.actor.get_full_name|default:"Système" }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-muted">{% trans "Aucun historique." %}</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Actions" %}</h3></div>
+    <div class="card-body">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start;">
+
+            {# Transition buttons based on allowed transitions #}
+            {% for t in allowed_transitions %}
+            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="to_status" value="{{ t }}">
+                {% if t == 'REJECTED' %}
+                <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                {% else %}
+                <button type="submit" class="btn btn-sm btn-primary">{{ t }}</button>
+                {% endif %}
+            </form>
+            {% endfor %}
+
+            {# Assignment form #}
+            {% if req.status == 'PLATFORM_NOTE_GENERATED' or req.status == 'PAYMENT_CONFIRMED' %}
+            <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                {% csrf_token %}
+                <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>
+                    <option value="">— {% trans "Assigner à" %} —</option>
+                    {% for m in available_members %}
+                    <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+            </form>
+            {% endif %}
+
+            {# Cost adjustment for VALIDATION_FINANCE #}
+            {% if req.status == 'VALIDATION_FINANCE' %}
+            <form method="post" action="{% url 'dashboard:admin_adjust_cost' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                {% csrf_token %}
+                <input type="number" name="admin_price" step="0.01" value="{{ req.admin_validated_price|default:req.budget_amount|default:req.quote_amount }}" class="form-control" style="width:120px; font-size:0.85rem;" placeholder="{% trans 'Coût DA' %}">
+                <input type="text" name="cost_justification" class="form-control" style="width:160px; font-size:0.85rem;" placeholder="{% trans 'Justification' %}">
+                <button type="submit" class="btn btn-sm btn-outline">{% trans "Ajuster coût" %}</button>
+            </form>
+            {% endif %}
+
+            {# Modify appointment #}
+            {% if req.status == 'APPOINTMENT_PROPOSED' and not req.appointment_confirmed %}
+            <form method="post" action="{% url 'dashboard:admin_modify_appointment' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                {% csrf_token %}
+                <input type="date" name="appointment_date" class="form-control" style="width:auto; font-size:0.85rem;" value="{{ req.appointment_date|date:'Y-m-d' }}">
+                <button type="submit" class="btn btn-sm btn-outline">{% trans "Modifier RDV" %}</button>
+            </form>
+            {% endif %}
+
+            {# Contact email #}
+            {% if req.requester and req.requester.email %}
+            <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                {% trans "Contacter" %}
+            </a>
+            {% elif req.guest_email %}
+            <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                {% trans "Contacter" %}
+            </a>
+            {% endif %}
+
+            {# Platform Note download #}
+            {% if req.status == 'PLATFORM_NOTE_GENERATED' or req.status == 'ASSIGNED' or req.status == 'APPOINTMENT_PROPOSED' or req.status == 'APPOINTMENT_CONFIRMED' %}
+            <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger Note" %}
+            </a>
+            {% endif %}
+
+            {% if not allowed_transitions and req.status != 'PLATFORM_NOTE_GENERATED' and req.status != 'PAYMENT_CONFIRMED' and req.status != 'VALIDATION_FINANCE' and req.status != 'APPOINTMENT_PROPOSED' %}
+            <span class="text-muted text-sm">{% trans "Aucune action disponible pour ce statut." %}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
