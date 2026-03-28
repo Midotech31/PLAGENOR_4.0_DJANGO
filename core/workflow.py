@@ -116,97 +116,43 @@ def transition(request_obj, to_status, actor, notes='', force=False):
 
 
 def _create_notifications(request_obj, to_status):
-    """Create in-app notifications for key workflow transitions."""
+    """Create in-app notifications for ALL workflow transitions."""
     try:
         from notifications.models import Notification
+        from accounts.models import User
 
-        if to_status == 'ASSIGNED' and request_obj.assigned_to:
+        # Notify the assigned member on relevant transitions
+        if request_obj.assigned_to and to_status in (
+            'ASSIGNED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
+        ):
             Notification.objects.create(
                 user=request_obj.assigned_to.user,
-                message=f"Nouvelle assignation: {request_obj.display_id} - {request_obj.title}",
+                message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
                 request=request_obj,
                 notification_type='WORKFLOW',
             )
-        elif to_status == 'APPOINTMENT_PROPOSED' and request_obj.requester:
+
+        # Notify the requester/client on relevant transitions
+        if request_obj.requester and to_status in (
+            'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
+            'ASSIGNED', 'APPOINTMENT_PROPOSED', 'REPORT_VALIDATED', 'COMPLETED', 'REJECTED',
+        ):
             Notification.objects.create(
                 user=request_obj.requester,
-                message=f"RDV proposé pour {request_obj.display_id}: {request_obj.appointment_date}",
+                message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
                 request=request_obj,
                 notification_type='WORKFLOW',
             )
-        elif to_status == 'APPOINTMENT_CONFIRMED' and request_obj.assigned_to:
-            Notification.objects.create(
-                user=request_obj.assigned_to.user,
-                message=f"RDV confirmé pour {request_obj.display_id}",
-                request=request_obj,
-                notification_type='WORKFLOW',
-            )
-        elif to_status in ('REPORT_VALIDATED', 'COMPLETED') and request_obj.requester:
-            msg = 'Rapport validé' if to_status == 'REPORT_VALIDATED' else 'Demande complétée'
-            Notification.objects.create(
-                user=request_obj.requester,
-                message=f"{msg}: {request_obj.display_id}",
-                request=request_obj,
-                notification_type='WORKFLOW',
-            )
-    except Exception:
-        pass  # Never break workflow due to notification failure
 
-
-def _auto_generate_documents(request_obj, to_status):
-    """Automatically generate documents when reaching specific states."""
-    try:
-        if to_status == 'PLATFORM_NOTE_GENERATED':
-            from documents.generators import generate_platform_note
-            filepath = generate_platform_note(request_obj)
-            if filepath:
-                import logging
-                logging.getLogger('plagenor.workflow').info(
-                    "Platform note generated for %s: %s", request_obj.display_id, filepath
+        # Always notify admins for important transitions
+        if to_status in ('SUBMITTED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED'):
+            admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    message=f"Nouvelle action: {request_obj.display_id} → {request_obj.get_status_display()}",
+                    request=request_obj,
+                    notification_type='WORKFLOW',
                 )
-    except Exception as e:
-        import logging
-        logging.getLogger('plagenor.workflow').error(
-            "Document generation failed for %s: %s", request_obj.display_id, e
-        )
-
-
-def _send_transition_emails(request_obj, old_status, to_status):
-    """Fire email notifications for key workflow transitions."""
-    try:
-        from notifications.emails import (
-            notify_status_change,
-            notify_assignment,
-            notify_appointment,
-            notify_report_delivery,
-        )
-
-        # Status change notification to requester
-        notify_status_change(request_obj, old_status, to_status)
-
-        # Assignment notification to member
-        if to_status == 'ASSIGNED' and request_obj.assigned_to:
-            notify_assignment(request_obj, request_obj.assigned_to)
-
-        # Appointment notification
-        if to_status == 'APPOINTMENT_PROPOSED' and request_obj.appointment_date:
-            notify_appointment(request_obj)
-
-        # Report delivery
-        if to_status in ('REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT', 'COMPLETED'):
-            if request_obj.report_token:
-                notify_report_delivery(request_obj)
     except Exception:
-        pass  # Never break workflow due to email failure
-
-
-def force_transition(request_obj, to_status, actor, notes=''):
-    """SUPER_ADMIN only: force a transition bypassing state machine rules."""
-    if getattr(actor, 'role', '') != 'SUPER_ADMIN':
-        raise AuthorizationError("Seul le SUPER_ADMIN peut forcer une transition")
-    return transition(request_obj, to_status, actor, notes=notes, force=True)
-
-
-def get_request_timeline(request_obj):
-    """Get full history timeline for a request."""
-    return request_obj.history.select_related('actor').order_by('created_at')
+        pass
