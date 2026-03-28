@@ -31,13 +31,50 @@ def index(request):
     genoclab_count = Request.objects.filter(channel='GENOCLAB').count()
     completed_count = Request.objects.filter(status='COMPLETED').count()
 
-    # Pending requests needing action
+    # Pending requests needing action (all non-terminal, non-assigned states)
     pending_requests = Request.objects.filter(
         status__in=[
-            'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'PLATFORM_NOTE_GENERATED',
-            'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REQUEST_CREATED', 'QUOTE_DRAFT',
+            'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
+            'PLATFORM_NOTE_GENERATED',
+            'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
+            'COMPLETED',
+            'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
+            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
+            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         ]
-    ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')[:20]
+    ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')[:50]
+
+    # Requests needing validation
+    validation_requests = Request.objects.filter(
+        status__in=[
+            'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
+            'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
+            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED',
+        ]
+    ).select_related('service', 'requester').order_by('-created_at')
+
+    # Requests ready for assignment
+    assignable_requests = Request.objects.filter(
+        status__in=['PLATFORM_NOTE_GENERATED', 'PAYMENT_CONFIRMED']
+    ).select_related('service', 'requester').order_by('-created_at')
+
+    # Requests needing report review
+    review_requests = Request.objects.filter(
+        status__in=['REPORT_UPLOADED', 'ADMIN_REVIEW']
+    ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')
+
+    # In-progress requests (assigned, appointment, analysis phases)
+    in_progress_requests = Request.objects.filter(
+        status__in=[
+            'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+            'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+        ]
+    ).select_related('service', 'requester', 'assigned_to__user').order_by('-updated_at')
+
+    # Requests needing completion/closure actions
+    completion_requests = Request.objects.filter(
+        status__in=['REPORT_VALIDATED', 'COMPLETED']
+    ).select_related('service', 'requester', 'assigned_to__user').order_by('-updated_at')
 
     # All requests with optional filters
     channel_filter = request.GET.get('channel', '')
@@ -74,6 +111,11 @@ def index(request):
         'genoclab_count': genoclab_count,
         'completed_count': completed_count,
         'pending_requests': pending_requests,
+        'validation_requests': validation_requests,
+        'assignable_requests': assignable_requests,
+        'review_requests': review_requests,
+        'in_progress_requests': in_progress_requests,
+        'completion_requests': completion_requests,
         'all_requests': all_requests,
         'available_members': available_members,
         'recommended_members': recommended_members,
@@ -110,14 +152,27 @@ def assign_request(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     member_id = request.POST.get('member_id')
+    if not member_id:
+        messages.error(request, "Veuillez sélectionner un analyste.")
+        return redirect('dashboard:admin_ops')
     member = get_object_or_404(MemberProfile, pk=member_id)
+
+    # Check if request is in a state that allows assignment
+    if req.status not in ('PLATFORM_NOTE_GENERATED', 'PAYMENT_CONFIRMED'):
+        messages.error(
+            request,
+            f"La demande {req.display_id} n'est pas prête pour l'assignation "
+            f"(statut actuel: {req.get_status_display()})."
+        )
+        return redirect('dashboard:admin_ops')
+
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
     try:
         transition(req, 'ASSIGNED', request.user, notes=f"Assigné à {member.user.get_full_name()}")
-    except ValueError:
-        pass
-    messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
+        messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, f"Erreur d'assignation: {e}")
     return redirect('dashboard:admin_ops')
 
 
