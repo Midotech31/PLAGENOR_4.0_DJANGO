@@ -77,10 +77,44 @@
                         </form>
 
                         {% elif req.status == 'VALIDATION_FINANCE' %}
+                        <!-- Cost display + adjustment -->
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:12px;">
+                            <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">{% trans "Coût de la prestation" %}</div>
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Coût estimé" %}:</span>
+                                    <strong>{{ req.budget_amount|default:req.quote_amount|default:0 }} DA</strong>
+                                </div>
+                                {% if req.admin_validated_price %}
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Coût validé" %}:</span>
+                                    <strong style="color:#059669;">{{ req.admin_validated_price }} DA</strong>
+                                </div>
+                                {% endif %}
+                                {% if req.channel == 'IBTIKAR' and req.declared_ibtikar_balance %}
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Solde IBTIKAR déclaré" %}:</span>
+                                    <strong>{{ req.declared_ibtikar_balance }} DA</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <form method="post" action="{% url 'dashboard:admin_adjust_cost' req.pk %}" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                {% csrf_token %}
+                                <div>
+                                    <label class="text-sm" style="font-size:0.75rem;">{% trans "Ajuster le coût (DA)" %}</label>
+                                    <input type="number" name="admin_price" step="0.01" value="{{ req.admin_validated_price|default:req.budget_amount|default:req.quote_amount }}" class="form-control" style="width:140px; font-size:0.85rem;">
+                                </div>
+                                <div>
+                                    <label class="text-sm" style="font-size:0.75rem;">{% trans "Justification" %}</label>
+                                    <input type="text" name="cost_justification" placeholder="{% trans 'Raison du changement...' %}" class="form-control" style="width:200px; font-size:0.85rem;">
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-outline">{% trans "Ajuster" %}</button>
+                            </form>
+                        </div>
                         <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="PLATFORM_NOTE_GENERATED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer Note de Plateforme" %}</button>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider & Générer Note" %}</button>
                         </form>
                         <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
                             {% csrf_token %}

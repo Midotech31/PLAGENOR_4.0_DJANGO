@@ -246,3 +246,44 @@ def report_review(request, pk):
         'req': req,
         'allowed_transitions': allowed,
     })
+
+
+@admin_required
+def adjust_cost(request, pk):
+    """Admin adjusts the validated cost of a request with justification."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    new_price = request.POST.get('admin_price', '')
+    justification = request.POST.get('cost_justification', '')
+    
+    if not new_price:
+        messages.error(request, "Veuillez saisir un montant.")
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    try:
+        price = float(new_price)
+    except ValueError:
+        messages.error(request, "Montant invalide.")
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
+    req.admin_validated_price = price
+    req.save(update_fields=['admin_validated_price'])
+    
+    # Log to audit
+    from core.audit import log_action
+    log_action(
+        action='COST_ADJUSTMENT',
+        entity_type='REQUEST',
+        entity_id=str(req.id),
+        actor=request.user,
+        details={
+            'old_price': str(old_price),
+            'new_price': str(price),
+            'justification': justification,
+        }
+    )
+    
+    messages.success(request, f"Coût ajusté pour {req.display_id}: {price:,.0f} DA. {f'Justification: {justification}' if justification else ''}")
+    return redirect_back(request, 'dashboard:admin_ops')

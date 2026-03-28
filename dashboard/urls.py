@@ -36,6 +36,7 @@ urlpatterns = [
     path('ops/points/<int:pk>/', admin_ops.award_points, name='admin_award_points'),
     path('ops/cheer/<int:pk>/', admin_ops.send_cheer, name='admin_send_cheer'),
     path('ops/report/<uuid:pk>/', admin_ops.report_review, name='admin_report_review'),
+    path('ops/cost/<uuid:pk>/', admin_ops.adjust_cost, name='admin_adjust_cost'),
     path('ops/appointment/<uuid:pk>/', admin_ops.modify_appointment, name='admin_modify_appointment'),
 
     # Analyst
