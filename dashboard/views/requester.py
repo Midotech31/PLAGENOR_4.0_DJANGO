@@ -2,6 +2,7 @@ import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.utils import timezone
 
@@ -75,7 +76,7 @@ def create_request(request):
     declared = float(request.POST.get('declared_balance', 0))
     if declared < 0 or declared > 200000:
         messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
-        return redirect('dashboard:requester')
+        return redirect_back(request, 'dashboard:requester')
     if service.ibtikar_price and float(service.ibtikar_price) > declared:
         messages.warning(request, f"Attention: le coût estimé ({service.ibtikar_price} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
 
@@ -87,7 +88,7 @@ def create_request(request):
             f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
             f"Reste: {budget_check['remaining']:,.0f} DZD."
         )
-        return redirect('dashboard:requester')
+        return redirect_back(request, 'dashboard:requester')
 
     # Collect YAML parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -114,7 +115,7 @@ def create_request(request):
         user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} soumise avec succès.")
-    return redirect('dashboard:requester')
+    return redirect_back(request, 'dashboard:requester')
 
 
 @requester_required
@@ -126,7 +127,7 @@ def confirm_receipt(request, pk):
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
-    return redirect('dashboard:requester')
+    return redirect_back(request, 'dashboard:requester')
 
 
 @requester_required
@@ -144,7 +145,7 @@ def confirm_appointment(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
-    return redirect('dashboard:requester')
+    return redirect_back(request, 'dashboard:requester')
 
 
 @requester_required
@@ -159,4 +160,4 @@ def rate_service(request, pk):
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
-    return redirect('dashboard:requester')
+    return redirect_back(request, 'dashboard:requester')

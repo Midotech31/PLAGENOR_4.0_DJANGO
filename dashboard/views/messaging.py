@@ -1,3 +1,4 @@
+from dashboard.utils import redirect_back
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect

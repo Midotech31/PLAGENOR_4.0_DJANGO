@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
@@ -143,7 +144,7 @@ def transition_request(request, pk):
         messages.success(request, f"Demande {req.display_id} transférée vers {to_status}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect('dashboard:admin_ops')
+    return redirect_back(request, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -154,7 +155,7 @@ def assign_request(request, pk):
     member_id = request.POST.get('member_id')
     if not member_id:
         messages.error(request, "Veuillez sélectionner un analyste.")
-        return redirect('dashboard:admin_ops')
+        return redirect_back(request, 'dashboard:admin_ops')
     member = get_object_or_404(MemberProfile, pk=member_id)
 
     # Check if request is in a state that allows assignment
@@ -164,7 +165,7 @@ def assign_request(request, pk):
             f"La demande {req.display_id} n'est pas prête pour l'assignation "
             f"(statut actuel: {req.get_status_display()})."
         )
-        return redirect('dashboard:admin_ops')
+        return redirect_back(request, 'dashboard:admin_ops')
 
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
@@ -173,7 +174,7 @@ def assign_request(request, pk):
         messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur d'assignation: {e}")
-    return redirect('dashboard:admin_ops')
+    return redirect_back(request, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -189,7 +190,7 @@ def award_points(request, member_pk):
     member.total_points += points
     member.save(update_fields=['total_points'])
     messages.success(request, f"{points} points attribués à {member.user.get_full_name()}.")
-    return redirect('dashboard:admin_ops')
+    return redirect_back(request, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -200,7 +201,7 @@ def send_cheer(request, member_pk):
     message_text = request.POST.get('message', '')
     Cheer.objects.create(member=member, message=message_text, from_user=request.user)
     messages.success(request, f"Encouragement envoyé à {member.user.get_full_name()}.")
-    return redirect('dashboard:admin_ops')
+    return redirect_back(request, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -210,14 +211,14 @@ def modify_appointment(request, pk):
     req = get_object_or_404(Request, pk=pk)
     if req.appointment_confirmed:
         messages.error(request, "Le RDV est déjà confirmé, impossible de modifier.")
-        return redirect('dashboard:admin_ops')
+        return redirect_back(request, 'dashboard:admin_ops')
     date_str = request.POST.get('appointment_date', '')
     if date_str:
         from datetime import datetime
         req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         req.save(update_fields=['appointment_date'])
         messages.success(request, f"Date de RDV modifiée: {req.appointment_date}")
-    return redirect('dashboard:admin_ops')
+    return redirect_back(request, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -239,7 +240,7 @@ def report_review(request, pk):
                 messages.success(request, f"Rapport {req.display_id} renvoyé pour révision.")
             except ValueError as e:
                 messages.error(request, str(e))
-        return redirect('dashboard:admin_ops')
+        return redirect_back(request, 'dashboard:admin_ops')
     allowed = get_allowed_transitions(req)
     return render(request, 'dashboard/admin_ops/report_review.html', {
         'req': req,

@@ -30,7 +30,7 @@
             <form id="public-lang-form" action="{% url 'set_language' %}" method="post" style="display:inline; margin-left:8px;">
                 {% csrf_token %}
                 <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
-                <input type="hidden" name="next" value="{{ request.path }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <button type="submit" style="background:none; border:1px solid #e2e8f0; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.8rem; color:#64748b; font-weight:500;" title="{% if LANGUAGE_CODE == 'fr' %}Switch to English{% else %}Passer en Français{% endif %}">
                     🌐 {% if LANGUAGE_CODE == 'fr' %}EN{% else %}FR{% endif %}
                 </button>

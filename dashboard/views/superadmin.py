@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
@@ -132,7 +133,7 @@ def user_toggle_active(request, pk):
     user.save(update_fields=['is_active'])
     status = 'activé' if user.is_active else 'désactivé'
     messages.success(request, f"Utilisateur {user.get_full_name()} {status}.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -144,7 +145,7 @@ def member_toggle_available(request, pk):
     profile.save(update_fields=['available'])
     status = 'disponible' if profile.available else 'indisponible'
     messages.success(request, f"Analyste {profile.user.get_full_name()} marqué {status}.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -162,7 +163,7 @@ def service_create(request):
         image=request.FILES.get('image'),
     )
     messages.success(request, "Service créé avec succès.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -173,7 +174,7 @@ def service_delete(request, pk):
     service.active = False
     service.save(update_fields=['active'])
     messages.success(request, f"Service {service.name} désactivé.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -185,7 +186,7 @@ def technique_create(request):
         category=request.POST.get('category', ''),
     )
     messages.success(request, "Technique ajoutée.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -196,7 +197,7 @@ def technique_delete(request, pk):
     technique.active = False
     technique.save(update_fields=['active'])
     messages.success(request, f"Technique {technique.name} désactivée.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -210,7 +211,7 @@ def content_update(request):
         defaults={'value': value, 'updated_by': request.user},
     )
     messages.success(request, f"Contenu '{key}' mis à jour.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 @superadmin_required
@@ -301,7 +302,7 @@ def service_edit(request, pk):
             )
 
         messages.success(request, f"Service {service.name} mis à jour.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
 
     return render(request, 'dashboard/superadmin/service_edit.html', {
         'service': service,
@@ -372,7 +373,7 @@ def create_user(request):
     if user.role == 'MEMBER':
         MemberProfile.objects.get_or_create(user=user)
     messages.success(request, f"Utilisateur {user.get_full_name()} créé avec succès.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Task 2: Edit User ---
@@ -397,7 +398,7 @@ def user_edit(request, pk):
         if user_obj.role == 'MEMBER' and old_role != 'MEMBER':
             MemberProfile.objects.get_or_create(user=user_obj)
         messages.success(request, f"Utilisateur {user_obj.get_full_name()} mis à jour.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     return render(request, 'dashboard/superadmin/user_edit.html', {
         'user_obj': user_obj,
         'role_choices': User.ROLE_CHOICES,
@@ -415,13 +416,13 @@ def force_transition_view(request, pk):
     justification = request.POST.get('justification', '')
     if not justification or len(justification.strip()) < 10:
         messages.error(request, "La justification doit comporter au moins 10 caractères.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     try:
         force_transition(req, to_status, request.user, notes=f"[FORCÉ] {justification}")
         messages.success(request, f"Demande {req.display_id} forcée vers {to_status}.")
     except Exception as e:
         messages.error(request, str(e))
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Task 5: Budget Override ---
@@ -437,7 +438,7 @@ def budget_override_view(request, pk):
         messages.success(request, f"Override budgétaire approuvé pour {req.display_id}.")
     except Exception as e:
         messages.error(request, str(e))
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Task 6: Add Payment Method ---
@@ -451,7 +452,7 @@ def add_payment_method(request):
         messages.success(request, "Méthode de paiement ajoutée.")
     else:
         messages.error(request, "Le nom est requis.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Task 11: DOCX Template Upload ---
@@ -464,11 +465,11 @@ def upload_template(request):
     allowed = ['ibtikar_form_template', 'platform_note_template', 'reception_form_template', 'quote_template']
     if template_type not in allowed:
         messages.error(request, "Type de template invalide.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     upload = request.FILES['template_file']
     if not upload.name.endswith('.docx'):
         messages.error(request, "Seuls les fichiers .docx sont acceptés.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
     if dest.exists():
         shutil.copy2(str(dest), str(dest.with_suffix('.backup.docx')))
@@ -476,7 +477,7 @@ def upload_template(request):
         for chunk in upload.chunks():
             f.write(chunk)
     messages.success(request, f"Template '{template_type}' mis à jour.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Task 12: Revenue Counter Reset ---
@@ -491,7 +492,7 @@ def reset_revenue(request):
         defaults={'value': timezone.now().isoformat(), 'updated_by': request.user}
     )
     messages.success(request, "Compteurs de revenus réinitialisés. Les données ont été archivées.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')
 
 
 # --- Email Export for Newsletter ---
@@ -529,7 +530,7 @@ def export_emails(request):
 def restore_db(request):
     if request.method != 'POST' or 'db_file' not in request.FILES:
         messages.error(request, "Aucun fichier sélectionné.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     import shutil
     import sqlite3
     upload = request.FILES['db_file']
@@ -544,10 +545,10 @@ def restore_db(request):
     except Exception:
         temp_path.unlink(missing_ok=True)
         messages.error(request, "Fichier invalide — ce n'est pas une base de données SQLite valide.")
-        return redirect('dashboard:superadmin')
+        return redirect_back(request, 'dashboard:superadmin')
     db_path = settings.BASE_DIR / 'data' / 'plagenor.db'
     if db_path.exists():
         shutil.copy2(str(db_path), str(db_path.with_suffix('.pre_restore.db')))
     shutil.move(str(temp_path), str(db_path))
     messages.success(request, "Base de données restaurée. Veuillez redémarrer le serveur.")
-    return redirect('dashboard:superadmin')
+    return redirect_back(request, 'dashboard:superadmin')

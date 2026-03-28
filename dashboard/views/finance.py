@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Sum
 from django.utils import timezone
@@ -93,7 +94,7 @@ def validate_budget(request, pk):
             messages.success(request, f"Demande {req.display_id} rejetée.")
         except (InvalidTransitionError, AuthorizationError, ValueError) as e:
             messages.error(request, str(e))
-    return redirect('dashboard:finance')
+    return redirect_back(request, 'dashboard:finance')
 
 
 @finance_required
@@ -108,4 +109,4 @@ def update_payment_status(request, pk):
         messages.success(request, f"Statut de paiement mis à jour: {invoice.get_payment_status_display()}")
     else:
         messages.error(request, "Statut invalide.")
-    return redirect('dashboard:finance')
+    return redirect_back(request, 'dashboard:finance')

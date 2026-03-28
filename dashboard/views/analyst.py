@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.utils import timezone
 
@@ -102,7 +103,7 @@ def accept_task(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
-    return redirect('dashboard:analyst')
+    return redirect_back(request, 'dashboard:analyst')
 
 
 @analyst_required
@@ -122,7 +123,7 @@ def decline_task(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Tâche {req.display_id} déclinée.")
-    return redirect('dashboard:analyst')
+    return redirect_back(request, 'dashboard:analyst')
 
 
 @analyst_required
@@ -140,7 +141,7 @@ def workflow_action(request, pk):
         messages.success(request, f"Demande {req.display_id} mise à jour.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect('dashboard:analyst')
+    return redirect_back(request, 'dashboard:analyst')
 
 
 @analyst_required
@@ -167,7 +168,7 @@ def suggest_appointment(request, pk):
             messages.success(request, f"Date de RDV proposée: {req.appointment_date}")
         except ValueError:
             messages.error(request, "Date invalide.")
-    return redirect('dashboard:analyst')
+    return redirect_back(request, 'dashboard:analyst')
 
 
 @analyst_required
@@ -188,4 +189,4 @@ def upload_report(request, pk):
             messages.error(request, str(e))
     else:
         messages.error(request, "Veuillez sélectionner un fichier.")
-    return redirect('dashboard:analyst')
+    return redirect_back(request, 'dashboard:analyst')

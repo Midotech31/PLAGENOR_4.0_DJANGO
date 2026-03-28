@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.utils import timezone
 
@@ -95,7 +96,7 @@ def create_request(request):
         user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} créée avec succès.")
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
 
 
 @client_required
@@ -108,7 +109,7 @@ def accept_quote(request, pk):
         messages.success(request, f"Devis accepté pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
 
 
 @client_required
@@ -121,7 +122,7 @@ def reject_quote(request, pk):
         messages.success(request, f"Devis refusé pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
 
 
 @client_required
@@ -137,7 +138,7 @@ def confirm_appointment(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
 
 
 @client_required
@@ -149,7 +150,7 @@ def confirm_receipt(request, pk):
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
 
 
 @client_required
@@ -164,4 +165,4 @@ def rate_service(request, pk):
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
-    return redirect('dashboard:client')
+    return redirect_back(request, 'dashboard:client')
