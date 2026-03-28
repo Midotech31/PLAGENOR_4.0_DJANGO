@@ -1757,3 +1757,29 @@ tbody tr:hover { background: var(--primary-50); }
     .public-nav .nav-links a:not(.btn) { display: none; }
     .auth-card { padding: 24px 20px; }
 }
+
+/* Logout button in sidebar */
+.sidebar-logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0;
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.sidebar-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+    color: #fff;
+}
+.sidebar-logout-btn svg {
+    width: 14px;
+    height: 14px;
+}
