@@ -27,7 +27,9 @@
         <div class="card" style="border:2px solid var(--indigo-600); position:relative;">
             <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--indigo-600); color:#fff; padding:4px 16px; border-radius:20px; font-size:0.75rem; font-weight:600;">{% trans "Recommandé" %}</div>
             <div class="card-body" style="text-align:center; padding:32px 24px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--indigo-600)" stroke-width="1.5" style="width:48px; height:48px; margin-bottom:16px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                <div style="width:64px; height:64px; margin:0 auto 16px; background:linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--indigo-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px; height:32px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                </div>
                 <h3 style="font-size:1.1rem; margin-bottom:8px;">{% trans "Créer un compte" %}</h3>
                 <p class="text-muted text-sm" style="margin-bottom:16px;">{% trans "Suivez l'état de votre demande, recevez des notifications et accédez à votre historique." %}</p>
                 <a href="{% url 'accounts:register' %}?service={{ service.code }}" class="btn btn-primary" style="width:100%;">{% trans "S'inscrire" %}</a>
@@ -37,7 +39,9 @@
         <!-- Option 2: Guest -->
         <div class="card">
             <div class="card-body" style="text-align:center; padding:32px 24px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px; height:48px; margin-bottom:16px; color:var(--slate-400);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div style="width:64px; height:64px; margin:0 auto 16px; background:linear-gradient(135deg, #f1f5f9, #e2e8f0); border-radius:16px; display:flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px; height:32px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M12 3a2 2 0 0 0-2 2v0a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2v0a2 2 0 0 0-2-2z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+                </div>
                 <h3 style="font-size:1.1rem; margin-bottom:8px;">{% trans "Continuer en tant qu'invité" %}</h3>
                 <p class="text-muted text-sm" style="margin-bottom:16px;">{% trans "Soumettez votre demande sans compte. Vous recevrez un code de suivi unique." %}</p>
                 <a href="{% url 'guest_submit' %}?service={{ service.code }}" class="btn btn-outline" style="width:100%;">{% trans "Soumettre sans compte" %}</a>
