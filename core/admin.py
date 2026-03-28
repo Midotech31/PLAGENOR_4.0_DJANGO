@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Service, Request, RequestHistory, RequestComment, Invoice, PlatformContent, PaymentMethod
+from .models import (
+    Service, Request, RequestHistory, RequestComment, Invoice,
+    PlatformContent, PaymentMethod, Message, RevenueArchive, ServiceFormField,
+)
 
 
 @admin.register(Service)
@@ -19,6 +22,24 @@ class RequestAdmin(admin.ModelAdmin):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'client', 'total_ttc', 'locked', 'created_at')
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('request', 'from_user', 'to_user', 'read', 'created_at')
+    list_filter = ('read',)
+
+
+@admin.register(RevenueArchive)
+class RevenueArchiveAdmin(admin.ModelAdmin):
+    list_display = ('month', 'year', 'channel', 'total_revenue', 'request_count')
+    list_filter = ('channel', 'year')
+
+
+@admin.register(ServiceFormField)
+class ServiceFormFieldAdmin(admin.ModelAdmin):
+    list_display = ('service', 'name', 'label', 'field_type', 'required', 'sort_order')
+    list_filter = ('field_type', 'required')
 
 
 admin.site.register(RequestHistory)

@@ -94,45 +94,132 @@ def generate_ibtikar_form(request_obj) -> str:
 
 
 def generate_platform_note(request_obj) -> str:
-    """Generate a platform note (note plateforme) DOCX for a request."""
-    template_path = os.path.join(settings.DATA_DIR, 'templates', 'note_plateforme_template.docx')
+    """Generate a Platform Note dynamically populated from specific request data."""
+    template_path = os.path.join(
+        settings.BASE_DIR, 'documents', 'docx_templates', 'platform_note_template.docx'
+    )
+
     if os.path.exists(template_path):
         doc = Document(template_path)
+        # Replace placeholders in existing template
+        replacements = {
+            '{{DISPLAY_ID}}': request_obj.display_id,
+            '{{DATE}}': datetime.now().strftime('%d/%m/%Y'),
+            '{{FULL_NAME}}': request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name or 'N/A',
+            '{{ETABLISSEMENT}}': getattr(request_obj.requester, 'organization', '') if request_obj.requester else '',
+            '{{LABORATORY}}': getattr(request_obj.requester, 'laboratory', '') if request_obj.requester else '',
+            '{{SUPERVISOR}}': getattr(request_obj.requester, 'supervisor', '') if request_obj.requester else '',
+            '{{STUDENT_LEVEL}}': getattr(request_obj.requester, 'student_level', '') if request_obj.requester else '',
+            '{{SERVICE_CODE}}': request_obj.service.code if request_obj.service else 'N/A',
+            '{{SERVICE_NAME}}': request_obj.service.name if request_obj.service else 'N/A',
+            '{{SERVICE_DESCRIPTION}}': request_obj.service.description if request_obj.service else '',
+            '{{TURNAROUND}}': str(request_obj.service.turnaround_days) if request_obj.service else 'N/A',
+            '{{BUDGET_AMOUNT}}': f"{request_obj.budget_amount:,.0f} DZD",
+            '{{URGENCY}}': request_obj.urgency,
+            '{{CHANNEL}}': request_obj.channel,
+            '{{TITLE}}': request_obj.title,
+            '{{DESCRIPTION}}': request_obj.description or '',
+        }
+        for paragraph in doc.paragraphs:
+            for key, value in replacements.items():
+                if key in paragraph.text:
+                    paragraph.text = paragraph.text.replace(key, str(value or ''))
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for key, value in replacements.items():
+                        if key in cell.text:
+                            cell.text = cell.text.replace(key, str(value or ''))
     else:
+        # Build document programmatically with FULL request data
         doc = Document()
-        doc.add_heading('Note de Plateforme — PLAGENOR', level=1)
-        doc.add_heading("ESSBO — École Supérieure en Sciences Biologiques d'Oran", level=2)
 
-    doc.add_paragraph(f"Référence: {request_obj.display_id}")
-    doc.add_paragraph(f"Date: {datetime.now().strftime('%d/%m/%Y')}")
-    doc.add_paragraph(f"Service: {request_obj.service.name if request_obj.service else 'N/A'}")
-    doc.add_paragraph(f"Canal: {request_obj.channel}")
+        # Header
+        doc.add_heading('NOTE DE PLATEFORME — PLAGENOR', level=1)
+        doc.add_paragraph("ESSBO — École Supérieure en Sciences Biologiques d'Oran")
+        doc.add_paragraph(f"Référence: {request_obj.display_id}")
+        doc.add_paragraph(f"Date d'émission: {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+        doc.add_paragraph('')
 
-    if request_obj.requester:
-        doc.add_paragraph(f"Demandeur: {request_obj.requester.get_full_name()}")
-        doc.add_paragraph(f"Organisation: {request_obj.requester.organization}")
+        # Requester section
+        doc.add_heading('Informations du demandeur', level=2)
+        requester_name = request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name or 'N/A'
+        table = doc.add_table(rows=6, cols=2)
+        table.style = 'Light Grid Accent 1'
+        fields = [
+            ('Nom et prénom', requester_name),
+            ('Établissement', getattr(request_obj.requester, 'organization', '') if request_obj.requester else ''),
+            ('Laboratoire', getattr(request_obj.requester, 'laboratory', '') if request_obj.requester else ''),
+            ('Niveau', getattr(request_obj.requester, 'student_level', '') if request_obj.requester else ''),
+            ('Directeur de recherche', getattr(request_obj.requester, 'supervisor', '') if request_obj.requester else ''),
+            ('Email / Téléphone', f"{getattr(request_obj.requester, 'email', '')} / {getattr(request_obj.requester, 'phone', '')}" if request_obj.requester else request_obj.guest_email or ''),
+        ]
+        for i, (label, value) in enumerate(fields):
+            table.rows[i].cells[0].text = label
+            table.rows[i].cells[1].text = str(value or '')
 
-    doc.add_paragraph(f"Budget estimé: {request_obj.budget_amount} DZD")
-    doc.add_paragraph(f"Urgence: {request_obj.urgency}")
+        # Service section
+        doc.add_heading('Service demandé', level=2)
+        if request_obj.service:
+            doc.add_paragraph(f"Code: {request_obj.service.code}")
+            doc.add_paragraph(f"Intitulé: {request_obj.service.name}")
+            doc.add_paragraph(f"Description: {request_obj.service.description}")
+            doc.add_paragraph(f"Délai estimé: {request_obj.service.turnaround_days} jours ouvrables")
 
-    # Platform note specifics
-    doc.add_heading('Détails du service', level=3)
-    if request_obj.service:
-        doc.add_paragraph(f"Code service: {request_obj.service.code}")
-        doc.add_paragraph(f"Description: {request_obj.service.description}")
-        doc.add_paragraph(f"Délai estimé: {request_obj.service.turnaround_days} jours")
+        # Request details
+        doc.add_heading('Détails de la demande', level=2)
+        doc.add_paragraph(f"Titre: {request_obj.title}")
+        if request_obj.description:
+            doc.add_paragraph(f"Description: {request_obj.description}")
+        doc.add_paragraph(f"Canal: {request_obj.channel}")
+        doc.add_paragraph(f"Urgence: {request_obj.urgency}")
 
-    doc.add_heading('Décompte budgétaire', level=3)
-    doc.add_paragraph(
-        f"Ce document sert de déduction virtuelle du budget IBTIKAR "
-        f"(plafond: {settings.IBTIKAR_BUDGET_CAP:,.0f} DZD par étudiant/an)."
-    )
-    doc.add_paragraph(f"Montant déduit: {request_obj.budget_amount} DZD")
+        # Service parameters (from YAML-driven form)
+        if request_obj.service_params:
+            doc.add_heading('Paramètres du service', level=3)
+            for key, value in request_obj.service_params.items():
+                clean_key = key.replace('param_', '').replace('_', ' ').title()
+                doc.add_paragraph(f"{clean_key}: {value}")
 
-    out_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-    os.makedirs(out_dir, exist_ok=True)
-    filename = f"NOTE_{request_obj.display_id}_{datetime.now().strftime('%Y%m%d')}.docx"
-    filepath = os.path.join(out_dir, filename)
+        # Sample table
+        if request_obj.sample_table:
+            doc.add_heading('Tableau des échantillons', level=3)
+            samples = request_obj.sample_table
+            if isinstance(samples, list) and samples:
+                if isinstance(samples[0], dict):
+                    headers = list(samples[0].keys())
+                    t = doc.add_table(rows=len(samples) + 1, cols=len(headers))
+                    t.style = 'Light Grid Accent 1'
+                    for j, h in enumerate(headers):
+                        t.rows[0].cells[j].text = h.replace('_', ' ').title()
+                    for i, sample in enumerate(samples):
+                        for j, h in enumerate(headers):
+                            t.rows[i + 1].cells[j].text = str(sample.get(h, ''))
+
+        # Budget section (IBTIKAR)
+        doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
+        doc.add_paragraph(f"Budget annuel par étudiant: 200 000 DZD")
+        doc.add_paragraph(f"Montant de cette prestation: {request_obj.budget_amount:,.0f} DZD")
+        if request_obj.declared_ibtikar_balance:
+            doc.add_paragraph(f"Solde IBTIKAR déclaré: {request_obj.declared_ibtikar_balance:,.0f} DZD")
+
+        # Assignment info (if assigned)
+        if request_obj.assigned_to:
+            doc.add_heading('Assignation', level=2)
+            doc.add_paragraph(f"Analyste assigné: {request_obj.assigned_to.user.get_full_name()}")
+            if request_obj.appointment_date:
+                doc.add_paragraph(f"Date de rendez-vous: {request_obj.appointment_date.strftime('%d/%m/%Y')}")
+
+        # Footer
+        doc.add_paragraph('')
+        doc.add_paragraph('—' * 40)
+        doc.add_paragraph('Ce document est généré automatiquement par PLAGENOR 4.0')
+        doc.add_paragraph("ESSBO — Université d'Oran — Prof. Mohamed Merzoug")
+
+    # Save
+    os.makedirs(os.path.join(settings.BASE_DIR, 'media', 'documents'), exist_ok=True)
+    filename = f"NOTE_PLT_{request_obj.display_id}_{datetime.now().strftime('%Y%m%d')}.docx"
+    filepath = os.path.join(settings.BASE_DIR, 'media', 'documents', filename)
     doc.save(filepath)
     return filepath
 

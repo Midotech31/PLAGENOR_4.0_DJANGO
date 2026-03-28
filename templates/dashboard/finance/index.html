@@ -11,10 +11,14 @@
 
 <!-- KPI Cards -->
 <div class="kpi-grid">
-    {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_virtual label='Budget IBTIKAR (virtuel)' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_real label='Revenus GENOCLAB (réel)' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='file' value=total_invoices label='Factures' color='purple' %}
-    {% include 'includes/kpi_card.html' with icon='users' value=ibtikar_students label='Étudiants IBTIKAR' color='orange' %}
+    {% trans "Budget IBTIKAR (virtuel)" as lbl_ibt %}
+    {% trans "Revenus GENOCLAB (réel)" as lbl_gen %}
+    {% trans "Factures" as lbl_inv %}
+    {% trans "Étudiants IBTIKAR" as lbl_students %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_virtual label=lbl_ibt color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_real label=lbl_gen color='green' %}
+    {% include 'includes/kpi_card.html' with icon='file' value=total_invoices label=lbl_inv color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='users' value=ibtikar_students label=lbl_students color='orange' %}
 </div>
 
 <!-- Tab Navigation -->
@@ -40,7 +44,7 @@
                     </div>
                     <div class="data-card-row text-sm text-muted">
                         <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
-                        <span>Budget: {{ req.budget_amount }} DA &middot; Solde déclaré: {{ req.declared_ibtikar_balance }} DA</span>
+                        <span>{% trans "Budget" %}: {{ req.budget_amount }} DA &middot; {% trans "Solde déclaré" %}: {{ req.declared_ibtikar_balance }} DA</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem;">
                         <form method="post" action="{% url 'dashboard:finance_validate' req.pk %}" style="display:inline;">

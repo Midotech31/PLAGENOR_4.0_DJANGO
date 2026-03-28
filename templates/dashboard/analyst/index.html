@@ -11,10 +11,14 @@
 
 <!-- KPI Cards -->
 <div class="kpi-grid">
-    {% include 'includes/kpi_card.html' with icon='clipboard' value=assigned_count label='Assignées' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='activity' value=in_progress_count label='En cours' color='orange' %}
-    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label='Complétées' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='star' value=productivity|floatformat:0 label='Productivité %' color='purple' %}
+    {% trans "Assignées" as lbl_assigned %}
+    {% trans "En cours" as lbl_progress %}
+    {% trans "Complétées" as lbl_completed %}
+    {% trans "Productivité %" as lbl_productivity %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=assigned_count label=lbl_assigned color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=in_progress_count label=lbl_progress color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label=lbl_completed color='green' %}
+    {% include 'includes/kpi_card.html' with icon='star' value=productivity|floatformat:0 label=lbl_productivity color='purple' %}
 </div>
 
 <!-- Tab Navigation -->
@@ -82,7 +86,7 @@
                     </div>
                     {% if req.admin_revision_notes %}
                     <div class="data-card-row text-sm" style="color: var(--danger-600);">
-                        <span>Notes de révision: {{ req.admin_revision_notes }}</span>
+                        <span>{% trans "Notes de révision" %}: {{ req.admin_revision_notes }}</span>
                     </div>
                     {% endif %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">

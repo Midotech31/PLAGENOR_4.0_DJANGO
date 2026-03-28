@@ -12,29 +12,38 @@
 
 <!-- Primary KPI Cards -->
 <div class="kpi-grid">
-    {% include 'includes/kpi_card.html' with icon='users' value=total_users label='Utilisateurs' color='indigo' %}
-    {% include 'includes/kpi_card.html' with icon='activity' value=total_members label='Analystes' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Demandes actives' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='check' value=completed_requests label='Complétées' color='green' %}
+    {% trans "Utilisateurs" as lbl_users %}
+    {% trans "Analystes" as lbl_analysts %}
+    {% trans "Demandes actives" as lbl_active %}
+    {% trans "Complétées" as lbl_completed %}
+    {% include 'includes/kpi_card.html' with icon='users' value=total_users label=lbl_users color='indigo' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=total_members label=lbl_analysts color='green' %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label=lbl_active color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_requests label=lbl_completed color='green' %}
 </div>
 
 <!-- Secondary KPI Cards -->
 <div class="kpi-grid" style="margin-bottom:32px;">
+    {% trans "Services actifs" as lbl_services %}
+    {% trans "Techniques" as lbl_tech %}
     {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='file' value=genoclab_count label='GENOCLAB' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='layers' value=total_services label='Services actifs' color='orange' %}
-    {% include 'includes/kpi_card.html' with icon='settings' value=total_techniques label='Techniques' color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='layers' value=total_services label=lbl_services color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='settings' value=total_techniques label=lbl_tech color='purple' %}
 </div>
 
 <!-- Financial & Rating KPI Cards -->
 <div class="kpi-grid" style="margin-bottom:32px;">
+    {% trans "Budget IBTIKAR (DA)" as lbl_ibt_budget %}
+    {% trans "Revenue GENOCLAB (DA)" as lbl_gen_rev %}
+    {% trans "Note moyenne / 5" as lbl_avg_rating %}
     {% with bd=budget_dashboard.ibtikar.total|default:0 %}
-    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=bd label='Budget IBTIKAR (DA)' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=bd label=lbl_ibt_budget color='blue' %}
     {% endwith %}
     {% with gd=budget_dashboard.genoclab.total|default:0 %}
-    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=gd label='Revenue GENOCLAB (DA)' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=gd label=lbl_gen_rev color='green' %}
     {% endwith %}
-    {% include 'includes/kpi_card.html' with icon='star' value=avg_rating|floatformat:1 label='Note moyenne / 5' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='star' value=avg_rating|floatformat:1 label=lbl_avg_rating color='orange' %}
 </div>
 
 <!-- Quick Actions + Recent Activity -->
@@ -611,7 +620,7 @@
             {% endwith %}
             {% with gen=budget_dashboard.genoclab %}
             <div class="card" style="padding:16px; text-align:center;">
-                <div class="text-muted" style="font-size:0.85rem;">{% trans "Revenue GENOCLAB (réel)" %}</div>
+                <div class="text-muted" style="font-size:0.85rem;">{% trans "Revenus GENOCLAB (réel)" %}</div>
                 <div style="font-size:1.5rem; font-weight:700; color:var(--success);">{{ gen.total|default:0|floatformat:0 }} DA</div>
             </div>
             {% endwith %}
@@ -722,11 +731,11 @@
                             <td>
                                 {% with tier=stat.level.key|default:stat.status|default:"normal" %}
                                 {% if tier == "fire" %}
-                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 Fire</span>
+                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 {% trans "Fire" %}</span>
                                 {% elif tier == "very_good" %}
-                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">Very Good</span>
+                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">{% trans "Very Good" %}</span>
                                 {% elif tier == "good" %}
-                                <span class="badge-status" style="background:#d1fae5;color:#059669;">Good</span>
+                                <span class="badge-status" style="background:#d1fae5;color:#059669;">{% trans "Good" %}</span>
                                 {% else %}
                                 <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">{{ stat.emoji }} {{ stat.level.label_fr|default:"Pas mal" }}</span>
                                 {% endif %}

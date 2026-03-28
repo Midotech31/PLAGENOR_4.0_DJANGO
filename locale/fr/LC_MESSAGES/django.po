@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-28 12:24+0100\n"
+"POT-Creation-Date: 2026-03-28 16:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
 #: templates/accounts/convert_guest.html:4 templates/accounts/login.html:47
 #: templates/accounts/register.html:10
 #: templates/pages/guest_submit_success.html:36
@@ -35,55 +36,68 @@ msgstr ""
 
 #: templates/accounts/convert_guest.html:17 templates/accounts/profile.html:19
 #: templates/accounts/register.html:42
+#: templates/dashboard/superadmin/index.html:157
+#: templates/dashboard/superadmin/user_edit.html:23
 msgid "Prénom"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:21 templates/accounts/profile.html:23
 #: templates/accounts/register.html:47
-#: templates/dashboard/analyst/index.html:194
-#: templates/dashboard/superadmin/index.html:126
-#: templates/dashboard/superadmin/index.html:174
-#: templates/dashboard/superadmin/index.html:237
-#: templates/dashboard/superadmin/index.html:283
-#: templates/dashboard/superadmin/index.html:329
-#: templates/dashboard/superadmin/index.html:348
+#: templates/dashboard/analyst/index.html:198
+#: templates/dashboard/superadmin/index.html:161
+#: templates/dashboard/superadmin/index.html:209
+#: templates/dashboard/superadmin/index.html:258
+#: templates/dashboard/superadmin/index.html:321
+#: templates/dashboard/superadmin/index.html:367
+#: templates/dashboard/superadmin/index.html:413
+#: templates/dashboard/superadmin/index.html:432
+#: templates/dashboard/superadmin/index.html:868
 #: templates/dashboard/superadmin/service_edit.html:18
 #: templates/dashboard/superadmin/service_edit.html:60
+#: templates/dashboard/superadmin/user_edit.html:27
 msgid "Nom"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:26 templates/accounts/profile.html:28
 #: templates/accounts/register.html:60
-#: templates/dashboard/analyst/index.html:195
-#: templates/dashboard/superadmin/index.html:127
-#: templates/pages/contact.html:23 templates/pages/guest_submit.html:23
+#: templates/dashboard/analyst/index.html:199
+#: templates/dashboard/superadmin/index.html:167
+#: templates/dashboard/superadmin/index.html:210
+#: templates/dashboard/superadmin/user_edit.html:33
+#: templates/pages/about.html:52 templates/pages/contact.html:23
+#: templates/pages/guest_submit.html:23
 msgid "Email"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:30 templates/accounts/profile.html:32
-#: templates/accounts/register.html:72
-#: templates/dashboard/analyst/index.html:197 templates/pages/contact.html:27
+#: templates/accounts/register.html:98
+#: templates/dashboard/analyst/index.html:201
+#: templates/dashboard/superadmin/index.html:185
+#: templates/dashboard/superadmin/user_edit.html:45
+#: templates/pages/about.html:53 templates/pages/contact.html:27
 #: templates/pages/guest_submit.html:27
 msgid "Téléphone"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:34 templates/accounts/login.html:32
-#: templates/accounts/register.html:79
+#: templates/accounts/register.html:105
+#: templates/dashboard/superadmin/index.html:189
 msgid "Mot de passe"
 msgstr ""
 
-#: templates/accounts/convert_guest.html:37 templates/accounts/register.html:90
+#: templates/accounts/convert_guest.html:37
+#: templates/accounts/register.html:116
 msgid "Créer mon compte"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:43
-#: templates/pages/guest_submit.html:65
+#: templates/pages/guest_submit.html:76
 msgid "Vous avez déjà un compte?"
 msgstr ""
 
 #: templates/accounts/convert_guest.html:43 templates/accounts/login.html:5
-#: templates/accounts/login.html:15 templates/base_public.html:27
-#: templates/base_public.html:67 templates/pages/guest_submit.html:65
+#: templates/accounts/login.html:15 templates/base_public.html:28
+#: templates/base_public.html:69 templates/pages/guest_submit.html:76
 msgid "Connexion"
 msgstr ""
 
@@ -99,8 +113,8 @@ msgstr ""
 msgid "Identifiant ou mot de passe incorrect."
 msgstr ""
 
-#: templates/accounts/login.html:28 templates/accounts/register.html:54
-msgid "Nom d'utilisateur"
+#: templates/accounts/login.html:28
+msgid "Identifiant"
 msgstr ""
 
 #: templates/accounts/login.html:29
@@ -115,7 +129,7 @@ msgstr ""
 msgid "Se souvenir de moi"
 msgstr ""
 
-#: templates/accounts/login.html:41 templates/accounts/register.html:94
+#: templates/accounts/login.html:41 templates/accounts/register.html:120
 msgid "Se connecter"
 msgstr ""
 
@@ -139,11 +153,11 @@ msgstr ""
 msgid "Suivre une demande"
 msgstr ""
 
-#: templates/accounts/login.html:53 templates/base_public.html:65
+#: templates/accounts/login.html:53 templates/base_public.html:67
 msgid "Université d'Oran"
 msgstr ""
 
-#: templates/accounts/login.html:54 templates/base_public.html:72
+#: templates/accounts/login.html:54 templates/base_public.html:74
 msgid "Conçu par"
 msgstr ""
 
@@ -160,11 +174,12 @@ msgstr ""
 msgid "Organisation / Université"
 msgstr ""
 
-#: templates/accounts/profile.html:40
+#: templates/accounts/profile.html:40 templates/accounts/register.html:85
+#: templates/dashboard/superadmin/user_edit.html:55
 msgid "Laboratoire"
 msgstr ""
 
-#: templates/accounts/profile.html:44
+#: templates/accounts/profile.html:44 templates/accounts/register.html:91
 msgid "Directeur de recherche"
 msgstr ""
 
@@ -173,11 +188,15 @@ msgid "Techniques maîtrisées"
 msgstr ""
 
 #: templates/accounts/profile.html:63
-#: templates/dashboard/superadmin/index.html:388
+#: templates/dashboard/superadmin/index.html:472
+#: templates/dashboard/superadmin/index.html:802
+#: templates/dashboard/superadmin/index.html:811
+#: templates/dashboard/superadmin/index.html:820
+#: templates/dashboard/superadmin/index.html:829
 msgid "Mettre à jour"
 msgstr ""
 
-#: templates/accounts/register.html:5 templates/base_public.html:68
+#: templates/accounts/register.html:5 templates/base_public.html:70
 msgid "Inscription"
 msgstr ""
 
@@ -197,43 +216,77 @@ msgstr ""
 msgid "Client externe"
 msgstr ""
 
+#: templates/accounts/register.html:54
+msgid "Identifiant souhaité"
+msgstr ""
+
 #: templates/accounts/register.html:66
 msgid "Université / Organisation"
 msgstr ""
 
-#: templates/accounts/register.html:72
+#: templates/accounts/register.html:73
+#: templates/dashboard/superadmin/index.html:721
+msgid "Niveau"
+msgstr ""
+
+#: templates/accounts/register.html:75
+msgid "Sélectionner"
+msgstr ""
+
+#: templates/accounts/register.html:80
+msgid ""
+"Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
+"algériennes"
+msgstr ""
+
+#: templates/accounts/register.html:86
+msgid "Nom du laboratoire"
+msgstr ""
+
+#: templates/accounts/register.html:92
+msgid "Nom du directeur de recherche"
+msgstr ""
+
+#: templates/accounts/register.html:98
 msgid "optionnel"
 msgstr ""
 
-#: templates/accounts/register.html:84
+#: templates/accounts/register.html:110
 msgid "Confirmer le mot de passe"
 msgstr ""
 
-#: templates/accounts/register.html:94
+#: templates/accounts/register.html:120
 msgid "Vous avez déjà un compte ?"
 msgstr ""
 
-#: templates/base_public.html:20 templates/base_public.html:58
+#: templates/base_public.html:20 templates/base_public.html:59
 #: templates/pages/home.html:5
 msgid "Accueil"
 msgstr ""
 
-#: templates/base_public.html:21 templates/base_public.html:59
-#: templates/dashboard/superadmin/index.html:82
-#: templates/includes/sidebar.html:32 templates/pages/services.html:4
+#: templates/base_public.html:21 templates/base_public.html:60
+#: templates/dashboard/superadmin/index.html:103
+#: templates/includes/sidebar.html:32 templates/pages/about.html:40
+#: templates/pages/services.html:4
 msgid "Services"
 msgstr ""
 
-#: templates/base_public.html:22 templates/base_public.html:60
+#: templates/base_public.html:22 templates/base_public.html:61
 #: templates/pages/about.html:4
 msgid "À propos"
 msgstr ""
 
-#: templates/base_public.html:23 templates/pages/track.html:4
+#: templates/base_public.html:23 templates/base_public.html:62
+#: templates/base_public.html:66 templates/pages/about.html:49
+#: templates/pages/contact.html:4
+msgid "Contact"
+msgstr ""
+
+#: templates/base_public.html:24 templates/pages/track.html:4
 msgid "Suivi"
 msgstr ""
 
-#: templates/base_public.html:25 templates/dashboard/placeholder.html:4
+#: templates/base_public.html:26 templates/dashboard/placeholder.html:4
 #: templates/dashboard/placeholder.html:9 templates/includes/sidebar.html:20
 #: templates/includes/sidebar.html:67 templates/includes/sidebar.html:94
 #: templates/includes/sidebar.html:125 templates/includes/sidebar.html:152
@@ -241,29 +294,25 @@ msgstr ""
 msgid "Tableau de bord"
 msgstr ""
 
-#: templates/base_public.html:50
+#: templates/base_public.html:51
 msgid ""
 "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée "
 "pour la gestion des canaux IBTIKAR et GENOCLAB."
 msgstr ""
 
-#: templates/base_public.html:53
+#: templates/base_public.html:54
 msgid "Tous droits réservés"
 msgstr ""
 
-#: templates/base_public.html:57
+#: templates/base_public.html:58
 msgid "Liens rapides"
 msgstr ""
 
-#: templates/base_public.html:61 templates/pages/home.html:24
+#: templates/base_public.html:63 templates/pages/home.html:24
 msgid "Suivi de demande"
 msgstr ""
 
-#: templates/base_public.html:64 templates/pages/contact.html:4
-msgid "Contact"
-msgstr ""
-
-#: templates/base_public.html:66
+#: templates/base_public.html:68
 msgid "Prof. Mohamed Merzoug"
 msgstr ""
 
@@ -285,289 +334,377 @@ msgstr ""
 msgid "Gestion des demandes et assignations"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:23
-#: templates/dashboard/analyst/index.html:23
-#: templates/dashboard/finance/index.html:127
+#: templates/dashboard/admin_ops/index.html:14
+#: templates/dashboard/client/index.html:14
+#: templates/dashboard/requester/index.html:14
+msgid "Total demandes"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:15
+#: templates/dashboard/admin_ops/index.html:26
+#: templates/dashboard/analyst/index.html:27
+#: templates/dashboard/finance/index.html:131
 #: templates/includes/sidebar.html:71 templates/includes/sidebar.html:98
 msgid "En attente"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:24
-#: templates/dashboard/admin_ops/index.html:122
+#: templates/dashboard/admin_ops/index.html:16
+#: templates/dashboard/analyst/index.html:16
+#: templates/dashboard/client/index.html:16
+#: templates/dashboard/placeholder.html:29
+#: templates/dashboard/requester/index.html:16
+#: templates/dashboard/superadmin/index.html:18
+#: templates/dashboard/superadmin/index.html:719
+msgid "Complétées"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:27
+#: templates/dashboard/admin_ops/index.html:125
+#: templates/dashboard/superadmin/index.html:498
 #: templates/includes/sidebar.html:75
 msgid "Toutes les demandes"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:25
+#: templates/dashboard/admin_ops/index.html:28
 #: templates/includes/sidebar.html:79
 msgid "Assignation"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:26
-#: templates/dashboard/finance/index.html:24 templates/includes/sidebar.html:83
+#: templates/dashboard/admin_ops/index.html:29
+#: templates/dashboard/finance/index.html:28
+#: templates/dashboard/finance/index.html:47 templates/includes/sidebar.html:83
 #: templates/includes/sidebar.html:133
 msgid "Budget"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:27
+#: templates/dashboard/admin_ops/index.html:30
 msgid "Rapports"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:33
+#: templates/dashboard/admin_ops/index.html:36
 msgid "Demandes en attente d'action"
 msgstr ""
 
+#: templates/dashboard/admin_ops/index.html:53
+msgid "Validation Pédagogique"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:54
+#: templates/dashboard/admin_ops/index.html:57
+#: templates/dashboard/admin_ops/index.html:65
+#: templates/dashboard/finance/index.html:58
+msgid "Rejeter"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:56
+msgid "Validation Finance"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:59
+#: templates/dashboard/admin_ops/index.html:243
+msgid "Assigner"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:61
+msgid "Valider rapport"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:62
+#: templates/dashboard/admin_ops/report_review.html:44
+msgid "Renvoyer pour révision"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:64
+msgid "Préparer devis"
+msgstr ""
+
 #: templates/dashboard/admin_ops/index.html:67
-#: templates/dashboard/admin_ops/index.html:312
+msgid "Envoyer devis"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:70
+#: templates/dashboard/admin_ops/index.html:317
 msgid "Notes..."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:68
+#: templates/dashboard/admin_ops/index.html:71
 msgid "Appliquer"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:74
-#: templates/dashboard/client/index.html:118
+#: templates/dashboard/admin_ops/index.html:77
+#: templates/dashboard/client/index.html:122
 msgid "RDV proposé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:78
+#: templates/dashboard/admin_ops/index.html:81
 msgid "Modifier RDV"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:85
+#: templates/dashboard/admin_ops/index.html:88
 msgid "Note plateforme"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:86
 #: templates/dashboard/admin_ops/index.html:89
+#: templates/dashboard/admin_ops/index.html:92
 msgid "Fiche réception"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:88
-#: templates/dashboard/client/index.html:95
+#: templates/dashboard/admin_ops/index.html:91
+#: templates/dashboard/client/index.html:99
+#: templates/dashboard/superadmin/index.html:824
 msgid "Devis"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:95
+#: templates/dashboard/admin_ops/index.html:98
 msgid "Envoyer message"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:98
-#: templates/dashboard/analyst/index.html:133
+#: templates/dashboard/admin_ops/index.html:101
+#: templates/dashboard/analyst/index.html:137
 msgid "Message..."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:99
-#: templates/dashboard/analyst/index.html:134
+#: templates/dashboard/admin_ops/index.html:102
+#: templates/dashboard/analyst/index.html:138
 #: templates/dashboard/report_viewer.html:245
 msgid "Envoyer"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:112
+#: templates/dashboard/admin_ops/index.html:115
 msgid "Aucune demande en attente."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:127
+#: templates/dashboard/admin_ops/index.html:130
 msgid "Tous les canaux"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:132
+#: templates/dashboard/admin_ops/index.html:135
 msgid "Tous les statuts"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:137
+#: templates/dashboard/admin_ops/index.html:140
 #: templates/includes/topbar.html:14
 msgid "Rechercher..."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:138
+#: templates/dashboard/admin_ops/index.html:141
 #: templates/dashboard/superadmin/audit_log.html:32
+#: templates/dashboard/superadmin/index.html:526
 msgid "Filtrer"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:144
-#: templates/dashboard/analyst/index.html:161
-#: templates/dashboard/client/index.html:227
-#: templates/dashboard/requester/index.html:188
+#: templates/dashboard/admin_ops/index.html:147
+#: templates/dashboard/analyst/index.html:165
+#: templates/dashboard/client/index.html:231
+#: templates/dashboard/requester/index.html:192
+#: templates/dashboard/superadmin/index.html:534
+#: templates/dashboard/superadmin/index.html:765
 msgid "ID"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:145
-#: templates/dashboard/analyst/index.html:162
-#: templates/dashboard/client/index.html:228
-#: templates/dashboard/requester/index.html:189
+#: templates/dashboard/admin_ops/index.html:148
+#: templates/dashboard/analyst/index.html:166
+#: templates/dashboard/client/index.html:232
+#: templates/dashboard/requester/index.html:193
+#: templates/dashboard/superadmin/index.html:535
+#: templates/dashboard/superadmin/index.html:766
 msgid "Titre"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:146
+#: templates/dashboard/admin_ops/index.html:149
 #: templates/dashboard/admin_ops/report_review.html:16
 #: templates/dashboard/report_viewer.html:192
-#: templates/dashboard/superadmin/index.html:241
-#: templates/dashboard/superadmin/index.html:284
+#: templates/dashboard/superadmin/index.html:325
+#: templates/dashboard/superadmin/index.html:368
+#: templates/dashboard/superadmin/index.html:505
+#: templates/dashboard/superadmin/index.html:536
+#: templates/dashboard/superadmin/index.html:767
 #: templates/dashboard/superadmin/revenue_archives.html:20
 #: templates/dashboard/superadmin/service_edit.html:22
-#: templates/pages/track.html:26
+#: templates/pages/guest_submit.html:37 templates/pages/track.html:26
 msgid "Canal"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:147
+#: templates/dashboard/admin_ops/index.html:150
 #: templates/dashboard/admin_ops/report_review.html:19
-#: templates/dashboard/analyst/index.html:164
-#: templates/dashboard/client/index.html:230
-#: templates/dashboard/finance/index.html:77
-#: templates/dashboard/requester/index.html:191
-#: templates/dashboard/superadmin/index.html:96
-#: templates/dashboard/superadmin/index.html:129 templates/pages/track.html:22
+#: templates/dashboard/analyst/index.html:168
+#: templates/dashboard/client/index.html:234
+#: templates/dashboard/finance/index.html:81
+#: templates/dashboard/requester/index.html:195
+#: templates/dashboard/superadmin/index.html:121
+#: templates/dashboard/superadmin/index.html:212
+#: templates/dashboard/superadmin/index.html:513
+#: templates/dashboard/superadmin/index.html:537 templates/pages/track.html:22
 msgid "Statut"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:148
+#: templates/dashboard/admin_ops/index.html:151
+#: templates/dashboard/superadmin/index.html:539
 msgid "Demandeur"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:149
-#: templates/dashboard/requester/index.html:128
+#: templates/dashboard/admin_ops/index.html:152
+#: templates/dashboard/requester/index.html:132
 #: templates/includes/request_card.html:13
 msgid "Assigné"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:150
-#: templates/dashboard/analyst/index.html:165
-#: templates/dashboard/client/index.html:195
-#: templates/dashboard/client/index.html:232
-#: templates/dashboard/finance/index.html:111
-#: templates/dashboard/requester/index.html:193
+#: templates/dashboard/admin_ops/index.html:153
+#: templates/dashboard/analyst/index.html:169
+#: templates/dashboard/client/index.html:199
+#: templates/dashboard/client/index.html:236
+#: templates/dashboard/finance/index.html:115
+#: templates/dashboard/requester/index.html:197
 #: templates/dashboard/superadmin/audit_log.html:48
-#: templates/pages/track.html:30
+#: templates/dashboard/superadmin/index.html:541
+#: templates/dashboard/superadmin/index.html:645 templates/pages/track.html:30
 msgid "Date"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:165
+#: templates/dashboard/admin_ops/index.html:168
+#: templates/dashboard/superadmin/index.html:602
 msgid "Aucune demande trouvée."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:177
+#: templates/dashboard/admin_ops/index.html:180
 msgid "Panneau d'assignation"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:179
+#: templates/dashboard/admin_ops/index.html:182
 msgid "Analystes disponibles"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:184
-#: templates/dashboard/admin_ops/index.html:264
+#: templates/dashboard/admin_ops/index.html:187
+#: templates/dashboard/admin_ops/index.html:269
+#: templates/dashboard/admin_ops/index.html:308
 #: templates/dashboard/admin_ops/report_review.html:18
 #: templates/dashboard/analyst/index.html:4
+#: templates/dashboard/superadmin/index.html:717
 msgid "Analyste"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:185
-#: templates/dashboard/admin_ops/index.html:265
-#: templates/dashboard/analyst/index.html:200
-#: templates/dashboard/superadmin/index.html:175
+#: templates/dashboard/admin_ops/index.html:188
+#: templates/dashboard/admin_ops/index.html:270
+#: templates/dashboard/analyst/index.html:204
+#: templates/dashboard/superadmin/index.html:259
 msgid "Charge"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:186
-#: templates/dashboard/admin_ops/index.html:266
-#: templates/dashboard/analyst/index.html:201
-#: templates/dashboard/superadmin/index.html:176
+#: templates/dashboard/admin_ops/index.html:189
+#: templates/dashboard/admin_ops/index.html:271
+#: templates/dashboard/analyst/index.html:205
+#: templates/dashboard/superadmin/index.html:106
+#: templates/dashboard/superadmin/index.html:260
 #: templates/includes/sidebar.html:44
 msgid "Productivité"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:187
-#: templates/dashboard/admin_ops/index.html:202
-#: templates/dashboard/admin_ops/index.html:267
-#: templates/dashboard/analyst/index.html:27
-#: templates/dashboard/analyst/index.html:202
-#: templates/dashboard/superadmin/index.html:177
-#: templates/dashboard/superadmin/index.html:205
+#: templates/dashboard/admin_ops/index.html:190
+#: templates/dashboard/admin_ops/index.html:205
+#: templates/dashboard/admin_ops/index.html:272
+#: templates/dashboard/analyst/index.html:31
+#: templates/dashboard/analyst/index.html:206
+#: templates/dashboard/superadmin/index.html:261
+#: templates/dashboard/superadmin/index.html:289
 #: templates/includes/sidebar.html:114
 msgid "Points"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:188
-#: templates/dashboard/superadmin/index.html:130
-#: templates/dashboard/superadmin/index.html:179
-#: templates/dashboard/superadmin/index.html:288
-#: templates/dashboard/superadmin/index.html:348
+#: templates/dashboard/admin_ops/index.html:191
+#: templates/dashboard/superadmin/index.html:213
+#: templates/dashboard/superadmin/index.html:263
+#: templates/dashboard/superadmin/index.html:372
+#: templates/dashboard/superadmin/index.html:432
+#: templates/dashboard/superadmin/index.html:542
+#: templates/dashboard/superadmin/index.html:557
 msgid "Actions"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:205
-#: templates/dashboard/superadmin/index.html:208
+#: templates/dashboard/admin_ops/index.html:208
+#: templates/dashboard/superadmin/index.html:292
 msgid "Raison"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:211
+#: templates/dashboard/admin_ops/index.html:214
 msgid "Encourager"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:213
+#: templates/dashboard/admin_ops/index.html:216
 msgid "Message"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:225
+#: templates/dashboard/admin_ops/index.html:228
 msgid "Demandes à assigner"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:240
-msgid "Assigner"
+#: templates/dashboard/admin_ops/index.html:255
+#: templates/dashboard/finance/index.html:14
+#: templates/dashboard/superadmin/index.html:617
+msgid "Budget IBTIKAR (virtuel)"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:258
+#: templates/dashboard/admin_ops/index.html:256
+#: templates/dashboard/finance/index.html:15
+#: templates/dashboard/superadmin/index.html:623
+msgid "Revenus GENOCLAB (réel)"
+msgstr ""
+
+#: templates/dashboard/admin_ops/index.html:263
 msgid "Comparaison performance analystes"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:268
-#: templates/dashboard/analyst/index.html:203
-#: templates/dashboard/superadmin/index.html:178
+#: templates/dashboard/admin_ops/index.html:273
+#: templates/dashboard/analyst/index.html:207
+#: templates/dashboard/superadmin/index.html:262
 msgid "Disponible"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:278
-#: templates/dashboard/analyst/index.html:203
+#: templates/dashboard/admin_ops/index.html:283
+#: templates/dashboard/analyst/index.html:207
 #: templates/dashboard/superadmin/audit_log.html:66
-#: templates/dashboard/superadmin/index.html:191
-#: templates/dashboard/superadmin/index.html:299
+#: templates/dashboard/superadmin/index.html:275
+#: templates/dashboard/superadmin/index.html:383
+#: templates/dashboard/superadmin/index.html:658
+#: templates/dashboard/superadmin/index.html:881
 msgid "Oui"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:278
-#: templates/dashboard/analyst/index.html:203
-#: templates/dashboard/superadmin/index.html:193
-#: templates/dashboard/superadmin/index.html:299
+#: templates/dashboard/admin_ops/index.html:283
+#: templates/dashboard/analyst/index.html:207
+#: templates/dashboard/superadmin/index.html:277
+#: templates/dashboard/superadmin/index.html:383
+#: templates/dashboard/superadmin/index.html:658
+#: templates/dashboard/superadmin/index.html:881
 msgid "Non"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:281
+#: templates/dashboard/admin_ops/index.html:286
 msgid "Aucun analyste."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:293
+#: templates/dashboard/admin_ops/index.html:298
 msgid "Rapports en attente de révision"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:305
+#: templates/dashboard/admin_ops/index.html:310
 #: templates/dashboard/admin_ops/report_review.html:25
+#: templates/dashboard/superadmin/index.html:778
 msgid "Télécharger"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:313
+#: templates/dashboard/admin_ops/index.html:318
 msgid "Valider"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:318
+#: templates/dashboard/admin_ops/index.html:323
 msgid "Raison du renvoi..."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:319
+#: templates/dashboard/admin_ops/index.html:324
 msgid "Renvoyer"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:325
+#: templates/dashboard/admin_ops/index.html:330
 msgid "Aucun rapport en attente."
 msgstr ""
 
@@ -580,18 +717,21 @@ msgid "Révision du rapport"
 msgstr ""
 
 #: templates/dashboard/admin_ops/report_review.html:17
-#: templates/dashboard/analyst/index.html:163
-#: templates/dashboard/client/index.html:38
-#: templates/dashboard/client/index.html:229
+#: templates/dashboard/analyst/index.html:167
+#: templates/dashboard/client/index.html:42
+#: templates/dashboard/client/index.html:233
 #: templates/dashboard/report_viewer.html:188
-#: templates/dashboard/requester/index.html:37
-#: templates/dashboard/requester/index.html:190
-#: templates/pages/guest_submit.html:33
+#: templates/dashboard/requester/index.html:41
+#: templates/dashboard/requester/index.html:194
+#: templates/dashboard/superadmin/index.html:538
+#: templates/dashboard/superadmin/index.html:867
+#: templates/pages/guest_submit.html:44
 #: templates/pages/guest_submit_success.html:25
 msgid "Service"
 msgstr ""
 
 #: templates/dashboard/admin_ops/report_review.html:24
+#: templates/dashboard/superadmin/index.html:768
 msgid "Rapport"
 msgstr ""
 
@@ -600,15 +740,12 @@ msgid "Valider le rapport"
 msgstr ""
 
 #: templates/dashboard/admin_ops/report_review.html:41
+#: templates/dashboard/analyst/index.html:89
 msgid "Notes de révision"
 msgstr ""
 
 #: templates/dashboard/admin_ops/report_review.html:42
 msgid "Indiquez les corrections nécessaires..."
-msgstr ""
-
-#: templates/dashboard/admin_ops/report_review.html:44
-msgid "Renvoyer pour révision"
 msgstr ""
 
 #: templates/dashboard/admin_ops/report_review.html:50
@@ -619,124 +756,141 @@ msgstr ""
 msgid "Espace analyste"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:24
-#: templates/dashboard/placeholder.html:38 templates/includes/sidebar.html:102
+#: templates/dashboard/analyst/index.html:14
+#: templates/dashboard/superadmin/index.html:718
+msgid "Assignées"
+msgstr ""
+
+#: templates/dashboard/analyst/index.html:15
+#: templates/dashboard/analyst/index.html:28
+#: templates/dashboard/client/index.html:15
+#: templates/dashboard/placeholder.html:38
+#: templates/dashboard/requester/index.html:15
+#: templates/includes/sidebar.html:102
 msgid "En cours"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:25
-#: templates/dashboard/analyst/index.html:155
-#: templates/dashboard/finance/index.html:27
+#: templates/dashboard/analyst/index.html:17
+#, python-format
+msgid "Productivité %%"
+msgstr ""
+
+#: templates/dashboard/analyst/index.html:29
+#: templates/dashboard/analyst/index.html:159
+#: templates/dashboard/finance/index.html:31
 #: templates/includes/sidebar.html:106 templates/includes/sidebar.html:145
 msgid "Historique"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:26
+#: templates/dashboard/analyst/index.html:30
 #: templates/includes/sidebar.html:110
 msgid "Profil"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:28
-#: templates/dashboard/client/index.html:27
-#: templates/dashboard/requester/index.html:26
+#: templates/dashboard/analyst/index.html:32
+#: templates/dashboard/client/index.html:31
+#: templates/dashboard/requester/index.html:30
 #: templates/includes/notification_list.html:5
 #: templates/includes/sidebar.html:118 templates/includes/sidebar.html:168
 #: templates/includes/sidebar.html:195
 msgid "Notifications"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:34
+#: templates/dashboard/analyst/index.html:38
 msgid "Tâches en attente"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:49
+#: templates/dashboard/analyst/index.html:53
 msgid "Accepter"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:53
+#: templates/dashboard/analyst/index.html:57
 msgid "Décliner"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:55
+#: templates/dashboard/analyst/index.html:59
 msgid "Raison..."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:56
-#: templates/dashboard/finance/index.html:57
+#: templates/dashboard/analyst/index.html:60
+#: templates/dashboard/finance/index.html:61
 msgid "Confirmer"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:62
+#: templates/dashboard/analyst/index.html:66
 msgid "Aucune tâche en attente."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:71
+#: templates/dashboard/analyst/index.html:75
 msgid "Travaux en cours"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:94
+#: templates/dashboard/analyst/index.html:98
 msgid "Échantillon reçu"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:100
+#: templates/dashboard/analyst/index.html:104
 msgid "Démarrer analyse"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:106
+#: templates/dashboard/analyst/index.html:110
 msgid "Terminer analyse"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:112
+#: templates/dashboard/analyst/index.html:116
 msgid "Uploader rapport"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:120
+#: templates/dashboard/analyst/index.html:124
 msgid "Proposer RDV"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:130
+#: templates/dashboard/analyst/index.html:134
 msgid "Répondre"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:146
+#: templates/dashboard/analyst/index.html:150
 msgid "Aucun travail en cours."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:178
+#: templates/dashboard/analyst/index.html:182
 msgid "Aucun historique."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:190
+#: templates/dashboard/analyst/index.html:194
 msgid "Mon profil"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:196 templates/pages/home.html:68
+#: templates/dashboard/analyst/index.html:200
+#: templates/dashboard/superadmin/index.html:179
+#: templates/dashboard/superadmin/user_edit.html:51
+#: templates/pages/guest_submit.html:31 templates/pages/home.html:68
 msgid "Organisation"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:208
+#: templates/dashboard/analyst/index.html:212
 msgid "Mes techniques"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:224
+#: templates/dashboard/analyst/index.html:228
 msgid "Historique des points"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:232
+#: templates/dashboard/analyst/index.html:236
 msgid "Aucun point pour le moment."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:237
+#: templates/dashboard/analyst/index.html:241
 msgid "Encouragements reçus"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:245
+#: templates/dashboard/analyst/index.html:249
 msgid "Aucun encouragement pour le moment."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:256
-#: templates/dashboard/client/index.html:259
-#: templates/dashboard/requester/index.html:220
+#: templates/dashboard/analyst/index.html:260
+#: templates/dashboard/client/index.html:263
+#: templates/dashboard/requester/index.html:224
 msgid "Aucune notification."
 msgstr ""
 
@@ -748,203 +902,215 @@ msgstr ""
 msgid "Espace GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/client/index.html:23
-#: templates/dashboard/requester/index.html:23
+#: templates/dashboard/client/index.html:17
+#: templates/dashboard/requester/index.html:17
+msgid "Rejetées"
+msgstr ""
+
+#: templates/dashboard/client/index.html:27
+#: templates/dashboard/requester/index.html:27
 #: templates/includes/sidebar.html:156 templates/includes/sidebar.html:179
 msgid "Nouvelle demande"
 msgstr ""
 
-#: templates/dashboard/client/index.html:24
-#: templates/dashboard/requester/index.html:24
+#: templates/dashboard/client/index.html:28
+#: templates/dashboard/requester/index.html:28
 #: templates/includes/sidebar.html:160 templates/includes/sidebar.html:183
 msgid "Mes demandes"
 msgstr ""
 
-#: templates/dashboard/client/index.html:25 templates/includes/sidebar.html:137
-#: templates/includes/sidebar.html:187
+#: templates/dashboard/client/index.html:29
+#: templates/dashboard/finance/index.html:16
+#: templates/dashboard/superadmin/index.html:631
+#: templates/includes/sidebar.html:137 templates/includes/sidebar.html:187
 msgid "Factures"
 msgstr ""
 
-#: templates/dashboard/client/index.html:26
-#: templates/dashboard/client/index.html:221
-#: templates/dashboard/finance/index.html:26
-#: templates/dashboard/requester/index.html:25
-#: templates/dashboard/requester/index.html:182
+#: templates/dashboard/client/index.html:30
+#: templates/dashboard/client/index.html:225
+#: templates/dashboard/finance/index.html:30
+#: templates/dashboard/requester/index.html:29
+#: templates/dashboard/requester/index.html:186
 #: templates/includes/sidebar.html:141 templates/includes/sidebar.html:164
 #: templates/includes/sidebar.html:191
 msgid "Archives"
 msgstr ""
 
-#: templates/dashboard/client/index.html:33
+#: templates/dashboard/client/index.html:37
 msgid "Soumettre une nouvelle demande GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/client/index.html:40
-#: templates/dashboard/requester/index.html:39
-#: templates/pages/guest_submit.html:35
+#: templates/dashboard/client/index.html:44
+#: templates/dashboard/requester/index.html:43
+#: templates/pages/guest_submit.html:46
 msgid "Sélectionner un service..."
-msgstr ""
-
-#: templates/dashboard/client/index.html:48
-#: templates/dashboard/requester/index.html:47
-#: templates/pages/guest_submit.html:43
-msgid "Titre de la demande"
-msgstr ""
-
-#: templates/dashboard/client/index.html:49
-msgid "Ex: Analyse complète..."
 msgstr ""
 
 #: templates/dashboard/client/index.html:52
 #: templates/dashboard/requester/index.html:51
-#: templates/dashboard/superadmin/index.html:264
-#: templates/dashboard/superadmin/service_edit.html:45
-#: templates/pages/guest_submit.html:47
-msgid "Description"
+#: templates/pages/guest_submit.html:54
+msgid "Titre de la demande"
 msgstr ""
 
 #: templates/dashboard/client/index.html:53
-#: templates/dashboard/requester/index.html:52
-#: templates/pages/guest_submit.html:48
-msgid "Décrivez votre demande..."
+msgid "Ex: Analyse complète..."
 msgstr ""
 
 #: templates/dashboard/client/index.html:56
+#: templates/dashboard/requester/index.html:55
+#: templates/dashboard/superadmin/index.html:348
+#: templates/dashboard/superadmin/service_edit.html:45
+#: templates/pages/guest_submit.html:58
+msgid "Description"
+msgstr ""
+
+#: templates/dashboard/client/index.html:57
 #: templates/dashboard/requester/index.html:56
-#: templates/pages/guest_submit.html:51
-msgid "Urgence"
-msgstr ""
-
-#: templates/dashboard/client/index.html:58
-#: templates/dashboard/requester/index.html:58
-#: templates/pages/guest_submit.html:53
-msgid "Normal"
-msgstr ""
-
-#: templates/dashboard/client/index.html:59
-#: templates/dashboard/requester/index.html:59
-#: templates/pages/guest_submit.html:54
-msgid "Urgent"
+#: templates/pages/guest_submit.html:59
+msgid "Décrivez votre demande..."
 msgstr ""
 
 #: templates/dashboard/client/index.html:60
 #: templates/dashboard/requester/index.html:60
-#: templates/pages/guest_submit.html:55
-msgid "Très urgent"
+#: templates/pages/guest_submit.html:62
+msgid "Urgence"
+msgstr ""
+
+#: templates/dashboard/client/index.html:62
+#: templates/dashboard/requester/index.html:62
+#: templates/pages/guest_submit.html:64
+msgid "Normal"
 msgstr ""
 
 #: templates/dashboard/client/index.html:63
-#: templates/dashboard/requester/index.html:68
-#: templates/pages/guest_submit.html:59
+#: templates/dashboard/requester/index.html:63
+#: templates/pages/guest_submit.html:65
+msgid "Urgent"
+msgstr ""
+
+#: templates/dashboard/client/index.html:64
+#: templates/dashboard/requester/index.html:64
+#: templates/pages/guest_submit.html:66
+msgid "Très urgent"
+msgstr ""
+
+#: templates/dashboard/client/index.html:67
+#: templates/dashboard/requester/index.html:72
+#: templates/pages/guest_submit.html:70
 msgid "Soumettre la demande"
 msgstr ""
 
-#: templates/dashboard/client/index.html:72
-#: templates/dashboard/requester/index.html:77
+#: templates/dashboard/client/index.html:76
+#: templates/dashboard/requester/index.html:81
 msgid "Mes demandes actives"
 msgstr ""
 
-#: templates/dashboard/client/index.html:90
+#: templates/dashboard/client/index.html:94
 msgid "Créée"
 msgstr ""
 
-#: templates/dashboard/client/index.html:100
-#: templates/dashboard/finance/index.html:110
+#: templates/dashboard/client/index.html:104
+#: templates/dashboard/finance/index.html:114
+#: templates/dashboard/superadmin/index.html:643
 msgid "Paiement"
 msgstr ""
 
-#: templates/dashboard/client/index.html:105
-#: templates/dashboard/requester/index.html:133
+#: templates/dashboard/client/index.html:109
+#: templates/dashboard/requester/index.html:137
 #: templates/includes/sidebar.html:91
 msgid "Analyse"
 msgstr ""
 
-#: templates/dashboard/client/index.html:110
-#: templates/dashboard/requester/index.html:138
+#: templates/dashboard/client/index.html:114
+#: templates/dashboard/requester/index.html:142
 msgid "Terminé"
 msgstr ""
 
-#: templates/dashboard/client/index.html:121
-#: templates/dashboard/requester/index.html:108
+#: templates/dashboard/client/index.html:125
+#: templates/dashboard/requester/index.html:112
 msgid "Confirmer RDV"
 msgstr ""
 
-#: templates/dashboard/client/index.html:129
+#: templates/dashboard/client/index.html:133
 msgid "Montant devis:"
 msgstr ""
 
-#: templates/dashboard/client/index.html:133
+#: templates/dashboard/client/index.html:137
 msgid "Accepter le devis"
 msgstr ""
 
-#: templates/dashboard/client/index.html:137
+#: templates/dashboard/client/index.html:141
 msgid "Refuser le devis"
 msgstr ""
 
-#: templates/dashboard/client/index.html:148
-#: templates/dashboard/requester/index.html:148
+#: templates/dashboard/client/index.html:152
+#: templates/dashboard/requester/index.html:152
 msgid "Confirmer réception"
 msgstr ""
 
-#: templates/dashboard/client/index.html:164
-#: templates/dashboard/requester/index.html:162
+#: templates/dashboard/client/index.html:168
+#: templates/dashboard/requester/index.html:166
 msgid "Commentaire..."
 msgstr ""
 
-#: templates/dashboard/client/index.html:165
-#: templates/dashboard/requester/index.html:163
+#: templates/dashboard/client/index.html:169
+#: templates/dashboard/requester/index.html:167
 msgid "Évaluer"
 msgstr ""
 
-#: templates/dashboard/client/index.html:170
-#: templates/dashboard/client/index.html:231
-#: templates/dashboard/requester/index.html:168
-#: templates/dashboard/requester/index.html:192
+#: templates/dashboard/client/index.html:174
+#: templates/dashboard/client/index.html:235
+#: templates/dashboard/requester/index.html:172
+#: templates/dashboard/requester/index.html:196
 msgid "Note"
 msgstr ""
 
-#: templates/dashboard/client/index.html:175
-#: templates/dashboard/requester/index.html:173
+#: templates/dashboard/client/index.html:179
+#: templates/dashboard/requester/index.html:177
 msgid "Aucune demande active. Soumettez votre première demande!"
 msgstr ""
 
-#: templates/dashboard/client/index.html:184
+#: templates/dashboard/client/index.html:188
 msgid "Mes factures"
 msgstr ""
 
-#: templates/dashboard/client/index.html:190
-#: templates/dashboard/finance/index.html:104
+#: templates/dashboard/client/index.html:194
+#: templates/dashboard/finance/index.html:108
+#: templates/dashboard/superadmin/index.html:637
 msgid "N° Facture"
 msgstr ""
 
-#: templates/dashboard/client/index.html:191
-#: templates/dashboard/finance/index.html:106
+#: templates/dashboard/client/index.html:195
+#: templates/dashboard/finance/index.html:110
 #: templates/dashboard/superadmin/audit_log.html:49
+#: templates/dashboard/superadmin/index.html:638
 msgid "Demande"
 msgstr ""
 
-#: templates/dashboard/client/index.html:192
-#: templates/dashboard/finance/index.html:107
+#: templates/dashboard/client/index.html:196
+#: templates/dashboard/finance/index.html:111
 msgid "HT"
 msgstr ""
 
-#: templates/dashboard/client/index.html:193
-#: templates/dashboard/finance/index.html:108
+#: templates/dashboard/client/index.html:197
+#: templates/dashboard/finance/index.html:112
+#: templates/dashboard/superadmin/index.html:641
 msgid "TVA"
 msgstr ""
 
-#: templates/dashboard/client/index.html:194
-#: templates/dashboard/finance/index.html:109
+#: templates/dashboard/client/index.html:198
+#: templates/dashboard/finance/index.html:113
 msgid "TTC"
 msgstr ""
 
-#: templates/dashboard/client/index.html:209
-#: templates/dashboard/finance/index.html:136
+#: templates/dashboard/client/index.html:213
+#: templates/dashboard/finance/index.html:140
+#: templates/dashboard/superadmin/index.html:662
 msgid "Aucune facture."
 msgstr ""
 
-#: templates/dashboard/client/index.html:246
-#: templates/dashboard/requester/index.html:207
+#: templates/dashboard/client/index.html:250
+#: templates/dashboard/requester/index.html:211
 msgid "Aucune archive."
 msgstr ""
 
@@ -956,89 +1122,94 @@ msgstr ""
 msgid "Gestion financière IBTIKAR & GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:23
+#: templates/dashboard/finance/index.html:17
+msgid "Étudiants IBTIKAR"
+msgstr ""
+
+#: templates/dashboard/finance/index.html:27
 #: templates/includes/sidebar.html:129
 msgid "Validation IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:25
-#: templates/dashboard/finance/index.html:98
+#: templates/dashboard/finance/index.html:29
+#: templates/dashboard/finance/index.html:102
 msgid "Factures GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:33
+#: templates/dashboard/finance/index.html:37
 msgid "Demandes IBTIKAR — Validation financière"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:49
+#: templates/dashboard/finance/index.html:47
+msgid "Solde déclaré"
+msgstr ""
+
+#: templates/dashboard/finance/index.html:53
 msgid "Approuver"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:54
-msgid "Rejeter"
-msgstr ""
-
-#: templates/dashboard/finance/index.html:56
+#: templates/dashboard/finance/index.html:60
 msgid "Raison du rejet..."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:63
+#: templates/dashboard/finance/index.html:67
 msgid "Aucune demande en attente de validation financière."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:72
+#: templates/dashboard/finance/index.html:76
 msgid "Budget IBTIKAR par statut"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:77
+#: templates/dashboard/finance/index.html:81
 msgid "Budget total"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:89
+#: templates/dashboard/finance/index.html:93
 msgid "Aucune donnée budgétaire."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:105
+#: templates/dashboard/finance/index.html:109
+#: templates/dashboard/superadmin/index.html:639
 msgid "Client"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:128
+#: templates/dashboard/finance/index.html:132
 msgid "Partiel"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:129
+#: templates/dashboard/finance/index.html:133
 msgid "Payé"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:148
+#: templates/dashboard/finance/index.html:152
 msgid "Archives des revenus"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:152
+#: templates/dashboard/finance/index.html:156
 msgid "IBTIKAR complétés"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:155
+#: templates/dashboard/finance/index.html:159
 msgid "GENOCLAB complétés"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:165
+#: templates/dashboard/finance/index.html:169
 msgid "Historique financier"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:168
+#: templates/dashboard/finance/index.html:172
 msgid "Total IBTIKAR (virtuel)"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:169
+#: templates/dashboard/finance/index.html:173
 msgid "Total GENOCLAB (réel)"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:170
+#: templates/dashboard/finance/index.html:174
 msgid "Factures émises"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:171
+#: templates/dashboard/finance/index.html:175
 msgid "Étudiants uniques"
 msgstr ""
 
@@ -1047,11 +1218,8 @@ msgid "Bienvenue"
 msgstr ""
 
 #: templates/dashboard/placeholder.html:20
+#: templates/dashboard/superadmin/index.html:102
 msgid "Demandes"
-msgstr ""
-
-#: templates/dashboard/placeholder.html:29
-msgid "Complétées"
 msgstr ""
 
 #: templates/dashboard/placeholder.html:48
@@ -1113,39 +1281,41 @@ msgstr ""
 msgid "Espace IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:32
+#: templates/dashboard/requester/index.html:36
 msgid "Soumettre une nouvelle demande IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:48
+#: templates/dashboard/requester/index.html:52
 msgid "Ex: Analyse DRX échantillon..."
 msgstr ""
 
-#: templates/dashboard/requester/index.html:64
+#: templates/dashboard/requester/index.html:68
 msgid "Solde IBTIKAR déclaré (DA)"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:91
+#: templates/dashboard/requester/index.html:95
+#: templates/dashboard/superadmin/index.html:540
 msgid "Assigné à"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:92
+#: templates/dashboard/requester/index.html:96
 msgid "RDV"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:92
+#: templates/dashboard/requester/index.html:96
 msgid "confirmé"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:99
+#: templates/dashboard/requester/index.html:103
+#: templates/dashboard/superadmin/index.html:797
 msgid "Formulaire IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:118
+#: templates/dashboard/requester/index.html:122
 msgid "Soumis"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:123
+#: templates/dashboard/requester/index.html:127
 msgid "Validation"
 msgstr ""
 
@@ -1234,266 +1404,512 @@ msgstr ""
 msgid "Vue d'ensemble de la plateforme"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:32
-msgid "Actions rapides"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:37
-msgid "Gérer utilisateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:41
-msgid "Ajouter service"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:45
-msgid "Ajouter technique"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:49
-msgid "Modifier contenu"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:55
-msgid "Derniers utilisateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:70
-msgid "Aucun utilisateur récent."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:79
-msgid "Vue d'ensemble"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:80
-#: templates/dashboard/superadmin/index.html:119
+#: templates/dashboard/superadmin/index.html:15
+#: templates/dashboard/superadmin/index.html:100
+#: templates/dashboard/superadmin/index.html:202
 #: templates/includes/sidebar.html:24
 msgid "Utilisateurs"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:81
-#: templates/dashboard/superadmin/index.html:444
+#: templates/dashboard/superadmin/index.html:16
+#: templates/dashboard/superadmin/index.html:101
+#: templates/dashboard/superadmin/index.html:943
 #: templates/includes/sidebar.html:28
 msgid "Analystes"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:83
-#: templates/dashboard/superadmin/index.html:443
+#: templates/dashboard/superadmin/index.html:17
+msgid "Demandes actives"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:27
+#: templates/dashboard/superadmin/index.html:941
+msgid "Services actifs"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:28
+#: templates/dashboard/superadmin/index.html:104
+#: templates/dashboard/superadmin/index.html:942
 msgid "Techniques"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:84
+#: templates/dashboard/superadmin/index.html:37
+msgid "Budget IBTIKAR (DA)"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:38
+msgid "Revenue GENOCLAB (DA)"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:39
+msgid "Note moyenne / 5"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:52
+msgid "Actions rapides"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:57
+msgid "Gérer utilisateurs"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:61
+msgid "Ajouter service"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:65
+msgid "Ajouter technique"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:69
+msgid "Modifier contenu"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:75
+msgid "Derniers utilisateurs"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:90
+msgid "Aucun utilisateur récent."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:99
+msgid "Vue d'ensemble"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:105
+#: templates/includes/sidebar.html:40
+msgid "Paiements"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:107
+#: templates/includes/sidebar.html:48 templates/includes/sidebar.html:87
+msgid "Documents"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:108
+#: templates/includes/sidebar.html:36
+msgid "Formulaires"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:109
 msgid "Contenu"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:85
+#: templates/dashboard/superadmin/index.html:110
 #: templates/includes/sidebar.html:60
 msgid "Système"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:91
+#: templates/dashboard/superadmin/index.html:116
 msgid "Répartition par statut"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:96
+#: templates/dashboard/superadmin/index.html:121
 #: templates/dashboard/superadmin/service_edit.html:73
 msgid "Nombre"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:107
+#: templates/dashboard/superadmin/index.html:132
 msgid "Aucune demande"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:108
+#: templates/dashboard/superadmin/index.html:133
 msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:128
+#: templates/dashboard/superadmin/index.html:145
+msgid "Créer un utilisateur"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:146
+msgid "Masquer"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:146
+msgid "Afficher"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:153
+#: templates/dashboard/superadmin/user_edit.html:19
+msgid "Nom d'utilisateur"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:171
+#: templates/dashboard/superadmin/index.html:211
+#: templates/dashboard/superadmin/user_edit.html:37
 msgid "Rôle"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:141
-#: templates/dashboard/superadmin/index.html:287
+#: templates/dashboard/superadmin/index.html:193
+msgid "Créer"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:224
+#: templates/dashboard/superadmin/index.html:371
 msgid "Actif"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:143
+#: templates/dashboard/superadmin/index.html:226
+#: templates/dashboard/superadmin/index.html:678
 msgid "Inactif"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:150
-#: templates/dashboard/superadmin/index.html:305
+#: templates/dashboard/superadmin/index.html:230
+#: templates/dashboard/superadmin/index.html:385
+#: templates/dashboard/superadmin/index.html:852
+msgid "Modifier"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:234
+#: templates/dashboard/superadmin/index.html:389
 msgid "Désactiver"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:150
+#: templates/dashboard/superadmin/index.html:234
 msgid "Activer"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:167
+#: templates/dashboard/superadmin/index.html:251
 msgid "Analystes / Opérateurs"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:200
+#: templates/dashboard/superadmin/index.html:284
 msgid "Rendre indisponible"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:200
+#: templates/dashboard/superadmin/index.html:284
 msgid "Rendre disponible"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:216
+#: templates/dashboard/superadmin/index.html:299
 msgid "Aucun analyste enregistré."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:227
+#: templates/dashboard/superadmin/index.html:311
 msgid "Ajouter un service"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:233
-#: templates/dashboard/superadmin/index.html:282
+#: templates/dashboard/superadmin/index.html:317
+#: templates/dashboard/superadmin/index.html:366
 msgid "Code"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:251
+#: templates/dashboard/superadmin/index.html:335
 msgid "Prix IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:255
+#: templates/dashboard/superadmin/index.html:339
 msgid "Prix GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:259
+#: templates/dashboard/superadmin/index.html:343
 #: templates/dashboard/superadmin/service_edit.html:40
 msgid "Délai (jours)"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:268
+#: templates/dashboard/superadmin/index.html:352
 #: templates/dashboard/superadmin/service_edit.html:49
 msgid "Image"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:271
+#: templates/dashboard/superadmin/index.html:355
 msgid "Créer le service"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:276
+#: templates/dashboard/superadmin/index.html:360
 msgid "Services existants"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:285
+#: templates/dashboard/superadmin/index.html:369
 #: templates/includes/sidebar.html:149
 msgid "IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:286
+#: templates/dashboard/superadmin/index.html:370
 #: templates/includes/sidebar.html:172
 msgid "GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:301
-msgid "Modifier"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:311
+#: templates/dashboard/superadmin/index.html:395
 msgid "Aucun service."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:323
+#: templates/dashboard/superadmin/index.html:407
 msgid "Ajouter une technique"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:333
-#: templates/dashboard/superadmin/index.html:348
+#: templates/dashboard/superadmin/index.html:417
+#: templates/dashboard/superadmin/index.html:432
 msgid "Catégorie"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:337
+#: templates/dashboard/superadmin/index.html:421
+#: templates/dashboard/superadmin/index.html:689
 msgid "Ajouter"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:344
+#: templates/dashboard/superadmin/index.html:428
 msgid "Techniques existantes"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:358
+#: templates/dashboard/superadmin/index.html:442
 msgid "Supprimer"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:364
+#: templates/dashboard/superadmin/index.html:448
 msgid "Aucune technique."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:376
+#: templates/dashboard/superadmin/index.html:460
 msgid "Gestion du contenu"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:381
-#: templates/dashboard/superadmin/index.html:394
+#: templates/dashboard/superadmin/index.html:465
+#: templates/dashboard/superadmin/index.html:478
 msgid "Clé"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:385
-#: templates/dashboard/superadmin/index.html:394
+#: templates/dashboard/superadmin/index.html:469
+#: templates/dashboard/superadmin/index.html:478
 msgid "Valeur"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:394
+#: templates/dashboard/superadmin/index.html:478
 msgid "Modifié"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:414
+#: templates/dashboard/superadmin/index.html:507
+#: templates/dashboard/superadmin/index.html:515
+msgid "Tous"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:522
+msgid "Recherche"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:523
+msgid "ID ou titre..."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:565
+msgid "Forcer une transition"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:570
+msgid "Sélectionner le statut cible"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:577
+msgid "Justification (min. 10 caractères)"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:579
+msgid "Forcer la transition"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:585
+msgid "Override budgétaire"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:589
+msgid "Montant budget"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:592
+msgid "Justification pour l override..."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:594
+msgid "Approuver override"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:640
+msgid "Sous-total HT"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:642
+msgid "Total TTC"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:644
+msgid "Verrouillé"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:673
+msgid "Méthodes de paiement"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:686
+msgid "Nom de la méthode"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:696
+#: templates/dashboard/superadmin/index.html:701
+msgid "Réinitialiser les compteurs"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:698
+msgid ""
+"Archive les données de revenus actuelles et réinitialise les compteurs du "
+"tableau de bord. Cette action est irréversible."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:699
+msgid ""
+"Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
+"données seront archivées."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:711
+msgid "Productivité des analystes"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:720
+msgid "Score"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:734
+msgid "Fire"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:736
+msgid "Very Good"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:738
+msgid "Good"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:746
+msgid "Aucune donnée de productivité."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:759
+msgid "Rapports générés"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:769
+msgid "Mis à jour"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:782
+msgid "Aucun rapport disponible."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:792
+msgid "Templates DOCX"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:794
+msgid ""
+"Mettez à jour les templates DOCX utilisés pour la génération automatique des "
+"documents. Un backup est créé automatiquement avant chaque mise à jour."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:806
+msgid "Note de plateforme"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:815
+msgid "Fiche de réception"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:840
+msgid "Configuration des formulaires par service"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:861
+msgid "Champs personnalisés"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:869
+#: templates/dashboard/superadmin/service_edit.html:64
+msgid "Label"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:870
+#: templates/dashboard/superadmin/service_edit.html:68
+msgid "Type"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:871
+#: templates/dashboard/superadmin/service_edit.html:81
+msgid "Requis"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:884
+msgid "Aucun champ personnalisé."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:896
 msgid "Sauvegarde"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:418
+#: templates/dashboard/superadmin/index.html:900
 msgid "Télécharger une sauvegarde"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:420
+#: templates/dashboard/superadmin/index.html:902
 msgid "Télécharge une copie de la base de données SQLite."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:425
+#: templates/dashboard/superadmin/index.html:906
+msgid "Restaurer une sauvegarde"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:908
+msgid ""
+"Attention : cette opération remplace la base de données actuelle. Un backup "
+"automatique sera créé avant la restauration. Le serveur devra être redémarré "
+"après la restauration."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:909
+msgid ""
+"Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base "
+"actuelle sera créé automatiquement."
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:916
+msgid "Restaurer"
+msgstr ""
+
+#: templates/dashboard/superadmin/index.html:924
 msgid "Informations plateforme"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:428 templates/pages/about.html:39
+#: templates/dashboard/superadmin/index.html:927
 msgid "Version"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:429
+#: templates/dashboard/superadmin/index.html:928
 msgid "Auteur"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:430
+#: templates/dashboard/superadmin/index.html:929
 #: templates/pages/contact.html:15
 msgid "Institution"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:431
+#: templates/dashboard/superadmin/index.html:930
 msgid "Base de données"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:432
+#: templates/dashboard/superadmin/index.html:931
 msgid "Framework"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:437
+#: templates/dashboard/superadmin/index.html:936
 msgid "Statistiques"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:440
+#: templates/dashboard/superadmin/index.html:939
 msgid "Utilisateurs totaux"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:441
+#: templates/dashboard/superadmin/index.html:940
 msgid "Demandes totales"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:442
-msgid "Services actifs"
 msgstr ""
 
 #: templates/dashboard/superadmin/revenue_archives.html:4
@@ -1557,14 +1973,6 @@ msgstr ""
 msgid "Champs personnalisés du formulaire"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:64
-msgid "Label"
-msgstr ""
-
-#: templates/dashboard/superadmin/service_edit.html:68
-msgid "Type"
-msgstr ""
-
 #: templates/dashboard/superadmin/service_edit.html:70
 msgid "Texte"
 msgstr ""
@@ -1581,20 +1989,47 @@ msgstr ""
 msgid "Options (virgules)"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:81
-msgid "Requis"
-msgstr ""
-
 #: templates/dashboard/superadmin/service_edit.html:86
 msgid "Ajouter un champ"
 msgstr ""
 
 #: templates/dashboard/superadmin/service_edit.html:89
+#: templates/dashboard/superadmin/user_edit.html:74
 msgid "Enregistrer"
 msgstr ""
 
 #: templates/dashboard/superadmin/service_edit.html:90
+#: templates/dashboard/superadmin/user_edit.html:75
 msgid "Annuler"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:4
+#: templates/dashboard/superadmin/user_edit.html:8
+msgid "Modifier utilisateur"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:9
+msgid "Retour au tableau de bord"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:13
+msgid "Informations de l'utilisateur"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:59
+msgid "Directeur de thèse"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:65
+msgid "Niveau étudiant"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:69
+msgid "Nouveau mot de passe"
+msgstr ""
+
+#: templates/dashboard/superadmin/user_edit.html:69
+msgid "laisser vide pour ne pas changer"
 msgstr ""
 
 #: templates/includes/notification_list.html:12
@@ -1628,18 +2063,6 @@ msgstr ""
 msgid "par échantillon"
 msgstr ""
 
-#: templates/includes/sidebar.html:36
-msgid "Formulaires"
-msgstr ""
-
-#: templates/includes/sidebar.html:40
-msgid "Paiements"
-msgstr ""
-
-#: templates/includes/sidebar.html:48 templates/includes/sidebar.html:87
-msgid "Documents"
-msgstr ""
-
 #: templates/includes/sidebar.html:52
 msgid "Audit"
 msgstr ""
@@ -1652,57 +2075,63 @@ msgstr ""
 msgid "Opérations"
 msgstr ""
 
-#: templates/includes/sidebar.html:229
-msgid "Quitter"
+#: templates/includes/sidebar.html:231
+msgid "Déconnexion"
 msgstr ""
 
 #: templates/pages/about.html:8
 msgid "À propos de PLAGENOR"
 msgstr ""
 
-#: templates/pages/about.html:9
-msgid "Plateforme de Gestion des Opérations Scientifiques — Version 4.0"
-msgstr ""
-
-#: templates/pages/about.html:14
-msgid "Mission"
-msgstr ""
-
-#: templates/pages/about.html:16
+#: templates/pages/about.html:15
 msgid ""
-"PLAGENOR centralise la gestion des demandes d'analyses scientifiques au sein "
-"de l'ESSBO. La plateforme assure le suivi complet des opérations, de la "
-"soumission à la livraison des résultats, en passant par la validation "
-"financière et l'assignation aux analystes."
+"L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, "
+"un service commun de recherche financé par la DGRSDT (Direction Générale de "
+"la Recherche Scientifique et du Développement Technologique)."
 msgstr ""
 
-#: templates/pages/about.html:23
-msgid "Canaux de Service"
-msgstr ""
-
-#: templates/pages/about.html:25
+#: templates/pages/about.html:18
 msgid ""
-"Canal interne pour les étudiants et chercheurs de l'ESSBO. Les analyses sont "
-"financées dans le cadre du budget IBTIKAR avec un plafond annuel."
+"PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie "
+"par le code de commerce algérien."
+msgstr ""
+
+#: templates/pages/about.html:21
+msgid ""
+"PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités "
+"de PLAGENOR — agissant comme un ERP interne pour organiser les flux de "
+"travail, gérer les demandes IBTIKAR et les clients GENOCLAB."
 msgstr ""
 
 #: templates/pages/about.html:28
+msgid "Deux missions"
+msgstr ""
+
+#: templates/pages/about.html:30
 msgid ""
-"Canal externe pour les universités, entreprises et laboratoires. Les "
-"prestations sont facturées selon un barème établi avec devis et facturation "
-"formelle."
+"Canal académique : réaliser des analyses génomiques pour les étudiants de "
+"fin de cycle (Master, Ingéniorat) et les doctorants de toutes les "
+"universités algériennes, afin de promouvoir la recherche scientifique en "
+"Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 "
+"000 DA géré par la DGRSDT."
 msgstr ""
 
-#: templates/pages/about.html:35
-msgid "Conception"
+#: templates/pages/about.html:33
+#, python-format
+msgid ""
+"Canal commercial : fournir les mêmes analyses génomiques aux clients "
+"externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une "
+"base commerciale avec facturation, TVA 19%%%%, et paiement réel."
 msgstr ""
 
-#: templates/pages/about.html:37
-msgid "Conçue et développée par"
+#: templates/pages/about.html:42
+msgid ""
+"Identification microbienne (MALDI-TOF), séquençage Sanger & Illumina, PCR, "
+"contrôle qualité des acides nucléiques, lyophilisation, synthèse d'amorces."
 msgstr ""
 
-#: templates/pages/about.html:38
-msgid "École Supérieure des Sciences Biologiques d'Oran (ESSBO)"
+#: templates/pages/about.html:54 templates/pages/contact.html:19
+msgid "Adresse"
 msgstr ""
 
 #: templates/pages/contact.html:8
@@ -1711,10 +2140,6 @@ msgstr ""
 
 #: templates/pages/contact.html:9
 msgid "Pour toute question, n'hésitez pas à nous contacter."
-msgstr ""
-
-#: templates/pages/contact.html:19
-msgid "Adresse"
 msgstr ""
 
 #: templates/pages/contact.html:31
@@ -1763,11 +2188,23 @@ msgstr ""
 msgid "Numéro de téléphone"
 msgstr ""
 
-#: templates/pages/guest_submit.html:31
+#: templates/pages/guest_submit.html:32
+msgid "Votre organisation"
+msgstr ""
+
+#: templates/pages/guest_submit.html:35
 msgid "Détails de la demande"
 msgstr ""
 
-#: templates/pages/guest_submit.html:44
+#: templates/pages/guest_submit.html:39
+msgid "externe"
+msgstr ""
+
+#: templates/pages/guest_submit.html:40
+msgid "académique"
+msgstr ""
+
+#: templates/pages/guest_submit.html:55
 msgid "Ex: Analyse DRX..."
 msgstr ""
 
@@ -1797,7 +2234,7 @@ msgid "Suivre ma demande"
 msgstr ""
 
 #: templates/pages/home.html:15
-msgid "Plateforme de Gestion des Opérations Scientifiques"
+msgid "Plateforme Technologique de Génomique — ESSBO · ORAN"
 msgstr ""
 
 #: templates/pages/home.html:19

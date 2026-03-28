@@ -11,10 +11,13 @@
 
 <!-- KPI Cards -->
 <div class="kpi-grid">
-    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Total demandes' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='clock' value=pending_count label='En attente' color='orange' %}
+    {% trans "Total demandes" as lbl_total %}
+    {% trans "En attente" as lbl_pending %}
+    {% trans "Complétées" as lbl_completed %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label=lbl_total color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='clock' value=pending_count label=lbl_pending color='orange' %}
     {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='purple' %}
-    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label='Complétées' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label=lbl_completed color='green' %}
 </div>
 
 <!-- Tab Navigation -->
@@ -47,21 +50,21 @@
                             {% csrf_token %}
                             <select name="to_status" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
                                 {% if req.status == 'SUBMITTED' %}
-                                <option value="VALIDATION_PEDAGOGIQUE">Validation Pédagogique</option>
-                                <option value="REJECTED">Rejeter</option>
+                                <option value="VALIDATION_PEDAGOGIQUE">{% trans "Validation Pédagogique" %}</option>
+                                <option value="REJECTED">{% trans "Rejeter" %}</option>
                                 {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
-                                <option value="VALIDATION_FINANCE">Validation Finance</option>
-                                <option value="REJECTED">Rejeter</option>
+                                <option value="VALIDATION_FINANCE">{% trans "Validation Finance" %}</option>
+                                <option value="REJECTED">{% trans "Rejeter" %}</option>
                                 {% elif req.status == 'PLATFORM_NOTE_GENERATED' %}
-                                <option value="ASSIGNED">Assigner</option>
+                                <option value="ASSIGNED">{% trans "Assigner" %}</option>
                                 {% elif req.status == 'ADMIN_REVIEW' or req.status == 'REPORT_UPLOADED' %}
-                                <option value="REPORT_VALIDATED">Valider rapport</option>
-                                <option value="ANALYSIS_STARTED">Renvoyer pour révision</option>
+                                <option value="REPORT_VALIDATED">{% trans "Valider rapport" %}</option>
+                                <option value="ANALYSIS_STARTED">{% trans "Renvoyer pour révision" %}</option>
                                 {% elif req.status == 'REQUEST_CREATED' %}
-                                <option value="QUOTE_DRAFT">Préparer devis</option>
-                                <option value="REJECTED">Rejeter</option>
+                                <option value="QUOTE_DRAFT">{% trans "Préparer devis" %}</option>
+                                <option value="REJECTED">{% trans "Rejeter" %}</option>
                                 {% elif req.status == 'QUOTE_DRAFT' %}
-                                <option value="QUOTE_SENT">Envoyer devis</option>
+                                <option value="QUOTE_SENT">{% trans "Envoyer devis" %}</option>
                                 {% endif %}
                             </select>
                             <input type="text" name="notes" placeholder="{% trans 'Notes...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
@@ -249,8 +252,10 @@
     <!-- Budget -->
     <div x-show="tab === 'budget'">
         <div class="grid-2 mb-4">
-            {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_budget label='Budget IBTIKAR (virtuel)' color='blue' %}
-            {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label='Revenus GENOCLAB (réel)' color='green' %}
+            {% trans "Budget IBTIKAR (virtuel)" as lbl_ibt_budget %}
+            {% trans "Revenus GENOCLAB (réel)" as lbl_gen_rev %}
+            {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_budget label=lbl_ibt_budget color='blue' %}
+            {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label=lbl_gen_rev color='green' %}
         </div>
 
         <!-- Performance comparison -->
@@ -300,7 +305,7 @@
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
                         <div class="data-card-row text-sm text-muted">
-                            <span>Analyste: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
+                            <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
                             {% if req.report_file %}
                             <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Télécharger" %}</a>
                             {% endif %}

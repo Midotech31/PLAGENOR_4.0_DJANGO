@@ -11,10 +11,14 @@
 
 <!-- KPI Cards -->
 <div class="kpi-grid">
-    {% include 'includes/kpi_card.html' with icon='clipboard' value=total label='Total demandes' color='blue' %}
-    {% include 'includes/kpi_card.html' with icon='activity' value=active label='En cours' color='orange' %}
-    {% include 'includes/kpi_card.html' with icon='check' value=completed label='Complétées' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label='Rejetées' color='red' %}
+    {% trans "Total demandes" as lbl_total %}
+    {% trans "En cours" as lbl_progress %}
+    {% trans "Complétées" as lbl_completed %}
+    {% trans "Rejetées" as lbl_rejected %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total label=lbl_total color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=active label=lbl_progress color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed label=lbl_completed color='green' %}
+    {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label=lbl_rejected color='red' %}
 </div>
 
 <!-- Tab Navigation -->
