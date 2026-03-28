@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Administration" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Tableau de bord — Opérations" %}</h1>
+    <p>{% trans "Gestion des demandes et assignations" %}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4 mb-4">
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Total demandes' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='clock' value=pending_count label='En attente' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label='Complétées' color='green' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: 'pending'}">
+    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
+        <button class="btn btn-sm" :class="tab === 'pending' ? 'btn-primary' : 'btn-outline'" @click="tab = 'pending'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En attente" %} ({{ pending_count }})</button>
+        <button class="btn btn-sm" :class="tab === 'all' ? 'btn-primary' : 'btn-outline'" @click="tab = 'all'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Toutes les demandes" %}</button>
+        <button class="btn btn-sm" :class="tab === 'assign' ? 'btn-primary' : 'btn-outline'" @click="tab = 'assign'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Assignation" %}</button>
+        <button class="btn btn-sm" :class="tab === 'budget' ? 'btn-primary' : 'btn-outline'" @click="tab = 'budget'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Budget" %}</button>
+        <button class="btn btn-sm" :class="tab === 'reports' ? 'btn-primary' : 'btn-outline'" @click="tab = 'reports'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Rapports" %}</button>
+    </div>
+
+    <!-- Pending Requests -->
+    <div x-show="tab === 'pending'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Demandes en attente d'action" %}</h3></div>
+            <div class="card-body">
+                {% for req in pending_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }} &middot; {{ req.requester.get_full_name|default:"Invité" }}</span>
+                        <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="to_status" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
+                                {% if req.status == 'SUBMITTED' %}
+                                <option value="VALIDATION_PEDAGOGIQUE">Validation Pédagogique</option>
+                                <option value="REJECTED">Rejeter</option>
+                                {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
+                                <option value="VALIDATION_FINANCE">Validation Finance</option>
+                                <option value="REJECTED">Rejeter</option>
+                                {% elif req.status == 'PLATFORM_NOTE_GENERATED' %}
+                                <option value="ASSIGNED">Assigner</option>
+                                {% elif req.status == 'ADMIN_REVIEW' or req.status == 'REPORT_UPLOADED' %}
+                                <option value="REPORT_VALIDATED">Valider rapport</option>
+                                <option value="ANALYSIS_STARTED">Renvoyer pour révision</option>
+                                {% elif req.status == 'REQUEST_CREATED' %}
+                                <option value="QUOTE_DRAFT">Préparer devis</option>
+                                <option value="REJECTED">Rejeter</option>
+                                {% elif req.status == 'QUOTE_DRAFT' %}
+                                <option value="QUOTE_SENT">Envoyer devis</option>
+                                {% endif %}
+                            </select>
+                            <input type="text" name="notes" placeholder="{% trans 'Notes...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Appliquer" %}</button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en attente." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- All Requests -->
+    <div x-show="tab === 'all'">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% trans "Toutes les demandes" %}</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" action="" class="flex gap-2 mb-4" style="flex-wrap: wrap;">
+                    <select name="channel" class="form-control" style="width:auto;">
+                        <option value="">{% trans "Tous les canaux" %}</option>
+                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
+                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                    </select>
+                    <select name="status" class="form-control" style="width:auto;">
+                        <option value="">{% trans "Tous les statuts" %}</option>
+                        {% for code, label in status_choices %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Rechercher...' %}" class="form-control" style="width:200px;">
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrer" %}</button>
+                </form>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Canal" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Demandeur" %}</th>
+                                <th>{% trans "Assigné" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in all_requests %}
+                        <tr>
+                            <td><strong>{{ req.display_id }}</strong></td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.get_channel_display }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{{ req.requester.get_full_name|default:"—" }}</td>
+                            <td>{{ req.assigned_to.user.get_full_name|default:"—" }}</td>
+                            <td>{{ req.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Panel -->
+    <div x-show="tab === 'assign'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Panneau d'assignation" %}</h3></div>
+            <div class="card-body">
+                <h4 class="mb-2">{% trans "Analystes disponibles" %}</h4>
+                <div class="table-wrapper mb-4">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "Analyste" %}</th>
+                                <th>{% trans "Charge" %}</th>
+                                <th>{% trans "Productivité" %}</th>
+                                <th>{% trans "Points" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in available_members %}
+                        <tr>
+                            <td>{{ m.user.get_full_name }}</td>
+                            <td>{{ m.current_load }}/{{ m.max_load }}</td>
+                            <td>{{ m.productivity_score }}%</td>
+                            <td>{{ m.total_points }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline;" x-data="{show: false}">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Points" %}</button>
+                                        <div x-show="show" style="display:inline;">
+                                            <input type="number" name="points" value="10" class="form-control" style="width:60px; display:inline-block; font-size:0.85rem;">
+                                            <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:120px; display:inline-block; font-size:0.85rem;">
+                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                        </div>
+                                    </form>
+                                    <form method="post" action="{% url 'dashboard:admin_send_cheer' m.pk %}" style="display:inline;" x-data="{show: false}">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Encourager" %}</button>
+                                        <div x-show="show" style="display:inline;">
+                                            <input type="text" name="message" placeholder="{% trans 'Message' %}" class="form-control" style="width:180px; display:inline-block; font-size:0.85rem;">
+                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 class="mb-2">{% trans "Demandes à assigner" %}</h4>
+                {% for req in pending_requests %}
+                    {% if req.status == 'PLATFORM_NOTE_GENERATED' or req.status == 'PAYMENT_CONFIRMED' %}
+                    <div class="data-card mb-2">
+                        <div class="data-card-row">
+                            <span><strong>{{ req.display_id }}</strong> — {{ req.title|truncatechars:40 }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                        <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" class="data-card-row mt-2" style="gap: 0.5rem;">
+                            {% csrf_token %}
+                            <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;">
+                                {% for m in available_members %}
+                                <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget -->
+    <div x-show="tab === 'budget'">
+        <div class="grid-2 mb-4">
+            {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_budget label='Budget IBTIKAR (virtuel)' color='blue' %}
+            {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label='Revenus GENOCLAB (réel)' color='green' %}
+        </div>
+    </div>
+
+    <!-- Reports -->
+    <div x-show="tab === 'reports'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Rapports en attente de révision" %}</h3></div>
+            <div class="card-body">
+                {% for req in pending_requests %}
+                    {% if req.status == 'REPORT_UPLOADED' or req.status == 'ADMIN_REVIEW' %}
+                    <div class="data-card mb-2">
+                        <div class="data-card-row">
+                            <span><strong>{{ req.display_id }}</strong> — {{ req.title|truncatechars:40 }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                        <div class="data-card-row text-sm text-muted">
+                            <span>Analyste: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
+                            {% if req.report_file %}
+                            <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Télécharger" %}</a>
+                            {% endif %}
+                        </div>
+                        <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="to_status" value="REPORT_VALIDATED">
+                                <input type="text" name="notes" placeholder="{% trans 'Notes...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
+                                <input type="text" name="notes" placeholder="{% trans 'Raison du renvoi...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Renvoyer" %}</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucun rapport en attente." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

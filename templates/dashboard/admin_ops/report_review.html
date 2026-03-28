@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Révision rapport" %} — {{ req.display_id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Révision du rapport" %} — {{ req.display_id }}</h1>
+    <p>{{ req.title }}</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="grid-2 mb-4">
+            <div class="data-card">
+                <div class="data-card-row"><strong>{% trans "Canal" %}</strong><span>{{ req.get_channel_display }}</span></div>
+                <div class="data-card-row"><strong>{% trans "Service" %}</strong><span>{{ req.service.name|default:"—" }}</span></div>
+                <div class="data-card-row"><strong>{% trans "Analyste" %}</strong><span>{{ req.assigned_to.user.get_full_name|default:"—" }}</span></div>
+                <div class="data-card-row"><strong>{% trans "Statut" %}</strong><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></div>
+            </div>
+            <div class="data-card">
+                {% if req.report_file %}
+                <div class="data-card-row">
+                    <strong>{% trans "Rapport" %}</strong>
+                    <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Télécharger" %}</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="validate">
+                <button type="submit" class="btn btn-primary">{% trans "Valider le rapport" %}</button>
+            </form>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_back">
+                <div class="form-group">
+                    <label>{% trans "Notes de révision" %}</label>
+                    <textarea name="revision_notes" class="form-control" rows="3" placeholder="{% trans 'Indiquez les corrections nécessaires...' %}"></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger">{% trans "Renvoyer pour révision" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline mt-4">{% trans "Retour" %}</a>
+{% endblock %}

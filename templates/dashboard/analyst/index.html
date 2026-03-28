@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Analyste" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Tableau de bord — Analyste" %}</h1>
+    <p>{% trans "Bienvenue" %}, {{ request.user.get_full_name }}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4 mb-4">
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=assigned_count label='Assignées' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=in_progress_count label='En cours' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label='Complétées' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='star' value=productivity|floatformat:0 label='Productivité %' color='purple' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: 'pending'}">
+    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
+        <button class="btn btn-sm" :class="tab === 'pending' ? 'btn-primary' : 'btn-outline'" @click="tab = 'pending'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En attente" %} ({{ pending_tasks.count }})</button>
+        <button class="btn btn-sm" :class="tab === 'progress' ? 'btn-primary' : 'btn-outline'" @click="tab = 'progress'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En cours" %} ({{ in_progress.count }})</button>
+        <button class="btn btn-sm" :class="tab === 'history' ? 'btn-primary' : 'btn-outline'" @click="tab = 'history'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Historique" %}</button>
+        <button class="btn btn-sm" :class="tab === 'profile' ? 'btn-primary' : 'btn-outline'" @click="tab = 'profile'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Profil" %}</button>
+        <button class="btn btn-sm" :class="tab === 'points' ? 'btn-primary' : 'btn-outline'" @click="tab = 'points'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Points" %}</button>
+        <button class="btn btn-sm" :class="tab === 'notifs' ? 'btn-primary' : 'btn-outline'" @click="tab = 'notifs'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Notifications" %}</button>
+    </div>
+
+    <!-- Pending Tasks -->
+    <div x-show="tab === 'pending'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Tâches en attente" %}</h3></div>
+            <div class="card-body">
+                {% for req in pending_tasks %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{{ req.get_urgency_display }} &middot; {{ req.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <form method="post" action="{% url 'dashboard:analyst_accept' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:analyst_decline' req.pk %}" style="display:inline;" x-data="{show: false}">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Décliner" %}</button>
+                            <div x-show="show" style="display:inline;">
+                                <input type="text" name="reason" placeholder="{% trans 'Raison...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune tâche en attente." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- In Progress -->
+    <div x-show="tab === 'progress'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Travaux en cours" %}</h3></div>
+            <div class="card-body">
+                {% for req in in_progress %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }}</span>
+                        <span>{{ req.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    {% if req.admin_revision_notes %}
+                    <div class="data-card-row text-sm" style="color: var(--danger-600);">
+                        <span>Notes de révision: {{ req.admin_revision_notes }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <!-- Workflow action buttons based on status -->
+                        {% if req.status == 'APPOINTMENT_SCHEDULED' %}
+                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
+                        </form>
+                        {% elif req.status == 'SAMPLE_RECEIVED' %}
+                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Démarrer analyse" %}</button>
+                        </form>
+                        {% elif req.status == 'ANALYSIS_STARTED' %}
+                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
+                        </form>
+                        {% elif req.status == 'ANALYSIS_FINISHED' %}
+                        <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div x-show="tab === 'history'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Historique" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in history %}
+                        <tr>
+                            <td>{{ req.display_id }}</td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.service.name|default:"—" }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{{ req.updated_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted">{% trans "Aucun historique." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile -->
+    <div x-show="tab === 'profile'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Mon profil" %}</h3></div>
+            <div class="card-body">
+                <div class="grid-2">
+                    <div class="data-card">
+                        <div class="data-card-row"><strong>{% trans "Nom" %}</strong><span>{{ request.user.get_full_name }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Email" %}</strong><span>{{ request.user.email }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Organisation" %}</strong><span>{{ request.user.organization|default:"—" }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Téléphone" %}</strong><span>{{ request.user.phone|default:"—" }}</span></div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-card-row"><strong>{% trans "Charge" %}</strong><span>{{ profile.current_load }}/{{ profile.max_load }} ({{ profile.load_percentage }}%)</span></div>
+                        <div class="data-card-row"><strong>{% trans "Productivité" %}</strong><span>{{ profile.productivity_score }}%</span></div>
+                        <div class="data-card-row"><strong>{% trans "Points" %}</strong><span>{{ profile.total_points }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Disponible" %}</strong><span>{% if profile.available %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</span></div>
+                    </div>
+                </div>
+                {% if profile.techniques.exists %}
+                <div class="mt-4">
+                    <h4>{% trans "Mes techniques" %}</h4>
+                    <div class="flex gap-2 mt-2" style="flex-wrap: wrap;">
+                        {% for t in profile.techniques.all %}
+                        <span class="badge-status info">{{ t.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Points & Cheers -->
+    <div x-show="tab === 'points'">
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Historique des points" %}</h3></div>
+                <div class="card-body">
+                    {% for ph in points_history %}
+                    <div class="data-card-row" style="padding: 0.5rem 0; border-bottom: 1px solid var(--slate-100);">
+                        <span><strong>+{{ ph.points }}</strong> — {{ ph.reason }}</span>
+                        <span class="text-xs text-muted">{{ ph.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state"><p>{% trans "Aucun point pour le moment." %}</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Encouragements reçus" %}</h3></div>
+                <div class="card-body">
+                    {% for cheer in cheers %}
+                    <div class="data-card-row" style="padding: 0.5rem 0; border-bottom: 1px solid var(--slate-100);">
+                        <span>{{ cheer.message }}</span>
+                        <span class="text-xs text-muted">{{ cheer.from_user.get_full_name }} &middot; {{ cheer.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state"><p>{% trans "Aucun encouragement pour le moment." %}</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div x-show="tab === 'notifs'">
+        {% include 'includes/notification_list.html' %}
+        {% if not notifications %}
+        <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

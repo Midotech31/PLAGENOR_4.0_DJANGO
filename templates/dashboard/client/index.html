@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Client GENOCLAB" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Tableau de bord — GENOCLAB" %}</h1>
+    <p>{% trans "Bienvenue" %}, {{ request.user.get_full_name }}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4 mb-4">
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total label='Total demandes' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=active label='En cours' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed label='Complétées' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label='Rejetées' color='red' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: 'requests'}">
+    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
+        <button class="btn btn-sm" :class="tab === 'new' ? 'btn-primary' : 'btn-outline'" @click="tab = 'new'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Nouvelle demande" %}</button>
+        <button class="btn btn-sm" :class="tab === 'requests' ? 'btn-primary' : 'btn-outline'" @click="tab = 'requests'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
+        <button class="btn btn-sm" :class="tab === 'invoices' ? 'btn-primary' : 'btn-outline'" @click="tab = 'invoices'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Factures" %}</button>
+        <button class="btn btn-sm" :class="tab === 'archives' ? 'btn-primary' : 'btn-outline'" @click="tab = 'archives'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Archives" %}</button>
+        <button class="btn btn-sm" :class="tab === 'notifs' ? 'btn-primary' : 'btn-outline'" @click="tab = 'notifs'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Notifications" %}</button>
+    </div>
+
+    <!-- New Request -->
+    <div x-show="tab === 'new'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande GENOCLAB" %}</h3></div>
+            <div class="card-body">
+                <form method="post" action="{% url 'dashboard:client_create' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>{% trans "Service" %}</label>
+                        <select name="service_id" class="form-control" required>
+                            <option value="">{% trans "Sélectionner un service..." %}</option>
+                            {% for s in services %}
+                            <option value="{{ s.pk }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Titre de la demande" %}</label>
+                        <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse complète...' %}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Description" %}</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Urgence" %}</label>
+                        <select name="urgency" class="form-control">
+                            <option value="Normal">{% trans "Normal" %}</option>
+                            <option value="Urgent">{% trans "Urgent" %}</option>
+                            <option value="Très urgent">{% trans "Très urgent" %}</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Soumettre la demande" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Requests -->
+    <div x-show="tab === 'requests'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Mes demandes actives" %}</h3></div>
+            <div class="card-body">
+                {% for req in active_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }} &middot; {{ req.get_urgency_display }}</span>
+                        <span>{{ req.created_at|date:"d/m/Y" }}</span>
+                    </div>
+
+                    <!-- Pipeline visualization -->
+                    <div class="pipeline mt-2">
+                        {% with s=req.status %}
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
+                        </div>
+                        <div class="pipeline-line"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_SCHEDULED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
+                        </div>
+                        <div class="pipeline-line"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_SCHEDULED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
+                        </div>
+                        <div class="pipeline-line"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
+                        </div>
+                        <div class="pipeline-line"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
+                        </div>
+                        {% endwith %}
+                    </div>
+
+                    <!-- Quote actions -->
+                    {% if req.status == 'QUOTE_SENT' %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <span class="text-sm">{% trans "Montant devis:" %} <strong>{{ req.quote_amount }} DA</strong></span>
+                        <div>
+                            <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter le devis" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Refuser le devis" %}</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Receipt confirmation -->
+                    {% if req.status == 'SENT_TO_CLIENT' and not req.receipt_confirmed %}
+                    <div class="data-card-row mt-2">
+                        <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer réception" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Rating -->
+                    {% if req.status == 'COMPLETED' and not req.service_rating %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <form method="post" action="{% url 'dashboard:client_rate' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="rating" class="form-control" style="width:auto; display:inline-block; font-size:0.85rem;">
+                                <option value="5">5 — {% trans "Excellent" %}</option>
+                                <option value="4">4 — {% trans "Très bien" %}</option>
+                                <option value="3">3 — {% trans "Bien" %}</option>
+                                <option value="2">2 — {% trans "Moyen" %}</option>
+                                <option value="1">1 — {% trans "Mauvais" %}</option>
+                            </select>
+                            <input type="text" name="comment" placeholder="{% trans 'Commentaire...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Évaluer" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande active. Soumettez votre première demande!" %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices -->
+    <div x-show="tab === 'invoices'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Mes factures" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "N° Facture" %}</th>
+                                <th>{% trans "Demande" %}</th>
+                                <th>{% trans "HT" %}</th>
+                                <th>{% trans "TVA" %}</th>
+                                <th>{% trans "TTC" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in invoices %}
+                        <tr>
+                            <td><strong>{{ inv.invoice_number }}</strong></td>
+                            <td>{{ inv.request.display_id|default:"—" }}</td>
+                            <td>{{ inv.subtotal_ht|floatformat:2 }} DA</td>
+                            <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
+                            <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
+                            <td>{{ inv.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archives -->
+    <div x-show="tab === 'archives'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Archives" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Note" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in archived %}
+                        <tr>
+                            <td>{{ req.display_id }}</td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.service.name|default:"—" }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{% if req.service_rating %}{{ req.service_rating }}/5{% else %}—{% endif %}</td>
+                            <td>{{ req.updated_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune archive." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div x-show="tab === 'notifs'">
+        {% include 'includes/notification_list.html' %}
+        {% if not notifications %}
+        <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

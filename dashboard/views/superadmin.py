@@ -1,0 +1,147 @@
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.db.models import Count, Q
+
+from accounts.models import User, MemberProfile, Technique
+from core.models import Service, Request, PlatformContent
+
+
+def superadmin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.role != 'SUPER_ADMIN':
+            return HttpResponseForbidden()
+        return view_func(request, *args, **kwargs)
+    wrapper.__wrapped__ = view_func
+    return login_required(wrapper)
+
+
+@superadmin_required
+def index(request):
+    total_users = User.objects.count()
+    total_members = MemberProfile.objects.count()
+    total_requests = Request.objects.count()
+    ibtikar_count = Request.objects.filter(channel='IBTIKAR').count()
+    genoclab_count = Request.objects.filter(channel='GENOCLAB').count()
+    total_services = Service.objects.filter(active=True).count()
+    total_techniques = Technique.objects.filter(active=True).count()
+
+    users = User.objects.order_by('-date_joined')[:50]
+    members = MemberProfile.objects.select_related('user').order_by('-user__date_joined')[:50]
+    services = Service.objects.order_by('code')
+    techniques = Technique.objects.order_by('name')
+    platform_content = PlatformContent.objects.all()
+
+    status_dist = (
+        Request.objects.values('status')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    context = {
+        'total_users': total_users,
+        'total_members': total_members,
+        'total_requests': total_requests,
+        'ibtikar_count': ibtikar_count,
+        'genoclab_count': genoclab_count,
+        'total_services': total_services,
+        'total_techniques': total_techniques,
+        'users': users,
+        'members': members,
+        'services': services,
+        'techniques': techniques,
+        'platform_content': platform_content,
+        'status_dist': status_dist,
+    }
+    return render(request, 'dashboard/superadmin/index.html', context)
+
+
+@superadmin_required
+def user_toggle_active(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    user = get_object_or_404(User, pk=pk)
+    user.is_active = not user.is_active
+    user.save(update_fields=['is_active'])
+    status = 'activé' if user.is_active else 'désactivé'
+    messages.success(request, f"Utilisateur {user.get_full_name()} {status}.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def member_toggle_available(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    profile = get_object_or_404(MemberProfile, pk=pk)
+    profile.available = not profile.available
+    profile.save(update_fields=['available'])
+    status = 'disponible' if profile.available else 'indisponible'
+    messages.success(request, f"Analyste {profile.user.get_full_name()} marqué {status}.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def service_create(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    Service.objects.create(
+        code=request.POST.get('code', ''),
+        name=request.POST.get('name', ''),
+        description=request.POST.get('description', ''),
+        channel_availability=request.POST.get('channel_availability', 'BOTH'),
+        ibtikar_price=request.POST.get('ibtikar_price', 0),
+        genoclab_price=request.POST.get('genoclab_price', 0),
+        turnaround_days=request.POST.get('turnaround_days', 7),
+        image=request.FILES.get('image'),
+    )
+    messages.success(request, "Service créé avec succès.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def service_delete(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    service = get_object_or_404(Service, pk=pk)
+    service.active = False
+    service.save(update_fields=['active'])
+    messages.success(request, f"Service {service.name} désactivé.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def technique_create(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    Technique.objects.create(
+        name=request.POST.get('name', ''),
+        category=request.POST.get('category', ''),
+    )
+    messages.success(request, "Technique ajoutée.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def technique_delete(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    technique = get_object_or_404(Technique, pk=pk)
+    technique.active = False
+    technique.save(update_fields=['active'])
+    messages.success(request, f"Technique {technique.name} désactivée.")
+    return redirect('dashboard:superadmin')
+
+
+@superadmin_required
+def content_update(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    key = request.POST.get('key', '')
+    value = request.POST.get('value', '')
+    PlatformContent.objects.update_or_create(
+        key=key,
+        defaults={'value': value, 'updated_by': request.user},
+    )
+    messages.success(request, f"Contenu '{key}' mis à jour.")
+    return redirect('dashboard:superadmin')
