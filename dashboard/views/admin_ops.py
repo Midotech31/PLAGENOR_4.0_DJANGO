@@ -3,6 +3,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
+from django.utils import timezone
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
 from core.models import Request, Invoice
@@ -78,6 +79,7 @@ def index(request):
         'status_filter': status_filter,
         'search_q': search_q,
         'status_choices': Request.STATUS_CHOICES,
+        'now': timezone.now(),
     }
     return render(request, 'dashboard/admin_ops/index.html', context)
 

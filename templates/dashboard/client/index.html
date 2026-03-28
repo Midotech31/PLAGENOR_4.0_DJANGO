@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>{% trans "Tableau de bord — GENOCLAB" %}</h1>
-    <p>{% trans "Bienvenue" %}, {{ request.user.get_full_name }}</p>
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Espace GENOCLAB" %}</p>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid-4 mb-4">
+<div class="kpi-grid">
     {% include 'includes/kpi_card.html' with icon='clipboard' value=total label='Total demandes' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='activity' value=active label='En cours' color='orange' %}
     {% include 'includes/kpi_card.html' with icon='check' value=completed label='Complétées' color='green' %}
@@ -19,12 +19,12 @@
 
 <!-- Tab Navigation -->
 <div x-data="{tab: 'requests'}">
-    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button class="btn btn-sm" :class="tab === 'new' ? 'btn-primary' : 'btn-outline'" @click="tab = 'new'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Nouvelle demande" %}</button>
-        <button class="btn btn-sm" :class="tab === 'requests' ? 'btn-primary' : 'btn-outline'" @click="tab = 'requests'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
-        <button class="btn btn-sm" :class="tab === 'invoices' ? 'btn-primary' : 'btn-outline'" @click="tab = 'invoices'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Factures" %}</button>
-        <button class="btn btn-sm" :class="tab === 'archives' ? 'btn-primary' : 'btn-outline'" @click="tab = 'archives'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Archives" %}</button>
-        <button class="btn btn-sm" :class="tab === 'notifs' ? 'btn-primary' : 'btn-outline'" @click="tab = 'notifs'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Notifications" %}</button>
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'new' && 'active'" @click="tab = 'new'">{% trans "Nouvelle demande" %}</button>
+        <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
+        <button class="tab-item" :class="tab === 'invoices' && 'active'" @click="tab = 'invoices'">{% trans "Factures" %}</button>
+        <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
+        <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
     </div>
 
     <!-- New Request -->

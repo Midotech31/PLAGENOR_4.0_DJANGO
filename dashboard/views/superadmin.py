@@ -3,6 +3,7 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Count, Q
+from django.utils import timezone
 
 from accounts.models import User, MemberProfile, Technique
 from core.models import Service, Request, PlatformContent
@@ -21,9 +22,10 @@ def superadmin_required(view_func):
 def index(request):
     total_users = User.objects.count()
     total_members = MemberProfile.objects.count()
-    total_requests = Request.objects.count()
-    ibtikar_count = Request.objects.filter(channel='IBTIKAR').count()
-    genoclab_count = Request.objects.filter(channel='GENOCLAB').count()
+    total_requests = Request.objects.filter(archived=False).count()
+    completed_requests = Request.objects.filter(status='COMPLETED').count()
+    ibtikar_count = Request.objects.filter(channel='IBTIKAR', archived=False).count()
+    genoclab_count = Request.objects.filter(channel='GENOCLAB', archived=False).count()
     total_services = Service.objects.filter(active=True).count()
     total_techniques = Technique.objects.filter(active=True).count()
 
@@ -32,6 +34,9 @@ def index(request):
     services = Service.objects.order_by('code')
     techniques = Technique.objects.order_by('name')
     platform_content = PlatformContent.objects.all()
+
+    recent_requests = Request.objects.filter(archived=False).order_by('-created_at')[:5]
+    recent_users = User.objects.order_by('-date_joined')[:5]
 
     status_dist = (
         Request.objects.values('status')
@@ -43,6 +48,7 @@ def index(request):
         'total_users': total_users,
         'total_members': total_members,
         'total_requests': total_requests,
+        'completed_requests': completed_requests,
         'ibtikar_count': ibtikar_count,
         'genoclab_count': genoclab_count,
         'total_services': total_services,
@@ -53,6 +59,9 @@ def index(request):
         'techniques': techniques,
         'platform_content': platform_content,
         'status_dist': status_dist,
+        'recent_requests': recent_requests,
+        'recent_users': recent_users,
+        'now': timezone.now(),
     }
     return render(request, 'dashboard/superadmin/index.html', context)
 

@@ -3,6 +3,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Sum
+from django.utils import timezone
 
 from core.models import Request, Invoice
 from core.workflow import transition
@@ -61,6 +62,7 @@ def index(request):
         'invoices': invoices,
         'completed_ibtikar': completed_ibtikar,
         'completed_genoclab': completed_genoclab,
+        'now': timezone.now(),
     }
     return render(request, 'dashboard/finance/index.html', context)
 

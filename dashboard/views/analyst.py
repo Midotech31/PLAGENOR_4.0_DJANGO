@@ -75,6 +75,7 @@ def index(request):
         'points_history': points_history,
         'cheers': cheers,
         'notifications': notifications,
+        'now': timezone.now(),
     }
     return render(request, 'dashboard/analyst/index.html', context)
 

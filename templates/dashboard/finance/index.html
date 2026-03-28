@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>{% trans "Tableau de bord — Finance" %}</h1>
-    <p>{% trans "Gestion financière IBTIKAR & GENOCLAB" %}</p>
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Gestion financière IBTIKAR & GENOCLAB" %}</p>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid-4 mb-4">
+<div class="kpi-grid">
     {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_virtual label='Budget IBTIKAR (virtuel)' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_real label='Revenus GENOCLAB (réel)' color='green' %}
     {% include 'includes/kpi_card.html' with icon='file' value=total_invoices label='Factures' color='purple' %}
@@ -19,12 +19,12 @@
 
 <!-- Tab Navigation -->
 <div x-data="{tab: 'validation'}">
-    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button class="btn btn-sm" :class="tab === 'validation' ? 'btn-primary' : 'btn-outline'" @click="tab = 'validation'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Validation IBTIKAR" %} ({{ pending_validation.count }})</button>
-        <button class="btn btn-sm" :class="tab === 'budget' ? 'btn-primary' : 'btn-outline'" @click="tab = 'budget'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Budget" %}</button>
-        <button class="btn btn-sm" :class="tab === 'invoices' ? 'btn-primary' : 'btn-outline'" @click="tab = 'invoices'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Factures GENOCLAB" %}</button>
-        <button class="btn btn-sm" :class="tab === 'archives' ? 'btn-primary' : 'btn-outline'" @click="tab = 'archives'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Archives" %}</button>
-        <button class="btn btn-sm" :class="tab === 'history' ? 'btn-primary' : 'btn-outline'" @click="tab = 'history'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Historique" %}</button>
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'validation' && 'active'" @click="tab = 'validation'">{% trans "Validation IBTIKAR" %} ({{ pending_validation.count }})</button>
+        <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
+        <button class="tab-item" :class="tab === 'invoices' && 'active'" @click="tab = 'invoices'">{% trans "Factures GENOCLAB" %}</button>
+        <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
+        <button class="tab-item" :class="tab === 'history' && 'active'" @click="tab = 'history'">{% trans "Historique" %}</button>
     </div>
 
     <!-- IBTIKAR Validation -->

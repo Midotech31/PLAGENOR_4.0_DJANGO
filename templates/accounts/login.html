@@ -7,12 +7,17 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
+        <div class="auth-logo">
+            <div class="logo-text">PLAGENOR 4.0</div>
+            <div class="logo-sub">{% trans "Plateforme de Gestion des Opérations" %}</div>
+        </div>
+
         <h2>{% trans "Connexion" %}</h2>
         <p class="auth-subtitle">{% trans "Accédez à votre espace PLAGENOR" %}</p>
 
         {% if form.errors %}
         <div class="alert alert-danger" style="margin-bottom:20px;">
-            {% trans "Identifiant ou mot de passe incorrect." %}
+            <span>{% trans "Identifiant ou mot de passe incorrect." %}</span>
             <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
         </div>
         {% endif %}
@@ -27,6 +32,12 @@
                 <label for="id_password">{% trans "Mot de passe" %}</label>
                 <input type="password" name="password" id="id_password" class="form-control" placeholder="{% trans 'Entrez votre mot de passe' %}" required>
             </div>
+            <div class="auth-options">
+                <label class="form-check">
+                    <input type="checkbox" name="remember_me">
+                    {% trans "Se souvenir de moi" %}
+                </label>
+            </div>
             <button type="submit" class="btn btn-primary">{% trans "Se connecter" %}</button>
         </form>
 
@@ -34,7 +45,13 @@
 
         <div class="auth-links">
             <p>{% trans "Pas encore de compte ?" %} <a href="{% url 'accounts:register' %}">{% trans "Créer un compte" %}</a></p>
-            <p style="margin-top:8px;">{% trans "Demande sans compte ?" %} <a href="{% url 'track' %}">{% trans "Soumettre en tant qu'invité" %}</a></p>
+            <p style="margin-top:10px;">{% trans "Demande sans compte ?" %} <a href="{% url 'track' %}">{% trans "Soumettre en tant qu'invité" %}</a></p>
+            <p style="margin-top:10px;"><a href="{% url 'track' %}">{% trans "Suivre une demande" %}</a></p>
+        </div>
+
+        <div class="auth-footer">
+            ESSBO — {% trans "Université d'Oran" %}<br>
+            {% trans "Conçu par" %} Prof. Mohamed Merzoug
         </div>
     </div>
 </div>

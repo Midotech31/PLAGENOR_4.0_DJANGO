@@ -53,6 +53,7 @@ def index(request):
         'archived': archived,
         'services': services,
         'notifications': notifications,
+        'now': timezone.now(),
     }
     return render(request, 'dashboard/requester/index.html', context)
 

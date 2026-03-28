@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>{% trans "Tableau de bord — Opérations" %}</h1>
-    <p>{% trans "Gestion des demandes et assignations" %}</p>
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Gestion des demandes et assignations" %}</p>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid-4 mb-4">
+<div class="kpi-grid">
     {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Total demandes' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='clock' value=pending_count label='En attente' color='orange' %}
     {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='purple' %}
@@ -19,12 +19,12 @@
 
 <!-- Tab Navigation -->
 <div x-data="{tab: 'pending'}">
-    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button class="btn btn-sm" :class="tab === 'pending' ? 'btn-primary' : 'btn-outline'" @click="tab = 'pending'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En attente" %} ({{ pending_count }})</button>
-        <button class="btn btn-sm" :class="tab === 'all' ? 'btn-primary' : 'btn-outline'" @click="tab = 'all'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Toutes les demandes" %}</button>
-        <button class="btn btn-sm" :class="tab === 'assign' ? 'btn-primary' : 'btn-outline'" @click="tab = 'assign'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Assignation" %}</button>
-        <button class="btn btn-sm" :class="tab === 'budget' ? 'btn-primary' : 'btn-outline'" @click="tab = 'budget'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Budget" %}</button>
-        <button class="btn btn-sm" :class="tab === 'reports' ? 'btn-primary' : 'btn-outline'" @click="tab = 'reports'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Rapports" %}</button>
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'pending' && 'active'" @click="tab = 'pending'">{% trans "En attente" %} ({{ pending_count }})</button>
+        <button class="tab-item" :class="tab === 'all' && 'active'" @click="tab = 'all'">{% trans "Toutes les demandes" %}</button>
+        <button class="tab-item" :class="tab === 'assign' && 'active'" @click="tab = 'assign'">{% trans "Assignation" %}</button>
+        <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
+        <button class="tab-item" :class="tab === 'reports' && 'active'" @click="tab = 'reports'">{% trans "Rapports" %}</button>
     </div>
 
     <!-- Pending Requests -->

@@ -4,34 +4,85 @@
 {% block title %}{% trans "Super Admin" %} — PLAGENOR 4.0{% endblock %}
 
 {% block content %}
+<!-- Greeting -->
 <div class="page-header">
-    <h1>{% trans "Tableau de bord — Super Administrateur" %}</h1>
-    <p>{% trans "Vue d'ensemble de la plateforme PLAGENOR 4.0" %}</p>
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Vue d'ensemble de la plateforme" %}</p>
 </div>
 
-<!-- KPI Cards -->
-<div class="grid-4 mb-4">
-    {% include 'includes/kpi_card.html' with icon='users' value=total_users label='Utilisateurs' color='blue' %}
+<!-- Primary KPI Cards -->
+<div class="kpi-grid">
+    {% include 'includes/kpi_card.html' with icon='users' value=total_users label='Utilisateurs' color='indigo' %}
     {% include 'includes/kpi_card.html' with icon='activity' value=total_members label='Analystes' color='green' %}
-    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Demandes' color='purple' %}
-    {% include 'includes/kpi_card.html' with icon='layers' value=total_services label='Services' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label='Demandes actives' color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_requests label='Complétées' color='green' %}
 </div>
 
-<div class="grid-2 mb-4">
+<!-- Secondary KPI Cards -->
+<div class="kpi-grid" style="margin-bottom:32px;">
     {% include 'includes/kpi_card.html' with icon='file' value=ibtikar_count label='IBTIKAR' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='file' value=genoclab_count label='GENOCLAB' color='green' %}
+    {% include 'includes/kpi_card.html' with icon='layers' value=total_services label='Services actifs' color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='settings' value=total_techniques label='Techniques' color='purple' %}
+</div>
+
+<!-- Quick Actions + Recent Activity -->
+<div class="grid-2 mb-32" style="margin-bottom:32px;">
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Actions rapides" %}</h3></div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="#" class="quick-action" onclick="document.querySelector('[data-tab=users]')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    {% trans "Gérer utilisateurs" %}
+                </a>
+                <a href="#" class="quick-action" onclick="document.querySelector('[data-tab=services]')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    {% trans "Ajouter service" %}
+                </a>
+                <a href="#" class="quick-action" onclick="document.querySelector('[data-tab=techniques]')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+                    {% trans "Ajouter technique" %}
+                </a>
+                <a href="#" class="quick-action" onclick="document.querySelector('[data-tab=content]')?.click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    {% trans "Modifier contenu" %}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Derniers utilisateurs" %}</h3></div>
+        <div class="card-body">
+            {% if recent_users %}
+            <ul class="activity-list">
+                {% for u in recent_users %}
+                <li class="activity-item">
+                    <div class="activity-dot {% if u.is_active %}green{% else %}red{% endif %}"></div>
+                    <div class="activity-content">
+                        <div class="activity-text">{{ u.get_full_name|default:u.username }}</div>
+                        <div class="activity-time">{{ u.get_role_display }} — {{ u.date_joined|date:"d/m/Y" }}</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state"><p>{% trans "Aucun utilisateur récent." %}</p></div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 <!-- Tab Navigation -->
 <div x-data="{tab: 'overview'}">
-    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button class="btn btn-sm" :class="tab === 'overview' ? 'btn-primary' : 'btn-outline'" @click="tab = 'overview'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Vue d'ensemble" %}</button>
-        <button class="btn btn-sm" :class="tab === 'users' ? 'btn-primary' : 'btn-outline'" @click="tab = 'users'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Utilisateurs" %}</button>
-        <button class="btn btn-sm" :class="tab === 'members' ? 'btn-primary' : 'btn-outline'" @click="tab = 'members'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Analystes" %}</button>
-        <button class="btn btn-sm" :class="tab === 'services' ? 'btn-primary' : 'btn-outline'" @click="tab = 'services'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Services" %}</button>
-        <button class="btn btn-sm" :class="tab === 'techniques' ? 'btn-primary' : 'btn-outline'" @click="tab = 'techniques'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Techniques" %}</button>
-        <button class="btn btn-sm" :class="tab === 'content' ? 'btn-primary' : 'btn-outline'" @click="tab = 'content'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Contenu" %}</button>
-        <button class="btn btn-sm" :class="tab === 'system' ? 'btn-primary' : 'btn-outline'" @click="tab = 'system'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Système" %}</button>
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'overview' && 'active'" @click="tab = 'overview'">{% trans "Vue d'ensemble" %}</button>
+        <button class="tab-item" :class="tab === 'users' && 'active'" @click="tab = 'users'" data-tab="users">{% trans "Utilisateurs" %}</button>
+        <button class="tab-item" :class="tab === 'members' && 'active'" @click="tab = 'members'">{% trans "Analystes" %}</button>
+        <button class="tab-item" :class="tab === 'services' && 'active'" @click="tab = 'services'" data-tab="services">{% trans "Services" %}</button>
+        <button class="tab-item" :class="tab === 'techniques' && 'active'" @click="tab = 'techniques'" data-tab="techniques">{% trans "Techniques" %}</button>
+        <button class="tab-item" :class="tab === 'content' && 'active'" @click="tab = 'content'" data-tab="content">{% trans "Contenu" %}</button>
+        <button class="tab-item" :class="tab === 'system' && 'active'" @click="tab = 'system'">{% trans "Système" %}</button>
     </div>
 
     <!-- Overview Tab -->
@@ -45,13 +96,17 @@
                         <thead><tr><th>{% trans "Statut" %}</th><th>{% trans "Nombre" %}</th></tr></thead>
                         <tbody>
                         {% for item in status_dist %}
-                        <tr><td><span class="badge-status {{ item.status|lower }}">{{ item.status }}</span></td><td>{{ item.count }}</td></tr>
+                        <tr><td><span class="badge-status {{ item.status|lower }}">{{ item.status }}</span></td><td><strong>{{ item.count }}</strong></td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <div class="empty-state"><p>{% trans "Aucune demande pour le moment." %}</p></div>
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <h3>{% trans "Aucune demande" %}</h3>
+                    <p>{% trans "Aucune demande pour le moment. Les statistiques apparaîtront ici." %}</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -63,8 +118,8 @@
             <div class="card-header">
                 <h3>{% trans "Utilisateurs" %} ({{ total_users }})</h3>
             </div>
-            <div class="card-body">
-                <div class="table-wrapper">
+            <div class="card-body" style="padding: 0;">
+                <div class="table-wrapper" style="border: none;">
                     <table>
                         <thead>
                             <tr>
@@ -78,8 +133,8 @@
                         <tbody>
                         {% for u in users %}
                         <tr>
-                            <td>{{ u.get_full_name|default:u.username }}</td>
-                            <td>{{ u.email }}</td>
+                            <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                            <td>{{ u.email|default:"—" }}</td>
                             <td><span class="badge-role {{ u.role|lower }}">{{ u.get_role_display }}</span></td>
                             <td>
                                 {% if u.is_active %}
@@ -91,7 +146,7 @@
                             <td>
                                 <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-primary{% endif %}">
+                                    <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
                                         {% if u.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
                                     </button>
                                 </form>
@@ -111,8 +166,8 @@
             <div class="card-header">
                 <h3>{% trans "Analystes / Opérateurs" %} ({{ total_members }})</h3>
             </div>
-            <div class="card-body">
-                <div class="table-wrapper">
+            <div class="card-body" style="padding: 0;">
+                <div class="table-wrapper" style="border: none;">
                     <table>
                         <thead>
                             <tr>
@@ -127,10 +182,10 @@
                         <tbody>
                         {% for m in members %}
                         <tr>
-                            <td>{{ m.user.get_full_name }}</td>
-                            <td>{{ m.current_load }}/{{ m.max_load }} ({{ m.load_percentage }}%)</td>
+                            <td><strong>{{ m.user.get_full_name }}</strong></td>
+                            <td>{{ m.current_load }}/{{ m.max_load }} <span class="text-muted">({{ m.load_percentage }}%)</span></td>
                             <td>{{ m.productivity_score }}%</td>
-                            <td>{{ m.total_points }}</td>
+                            <td><span class="font-mono">{{ m.total_points }}</span></td>
                             <td>
                                 {% if m.available %}
                                 <span class="badge-status completed">{% trans "Oui" %}</span>
@@ -148,6 +203,8 @@
                             </td>
                         </tr>
                         {% endfor %}
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted" style="padding:32px;">{% trans "Aucun analyste enregistré." %}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -157,7 +214,7 @@
 
     <!-- Services Tab -->
     <div x-show="tab === 'services'">
-        <div class="card mb-4">
+        <div class="card" style="margin-bottom: 24px;">
             <div class="card-header"><h3>{% trans "Ajouter un service" %}</h3></div>
             <div class="card-body">
                 <form method="post" action="{% url 'dashboard:superadmin_service_create' %}" enctype="multipart/form-data">
@@ -207,9 +264,9 @@
             </div>
         </div>
         <div class="card">
-            <div class="card-header"><h3>{% trans "Services existants" %}</h3></div>
-            <div class="card-body">
-                <div class="table-wrapper">
+            <div class="card-header"><h3>{% trans "Services existants" %} ({{ total_services }})</h3></div>
+            <div class="card-body" style="padding: 0;">
+                <div class="table-wrapper" style="border: none;">
                     <table>
                         <thead>
                             <tr>
@@ -225,8 +282,8 @@
                         <tbody>
                         {% for s in services %}
                         <tr>
-                            <td>{{ s.code }}</td>
-                            <td>{{ s.name }}</td>
+                            <td><span class="font-mono">{{ s.code }}</span></td>
+                            <td><strong>{{ s.name }}</strong></td>
                             <td>{{ s.get_channel_availability_display }}</td>
                             <td>{{ s.ibtikar_price }} DA</td>
                             <td>{{ s.genoclab_price }} DA</td>
@@ -240,6 +297,8 @@
                                 {% endif %}
                             </td>
                         </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">{% trans "Aucun service." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -250,7 +309,7 @@
 
     <!-- Techniques Tab -->
     <div x-show="tab === 'techniques'">
-        <div class="card mb-4">
+        <div class="card" style="margin-bottom: 24px;">
             <div class="card-header"><h3>{% trans "Ajouter une technique" %}</h3></div>
             <div class="card-body">
                 <form method="post" action="{% url 'dashboard:superadmin_technique_create' %}">
@@ -264,7 +323,7 @@
                             <label>{% trans "Catégorie" %}</label>
                             <input type="text" name="category" class="form-control">
                         </div>
-                        <div class="form-group" style="align-self: end;">
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
                             <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
                         </div>
                     </div>
@@ -273,14 +332,14 @@
         </div>
         <div class="card">
             <div class="card-header"><h3>{% trans "Techniques existantes" %} ({{ total_techniques }})</h3></div>
-            <div class="card-body">
-                <div class="table-wrapper">
+            <div class="card-body" style="padding: 0;">
+                <div class="table-wrapper" style="border: none;">
                     <table>
                         <thead><tr><th>{% trans "Nom" %}</th><th>{% trans "Catégorie" %}</th><th>{% trans "Actions" %}</th></tr></thead>
                         <tbody>
                         {% for t in techniques %}
                         <tr>
-                            <td>{{ t.name }}</td>
+                            <td><strong>{{ t.name }}</strong></td>
                             <td>{{ t.category|default:"—" }}</td>
                             <td>
                                 {% if t.active %}
@@ -291,6 +350,8 @@
                                 {% endif %}
                             </td>
                         </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted" style="padding:32px;">{% trans "Aucune technique." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -318,15 +379,15 @@
                 </form>
 
                 {% if platform_content %}
-                <div class="table-wrapper mt-4">
+                <div class="table-wrapper" style="margin-top: 24px;">
                     <table>
                         <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th></tr></thead>
                         <tbody>
                         {% for pc in platform_content %}
                         <tr>
-                            <td><strong>{{ pc.key }}</strong></td>
+                            <td><strong class="font-mono">{{ pc.key }}</strong></td>
                             <td>{{ pc.value|truncatechars:80 }}</td>
-                            <td>{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
+                            <td class="text-muted">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
                         </tr>
                         {% endfor %}
                         </tbody>
@@ -339,21 +400,28 @@
 
     <!-- System Tab -->
     <div x-show="tab === 'system'">
-        <div class="card">
-            <div class="card-header"><h3>{% trans "Informations système" %}</h3></div>
-            <div class="card-body">
-                <div class="grid-2">
-                    <div class="data-card">
-                        <div class="data-card-row"><strong>{% trans "Version" %}</strong><span>4.0.0</span></div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Informations plateforme" %}</h3></div>
+                <div class="card-body">
+                    <div class="data-card" style="box-shadow: none; border: none; padding: 0;">
+                        <div class="data-card-row"><strong>{% trans "Version" %}</strong><span class="font-mono">4.0.0</span></div>
                         <div class="data-card-row"><strong>{% trans "Auteur" %}</strong><span>Prof. Mohamed Merzoug</span></div>
-                        <div class="data-card-row"><strong>{% trans "Institution" %}</strong><span>ESSBO</span></div>
+                        <div class="data-card-row"><strong>{% trans "Institution" %}</strong><span>ESSBO — Université d'Oran</span></div>
                         <div class="data-card-row"><strong>{% trans "Base de données" %}</strong><span>SQLite3</span></div>
+                        <div class="data-card-row"><strong>{% trans "Framework" %}</strong><span>Django 5.x</span></div>
                     </div>
-                    <div class="data-card">
-                        <div class="data-card-row"><strong>{% trans "Utilisateurs totaux" %}</strong><span>{{ total_users }}</span></div>
-                        <div class="data-card-row"><strong>{% trans "Demandes totales" %}</strong><span>{{ total_requests }}</span></div>
-                        <div class="data-card-row"><strong>{% trans "Services actifs" %}</strong><span>{{ total_services }}</span></div>
-                        <div class="data-card-row"><strong>{% trans "Techniques" %}</strong><span>{{ total_techniques }}</span></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Statistiques" %}</h3></div>
+                <div class="card-body">
+                    <div class="data-card" style="box-shadow: none; border: none; padding: 0;">
+                        <div class="data-card-row"><strong>{% trans "Utilisateurs totaux" %}</strong><span class="font-mono">{{ total_users }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Demandes totales" %}</strong><span class="font-mono">{{ total_requests }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Services actifs" %}</strong><span class="font-mono">{{ total_services }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Techniques" %}</strong><span class="font-mono">{{ total_techniques }}</span></div>
+                        <div class="data-card-row"><strong>{% trans "Analystes" %}</strong><span class="font-mono">{{ total_members }}</span></div>
                     </div>
                 </div>
             </div>

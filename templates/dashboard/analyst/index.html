@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>{% trans "Tableau de bord — Analyste" %}</h1>
-    <p>{% trans "Bienvenue" %}, {{ request.user.get_full_name }}</p>
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Espace analyste" %}</p>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid-4 mb-4">
+<div class="kpi-grid">
     {% include 'includes/kpi_card.html' with icon='clipboard' value=assigned_count label='Assignées' color='blue' %}
     {% include 'includes/kpi_card.html' with icon='activity' value=in_progress_count label='En cours' color='orange' %}
     {% include 'includes/kpi_card.html' with icon='check' value=completed_count label='Complétées' color='green' %}
@@ -19,13 +19,13 @@
 
 <!-- Tab Navigation -->
 <div x-data="{tab: 'pending'}">
-    <div class="tabs" style="display: flex; gap: 0; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button class="btn btn-sm" :class="tab === 'pending' ? 'btn-primary' : 'btn-outline'" @click="tab = 'pending'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En attente" %} ({{ pending_tasks.count }})</button>
-        <button class="btn btn-sm" :class="tab === 'progress' ? 'btn-primary' : 'btn-outline'" @click="tab = 'progress'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "En cours" %} ({{ in_progress.count }})</button>
-        <button class="btn btn-sm" :class="tab === 'history' ? 'btn-primary' : 'btn-outline'" @click="tab = 'history'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Historique" %}</button>
-        <button class="btn btn-sm" :class="tab === 'profile' ? 'btn-primary' : 'btn-outline'" @click="tab = 'profile'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Profil" %}</button>
-        <button class="btn btn-sm" :class="tab === 'points' ? 'btn-primary' : 'btn-outline'" @click="tab = 'points'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Points" %}</button>
-        <button class="btn btn-sm" :class="tab === 'notifs' ? 'btn-primary' : 'btn-outline'" @click="tab = 'notifs'" style="border-radius: var(--radius-sm) var(--radius-sm) 0 0;">{% trans "Notifications" %}</button>
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'pending' && 'active'" @click="tab = 'pending'">{% trans "En attente" %} ({{ pending_tasks.count }})</button>
+        <button class="tab-item" :class="tab === 'progress' && 'active'" @click="tab = 'progress'">{% trans "En cours" %} ({{ in_progress.count }})</button>
+        <button class="tab-item" :class="tab === 'history' && 'active'" @click="tab = 'history'">{% trans "Historique" %}</button>
+        <button class="tab-item" :class="tab === 'profile' && 'active'" @click="tab = 'profile'">{% trans "Profil" %}</button>
+        <button class="tab-item" :class="tab === 'points' && 'active'" @click="tab = 'points'">{% trans "Points" %}</button>
+        <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
     </div>
 
     <!-- Pending Tasks -->
