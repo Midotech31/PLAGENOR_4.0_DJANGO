@@ -2,11 +2,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.utils import timezone
+from django.conf import settings
 
 from accounts.models import User, MemberProfile, Technique
-from core.models import Service, Request, PlatformContent
+from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
 
@@ -50,6 +51,37 @@ def index(request):
     budget_dashboard = get_budget_dashboard()
     productivity_stats = get_all_productivity_stats()
 
+    # Task 3: Requests tab with filters
+    sa_channel = request.GET.get('sa_channel', '')
+    sa_status = request.GET.get('sa_status', '')
+    sa_search = request.GET.get('sa_q', '')
+    all_requests_qs = Request.objects.select_related('service', 'requester', 'assigned_to__user')
+    if sa_channel:
+        all_requests_qs = all_requests_qs.filter(channel=sa_channel)
+    if sa_status:
+        all_requests_qs = all_requests_qs.filter(status=sa_status)
+    if sa_search:
+        all_requests_qs = all_requests_qs.filter(Q(display_id__icontains=sa_search) | Q(title__icontains=sa_search))
+    all_requests_qs = all_requests_qs.order_by('-created_at')[:100]
+
+    # Task 6: Payments tab
+    all_invoices = Invoice.objects.select_related('request', 'client').order_by('-created_at')[:50]
+    payment_methods = PaymentMethod.objects.all()
+
+    # Task 8: Documents tab
+    requests_with_reports = Request.objects.exclude(report_file='').exclude(report_file__isnull=True).order_by('-updated_at')[:20]
+
+    # Task 9: Forms tab
+    all_form_fields = ServiceFormField.objects.select_related('service').order_by('service__code', 'sort_order')
+    try:
+        from core.registry import load_service_registry
+        yaml_registry = load_service_registry()
+    except Exception:
+        yaml_registry = {}
+
+    # Task 10: KPI - average rating
+    avg_rating = Request.objects.filter(service_rating__isnull=False).aggregate(avg=Avg('service_rating'))['avg'] or 0
+
     context = {
         'total_users': total_users,
         'total_members': total_members,
@@ -70,6 +102,23 @@ def index(request):
         'budget_dashboard': budget_dashboard,
         'productivity_stats': productivity_stats,
         'now': timezone.now(),
+        # Requests tab
+        'all_requests': all_requests_qs,
+        'sa_channel': sa_channel,
+        'sa_status': sa_status,
+        'sa_search': sa_search,
+        'status_choices': Request.STATUS_CHOICES,
+        'role_choices': User.ROLE_CHOICES,
+        # Payments tab
+        'all_invoices': all_invoices,
+        'payment_methods': payment_methods,
+        # Documents tab
+        'requests_with_reports': requests_with_reports,
+        # Forms tab
+        'all_form_fields': all_form_fields,
+        'yaml_registry': yaml_registry,
+        # KPI
+        'avg_rating': avg_rating,
     }
     return render(request, 'dashboard/superadmin/index.html', context)
 
@@ -302,3 +351,173 @@ def revenue_archives(request):
         'now': timezone.now(),
     }
     return render(request, 'dashboard/superadmin/revenue_archives.html', context)
+
+
+# --- Task 1: Create User ---
+@superadmin_required
+def create_user(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from django.contrib.auth.hashers import make_password
+    user = User.objects.create(
+        username=request.POST.get('username', ''),
+        first_name=request.POST.get('first_name', ''),
+        last_name=request.POST.get('last_name', ''),
+        email=request.POST.get('email', ''),
+        role=request.POST.get('role', 'REQUESTER'),
+        organization=request.POST.get('organization', ''),
+        phone=request.POST.get('phone', ''),
+        password=make_password(request.POST.get('password', '')),
+    )
+    if user.role == 'MEMBER':
+        MemberProfile.objects.get_or_create(user=user)
+    messages.success(request, f"Utilisateur {user.get_full_name()} créé avec succès.")
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 2: Edit User ---
+@superadmin_required
+def user_edit(request, pk):
+    user_obj = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        user_obj.first_name = request.POST.get('first_name', user_obj.first_name)
+        user_obj.last_name = request.POST.get('last_name', user_obj.last_name)
+        user_obj.email = request.POST.get('email', user_obj.email)
+        old_role = user_obj.role
+        user_obj.role = request.POST.get('role', user_obj.role)
+        user_obj.organization = request.POST.get('organization', user_obj.organization or '')
+        user_obj.phone = request.POST.get('phone', user_obj.phone or '')
+        user_obj.laboratory = request.POST.get('laboratory', user_obj.laboratory or '')
+        user_obj.supervisor = request.POST.get('supervisor', user_obj.supervisor or '')
+        user_obj.student_level = request.POST.get('student_level', user_obj.student_level or '')
+        new_pass = request.POST.get('new_password', '').strip()
+        if new_pass:
+            user_obj.set_password(new_pass)
+        user_obj.save()
+        if user_obj.role == 'MEMBER' and old_role != 'MEMBER':
+            MemberProfile.objects.get_or_create(user=user_obj)
+        messages.success(request, f"Utilisateur {user_obj.get_full_name()} mis à jour.")
+        return redirect('dashboard:superadmin')
+    return render(request, 'dashboard/superadmin/user_edit.html', {
+        'user_obj': user_obj,
+        'role_choices': User.ROLE_CHOICES,
+    })
+
+
+# --- Task 4: Force Transition ---
+@superadmin_required
+def force_transition_view(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.workflow import force_transition
+    req = get_object_or_404(Request, pk=pk)
+    to_status = request.POST.get('to_status', '')
+    justification = request.POST.get('justification', '')
+    if not justification or len(justification.strip()) < 10:
+        messages.error(request, "La justification doit comporter au moins 10 caractères.")
+        return redirect('dashboard:superadmin')
+    try:
+        force_transition(req, to_status, request.user, notes=f"[FORCÉ] {justification}")
+        messages.success(request, f"Demande {req.display_id} forcée vers {to_status}.")
+    except Exception as e:
+        messages.error(request, str(e))
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 5: Budget Override ---
+@superadmin_required
+def budget_override_view(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.financial import approve_with_budget_override
+    req = get_object_or_404(Request, pk=pk)
+    justification = request.POST.get('justification', '')
+    try:
+        approve_with_budget_override(req, request.user, float(req.budget_amount), justification)
+        messages.success(request, f"Override budgétaire approuvé pour {req.display_id}.")
+    except Exception as e:
+        messages.error(request, str(e))
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 6: Add Payment Method ---
+@superadmin_required
+def add_payment_method(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    name = request.POST.get('name', '').strip()
+    if name:
+        PaymentMethod.objects.create(name=name)
+        messages.success(request, "Méthode de paiement ajoutée.")
+    else:
+        messages.error(request, "Le nom est requis.")
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 11: DOCX Template Upload ---
+@superadmin_required
+def upload_template(request):
+    if request.method != 'POST' or 'template_file' not in request.FILES:
+        return HttpResponseForbidden()
+    import shutil
+    template_type = request.POST.get('template_type', '')
+    allowed = ['ibtikar_form_template', 'platform_note_template', 'reception_form_template', 'quote_template']
+    if template_type not in allowed:
+        messages.error(request, "Type de template invalide.")
+        return redirect('dashboard:superadmin')
+    upload = request.FILES['template_file']
+    if not upload.name.endswith('.docx'):
+        messages.error(request, "Seuls les fichiers .docx sont acceptés.")
+        return redirect('dashboard:superadmin')
+    dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
+    if dest.exists():
+        shutil.copy2(str(dest), str(dest.with_suffix('.backup.docx')))
+    with open(str(dest), 'wb') as f:
+        for chunk in upload.chunks():
+            f.write(chunk)
+    messages.success(request, f"Template '{template_type}' mis à jour.")
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 12: Revenue Counter Reset ---
+@superadmin_required
+def reset_revenue(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.financial import archive_monthly_revenue
+    archive_monthly_revenue()
+    PlatformContent.objects.update_or_create(
+        key='revenue_reset_date',
+        defaults={'value': timezone.now().isoformat(), 'updated_by': request.user}
+    )
+    messages.success(request, "Compteurs de revenus réinitialisés. Les données ont été archivées.")
+    return redirect('dashboard:superadmin')
+
+
+# --- Task 14: Restore from Backup ---
+@superadmin_required
+def restore_db(request):
+    if request.method != 'POST' or 'db_file' not in request.FILES:
+        messages.error(request, "Aucun fichier sélectionné.")
+        return redirect('dashboard:superadmin')
+    import shutil
+    import sqlite3
+    upload = request.FILES['db_file']
+    temp_path = settings.BASE_DIR / 'data' / 'restore_temp.db'
+    with open(str(temp_path), 'wb') as f:
+        for chunk in upload.chunks():
+            f.write(chunk)
+    try:
+        conn = sqlite3.connect(str(temp_path))
+        conn.execute("SELECT count(*) FROM sqlite_master")
+        conn.close()
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        messages.error(request, "Fichier invalide — ce n'est pas une base de données SQLite valide.")
+        return redirect('dashboard:superadmin')
+    db_path = settings.BASE_DIR / 'data' / 'plagenor.db'
+    if db_path.exists():
+        shutil.copy2(str(db_path), str(db_path.with_suffix('.pre_restore.db')))
+    shutil.move(str(temp_path), str(db_path))
+    messages.success(request, "Base de données restaurée. Veuillez redémarrer le serveur.")
+    return redirect('dashboard:superadmin')

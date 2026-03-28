@@ -26,6 +26,17 @@
     {% include 'includes/kpi_card.html' with icon='settings' value=total_techniques label='Techniques' color='purple' %}
 </div>
 
+<!-- Financial & Rating KPI Cards -->
+<div class="kpi-grid" style="margin-bottom:32px;">
+    {% with bd=budget_dashboard.ibtikar.total|default:0 %}
+    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=bd label='Budget IBTIKAR (DA)' color='blue' %}
+    {% endwith %}
+    {% with gd=budget_dashboard.genoclab.total|default:0 %}
+    {% include 'includes/kpi_card.html' with icon='dollar-sign' value=gd label='Revenue GENOCLAB (DA)' color='green' %}
+    {% endwith %}
+    {% include 'includes/kpi_card.html' with icon='star' value=avg_rating|floatformat:1 label='Note moyenne / 5' color='orange' %}
+</div>
+
 <!-- Quick Actions + Recent Activity -->
 <div class="grid-2 mb-32" style="margin-bottom:32px;">
     <div class="card">
@@ -74,13 +85,18 @@
 </div>
 
 <!-- Tab Navigation -->
-<div x-data="{tab: 'overview'}">
-    <div class="tab-list" style="margin-bottom: 24px;">
+<div x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'overview' }">
+    <div class="tab-list" style="margin-bottom: 24px; flex-wrap: wrap;">
         <button class="tab-item" :class="tab === 'overview' && 'active'" @click="tab = 'overview'">{% trans "Vue d'ensemble" %}</button>
         <button class="tab-item" :class="tab === 'users' && 'active'" @click="tab = 'users'" data-tab="users">{% trans "Utilisateurs" %}</button>
         <button class="tab-item" :class="tab === 'members' && 'active'" @click="tab = 'members'">{% trans "Analystes" %}</button>
+        <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Demandes" %}</button>
         <button class="tab-item" :class="tab === 'services' && 'active'" @click="tab = 'services'" data-tab="services">{% trans "Services" %}</button>
         <button class="tab-item" :class="tab === 'techniques' && 'active'" @click="tab = 'techniques'" data-tab="techniques">{% trans "Techniques" %}</button>
+        <button class="tab-item" :class="tab === 'payments' && 'active'" @click="tab = 'payments'">{% trans "Paiements" %}</button>
+        <button class="tab-item" :class="tab === 'productivity' && 'active'" @click="tab = 'productivity'">{% trans "Productivité" %}</button>
+        <button class="tab-item" :class="tab === 'documents' && 'active'" @click="tab = 'documents'">{% trans "Documents" %}</button>
+        <button class="tab-item" :class="tab === 'forms' && 'active'" @click="tab = 'forms'">{% trans "Formulaires" %}</button>
         <button class="tab-item" :class="tab === 'content' && 'active'" @click="tab = 'content'" data-tab="content">{% trans "Contenu" %}</button>
         <button class="tab-item" :class="tab === 'system' && 'active'" @click="tab = 'system'">{% trans "Système" %}</button>
     </div>
@@ -114,6 +130,64 @@
 
     <!-- Users Tab -->
     <div x-show="tab === 'users'">
+        <!-- Create User Form -->
+        <div class="card" style="margin-bottom: 24px;" x-data="{ showCreate: false }">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>{% trans "Créer un utilisateur" %}</h3>
+                <button class="btn btn-sm btn-outline" @click="showCreate = !showCreate" x-text="showCreate ? '{% trans "Masquer" %}' : '{% trans "Afficher" %}'"></button>
+            </div>
+            <div class="card-body" x-show="showCreate" x-cloak>
+                <form method="post" action="{% url 'dashboard:superadmin_user_create' %}">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Nom d'utilisateur" %} *</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Prénom" %}</label>
+                            <input type="text" name="first_name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Nom" %}</label>
+                            <input type="text" name="last_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Email" %}</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Rôle" %} *</label>
+                            <select name="role" class="form-control" required>
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Organisation" %}</label>
+                            <input type="text" name="organization" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Téléphone" %}</label>
+                            <input type="text" name="phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Mot de passe" %} *</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button type="submit" class="btn btn-primary">{% trans "Créer" %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h3>{% trans "Utilisateurs" %} ({{ total_users }})</h3>
@@ -143,7 +217,8 @@
                                 <span class="badge-status rejected">{% trans "Inactif" %}</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td style="white-space:nowrap;">
+                                <a href="{% url 'dashboard:superadmin_user_edit' u.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
                                 <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
@@ -408,6 +483,404 @@
         </div>
     </div>
 
+    <!-- Requests Tab -->
+    <div x-show="tab === 'requests'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Toutes les demandes" %}</h3></div>
+            <div class="card-body">
+                <!-- Filter bar -->
+                <form method="get" action="{% url 'dashboard:superadmin' %}" style="margin-bottom: 16px;">
+                    <input type="hidden" name="tab" value="requests">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Canal" %}</label>
+                            <select name="sa_channel" class="form-control">
+                                <option value="">{% trans "Tous" %}</option>
+                                <option value="IBTIKAR" {% if sa_channel == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
+                                <option value="GENOCLAB" {% if sa_channel == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Statut" %}</label>
+                            <select name="sa_status" class="form-control">
+                                <option value="">{% trans "Tous" %}</option>
+                                {% for val, lbl in status_choices %}
+                                <option value="{{ val }}" {% if sa_status == val %}selected{% endif %}>{{ lbl }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Recherche" %}</label>
+                            <input type="text" name="sa_q" class="form-control" value="{{ sa_search }}" placeholder="{% trans 'ID ou titre...' %}">
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="table-wrapper" style="border:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Canal" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Demandeur" %}</th>
+                                <th>{% trans "Assigné à" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in all_requests %}
+                        <tr x-data="{ expanded: false }">
+                            <td><span class="font-mono">{{ r.display_id }}</span></td>
+                            <td>{{ r.title|truncatechars:40 }}</td>
+                            <td><span class="badge-role {{ r.channel|lower }}">{{ r.channel }}</span></td>
+                            <td><span class="badge-status {{ r.status|lower }}">{{ r.status }}</span></td>
+                            <td>{{ r.service.name|default:"—" }}</td>
+                            <td>{{ r.requester.get_full_name|default:"—" }}</td>
+                            <td>{% if r.assigned_to %}{{ r.assigned_to.user.get_full_name }}{% else %}—{% endif %}</td>
+                            <td class="text-muted">{{ r.created_at|date:"d/m/Y" }}</td>
+                            <td style="white-space:nowrap;">
+                                <button class="btn btn-sm btn-outline" @click="expanded = !expanded">{% trans "Actions" %}</button>
+                            </td>
+                        </tr>
+                        <tr x-show="expanded" x-data="">
+                            <td colspan="9" style="background:#f8f9fa; padding:16px;">
+                                <div class="grid-2" style="gap:16px;">
+                                    <!-- Force Transition -->
+                                    <div>
+                                        <strong>{% trans "Forcer une transition" %}</strong>
+                                        <form method="post" action="{% url 'dashboard:superadmin_force_transition' r.pk %}" style="margin-top:8px;">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <select name="to_status" class="form-control" required>
+                                                    <option value="">{% trans "Sélectionner le statut cible" %}</option>
+                                                    {% for val, lbl in status_choices %}
+                                                    <option value="{{ val }}">{{ lbl }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification (min. 10 caractères)' %}"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Forcer la transition" %}</button>
+                                        </form>
+                                    </div>
+                                    <!-- Budget Override (IBTIKAR only) -->
+                                    {% if r.channel == 'IBTIKAR' %}
+                                    <div>
+                                        <strong>{% trans "Override budgétaire" %}</strong>
+                                        <form method="post" action="{% url 'dashboard:superadmin_budget_override' r.pk %}" style="margin-top:8px;">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <label>{% trans "Montant budget" %}: {{ r.budget_amount }} DA</label>
+                                            </div>
+                                            <div class="form-group">
+                                                <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification pour l override...' %}"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver override" %}</button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="text-center text-muted" style="padding:32px;">{% trans "Aucune demande trouvée." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Tab -->
+    <div x-show="tab === 'payments'">
+        <!-- Budget Summary -->
+        <div class="kpi-grid" style="margin-bottom:24px;">
+            {% with ibt=budget_dashboard.ibtikar %}
+            <div class="card" style="padding:16px; text-align:center;">
+                <div class="text-muted" style="font-size:0.85rem;">{% trans "Budget IBTIKAR (virtuel)" %}</div>
+                <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ ibt.total|default:0|floatformat:0 }} DA</div>
+            </div>
+            {% endwith %}
+            {% with gen=budget_dashboard.genoclab %}
+            <div class="card" style="padding:16px; text-align:center;">
+                <div class="text-muted" style="font-size:0.85rem;">{% trans "Revenue GENOCLAB (réel)" %}</div>
+                <div style="font-size:1.5rem; font-weight:700; color:var(--success);">{{ gen.total|default:0|floatformat:0 }} DA</div>
+            </div>
+            {% endwith %}
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Factures" %}</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrapper" style="border:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "N° Facture" %}</th>
+                                <th>{% trans "Demande" %}</th>
+                                <th>{% trans "Client" %}</th>
+                                <th>{% trans "Sous-total HT" %}</th>
+                                <th>{% trans "TVA" %}</th>
+                                <th>{% trans "Total TTC" %}</th>
+                                <th>{% trans "Paiement" %}</th>
+                                <th>{% trans "Verrouillé" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in all_invoices %}
+                        <tr>
+                            <td><span class="font-mono">{{ inv.invoice_number }}</span></td>
+                            <td>{{ inv.request.display_id|default:"—" }}</td>
+                            <td>{{ inv.client.get_full_name|default:"—" }}</td>
+                            <td>{{ inv.subtotal_ht|floatformat:2 }} DA</td>
+                            <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
+                            <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
+                            <td><span class="badge-status {{ inv.payment_status|lower }}">{{ inv.payment_status }}</span></td>
+                            <td>{% if inv.locked %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</td>
+                            <td class="text-muted">{{ inv.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="text-center text-muted" style="padding:32px;">{% trans "Aucune facture." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods + Revenue Reset -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Méthodes de paiement" %}</h3></div>
+                <div class="card-body">
+                    {% if payment_methods %}
+                    <ul style="list-style:none; padding:0; margin:0 0 16px 0;">
+                        {% for pm in payment_methods %}
+                        <li style="padding:8px 0; border-bottom:1px solid #eee;">{{ pm.name }} {% if not pm.active %}<span class="badge-status rejected">{% trans "Inactif" %}</span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <form method="post" action="{% url 'dashboard:superadmin_payment_method_create' %}">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" name="name" class="form-control" required placeholder="{% trans 'Nom de la méthode' %}">
+                            </div>
+                            <div class="form-group" style="display:flex; align-items:flex-end;">
+                                <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Réinitialiser les compteurs" %}</h3></div>
+                <div class="card-body">
+                    <p class="text-muted" style="margin-bottom:12px;">{% trans "Archive les données de revenus actuelles et réinitialise les compteurs du tableau de bord. Cette action est irréversible." %}</p>
+                    <form method="post" action="{% url 'dashboard:superadmin_reset_revenue' %}" onsubmit="return confirm('{% trans "Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les données seront archivées." %}');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">{% trans "Réinitialiser les compteurs" %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productivity Tab -->
+    <div x-show="tab === 'productivity'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Productivité des analystes" %}</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrapper" style="border:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "Analyste" %}</th>
+                                <th>{% trans "Assignées" %}</th>
+                                <th>{% trans "Complétées" %}</th>
+                                <th>{% trans "Score" %}</th>
+                                <th>{% trans "Niveau" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for stat in productivity_stats %}
+                        <tr>
+                            <td><strong>{{ stat.member_name|default:stat.member }}</strong></td>
+                            <td>{{ stat.assigned_count|default:0 }}</td>
+                            <td>{{ stat.completed_count|default:0 }}</td>
+                            <td>{{ stat.score|default:stat.productivity_score|default:0|floatformat:0 }}%</td>
+                            <td>
+                                {% with tier=stat.tier|default:stat.productivity_tier|default:"Normal" %}
+                                {% if tier == "Fire" or tier == "FIRE" %}
+                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 Fire</span>
+                                {% elif tier == "Very Good" or tier == "VERY_GOOD" %}
+                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">Very Good</span>
+                                {% elif tier == "Good" or tier == "GOOD" %}
+                                <span class="badge-status" style="background:#d1fae5;color:#059669;">Good</span>
+                                {% else %}
+                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">Not Bad</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">{% trans "Aucune donnée de productivité." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Tab -->
+    <div x-show="tab === 'documents'">
+        <!-- Requests with reports -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Rapports générés" %}</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrapper" style="border:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Canal" %}</th>
+                                <th>{% trans "Rapport" %}</th>
+                                <th>{% trans "Mis à jour" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in requests_with_reports %}
+                        <tr>
+                            <td><span class="font-mono">{{ r.display_id }}</span></td>
+                            <td>{{ r.title|truncatechars:50 }}</td>
+                            <td><span class="badge-role {{ r.channel|lower }}">{{ r.channel }}</span></td>
+                            <td><a href="{{ r.report_file.url }}" target="_blank" class="btn btn-sm btn-outline">{% trans "Télécharger" %}</a></td>
+                            <td class="text-muted">{{ r.updated_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">{% trans "Aucun rapport disponible." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCX Template Management -->
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Templates DOCX" %}</h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:16px;">{% trans "Mettez à jour les templates DOCX utilisés pour la génération automatique des documents. Un backup est créé automatiquement avant chaque mise à jour." %}</p>
+                <div class="grid-2" style="gap:16px;">
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+                        <strong>{% trans "Formulaire IBTIKAR" %}</strong>
+                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="template_type" value="ibtikar_form_template">
+                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
+                        </form>
+                    </div>
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+                        <strong>{% trans "Note de plateforme" %}</strong>
+                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="template_type" value="platform_note_template">
+                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
+                        </form>
+                    </div>
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+                        <strong>{% trans "Fiche de réception" %}</strong>
+                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="template_type" value="reception_form_template">
+                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
+                        </form>
+                    </div>
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+                        <strong>{% trans "Devis" %}</strong>
+                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="template_type" value="quote_template">
+                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forms Tab -->
+    <div x-show="tab === 'forms'">
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Configuration des formulaires par service" %}</h3></div>
+            <div class="card-body">
+                {% for svc in services %}
+                <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div>
+                            <strong class="font-mono">{{ svc.code }}</strong> — {{ svc.name }}
+                        </div>
+                        <div>
+                            {% with yaml_def=yaml_registry|default_if_none:"" %}
+                            <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
+                            {% endwith %}
+                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Champs personnalisés" %} ({{ all_form_fields|length }})</h3></div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrapper" style="border:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Nom" %}</th>
+                                <th>{% trans "Label" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Requis" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in all_form_fields %}
+                        <tr>
+                            <td><span class="font-mono">{{ f.service.code }}</span></td>
+                            <td><strong>{{ f.name }}</strong></td>
+                            <td>{{ f.label }}</td>
+                            <td>{{ f.field_type }}</td>
+                            <td>{% if f.required %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">{% trans "Aucun champ personnalisé." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- System Tab -->
     <div x-show="tab === 'system'">
         <div class="card" style="margin-bottom:24px;">
@@ -418,6 +891,23 @@
                     <button type="submit" class="btn btn-primary">{% trans "Télécharger une sauvegarde" %}</button>
                 </form>
                 <p class="text-muted text-sm" style="margin-top:8px;">{% trans "Télécharge une copie de la base de données SQLite." %}</p>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Restaurer une sauvegarde" %}</h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:12px; color:#dc2626;">⚠ {% trans "Attention : cette opération remplace la base de données actuelle. Un backup automatique sera créé avant la restauration. Le serveur devra être redémarré après la restauration." %}</p>
+                <form method="post" action="{% url 'dashboard:superadmin_restore' %}" enctype="multipart/form-data" onsubmit="return confirm('{% trans "Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base actuelle sera créé automatiquement." %}');">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="file" name="db_file" class="form-control" accept=".db" required>
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button type="submit" class="btn btn-danger">{% trans "Restaurer" %}</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
         <div class="grid-2">

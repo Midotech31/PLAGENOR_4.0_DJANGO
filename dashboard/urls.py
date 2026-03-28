@@ -19,6 +19,14 @@ urlpatterns = [
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
     path('home/service/<uuid:pk>/edit/', superadmin.service_edit, name='superadmin_service_edit'),
     path('home/backup/', superadmin.backup_now, name='superadmin_backup'),
+    path('home/user/create/', superadmin.create_user, name='superadmin_user_create'),
+    path('home/user/<int:pk>/edit/', superadmin.user_edit, name='superadmin_user_edit'),
+    path('home/force-transition/<uuid:pk>/', superadmin.force_transition_view, name='superadmin_force_transition'),
+    path('home/budget-override/<uuid:pk>/', superadmin.budget_override_view, name='superadmin_budget_override'),
+    path('home/payment-method/create/', superadmin.add_payment_method, name='superadmin_payment_method_create'),
+    path('home/template-upload/', superadmin.upload_template, name='superadmin_template_upload'),
+    path('home/reset-revenue/', superadmin.reset_revenue, name='superadmin_reset_revenue'),
+    path('home/restore/', superadmin.restore_db, name='superadmin_restore'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),

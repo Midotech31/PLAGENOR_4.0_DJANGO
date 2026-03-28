@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Modifier utilisateur" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Modifier utilisateur" %}: {{ user_obj.get_full_name|default:user_obj.username }}</h1>
+    <p class="greeting-date"><a href="{% url 'dashboard:superadmin' %}?tab=users">← {% trans "Retour au tableau de bord" %}</a></p>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>{% trans "Informations de l'utilisateur" %}</h3></div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Nom d'utilisateur" %}</label>
+                    <input type="text" class="form-control" value="{{ user_obj.username }}" disabled>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Prénom" %}</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ user_obj.first_name }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Nom" %}</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ user_obj.last_name }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Email" %}</label>
+                    <input type="email" name="email" class="form-control" value="{{ user_obj.email }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Rôle" %}</label>
+                    <select name="role" class="form-control">
+                        {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if user_obj.role == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Téléphone" %}</label>
+                    <input type="text" name="phone" class="form-control" value="{{ user_obj.phone }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Organisation" %}</label>
+                    <input type="text" name="organization" class="form-control" value="{{ user_obj.organization }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Laboratoire" %}</label>
+                    <input type="text" name="laboratory" class="form-control" value="{{ user_obj.laboratory }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Directeur de thèse" %}</label>
+                    <input type="text" name="supervisor" class="form-control" value="{{ user_obj.supervisor }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Niveau étudiant" %}</label>
+                    <input type="text" name="student_level" class="form-control" value="{{ user_obj.student_level }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Nouveau mot de passe" %} <small class="text-muted">({% trans "laisser vide pour ne pas changer" %})</small></label>
+                    <input type="password" name="new_password" class="form-control" autocomplete="new-password">
+                </div>
+            </div>
+            <div style="margin-top: 16px;">
+                <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+                <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="margin-left:8px;">{% trans "Annuler" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
