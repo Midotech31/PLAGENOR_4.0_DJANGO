@@ -1,0 +1,68 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Accueil" %}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-logos">
+        <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" onerror="this.style.display='none'">
+        <div>
+            <h1>PLAGENOR 4.0</h1>
+            <p>{% trans "Plateforme de Gestion des Opérations Scientifiques" %}</p>
+        </div>
+        <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" onerror="this.style.display='none'">
+    </div>
+    <p>{% trans "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
+    <div class="btn-group">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% trans "Soumettre une demande" %}</a>
+        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">{% trans "Voir les services" %}</a>
+        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">{% trans "Suivi de demande" %}</a>
+    </div>
+</section>
+
+<!-- Channel Cards -->
+<div class="channel-cards">
+    <div class="channel-card">
+        <h3>IBTIKAR</h3>
+        <p>{% trans "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR." %}</p>
+    </div>
+    <div class="channel-card genoclab">
+        <h3>GENOCLAB</h3>
+        <p>{% trans "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques." %}</p>
+    </div>
+</div>
+
+<!-- Services -->
+{% if services %}
+<section class="section">
+    <h2 class="section-title">{% trans "Nos Services" %}</h2>
+    <p class="section-subtitle">{% trans "Analyses scientifiques et techniques proposées par le laboratoire ESSBO" %}</p>
+    <div class="services-grid" style="padding:0;">
+        {% for service in services %}
+        <div class="service-card">
+            <div class="service-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="service-code">{{ service.code }}</div>
+            <h4>{{ service.name }}</h4>
+            <p>{{ service.description|truncatewords:20 }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Institutional Context -->
+<section class="section" style="text-align:center;">
+    <h2 class="section-title">{% trans "Organisation" %}</h2>
+    <p class="section-subtitle">{% trans "ESSBO → PLAGENOR → GENOCLAB" %}</p>
+    <div style="max-width:600px;margin:0 auto;">
+        <p class="text-muted">
+            {% trans "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes." %}
+        </p>
+    </div>
+</section>
+{% endblock %}

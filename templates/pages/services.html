@@ -1,0 +1,40 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Services" %}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <h2 class="section-title">{% trans "Nos Services" %}</h2>
+    <p class="section-subtitle">{% trans "Catalogue des analyses et prestations proposées" %}</p>
+
+    {% if services %}
+    <div class="services-grid" style="padding:0;">
+        {% for service in services %}
+        <div class="service-card">
+            <div class="service-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="service-code">{{ service.code }}</div>
+            <h4>{{ service.name }}</h4>
+            <p>{{ service.description|truncatewords:25 }}</p>
+            <div style="margin-top:12px;display:flex;gap:16px;font-size:.78rem;color:var(--slate-500);">
+                {% if service.channel_availability == 'BOTH' %}
+                <span>IBTIKAR &amp; GENOCLAB</span>
+                {% else %}
+                <span>{{ service.get_channel_availability_display }}</span>
+                {% endif %}
+                <span>{{ service.turnaround_days }} {% trans "jours" %}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <h3>{% trans "Aucun service disponible" %}</h3>
+        <p>{% trans "Les services seront bientôt publiés. Revenez plus tard." %}</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

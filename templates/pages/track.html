@@ -1,0 +1,44 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Suivi" %}{% endblock %}
+
+{% block content %}
+<div class="track-section">
+    <h2>{% trans "Suivi de votre demande" %}</h2>
+    <p>{% trans "Entrez votre identifiant de demande ou votre token de suivi pour consulter l'état d'avancement." %}</p>
+    <form class="track-form" method="get" action="{% url 'track' %}">
+        <input type="text" name="q" class="form-control" placeholder="{% trans 'Ex: IBT-2026-0042 ou votre token...' %}" value="{{ request.GET.q|default:'' }}" required>
+        <button type="submit" class="btn btn-primary">{% trans "Rechercher" %}</button>
+    </form>
+
+    {% if request.GET.q %}
+    <div class="card mt-24" style="margin-top:24px;text-align:left;">
+        <div class="card-body">
+            {% if tracked_request %}
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">{{ tracked_request.display_id }} — {{ tracked_request.title }}</h3>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;">
+                <div>
+                    <span class="text-muted">{% trans "Statut" %}:</span>
+                    <span class="badge-status badge-submitted">{{ tracked_request.get_status_display }}</span>
+                </div>
+                <div>
+                    <span class="text-muted">{% trans "Canal" %}:</span>
+                    {{ tracked_request.channel }}
+                </div>
+                <div>
+                    <span class="text-muted">{% trans "Date" %}:</span>
+                    {{ tracked_request.created_at|date:"d/m/Y" }}
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:24px;">
+                <h3>{% trans "Aucun résultat" %}</h3>
+                <p>{% trans "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

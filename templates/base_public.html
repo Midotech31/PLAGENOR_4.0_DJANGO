@@ -1,0 +1,75 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PLAGENOR 4.0{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="auth-page">
+    <nav class="public-nav">
+        <a href="{% url 'home' %}" class="nav-brand">PLAGENOR 4.0</a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">{% trans "Accueil" %}</a>
+            <a href="{% url 'services' %}">{% trans "Services" %}</a>
+            <a href="{% url 'about' %}">{% trans "À propos" %}</a>
+            <a href="{% url 'track' %}">{% trans "Suivi" %}</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard:router' %}" class="btn btn-primary btn-sm">{% trans "Tableau de bord" %}</a>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-sm">{% trans "Connexion" %}</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div style="max-width: 800px; margin: 16px auto; padding: 0 32px;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <footer class="public-footer">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">PLAGENOR 4.0</div>
+                <p class="footer-desc">
+                    {% trans "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB." %}
+                </p>
+                <p class="footer-desc mt-8" style="margin-top:8px">
+                    &copy; {{ current_year|default:"2026" }} ESSBO — {% trans "Tous droits réservés" %}
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>{% trans "Liens rapides" %}</h4>
+                <a href="{% url 'home' %}">{% trans "Accueil" %}</a>
+                <a href="{% url 'services' %}">{% trans "Services" %}</a>
+                <a href="{% url 'about' %}">{% trans "À propos" %}</a>
+                <a href="{% url 'track' %}">{% trans "Suivi de demande" %}</a>
+            </div>
+            <div class="footer-col">
+                <h4>{% trans "Contact" %}</h4>
+                <a href="#">ESSBO — Université d'Oran</a>
+                <a href="#">{% trans "Prof. Mohamed Merzoug" %}</a>
+                <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
+                <a href="{% url 'accounts:register' %}">{% trans "Inscription" %}</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            PLAGENOR 4.0 — {% trans "Conçu par" %} Prof. Mohamed Merzoug | ESSBO
+        </div>
+    </footer>
+
+    <script src="{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

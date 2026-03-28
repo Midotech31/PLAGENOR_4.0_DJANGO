@@ -1,0 +1,45 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "À propos" %}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <h2 class="section-title">{% trans "À propos de PLAGENOR" %}</h2>
+    <p class="section-subtitle">{% trans "Plateforme de Gestion des Opérations Scientifiques — Version 4.0" %}</p>
+
+    <div style="max-width:700px;margin:0 auto;">
+        <div class="card mb-24" style="margin-bottom:24px;">
+            <div class="card-body">
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% trans "Mission" %}</h3>
+                <p class="text-muted text-sm">
+                    {% trans "PLAGENOR centralise la gestion des demandes d'analyses scientifiques au sein de l'ESSBO. La plateforme assure le suivi complet des opérations, de la soumission à la livraison des résultats, en passant par la validation financière et l'assignation aux analystes." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-24" style="margin-bottom:24px;">
+            <div class="card-body">
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% trans "Canaux de Service" %}</h3>
+                <p class="text-muted text-sm mb-8" style="margin-bottom:12px;">
+                    <strong>IBTIKAR</strong> — {% trans "Canal interne pour les étudiants et chercheurs de l'ESSBO. Les analyses sont financées dans le cadre du budget IBTIKAR avec un plafond annuel." %}
+                </p>
+                <p class="text-muted text-sm">
+                    <strong>GENOCLAB</strong> — {% trans "Canal externe pour les universités, entreprises et laboratoires. Les prestations sont facturées selon un barème établi avec devis et facturation formelle." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% trans "Conception" %}</h3>
+                <p class="text-muted text-sm">
+                    {% trans "Conçue et développée par" %} <strong>Prof. Mohamed Merzoug</strong><br>
+                    {% trans "École Supérieure des Sciences Biologiques d'Oran (ESSBO)" %}<br>
+                    {% trans "Version" %} 4.0 — 2026
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
