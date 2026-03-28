@@ -35,20 +35,35 @@
 <!-- Institutional Partners -->
 <section class="section" style="background:#f8fafc; padding:48px 0;">
     <div style="max-width:1100px; margin:0 auto; text-align:center; padding:0 32px;">
-        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:20px; font-weight:500;">{% trans "Institutions & Partenaires" %}</h3>
-        <div style="display:flex; align-items:center; justify-content:center; gap:40px; flex-wrap:wrap;">
-            <a href="https://www.dgrsdt.dz/" target="_blank" rel="noopener" style="display:flex; align-items:center;">
-                <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="height:45px; width:auto; opacity:0.8; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+        <style>
+            @keyframes logoFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-6px); }
+            }
+            .partner-logo { animation: logoFloat 3s ease-in-out infinite; transition: opacity 0.2s, transform 0.2s; }
+            .partner-logo:nth-child(1) { animation-delay: 0s; }
+            .partner-logo:nth-child(2) { animation-delay: 0.4s; }
+            .partner-logo:nth-child(3) { animation-delay: 0.8s; }
+            .partner-logo:nth-child(4) { animation-delay: 1.2s; }
+            .partner-logo:nth-child(5) { animation-delay: 1.6s; }
+            .partner-logo:hover { opacity: 1 !important; transform: translateY(-8px) scale(1.05); }
+        </style>
+        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:28px; font-weight:500;">{% trans "Institutions & Partenaires" %}</h3>
+        <div style="display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap;">
+            <a href="https://www.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="height:65px; width:auto;">
             </a>
-            <a href="http://www.essb-oran.edu.dz/" target="_blank" rel="noopener" style="display:flex; align-items:center;">
-                <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="height:50px; width:auto; opacity:0.8; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+            <a href="http://www.essb-oran.edu.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="height:75px; width:auto;">
             </a>
-            <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="height:80px; width:auto; opacity:0.9; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
-            <a href="https://ibtikar.dgrsdt.dz/" target="_blank" rel="noopener" style="display:flex; align-items:center;">
-                <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" style="height:40px; width:auto; opacity:0.8; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+            <div class="partner-logo" style="display:flex; align-items:center; opacity:0.9;">
+                <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="height:110px; width:auto;">
+            </div>
+            <a href="https://ibtikar.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" style="height:60px; width:auto;">
             </a>
-            <a href="https://genoclab.my.canva.site/genoclab-essbo" target="_blank" rel="noopener" style="display:flex; align-items:center;">
-                <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" style="height:45px; width:auto; opacity:0.8; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+            <a href="https://genoclab.my.canva.site/genoclab-essbo" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" style="height:65px; width:auto;">
             </a>
         </div>
     </div>
