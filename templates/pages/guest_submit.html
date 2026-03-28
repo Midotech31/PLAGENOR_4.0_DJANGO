@@ -27,8 +27,19 @@
                     <label>{% trans "Téléphone" %}</label>
                     <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Numéro de téléphone' %}">
                 </div>
+                <div class="form-group">
+                    <label>{% trans "Organisation" %}</label>
+                    <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}">
+                </div>
 
                 <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
+                <div class="form-group">
+                    <label>{% trans "Canal" %} *</label>
+                    <select name="channel" id="id_channel" class="form-control" required>
+                        <option value="GENOCLAB">GENOCLAB ({% trans "externe" %})</option>
+                        <option value="IBTIKAR">IBTIKAR ({% trans "académique" %})</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>{% trans "Service" %} *</label>
                     <select name="service_id" class="form-control" required>

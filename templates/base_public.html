@@ -20,6 +20,7 @@
             <a href="{% url 'home' %}">{% trans "Accueil" %}</a>
             <a href="{% url 'services' %}">{% trans "Services" %}</a>
             <a href="{% url 'about' %}">{% trans "À propos" %}</a>
+            <a href="{% url 'contact' %}">{% trans "Contact" %}</a>
             <a href="{% url 'track' %}">{% trans "Suivi" %}</a>
             {% if user.is_authenticated %}
             <a href="{% url 'dashboard:router' %}" class="btn btn-primary btn-sm">{% trans "Tableau de bord" %}</a>
@@ -58,6 +59,7 @@
                 <a href="{% url 'home' %}">{% trans "Accueil" %}</a>
                 <a href="{% url 'services' %}">{% trans "Services" %}</a>
                 <a href="{% url 'about' %}">{% trans "À propos" %}</a>
+                <a href="{% url 'contact' %}">{% trans "Contact" %}</a>
                 <a href="{% url 'track' %}">{% trans "Suivi de demande" %}</a>
             </div>
             <div class="footer-col">

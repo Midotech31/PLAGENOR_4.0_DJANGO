@@ -48,6 +48,10 @@ def guest_submit(request):
         guest_name = request.POST.get('guest_name', '').strip()
         guest_email = request.POST.get('guest_email', '').strip()
         guest_phone = request.POST.get('guest_phone', '').strip()
+        organization = request.POST.get('organization', '').strip()
+        channel = request.POST.get('channel', 'GENOCLAB').strip()
+        if channel not in ('IBTIKAR', 'GENOCLAB'):
+            channel = 'GENOCLAB'
         service_id = request.POST.get('service_id', '')
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -68,8 +72,9 @@ def guest_submit(request):
 
         # Generate display_id
         year = datetime.now().year
-        count = Request.objects.filter(channel='GENOCLAB', created_at__year=year).count() + 1
-        display_id = f"GCL-{year}-{count:04d}"
+        prefix = 'IBT' if channel == 'IBTIKAR' else 'GCL'
+        count = Request.objects.filter(channel=channel, created_at__year=year).count() + 1
+        display_id = f"{prefix}-{year}-{count:04d}"
         guest_token = uuid_lib.uuid4()
 
         # Collect YAML parameter values
@@ -84,15 +89,21 @@ def guest_submit(request):
                     sample_data.setdefault(row_idx, {})[col_name] = val
         sample_table_data = list(sample_data.values()) if sample_data else []
 
+        requester_data = {}
+        if organization:
+            requester_data['organization'] = organization
+
+        quote = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+
         req = Request.objects.create(
             display_id=display_id,
             title=title or f"Demande {service.name}",
             description=description,
-            channel='GENOCLAB',
+            channel=channel,
             status='REQUEST_CREATED',
             urgency=urgency,
             service=service,
-            quote_amount=service.genoclab_price,
+            quote_amount=quote,
             submitted_as_guest=True,
             guest_token=guest_token,
             guest_name=guest_name,
@@ -100,6 +111,7 @@ def guest_submit(request):
             guest_phone=guest_phone,
             service_params=service_params,
             sample_table=sample_table_data,
+            requester_data=requester_data,
         )
 
         RequestHistory.objects.create(

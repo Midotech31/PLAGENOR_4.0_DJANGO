@@ -68,6 +68,32 @@
                 {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
             </div>
 
+            <div id="academic-fields" style="display:none;">
+                <div class="form-group">
+                    <label for="id_student_level">{% trans "Niveau" %}</label>
+                    <select name="student_level" id="id_student_level" class="form-control">
+                        <option value="">— {% trans "Sélectionner" %} —</option>
+                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>Master (fin de cycle)</option>
+                        <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>Ingéniorat (fin de cycle)</option>
+                        <option value="doctorat" {% if form.student_level.value == 'doctorat' %}selected{% endif %}>Doctorat</option>
+                    </select>
+                    <small class="text-muted">{% trans "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités algériennes" %}</small>
+                    {% if form.student_level.errors %}<div class="form-error">{{ form.student_level.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_laboratory">{% trans "Laboratoire" %}</label>
+                    <input type="text" name="laboratory" id="id_laboratory" class="form-control" value="{{ form.laboratory.value|default:'' }}" placeholder="{% trans 'Nom du laboratoire' %}">
+                    {% if form.laboratory.errors %}<div class="form-error">{{ form.laboratory.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_supervisor">{% trans "Directeur de recherche" %}</label>
+                    <input type="text" name="supervisor" id="id_supervisor" class="form-control" value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
+                    {% if form.supervisor.errors %}<div class="form-error">{{ form.supervisor.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="id_phone">{% trans "Téléphone" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
                 <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
@@ -95,4 +121,29 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    var roleInputs = document.querySelectorAll('input[name="role"]');
+    var academicFields = document.getElementById('academic-fields');
+    var studentLevel = document.getElementById('id_student_level');
+    var supervisor = document.getElementById('id_supervisor');
+
+    function toggleAcademic() {
+        var selected = document.querySelector('input[name="role"]:checked');
+        if (selected && selected.value === 'REQUESTER') {
+            academicFields.style.display = '';
+            studentLevel.required = true;
+            supervisor.required = true;
+        } else {
+            academicFields.style.display = 'none';
+            studentLevel.required = false;
+            supervisor.required = false;
+        }
+    }
+
+    roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
+    toggleAcademic();
+})();
+</script>
 {% endblock %}
