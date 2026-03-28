@@ -22,7 +22,7 @@
 </div>
 
 <!-- Tab Navigation -->
-<div x-data="{tab: 'requests'}">
+<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
     <div class="tab-list" style="margin-bottom: 24px;">
         <button class="tab-item" :class="tab === 'new' && 'active'" @click="tab = 'new'">{% trans "Nouvelle demande" %}</button>
         <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>

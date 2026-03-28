@@ -22,7 +22,7 @@
 </div>
 
 <!-- Tab Navigation -->
-<div x-data="{tab: 'pending'}">
+<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'pending'}">
     <div class="tab-list" style="margin-bottom: 24px;">
         <button class="tab-item" :class="tab === 'pending' && 'active'" @click="tab = 'pending'">{% trans "En attente" %} ({{ pending_tasks.count }})</button>
         <button class="tab-item" :class="tab === 'progress' && 'active'" @click="tab = 'progress'">{% trans "En cours" %} ({{ in_progress.count }})</button>
