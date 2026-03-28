@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load cms %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
@@ -15,7 +16,7 @@
 </head>
 <body class="auth-page">
     <nav class="public-nav">
-        <a href="{% url 'home' %}" class="nav-brand">PLAGENOR 4.0</a>
+        <a href="{% url 'home' %}" class="nav-brand">{% cms 'nav_brand' 'PLAGENOR 4.0' %}</a>
         <div class="nav-links">
             <a href="{% url 'home' %}">{% trans "Accueil" %}</a>
             <a href="{% url 'services' %}">{% trans "Services" %}</a>
@@ -54,12 +55,12 @@
     <footer class="public-footer">
         <div class="footer-grid">
             <div>
-                <div class="footer-brand">PLAGENOR 4.0</div>
+                <div class="footer-brand">{% cms 'footer_brand' 'PLAGENOR 4.0' %}</div>
                 <p class="footer-desc">
-                    {% trans "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB." %}
+                    {% cms 'footer_description' "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB." %}
                 </p>
                 <p class="footer-desc" style="margin-top:12px">
-                    &copy; {{ current_year|default:"2026" }} ESSBO — {% trans "Tous droits réservés" %}
+                    {% cms 'footer_copyright' '© 2026 ESSBO — Tous droits réservés' %}
                 </p>
             </div>
             <div class="footer-col">
@@ -72,14 +73,14 @@
             </div>
             <div class="footer-col">
                 <h4>{% trans "Contact" %}</h4>
-                <a href="#">ESSBO — {% trans "Université d'Oran" %}</a>
-                <a href="#">{% trans "Prof. Mohamed Merzoug" %}</a>
+                <a href="#">{% cms 'footer_contact_1' "ESSBO — Université d'Oran" %}</a>
+                <a href="#">{% cms 'footer_contact_2' 'Prof. Mohamed Merzoug' %}</a>
                 <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
                 <a href="{% url 'accounts:register' %}">{% trans "Inscription" %}</a>
             </div>
         </div>
         <div class="footer-bottom">
-            PLAGENOR 4.0 — {% trans "Conçu par" %} Prof. Mohamed Merzoug | ESSBO
+            {% cms 'footer_credit' 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO' %}
         </div>
     </footer>
 

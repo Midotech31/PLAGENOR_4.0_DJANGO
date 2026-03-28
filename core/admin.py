@@ -44,5 +44,21 @@ class ServiceFormFieldAdmin(admin.ModelAdmin):
 
 admin.site.register(RequestHistory)
 admin.site.register(RequestComment)
-admin.site.register(PlatformContent)
+@admin.register(PlatformContent)
+class PlatformContentAdmin(admin.ModelAdmin):
+    list_display = ('key', 'short_value', 'updated_at', 'updated_by')
+    search_fields = ('key', 'value')
+    list_filter = ('updated_at',)
+    ordering = ('key',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('key', 'value'),
+            'description': 'Modifiez le texte visible sur le site. La clé identifie l\'élément, la valeur est le texte affiché.'
+        }),
+    )
+
+    def short_value(self, obj):
+        return obj.value[:80] + '...' if len(obj.value) > 80 else obj.value
+    short_value.short_description = 'Contenu'
 admin.site.register(PaymentMethod)

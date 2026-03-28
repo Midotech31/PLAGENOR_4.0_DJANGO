@@ -1,6 +1,7 @@
 {% extends 'base_public.html' %}
 {% load static %}
 {% load i18n %}
+{% load cms %}
 
 {% block title %}PLAGENOR 4.0 — {% trans "Connexion" %}{% endblock %}
 
@@ -8,12 +9,12 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-logo">
-            <div class="logo-text">PLAGENOR 4.0</div>
-            <div class="logo-sub">{% trans "Plateforme de Gestion des Opérations" %}</div>
+            <div class="logo-text">{% cms 'login_logo_text' 'PLAGENOR 4.0' %}</div>
+            <div class="logo-sub">{% cms 'login_logo_sub' 'Plateforme de Gestion des Opérations' %}</div>
         </div>
 
-        <h2>{% trans "Connexion" %}</h2>
-        <p class="auth-subtitle">{% trans "Accédez à votre espace PLAGENOR" %}</p>
+        <h2>{% cms 'login_title' 'Connexion' %}</h2>
+        <p class="auth-subtitle">{% cms 'login_subtitle' 'Accédez à votre espace PLAGENOR' %}</p>
 
         {% if form.errors %}
         <div class="alert alert-danger" style="margin-bottom:20px;">
@@ -50,8 +51,8 @@
         </div>
 
         <div class="auth-footer">
-            ESSBO — {% trans "Université d'Oran" %}<br>
-            {% trans "Conçu par" %} Prof. Mohamed Merzoug
+            {% cms 'login_footer_1' "ESSBO — Université d'Oran" %}<br>
+            {% cms 'login_footer_2' 'Conçu par Prof. Mohamed Merzoug' %}
         </div>
     </div>
 </div>

@@ -1,6 +1,7 @@
 {% extends 'base_public.html' %}
 {% load static %}
 {% load i18n %}
+{% load cms %}
 
 {% block title %}PLAGENOR 4.0 — {% trans "Accueil" %}{% endblock %}
 
@@ -8,27 +9,27 @@
 <!-- Hero -->
 <section class="hero">
     <div style="text-align:center;">
-        <h1 style="font-size:2.5rem; margin-bottom:8px;">PLAGENOR 4.0</h1>
-        <p style="font-size:1.1rem; opacity:0.85;">{% trans "Plateforme Technologique de Génomique — ESSBO · ORAN" %}</p>
+        <h1 style="font-size:2.5rem; margin-bottom:8px;">{% cms 'hero_title' 'PLAGENOR 4.0' %}</h1>
+        <p style="font-size:1.1rem; opacity:0.85;">{% cms 'hero_subtitle' 'Plateforme Technologique de Génomique — ESSBO · ORAN' %}</p>
     </div>
-    <p>{% trans "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
+    <p>{% cms 'hero_description' "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
     <div class="btn-group">
-        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% trans "Soumettre une demande" %}</a>
-        <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Soumission invité" %}</a>
-        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Voir les services" %}</a>
-        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% trans "Suivi de demande" %}</a>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% cms 'hero_btn_submit' 'Soumettre une demande' %}</a>
+        <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_guest' 'Soumission invité' %}</a>
+        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_services' 'Voir les services' %}</a>
+        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_track' 'Suivi de demande' %}</a>
     </div>
 </section>
 
 <!-- Channel Cards -->
 <div class="channel-cards">
     <div class="channel-card">
-        <h3>IBTIKAR</h3>
-        <p>{% trans "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR." %}</p>
+        <h3>{% cms 'ibtikar_title' 'IBTIKAR' %}</h3>
+        <p>{% cms 'ibtikar_description' "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR." %}</p>
     </div>
     <div class="channel-card genoclab">
-        <h3>GENOCLAB</h3>
-        <p>{% trans "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques." %}</p>
+        <h3>{% cms 'genoclab_title' 'GENOCLAB' %}</h3>
+        <p>{% cms 'genoclab_description' "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques." %}</p>
     </div>
 </div>
 
@@ -48,7 +49,7 @@
             .partner-logo:nth-child(5) { animation-delay: 1.6s; }
             .partner-logo:hover { opacity: 1 !important; transform: translateY(-8px) scale(1.05); }
         </style>
-        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:28px; font-weight:500;">{% trans "Institutions & Partenaires" %}</h3>
+        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:28px; font-weight:500;">{% cms 'institutions_title' 'INSTITUTIONS & PARTENAIRES' %}</h3>
         <div style="display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap;">
             <a href="https://www.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
                 <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="height:65px; width:auto;">
@@ -72,8 +73,8 @@
 <!-- Services -->
 {% if services %}
 <section class="section">
-    <h2 class="section-title">{% trans "Nos Services" %}</h2>
-    <p class="section-subtitle">{% trans "Analyses scientifiques et techniques proposées par le laboratoire ESSBO" %}</p>
+    <h2 class="section-title">{% cms 'services_title' 'Nos Services' %}</h2>
+    <p class="section-subtitle">{% cms 'services_subtitle' 'Analyses scientifiques et techniques proposées par le laboratoire ESSBO' %}</p>
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
         <a href="{% url 'service_landing' service.code %}" style="text-decoration:none; color:inherit;">
@@ -99,11 +100,11 @@
 
 <!-- Institutional Context -->
 <section class="section" style="text-align:center;">
-    <h2 class="section-title">{% trans "Organisation" %}</h2>
-    <p class="section-subtitle">{% trans "ESSBO → PLAGENOR → GENOCLAB" %}</p>
+    <h2 class="section-title">{% cms 'org_title' 'Organisation' %}</h2>
+    <p class="section-subtitle">{% cms 'org_subtitle' 'ESSBO → PLAGENOR → GENOCLAB' %}</p>
     <div style="max-width:600px;margin:0 auto;">
         <p class="text-muted">
-            {% trans "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes." %}
+            {% cms 'org_description' "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes." %}
         </p>
     </div>
 </section>

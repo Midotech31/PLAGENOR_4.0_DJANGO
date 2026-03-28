@@ -1,57 +1,58 @@
 {% extends 'base_public.html' %}
 {% load i18n %}
+{% load cms %}
 
 {% block title %}PLAGENOR 4.0 — {% trans "À propos" %}{% endblock %}
 
 {% block content %}
 <section class="section">
-    <h2 class="section-title">{% trans "À propos de PLAGENOR" %}</h2>
+    <h2 class="section-title">{% cms 'about_title' 'À propos de PLAGENOR' %}</h2>
 
     <div style="max-width:750px;margin:0 auto;">
 
         <div class="card mb-24" style="margin-bottom:24px;">
             <div class="card-body">
                 <p class="text-muted text-sm" style="margin-bottom:12px;">
-                    {% trans "L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, un service commun de recherche financé par la DGRSDT (Direction Générale de la Recherche Scientifique et du Développement Technologique)." %}
+                    {% cms 'about_intro' "L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, un service commun de recherche financé par la DGRSDT (Direction Générale de la Recherche Scientifique et du Développement Technologique)." %}
                 </p>
                 <p class="text-muted text-sm" style="margin-bottom:12px;">
-                    {% trans "PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie par le code de commerce algérien." %}
+                    {% cms 'about_genoclab' "PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie par le code de commerce algérien." %}
                 </p>
                 <p class="text-muted text-sm">
-                    {% trans "PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités de PLAGENOR — agissant comme un ERP interne pour organiser les flux de travail, gérer les demandes IBTIKAR et les clients GENOCLAB." %}
+                    {% cms 'about_plagenor' "PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités de PLAGENOR — agissant comme un ERP interne pour organiser les flux de travail, gérer les demandes IBTIKAR et les clients GENOCLAB." %}
                 </p>
             </div>
         </div>
 
         <div class="card mb-24" style="margin-bottom:24px;">
             <div class="card-body">
-                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:12px;">{% trans "Deux missions" %}</h3>
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:12px;">{% cms 'about_missions_title' 'Deux missions' %}</h3>
                 <p class="text-muted text-sm" style="margin-bottom:12px;">
-                    <strong>IBTIKAR-DGRSDT</strong> — {% trans "Canal académique : réaliser des analyses génomiques pour les étudiants de fin de cycle (Master, Ingéniorat) et les doctorants de toutes les universités algériennes, afin de promouvoir la recherche scientifique en Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 000 DA géré par la DGRSDT." %}
+                    <strong>IBTIKAR-DGRSDT</strong> — {% cms 'about_ibtikar_mission' "Canal académique : réaliser des analyses génomiques pour les étudiants de fin de cycle (Master, Ingéniorat) et les doctorants de toutes les universités algériennes, afin de promouvoir la recherche scientifique en Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 000 DA géré par la DGRSDT." %}
                 </p>
                 <p class="text-muted text-sm">
-                    <strong>GENOCLAB</strong> — {% trans "Canal commercial : fournir les mêmes analyses génomiques aux clients externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une base commerciale avec facturation, TVA 19%%, et paiement réel." %}
+                    <strong>GENOCLAB</strong> — {% cms 'about_genoclab_mission' "Canal commercial : fournir les mêmes analyses génomiques aux clients externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une base commerciale avec facturation, TVA 19%, et paiement réel." %}
                 </p>
             </div>
         </div>
 
         <div class="card mb-24" style="margin-bottom:24px;">
             <div class="card-body">
-                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% trans "Services" %}</h3>
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% cms 'about_services_title' 'Services' %}</h3>
                 <p class="text-muted text-sm">
-                    {% trans "Identification microbienne (MALDI-TOF), séquençage Sanger & Illumina, PCR, contrôle qualité des acides nucléiques, lyophilisation, synthèse d'amorces." %}
+                    {% cms 'about_services_desc' "Identification microbienne (MALDI-TOF), séquençage Sanger & Illumina, PCR, contrôle qualité des acides nucléiques, lyophilisation, synthèse d'amorces." %}
                 </p>
             </div>
         </div>
 
         <div class="card">
             <div class="card-body">
-                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% trans "Contact" %}</h3>
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% cms 'about_contact_title' 'Contact' %}</h3>
                 <p class="text-muted text-sm">
-                    <strong>Prof. Mohamed Merzoug</strong><br>
-                    {% trans "Email" %} : <a href="mailto:mohamed.merzouge.essbo@email.com">mohamed.merzouge.essbo@email.com</a><br>
-                    {% trans "Téléphone" %} : 041 24 63 59<br>
-                    {% trans "Adresse" %} : Cité Emir Abdelkader, 31000 Oran
+                    <strong>{% cms 'about_contact_name' 'Prof. Mohamed Merzoug' %}</strong><br>
+                    {% trans "Email" %} : <a href="mailto:{% cms 'about_contact_email' 'mohamed.merzouge.essbo@email.com' %}">{% cms 'about_contact_email' 'mohamed.merzouge.essbo@email.com' %}</a><br>
+                    {% trans "Téléphone" %} : {% cms 'about_contact_phone' '041 24 63 59' %}<br>
+                    {% trans "Adresse" %} : {% cms 'about_contact_address' 'Cité Emir Abdelkader, 31000 Oran' %}
                 </p>
             </div>
         </div>
