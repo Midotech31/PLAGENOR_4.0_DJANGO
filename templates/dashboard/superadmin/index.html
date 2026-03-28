@@ -715,20 +715,20 @@
                         <tbody>
                         {% for stat in productivity_stats %}
                         <tr>
-                            <td><strong>{{ stat.member_name|default:stat.member }}</strong></td>
-                            <td>{{ stat.assigned_count|default:0 }}</td>
-                            <td>{{ stat.completed_count|default:0 }}</td>
-                            <td>{{ stat.score|default:stat.productivity_score|default:0|floatformat:0 }}%</td>
+                            <td><strong>{{ stat.name }}</strong></td>
+                            <td>{{ stat.total_assigned|default:0 }}</td>
+                            <td>{{ stat.completed|default:0 }}</td>
+                            <td>{{ stat.score|default:0|floatformat:0 }}%</td>
                             <td>
-                                {% with tier=stat.tier|default:stat.productivity_tier|default:"Normal" %}
-                                {% if tier == "Fire" or tier == "FIRE" %}
+                                {% with tier=stat.level.key|default:stat.status|default:"normal" %}
+                                {% if tier == "fire" %}
                                 <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 Fire</span>
-                                {% elif tier == "Very Good" or tier == "VERY_GOOD" %}
+                                {% elif tier == "very_good" %}
                                 <span class="badge-status" style="background:#fef3c7;color:#d97706;">Very Good</span>
-                                {% elif tier == "Good" or tier == "GOOD" %}
+                                {% elif tier == "good" %}
                                 <span class="badge-status" style="background:#d1fae5;color:#059669;">Good</span>
                                 {% else %}
-                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">Not Bad</span>
+                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">{{ stat.emoji }} {{ stat.level.label_fr|default:"Pas mal" }}</span>
                                 {% endif %}
                                 {% endwith %}
                             </td>
