@@ -43,8 +43,35 @@
             </div>
         </div>
 
-        <div class="topbar-user">
-            <div class="topbar-avatar">{{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}</div>
+        <!-- Profile Dropdown -->
+        <div x-data="{ profileOpen: false }" style="position:relative;">
+            <button @click="profileOpen = !profileOpen" class="topbar-avatar-btn" style="display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; padding:4px 8px; border-radius:8px;">
+                <div class="topbar-avatar">{{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}</div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div x-show="profileOpen" @click.outside="profileOpen = false" class="profile-dropdown" style="position:absolute; right:0; top:calc(100% + 8px); width:220px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.12); z-index:200; overflow:hidden;">
+                <div style="padding:12px 16px;">
+                    <strong style="font-size:0.9rem;">{{ user.get_full_name }}</strong>
+                    <div class="text-muted" style="font-size:0.75rem;">{{ user.get_role_display }}</div>
+                </div>
+                <div style="height:1px; background:#e2e8f0;"></div>
+                <a href="{% url 'accounts:profile' %}" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#1e293b; text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {% trans "Mon Profil" %}
+                </a>
+                <a href="{% url 'dashboard:router' %}" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#1e293b; text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    {% trans "Tableau de bord" %}
+                </a>
+                <div style="height:1px; background:#e2e8f0;"></div>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#dc2626; background:none; border:none; width:100%; cursor:pointer; text-align:left;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        {% trans "Déconnexion" %}
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Language Switch -->
