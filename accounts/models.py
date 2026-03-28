@@ -44,6 +44,8 @@ class User(AbstractUser):
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
 
     # Login security
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='Photo de profil')
+    last_seen = models.DateTimeField(null=True, blank=True, verbose_name='Dernière activité')
     login_attempts = models.IntegerField(default=0)
     locked_until = models.DateTimeField(null=True, blank=True)
 

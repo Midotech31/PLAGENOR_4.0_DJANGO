@@ -1829,3 +1829,20 @@ a:has(.service-card):hover .service-card,
     color: #dc2626;
     border-color: #fecaca;
 }
+
+/* Online indicator */
+.online-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+.online-dot.green {
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+.online-dot.gray {
+    background: #cbd5e1;
+}

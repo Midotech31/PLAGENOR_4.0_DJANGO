@@ -12,6 +12,7 @@ from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
 from core.registry import get_service_def
 from core.exceptions import InvalidTransitionError, AuthorizationError
+from notifications.models import Notification
 
 
 def admin_required(view_func):
@@ -220,6 +221,12 @@ def award_points(request, member_pk):
     )
     member.total_points += points
     member.save(update_fields=['total_points'])
+    # Notify member
+    Notification.objects.create(
+        user=member.user,
+        message=f"{points} points reçus ! {reason}" if reason else f"{points} points reçus !",
+        notification_type='reward'
+    )
     messages.success(request, f"{points} points attribués à {member.user.get_full_name()}.")
     return redirect_back(request, 'dashboard:admin_ops')
 
@@ -231,6 +238,11 @@ def send_cheer(request, member_pk):
     member = get_object_or_404(MemberProfile, pk=member_pk)
     message_text = request.POST.get('message', '')
     Cheer.objects.create(member=member, message=message_text, from_user=request.user)
+    Notification.objects.create(
+        user=member.user,
+        message=f"Encouragement reçu : {message_text}" if message_text else "Vous avez reçu un encouragement !",
+        notification_type='reward'
+    )
     messages.success(request, f"Encouragement envoyé à {member.user.get_full_name()}.")
     return redirect_back(request, 'dashboard:admin_ops')
 

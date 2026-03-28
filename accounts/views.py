@@ -40,6 +40,8 @@ def profile(request):
         user.organization = request.POST.get('organization', user.organization or '')
         user.laboratory = request.POST.get('laboratory', user.laboratory or '')
         user.supervisor = request.POST.get('supervisor', user.supervisor or '')
+        if 'avatar' in request.FILES:
+            user.avatar = request.FILES['avatar']
         user.save()
 
         # Member technique update
