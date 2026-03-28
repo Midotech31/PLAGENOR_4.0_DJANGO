@@ -39,10 +39,11 @@
                         <select name="service_id" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
-                            <option value="{{ s.pk }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div id="dynamic-service-form"></div>
                     <div class="form-group">
                         <label>{% trans "Titre de la demande" %}</label>
                         <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse complète...' %}">
@@ -90,12 +91,12 @@
                         </div>
                         <div class="pipeline-line"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_SCHEDULED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
                         </div>
                         <div class="pipeline-line"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_SCHEDULED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
                         </div>
                         <div class="pipeline-line"></div>
@@ -110,6 +111,17 @@
                         </div>
                         {% endwith %}
                     </div>
+
+                    <!-- Appointment confirmation -->
+                    {% if req.appointment_date and not req.appointment_confirmed and req.status == 'APPOINTMENT_PROPOSED' %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <span class="text-sm">{% trans "RDV proposé" %}: <strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></span>
+                        <form method="post" action="{% url 'dashboard:client_confirm_appointment' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
 
                     <!-- Quote actions -->
                     {% if req.status == 'QUOTE_SENT' %}

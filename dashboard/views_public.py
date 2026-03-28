@@ -34,6 +34,10 @@ def track(request):
     return render(request, 'pages/track.html', {'tracked_request': tracked_request})
 
 
+def contact(request):
+    return render(request, 'pages/contact.html')
+
+
 def guest_submit(request):
     """Public guest submission form — no login required."""
     services_qs = Service.objects.filter(
@@ -68,6 +72,18 @@ def guest_submit(request):
         display_id = f"GCL-{year}-{count:04d}"
         guest_token = uuid_lib.uuid4()
 
+        # Collect YAML parameter values
+        service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+        # Collect sample table data
+        sample_data = {}
+        for key, val in request.POST.items():
+            if key.startswith('sample_'):
+                parts = key.split('_', 2)
+                if len(parts) == 3:
+                    row_idx, col_name = parts[1], parts[2]
+                    sample_data.setdefault(row_idx, {})[col_name] = val
+        sample_table_data = list(sample_data.values()) if sample_data else []
+
         req = Request.objects.create(
             display_id=display_id,
             title=title or f"Demande {service.name}",
@@ -82,6 +98,8 @@ def guest_submit(request):
             guest_name=guest_name,
             guest_email=guest_email,
             guest_phone=guest_phone,
+            service_params=service_params,
+            sample_table=sample_table_data,
         )
 
         RequestHistory.objects.create(

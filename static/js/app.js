@@ -46,6 +46,26 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Dynamic service form loading
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('select[name="service_id"]').forEach(function(select) {
+        select.addEventListener('change', function() {
+            var serviceId = this.value;
+            var container = document.getElementById('dynamic-service-form');
+            if (!container) return;
+            if (!serviceId) { container.innerHTML = ''; return; }
+            var option = this.options[this.selectedIndex];
+            var code = option.getAttribute('data-code') || '';
+            if (code) {
+                fetch('/dashboard/api/service-form/' + code + '/')
+                    .then(function(r) { return r.text(); })
+                    .then(function(html) { container.innerHTML = html; })
+                    .catch(function() { container.innerHTML = ''; });
+            }
+        });
+    });
+});
+
 // Role selector (registration page)
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.role-option').forEach(option => {

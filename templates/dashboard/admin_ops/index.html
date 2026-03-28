@@ -68,6 +68,17 @@
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Appliquer" %}</button>
                         </form>
                     </div>
+                    <!-- Appointment modification (if APPOINTMENT_PROPOSED) -->
+                    {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date and not req.appointment_confirmed %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <span class="text-sm text-muted">{% trans "RDV proposé" %}: {{ req.appointment_date|date:"d/m/Y" }}</span>
+                        <form method="post" action="{% url 'dashboard:admin_modify_appointment' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="date" name="appointment_date" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" value="{{ req.appointment_date|date:'Y-m-d' }}">
+                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Modifier RDV" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
                     <!-- Document generation buttons -->
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         {% if req.channel == 'IBTIKAR' %}

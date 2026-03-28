@@ -207,6 +207,90 @@ def audit_log(request):
 
 
 @superadmin_required
+def service_edit(request, pk):
+    """Edit a service and its custom form fields."""
+    from core.models import ServiceFormField
+    service = get_object_or_404(Service, pk=pk)
+    custom_fields = service.custom_fields.all()
+
+    if request.method == 'POST':
+        service.name = request.POST.get('name', service.name)
+        service.description = request.POST.get('description', service.description)
+        service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
+        service.ibtikar_price = request.POST.get('ibtikar_price', service.ibtikar_price)
+        service.genoclab_price = request.POST.get('genoclab_price', service.genoclab_price)
+        service.turnaround_days = request.POST.get('turnaround_days', service.turnaround_days)
+        if 'image' in request.FILES:
+            service.image = request.FILES['image']
+        service.save()
+
+        # Handle custom fields: delete existing and recreate from POST
+        service.custom_fields.all().delete()
+        field_names = request.POST.getlist('field_name')
+        field_labels = request.POST.getlist('field_label')
+        field_types = request.POST.getlist('field_type')
+        field_required = request.POST.getlist('field_required')
+        field_options = request.POST.getlist('field_options')
+        for i, name in enumerate(field_names):
+            if not name.strip():
+                continue
+            import json
+            opts = []
+            if i < len(field_options) and field_options[i].strip():
+                try:
+                    opts = json.loads(field_options[i])
+                except (json.JSONDecodeError, ValueError):
+                    opts = [o.strip() for o in field_options[i].split(',') if o.strip()]
+            ServiceFormField.objects.create(
+                service=service,
+                name=name.strip(),
+                label=field_labels[i].strip() if i < len(field_labels) else name.strip(),
+                field_type=field_types[i] if i < len(field_types) else 'string',
+                required=str(i) in field_required,
+                options=opts,
+                sort_order=i,
+            )
+
+        messages.success(request, f"Service {service.name} mis à jour.")
+        return redirect('dashboard:superadmin')
+
+    return render(request, 'dashboard/superadmin/service_edit.html', {
+        'service': service,
+        'custom_fields': custom_fields,
+    })
+
+
+@superadmin_required
+def backup_now(request):
+    """Create a database backup and return as download."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    import shutil
+    from datetime import datetime as dt
+    from django.http import FileResponse
+    from django.conf import settings as s
+
+    db_path = s.BASE_DIR / 'data' / 'plagenor.db'
+    backup_dir = s.BASE_DIR / 'data' / 'backups'
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = dt.now().strftime('%Y%m%d_%H%M%S')
+    backup_path = backup_dir / f'plagenor_{timestamp}.db'
+    shutil.copy2(str(db_path), str(backup_path))
+
+    # Keep last 30 backups
+    backups = sorted(backup_dir.glob('plagenor_*.db'), reverse=True)
+    for old_backup in backups[30:]:
+        old_backup.unlink()
+
+    return FileResponse(
+        open(str(backup_path), 'rb'),
+        as_attachment=True,
+        filename=f'plagenor_{timestamp}.db',
+    )
+
+
+@superadmin_required
 def revenue_archives(request):
     """Display monthly revenue archives."""
     from core.models import RevenueArchive

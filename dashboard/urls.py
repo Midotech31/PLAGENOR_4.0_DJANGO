@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api
 from . import views
 
 app_name = 'dashboard'
@@ -17,6 +17,8 @@ urlpatterns = [
     path('home/technique/create/', superadmin.technique_create, name='superadmin_technique_create'),
     path('home/technique/<int:pk>/delete/', superadmin.technique_delete, name='superadmin_technique_delete'),
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
+    path('home/service/<uuid:pk>/edit/', superadmin.service_edit, name='superadmin_service_edit'),
+    path('home/backup/', superadmin.backup_now, name='superadmin_backup'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),
@@ -25,6 +27,7 @@ urlpatterns = [
     path('ops/points/<int:pk>/', admin_ops.award_points, name='admin_award_points'),
     path('ops/cheer/<int:pk>/', admin_ops.send_cheer, name='admin_send_cheer'),
     path('ops/report/<uuid:pk>/', admin_ops.report_review, name='admin_report_review'),
+    path('ops/appointment/<uuid:pk>/', admin_ops.modify_appointment, name='admin_modify_appointment'),
 
     # Analyst
     path('analyst/', analyst.index, name='analyst'),
@@ -37,6 +40,7 @@ urlpatterns = [
     # Finance
     path('finance/', finance.index, name='finance'),
     path('finance/validate/<uuid:pk>/', finance.validate_budget, name='finance_validate'),
+    path('finance/payment/<uuid:pk>/', finance.update_payment_status, name='finance_payment_status'),
 
     # Requester (IBTIKAR)
     path('requester/', requester.index, name='requester'),
@@ -50,8 +54,12 @@ urlpatterns = [
     path('client/create/', client.create_request, name='client_create'),
     path('client/quote/<uuid:pk>/accept/', client.accept_quote, name='client_accept_quote'),
     path('client/quote/<uuid:pk>/reject/', client.reject_quote, name='client_reject_quote'),
+    path('client/appointment/<uuid:pk>/confirm/', client.confirm_appointment, name='client_confirm_appointment'),
     path('client/confirm/<uuid:pk>/', client.confirm_receipt, name='client_confirm'),
     path('client/rate/<uuid:pk>/', client.rate_service, name='client_rate'),
+
+    # Service form API
+    path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),
 
     # Messaging
     path('message/<uuid:pk>/', messaging.send_message, name='send_message'),

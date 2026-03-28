@@ -107,6 +107,7 @@
                                 <th>{% trans "HT" %}</th>
                                 <th>{% trans "TVA" %}</th>
                                 <th>{% trans "TTC" %}</th>
+                                <th>{% trans "Paiement" %}</th>
                                 <th>{% trans "Date" %}</th>
                             </tr>
                         </thead>
@@ -119,10 +120,20 @@
                             <td>{{ inv.subtotal_ht|floatformat:2 }} DA</td>
                             <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
                             <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
+                            <td>
+                                <form method="post" action="{% url 'dashboard:finance_payment_status' inv.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <select name="payment_status" class="form-control" style="width:auto; font-size:0.8rem; display:inline-block;" onchange="this.form.submit()">
+                                        <option value="PENDING" {% if inv.payment_status == 'PENDING' %}selected{% endif %}>{% trans "En attente" %}</option>
+                                        <option value="PARTIAL" {% if inv.payment_status == 'PARTIAL' %}selected{% endif %}>{% trans "Partiel" %}</option>
+                                        <option value="COMPLETED" {% if inv.payment_status == 'COMPLETED' %}selected{% endif %}>{% trans "Payé" %}</option>
+                                    </select>
+                                </form>
+                            </td>
                             <td>{{ inv.created_at|date:"d/m/Y" }}</td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="7" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>

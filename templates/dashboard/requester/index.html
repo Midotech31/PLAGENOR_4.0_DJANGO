@@ -38,10 +38,11 @@
                         <select name="service_id" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
-                            <option value="{{ s.pk }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div id="dynamic-service-form"></div>
                     <div class="form-group">
                         <label>{% trans "Titre de la demande" %}</label>
                         <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse DRX échantillon...' %}">
@@ -123,7 +124,7 @@
                         </div>
                         <div class="pipeline-line"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_SCHEDULED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
                         </div>
                         <div class="pipeline-line"></div>

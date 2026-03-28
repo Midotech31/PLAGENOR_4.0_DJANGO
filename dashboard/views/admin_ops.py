@@ -149,6 +149,23 @@ def send_cheer(request, member_pk):
 
 
 @admin_required
+def modify_appointment(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    if req.appointment_confirmed:
+        messages.error(request, "Le RDV est déjà confirmé, impossible de modifier.")
+        return redirect('dashboard:admin_ops')
+    date_str = request.POST.get('appointment_date', '')
+    if date_str:
+        from datetime import datetime
+        req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        req.save(update_fields=['appointment_date'])
+        messages.success(request, f"Date de RDV modifiée: {req.appointment_date}")
+    return redirect('dashboard:admin_ops')
+
+
+@admin_required
 def report_review(request, pk):
     req = get_object_or_404(Request, pk=pk)
     if request.method == 'POST':

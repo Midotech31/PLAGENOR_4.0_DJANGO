@@ -31,7 +31,7 @@ def index(request):
     assigned_count = Request.objects.filter(assigned_to=profile).count()
     in_progress_count = Request.objects.filter(
         assigned_to=profile,
-        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_SCHEDULED', 'PENDING_ACCEPTANCE']
+        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'PENDING_ACCEPTANCE']
     ).count()
     completed_count = Request.objects.filter(
         assigned_to=profile, status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
@@ -47,7 +47,7 @@ def index(request):
     in_progress = Request.objects.filter(
         assigned_to=profile,
         status__in=[
-            'APPOINTMENT_SCHEDULED', 'SAMPLE_RECEIVED',
+            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
             'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
         ]
     ).select_related('service', 'requester').order_by('-updated_at')
@@ -98,12 +98,9 @@ def accept_task(request, pk):
     req.assignment_accepted_at = timezone.now()
     req.save(update_fields=['assignment_accepted', 'assignment_accepted_at'])
     try:
-        transition(req, 'APPOINTMENT_SCHEDULED', request.user, notes='Tâche acceptée')
+        transition(req, 'APPOINTMENT_PROPOSED', request.user, notes='Tâche acceptée')
     except (InvalidTransitionError, AuthorizationError, ValueError):
-        try:
-            transition(req, 'PENDING_ACCEPTANCE', request.user, notes='Tâche acceptée')
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
+        pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
     return redirect('dashboard:analyst')
 
@@ -161,6 +158,12 @@ def suggest_appointment(request, pk):
             req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             req.appointment_proposed_by = request.user
             req.save(update_fields=['appointment_date', 'appointment_proposed_by'])
+            # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED
+            if req.status == 'ASSIGNED':
+                try:
+                    transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=f'RDV proposé: {req.appointment_date}')
+                except (InvalidTransitionError, AuthorizationError, ValueError):
+                    pass
             messages.success(request, f"Date de RDV proposée: {req.appointment_date}")
         except ValueError:
             messages.error(request, "Date invalide.")

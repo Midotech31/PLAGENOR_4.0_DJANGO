@@ -31,6 +31,11 @@
                     {{ tracked_request.created_at|date:"d/m/Y" }}
                 </div>
             </div>
+            {% if tracked_request.submitted_as_guest and tracked_request.guest_email %}
+            <div style="margin-top:12px;">
+                <a href="{% url 'accounts:convert_guest' %}?email={{ tracked_request.guest_email|urlencode }}" class="btn btn-sm btn-primary">{% trans "Créer un compte pour gérer vos demandes" %}</a>
+            </div>
+            {% endif %}
             {% else %}
             <div class="empty-state" style="padding:24px;">
                 <h3>{% trans "Aucun résultat" %}</h3>

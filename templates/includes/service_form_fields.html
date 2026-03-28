@@ -1,0 +1,116 @@
+{% load i18n %}
+{% if parameters or db_fields %}
+<div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
+    <h4 style="margin-bottom:12px;">{% trans "Paramètres du service" %}</h4>
+    {% for param in parameters %}
+    <div class="form-group">
+        <label>{{ param.label|default:param.name }}{% if param.required %} *{% endif %}</label>
+        {% if param.type == 'string' or param.type == 'text' %}
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:'' }}">
+        {% elif param.type == 'enum' %}
+        <select name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
+            <option value="">-- {% trans "Choisir" %} --</option>
+            {% for opt in param.options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+            {% endfor %}
+        </select>
+        {% elif param.type == 'boolean' %}
+        <div><input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}"> <label for="param_{{ param.name }}" style="display:inline;">{{ param.label|default:param.name }}</label></div>
+        {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
+        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %}>
+        {% else %}
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% for field in db_fields %}
+    <div class="form-group">
+        <label>{{ field.label }}{% if field.required %} *{% endif %}</label>
+        {% if field.field_type == 'string' %}
+        <input type="text" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
+        {% elif field.field_type == 'enum' %}
+        <select name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
+            <option value="">-- {% trans "Choisir" %} --</option>
+            {% for opt in field.options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+            {% endfor %}
+        </select>
+        {% elif field.field_type == 'boolean' %}
+        <div><input type="checkbox" name="param_{{ field.name }}" value="true"> <label style="display:inline;">{{ field.label }}</label></div>
+        {% elif field.field_type == 'number' %}
+        <input type="number" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if sample_table.enabled %}
+<div class="sample-table-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
+    <h4 style="margin-bottom:12px;">{% trans "Tableau des échantillons" %}</h4>
+    <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                {% for col in sample_table.columns %}
+                <th style="padding:8px; border:1px solid #e2e8f0; background:#fff;">{{ col.label|default:col.name }}</th>
+                {% endfor %}
+                <th style="padding:8px; border:1px solid #e2e8f0; background:#fff; width:40px;"></th>
+            </tr>
+        </thead>
+        <tbody id="sample-table-body">
+            <tr>
+                {% for col in sample_table.columns %}
+                <td style="padding:4px; border:1px solid #e2e8f0;">
+                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;">
+                </td>
+                {% endfor %}
+                <td style="padding:4px; border:1px solid #e2e8f0; text-align:center;">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()" style="padding:2px 8px;">&times;</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow()" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
+
+    <script>
+    var sampleRowCount = 1;
+    var sampleColumns = [{% for col in sample_table.columns %}'{{ col.name }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+    function addSampleRow() {
+        var tbody = document.getElementById('sample-table-body');
+        var tr = document.createElement('tr');
+        sampleColumns.forEach(function(col) {
+            var td = document.createElement('td');
+            td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'sample_' + sampleRowCount + '_' + col;
+            input.className = 'form-control';
+            input.style.fontSize = '0.85rem';
+            td.appendChild(input);
+            tr.appendChild(td);
+        });
+        var tdBtn = document.createElement('td');
+        tdBtn.style.cssText = 'padding:4px; border:1px solid #e2e8f0; text-align:center;';
+        tdBtn.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="this.closest(\'tr\').remove()" style="padding:2px 8px;">&times;</button>';
+        tr.appendChild(tdBtn);
+        tbody.appendChild(tr);
+        sampleRowCount++;
+    }
+    </script>
+</div>
+{% endif %}
+
+{% if pricing %}
+<div class="pricing-info" style="margin-top:12px; padding:12px; background:var(--blue-50, #eff6ff); border-radius:8px; font-size:0.9rem;">
+    <strong>{% trans "Tarification" %}:</strong>
+    {% if pricing.model == 'per_sample_table_row_with_multiplier' %}
+        {{ pricing.base_price|default:"—" }} DA {% trans "par échantillon" %}
+        {% if pricing.multiplier %} × {{ pricing.multiplier }}{% endif %}
+    {% elif pricing.model == 'per_sample_fixed' %}
+        {{ pricing.price|default:"—" }} DA {% trans "par échantillon" %}
+    {% else %}
+        {{ pricing.model|default:"Standard" }}
+    {% endif %}
+</div>
+{% endif %}

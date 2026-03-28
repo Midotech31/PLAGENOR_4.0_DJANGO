@@ -32,6 +32,25 @@ class Service(models.Model):
         return f"{self.code} — {self.name}"
 
 
+class ServiceFormField(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='custom_fields')
+    name = models.CharField(max_length=100)
+    label = models.CharField(max_length=200)
+    field_type = models.CharField(max_length=20, choices=[
+        ('string', 'Texte'), ('enum', 'Liste'), ('boolean', 'Oui/Non'), ('number', 'Nombre'),
+    ], default='string')
+    options = models.JSONField(default=list, blank=True, help_text='Options for enum type')
+    required = models.BooleanField(default=False)
+    sort_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'service_form_fields'
+        ordering = ['sort_order', 'pk']
+
+    def __str__(self):
+        return f"{self.service.code} — {self.label}"
+
+
 class Request(models.Model):
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
@@ -52,7 +71,8 @@ class Request(models.Model):
         ('PLATFORM_NOTE_GENERATED', 'Note Générée'),
         ('ASSIGNED', 'Assigné'),
         ('PENDING_ACCEPTANCE', 'En Attente Acceptation'),
-        ('APPOINTMENT_SCHEDULED', 'RDV Planifié'),
+        ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
+        ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
         ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
         ('ANALYSIS_STARTED', 'Analyse Démarrée'),
         ('ANALYSIS_FINISHED', 'Analyse Terminée'),
@@ -184,6 +204,12 @@ class RequestComment(models.Model):
 
 
 class Invoice(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('PARTIAL', 'Partiel'),
+        ('COMPLETED', 'Payé'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     invoice_number = models.CharField(max_length=50, unique=True)
     request = models.ForeignKey(Request, on_delete=models.SET_NULL, null=True, blank=True)
@@ -193,6 +219,7 @@ class Invoice(models.Model):
     vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=0.19)
     vat_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='PENDING')
     locked = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+')

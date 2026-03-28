@@ -94,3 +94,18 @@ def validate_budget(request, pk):
         except (InvalidTransitionError, AuthorizationError, ValueError) as e:
             messages.error(request, str(e))
     return redirect('dashboard:finance')
+
+
+@finance_required
+def update_payment_status(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    invoice = get_object_or_404(Invoice, pk=pk)
+    new_status = request.POST.get('payment_status', '')
+    if new_status in dict(Invoice.PAYMENT_STATUS_CHOICES):
+        invoice.payment_status = new_status
+        invoice.save(update_fields=['payment_status'])
+        messages.success(request, f"Statut de paiement mis à jour: {invoice.get_payment_status_display()}")
+    else:
+        messages.error(request, "Statut invalide.")
+    return redirect('dashboard:finance')

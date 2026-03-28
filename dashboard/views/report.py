@@ -18,6 +18,18 @@ def report_viewer(request, token):
         req.report_delivered_at = timezone.now()
         req.save()
 
+        # Notify admins and assigned member
+        try:
+            from notifications.models import Notification
+            from accounts.models import User
+            admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'])
+            for admin in admins:
+                Notification.objects.create(user=admin, message=f"Rapport {req.display_id} consulté", request=req)
+            if req.assigned_to:
+                Notification.objects.create(user=req.assigned_to.user, message=f"Rapport {req.display_id} consulté", request=req)
+        except Exception:
+            pass
+
     return render(request, 'dashboard/report_viewer.html', {'req': req})
 
 

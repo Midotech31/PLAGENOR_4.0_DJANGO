@@ -81,6 +81,16 @@ def create_request(request):
         )
         return redirect('dashboard:requester')
 
+    # Collect YAML parameter values
+    service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+    sample_data = {}
+    for key, val in request.POST.items():
+        if key.startswith('sample_'):
+            parts = key.split('_', 2)
+            if len(parts) == 3:
+                sample_data.setdefault(parts[1], {})[parts[2]] = val
+    sample_table_data = list(sample_data.values()) if sample_data else []
+
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
         data={
@@ -90,6 +100,8 @@ def create_request(request):
             'service_id': str(service.pk),
             'budget_amount': float(service.ibtikar_price),
             'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
+            'service_params': service_params,
+            'sample_table': sample_table_data,
         },
         user=request.user,
     )
@@ -117,6 +129,12 @@ def confirm_appointment(request, pk):
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
     req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at'])
+    try:
+        from core.workflow import transition
+        from core.exceptions import InvalidTransitionError, AuthorizationError
+        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
+    except (InvalidTransitionError, AuthorizationError, ValueError):
+        pass
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
     return redirect('dashboard:requester')
 

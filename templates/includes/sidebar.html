@@ -197,6 +197,14 @@
         {% endif %}
     </nav>
 
+    <!-- Profile link -->
+    <div style="padding: 0 16px; margin-top: 16px;">
+        <a href="{% url 'accounts:profile' %}" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {% trans "Mon Profil" %}
+        </a>
+    </div>
+
     <!-- Footer -->
     <div class="sidebar-footer">
         <div class="sidebar-user">

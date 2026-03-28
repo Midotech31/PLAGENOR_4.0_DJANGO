@@ -71,6 +71,16 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
+    # Collect YAML parameter values
+    service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+    sample_data = {}
+    for key, val in request.POST.items():
+        if key.startswith('sample_'):
+            parts = key.split('_', 2)
+            if len(parts) == 3:
+                sample_data.setdefault(parts[1], {})[parts[2]] = val
+    sample_table_data = list(sample_data.values()) if sample_data else []
+
     # Use genoclab service to submit
     req = submit_genoclab_request(
         data={
@@ -79,6 +89,8 @@ def create_request(request):
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
             'quote_amount': float(service.genoclab_price),
+            'service_params': service_params,
+            'sample_table': sample_table_data,
         },
         user=request.user,
     )
@@ -109,6 +121,22 @@ def reject_quote(request, pk):
         messages.success(request, f"Devis refusé pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
+    return redirect('dashboard:client')
+
+
+@client_required
+def confirm_appointment(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req.appointment_confirmed = True
+    req.appointment_confirmed_at = timezone.now()
+    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at'])
+    try:
+        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
+    except (InvalidTransitionError, AuthorizationError, ValueError):
+        pass
+    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
     return redirect('dashboard:client')
 
 

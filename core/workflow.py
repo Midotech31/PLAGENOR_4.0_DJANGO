@@ -23,8 +23,10 @@ ROLE_PERMISSIONS = {
     ('VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED'): ['SUPER_ADMIN', 'FINANCE'],
     ('VALIDATION_FINANCE', 'REJECTED'): ['SUPER_ADMIN', 'FINANCE'],
     ('PLATFORM_NOTE_GENERATED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    # Analyst workflow
-    ('ASSIGNED', 'SAMPLE_RECEIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
+    # Analyst workflow — appointment states
+    ('ASSIGNED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'MEMBER'],
+    ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER', 'CLIENT'],
+    ('APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
     ('SAMPLE_RECEIVED', 'ANALYSIS_STARTED'): ['SUPER_ADMIN', 'MEMBER'],
     ('ANALYSIS_STARTED', 'ANALYSIS_FINISHED'): ['SUPER_ADMIN', 'MEMBER'],
     ('ANALYSIS_FINISHED', 'REPORT_UPLOADED'): ['SUPER_ADMIN', 'MEMBER'],
@@ -125,7 +127,7 @@ def _send_transition_emails(request_obj, old_status, to_status):
             notify_assignment(request_obj, request_obj.assigned_to)
 
         # Appointment notification
-        if to_status == 'APPOINTMENT_SCHEDULED' and request_obj.appointment_date:
+        if to_status == 'APPOINTMENT_PROPOSED' and request_obj.appointment_date:
             notify_appointment(request_obj)
 
         # Report delivery

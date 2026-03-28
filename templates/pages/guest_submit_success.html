@@ -33,6 +33,7 @@
 
             <div class="btn-group" style="justify-content:center; gap:12px; margin-top:24px;">
                 <a href="{% url 'track' %}?q={{ req.display_id }}" class="btn btn-primary">{% trans "Suivre ma demande" %}</a>
+                <a href="{% url 'accounts:convert_guest' %}?email={{ req.guest_email|urlencode }}" class="btn btn-outline">{% trans "Créer un compte" %}</a>
                 <a href="{% url 'home' %}" class="btn btn-outline">{% trans "Retour à l'accueil" %}</a>
             </div>
         </div>

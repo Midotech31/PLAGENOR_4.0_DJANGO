@@ -10,6 +10,7 @@
     <div class="hero-logos">
         <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" onerror="this.style.display='none'">
         <div>
+            <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="max-height:60px;" onerror="this.style.display='none'">
             <h1>PLAGENOR 4.0</h1>
             <p>{% trans "Plateforme de Gestion des Opérations Scientifiques" %}</p>
         </div>
@@ -44,9 +45,15 @@
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
         <div class="service-card">
+            {% if service.image %}
+            <div class="service-icon">
+                <img src="{{ service.image.url }}" alt="{{ service.name }}" style="max-width:64px; max-height:64px; object-fit:contain;">
+            </div>
+            {% else %}
             <div class="service-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
+            {% endif %}
             <div class="service-code">{{ service.code }}</div>
             <h4>{{ service.name }}</h4>
             <p>{{ service.description|truncatewords:20 }}</p>
