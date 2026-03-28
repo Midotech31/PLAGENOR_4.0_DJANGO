@@ -1,0 +1,34 @@
+from django.shortcuts import get_object_or_404, redirect, render
+from django.http import Http404
+from django.utils import timezone
+
+from core.models import Request
+
+
+def report_viewer(request, token):
+    """Public report viewing page — accessed via email link."""
+    try:
+        req = Request.objects.get(report_token=token)
+    except Request.DoesNotExist:
+        raise Http404("Report not found")
+
+    # Mark as delivered on first view
+    if not req.report_delivered:
+        req.report_delivered = True
+        req.report_delivered_at = timezone.now()
+        req.save()
+
+    return render(request, 'dashboard/report_viewer.html', {'req': req})
+
+
+def rate_report(request, token):
+    """Handle star rating submission."""
+    if request.method == 'POST':
+        req = get_object_or_404(Request, report_token=token)
+        rating = int(request.POST.get('rating', 0))
+        if 1 <= rating <= 5:
+            req.service_rating = rating
+            req.rating_comment = request.POST.get('comment', '')
+            req.rated_at = timezone.now()
+            req.save()
+    return redirect('report_view', token=token)

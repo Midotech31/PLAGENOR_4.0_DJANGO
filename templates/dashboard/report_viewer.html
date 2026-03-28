@@ -1,0 +1,251 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Rapport — {{ req.display_id }} | PLAGENOR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 700px;
+        margin: 48px auto;
+        padding: 0 24px;
+    }
+    .report-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 40px;
+    }
+    .report-brand {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    .report-brand h1 {
+        font-size: 1.5rem;
+        color: var(--primary-700, #4338ca);
+        margin: 0 0 4px;
+    }
+    .report-brand p {
+        color: var(--neutral-500, #64748b);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    .report-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    .report-detail {
+        padding: 12px 16px;
+        background: var(--neutral-50, #f8fafc);
+        border-radius: 8px;
+    }
+    .report-detail .label {
+        font-size: 0.75rem;
+        color: var(--neutral-500, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+    }
+    .report-detail .value {
+        font-weight: 600;
+        color: var(--neutral-800, #1e293b);
+    }
+    .report-download {
+        text-align: center;
+        margin: 32px 0;
+    }
+    .report-download a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 32px;
+        background: var(--primary-600, #4f46e5);
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.15s ease;
+    }
+    .report-download a:hover {
+        background: var(--primary-700, #4338ca);
+    }
+    .report-thanks {
+        text-align: center;
+        padding: 24px;
+        background: var(--success-50, #f0fdf4);
+        border-radius: 8px;
+        margin-bottom: 32px;
+    }
+    .report-thanks h3 {
+        color: var(--success-700, #15803d);
+        margin: 0 0 8px;
+    }
+    .report-thanks p {
+        color: var(--neutral-600, #475569);
+        margin: 0;
+    }
+    /* Star rating */
+    .star-rating {
+        text-align: center;
+        margin-top: 32px;
+        padding-top: 32px;
+        border-top: 1px solid var(--neutral-200, #e2e8f0);
+    }
+    .star-rating h3 {
+        margin: 0 0 16px;
+        color: var(--neutral-700, #334155);
+    }
+    .stars {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .stars input[type="radio"] {
+        display: none;
+    }
+    .stars label {
+        font-size: 2rem;
+        color: var(--neutral-300, #cbd5e1);
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+    .stars label:hover,
+    .stars label:hover ~ label,
+    .stars input:checked ~ label {
+        color: #facc15;
+    }
+    /* Reverse order trick for CSS-only hover */
+    .stars {
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+    .stars label:hover ~ label {
+        color: #facc15;
+    }
+    .rating-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--neutral-300, #cbd5e1);
+        border-radius: 8px;
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+        margin-bottom: 16px;
+    }
+    .rating-form button {
+        padding: 10px 24px;
+        background: var(--primary-600, #4f46e5);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .rated-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: var(--success-50, #f0fdf4);
+        color: var(--success-700, #15803d);
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    @media (max-width: 600px) {
+        .report-details {
+            grid-template-columns: 1fr;
+        }
+        .report-card {
+            padding: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-card">
+        <div class="report-brand">
+            <h1>PLAGENOR 4.0</h1>
+            <p>{% trans "Plateforme de Gestion des Opérations Scientifiques — ESSBO" %}</p>
+        </div>
+
+        <div class="report-thanks">
+            <h3>{% trans "Merci pour votre confiance" %}</h3>
+            <p>{% trans "Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous." %}</p>
+        </div>
+
+        <div class="report-details">
+            <div class="report-detail">
+                <div class="label">{% trans "Référence" %}</div>
+                <div class="value">{{ req.display_id }}</div>
+            </div>
+            <div class="report-detail">
+                <div class="label">{% trans "Service" %}</div>
+                <div class="value">{{ req.service.name|default:"—" }}</div>
+            </div>
+            <div class="report-detail">
+                <div class="label">{% trans "Canal" %}</div>
+                <div class="value">{{ req.channel }}</div>
+            </div>
+            <div class="report-detail">
+                <div class="label">{% trans "Date de soumission" %}</div>
+                <div class="value">{{ req.created_at|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+
+        {% if req.report_file %}
+        <div class="report-download">
+            <a href="{{ req.report_file.url }}">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="star-rating">
+            {% if req.service_rating %}
+                <h3>{% trans "Votre évaluation" %}</h3>
+                <div class="stars" style="flex-direction: row; pointer-events: none;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= req.service_rating %}
+                            <span style="font-size:2rem;color:#facc15;">&#9733;</span>
+                        {% else %}
+                            <span style="font-size:2rem;color:#cbd5e1;">&#9733;</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% if req.rating_comment %}
+                    <p style="color:#475569;font-style:italic;">"{{ req.rating_comment }}"</p>
+                {% endif %}
+                <div class="rated-badge">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    {% trans "Merci pour votre évaluation" %}
+                </div>
+            {% else %}
+                <h3>{% trans "Évaluez notre service" %}</h3>
+                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form">
+                    {% csrf_token %}
+                    <div class="stars">
+                        {% for i in "54321" %}
+                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}">
+                        <label for="star{{ i }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                    <textarea name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}"></textarea>
+                    <br>
+                    <button type="submit">{% trans "Envoyer" %}</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
