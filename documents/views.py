@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, FileResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -14,7 +14,7 @@ from documents.generators import (
 
 def _serve_docx(filepath, filename):
     """Serve a DOCX file as a download response."""
-    if not os.path.exists(filepath):
+    if not Path(filepath).exists():
         raise Http404("Document non trouvé.")
     response = FileResponse(
         open(filepath, 'rb'),

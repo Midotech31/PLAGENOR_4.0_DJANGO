@@ -2,7 +2,7 @@ from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from django.conf import settings
-import os
+from pathlib import Path
 from datetime import datetime
 
 
@@ -57,20 +57,16 @@ def generate_ibtikar_form(request_obj) -> str:
     service_code = request_obj.service.code if request_obj.service else ''
     template_name = IBTIKAR_TEMPLATE_MAP.get(service_code, '')
     if template_name:
-        template_path = os.path.join(
-            settings.BASE_DIR, 'documents', 'docx_templates', 'ibtikar', template_name
-        )
-        if os.path.exists(template_path):
-            doc = Document(template_path)
+        template_path = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar' / template_name
+        if template_path.exists():
+            doc = Document(str(template_path))
             _replace_placeholders(doc, replacements)
 
     # 2) Fall back to generic ibtikar_form_template.docx
     if doc is None:
-        generic_path = os.path.join(
-            settings.BASE_DIR, 'documents', 'docx_templates', 'ibtikar_form_template.docx'
-        )
-        if os.path.exists(generic_path):
-            doc = Document(generic_path)
+        generic_path = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar_form_template.docx'
+        if generic_path.exists():
+            doc = Document(str(generic_path))
             _replace_placeholders(doc, replacements)
 
     # 3) Fall back to programmatic generation
@@ -117,22 +113,20 @@ def generate_ibtikar_form(request_obj) -> str:
                     for j, h in enumerate(headers):
                         sample_table.rows[i + 1].cells[j].text = str(row_data.get(h, ''))
 
-    out_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(settings.MEDIA_ROOT) / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"IBTIKAR_{request_obj.display_id}_{datetime.now().strftime('%Y%m%d')}.docx"
-    filepath = os.path.join(out_dir, filename)
-    doc.save(filepath)
-    return filepath
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
 
 
 def generate_platform_note(request_obj) -> str:
     """Generate a Platform Note dynamically populated from specific request data."""
-    template_path = os.path.join(
-        settings.BASE_DIR, 'documents', 'docx_templates', 'platform_note_template.docx'
-    )
+    template_path = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'platform_note_template.docx'
 
-    if os.path.exists(template_path):
-        doc = Document(template_path)
+    if template_path.exists():
+        doc = Document(str(template_path))
 
         requester_name = request_obj.requester.get_full_name() if request_obj.requester else request_obj.guest_name or 'N/A'
         requester_org = getattr(request_obj.requester, 'organization', '') if request_obj.requester else ''
@@ -254,11 +248,12 @@ def generate_platform_note(request_obj) -> str:
         doc.add_paragraph("ESSBO — Université d'Oran — Prof. Mohamed Merzoug")
 
     # Save
-    os.makedirs(os.path.join(settings.BASE_DIR, 'media', 'documents'), exist_ok=True)
+    out_dir = Path(settings.BASE_DIR) / 'media' / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"NOTE_PLT_{request_obj.display_id}_{datetime.now().strftime('%Y%m%d')}.docx"
-    filepath = os.path.join(settings.BASE_DIR, 'media', 'documents', filename)
-    doc.save(filepath)
-    return filepath
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
 
 
 def generate_quote(request_obj) -> str:
@@ -315,12 +310,12 @@ def generate_quote(request_obj) -> str:
     summary_table.rows[2].cells[0].text = 'Total TTC'
     summary_table.rows[2].cells[1].text = f"{total_ttc:,.2f} DA"
 
-    out_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(settings.MEDIA_ROOT) / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"DEVIS_{request_obj.display_id}_{datetime.now().strftime('%Y%m%d')}.docx"
-    filepath = os.path.join(out_dir, filename)
-    doc.save(filepath)
-    return filepath
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
 
 
 def generate_reception_form(request_obj) -> str:
@@ -356,12 +351,12 @@ def generate_reception_form(request_obj) -> str:
     doc.add_paragraph("Signature du réceptionniste: ________________")
     doc.add_paragraph("Signature du déposant: ________________")
 
-    out_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(settings.MEDIA_ROOT) / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"RECEPTION_{request_obj.display_id}.docx"
-    filepath = os.path.join(out_dir, filename)
-    doc.save(filepath)
-    return filepath
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
 
 
 def generate_invoice_document(invoice_obj) -> str:
@@ -378,9 +373,9 @@ def generate_invoice_document(invoice_obj) -> str:
     doc.add_paragraph(f"TVA ({invoice_obj.vat_rate * 100:.0f}%): {invoice_obj.vat_amount} DZD")
     doc.add_paragraph(f"Total TTC: {invoice_obj.total_ttc} DZD")
 
-    out_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(settings.MEDIA_ROOT) / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"INVOICE_{invoice_obj.invoice_number}.docx"
-    filepath = os.path.join(out_dir, filename)
-    doc.save(filepath)
-    return filepath
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
