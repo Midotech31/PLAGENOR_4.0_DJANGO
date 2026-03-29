@@ -61,9 +61,9 @@
             {% if tracked_request.channel == 'IBTIKAR' %}
             {% if tracked_request.status == 'IBTIKAR_SUBMISSION_PENDING' or tracked_request.status == 'IBTIKAR_CODE_SUBMITTED' %}
             <div style="margin-top:20px;">
-                {% url 'documents:ibtikar_form' tracked_request.pk as _ibk_form_url %}
-                {% url 'guest_ibtikar_code' tracked_request.pk as _ibk_code_url %}
-                {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=tracked_request ibk_form_url=_ibk_form_url ibk_code_submit_url=_ibk_code_url %}
+                {% url 'documents:ibtikar_form' tracked_request.pk as ibkformurl %}
+                {% url 'guest_ibtikar_code' tracked_request.pk as ibkcodeurl %}
+                {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=tracked_request ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
             </div>
             {% endif %}
             {% endif %}
