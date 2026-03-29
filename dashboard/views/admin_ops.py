@@ -108,6 +108,18 @@ def index(request):
     ibtikar_budget = budget_data['ibtikar']['total']
     genoclab_revenue = budget_data['genoclab']['total']
 
+    # Ratings & Reviews overview
+    from django.db.models import Avg
+    rated_requests = Request.objects.filter(service_rating__isnull=False)
+    avg_rating = rated_requests.aggregate(avg=Avg('service_rating'))['avg'] or 0
+    total_ratings = rated_requests.count()
+    recent_reviews = rated_requests.select_related('requester', 'service').order_by('-rated_at')[:10]
+
+    # Rating distribution
+    rating_distribution = {}
+    for star in range(1, 6):
+        rating_distribution[star] = rated_requests.filter(service_rating=star).count()
+
     context = {
         'total_requests': total_requests,
         'pending_count': pending_count,
@@ -131,6 +143,11 @@ def index(request):
         'search_q': search_q,
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
+        # Ratings & Reviews
+        'avg_rating': avg_rating,
+        'total_ratings': total_ratings,
+        'recent_reviews': recent_reviews,
+        'rating_distribution': rating_distribution,
     }
     return render(request, 'dashboard/admin_ops/index.html', context)
 
