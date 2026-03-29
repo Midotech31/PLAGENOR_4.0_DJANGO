@@ -289,11 +289,24 @@
                         <span>{{ req.updated_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        {% if req.status == 'REPORT_VALIDATED' %}
+                        {% if req.status == 'REPORT_VALIDATED' and req.channel == 'IBTIKAR' %}
                         <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <input type="hidden" name="to_status" value="COMPLETED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Marquer complété" %}</button>
+                            <input type="hidden" name="to_status" value="SENT_TO_REQUESTER">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                                {% trans "Transmettre au demandeur" %}
+                            </button>
+                        </form>
+
+                        {% elif req.status == 'REPORT_VALIDATED' and req.channel == 'GENOCLAB' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SENT_TO_CLIENT">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                                {% trans "Transmettre au client" %}
+                            </button>
                         </form>
 
                         {% elif req.status == 'COMPLETED' and req.channel == 'IBTIKAR' %}
