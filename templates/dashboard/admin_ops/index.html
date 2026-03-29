@@ -420,7 +420,8 @@
                 <h3>{% trans "Toutes les demandes" %}</h3>
             </div>
             <div class="card-body">
-                <form method="get" action="" class="flex gap-2 mb-4" style="flex-wrap: wrap;">
+                <form method="get" action="" class="flex gap-2 mb-4" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <input type="hidden" name="tab" value="all">
                     <select name="channel" class="form-control" style="width:auto;">
                         <option value="">{% trans "Tous les canaux" %}</option>
                         <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
@@ -434,6 +435,9 @@
                     </select>
                     <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Rechercher...' %}" class="form-control" style="width:200px;">
                     <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrer" %}</button>
+                    {% if channel_filter or status_filter or search_q %}
+                    <a href="?tab=all" class="btn btn-outline btn-sm">{% trans "Réinitialiser" %}</a>
+                    {% endif %}
                 </form>
                 <div class="table-wrapper">
                     <table>
