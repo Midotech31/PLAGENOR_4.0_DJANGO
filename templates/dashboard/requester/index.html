@@ -220,27 +220,53 @@
                         {% endwith %}
                     </div>
 
-                    <!-- Actions for delivered reports -->
+                    <!-- Report delivery + receipt confirmation + rating -->
                     {% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
-                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:16px; margin-top:12px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <strong style="color:#065f46;">{% trans "Votre rapport est prêt" %}</strong>
+                        </div>
+                        {% if req.report_file %}
                         <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer réception" %}</button>
+                            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                {% trans "Télécharger le rapport et confirmer la réception" %}
+                            </button>
                         </form>
+                        {% else %}
+                        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                {% trans "Confirmer la réception du rapport" %}
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                     {% endif %}
+
                     {% if req.status == 'COMPLETED' and not req.service_rating %}
-                    <div class="data-card-row mt-2" style="gap: 0.5rem;" x-data="{rating: 5}">
-                        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}" style="display:inline;">
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:16px; margin-top:12px;" x-data="{rating: 5, hover: 0}">
+                        <div style="margin-bottom:10px;">
+                            <strong style="color:#92400e; font-size:0.9rem;">{% trans "Évaluez le service" %}</strong>
+                            <p class="text-muted" style="font-size:0.8rem; margin:4px 0 0;">{% trans "Votre avis nous aide à améliorer nos services." %}</p>
+                        </div>
+                        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}">
                             {% csrf_token %}
                             <input type="hidden" name="rating" :value="rating">
-                            <div style="display:inline-flex; gap:4px; cursor:pointer;">
+                            <div style="display:flex; gap:4px; cursor:pointer; margin-bottom:12px;">
                                 {% for i in "12345" %}
-                                <span @click="rating = {{ i }}" :style="rating >= {{ i }} ? 'color: #f59e0b' : 'color: #d1d5db'" style="font-size:24px;">&#9733;</span>
+                                <span @click="rating = {{ i }}" @mouseover="hover = {{ i }}" @mouseleave="hover = 0"
+                                      :style="(hover ? hover >= {{ i }} : rating >= {{ i }}) ? 'color:#f59e0b; transform:scale(1.1)' : 'color:#d1d5db'"
+                                      style="font-size:32px; transition:all 0.15s;">&#9733;</span>
                                 {% endfor %}
                             </div>
-                            <input type="text" name="comment" placeholder="{% trans 'Commentaire...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Évaluer" %}</button>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
+                            </div>
                         </form>
                     </div>
                     {% elif req.service_rating %}
