@@ -187,6 +187,23 @@ def confirm_receipt(request, pk):
             transition(req, 'COMPLETED', request.user, notes='Réception confirmée par le demandeur')
         except (InvalidTransitionError, AuthorizationError, ValueError):
             pass
+    # Notify admin + analyst that report was downloaded/confirmed
+    from accounts.models import User
+    admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+    for admin in admins:
+        Notification.objects.create(
+            user=admin,
+            message=f"{req.display_id}: Rapport téléchargé et réception confirmée par le demandeur.",
+            request=req,
+            notification_type='WORKFLOW',
+        )
+    if req.assigned_to:
+        Notification.objects.create(
+            user=req.assigned_to.user,
+            message=f"{req.display_id}: Rapport téléchargé et réception confirmée par le demandeur.",
+            request=req,
+            notification_type='WORKFLOW',
+        )
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
     return redirect_back(request, 'dashboard:requester')
 
