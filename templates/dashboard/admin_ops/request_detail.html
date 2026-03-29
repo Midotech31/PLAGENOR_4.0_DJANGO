@@ -255,6 +255,34 @@
             </div>
         </div>
 
+        <!-- Rating & Review -->
+        {% if req.service_rating %}
+        <div class="card mb-4" style="border-left: 4px solid #f59e0b;">
+            <div class="card-header" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:#d97706;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    {% trans "Avis client" %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 2rem; color: #f59e0b;">
+                        {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}★{% else %}☆{% endif %}{% endfor %}
+                    </span>
+                    <span style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">{{ req.service_rating }}<span style="font-size: 1rem; color: #64748b;">/5</span></span>
+                </div>
+                {% if req.rating_comment %}
+                <div style="background: #fffbeb; padding: 16px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                    <p style="font-style: italic; color: #92400e; margin: 0; font-size: 1rem;">"{{ req.rating_comment }}"</p>
+                </div>
+                {% endif %}
+                <div style="margin-top: 12px; font-size: 0.85rem; color: #64748b;">
+                    {% trans "Évalué le" %} {{ req.rated_at|date:"d/m/Y à H:i" }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- QR Code for report access -->
         {% if req.report_token %}
         <div class="card mb-4">
