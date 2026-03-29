@@ -197,6 +197,95 @@ def request_detail(request, pk):
 
 
 @analyst_required
+def accept_alt_date(request, pk):
+    """Analyst accepts the requester/client's proposed alternative date."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    profile = request.user.member_profile
+    if req.assigned_to != profile:
+        return HttpResponseForbidden()
+    if not req.alt_date_proposed:
+        messages.error(request, "Aucune date alternative à accepter.")
+        return redirect_back(request, 'dashboard:analyst')
+
+    # Update appointment date to the proposed alternative
+    old_date = req.appointment_date
+    req.appointment_date = req.alt_date_proposed
+    req.appointment_confirmed = True
+    req.appointment_confirmed_at = timezone.now()
+    req.alt_date_proposed = None
+    req.alt_date_note = ''
+    req.save(update_fields=[
+        'appointment_date', 'appointment_confirmed', 'appointment_confirmed_at',
+        'alt_date_proposed', 'alt_date_note',
+    ])
+
+    # Transition to APPOINTMENT_CONFIRMED if currently APPOINTMENT_PROPOSED
+    if req.status == 'APPOINTMENT_PROPOSED':
+        try:
+            transition(
+                req, 'APPOINTMENT_CONFIRMED', request.user,
+                notes=f"Date alternative acceptée: {req.appointment_date.strftime('%d/%m/%Y')} (ancienne: {old_date})"
+            )
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
+
+    # Notify the requester/client
+    if req.requester:
+        Notification.objects.create(
+            user=req.requester,
+            message=f"{req.display_id}: Date alternative acceptée — RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}",
+            request=req,
+            notification_type='WORKFLOW',
+        )
+
+    messages.success(request, f"Date alternative acceptée. RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}.")
+    return redirect_back(request, 'dashboard:analyst')
+
+
+@analyst_required
+def decline_alt_date(request, pk):
+    """Analyst declines the requester/client's proposed alternative date."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    profile = request.user.member_profile
+    if req.assigned_to != profile:
+        return HttpResponseForbidden()
+
+    decline_reason = request.POST.get('decline_reason', '')
+
+    # Clear the proposed alternative
+    req.alt_date_proposed = None
+    req.alt_date_note = ''
+    req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
+
+    # Log as comment
+    from core.models import RequestComment
+    RequestComment.objects.create(
+        request=req, author=request.user,
+        text=f"Date alternative refusée. {decline_reason}".strip(),
+        step=req.status,
+    )
+
+    # Notify the requester/client
+    if req.requester:
+        msg = f"{req.display_id}: Date alternative refusée par l'analyste."
+        if decline_reason:
+            msg += f" Raison: {decline_reason}"
+        Notification.objects.create(
+            user=req.requester,
+            message=msg,
+            request=req,
+            notification_type='WORKFLOW',
+        )
+
+    messages.success(request, "Date alternative refusée. Le demandeur en sera notifié.")
+    return redirect_back(request, 'dashboard:analyst')
+
+
+@analyst_required
 def upload_report(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

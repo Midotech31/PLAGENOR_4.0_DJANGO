@@ -120,6 +120,8 @@ class Request(models.Model):
     appointment_proposed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     appointment_confirmed = models.BooleanField(default=False)
     appointment_confirmed_at = models.DateTimeField(null=True, blank=True)
+    alt_date_proposed = models.DateField(null=True, blank=True, verbose_name='Date alternative proposée')
+    alt_date_note = models.TextField(default='', blank=True, verbose_name='Note date alternative')
 
     # Assignment acceptance
     assignment_accepted = models.BooleanField(default=False)

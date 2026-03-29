@@ -50,6 +50,8 @@ urlpatterns = [
     path('analyst/action/<uuid:pk>/', analyst.workflow_action, name='analyst_action'),
     path('analyst/upload/<uuid:pk>/', analyst.upload_report, name='analyst_upload_report'),
     path('analyst/appointment/<uuid:pk>/', analyst.suggest_appointment, name='analyst_suggest_appointment'),
+    path('analyst/alt-date/<uuid:pk>/accept/', analyst.accept_alt_date, name='analyst_accept_alt_date'),
+    path('analyst/alt-date/<uuid:pk>/decline/', analyst.decline_alt_date, name='analyst_decline_alt_date'),
     path('analyst/request/<uuid:pk>/', analyst.request_detail, name='analyst_request_detail'),
 
     # Finance

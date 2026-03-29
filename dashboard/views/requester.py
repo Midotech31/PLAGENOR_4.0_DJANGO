@@ -209,19 +209,32 @@ def suggest_alternative_date(request, pk):
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
     if alt_date:
+        from datetime import datetime as dt
         from core.models import RequestComment
+        try:
+            parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Date invalide.")
+            return redirect_back(request, 'dashboard:requester')
+        # Store the alternative date on the request
+        req.alt_date_proposed = parsed_date
+        req.alt_date_note = alt_note
+        req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
+        # Also log as comment for audit trail
         RequestComment.objects.create(
             request=req, author=request.user,
-            text=f"Date alternative proposée: {alt_date}. {alt_note}",
+            text=f"Date alternative proposée: {alt_date}. {alt_note}".strip(),
             step=req.status
         )
+        # Notify the assigned analyst
         if req.assigned_to:
             Notification.objects.create(
                 user=req.assigned_to.user,
-                message=f"Nouvelle date proposée pour {req.display_id}: {alt_date}",
-                request=req
+                message=f"{req.display_id}: Date alternative proposée — {parsed_date.strftime('%d/%m/%Y')}",
+                request=req,
+                notification_type='WORKFLOW',
             )
-        messages.success(request, f"Date alternative proposée: {alt_date}")
+        messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
     return redirect_back(request, 'dashboard:requester')
 
 
