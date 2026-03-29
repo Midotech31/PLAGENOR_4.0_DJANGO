@@ -429,9 +429,37 @@
                     </select>
                     <select name="status" class="form-control" style="width:auto;">
                         <option value="">{% trans "Tous les statuts" %}</option>
-                        {% for code, label in status_choices %}
-                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
+                        <optgroup label="{% trans 'Commun' %}">
+                            <option value="ASSIGNED" {% if status_filter == 'ASSIGNED' %}selected{% endif %}>{% trans "Assigné" %}</option>
+                            <option value="APPOINTMENT_PROPOSED" {% if status_filter == 'APPOINTMENT_PROPOSED' %}selected{% endif %}>{% trans "RDV Proposé" %}</option>
+                            <option value="APPOINTMENT_CONFIRMED" {% if status_filter == 'APPOINTMENT_CONFIRMED' %}selected{% endif %}>{% trans "RDV Confirmé" %}</option>
+                            <option value="SAMPLE_RECEIVED" {% if status_filter == 'SAMPLE_RECEIVED' %}selected{% endif %}>{% trans "Échantillon Reçu" %}</option>
+                            <option value="ANALYSIS_STARTED" {% if status_filter == 'ANALYSIS_STARTED' %}selected{% endif %}>{% trans "Analyse Démarrée" %}</option>
+                            <option value="ANALYSIS_FINISHED" {% if status_filter == 'ANALYSIS_FINISHED' %}selected{% endif %}>{% trans "Analyse Terminée" %}</option>
+                            <option value="REPORT_UPLOADED" {% if status_filter == 'REPORT_UPLOADED' %}selected{% endif %}>{% trans "Rapport Uploadé" %}</option>
+                            <option value="REPORT_VALIDATED" {% if status_filter == 'REPORT_VALIDATED' %}selected{% endif %}>{% trans "Rapport Validé" %}</option>
+                            <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>{% trans "Complété" %}</option>
+                            <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>{% trans "Rejeté" %}</option>
+                        </optgroup>
+                        <optgroup label="IBTIKAR">
+                            <option value="SUBMITTED" {% if status_filter == 'SUBMITTED' %}selected{% endif %}>{% trans "Soumis" %}</option>
+                            <option value="VALIDATION_PEDAGOGIQUE" {% if status_filter == 'VALIDATION_PEDAGOGIQUE' %}selected{% endif %}>{% trans "Validation Pédagogique" %}</option>
+                            <option value="VALIDATION_FINANCE" {% if status_filter == 'VALIDATION_FINANCE' %}selected{% endif %}>{% trans "Validation Finance" %}</option>
+                            <option value="PLATFORM_NOTE_GENERATED" {% if status_filter == 'PLATFORM_NOTE_GENERATED' %}selected{% endif %}>{% trans "Note Générée" %}</option>
+                            <option value="SENT_TO_REQUESTER" {% if status_filter == 'SENT_TO_REQUESTER' %}selected{% endif %}>{% trans "Transmis au Demandeur" %}</option>
+                            <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>{% trans "Clôturé" %}</option>
+                        </optgroup>
+                        <optgroup label="GENOCLAB">
+                            <option value="REQUEST_CREATED" {% if status_filter == 'REQUEST_CREATED' %}selected{% endif %}>{% trans "Demande Créée" %}</option>
+                            <option value="QUOTE_DRAFT" {% if status_filter == 'QUOTE_DRAFT' %}selected{% endif %}>{% trans "Devis En Cours" %}</option>
+                            <option value="QUOTE_SENT" {% if status_filter == 'QUOTE_SENT' %}selected{% endif %}>{% trans "Devis Envoyé" %}</option>
+                            <option value="QUOTE_VALIDATED_BY_CLIENT" {% if status_filter == 'QUOTE_VALIDATED_BY_CLIENT' %}selected{% endif %}>{% trans "Devis Accepté" %}</option>
+                            <option value="QUOTE_REJECTED_BY_CLIENT" {% if status_filter == 'QUOTE_REJECTED_BY_CLIENT' %}selected{% endif %}>{% trans "Devis Refusé" %}</option>
+                            <option value="INVOICE_GENERATED" {% if status_filter == 'INVOICE_GENERATED' %}selected{% endif %}>{% trans "Facture Émise" %}</option>
+                            <option value="PAYMENT_CONFIRMED" {% if status_filter == 'PAYMENT_CONFIRMED' %}selected{% endif %}>{% trans "Paiement Confirmé" %}</option>
+                            <option value="SENT_TO_CLIENT" {% if status_filter == 'SENT_TO_CLIENT' %}selected{% endif %}>{% trans "Transmis au Client" %}</option>
+                            <option value="ARCHIVED" {% if status_filter == 'ARCHIVED' %}selected{% endif %}>{% trans "Archivé" %}</option>
+                        </optgroup>
                     </select>
                     <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Rechercher...' %}" class="form-control" style="width:200px;">
                     <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrer" %}</button>
