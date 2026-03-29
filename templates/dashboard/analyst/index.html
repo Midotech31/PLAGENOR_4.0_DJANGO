@@ -102,7 +102,7 @@
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <a href="{% url 'dashboard:analyst_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
                         <!-- Workflow action buttons based on status -->
-                        {% if req.status == 'APPOINTMENT_SCHEDULED' %}
+                        {% if req.status == 'APPOINTMENT_CONFIRMED' %}
                         <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">

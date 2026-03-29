@@ -274,15 +274,27 @@ def report_review(request, pk):
             try:
                 transition(req, 'REPORT_VALIDATED', request.user, notes='Rapport validé par admin')
                 messages.success(request, f"Rapport {req.display_id} validé.")
-            except ValueError as e:
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
                 messages.error(request, str(e))
         elif action == 'send_back':
-            req.admin_revision_notes = request.POST.get('revision_notes', '')
+            revision_notes = request.POST.get('revision_notes', '')
+            req.admin_revision_notes = revision_notes
             req.save(update_fields=['admin_revision_notes'])
             try:
-                transition(req, 'ANALYSIS_STARTED', request.user, notes='Rapport renvoyé pour révision')
+                transition(
+                    req, 'ANALYSIS_STARTED', request.user,
+                    notes=f"Rapport renvoyé pour révision. {revision_notes}".strip()
+                )
+                # Notify the assigned analyst about the revision
+                if req.assigned_to:
+                    Notification.objects.create(
+                        user=req.assigned_to.user,
+                        message=f"{req.display_id}: Rapport renvoyé pour révision. {revision_notes}".strip(),
+                        request=req,
+                        notification_type='WORKFLOW',
+                    )
                 messages.success(request, f"Rapport {req.display_id} renvoyé pour révision.")
-            except ValueError as e:
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
                 messages.error(request, str(e))
         return redirect_back(request, 'dashboard:admin_ops')
     allowed = get_allowed_transitions(req)
