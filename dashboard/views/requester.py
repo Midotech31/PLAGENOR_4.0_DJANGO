@@ -267,6 +267,29 @@ def suggest_alternative_date(request, pk):
 
 
 @requester_required
+def submit_ibtikar_code(request, pk):
+    """Requester submits their IBTIKAR-DGRSDT code."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    code = request.POST.get('ibtikar_code', '').strip()
+    if not code:
+        messages.error(request, "Veuillez saisir votre code IBTIKAR.")
+        return redirect_back(request, 'dashboard:requester')
+    req.ibtikar_external_code = code
+    req.save(update_fields=['ibtikar_external_code'])
+    if req.status == 'IBTIKAR_SUBMISSION_PENDING':
+        try:
+            from core.workflow import transition
+            from core.exceptions import InvalidTransitionError, AuthorizationError
+            transition(req, 'IBTIKAR_CODE_SUBMITTED', request.user, notes=f'Code IBTIKAR: {code}')
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
+    messages.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
+    return redirect_back(request, 'dashboard:requester')
+
+
+@requester_required
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

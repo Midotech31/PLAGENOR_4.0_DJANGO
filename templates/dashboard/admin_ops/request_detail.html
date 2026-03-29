@@ -50,6 +50,9 @@
                 {% if req.declared_ibtikar_balance %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
                 {% endif %}
+                {% if req.ibtikar_external_code %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Code IBTIKAR-DGRSDT" %}</span><strong style="color:#059669; font-family:monospace; font-size:1rem;">{{ req.ibtikar_external_code }}</strong></div>
+                {% endif %}
                 {% else %}
                 <div class="text-muted">{% trans "Aucun demandeur associé." %}</div>
                 {% endif %}
@@ -346,6 +349,8 @@
                 <input type="hidden" name="to_status" value="{{ t }}">
                 {% if t == 'REJECTED' %}
                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                {% elif t == 'IBTIKAR_SUBMISSION_PENDING' %}
+                <button type="submit" class="btn btn-sm btn-primary">{% trans "Notifier le demandeur (soumission IBTIKAR)" %}</button>
                 {% elif t == 'SENT_TO_REQUESTER' %}
                 <button type="submit" class="btn btn-sm btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
@@ -365,7 +370,7 @@
             {% endfor %}
 
             {# Assignment form #}
-            {% if req.status == 'PLATFORM_NOTE_GENERATED' or req.status == 'PAYMENT_CONFIRMED' %}
+            {% if req.status == 'IBTIKAR_CODE_SUBMITTED' or req.status == 'PAYMENT_CONFIRMED' %}
             <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
                 {% csrf_token %}
                 <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>

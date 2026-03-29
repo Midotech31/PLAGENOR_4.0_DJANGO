@@ -66,6 +66,7 @@ urlpatterns = [
     path('requester/confirm/<uuid:pk>/', requester.confirm_receipt, name='requester_confirm'),
     path('requester/rate/<uuid:pk>/', requester.rate_service, name='requester_rate'),
     path('requester/appointment/<uuid:pk>/confirm/', requester.confirm_appointment, name='requester_confirm_appointment'),
+    path('requester/ibtikar-code/<uuid:pk>/', requester.submit_ibtikar_code, name='requester_ibtikar_code'),
     path('requester/alt-date/<uuid:pk>/', requester.suggest_alternative_date, name='requester_alt_date'),
 
     # Client (GENOCLAB)

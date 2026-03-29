@@ -40,14 +40,15 @@
     </nav>
 
     {% if messages %}
-    <div style="max-width: 800px; margin: 16px auto; padding: 0 32px;">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-        </div>
-        {% endfor %}
+    <div class="toast-container" id="toast-container">
+    {% for message in messages %}
+    <div class="toast toast-{{ message.tags }}" role="alert">
+        <span class="toast-text">{{ message }}</span>
+        <button class="toast-close" onclick="this.closest('.toast').remove()">&times;</button>
     </div>
+    {% endfor %}
+    </div>
+    <script>setTimeout(function(){var c=document.getElementById('toast-container');if(c)c.style.opacity='0';setTimeout(function(){if(c)c.remove();},400);},4000);</script>
     {% endif %}
 
     {% block content %}{% endblock %}

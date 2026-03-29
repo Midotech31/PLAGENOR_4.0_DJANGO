@@ -178,3 +178,25 @@ def guest_submit(request):
     return render(request, 'pages/guest_submit.html', {
         'services': services_qs,
     })
+
+
+def guest_ibtikar_code(request, pk):
+    """Guest submits their IBTIKAR-DGRSDT code via tracking page."""
+    from django.contrib import messages as msg
+    req = get_object_or_404(Request, pk=pk, submitted_as_guest=True)
+    if request.method != 'POST':
+        return redirect('track')
+    code = request.POST.get('ibtikar_code', '').strip()
+    if not code:
+        msg.error(request, "Veuillez saisir votre code IBTIKAR.")
+        return redirect(f"{reverse('track')}?q={req.display_id}")
+    req.ibtikar_external_code = code
+    req.save(update_fields=['ibtikar_external_code'])
+    if req.status == 'IBTIKAR_SUBMISSION_PENDING':
+        try:
+            from core.workflow import transition
+            transition(req, 'IBTIKAR_CODE_SUBMITTED', None, notes=f'Code IBTIKAR (guest): {code}', force=True)
+        except Exception:
+            pass
+    msg.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
+    return redirect(f"{reverse('track')}?q={req.display_id}")

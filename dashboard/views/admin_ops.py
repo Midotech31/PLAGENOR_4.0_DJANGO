@@ -59,7 +59,7 @@ def index(request):
 
     # Requests ready for assignment
     assignable_requests = Request.objects.filter(
-        status__in=['PLATFORM_NOTE_GENERATED', 'PAYMENT_CONFIRMED']
+        status__in=['IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED']
     ).select_related('service', 'requester').order_by('-created_at')
 
     # Requests needing report review
@@ -192,7 +192,7 @@ def assign_request(request, pk):
     member = get_object_or_404(MemberProfile, pk=member_id)
 
     # Check if request is in a state that allows assignment
-    if req.status not in ('PLATFORM_NOTE_GENERATED', 'PAYMENT_CONFIRMED'):
+    if req.status not in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED'):
         messages.error(
             request,
             f"La demande {req.display_id} n'est pas prête pour l'assignation "

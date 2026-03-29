@@ -446,6 +446,8 @@
                             <option value="VALIDATION_PEDAGOGIQUE" {% if status_filter == 'VALIDATION_PEDAGOGIQUE' %}selected{% endif %}>{% trans "Validation Pédagogique" %}</option>
                             <option value="VALIDATION_FINANCE" {% if status_filter == 'VALIDATION_FINANCE' %}selected{% endif %}>{% trans "Validation Finance" %}</option>
                             <option value="PLATFORM_NOTE_GENERATED" {% if status_filter == 'PLATFORM_NOTE_GENERATED' %}selected{% endif %}>{% trans "Note Générée" %}</option>
+                            <option value="IBTIKAR_SUBMISSION_PENDING" {% if status_filter == 'IBTIKAR_SUBMISSION_PENDING' %}selected{% endif %}>{% trans "En attente soumission IBTIKAR" %}</option>
+                            <option value="IBTIKAR_CODE_SUBMITTED" {% if status_filter == 'IBTIKAR_CODE_SUBMITTED' %}selected{% endif %}>{% trans "Code IBTIKAR soumis" %}</option>
                             <option value="SENT_TO_REQUESTER" {% if status_filter == 'SENT_TO_REQUESTER' %}selected{% endif %}>{% trans "Transmis au Demandeur" %}</option>
                             <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>{% trans "Clôturé" %}</option>
                         </optgroup>

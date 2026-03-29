@@ -69,6 +69,8 @@ class Request(models.Model):
         ('VALIDATION_PEDAGOGIQUE', 'Validation Pédagogique'),
         ('VALIDATION_FINANCE', 'Validation Finance'),
         ('PLATFORM_NOTE_GENERATED', 'Note Générée'),
+        ('IBTIKAR_SUBMISSION_PENDING', 'En attente soumission IBTIKAR'),
+        ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
         ('ASSIGNED', 'Assigné'),
         ('PENDING_ACCEPTANCE', 'En Attente Acceptation'),
         ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
@@ -157,6 +159,7 @@ class Request(models.Model):
     requester_data = models.JSONField(default=dict, blank=True)
 
     # Metadata
+    ibtikar_external_code = models.CharField(max_length=50, default='', blank=True, verbose_name='Code demande IBTIKAR-DGRSDT')
     rejection_reason = models.TextField(default='', blank=True)
     archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)

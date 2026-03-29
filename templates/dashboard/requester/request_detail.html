@@ -189,6 +189,15 @@
     </div>
 </div>
 
+<!-- IBTIKAR post-validation workflow -->
+{% if req.channel == 'IBTIKAR' %}
+{% if req.status == 'IBTIKAR_SUBMISSION_PENDING' or req.status == 'IBTIKAR_CODE_SUBMITTED' %}
+{% url 'documents:ibtikar_form' req.pk as _ibk_form_url %}
+{% url 'dashboard:requester_ibtikar_code' req.pk as _ibk_code_url %}
+{% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=_ibk_form_url ibk_code_submit_url=_ibk_code_url %}
+{% endif %}
+{% endif %}
+
 <!-- Report delivery + receipt confirmation + rating -->
 {% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
 <div class="card mb-4" style="margin-top:24px; border:2px solid #bbf7d0;">
