@@ -170,6 +170,8 @@ function updateCostEstimate() {
 
         var display = document.getElementById('cost-estimate');
         if (display) display.textContent = total.toLocaleString('fr-FR') + ' DA';
+        // Trigger budget recheck
+        document.dispatchEvent(new Event('costUpdated'));
     } catch(e) { console.log('Cost calc error:', e); }
 }
 

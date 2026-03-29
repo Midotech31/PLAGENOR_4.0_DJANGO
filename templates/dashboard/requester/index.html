@@ -84,20 +84,19 @@
                         if (!serviceSelect || !balanceInput || !warning) return;
                         var opt = serviceSelect.options[serviceSelect.selectedIndex];
                         if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
-                        // Extract price from option text: "CODE — Name (PRICE DA)"
-                        var match = opt.textContent.match(/\(([\d.,]+)\s*DA\)/);
-                        var price = match ? parseFloat(match[1].replace(',', '')) : 0;
                         var balance = parseFloat(balanceInput.value) || 0;
-                        // Count sample rows
-                        var tbody = document.getElementById('sample-table-body');
-                        var rows = tbody ? tbody.querySelectorAll('tr').length : 1;
-                        var estimated = price * Math.max(rows, 1);
+                        // Read the actual computed cost from the cost-estimate element
+                        var costEl = document.getElementById('cost-estimate');
+                        var estimated = 0;
+                        if (costEl && costEl.textContent && costEl.textContent !== '—') {
+                            estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
+                        }
 
                         if (balance < 0 || balance > 200000) {
                             warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
                             warning.style.display = 'block';
                             submitBtn.disabled = true;
-                        } else if (price > 0 && estimated > balance) {
+                        } else if (estimated > 0 && estimated > balance) {
                             warning.innerHTML = '{% trans "Attention: le coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "dépasse votre solde déclaré" %} (' + balance.toLocaleString('fr-FR') + ' DA).';
                             warning.style.display = 'block';
                             submitBtn.disabled = true;
@@ -107,12 +106,10 @@
                         }
                     }
 
-                    if (serviceSelect) serviceSelect.addEventListener('change', checkBudget);
+                    if (serviceSelect) serviceSelect.addEventListener('change', function(){ setTimeout(checkBudget, 100); });
                     if (balanceInput) balanceInput.addEventListener('input', checkBudget);
-                    // Re-check when sample rows change
-                    var observer = new MutationObserver(checkBudget);
-                    var tbody = document.getElementById('sample-table-body');
-                    if (tbody) observer.observe(tbody, {childList: true});
+                    // Re-check when cost estimate updates
+                    document.addEventListener('costUpdated', checkBudget);
                 })();
                 </script>
             </div>
