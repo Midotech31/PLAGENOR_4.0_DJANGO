@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view
 from . import views
 
 app_name = 'dashboard'
@@ -81,6 +81,9 @@ urlpatterns = [
 
     # Service form API
     path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),
+
+    # QR Code
+    path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),
 
     # Messaging
     path('message/<uuid:pk>/', messaging.send_message, name='send_message'),

@@ -194,6 +194,17 @@
             </div>
         </div>
 
+        <!-- QR Code for report access -->
+        {% if req.report_token %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "QR Code Rapport" %}</h3></div>
+            <div class="card-body" style="text-align:center; padding:20px;">
+                <img src="{% url 'dashboard:report_qr' req.pk %}" alt="QR Code" style="width:180px; height:180px; border-radius:8px; border:1px solid #e2e8f0;">
+                <p class="text-muted" style="font-size:0.8rem; margin-top:10px;">{% trans "Scannez pour accéder à la page du rapport" %}</p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Messages -->
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Messages" %} ({{ messages_list.count }})</h3></div>

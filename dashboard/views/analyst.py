@@ -210,15 +210,18 @@ def accept_alt_date(request, pk):
         return redirect_back(request, 'dashboard:analyst')
 
     # Update appointment date to the proposed alternative
+    import uuid as _uuid
     old_date = req.appointment_date
     req.appointment_date = req.alt_date_proposed
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
     req.alt_date_proposed = None
     req.alt_date_note = ''
+    if not req.report_token:
+        req.report_token = _uuid.uuid4()
     req.save(update_fields=[
         'appointment_date', 'appointment_confirmed', 'appointment_confirmed_at',
-        'alt_date_proposed', 'alt_date_note',
+        'alt_date_proposed', 'alt_date_note', 'report_token',
     ])
 
     # Transition to APPOINTMENT_CONFIRMED if currently APPOINTMENT_PROPOSED

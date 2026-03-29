@@ -169,10 +169,13 @@ def reject_quote(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
+    import uuid as _uuid
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
-    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at'])
+    if not req.report_token:
+        req.report_token = _uuid.uuid4()
+    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
     try:
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
     except (InvalidTransitionError, AuthorizationError, ValueError):
