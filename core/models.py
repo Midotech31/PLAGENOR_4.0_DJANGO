@@ -112,6 +112,7 @@ class Request(models.Model):
     budget_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     declared_ibtikar_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quote_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    quote_detail = models.JSONField(default=dict, blank=True, verbose_name='Détail du devis')
     admin_validated_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     # Appointment

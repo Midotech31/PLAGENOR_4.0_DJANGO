@@ -11,6 +11,7 @@ from core.models import Request, RequestHistory, RequestComment, Invoice
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
 from core.registry import get_service_def
+from core.pricing import calculate_price
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
 
@@ -330,3 +331,173 @@ def adjust_cost(request, pk):
     
     messages.success(request, f"Coût ajusté pour {req.display_id}: {price:,.0f} DA. {f'Justification: {justification}' if justification else ''}")
     return redirect_back(request, 'dashboard:admin_ops')
+
+
+@admin_required
+def prepare_quote(request, pk):
+    """Admin prepares/edits a detailed quote for a GENOCLAB request."""
+    req = get_object_or_404(Request, pk=pk)
+
+    if request.method == 'POST':
+        # Parse form data for line items
+        items = []
+        idx = 0
+        while f'item_label_{idx}' in request.POST:
+            label = request.POST.get(f'item_label_{idx}', '')
+            unit_price = float(request.POST.get(f'item_unit_price_{idx}', 0))
+            quantity = int(request.POST.get(f'item_quantity_{idx}', 0))
+            total = unit_price * quantity
+            if label:
+                items.append({
+                    'label': label,
+                    'unit_price': unit_price,
+                    'quantity': quantity,
+                    'total': total,
+                })
+            idx += 1
+
+        admin_fees = float(request.POST.get('admin_fees', 0))
+        report_fees = float(request.POST.get('report_fees', 0))
+        vat_rate = float(request.POST.get('vat_rate', 19)) / 100
+        notes = request.POST.get('quote_notes', '')
+
+        subtotal_ht = sum(item['total'] for item in items)
+        subtotal_before_tax = subtotal_ht + admin_fees + report_fees
+        vat_amount = round(subtotal_before_tax * vat_rate, 2)
+        total_ttc = round(subtotal_before_tax + vat_amount, 2)
+
+        quote_detail = {
+            'items': items,
+            'subtotal_ht': subtotal_ht,
+            'admin_fees': admin_fees,
+            'report_fees': report_fees,
+            'subtotal_before_tax': subtotal_before_tax,
+            'vat_rate': vat_rate,
+            'vat_amount': vat_amount,
+            'total_ttc': total_ttc,
+            'notes': notes,
+        }
+
+        req.quote_detail = quote_detail
+        req.quote_amount = total_ttc
+        req.save(update_fields=['quote_detail', 'quote_amount'])
+
+        action = request.POST.get('action', 'save')
+        if action == 'send':
+            # Transition to QUOTE_DRAFT first (if still REQUEST_CREATED), then to QUOTE_SENT
+            try:
+                if req.status == 'REQUEST_CREATED':
+                    transition(req, 'QUOTE_DRAFT', request.user, notes='Devis préparé')
+                if req.status == 'QUOTE_DRAFT':
+                    transition(req, 'QUOTE_SENT', request.user, notes='Devis envoyé au client')
+                messages.success(request, f"Devis envoyé au client pour {req.display_id}.")
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                messages.error(request, str(e))
+        else:
+            # Just save as draft
+            if req.status == 'REQUEST_CREATED':
+                try:
+                    transition(req, 'QUOTE_DRAFT', request.user, notes='Devis en brouillon')
+                except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                    messages.error(request, str(e))
+            messages.success(request, f"Devis enregistré pour {req.display_id}.")
+
+        return redirect('dashboard:admin_request_detail', pk=req.pk)
+
+    # GET: Show quote form with auto-estimate
+    yaml_def = get_service_def(req.service.code) if req.service else None
+    auto_estimate = _compute_auto_estimate(req, yaml_def)
+
+    import json
+    existing_quote = req.quote_detail or {}
+    context = {
+        'req': req,
+        'yaml_def': yaml_def,
+        'auto_estimate': auto_estimate,
+        'existing_quote': existing_quote,
+        'existing_items_json': json.dumps(existing_quote.get('items', [])),
+    }
+    return render(request, 'dashboard/admin_ops/prepare_quote.html', context)
+
+
+def _compute_auto_estimate(req, yaml_def):
+    """Compute auto price estimate from YAML pricing + sample table."""
+    if not yaml_def:
+        return None
+    try:
+        result = calculate_price(yaml_def, req.service_params or {}, req.sample_table or [])
+        return result
+    except Exception:
+        return None
+
+
+@admin_required
+def generate_invoice(request, pk):
+    """Generate an invoice from a GENOCLAB request's quote."""
+    req = get_object_or_404(Request, pk=pk)
+
+    if request.method == 'POST':
+        quote = req.quote_detail or {}
+        items = quote.get('items', [])
+
+        # Build invoice line items from quote
+        line_items = []
+        for item in items:
+            line_items.append({
+                'description': item['label'],
+                'unit_price': item['unit_price'],
+                'quantity': item['quantity'],
+                'total': item['total'],
+            })
+        if quote.get('admin_fees', 0) > 0:
+            line_items.append({'description': 'Frais administratifs', 'unit_price': quote['admin_fees'], 'quantity': 1, 'total': quote['admin_fees']})
+        if quote.get('report_fees', 0) > 0:
+            line_items.append({'description': 'Frais de rapport', 'unit_price': quote['report_fees'], 'quantity': 1, 'total': quote['report_fees']})
+
+        # Generate invoice number
+        from datetime import datetime
+        year = datetime.now().year
+        count = Invoice.objects.filter(created_at__year=year).count() + 1
+        invoice_number = f"GCL-INV-{year}-{count:04d}"
+
+        subtotal_ht = quote.get('subtotal_before_tax', float(req.quote_amount))
+        vat_rate = quote.get('vat_rate', 0.19)
+        vat_amount = quote.get('vat_amount', round(subtotal_ht * vat_rate, 2))
+        total_ttc = quote.get('total_ttc', round(subtotal_ht + vat_amount, 2))
+
+        Invoice.objects.create(
+            invoice_number=invoice_number,
+            request=req,
+            client=req.requester,
+            line_items=line_items,
+            subtotal_ht=subtotal_ht,
+            vat_rate=vat_rate,
+            vat_amount=vat_amount,
+            total_ttc=total_ttc,
+            created_by=request.user,
+        )
+
+        # Transition to INVOICE_GENERATED
+        try:
+            transition(req, 'INVOICE_GENERATED', request.user, notes=f'Facture {invoice_number} générée')
+            messages.success(request, f"Facture {invoice_number} générée pour {req.display_id}.")
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            messages.error(request, str(e))
+
+        return redirect('dashboard:admin_request_detail', pk=req.pk)
+
+    return redirect('dashboard:admin_request_detail', pk=req.pk)
+
+
+@admin_required
+def confirm_payment(request, pk):
+    """Admin confirms payment for a GENOCLAB request."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    try:
+        transition(req, 'PAYMENT_CONFIRMED', request.user, notes='Paiement confirmé par admin')
+        messages.success(request, f"Paiement confirmé pour {req.display_id}.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+    return redirect('dashboard:admin_request_detail', pk=req.pk)

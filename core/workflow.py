@@ -134,8 +134,11 @@ def _create_notifications(request_obj, to_status):
 
         # Notify the requester/client on relevant transitions
         if request_obj.requester and to_status in (
+            # IBTIKAR states
             'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
             'ASSIGNED', 'APPOINTMENT_PROPOSED', 'REPORT_VALIDATED', 'COMPLETED', 'REJECTED',
+            # GENOCLAB states
+            'QUOTE_SENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
         ):
             Notification.objects.create(
                 user=request_obj.requester,
@@ -145,7 +148,11 @@ def _create_notifications(request_obj, to_status):
             )
 
         # Always notify admins for important transitions
-        if to_status in ('SUBMITTED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED'):
+        if to_status in (
+            'SUBMITTED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
+            # GENOCLAB admin-relevant states
+            'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'PAYMENT_CONFIRMED',
+        ):
             admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
             for admin in admins:
                 Notification.objects.create(
@@ -156,3 +163,13 @@ def _create_notifications(request_obj, to_status):
                 )
     except Exception:
         pass
+
+
+def _send_transition_emails(request_obj, old_status, to_status):
+    """Send email notifications for key transitions. Placeholder for future SMTP integration."""
+    pass
+
+
+def _auto_generate_documents(request_obj, to_status):
+    """Auto-generate documents on specific transitions."""
+    pass

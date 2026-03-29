@@ -161,17 +161,47 @@
 
                     <!-- Quote actions -->
                     {% if req.status == 'QUOTE_SENT' %}
-                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
-                        <span class="text-sm">{% trans "Montant devis:" %} <strong>{{ req.quote_amount }} DA</strong></span>
-                        <div>
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:8px;">
+                        <div style="font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>{% trans "Devis reçu" %}</span>
+                            <strong style="color:#059669; font-size:1.05rem;">{{ req.quote_amount|floatformat:2 }} DA</strong>
+                        </div>
+                        {% if req.quote_detail and req.quote_detail.items %}
+                        <div style="font-size:0.8rem; margin-bottom:8px;">
+                            {% for item in req.quote_detail.items %}
+                            <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                                <span class="text-muted">{{ item.label }}</span>
+                                <span>{{ item.total|floatformat:2 }} DA</span>
+                            </div>
+                            {% endfor %}
+                            {% if req.quote_detail.admin_fees %}
+                            <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                                <span class="text-muted">{% trans "Frais admin." %}</span>
+                                <span>{{ req.quote_detail.admin_fees|floatformat:2 }} DA</span>
+                            </div>
+                            {% endif %}
+                            {% if req.quote_detail.report_fees %}
+                            <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                                <span class="text-muted">{% trans "Frais rapport" %}</span>
+                                <span>{{ req.quote_detail.report_fees|floatformat:2 }} DA</span>
+                            </div>
+                            {% endif %}
+                            <div style="display:flex; justify-content:space-between; padding:4px 0; border-top:1px solid #d1fae5; margin-top:4px; font-weight:600;">
+                                <span>{% trans "Total TTC" %}</span>
+                                <span style="color:#059669;">{{ req.quote_detail.total_ttc|floatformat:2 }} DA</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div style="display:flex; gap:8px;">
                             <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter le devis" %}</button>
+                                <button type="submit" class="btn btn-sm btn-primary" style="background:#059669;">{% trans "Accepter le devis" %}</button>
                             </form>
                             <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Refuser le devis" %}</button>
                             </form>
+                            <a href="{% url 'dashboard:client_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détail" %}</a>
                         </div>
                     </div>
                     {% endif %}

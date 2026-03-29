@@ -39,6 +39,9 @@ urlpatterns = [
     path('ops/report/<uuid:pk>/', admin_ops.report_review, name='admin_report_review'),
     path('ops/cost/<uuid:pk>/', admin_ops.adjust_cost, name='admin_adjust_cost'),
     path('ops/appointment/<uuid:pk>/', admin_ops.modify_appointment, name='admin_modify_appointment'),
+    path('ops/quote/<uuid:pk>/', admin_ops.prepare_quote, name='admin_prepare_quote'),
+    path('ops/invoice/<uuid:pk>/', admin_ops.generate_invoice, name='admin_generate_invoice'),
+    path('ops/payment/<uuid:pk>/', admin_ops.confirm_payment, name='admin_confirm_payment'),
 
     # Analyst
     path('analyst/', analyst.index, name='analyst'),
