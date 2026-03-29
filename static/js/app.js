@@ -8,21 +8,8 @@ document.body.addEventListener('htmx:configRequest', (e) => {
         || '';
 });
 
-// Notification badge refresh
-function refreshNotificationCount() {
-    fetch('/dashboard/api/notification-count/')
-        .then(r => r.json())
-        .then(data => {
-            const badge = document.getElementById('notification-count');
-            if (badge) {
-                badge.textContent = data.count;
-                badge.style.display = data.count > 0 ? 'flex' : 'none';
-            }
-        })
-        .catch(() => {});
-}
-
-setInterval(refreshNotificationCount, 30000);
+// Notification count is injected server-side via context processor (unread_count).
+// No client-side polling needed.
 
 // Language toggle
 function toggleLanguage() {
