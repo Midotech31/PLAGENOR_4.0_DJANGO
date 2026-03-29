@@ -1,7 +1,11 @@
 # core/workflow.py — PLAGENOR 4.0 Workflow Engine (Django)
 # Integrates state_machine.py transitions with role-based permission checks.
 
+import logging
+
 from core.models import Request, RequestHistory
+
+logger = logging.getLogger('plagenor.workflow')
 from core.state_machine import (
     IBTIKAR_TRANSITIONS,
     GENOCLAB_TRANSITIONS,
@@ -169,8 +173,16 @@ def _create_notifications(request_obj, to_status):
                     request=request_obj,
                     notification_type='WORKFLOW',
                 )
-    except Exception:
-        pass
+    except Exception as e:
+        # Log notification errors but don't break the workflow transition
+        logger.exception(
+            f"Failed to create notifications for request {request_obj.display_id}: {str(e)}",
+            extra={
+                'request_id': str(request_obj.id),
+                'request_display_id': request_obj.display_id,
+                'to_status': to_status,
+            }
+        )
 
 
 def _send_transition_emails(request_obj, old_status, to_status):
