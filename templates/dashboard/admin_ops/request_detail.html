@@ -335,6 +335,18 @@
                 <input type="hidden" name="to_status" value="{{ t }}">
                 {% if t == 'REJECTED' %}
                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                {% elif t == 'SENT_TO_REQUESTER' %}
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                    {% trans "Transmettre le rapport au demandeur" %}
+                </button>
+                {% elif t == 'SENT_TO_CLIENT' %}
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                    {% trans "Transmettre le rapport au client" %}
+                </button>
+                {% elif t == 'ANALYSIS_STARTED' and req.status == 'REPORT_UPLOADED' %}
+                <button type="submit" class="btn btn-sm btn-outline" style="color:#d97706; border-color:#fde68a;">{% trans "Renvoyer pour révision" %}</button>
                 {% else %}
                 <button type="submit" class="btn btn-sm btn-primary">{{ t }}</button>
                 {% endif %}

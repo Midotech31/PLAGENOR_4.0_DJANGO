@@ -26,7 +26,8 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
     "ANALYSIS_STARTED":         {"ANALYSIS_FINISHED"},
     "ANALYSIS_FINISHED":        {"REPORT_UPLOADED"},
     "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},
-    "REPORT_VALIDATED":         {"COMPLETED"},
+    "REPORT_VALIDATED":         {"SENT_TO_REQUESTER"},
+    "SENT_TO_REQUESTER":        {"COMPLETED"},
     "COMPLETED":                {"CLOSED"},
     "CLOSED":                   set(),     # terminal
     "REJECTED":                 set(),     # terminal
@@ -56,7 +57,8 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "ANALYSIS_STARTED":         {"ANALYSIS_FINISHED"},
     "ANALYSIS_FINISHED":        {"REPORT_UPLOADED"},
     "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},
-    "REPORT_VALIDATED":         {"COMPLETED"},
+    "REPORT_VALIDATED":         {"SENT_TO_CLIENT"},
+    "SENT_TO_CLIENT":           {"COMPLETED"},
     "COMPLETED":                {"ARCHIVED"},
     "ARCHIVED":                 set(),     # terminal
     "REJECTED":                 set(),     # terminal

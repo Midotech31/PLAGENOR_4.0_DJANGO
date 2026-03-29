@@ -179,6 +179,14 @@ def confirm_receipt(request, pk):
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
+    # Transition SENT_TO_REQUESTER → COMPLETED
+    if req.status == 'SENT_TO_REQUESTER':
+        try:
+            from core.workflow import transition
+            from core.exceptions import InvalidTransitionError, AuthorizationError
+            transition(req, 'COMPLETED', request.user, notes='Réception confirmée par le demandeur')
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
     return redirect_back(request, 'dashboard:requester')
 
