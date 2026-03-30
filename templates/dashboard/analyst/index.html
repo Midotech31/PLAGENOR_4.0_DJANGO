@@ -101,6 +101,42 @@
                     {% endif %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <a href="{% url 'dashboard:analyst_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                    </div>
+                    {# Compact Pipeline for GENOCLAB requests #}
+                    {% if req.channel == 'GENOCLAB' %}
+                    <div class="pipeline mt-2">
+                        {% with s=req.status %}
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s != 'REQUEST_CREATED' and s != 'QUOTE_DRAFT' %} done{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'QUOTE_DRAFT' %}active{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ASSIGNED' %}active{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ANALYSIS_FINISHED' %}active{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'PAYMENT_CONFIRMED' %}active{% endif %}"></div></div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot{% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %} done{% endif %}"></div></div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <!-- Workflow action buttons based on status -->
                         {% if req.status == 'APPOINTMENT_CONFIRMED' %}
                         <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
@@ -234,7 +270,7 @@
                         </thead>
                         <tbody>
                         {% for req in history %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'dashboard:analyst_request_detail' req.pk %}">
                             <td>{{ req.display_id }}</td>
                             <td>{{ req.title|truncatechars:40 }}</td>
                             <td>{{ req.service.name|default:"—" }}</td>
@@ -284,36 +320,216 @@
         </div>
     </div>
 
-    <!-- Points & Cheers -->
+    <!-- Points & Cheers — Gamified Dashboard -->
     <div x-show="tab === 'points'">
-        <div class="grid-2">
+
+        <!-- Ranking Position + Performance Status Banner -->
+        <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+            <!-- Rank card -->
+            <div style="flex:1; min-width:160px; background:linear-gradient(135deg,#1e293b,#334155); border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; color:white;">
+                <div style="font-size:2.5rem; line-height:1;">
+                    {% if rank_position == 1 %}🥇{% elif rank_position == 2 %}🥈{% elif rank_position == 3 %}🥉{% else %}#{% endif %}
+                </div>
+                <div>
+                    <div style="font-size:2rem; font-weight:800; line-height:1;">{{ rank_position|default:"—" }}</div>
+                    <div style="font-size:0.78rem; color:#94a3b8; margin-top:2px;">{% trans "sur" %} {{ total_members_count }} {% trans "analystes" %}</div>
+                </div>
+            </div>
+            <!-- Performance status card -->
+            <div style="flex:2; min-width:200px; background:{{ perf_status.bg }}; border:1px solid {{ perf_status.color }}30; border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
+                <div style="font-size:2.5rem; line-height:1;">
+                    {% if profile.productivity_score >= 90 %}🔥{% elif profile.productivity_score >= 75 %}⭐{% elif profile.productivity_score >= 55 %}✅{% elif profile.productivity_score >= 35 %}👍{% else %}⏰{% endif %}
+                </div>
+                <div>
+                    <div style="font-size:1.3rem; font-weight:700; color:{{ perf_status.color }};">{{ perf_status.label }}</div>
+                    <div style="font-size:0.85rem; color:#64748b; margin-top:2px;">{% trans "Score de productivité" %}: <strong>{{ profile.productivity_score }}%</strong></div>
+                </div>
+            </div>
+            <!-- Points summary card -->
+            <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#7c3aed,#6d28d9); border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; color:white;">
+                <div>
+                    <div style="font-size:2.2rem; font-weight:800; line-height:1;">{{ profile.total_points }}</div>
+                    <div style="font-size:0.78rem; color:#c4b5fd; margin-top:2px; text-transform:uppercase; letter-spacing:0.06em;">{% trans "Points" %}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surprise Box (unlocked at 100 pts) -->
+        {% if profile.gift_unlocked %}
+        <div style="margin-bottom:24px;">
+            {% if profile.gift_collected %}
+            <!-- Already collected -->
+            <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px solid #86efac; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                <div style="font-size:3rem;">✅</div>
+                <div>
+                    <div style="font-size:1.1rem; font-weight:700; color:#166534;">{% trans "Cadeau récupéré !" %}</div>
+                    <div style="font-size:0.88rem; color:#4ade80; margin-top:4px;">{% trans "Merci pour votre excellent travail. Continuez comme ça !" %}</div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Gift available to collect -->
+            <div style="background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;" x-data="{opened: false}">
+                <div style="font-size:3.5rem; cursor:pointer; transition:transform 0.3s;" @click="opened = !opened" :style="opened ? 'transform:scale(1.2) rotate(10deg)' : ''">🎁</div>
+                <div style="flex:1;">
+                    <div style="font-size:1.2rem; font-weight:700; color:#92400e;">{% trans "🎉 Boîte surprise débloquée !" %}</div>
+                    <div style="font-size:0.88rem; color:#78350f; margin-top:4px;">{% trans "Vous avez cumulé 100 points ! Une récompense vous attend chez l'administrateur." %}</div>
+                    {% if profile.gift_image %}
+                    <div x-show="opened" style="margin-top:12px;">
+                        <img src="{{ profile.gift_image.url }}" alt="{% trans 'Récompense' %}" style="max-width:200px; max-height:200px; border-radius:10px; border:2px solid #f59e0b; object-fit:cover;">
+                        <div style="font-size:0.82rem; color:#92400e; margin-top:6px;">{% trans "Voici votre récompense — allez la récupérer !" %}</div>
+                    </div>
+                    {% else %}
+                    <div x-show="opened" style="margin-top:12px; font-size:0.88rem; color:#92400e;">{% trans "L'administrateur prépare votre récompense..." %}</div>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'dashboard:analyst_collect_gift' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b; color:white; font-weight:600;">
+                        {% trans "Marquer comme récupéré" %}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% elif profile.total_points >= 80 %}
+        <!-- Almost there -->
+        <div style="margin-bottom:24px; background:linear-gradient(135deg,#f8fafc,#f1f5f9); border:1px dashed #cbd5e1; border-radius:16px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
+            <div style="font-size:2.5rem;">🔒</div>
+            <div>
+                <div style="font-size:1rem; font-weight:600; color:#475569;">{% trans "Boîte surprise presque débloquée !" %}</div>
+                <div style="font-size:0.85rem; color:#94a3b8; margin-top:4px;">{% trans "Objectif : 100 points" %} — {{ profile.total_points }}/100</div>
+                <div style="background:#e2e8f0; border-radius:100px; height:8px; overflow:hidden; margin-top:8px; max-width:300px;">
+                    <div style="height:100%; border-radius:100px; width:{% widthratio profile.total_points 100 100 %}%; background:linear-gradient(90deg,#f59e0b,#fbbf24); transition:width 0.8s ease;"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Hero: Level + Total Points -->
+        {% with pts=profile.total_points %}
+        {% if pts >= 500 %}{% with lvl="🏆 Expert" lvl_color="#7c3aed" next=1000 %}
+        {% include 'includes/_points_hero.html' %}{% endwith %}
+        {% elif pts >= 200 %}{% with lvl="⭐ Confirmé" lvl_color="#0284c7" next=500 %}
+        {% include 'includes/_points_hero.html' %}{% endwith %}
+        {% elif pts >= 50 %}{% with lvl="🔵 Intermédiaire" lvl_color="#059669" next=200 %}
+        {% include 'includes/_points_hero.html' %}{% endwith %}
+        {% else %}{% with lvl="🌱 Débutant" lvl_color="#64748b" next=50 %}
+        {% include 'includes/_points_hero.html' %}{% endwith %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="grid-2" style="margin-top:24px;">
+            <!-- Points History Feed -->
             <div class="card">
-                <div class="card-header"><h3>{% trans "Historique des points" %}</h3></div>
-                <div class="card-body">
+                <div class="card-header" style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.3rem;">⚡</span>
+                    <h3 style="margin:0;">{% trans "Activité & Points" %}</h3>
+                    <span style="margin-left:auto; background:#fef3c7; color:#92400e; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ points_history.count }} {% trans "événements" %}</span>
+                </div>
+                <div class="card-body" style="padding:0;">
                     {% for ph in points_history %}
-                    <div class="data-card-row" style="padding: 0.5rem 0; border-bottom: 1px solid var(--slate-100);">
-                        <span><strong>+{{ ph.points }}</strong> — {{ ph.reason }}</span>
-                        <span class="text-xs text-muted">{{ ph.created_at|date:"d/m/Y" }}</span>
+                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--slate-100); transition:background 0.15s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+                        <div style="width:38px; height:38px; border-radius:50%; background:{% if ph.points > 0 %}#d1fae5{% else %}#fee2e2{% endif %}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
+                            {% if ph.points > 0 %}⬆{% else %}⬇{% endif %}
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:0.9rem; font-weight:500; color:#1e293b;">{{ ph.reason }}</div>
+                            <div style="font-size:0.78rem; color:#94a3b8;">{{ ph.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <div style="font-size:1rem; font-weight:700; color:{% if ph.points > 0 %}#059669{% else %}#dc2626{% endif %}; flex-shrink:0;">
+                            {% if ph.points > 0 %}+{% endif %}{{ ph.points }} pts
+                        </div>
                     </div>
                     {% empty %}
-                    <div class="empty-state"><p>{% trans "Aucun point pour le moment." %}</p></div>
+                    <div style="padding:40px; text-align:center; color:#94a3b8;">
+                        <div style="font-size:2.5rem; margin-bottom:8px;">🎯</div>
+                        <p style="margin:0; font-size:0.95rem;">{% trans "Complétez des demandes pour gagner vos premiers points !" %}</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
+
+            <!-- Cheers / Encouragements -->
             <div class="card">
-                <div class="card-header"><h3>{% trans "Encouragements reçus" %}</h3></div>
-                <div class="card-body">
+                <div class="card-header" style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.3rem;">🎉</span>
+                    <h3 style="margin:0;">{% trans "Encouragements" %}</h3>
+                    {% if cheers %}<span style="margin-left:auto; background:#ede9fe; color:#6d28d9; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ cheers.count }}</span>{% endif %}
+                </div>
+                <div class="card-body" style="padding:0;">
                     {% for cheer in cheers %}
-                    <div class="data-card-row" style="padding: 0.5rem 0; border-bottom: 1px solid var(--slate-100);">
-                        <span>{{ cheer.message }}</span>
-                        <span class="text-xs text-muted">{{ cheer.from_user.get_full_name }} &middot; {{ cheer.created_at|date:"d/m/Y" }}</span>
+                    <div style="padding:14px 16px; border-bottom:1px solid var(--slate-100);">
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#f472b6,#a78bfa); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.9rem; flex-shrink:0;">
+                                {{ cheer.from_user.first_name|first|upper }}
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-size:0.85rem; font-weight:600; color:#1e293b;">{{ cheer.from_user.get_full_name }}</div>
+                                <div style="font-size:0.9rem; color:#475569; margin-top:3px; font-style:italic;">"{{ cheer.message }}"</div>
+                                <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">{{ cheer.created_at|date:"d/m/Y" }}</div>
+                            </div>
+                        </div>
                     </div>
                     {% empty %}
-                    <div class="empty-state"><p>{% trans "Aucun encouragement pour le moment." %}</p></div>
+                    <div style="padding:40px; text-align:center; color:#94a3b8;">
+                        <div style="font-size:2.5rem; margin-bottom:8px;">💬</div>
+                        <p style="margin:0; font-size:0.95rem;">{% trans "Vos encouragements apparaîtront ici." %}</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
+
+        <!-- Achievements / Badges -->
+        <div class="card" style="margin-top:24px;">
+            <div class="card-header" style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.3rem;">🏅</span>
+                <h3 style="margin:0;">{% trans "Badges & Objectifs" %}</h3>
+            </div>
+            <div class="card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px;">
+                    {% with pts=profile.total_points comp=completed_count %}
+                    <!-- First Analysis -->
+                    <div style="background:{% if comp >= 1 %}linear-gradient(135deg,#d1fae5,#a7f3d0){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 1 %}#6ee7b7{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">🔬</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 1 %}#065f46{% else %}#94a3b8{% endif %};">{% trans "Première analyse" %}</div>
+                        <div style="font-size:0.72rem; color:{% if comp >= 1 %}#059669{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 1 %}✓ {% trans "Débloqué" %}{% else %}0/1{% endif %}</div>
+                    </div>
+                    <!-- 5 Analyses -->
+                    <div style="background:{% if comp >= 5 %}linear-gradient(135deg,#dbeafe,#bfdbfe){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 5 %}#93c5fd{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">📊</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 5 %}#1e3a8a{% else %}#94a3b8{% endif %};">{% trans "5 Analyses" %}</div>
+                        <div style="font-size:0.72rem; color:{% if comp >= 5 %}#1d4ed8{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 5 %}✓ {% trans "Débloqué" %}{% else %}{{ comp }}/5{% endif %}</div>
+                    </div>
+                    <!-- 50 Points -->
+                    <div style="background:{% if pts >= 50 %}linear-gradient(135deg,#fef3c7,#fde68a){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 50 %}#fcd34d{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">⭐</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 50 %}#92400e{% else %}#94a3b8{% endif %};">50 {% trans "Points" %}</div>
+                        <div style="font-size:0.72rem; color:{% if pts >= 50 %}#d97706{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 50 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/50{% endif %}</div>
+                    </div>
+                    <!-- 200 Points -->
+                    <div style="background:{% if pts >= 200 %}linear-gradient(135deg,#ede9fe,#ddd6fe){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 200 %}#c4b5fd{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">💎</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 200 %}#4c1d95{% else %}#94a3b8{% endif %};">200 {% trans "Points" %}</div>
+                        <div style="font-size:0.72rem; color:{% if pts >= 200 %}#7c3aed{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 200 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/200{% endif %}</div>
+                    </div>
+                    <!-- Expert 500 Points -->
+                    <div style="background:{% if pts >= 500 %}linear-gradient(135deg,#fce7f3,#fbcfe8){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 500 %}#f9a8d4{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">🏆</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 500 %}#9d174d{% else %}#94a3b8{% endif %};">500 {% trans "Points — Expert" %}</div>
+                        <div style="font-size:0.72rem; color:{% if pts >= 500 %}#be185d{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 500 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/500{% endif %}</div>
+                    </div>
+                    <!-- Speed Demon: 10 completed -->
+                    <div style="background:{% if comp >= 10 %}linear-gradient(135deg,#fff7ed,#fed7aa){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 10 %}#fdba74{% else %}#e2e8f0{% endif %};">
+                        <div style="font-size:2rem; margin-bottom:6px;">🚀</div>
+                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 10 %}#9a3412{% else %}#94a3b8{% endif %};">10 {% trans "Analyses" %}</div>
+                        <div style="font-size:0.72rem; color:{% if comp >= 10 %}#ea580c{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 10 %}✓ {% trans "Débloqué" %}{% else %}{{ comp }}/10{% endif %}</div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Notifications -->

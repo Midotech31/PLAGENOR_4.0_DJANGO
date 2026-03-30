@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{{ template.name }} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="greeting">{{ template.name }}</h1>
+            <p class="greeting-date">
+                {% trans "Modèle de" %} {{ template.get_template_type_display }} — {{ template.service.name }}
+            </p>
+        </div>
+        <div>
+            {% if template.is_active %}
+            <span class="badge badge-success badge-lg">{% trans "Actif" %}</span>
+            {% else %}
+            <span class="badge badge-secondary badge-lg">{% trans "Inactif" %}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Template Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Informations" %}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">{% trans "Service" %}</th>
+                        <td>
+                            <span class="badge badge-info">{{ template.service.code }}</span>
+                            {{ template.service.name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Type" %}</th>
+                        <td>{{ template.get_template_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Description" %}</th>
+                        <td>{{ template.description|default:"<em class='text-muted'>Aucune description</em>"|safe }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Fichier" %}</th>
+                        <td>
+                            {% if template.file %}
+                            <a href="{{ template.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fa fa-download"></i> {{ template.file.name|filename }}
+                            </a>
+                            {% else %}
+                            <span class="text-danger">{% trans "Aucun fichier" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Créé par" %}</th>
+                        <td>{{ template.created_by.get_full_name|default:template.created_by.username|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Créé le" %}</th>
+                        <td>{{ template.created_at|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>{% trans "Mis à jour le" %}</th>
+                        <td>{{ template.updated_at|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Placeholders -->
+        {% if template.placeholders.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Placeholders documentés" %}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Placeholder" %}</th>
+                            <th>{% trans "Description" %}</th>
+                            <th>{% trans "Exemple" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for placeholder in template.placeholders.all %}
+                        <tr>
+                            <td><code>{{'{'}}{'{'}}{{{ placeholder.placeholder }}}}</code></td>
+                            <td>{{ placeholder.description }}</td>
+                            <td><small class="text-muted">{{ placeholder.example_value|default:"—" }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Actions" %}</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'documents:template_edit' template.pk %}" class="btn btn-primary btn-block mb-2">
+                    <i class="fa fa-edit"></i> {% trans "Modifier" %}
+                </a>
+                
+                {% if template.is_active %}
+                <form method="post" action="{% url 'documents:template_toggle' template.pk %}" class="mb-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-block">
+                        <i class="fa fa-toggle-off"></i> {% trans "Désactiver" %}
+                    </button>
+                </form>
+                {% else %}
+                <form method="post" action="{% url 'documents:template_toggle' template.pk %}" class="mb-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-block">
+                        <i class="fa fa-toggle-on"></i> {% trans "Activer" %}
+                    </button>
+                </form>
+                {% endif %}
+                
+                <a href="{% url 'documents:template_delete' template.pk %}" class="btn btn-danger btn-block">
+                    <i class="fa fa-trash"></i> {% trans "Supprimer" %}
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">{% trans "Aide" %}</h5>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    {% trans "Ce modèle sera utilisé pour générer automatiquement des documents lorsqu'un utilisateur demande un document de type" %} 
+                    <strong>{{ template.get_template_type_display }}</strong>
+                    {% trans "pour le service" %}
+                    <strong>{{ template.service.name }}</strong>.
+                </p>
+                <hr>
+                <p class="small text-muted">
+                    <i class="fa fa-info-circle"></i>
+                    {% trans "Seul un modèle actif par service/type sera utilisé. Les autres seront désactivés automatiquement." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'documents:template_list' %}" class="btn btn-secondary">
+        <i class="fa fa-arrow-left"></i> {% trans "Retour à la liste" %}
+    </a>
+</div>
+{% endblock %}

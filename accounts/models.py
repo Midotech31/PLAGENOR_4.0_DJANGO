@@ -49,6 +49,9 @@ class User(AbstractUser):
     login_attempts = models.IntegerField(default=0)
     locked_until = models.DateTimeField(null=True, blank=True)
 
+    # Password reset (Prompt 11)
+    must_change_password = models.BooleanField(default=False, verbose_name='Doit changer le mot de passe')
+
     class Meta:
         db_table = 'users'
 

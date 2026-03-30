@@ -97,10 +97,16 @@ def request_detail(request, pk):
         for key in req.sample_table[0].keys():
             sample_headers.append(sample_col_labels.get(key, key.replace('_', ' ').title()))
 
+    from core.models import Message
+    messages_list = Message.objects.filter(
+        request=req, to_user=request.user
+    ).select_related('from_user').order_by('created_at')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
+        'messages_list': messages_list,
     }
     return render(request, 'dashboard/client/request_detail.html', context)
 
@@ -141,15 +147,16 @@ def create_request(request):
 
 @client_required
 def accept_quote(request, pk):
+    """After accepting quote, client must upload purchase order (Bon de commande)."""
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     try:
         transition(req, 'QUOTE_VALIDATED_BY_CLIENT', request.user, notes='Devis accepté par client')
-        messages.success(request, f"Devis accepté pour {req.display_id}.")
+        messages.success(request, f"Devis accepté pour {req.display_id}. Veuillez maintenant télécharger votre Bon de Commande (obligatoire selon le code de commerce algérien).")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:client')
+    return redirect('dashboard:client_request_detail', pk=pk)
 
 
 @client_required
@@ -163,6 +170,96 @@ def reject_quote(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect_back(request, 'dashboard:client')
+
+
+@client_required
+def upload_order(request, pk):
+    """Upload purchase order (Bon de commande) - mandatory per Algerian commercial code."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    
+    # Check status - client must have accepted quote
+    if req.status != 'QUOTE_VALIDATED_BY_CLIENT':
+        messages.error(request, "Vous ne pouvez pas télécharger de bon de commande à ce stade.")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    order_file = request.FILES.get('order_file')
+    if not order_file:
+        messages.error(request, "Veuillez sélectionner un fichier pour le Bon de Commande.")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Validate file type
+    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png']
+    import os
+    ext = os.path.splitext(order_file.name)[1].lower()
+    if ext not in allowed_extensions:
+        messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Save the order file
+    req.order_file = order_file
+    req.order_uploaded_at = timezone.now()
+    req.save(update_fields=['order_file', 'order_uploaded_at'])
+    
+    # Transition to ORDER_UPLOADED
+    try:
+        transition(req, 'ORDER_UPLOADED', request.user, notes='Bon de commande téléchargé par le client')
+        
+        # Notify admin about purchase order upload
+        from notifications.services import notify_purchase_order_uploaded
+        notify_purchase_order_uploaded(req)
+        
+        messages.success(request, f"Bon de Commande téléchargé avec succès pour {req.display_id}. L'administrateur va maintenant assigner votre demande à un analyste.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+    
+    return redirect('dashboard:client_request_detail', pk=pk)
+
+
+@client_required
+def upload_payment_receipt(request, pk):
+    """Upload payment receipt after analysis is finished."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    
+    # Check status - client must have received payment request
+    if req.status != 'PAYMENT_PENDING':
+        messages.error(request, "Vous ne pouvez pas télécharger de reçu de paiement à ce stade.")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    payment_receipt = request.FILES.get('payment_receipt_file')
+    if not payment_receipt:
+        messages.error(request, "Veuillez sélectionner un fichier pour le Reçu de Paiement.")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Validate file type
+    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png']
+    import os
+    ext = os.path.splitext(payment_receipt.name)[1].lower()
+    if ext not in allowed_extensions:
+        messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Save the payment receipt
+    req.payment_receipt_file = payment_receipt
+    req.payment_uploaded_at = timezone.now()
+    req.save(update_fields=['payment_receipt_file', 'payment_uploaded_at'])
+    
+    # Transition to PAYMENT_CONFIRMED
+    try:
+        transition(req, 'PAYMENT_CONFIRMED', request.user, notes='Reçu de paiement téléchargé par le client')
+        
+        # Notify assigned analyst that they can now upload the report
+        from notifications.services import notify_payment_received
+        notify_payment_received(req)
+        
+        messages.success(request, f"Paiement confirmé pour {req.display_id}. L'analyste assigné peut maintenant télécharger le rapport d'analyse.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+    
+    return redirect('dashboard:client_request_detail', pk=pk)
 
 
 @client_required

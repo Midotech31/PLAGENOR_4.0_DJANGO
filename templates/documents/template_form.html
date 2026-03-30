@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{% if template %}{% trans "Modifier le Modèle" %}{% else %}{% trans "Créer un Modèle" %}{% endif %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">
+        {% if template %}
+            {% trans "Modifier le Modèle" %}
+        {% else %}
+            {% trans "Créer un Nouveau Modèle" %}
+        {% endif %}
+    </h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="service">{% trans "Service" %} *</label>
+                    <select name="service" id="service" class="form-control" required>
+                        <option value="">{% trans "Sélectionner un service" %}</option>
+                        {% for service in services %}
+                        <option value="{{ service.id }}" {% if template.service_id == service.id %}selected{% endif %}>
+                            {{ service.code }} — {{ service.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group col-md-6">
+                    <label for="template_type">{% trans "Type de document" %} *</label>
+                    <select name="template_type" id="template_type" class="form-control" required>
+                        <option value="">{% trans "Sélectionner un type" %}</option>
+                        {% for value, label in template_types %}
+                        <option value="{{ value }}" {% if template.template_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="name">{% trans "Nom du modèle" %} *</label>
+                <input type="text" name="name" id="name" class="form-control" required
+                       value="{{ template.name|default:'' }}"
+                       placeholder="{% trans 'ex: Formulaire IBTIKAR CAN 2024' %}">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">{% trans "Description" %}</label>
+                <textarea name="description" id="description" class="form-control" rows="3"
+                          placeholder="{% trans 'Décrivez ce modèle et son utilisation...' %}">{{ template.description|default:'' }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">
+                    {% trans "Fichier DOCX" %} *
+                    {% if template %}
+                    <small class="text-muted">({% trans "Actuel" %}: {{ template.file.name|filename }})</small>
+                    {% endif %}
+                </label>
+                <div class="custom-file">
+                    <input type="file" name="file" id="file" class="custom-file-input" accept=".docx" 
+                           {% if not template %}required{% endif %}>
+                    <label class="custom-file-label" for="file">
+                        {% if template %}
+                            {{ template.file.name|filename }}
+                        {% else %}
+                            {% trans "Choisir un fichier DOCX..." %}
+                        {% endif %}
+                    </label>
+                </div>
+                <small class="form-text text-muted">
+                    {% trans "Le fichier doit être un document DOCX avec des placeholders (ex: {{FULL_NAME}}, {{PROJECT_TITLE}})" %}
+                </small>
+            </div>
+            
+            {% if template %}
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" name="is_active" id="is_active" class="custom-control-input"
+                           {% if template.is_active %}checked{% endif %}>
+                    <label class="custom-control-label" for="is_active">
+                        {% trans "Modèle actif" %}
+                    </label>
+                </div>
+                <small class="form-text text-muted">
+                    {% trans "Un seul modèle actif par service et type sera utilisé pour la génération des documents." %}
+                </small>
+            </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-save"></i> 
+                    {% if template %}
+                        {% trans "Enregistrer" %}
+                    {% else %}
+                        {% trans "Créer le modèle" %}
+                    {% endif %}
+                </button>
+                <a href="{% url 'documents:template_list' %}" class="btn btn-secondary">
+                    {% trans "Annuler" %}
+                </a>
+                {% if template %}
+                <a href="{% url 'documents:template_delete' template.pk %}" class="btn btn-danger float-right">
+                    <i class="fa fa-trash"></i> {% trans "Supprimer" %}
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Placeholder Help -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">{% trans "Placeholders disponibles" %}</h5>
+    </div>
+    <div class="card-body">
+        <p>{% trans "Utilisez ces placeholders dans votre document Word (entourés de doubles accolades) :" %}</p>
+        <div class="row">
+            <div class="col-md-6">
+                <h6>{% trans "Informations client" %}</h6>
+                <ul class="list-unstyled">
+                    <li><code>{{'{'}}{'{'}}{FULL_NAME{{'}'}}}</code> — {% trans "Nom complet" %}</li>
+                    <li><code>{{'{'}}{'{'}}{EMAIL{{'}'}}}</code> — {% trans "Email" %}</li>
+                    <li><code>{{'{'}}{'{'}}{PHONE{{'}'}}}</code> — {% trans "Téléphone" %}</li>
+                    <li><code>{{'{'}}{'{'}}{ORGANIZATION{{'}'}}}</code> — {% trans "Organisation" %}</li>
+                    <li><code>{{'{'}}{'{'}}{COUNTRY{{'}'}}}</code> — {% trans "Pays" %}</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>{% trans "Informations demande" %}</h6>
+                <ul class="list-unstyled">
+                    <li><code>{{'{'}}{'{'}}{SERVICE{{'}'}}}</code> — {% trans "Service" %}</li>
+                    <li><code>{{'{'}}{'{'}}{PROJECT_TITLE{{'}'}}}</code> — {% trans "Titre du projet" %}</li>
+                    <li><code>{{'{'}}{'{'}}{SUBMISSION_DATE{{'}'}}}</code> — {% trans "Date de soumission" %}</li>
+                    <li><code>{{'{'}}{'{'}}{REQUEST_ID{{'}'}}}</code> — {% trans "ID de la demande" %}</li>
+                    <li><code>{{'{'}}{'{'}}{STATUS{{'}'}}}</code> — {% trans "Statut" %}</li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+        <p class="text-muted">
+            <i class="fa fa-info-circle"></i>
+            {% trans "Les placeholders seront remplacés par les valeurs correspondantes lors de la génération du document." %}
+        </p>
+    </div>
+</div>
+{% endblock %}

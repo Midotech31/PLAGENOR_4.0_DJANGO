@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n dashboard_extras %}
 
 {% block title %}{% trans "Administration" %} — PLAGENOR 4.0{% endblock %}
 
@@ -27,6 +27,7 @@
         <button class="tab-item" :class="tab === 'all' && 'active'" @click="tab = 'all'">{% trans "Toutes les demandes" %}</button>
         <button class="tab-item" :class="tab === 'assign' && 'active'" @click="tab = 'assign'">{% trans "Assignation" %}</button>
         <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
+        <button class="tab-item" :class="tab === 'performance' && 'active'" @click="tab = 'performance'">{% trans "Performance" %}</button>
         <button class="tab-item" :class="tab === 'ratings' && 'active'" @click="tab = 'ratings'">{% trans "Avis" %} ({{ total_ratings }})</button>
         <button class="tab-item" :class="tab === 'reports' && 'active'" @click="tab = 'reports'">{% trans "Rapports" %}</button>
     </div>
@@ -524,6 +525,10 @@
             <div class="card-header"><h3>{% trans "Panneau d'assignation" %}</h3></div>
             <div class="card-body">
                 <h4 class="mb-2">{% trans "Analystes disponibles" %}</h4>
+                <p class="text-sm text-muted" style="margin-bottom:12px;">
+                    {% trans "Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet" %}
+                    <a href="#" @click.prevent="tab = 'performance'" style="color:var(--primary); font-weight:500;">{% trans "Performance" %}</a>.
+                </p>
                 <div class="table-wrapper mb-4">
                     <table>
                         <thead>
@@ -532,36 +537,27 @@
                                 <th>{% trans "Charge" %}</th>
                                 <th>{% trans "Productivité" %}</th>
                                 <th>{% trans "Points" %}</th>
-                                <th>{% trans "Actions" %}</th>
+                                <th>{% trans "Disponible" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for m in available_members %}
                         <tr>
-                            <td>{{ m.user.get_full_name }}</td>
+                            <td>
+                                {% if m.user.avatar %}
+                                <img src="{{ m.user.avatar.url }}" alt="" style="width:28px; height:28px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px; border:1px solid #e2e8f0;">
+                                {% endif %}
+                                <strong>{{ m.user.get_full_name }}</strong>
+                            </td>
                             <td>{{ m.current_load }}/{{ m.max_load }}</td>
                             <td>{{ m.productivity_score }}%</td>
                             <td>{{ m.total_points }}</td>
                             <td>
-                                <div class="btn-group">
-                                    <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline;" x-data="{show: false}">
-                                        {% csrf_token %}
-                                        <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Points" %}</button>
-                                        <div x-show="show" style="display:inline;">
-                                            <input type="number" name="points" value="10" class="form-control" style="width:60px; display:inline-block; font-size:0.85rem;">
-                                            <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:120px; display:inline-block; font-size:0.85rem;">
-                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
-                                        </div>
-                                    </form>
-                                    <form method="post" action="{% url 'dashboard:admin_send_cheer' m.pk %}" style="display:inline;" x-data="{show: false}">
-                                        {% csrf_token %}
-                                        <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Encourager" %}</button>
-                                        <div x-show="show" style="display:inline;">
-                                            <input type="text" name="message" placeholder="{% trans 'Message' %}" class="form-control" style="width:180px; display:inline-block; font-size:0.85rem;">
-                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
-                                        </div>
-                                    </form>
-                                </div>
+                                {% if m.available %}
+                                <span class="badge-status completed">{% trans "Oui" %}</span>
+                                {% else %}
+                                <span class="badge-status rejected">{% trans "Non" %}</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -611,36 +607,126 @@
             {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label=lbl_gen_rev color='green' %}
         </div>
 
-        <!-- Performance comparison -->
-        <div class="card" style="margin-top:24px;">
-            <div class="card-header"><h3>{% trans "Comparaison performance analystes" %}</h3></div>
-            <div class="card-body">
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>{% trans "Analyste" %}</th>
-                                <th>{% trans "Charge" %}</th>
-                                <th>{% trans "Productivité" %}</th>
-                                <th>{% trans "Points" %}</th>
-                                <th>{% trans "Disponible" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for m in available_members %}
-                        <tr>
-                            <td><strong>{{ m.user.get_full_name }}</strong></td>
-                            <td>{{ m.current_load }}/{{ m.max_load }} ({{ m.load_percentage }}%)</td>
-                            <td>{{ m.productivity_score }}%</td>
-                            <td>{{ m.total_points }}</td>
-                            <td>{% if m.available %}<span class="badge-status completed">{% trans "Oui" %}</span>{% else %}<span class="badge-status rejected">{% trans "Non" %}</span>{% endif %}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="text-center text-muted">{% trans "Aucun analyste." %}</td></tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+        <!-- No more static table here — moved to Performance tab -->
+    </div>
+
+    <!-- Performance & Points Ranking -->
+    <div x-show="tab === 'performance'">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% trans "Performance & Points" %}</h3>
+                <span class="badge-status" style="background:#e0f2fe;color:#0369a1;">{{ all_members_ranked|length }} {% trans "analystes" %}</span>
+            </div>
+            <div class="card-body" style="padding: 24px;">
+                {% if all_members_ranked %}
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    {% for m in all_members_ranked %}
+                    {% with pct_prod=m.productivity_score|add:0 %}
+                    {% with pct_pts=m.total_points|default:0 %}
+                    {% with bar_width_prod=pct_prod %}
+                    {% with bar_width_pts=pct_pts|add:0 %}
+                    {% with member_name=m.user.get_full_name|default:m.user.username %}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden;" x-data="{ open{{ m.pk }}: false }">
+                        <!-- Top row: rank, avatar, name, points, actions -->
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <!-- Rank badge -->
+                            <div style="min-width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; {% if forloop.first %}background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;{% elif forloop.counter == 2 %}background:linear-gradient(135deg,#94a3b8,#64748b);color:white;{% elif forloop.counter == 3 %}background:linear-gradient(135deg,#d97706,#b45309);color:white;{% else %}background:#f1f5f9;color:#64748b;{% endif %}">
+                                {{ forloop.counter }}
+                            </div>
+                            <!-- Avatar -->
+                            <img src="{% if m.user.avatar %}{{ m.user.avatar.url }}{% else %}/static/images/plagenor_logo.png{% endif %}" alt="{{ member_name }}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid {% if forloop.first %}#f59e0b{% elif forloop.counter == 2 %}#94a3b8{% elif forloop.counter == 3 %}#d97706{% else %}#e2e8f0{% endif %};">
+                            <!-- Name & Load -->
+                            <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; font-size:0.95rem; color:#1e293b;">{{ member_name }}</div>
+                                <div style="font-size:0.78rem; color:#94a3b8;">
+                                    {% trans "Charge" %}: {{ m.current_load }}/{{ m.max_load }} ({{ m.load_percentage }}%)
+                                    {% if m.available %}<span style="color:#059669;margin-left:6px;">●</span>{% else %}<span style="color:#dc2626;margin-left:6px;">○</span>{% endif %}
+                                </div>
+                            </div>
+                            <!-- Points display -->
+                            <div style="text-align:center; min-width:80px;">
+                                <div style="font-size:1.4rem; font-weight:800; color:#7c3aed; line-height:1;">{{ m.total_points }}</div>
+                                <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa;">{% trans "pts" %}</div>
+                            </div>
+                            <!-- Productivity score -->
+                            <div style="text-align:center; min-width:80px;">
+                                <div style="font-size:1.4rem; font-weight:800; color:#0891b2; line-height:1;">{{ m.productivity_score }}%</div>
+                                <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:#22d3ee;">{% trans "prod." %}</div>
+                            </div>
+                            <!-- Action buttons -->
+                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                                <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                    {% csrf_token %}
+                                    <input type="number" name="points" min="1" max="100" value="10" class="form-control" style="width:52px; font-size:0.8rem; height:32px; padding:4px 6px;" title="{% trans 'Points' %}">
+                                    <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:100px; font-size:0.8rem; height:32px; padding:4px 8px;">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="height:32px; font-size:0.78rem; padding:4px 10px;" title="{% trans 'Attribuer points' %}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        {% trans "Pts" %}
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:admin_send_cheer' m.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                    {% csrf_token %}
+                                    <input type="text" name="message" placeholder="{% trans 'Message encourageant...' %}" class="form-control" style="width:140px; font-size:0.8rem; height:32px; padding:4px 8px;" title="{% trans 'Message' %}">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="height:32px; font-size:0.78rem; padding:4px 10px; color:#d97706; border-color:#d97706;" title="{% trans 'Envoyer un encouragement' %}">
+                                        💪
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Performance bar -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.72rem; color:#64748b; font-weight:500;">{% trans "Performance" %}</span>
+                                <span style="font-size:0.72rem; color:#0891b2; font-weight:600;">{{ m.productivity_score }}%</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:100px; height:8px; overflow:hidden;">
+                                <div style="height:100%; border-radius:100px; width:{{ bar_width_prod }}%; background:linear-gradient(90deg, #06b6d4, #0891b2); transition:width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                        <!-- Points bar -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.72rem; color:#64748b; font-weight:500;">{% trans "Points" %}</span>
+                                <span style="font-size:0.72rem; color:#7c3aed; font-weight:600;">{{ m.total_points }} pts</span>
+                            </div>
+                            <div style="background:#ede9fe; border-radius:100px; height:8px; overflow:hidden;">
+                                <div style="height:100%; border-radius:100px; width:{% widthratio m.total_points max_points 100 %}%; background:linear-gradient(90deg, #8b5cf6, #7c3aed); transition:width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                        <!-- Gift box section -->
+                        {% if m.total_points >= 100 or m.gift_unlocked %}
+                        <div style="border-top:1px solid #e2e8f0; padding-top:10px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <span style="font-size:1.3rem;">🎁</span>
+                            <div style="flex:1; min-width:120px;">
+                                {% if m.gift_collected %}
+                                <span style="font-size:0.82rem; color:#059669; font-weight:600;">✅ {% trans "Cadeau récupéré" %}</span>
+                                {% elif m.gift_image %}
+                                <span style="font-size:0.82rem; color:#d97706; font-weight:600;">⏳ {% trans "En attente de récupération" %}</span>
+                                <img src="{{ m.gift_image.url }}" alt="" style="width:40px; height:40px; border-radius:6px; object-fit:cover; margin-left:8px; vertical-align:middle; border:1px solid #fde68a;">
+                                {% else %}
+                                <span style="font-size:0.82rem; color:#7c3aed; font-weight:600;">🔓 {% trans "Boîte débloquée — ajoutez une récompense" %}</span>
+                                {% endif %}
+                            </div>
+                            {% if not m.gift_collected %}
+                            <form method="post" action="{% url 'dashboard:admin_upload_gift' m.pk %}" enctype="multipart/form-data" style="display:inline-flex; gap:6px; align-items:center;">
+                                {% csrf_token %}
+                                <input type="file" name="gift_image" accept="image/*" class="form-control" style="width:160px; font-size:0.78rem; height:32px; padding:4px 6px;" title="{% trans 'Image récompense' %}">
+                                <button type="submit" class="btn btn-sm btn-outline" style="height:32px; font-size:0.78rem; padding:4px 10px; color:#7c3aed; border-color:#7c3aed;" title="{% trans 'Déposer la récompense' %}">
+                                    {% trans "Déposer" %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>{% trans "Aucun analyste enregistré." %}</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -720,7 +806,7 @@
                         <span style="min-width: 60px; font-weight: 600;">{{ star }} ★</span>
                         <div style="flex: 1; background: #e2e8f0; border-radius: 4px; height: 24px; overflow: hidden;">
                             {% if total_ratings > 0 %}
-                            <div style="background: linear-gradient(90deg, #f59e0b, #fbbf24); height: 100%; border-radius: 4px; width: {{ count|div:total_ratings|mul:100 }}%;"></div>
+                            <div style="background: linear-gradient(90deg, #f59e0b, #fbbf24); height: 100%; border-radius: 4px; width: {{ rating_percentages|get_item:star }}%;"></div>
                             {% endif %}
                         </div>
                         <span style="min-width: 50px; text-align: right; font-size: 0.9rem; color: #64748b;">{{ count }}</span>

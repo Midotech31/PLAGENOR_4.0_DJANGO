@@ -2361,3 +2361,73 @@ msgstr "No request found with this ID. Please check and try again."
 
 #~ msgid "Quitter"
 #~ msgstr "Logout"
+
+# Form validation messages
+msgid "Cet email est déjà enregistré"
+msgstr "This email is already registered"
+
+msgid "Format d'email invalide"
+msgstr "Invalid email format"
+
+msgid "Format de date invalide (JJ/MM/AAAA attendu)"
+msgstr "Invalid date format (DD/MM/YYYY expected)"
+
+msgid "Veuillez remplir tous les champs obligatoires"
+msgstr "Please fill all required fields"
+
+msgid "Formulaire soumis avec succès"
+msgstr "Form submitted successfully"
+
+msgid "Ce champ est obligatoire"
+msgstr "This field is required"
+
+msgid "Profil mis à jour."
+msgstr "Profile updated."
+
+msgid "Email et mot de passe sont obligatoires."
+msgstr "Email and password are required."
+
+msgid "Un compte avec cet email existe déjà."
+msgstr "An account with this email already exists."
+
+msgid "Rôle"
+msgstr "Role"
+
+msgid "Demandeur IBTIKAR (étudiant/chercheur)"
+msgstr "IBTIKAR Applicant (student/researcher)"
+
+msgid "Client GENOCLAB (externe)"
+msgstr "GENOCLAB Client (external)"
+
+msgid "— Sélectionner —"
+msgstr "— Select —"
+
+msgid "Master (fin de cycle)"
+msgstr "Master's (end of cycle)"
+
+msgid "Ingéniorat (fin de cycle)"
+msgstr "Engineering (end of cycle)"
+
+msgid "Doctorat"
+msgstr "Doctorate"
+
+msgid "Université / Organisation"
+msgstr "University / Organisation"
+
+msgid "Niveau"
+msgstr "Level"
+
+msgid "Laboratoire"
+msgstr "Laboratory"
+
+msgid "Directeur de recherche"
+msgstr "Research Supervisor"
+
+msgid "Identifiant IBTIKAR-DGRSDT"
+msgstr "IBTIKAR-DGRSDT Identifier"
+
+msgid "Format: IDGRSTDXXXXX"
+msgstr "Format: IDGRSTDXXXXX"
+
+msgid "Téléphone"
+msgstr "Phone"

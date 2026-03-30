@@ -1883,3 +1883,151 @@ a:has(.service-card):hover .service-card,
 .toast-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit; opacity: 0.5; padding: 0 0 0 8px; }
 .toast-close:hover { opacity: 1; }
 @keyframes toastIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ============================================================
+   Form Validation Styles
+   ============================================================ */
+.form-error {
+    color: #dc2626;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.form-error::before {
+    content: '⚠';
+    font-size: 0.75rem;
+}
+.is-invalid {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+.is-invalid:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+}
+.required-asterisk {
+    color: #dc2626;
+    font-weight: bold;
+    margin-left: 2px;
+}
+button[disabled], input[type="submit"][disabled] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    /* pointer-events kept enabled so title tooltip shows on hover */
+}
+button[disabled]:hover, input[type="submit"][disabled]:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+/* ===== CLICKABLE TABLE ROWS ===== */
+tr.clickable-row {
+    cursor: pointer;
+}
+tr.clickable-row:hover td {
+    background: var(--slate-50, #f8fafc);
+}
+
+/* ===== MESSAGE BUBBLES (requester/client view) ===== */
+.msg-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+}
+.msg-bubble.msg-from-analyst {
+    background: #f0f9ff;
+    border-left: 3px solid #38bdf8;
+}
+.msg-bubble.msg-from-admin {
+    background: #f8fafc;
+    border-left: 3px solid #94a3b8;
+}
+.msg-bubble .msg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Wrapper for disabled-button tooltip */
+.submit-btn-wrapper {
+    display: inline-block;
+    position: relative;
+}
+.submit-btn-wrapper[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 9999;
+    pointer-events: none;
+}
+.submit-btn-wrapper[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e293b;
+    pointer-events: none;
+    z-index: 9999;
+}
+/* Toast notification styles */
+.plagenor-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    max-width: 400px;
+}
+.plagenor-toast.show {
+    transform: translateX(0);
+}
+.plagenor-toast-success {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #065f46;
+}
+.plagenor-toast-error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+.plagenor-toast-info {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    color: #1e40af;
+}
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.toast-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.toast-message {
+    flex: 1;
+}

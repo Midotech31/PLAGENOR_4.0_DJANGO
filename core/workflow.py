@@ -134,6 +134,10 @@ def _create_notifications(request_obj, to_status):
         # Notify the assigned member on relevant transitions
         if request_obj.assigned_to and to_status in (
             'ASSIGNED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
+            # GENOCLAB: Member should be notified of all relevant steps
+            'PAYMENT_CONFIRMED',  # Member can now upload report
+            'REPORT_VALIDATED',  # Admin validated the report
+            'SENT_TO_CLIENT',    # Report sent to client
         ):
             Notification.objects.create(
                 user=request_obj.assigned_to.user,
@@ -148,9 +152,13 @@ def _create_notifications(request_obj, to_status):
             'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
             'IBTIKAR_SUBMISSION_PENDING', 'ASSIGNED', 'APPOINTMENT_PROPOSED',
             'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'REJECTED',
-            # GENOCLAB states
+            # GENOCLAB states - Full pipeline notifications
             'QUOTE_SENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
             'SENT_TO_CLIENT',
+            'ORDER_UPLOADED',  # Client uploads purchase order
+            'PAYMENT_PENDING',  # Client needs to pay
+            'REPORT_UPLOADED',  # Report uploaded, awaiting validation
+            'REPORT_VALIDATED',  # Report validated
         ):
             Notification.objects.create(
                 user=request_obj.requester,
@@ -161,7 +169,7 @@ def _create_notifications(request_obj, to_status):
 
         # Always notify admins for important transitions
         if to_status in (
-            'SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
+            'SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
             # GENOCLAB admin-relevant states
             'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'PAYMENT_CONFIRMED',
         ):

@@ -96,22 +96,22 @@
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -214,13 +214,21 @@
                             <strong style="color:#065f46;">{% trans "Votre rapport est prêt" %}</strong>
                         </div>
                         {% if req.report_file %}
-                        <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            {# Download button - separate from form #}
+                            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; text-decoration:none;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                {% trans "Télécharger le rapport et confirmer la réception" %}
-                            </button>
-                        </form>
+                                {% trans "Télécharger le rapport" %}
+                            </a>
+                            {# Confirm receipt button #}
+                            <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% trans "Confirmer la réception" %}
+                                </button>
+                            </form>
+                        </div>
                         {% else %}
                         <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}" style="display:inline;">
                             {% csrf_token %}

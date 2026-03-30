@@ -152,22 +152,22 @@
                         <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
                     </div>
-                    <div class="pipeline-line"></div>
+                    <div class="pipeline-line{% if s != 'SUBMITTED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
                     </div>
-                    <div class="pipeline-line"></div>
+                    <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
                     </div>
-                    <div class="pipeline-line"></div>
+                    <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                     </div>
-                    <div class="pipeline-line"></div>
+                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -211,14 +211,36 @@
                 <p class="text-muted" style="margin:2px 0 0; font-size:0.85rem;">{% trans "Téléchargez-le et confirmez la réception pour finaliser votre demande." %}</p>
             </div>
         </div>
-        {% if req.report_file %}
-        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                {% trans "Télécharger le rapport et confirmer la réception" %}
-            </button>
-        </form>
+        {% if req.report_file and req.report_token %}
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <!-- Step 1: View report with citation clause -->
+            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+            <!-- Step 2: Confirm receipt after reading -->
+            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Confirmer la réception" %}
+                </button>
+            </form>
+        </div>
+        {% elif req.report_file %}
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Confirmer la réception" %}
+                </button>
+            </form>
+        </div>
         {% else %}
         <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}">
             {% csrf_token %}
@@ -246,7 +268,7 @@
         </div>
         {% if req.report_file %}
         <div style="margin-bottom:16px;">
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+            <a href="{% if req.report_token %}{% url 'report_view' req.report_token %}{% else %}{{ req.report_file.url }}{% endif %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -275,6 +297,24 @@
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
         {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
         {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if messages_list %}
+<!-- Messages from analyst/operator -->
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Messages" %} <span class="badge" style="background:#e0e7ff; color:#4f46e5; border-radius:12px; padding:2px 8px; font-size:0.8rem;">{{ messages_list.count }}</span></h3></div>
+    <div class="card-body" style="max-height:400px; overflow-y:auto;">
+        {% for msg in messages_list %}
+        <div class="msg-bubble {% if msg.from_user.role == 'MEMBER' %}msg-from-analyst{% else %}msg-from-admin{% endif %}">
+            <div class="msg-header">
+                <strong style="font-size:0.9rem;">{{ msg.from_user.get_full_name }}</strong>
+                <span class="text-xs text-muted">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="text-sm">{{ msg.text }}</div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}

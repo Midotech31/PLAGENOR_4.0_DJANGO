@@ -57,53 +57,6 @@
     </div>
 
     {% if yaml_def %}
-    <!-- Parameters -->
-    {% if yaml_def.parameters %}
-    <div class="card" style="margin-bottom:20px;">
-        <div class="card-body" style="padding:20px;">
-            <h4 style="font-size:0.95rem; margin-bottom:16px;">{% trans "Paramètres du service" %}</h4>
-            <div style="display:grid; gap:12px;">
-                {% for param in yaml_def.parameters %}
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border, #e2e8f0);">
-                    <div>
-                        <strong style="font-size:0.85rem;">{{ param.label|default:param.name }}</strong>
-                        {% if param.required %}<span style="color:#dc2626; font-size:0.75rem; margin-left:4px;">*</span>{% endif %}
-                    </div>
-                    <span class="text-muted text-sm">{{ param.type|default:"text" }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Sample Table Columns -->
-    {% if yaml_def.sample_table %}
-    <div class="card" style="margin-bottom:20px;">
-        <div class="card-body" style="padding:20px;">
-            <h4 style="font-size:0.95rem; margin-bottom:16px;">{% trans "Colonnes du tableau d'échantillons" %}</h4>
-            <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
-                <thead>
-                    <tr style="background:var(--slate-50, #f8fafc);">
-                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Colonne" %}</th>
-                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Type" %}</th>
-                        <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% trans "Obligatoire" %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for col in yaml_def.sample_table %}
-                    <tr>
-                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{{ col.label|default:col.name }}</td>
-                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{{ col.type|default:"text" }}</td>
-                        <td style="padding:8px 12px; border-bottom:1px solid var(--border, #e2e8f0);">{% if col.required %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Compliance / Requirements -->
     {% if yaml_def.compliance or yaml_def.requirements %}
     <div class="card" style="margin-bottom:20px;">

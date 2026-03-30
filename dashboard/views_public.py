@@ -200,3 +200,21 @@ def guest_ibtikar_code(request, pk):
             pass
     msg.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
     return redirect(f"{reverse('track')}?q={req.display_id}")
+
+
+def switch_language(request):
+    """Switch language and redirect back."""
+    from django.utils import translation
+    from django.conf import settings
+    from django.http import HttpResponseRedirect
+    
+    lang = request.POST.get('language', 'fr')
+    next_url = request.POST.get('next', '/')
+    
+    if lang in dict(settings.LANGUAGES):
+        translation.activate(lang)
+        response = HttpResponseRedirect(next_url)
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang, max_age=365*24*60*60)
+        return response
+    
+    return redirect(next_url)

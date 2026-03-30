@@ -15,6 +15,7 @@ urlpatterns = [
     # Public report delivery
     path('report/<uuid:token>/', report_views.report_viewer, name='report_view'),
     path('report/<uuid:token>/rate/', report_views.rate_report, name='report_rate'),
+    path('report/<uuid:token>/acknowledge/', report_views.acknowledge_citation, name='report_acknowledge'),
     path('', include('dashboard.urls_public')),
 ]
 

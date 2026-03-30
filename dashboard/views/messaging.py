@@ -19,8 +19,8 @@ def send_message(request, pk):
         django_messages.error(request, "Le message ne peut pas être vide.")
         return _redirect_by_role(request.user)
 
-    # Determine recipient
     user = request.user
+
     if user.is_admin:
         # Admin sends to assigned member
         if req.assigned_to:
@@ -28,30 +28,36 @@ def send_message(request, pk):
         else:
             django_messages.error(request, "Aucun analyste assigné.")
             return _redirect_by_role(user)
+        Message.objects.create(request=req, from_user=user, to_user=to_user, text=text, step=req.status)
+
     elif user.role == 'MEMBER':
-        # Member sends to admin who last acted or to requester
+        # Member message is visible to BOTH the platform admin AND the requester.
+        # Find the last-acting admin for the primary message.
+        from accounts.models import User as UserModel
         last_admin = req.history.filter(
             actor__role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN']
         ).order_by('-created_at').values_list('actor', flat=True).first()
-        if last_admin:
-            from accounts.models import User
-            to_user = User.objects.filter(pk=last_admin).first()
-        else:
-            to_user = req.requester
-        if not to_user:
+        admin_user = UserModel.objects.filter(pk=last_admin).first() if last_admin else None
+
+        # Always create a copy visible to the requester
+        requester = req.requester
+        recipients = set()
+        if admin_user:
+            recipients.add(admin_user)
+        if requester and requester != admin_user:
+            recipients.add(requester)
+
+        if not recipients:
             django_messages.error(request, "Impossible de déterminer le destinataire.")
             return _redirect_by_role(user)
+
+        for recipient in recipients:
+            Message.objects.create(request=req, from_user=user, to_user=recipient, text=text, step=req.status)
+
     else:
         django_messages.error(request, "Action non autorisée.")
         return _redirect_by_role(user)
 
-    Message.objects.create(
-        request=req,
-        from_user=user,
-        to_user=to_user,
-        text=text,
-        step=req.status,
-    )
     django_messages.success(request, "Message envoyé.")
     return _redirect_by_role(user)
 

@@ -36,29 +36,32 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# GENOCLAB Official Workflow (definitive briefing Section 2/10)
+# GENOCLAB Official Workflow with Payment Gate (Algerian Commercial Code)
 # REQUEST_CREATED → QUOTE_DRAFT → QUOTE_SENT → QUOTE_VALIDATED_BY_CLIENT →
-# INVOICE_GENERATED → PAYMENT_CONFIRMED → ASSIGNED → SAMPLE_RECEIVED →
-# ANALYSIS_STARTED → ANALYSIS_FINISHED → REPORT_UPLOADED → REPORT_VALIDATED →
-# COMPLETED → ARCHIVED
+# ORDER_UPLOADED → ASSIGNED → SAMPLE_RECEIVED → ANALYSIS_STARTED →
+# ANALYSIS_FINISHED → PAYMENT_PENDING → PAYMENT_CONFIRMED → REPORT_UPLOADED →
+# REPORT_VALIDATED → SENT_TO_CLIENT → COMPLETED → ARCHIVED
 # REJECTED possible at any validation step
+# NOTE: Purchase Order (Bon de commande) is mandatory per Algerian commercial code
+# NOTE: Payment must be received BEFORE report delivery
 # ═══════════════════════════════════════════════════════════════════════════
 
 GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "REQUEST_CREATED":          {"QUOTE_DRAFT", "REJECTED"},
     "QUOTE_DRAFT":              {"QUOTE_SENT", "REJECTED"},
     "QUOTE_SENT":               {"QUOTE_VALIDATED_BY_CLIENT", "QUOTE_REJECTED_BY_CLIENT"},
-    "QUOTE_VALIDATED_BY_CLIENT": {"INVOICE_GENERATED"},
+    "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
+    "ORDER_UPLOADED":           {"ASSIGNED"},  # Admin assigns after order verified
     "QUOTE_REJECTED_BY_CLIENT": set(),     # terminal
-    "INVOICE_GENERATED":        {"PAYMENT_CONFIRMED"},
-    "PAYMENT_CONFIRMED":        {"ASSIGNED"},
     "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
     "ANALYSIS_STARTED":         {"ANALYSIS_FINISHED"},
-    "ANALYSIS_FINISHED":        {"REPORT_UPLOADED"},
-    "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},
+    "ANALYSIS_FINISHED":        {"PAYMENT_PENDING"},  # Notify client to pay
+    "PAYMENT_PENDING":          {"PAYMENT_CONFIRMED"},  # Client uploads receipt
+    "PAYMENT_CONFIRMED":        {"REPORT_UPLOADED"},  # Member can upload report after payment
+    "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},  # Admin validates or requests revision
     "REPORT_VALIDATED":         {"SENT_TO_CLIENT"},
     "SENT_TO_CLIENT":           {"COMPLETED"},
     "COMPLETED":                {"ARCHIVED"},

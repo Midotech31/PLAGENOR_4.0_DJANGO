@@ -13,11 +13,19 @@ def notification_click(request, pk):
         notif.read = True
         notif.save(update_fields=['read'])
 
-    # Redirect to the appropriate detail page based on user role
+    # Priority 1: Use explicit link_url if available (deep linking)
+    if notif.link_url:
+        return redirect(notif.link_url)
+
+    # Priority 2: Redirect to the appropriate detail page based on user role
     if notif.request_id:
         url = _get_detail_url(request.user, notif.request)
         if url:
             return redirect(url)
+
+    # Priority 3: Use action_url if available
+    if notif.action_url:
+        return redirect(notif.action_url)
 
     # Fallback: redirect to dashboard
     return redirect('dashboard:router')

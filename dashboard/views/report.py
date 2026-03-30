@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from core.models import Request
 
@@ -44,3 +45,16 @@ def rate_report(request, token):
             req.rated_at = timezone.now()
             req.save()
     return redirect('report_view', token=token)
+
+
+@require_POST
+def acknowledge_citation(request, token):
+    """Mark citation as acknowledged for this report (called via AJAX)."""
+    try:
+        req = Request.objects.get(report_token=token)
+        if not req.citation_acknowledged:
+            req.citation_acknowledged = True
+            req.save(update_fields=['citation_acknowledged'])
+        return JsonResponse({'ok': True})
+    except Request.DoesNotExist:
+        return JsonResponse({'ok': False}, status=404)

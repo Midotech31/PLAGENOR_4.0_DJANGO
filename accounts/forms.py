@@ -1,40 +1,50 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.validators import EmailValidator
+from django.utils.translation import gettext_lazy as _
 from .models import User
+
+_email_validator = EmailValidator()
 
 
 class RegistrationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        label=_('Email'),
+        validators=[_email_validator],
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
+    )
     role = forms.ChoiceField(choices=[
-        ('REQUESTER', 'Demandeur IBTIKAR (étudiant/chercheur)'),
-        ('CLIENT', 'Client GENOCLAB (externe)'),
-    ])
+        ('REQUESTER', _('Demandeur IBTIKAR (étudiant/chercheur)')),
+        ('CLIENT', _('Client GENOCLAB (externe)')),
+    ], label=_('Rôle'))
     organization = forms.CharField(
         max_length=200,
         required=True,
-        label='Université / Organisation',
+        label=_('Université / Organisation'),
     )
     student_level = forms.ChoiceField(
         choices=[
-            ('', '— Sélectionner —'),
-            ('master', 'Master (fin de cycle)'),
-            ('ingenieur', 'Ingéniorat (fin de cycle)'),
-            ('doctorat', 'Doctorat'),
+            ('', _('— Sélectionner —')),
+            ('master', _('Master (fin de cycle)')),
+            ('ingenieur', _('Ingéniorat (fin de cycle)')),
+            ('doctorat', _('Doctorat')),
         ],
         required=False,
-        label='Niveau',
+        label=_('Niveau'),
     )
-    laboratory = forms.CharField(max_length=200, required=False, label='Laboratoire')
-    supervisor = forms.CharField(max_length=200, required=False, label='Directeur de recherche')
+    laboratory = forms.CharField(max_length=200, required=False, label=_('Laboratoire'))
+    supervisor = forms.CharField(max_length=200, required=False, label=_('Directeur de recherche'))
     ibtikar_id = forms.CharField(
         max_length=20, required=False,
-        label='Identifiant IBTIKAR-DGRSDT',
-        help_text='Format: IDGRSTDXXXXX',
+        label=_('Identifiant IBTIKAR-DGRSDT'),
+        help_text=_('Format: IDGRSTDXXXXX'),
         widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD12345', 'pattern': 'IDGRSTD[0-9]{5}'})
     )
     phone = forms.CharField(
         max_length=50,
         required=False,
-        label='Téléphone',
+        label=_('Téléphone'),
     )
 
     class Meta:
@@ -44,3 +54,9 @@ class RegistrationForm(UserCreationForm):
             'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
             'password1', 'password2',
         )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(_('Cet email est déjà enregistré'))
+        return email

@@ -97,10 +97,16 @@ def request_detail(request, pk):
         for key in req.sample_table[0].keys():
             sample_headers.append(sample_col_labels.get(key, key.replace('_', ' ').title()))
 
+    from core.models import Message
+    messages_list = Message.objects.filter(
+        request=req, to_user=request.user
+    ).select_related('from_user').order_by('created_at')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
+        'messages_list': messages_list,
     }
     return render(request, 'dashboard/requester/request_detail.html', context)
 

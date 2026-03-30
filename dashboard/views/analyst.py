@@ -69,6 +69,27 @@ def index(request):
     # Notifications
     notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
 
+    # Ranking position among all members (sorted by productivity_score desc, total_points desc)
+    all_members = list(MemberProfile.objects.order_by('-productivity_score', '-total_points').values_list('pk', flat=True))
+    try:
+        rank_position = all_members.index(profile.pk) + 1
+    except ValueError:
+        rank_position = None
+    total_members_count = len(all_members)
+
+    # Performance status label based on productivity_score
+    score = profile.productivity_score
+    if score >= 90:
+        perf_status = {'label': '🔥 On Fire', 'color': '#dc2626', 'bg': '#fee2e2'}
+    elif score >= 75:
+        perf_status = {'label': '⭐ Very Good', 'color': '#d97706', 'bg': '#fef3c7'}
+    elif score >= 55:
+        perf_status = {'label': '✅ Good', 'color': '#059669', 'bg': '#d1fae5'}
+    elif score >= 35:
+        perf_status = {'label': '👍 Not Bad', 'color': '#0284c7', 'bg': '#dbeafe'}
+    else:
+        perf_status = {'label': '⏰ Wake Up!', 'color': '#6b7280', 'bg': '#f3f4f6'}
+
     context = {
         'profile': profile,
         'assigned_count': assigned_count,
@@ -83,6 +104,9 @@ def index(request):
         'cheers': cheers,
         'notifications': notifications,
         'now': timezone.now(),
+        'rank_position': rank_position,
+        'total_members_count': total_members_count,
+        'perf_status': perf_status,
     }
     return render(request, 'dashboard/analyst/index.html', context)
 
@@ -138,7 +162,15 @@ def workflow_action(request, pk):
     notes = request.POST.get('notes', '')
     try:
         transition(req, to_status, request.user, notes=notes)
-        messages.success(request, f"Demande {req.display_id} mise à jour.")
+        
+        # For GENOCLAB: when analysis is finished, notify client to pay before report delivery
+        if to_status == 'ANALYSIS_FINISHED' and req.channel == 'GENOCLAB':
+            from notifications.services import notify_payment_request
+            notify_payment_request(req)
+            messages.success(request, f"Demande {req.display_id} mise à jour. Le client a été notifié pour le paiement.")
+        else:
+            messages.success(request, f"Demande {req.display_id} mise à jour.")
+            
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect_back(request, 'dashboard:analyst')
@@ -185,7 +217,10 @@ def request_detail(request, pk):
     from core.models import RequestComment, Message
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    # Allow access to currently assigned requests AND historical ones (once completed/sent)
+    from core.models import RequestHistory
+    was_assigned = req.assigned_to == profile or req.history.filter(actor=request.user).exists()
+    if not was_assigned:
         return HttpResponseForbidden()
     history = req.history.select_related('actor').order_by('created_at')
     comments = req.comments.select_related('author').order_by('created_at')
@@ -296,6 +331,12 @@ def upload_report(request, pk):
     profile = request.user.member_profile
     if req.assigned_to != profile:
         return HttpResponseForbidden()
+    
+    # For GENOCLAB: Payment must be confirmed before report upload
+    if req.channel == 'GENOCLAB' and req.status != 'PAYMENT_CONFIRMED':
+        messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
+        return redirect_back(request, 'dashboard:analyst')
+    
     if 'report_file' in request.FILES:
         req.report_file = request.FILES['report_file']
         req.save(update_fields=['report_file'])
@@ -306,4 +347,19 @@ def upload_report(request, pk):
             messages.error(request, str(e))
     else:
         messages.error(request, "Veuillez sélectionner un fichier.")
+    return redirect_back(request, 'dashboard:analyst')
+
+
+@analyst_required
+def collect_gift(request):
+    """Member marks their gift as collected (physically picked up from admin)."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    profile = request.user.member_profile
+    if profile.gift_unlocked and not profile.gift_collected:
+        profile.gift_collected = True
+        profile.save(update_fields=['gift_collected'])
+        messages.success(request, "🎁 Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
+    else:
+        messages.info(request, "Aucun cadeau disponible à récupérer.")
     return redirect_back(request, 'dashboard:analyst')

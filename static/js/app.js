@@ -1,5 +1,14 @@
 /* PLAGENOR 4.0 — Main JS */
 
+// Clickable table rows — navigate to data-href on click
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('tr.clickable-row[data-href]').forEach(function (row) {
+        row.addEventListener('click', function () {
+            window.location.href = row.dataset.href;
+        });
+    });
+});
+
 // HTMX: include CSRF token in all requests
 document.body.addEventListener('htmx:configRequest', (e) => {
     e.detail.headers['X-CSRFToken'] =
@@ -15,8 +24,6 @@ document.body.addEventListener('htmx:configRequest', (e) => {
 function toggleLanguage() {
     const form = document.getElementById('language-form');
     if (!form) return;
-    const input = form.querySelector('[name=language]');
-    input.value = input.value === 'fr' ? 'en' : 'fr';
     form.submit();
 }
 

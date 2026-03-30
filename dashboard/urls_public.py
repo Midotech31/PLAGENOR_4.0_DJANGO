@@ -11,4 +11,5 @@ urlpatterns = [
     path('track/ibtikar-code/<uuid:pk>/', views_public.guest_ibtikar_code, name='guest_ibtikar_code'),
     path('service/<str:service_code>/detail/', views_public.service_detail, name='service_detail'),
     path('service/<str:service_code>/', views_public.service_landing, name='service_landing'),
+    path('switch-language/', views_public.switch_language, name='switch_language'),
 ]

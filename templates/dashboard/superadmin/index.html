@@ -201,6 +201,29 @@
             <div class="card-header">
                 <h3>{% trans "Utilisateurs" %} ({{ total_users }})</h3>
             </div>
+            <div class="card-body" style="padding:16px; border-bottom:1px solid #e5e7eb;">
+                <!-- Search + filter bar -->
+                <form method="get" action="{% url 'dashboard:superadmin' %}" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+                    <input type="hidden" name="tab" value="users">
+                    <div class="form-group" style="margin:0; flex:1; min-width:160px;">
+                        <label style="font-size:0.78rem; color:#64748b;">{% trans "Recherche" %}</label>
+                        <input type="text" name="user_q" value="{{ user_search }}" class="form-control" placeholder="{% trans 'Nom, email, username...' %}" style="height:34px; font-size:0.85rem; width:280px;">
+                    </div>
+                    <div class="form-group" style="margin:0; min-width:140px;">
+                        <label style="font-size:0.78rem; color:#64748b;">{% trans "Rôle" %}</label>
+                        <select name="user_role" class="form-control" style="height:34px; font-size:0.85rem; width:200px;">
+                            <option value="">{% trans "Tous les rôles" %}</option>
+                            {% for value, label in role_choices %}
+                            <option value="{{ value }}" {% if user_role_filter == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height:34px; font-size:0.85rem; padding:0 16px;">{% trans "Filtrer" %}</button>
+                    {% if user_search or user_role_filter %}
+                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;">✕</a>
+                    {% endif %}
+                </form>
+            </div>
             <div class="card-body" style="padding: 0;">
                 <div class="table-wrapper" style="border: none;">
                     <table>
@@ -228,18 +251,42 @@
                             </td>
                             <td style="white-space:nowrap;">
                                 <a href="{% url 'dashboard:superadmin_user_edit' u.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
-                                <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}" style="display:inline;">
+                                <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}" style="display:inline;"
+                                      onsubmit="return confirm('{% if u.is_active %}{% trans "Désactiver cet utilisateur ?" %}{% else %}{% trans "Activer cet utilisateur ?" %}{% endif %}')">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
                                         {% if u.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
                                     </button>
                                 </form>
+                                {% if u != request.user %}
+                                <a href="{% url 'dashboard:superadmin_reset_account' u.pk %}"
+                                   class="btn btn-sm btn-outline"
+                                   style="color:#dc2626;border-color:#dc2626;"
+                                   title="{% trans 'Réinitialiser / Reset Account' %}">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                    {% trans "Réinitialiser" %}
+                                </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                {% if users_page.has_other_pages %}
+                <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
+                    {% if users_page.has_previous %}
+                    <a href="?tab=users&users_page={{ users_page.previous_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-sm btn-outline">‹</a>
+                    {% endif %}
+                    <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ users_page.number }} / {{ users_page.paginator.num_pages }}</span>
+                    {% if users_page.has_next %}
+                    <a href="?tab=users&users_page={{ users_page.next_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-sm btn-outline">›</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -259,17 +306,37 @@
                                 <th>{% trans "Charge" %}</th>
                                 <th>{% trans "Productivité" %}</th>
                                 <th>{% trans "Points" %}</th>
+                                <th>{% trans "Techniques" %}</th>
                                 <th>{% trans "Disponible" %}</th>
                                 <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for m in members %}
-                        <tr>
+                        <tr x-data="{showTech: false}">
                             <td><strong>{{ m.user.get_full_name }}</strong></td>
                             <td>{{ m.current_load }}/{{ m.max_load }} <span class="text-muted">({{ m.load_percentage }}%)</span></td>
                             <td>{{ m.productivity_score }}%</td>
                             <td><span class="font-mono">{{ m.total_points }}</span></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline" @click="showTech = !showTech" style="font-size:0.78rem;">
+                                    {{ m.techniques.count }} {% trans "tech." %}
+                                </button>
+                                <div x-show="showTech" style="margin-top:6px;">
+                                    <form method="post" action="{% url 'dashboard:superadmin_member_techniques' m.pk %}">
+                                        {% csrf_token %}
+                                        <div style="display:flex; flex-wrap:wrap; gap:4px; max-width:300px;">
+                                            {% for t in techniques %}
+                                            <label style="display:flex; align-items:center; gap:3px; font-size:0.78rem; cursor:pointer;">
+                                                <input type="checkbox" name="techniques" value="{{ t.pk }}" {% if t in m.techniques.all %}checked{% endif %}>
+                                                {{ t.name }}
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-primary" style="margin-top:6px; font-size:0.78rem;">{% trans "Sauvegarder" %}</button>
+                                    </form>
+                                </div>
+                            </td>
                             <td>
                                 {% if m.available %}
                                 <span class="badge-status completed">{% trans "Oui" %}</span>
@@ -296,11 +363,23 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center text-muted" style="padding:32px;">{% trans "Aucun analyste enregistré." %}</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">{% trans "Aucun analyste enregistré." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                {% if members_page.has_other_pages %}
+                <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
+                    {% if members_page.has_previous %}
+                    <a href="?tab=members&members_page={{ members_page.previous_page_number }}" class="btn btn-sm btn-outline">‹</a>
+                    {% endif %}
+                    <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ members_page.number }} / {{ members_page.paginator.num_pages }}</span>
+                    {% if members_page.has_next %}
+                    <a href="?tab=members&members_page={{ members_page.next_page_number }}" class="btn btn-sm btn-outline">›</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -381,12 +460,17 @@
                             <td>{{ s.ibtikar_price }} DA</td>
                             <td>{{ s.genoclab_price }} DA</td>
                             <td>{% if s.active %}<span class="badge-status completed">{% trans "Oui" %}</span>{% else %}<span class="badge-status rejected">{% trans "Non" %}</span>{% endif %}</td>
-                            <td>
+                            <td style="white-space:nowrap;">
                                 <a href="{% url 'dashboard:superadmin_service_edit' s.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
                                 {% if s.active %}
                                 <form method="post" action="{% url 'dashboard:superadmin_service_delete' s.pk %}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'dashboard:superadmin_service_reactivate' s.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
                                 </form>
                                 {% endif %}
                             </td>
@@ -429,23 +513,44 @@
             <div class="card-body" style="padding: 0;">
                 <div class="table-wrapper" style="border: none;">
                     <table>
-                        <thead><tr><th>{% trans "Nom" %}</th><th>{% trans "Catégorie" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+                        <thead><tr><th>{% trans "Nom" %}</th><th>{% trans "Catégorie" %}</th><th>{% trans "Statut" %}</th><th>{% trans "Actions" %}</th></tr></thead>
                         <tbody>
                         {% for t in techniques %}
-                        <tr>
-                            <td><strong>{{ t.name }}</strong></td>
+                        <tr x-data="{editTech: false}">
+                            <td>
+                                <span x-show="!editTech"><strong>{{ t.name }}</strong></span>
+                                <form x-show="editTech" method="post" action="{% url 'dashboard:superadmin_technique_edit' t.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                    {% csrf_token %}
+                                    <input type="text" name="name" value="{{ t.name }}" class="form-control" style="width:120px; font-size:0.85rem; height:30px;">
+                                    <input type="text" name="category" value="{{ t.category }}" class="form-control" style="width:100px; font-size:0.85rem; height:30px;" placeholder="{% trans 'Catégorie' %}">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="height:30px;">{% trans "OK" %}</button>
+                                </form>
+                            </td>
                             <td>{{ t.category|default:"—" }}</td>
                             <td>
                                 {% if t.active %}
+                                <span class="badge-status completed">{% trans "Active" %}</span>
+                                {% else %}
+                                <span class="badge-status rejected">{% trans "Inactive" %}</span>
+                                {% endif %}
+                            </td>
+                            <td style="white-space:nowrap;">
+                                <button type="button" class="btn btn-sm btn-outline" @click="editTech = !editTech">{% trans "Modifier" %}</button>
+                                {% if t.active %}
                                 <form method="post" action="{% url 'dashboard:superadmin_technique_delete' t.pk %}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">{% trans "Supprimer" %}</button>
+                                    <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'dashboard:superadmin_technique_reactivate' t.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
                                 </form>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="3" class="text-center text-muted" style="padding:32px;">{% trans "Aucune technique." %}</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted" style="padding:32px;">{% trans "Aucune technique." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -475,13 +580,19 @@
                 {% if platform_content %}
                 <div class="table-wrapper" style="margin-top: 24px;">
                     <table>
-                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th></tr></thead>
+                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th>{% trans "Actions" %}</th></tr></thead>
                         <tbody>
                         {% for pc in platform_content %}
                         <tr>
                             <td><strong class="font-mono">{{ pc.key }}</strong></td>
                             <td>{{ pc.value|truncatechars:80 }}</td>
                             <td class="text-muted">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'dashboard:superadmin_content_delete' pc.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                         </tbody>
@@ -522,8 +633,12 @@
                             <label>{% trans "Recherche" %}</label>
                             <input type="text" name="sa_q" class="form-control" value="{{ sa_search }}" placeholder="{% trans 'ID ou titre...' %}">
                         </div>
-                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                        <div class="form-group" style="display:flex; align-items:flex-end; gap:6px;">
                             <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
+                            <a href="?tab=requests&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}&export=requests_csv" class="btn btn-outline" style="font-size:0.85rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                {% trans "CSV" %}
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -604,6 +719,18 @@
                         {% endfor %}
                     </table>
                 </div>
+                <!-- Pagination -->
+                {% if requests_page.has_other_pages %}
+                <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
+                    {% if requests_page.has_previous %}
+                    <a href="?tab=requests&requests_page={{ requests_page.previous_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-sm btn-outline">‹</a>
+                    {% endif %}
+                    <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ requests_page.number }} / {{ requests_page.paginator.num_pages }}</span>
+                    {% if requests_page.has_next %}
+                    <a href="?tab=requests&requests_page={{ requests_page.next_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-sm btn-outline">›</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -664,6 +791,18 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                {% if invoices_page.has_other_pages %}
+                <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
+                    {% if invoices_page.has_previous %}
+                    <a href="?tab=payments&invoices_page={{ invoices_page.previous_page_number }}" class="btn btn-sm btn-outline">‹</a>
+                    {% endif %}
+                    <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ invoices_page.number }} / {{ invoices_page.paginator.num_pages }}</span>
+                    {% if invoices_page.has_next %}
+                    <a href="?tab=payments&invoices_page={{ invoices_page.next_page_number }}" class="btn btn-sm btn-outline">›</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -709,45 +848,44 @@
     <div x-show="tab === 'productivity'">
         <div class="card">
             <div class="card-header"><h3>{% trans "Productivité des analystes" %}</h3></div>
-            <div class="card-body" style="padding:0;">
-                <div class="table-wrapper" style="border:none;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>{% trans "Analyste" %}</th>
-                                <th>{% trans "Assignées" %}</th>
-                                <th>{% trans "Complétées" %}</th>
-                                <th>{% trans "Score" %}</th>
-                                <th>{% trans "Niveau" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for stat in productivity_stats %}
-                        <tr>
-                            <td><strong>{{ stat.name }}</strong></td>
-                            <td>{{ stat.total_assigned|default:0 }}</td>
-                            <td>{{ stat.completed|default:0 }}</td>
-                            <td>{{ stat.score|default:0|floatformat:0 }}%</td>
-                            <td>
+            <div class="card-body" style="padding:24px;">
+                {% if productivity_stats %}
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                    {% for stat in productivity_stats %}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px;">
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+                            <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; font-size:0.95rem; color:#1e293b;">{{ stat.name }}</div>
+                                <div style="font-size:0.78rem; color:#94a3b8;">{{ stat.total_assigned|default:0 }} {% trans "assignées" %} · {{ stat.completed|default:0 }} {% trans "complétées" %}</div>
+                            </div>
+                            <div style="text-align:center; min-width:70px;">
+                                <div style="font-size:1.3rem; font-weight:800; color:#0891b2;">{{ stat.score|default:0|floatformat:0 }}%</div>
+                                <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase;">{% trans "Score" %}</div>
+                            </div>
+                            <div>
                                 {% with tier=stat.level.key|default:stat.status|default:"normal" %}
                                 {% if tier == "fire" %}
                                 <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 {% trans "Fire" %}</span>
                                 {% elif tier == "very_good" %}
-                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">{% trans "Very Good" %}</span>
+                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">⭐ {% trans "Very Good" %}</span>
                                 {% elif tier == "good" %}
-                                <span class="badge-status" style="background:#d1fae5;color:#059669;">{% trans "Good" %}</span>
+                                <span class="badge-status" style="background:#d1fae5;color:#059669;">✅ {% trans "Good" %}</span>
                                 {% else %}
                                 <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">{{ stat.emoji }} {{ stat.level.label_fr|default:"Pas mal" }}</span>
                                 {% endif %}
                                 {% endwith %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">{% trans "Aucune donnée de productivité." %}</td></tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </div>
+                        </div>
+                        <!-- Visual score bar -->
+                        <div style="background:#e2e8f0; border-radius:100px; height:6px; overflow:hidden;">
+                            <div style="height:100%; border-radius:100px; width:{{ stat.score|default:0|floatformat:0 }}%; background:linear-gradient(90deg,#06b6d4,#0891b2); transition:width 0.8s ease;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="empty-state"><p>{% trans "Aucune donnée de productivité." %}</p></div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -793,42 +931,23 @@
             <div class="card-body">
                 <p class="text-muted" style="margin-bottom:16px;">{% trans "Mettez à jour les templates DOCX utilisés pour la génération automatique des documents. Un backup est créé automatiquement avant chaque mise à jour." %}</p>
                 <div class="grid-2" style="gap:16px;">
+                    {% for tpl_type, tpl_label in template_types %}
                     <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
-                        <strong>{% trans "Formulaire IBTIKAR" %}</strong>
-                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong>{{ tpl_label }}</strong>
+                            <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-sm btn-outline" style="font-size:0.78rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                {% trans "Télécharger" %}
+                            </a>
+                        </div>
+                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <input type="hidden" name="template_type" value="ibtikar_form_template">
+                            <input type="hidden" name="template_type" value="{{ tpl_type }}">
                             <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
                         </form>
                     </div>
-                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
-                        <strong>{% trans "Note de plateforme" %}</strong>
-                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
-                            {% csrf_token %}
-                            <input type="hidden" name="template_type" value="platform_note_template">
-                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
-                        </form>
-                    </div>
-                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
-                        <strong>{% trans "Fiche de réception" %}</strong>
-                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
-                            {% csrf_token %}
-                            <input type="hidden" name="template_type" value="reception_form_template">
-                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
-                        </form>
-                    </div>
-                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
-                        <strong>{% trans "Devis" %}</strong>
-                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data" style="margin-top:8px;">
-                            {% csrf_token %}
-                            <input type="hidden" name="template_type" value="quote_template">
-                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
-                        </form>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -892,6 +1011,30 @@
 
     <!-- System Tab -->
     <div x-show="tab === 'system'">
+        <!-- Quick Links to separate pages -->
+        <div class="grid-2" style="margin-bottom:24px;">
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Journal d'audit" %}</h3></div>
+                <div class="card-body">
+                    <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez l'historique complet de toutes les transitions, actions et modifications effectuées sur la plateforme." %}</p>
+                    <a href="{% url 'dashboard:audit_log' %}" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        {% trans "Voir le journal d'audit" %}
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Archives des revenus" %}</h3></div>
+                <div class="card-body">
+                    <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR." %}</p>
+                    <a href="{% url 'dashboard:revenue_archives' %}" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        {% trans "Voir les archives" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Contacts & Newsletter" %}</h3></div>
             <div class="card-body">

@@ -1,0 +1,44 @@
+{% load i18n %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
+<head>
+<meta charset="UTF-8">
+<title>{% trans "Réinitialisation de compte PLAGENOR 4.0" %}</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; padding: 32px;">
+<div style="max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden;">
+    <div style="background: #4F46E5; padding: 28px 32px; text-align: center;">
+        <h1 style="color: #fff; margin: 0; font-size: 1.5rem;">PLAGENOR 4.0</h1>
+        <p style="color: #c7d2fe; margin: 6px 0 0; font-size: 0.875rem;">{% trans "Plateforme de Gestion des Opérations Scientifiques" %}</p>
+    </div>
+    <div style="padding: 32px;">
+        <h2 style="color: #1e293b; margin: 0 0 16px;">{% trans "Réinitialisation de votre compte" %}</h2>
+        <p style="color: #475569;">{% blocktrans with name=user.get_full_name|default:user.username %}Bonjour {{ name }},{% endblocktrans %}</p>
+        <p style="color: #475569;">{% blocktrans with admin=admin_name platform=platform_name %}Votre compte sur {{ platform }} a été réinitialisé par {{ admin }}.{% endblocktrans %}</p>
+
+        <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+            <p style="color: #991b1b; margin: 0 0 8px; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">{% trans "Mot de passe temporaire" %}</p>
+            <p style="color: #1e293b; font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: 0.1em;">{{ temp_password }}</p>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <ul style="color: #92400e; margin: 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.7;">
+                <li>{% trans "Ce mot de passe temporaire expire après 24 heures ou dès la première utilisation." %}</li>
+                <li>{% trans "Vous serez immédiatement invité à définir un nouveau mot de passe après connexion." %}</li>
+                <li>{% trans "Ne partagez jamais votre mot de passe avec quiconque." %}</li>
+            </ul>
+        </div>
+
+        <p style="text-align: center;">
+            <a href="{{ login_url }}" style="display: inline-block; padding: 12px 28px; background: #4F46E5; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">{% trans "Se connecter" %}</a>
+        </p>
+
+        <p style="color: #94a3b8; font-size: 0.8rem; text-align: center; margin-top: 24px;">
+            {% trans "Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter immédiatement l'administrateur de la plateforme." %}
+        </p>
+    </div>
+    <div style="background: #f1f5f9; padding: 16px 32px; text-align: center;">
+        <p style="color: #94a3b8; margin: 0; font-size: 0.8rem;">© 2026 ESSBO — PLAGENOR 4.0</p>
+    </div>
+</div>
+</body>
+</html>

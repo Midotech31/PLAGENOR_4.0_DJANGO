@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{% trans "Gestion des Modèles" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Gestion des Modèles de Documents" %}</h1>
+    <p class="greeting-date">{% trans "Gérez les modèles DOCX pour la génération automatique des documents" %}</p>
+</div>
+
+<!-- Actions -->
+<div class="actions-bar">
+    <a href="{% url 'documents:template_create' %}" class="btn btn-primary">
+        <i class="fa fa-plus"></i> {% trans "Nouveau modèle" %}
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="type">{% trans "Type" %}</label>
+                <select name="type" id="type" onchange="this.form.submit()">
+                    <option value="">{% trans "Tous les types" %}</option>
+                    {% for value, label in template_types %}
+                    <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="service">{% trans "Service" %}</label>
+                <select name="service" id="service" onchange="this.form.submit()">
+                    <option value="">{% trans "Tous les services" %}</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}" {% if current_service == service.id|stringformat:"s" %}selected{% endif %}>{{ service.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="active">{% trans "Statut" %}</label>
+                <select name="active" id="active" onchange="this.form.submit()">
+                    <option value="">{% trans "Tous" %}</option>
+                    <option value="1" {% if current_active == '1' %}selected{% endif %}>{% trans "Actifs" %}</option>
+                    <option value="0" {% if current_active == '0' %}selected{% endif %}>{% trans "Inactifs" %}</option>
+                </select>
+            </div>
+            
+            {% if current_type or current_service or current_active %}
+            <a href="{% url 'documents:template_list' %}" class="btn btn-secondary">{% trans "Réinitialiser" %}</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Templates List -->
+<div class="card">
+    <div class="card-body">
+        {% if templates %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{% trans "Nom" %}</th>
+                    <th>{% trans "Service" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th>{% trans "Statut" %}</th>
+                    <th>{% trans "Créé le" %}</th>
+                    <th>{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for template in templates %}
+                <tr>
+                    <td>
+                        <strong>{{ template.name }}</strong>
+                        {% if template.description %}
+                        <br><small class="text-muted">{{ template.description|truncatewords:20 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ template.service.code }}</span>
+                        <br><small>{{ template.service.name }}</small>
+                    </td>
+                    <td>{{ template.get_template_type_display }}</td>
+                    <td>
+                        {% if template.is_active %}
+                        <span class="badge badge-success">{% trans "Actif" %}</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{% trans "Inactif" %}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ template.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'documents:template_detail' template.pk %}" class="btn btn-sm btn-outline-primary" title="{% trans 'Voir' %}">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            <a href="{% url 'documents:template_edit' template.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'Modifier' %}">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            {% if template.is_active %}
+                            <form method="post" action="{% url 'documents:template_toggle' template.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-warning" title="{% trans 'Désactiver' %}">
+                                    <i class="fa fa-toggle-on"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'documents:template_toggle' template.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="{% trans 'Activer' %}">
+                                    <i class="fa fa-toggle-off"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <a href="{% url 'documents:template_delete' template.pk %}" class="btn btn-sm btn-outline-danger" title="{% trans 'Supprimer' %}">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa fa-file-word-o"></i>
+            <p>{% trans "Aucun modèle trouvé." %}</p>
+            <a href="{% url 'documents:template_create' %}" class="btn btn-primary">
+                {% trans "Créer le premier modèle" %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

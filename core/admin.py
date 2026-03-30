@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     Service, Request, RequestHistory, RequestComment, Invoice,
     PlatformContent, PaymentMethod, Message, RevenueArchive, ServiceFormField,
+    ServicePricing,
 )
 
 
@@ -62,3 +63,29 @@ class PlatformContentAdmin(admin.ModelAdmin):
         return obj.value[:80] + '...' if len(obj.value) > 80 else obj.value
     short_value.short_description = 'Contenu'
 admin.site.register(PaymentMethod)
+
+
+@admin.register(ServicePricing)
+class ServicePricingAdmin(admin.ModelAdmin):
+    list_display = ('service', 'pricing_type', 'name', 'amount', 'unit', 'is_active', 'priority')
+    list_filter = ('pricing_type', 'channel', 'is_active', 'service')
+    search_fields = ('name', 'description', 'service__name', 'service__code')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('service', 'updated_by')
+    ordering = ['service', 'priority', 'pk']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('service', 'pricing_type', 'channel', 'name', 'description')
+        }),
+        ('Tarif', {
+            'fields': ('amount', 'unit', 'min_quantity', 'max_quantity', 'min_amount', 'max_amount')
+        }),
+        ('Options', {
+            'fields': ('is_active', 'priority')
+        }),
+        ('Métadonnées', {
+            'fields': ('updated_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

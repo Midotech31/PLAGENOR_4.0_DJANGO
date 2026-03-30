@@ -8,12 +8,69 @@
 {% block content %}
 <!-- Hero -->
 <section class="hero">
-    <div style="text-align:center;">
+    <!-- DNA Double Helix — decorative SVG accent (right side) -->
+    <svg aria-hidden="true" focusable="false"
+         style="position:absolute; right:0; top:0; height:100%; width:auto; max-width:340px; opacity:0.13; pointer-events:none; user-select:none;"
+         viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid meet">
+        <!-- Strand A: sine wave going right-to-left -->
+        <path d="M80,0 C120,20 40,60 80,80 C120,100 40,140 80,160 C120,180 40,220 80,240 C120,260 40,300 80,320 C120,340 40,380 80,400 C120,420 40,460 80,480"
+              fill="none" stroke="#67e8f9" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Strand B: sine wave going left-to-right (phase shifted 180°) -->
+        <path d="M80,0 C40,20 120,60 80,80 C40,100 120,140 80,160 C40,180 120,220 80,240 C40,260 120,300 80,320 C40,340 120,380 80,400 C40,420 120,460 80,480"
+              fill="none" stroke="#a5f3fc" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Base pairs (rungs) — horizontal connectors at crossing points -->
+        <!-- Each rung at the midpoint between crossings (every 40px) -->
+        <line x1="80" y1="40"  x2="80" y2="40"  stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
+        <!-- Rungs at the widest separation points -->
+        <line x1="40"  y1="40"  x2="120" y2="40"  stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="120" x2="120" y2="120" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="200" x2="120" y2="200" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="280" x2="120" y2="280" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="360" x2="120" y2="360" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="440" x2="120" y2="440" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <!-- Rungs at crossing points (narrower) -->
+        <line x1="68"  y1="80"  x2="92"  y2="80"  stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="160" x2="92"  y2="160" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="240" x2="92"  y2="240" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="320" x2="92"  y2="320" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="400" x2="92"  y2="400" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <!-- Nucleotide dots on strand A -->
+        <circle cx="120" cy="40"  r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="120" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="120" cy="200" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="280" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="120" cy="360" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="440" r="4" fill="#67e8f9" opacity="0.9"/>
+        <!-- Nucleotide dots on strand B -->
+        <circle cx="40"  cy="40"  r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="120" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="40"  cy="200" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="280" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="40"  cy="360" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="440" r="4" fill="#a5f3fc" opacity="0.9"/>
+    </svg>
+    <!-- DNA Double Helix — left side mirror -->
+    <svg aria-hidden="true" focusable="false"
+         style="position:absolute; left:0; top:0; height:100%; width:auto; max-width:340px; opacity:0.08; pointer-events:none; user-select:none; transform:scaleX(-1);"
+         viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid meet">
+        <path d="M80,0 C120,20 40,60 80,80 C120,100 40,140 80,160 C120,180 40,220 80,240 C120,260 40,300 80,320 C120,340 40,380 80,400 C120,420 40,460 80,480"
+              fill="none" stroke="#67e8f9" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M80,0 C40,20 120,60 80,80 C40,100 120,140 80,160 C40,180 120,220 80,240 C40,260 120,300 80,320 C40,340 120,380 80,400 C40,420 120,460 80,480"
+              fill="none" stroke="#a5f3fc" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="40"  y1="40"  x2="120" y2="40"  stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="120" x2="120" y2="120" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="200" x2="120" y2="200" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="280" x2="120" y2="280" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="360" x2="120" y2="360" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="440" x2="120" y2="440" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+    </svg>
+
+    <div style="text-align:center; position:relative;">
         <h1 style="font-size:2.5rem; margin-bottom:8px;">{% cms 'hero_title' 'PLAGENOR 4.0' %}</h1>
         <p style="font-size:1.1rem; opacity:0.85;">{% cms 'hero_subtitle' 'Plateforme Technologique de Génomique — ESSBO · ORAN' %}</p>
     </div>
-    <p>{% cms 'hero_description' "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
-    <div class="btn-group">
+    <p style="position:relative;">{% cms 'hero_description' "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
+    <div class="btn-group" style="position:relative;">
         <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% cms 'hero_btn_submit' 'Soumettre une demande' %}</a>
         <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_guest' 'Soumission invité' %}</a>
         <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_services' 'Voir les services' %}</a>

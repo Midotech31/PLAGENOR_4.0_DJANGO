@@ -229,9 +229,9 @@
             </div>
         </div>
         <div class="sidebar-actions">
-            <form id="language-form" action="{% url 'set_language' %}" method="post" style="display:none">
+            <form id="language-form" class="no-validation" action="{% url 'set_language' %}" method="post" style="display:none">
                 {% csrf_token %}
-                <input type="hidden" name="language" value="{{ LANGUAGE_CODE }}">
+                <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
             </form>
             <button type="button" onclick="toggleLanguage()">

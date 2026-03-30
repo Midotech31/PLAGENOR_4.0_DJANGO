@@ -200,22 +200,22 @@
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s != 'SUBMITTED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                         </div>
-                        <div class="pipeline-line"></div>
+                        <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>

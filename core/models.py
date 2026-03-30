@@ -51,6 +51,90 @@ class ServiceFormField(models.Model):
         return f"{self.service.code} — {self.label}"
 
 
+class ServicePricing(models.Model):
+    """Dynamic pricing configuration for services - allows Super Admin to set detailed pricing."""
+    
+    PRICING_TYPE_CHOICES = [
+        ('BASE', 'Prix de base'),
+        ('PER_SAMPLE', 'Par échantillon'),
+        ('PER_PARAMETER', 'Par paramètre'),
+        ('URGENCY_SURCHARGE', 'Majoration urgence'),
+        ('DISCOUNT', 'Remise'),
+    ]
+    
+    CHANNEL_CHOICES = [
+        ('IBTIKAR', 'IBTIKAR'),
+        ('GENOCLAB', 'GENOCLAB'),
+        ('BOTH', 'Les deux'),
+    ]
+    
+    service = models.ForeignKey(
+        Service, 
+        on_delete=models.CASCADE, 
+        related_name='pricing_configs'
+    )
+    pricing_type = models.CharField(
+        max_length=20,
+        choices=PRICING_TYPE_CHOICES,
+        default='BASE'
+    )
+    channel = models.CharField(
+        max_length=10,
+        choices=CHANNEL_CHOICES,
+        default='BOTH'
+    )
+    name = models.CharField(max_length=200, verbose_name='Nom du tarif')
+    description = models.TextField(default='', blank=True, verbose_name='Description')
+    amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0,
+        verbose_name='Montant (DZD)'
+    )
+    unit = models.CharField(
+        max_length=50, 
+        default='固定',
+        blank=True,
+        verbose_name='Unité (ex: par échantillon)'
+    )
+    min_quantity = models.IntegerField(default=1, verbose_name='Quantité minimum')
+    max_quantity = models.IntegerField(null=True, blank=True, verbose_name='Quantité maximum')
+    min_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Montant minimum'
+    )
+    max_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name='Montant maximum'
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Actif')
+    priority = models.IntegerField(default=0, verbose_name='Priorité')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pricing_updates'
+    )
+    
+    class Meta:
+        db_table = 'service_pricing'
+        ordering = ['service', 'priority', 'pk']
+        verbose_name = 'Configuration tarifaire'
+        verbose_name_plural = 'Configurations tarifaires'
+    
+    def __str__(self):
+        return f"{self.service.code} - {self.name}: {self.amount} DZD"
+
+
 class Request(models.Model):
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
@@ -91,7 +175,8 @@ class Request(models.Model):
         ('QUOTE_SENT', 'Devis Envoyé'),
         ('QUOTE_VALIDATED_BY_CLIENT', 'Devis Accepté'),
         ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
-        ('INVOICE_GENERATED', 'Facture Émise'),
+        ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
+        ('PAYMENT_PENDING', 'En Attente Paiement'),
         ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
         ('SENT_TO_CLIENT', 'Transmis Client'),
         ('ARCHIVED', 'Archivé'),
@@ -116,6 +201,14 @@ class Request(models.Model):
     quote_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quote_detail = models.JSONField(default=dict, blank=True, verbose_name='Détail du devis')
     admin_validated_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    
+    # GENOCLAB: Purchase Order (Bon de commande - mandatory per Algerian commercial code)
+    order_file = models.FileField(upload_to='orders/', null=True, blank=True, verbose_name='Bon de commande')
+    order_uploaded_at = models.DateTimeField(null=True, blank=True)
+    
+    # GENOCLAB: Payment receipt
+    payment_receipt_file = models.FileField(upload_to='payments/', null=True, blank=True, verbose_name='Reçu de paiement')
+    payment_uploaded_at = models.DateTimeField(null=True, blank=True)
 
     # Appointment
     appointment_date = models.DateField(null=True, blank=True)
@@ -144,6 +237,9 @@ class Request(models.Model):
     rated_at = models.DateTimeField(null=True, blank=True)
     receipt_confirmed = models.BooleanField(default=False)
     receipt_confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    # Citation acknowledgment (Prompt 10)
+    citation_acknowledged = models.BooleanField(default=False, verbose_name='Citation acknowledgée')
 
     # Guest
     submitted_as_guest = models.BooleanField(default=False)

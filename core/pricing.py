@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from django.db import models
+
 MULTIPLIER_KEY_MAP = {
     'nombre_echantillons': 'nombre_echantillons',
     'sample_count': 'nombre_echantillons',
@@ -124,3 +126,93 @@ def _price_per_sample_fixed(pricing: dict, samples: list, currency: str) -> dict
 def format_price(amount: float, currency: str = 'DZD') -> str:
     """Format a price for display."""
     return f"{amount:,.0f} {currency}"
+
+
+def calculate_cost_from_db(service, channel, sample_table=None, service_params=None, urgency='Normal'):
+    """
+    Calculate cost based on ServicePricing configurations from database.
+    
+    Args:
+        service: Service model instance
+        channel: 'IBTIKAR' or 'GENOCLAB'
+        sample_table: List of sample dicts (optional)
+        service_params: Dict of service parameters (optional)
+        urgency: Urgency level for surcharge calculation
+    
+    Returns:
+        dict with cost breakdown and total
+    """
+    from decimal import Decimal
+    
+    if not service:
+        return {'error': 'Service is required', 'total': 0}
+    
+    # Get active pricing configs for this service
+    pricing_configs = service.pricing_configs.filter(
+        is_active=True
+    ).filter(
+        models.Q(channel=channel) | models.Q(channel='BOTH')
+    ).order_by('priority', 'pk')
+    
+    if not pricing_configs.exists():
+        # Fall back to service's base price
+        base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+        sample_count = len([s for s in sample_table if s]) if sample_table else 1
+        total = float(base_price) * sample_count
+        return {
+            'source': 'service_base_price',
+            'base_price': float(base_price),
+            'sample_count': sample_count,
+            'total': total,
+            'breakdown': [{
+                'name': 'Prix de base',
+                'type': 'BASE',
+                'amount': float(base_price),
+                'quantity': sample_count,
+                'subtotal': total,
+            }],
+        }
+    
+    breakdown = []
+    total = Decimal('0')
+    sample_count = len([s for s in sample_table if s]) if sample_table else 0
+    
+    for config in pricing_configs:
+        config_total = Decimal('0')
+        quantity = 1
+        
+        if config.pricing_type == 'BASE':
+            quantity = sample_count if sample_count > 0 else 1
+            config_total = config.amount * quantity
+        elif config.pricing_type == 'PER_SAMPLE':
+            quantity = sample_count
+            config_total = config.amount * quantity
+        elif config.pricing_type == 'PER_PARAMETER':
+            # Count parameters in service_params
+            if service_params:
+                quantity = len([v for v in service_params.values() if v])
+            config_total = config.amount * quantity
+        elif config.pricing_type == 'URGENCY_SURCHARGE':
+            if urgency in ['Urgent', 'Très urgent']:
+                quantity = 1
+                config_total = config.amount
+        elif config.pricing_type == 'DISCOUNT':
+            quantity = 1
+            config_total = -config.amount  # Negative for discount
+        
+        total += config_total
+        breakdown.append({
+            'name': config.name,
+            'type': config.pricing_type,
+            'amount': float(config.amount),
+            'quantity': quantity,
+            'subtotal': float(config_total),
+        })
+    
+    return {
+        'source': 'service_pricing_db',
+        'pricing_configs_used': pricing_configs.count(),
+        'sample_count': sample_count,
+        'total': float(total),
+        'breakdown': breakdown,
+    }

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Réinitialiser le compte" %} — {{ target_user.username }} | PLAGENOR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% trans "Réinitialiser le compte" %}</h1>
+        <p class="page-subtitle">{{ target_user.get_full_name|default:target_user.username }}</p>
+    </div>
+    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+</div>
+
+<div class="card" style="max-width: 520px; margin: 0 auto;">
+    <div class="card-body" style="padding: 32px;">
+        <div style="text-align:center; margin-bottom: 24px;">
+            <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <svg width="28" height="28" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <h2 style="color:#1e293b;margin:0 0 8px;">{% trans "Confirmer la réinitialisation" %}</h2>
+        </div>
+
+        <div class="alert alert-warning" style="margin-bottom:20px;">
+            <strong>⚠ {% trans "Attention" %}</strong><br>
+            {% blocktrans with username=target_user.username %}
+            Êtes-vous sûr de vouloir réinitialiser le compte de <strong>{{ username }}</strong> ?
+            Toutes les données associées (demandes, rapports, historique) seront conservées.
+            {% endblocktrans %}
+        </div>
+
+        <div style="background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:20px;">
+            <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:0.9rem;">
+                <dt style="color:#64748b;font-weight:500;">{% trans "Utilisateur" %}</dt>
+                <dd style="margin:0;font-weight:600;">{{ target_user.get_full_name|default:target_user.username }}</dd>
+                <dt style="color:#64748b;font-weight:500;">{% trans "Identifiant" %}</dt>
+                <dd style="margin:0;">{{ target_user.username }}</dd>
+                <dt style="color:#64748b;font-weight:500;">{% trans "Email" %}</dt>
+                <dd style="margin:0;">{{ target_user.email|default:"—" }}</dd>
+                <dt style="color:#64748b;font-weight:500;">{% trans "Rôle" %}</dt>
+                <dd style="margin:0;">{{ target_user.get_role_display }}</dd>
+            </dl>
+        </div>
+
+        <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-left:20px;margin-bottom:24px;">
+            <li>{% trans "Un mot de passe temporaire sécurisé (16 caractères) sera généré." %}</li>
+            <li>{% trans "L'utilisateur devra changer son mot de passe dès la prochaine connexion." %}</li>
+            {% if target_user.email %}
+            <li>{% blocktrans with email=target_user.email %}Un email avec le mot de passe temporaire sera envoyé à <strong>{{ email }}</strong>.{% endblocktrans %}</li>
+            {% else %}
+            <li style="color:#dc2626;">{% trans "⚠ Aucun email configuré — le mot de passe temporaire sera affiché dans la notification." %}</li>
+            {% endif %}
+            <li>{% trans "Cette action est enregistrée dans le journal d'audit." %}</li>
+        </ul>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:flex;gap:12px;">
+                <button type="submit" class="btn btn-danger" style="flex:1;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    {% trans "Réinitialiser le compte" %}
+                </button>
+                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline" style="flex:1;text-align:center;">{% trans "Annuler" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

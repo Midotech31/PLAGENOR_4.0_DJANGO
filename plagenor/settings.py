@@ -36,6 +36,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dashboard.middleware.UpdateLastSeenMiddleware',
+    'dashboard.middleware.ForcePasswordChangeMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
 ]
 
@@ -112,6 +113,12 @@ USE_L10N = True
 TIME_ZONE = 'Africa/Algiers'
 USE_TZ = True
 
+# Language cookie settings
+LANGUAGE_COOKIE_NAME = 'django_language'
+LANGUAGE_COOKIE_AGE = 365 * 24 * 60 * 60  # 1 year
+LANGUAGE_COOKIE_HTTPONLY = False
+LANGUAGE_COOKIE_SAMESITE = 'Lax'
+
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
@@ -128,15 +135,17 @@ PLATFORM_AUTHOR = 'Prof. Mohamed Merzoug'
 PLATFORM_INSTITUTION = 'ESSBO'
 
 # Email configuration
+# Use SMTP backend automatically when SMTP_HOST is configured in .env
+_smtp_host = os.getenv('SMTP_HOST') or os.getenv('EMAIL_HOST', '')
 EMAIL_BACKEND = os.getenv(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend',
+    'django.core.mail.backends.smtp.EmailBackend' if _smtp_host and _smtp_host not in ('', 'localhost') else 'django.core.mail.backends.console.EmailBackend',
 )
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST = _smtp_host or 'localhost'
+EMAIL_PORT = int(os.getenv('SMTP_PORT') or os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
+EMAIL_HOST_USER = os.getenv('SMTP_USER') or os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

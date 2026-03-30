@@ -59,7 +59,7 @@ def index(request):
 
     # Requests ready for assignment
     assignable_requests = Request.objects.filter(
-        status__in=['IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED']
+        status__in=['IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED']
     ).select_related('service', 'requester').order_by('-created_at')
 
     # Requests needing report review
@@ -73,7 +73,7 @@ def index(request):
             'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
             'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
         ]
-    ).select_related('service', 'requester', 'assigned_to__user').order_by('-updated_at')
+    ).select_related('service', 'requester', 'assigned_to__user').prefetch_related('messages__from_user').order_by('-updated_at')
 
     # Requests needing completion/closure actions
     completion_requests = Request.objects.filter(
@@ -102,6 +102,14 @@ def index(request):
         available=True
     ).select_related('user').order_by('current_load')
 
+    # All members sorted by performance (productivity_score desc, then total_points desc)
+    all_members_ranked = MemberProfile.objects.select_related('user').order_by(
+        '-productivity_score', '-total_points'
+    )
+    # Compute max values for bar scaling
+    max_productivity = max((m.productivity_score for m in all_members_ranked), default=100) or 100
+    max_points = max((m.total_points for m in all_members_ranked), default=1) or 1
+
     # Budget overview from financial engine
     from core.financial import get_budget_dashboard
     budget_data = get_budget_dashboard()
@@ -115,11 +123,14 @@ def index(request):
     total_ratings = rated_requests.count()
     recent_reviews = rated_requests.select_related('requester', 'service').order_by('-rated_at')[:10]
 
-    # Rating distribution
+    # Rating distribution with computed percentages
     rating_distribution = {}
+    rating_percentages = {}
     for star in range(1, 6):
-        rating_distribution[star] = rated_requests.filter(service_rating=star).count()
-
+        count = rated_requests.filter(service_rating=star).count()
+        rating_distribution[star] = count
+        rating_percentages[star] = round((count / total_ratings * 100), 1) if total_ratings > 0 else 0
+    
     context = {
         'total_requests': total_requests,
         'pending_count': pending_count,
@@ -148,6 +159,11 @@ def index(request):
         'total_ratings': total_ratings,
         'recent_reviews': recent_reviews,
         'rating_distribution': rating_distribution,
+        'rating_percentages': rating_percentages,
+        # Performance ranking
+        'all_members_ranked': all_members_ranked,
+        'max_productivity': max_productivity,
+        'max_points': max_points,
     }
     return render(request, 'dashboard/admin_ops/index.html', context)
 
@@ -209,7 +225,7 @@ def assign_request(request, pk):
     member = get_object_or_404(MemberProfile, pk=member_id)
 
     # Check if request is in a state that allows assignment
-    if req.status not in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED'):
+    if req.status not in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED'):
         messages.error(
             request,
             f"La demande {req.display_id} n'est pas prête pour l'assignation "
@@ -238,7 +254,15 @@ def award_points(request, member_pk):
         member=member, points=points, reason=reason, awarded_by=request.user
     )
     member.total_points += points
-    member.save(update_fields=['total_points'])
+    # Auto-unlock gift box at 100 points threshold
+    if member.total_points >= 100 and not member.gift_unlocked:
+        member.gift_unlocked = True
+        Notification.objects.create(
+            user=member.user,
+            message="🎁 Félicitations ! Vous avez débloqué une boîte surprise ! Rendez-vous dans votre espace Points.",
+            notification_type='reward'
+        )
+    member.save(update_fields=['total_points', 'gift_unlocked'])
     # Notify member
     Notification.objects.create(
         user=member.user,
@@ -246,6 +270,29 @@ def award_points(request, member_pk):
         notification_type='reward'
     )
     messages.success(request, f"{points} points attribués à {member.user.get_full_name()}.")
+    return redirect_back(request, 'dashboard:admin_ops')
+
+
+@admin_required
+def upload_gift(request, member_pk):
+    """Admin uploads a reward picture into the member's gift box."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    member = get_object_or_404(MemberProfile, pk=member_pk)
+    gift_image = request.FILES.get('gift_image')
+    if gift_image:
+        member.gift_image = gift_image
+        member.gift_unlocked = True
+        member.gift_collected = False
+        member.save(update_fields=['gift_image', 'gift_unlocked', 'gift_collected'])
+        Notification.objects.create(
+            user=member.user,
+            message="🎁 Une récompense vous attend ! Ouvrez votre boîte surprise dans votre espace Points.",
+            notification_type='reward'
+        )
+        messages.success(request, f"Récompense ajoutée pour {member.user.get_full_name()}.")
+    else:
+        messages.error(request, "Veuillez sélectionner une image.")
     return redirect_back(request, 'dashboard:admin_ops')
 
 
