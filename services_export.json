@@ -1,0 +1,155 @@
+[
+  {
+    "model": "core.service",
+    "pk": "9c6934b2-1e15-4fda-b22d-4e81323fb615",
+    "fields": {
+      "name": "Nucleic Acid Quality Control",
+      "code": "EGTP-CAN",
+      "description": "Quality control of nucleic acids (DNA or RNA) including fluorimetric quantification and integrity assessment by agarose gel electrophoresis. This service is intended to assess sample suitability prior to downstream molecular analyses.\r\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "3000.00",
+      "genoclab_price": "3000.00",
+      "turnaround_days": 5,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.888606+00:00",
+      "updated_at": "2026-03-30T02:44:49.180758+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "dcc43664-2717-43fe-99cd-b2b98135aab5",
+    "fields": {
+      "name": "Nucleic Acid Integrity Control",
+      "code": "EGTP-CAN02",
+      "description": "",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "1000.00",
+      "genoclab_price": "1500.00",
+      "turnaround_days": 5,
+      "active": true,
+      "created_at": "2026-03-28T15:16:48.852796+00:00",
+      "updated_at": "2026-03-28T15:16:48.852796+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "a9c7ff7c-251f-42ce-a0d3-028faeed00fa",
+    "fields": {
+      "name": "Identification microbienne via MALDI-TOF MS",
+      "code": "EGTP-IMT",
+      "description": "Identification microbienne rapide et fiable des bactéries, levures et moisissures par spectrométrie de masse MALDI-TOF (profil protéique) sur plateforme MALDI Biotyper.\r\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "2500.00",
+      "genoclab_price": "4000.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.900903+00:00",
+      "updated_at": "2026-03-30T02:56:08.663290+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "db515b1c-01a7-4de4-b26d-d9ae947f73a1",
+    "fields": {
+      "name": "Microbial Whole Genome Sequencing (Illumina)",
+      "code": "EGTP-Illumina-Microbial-WGS",
+      "description": "Whole Genome Sequencing (WGS) of microbial isolates using Illumina high-throughput sequencing technology. The service includes genomic DNA extraction from pure cultures, nucleic acid quality control, Illumina library preparation, paired-end sequencing, and delivery of raw sequencing data.\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "95000.00",
+      "genoclab_price": "95000.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.894919+00:00",
+      "updated_at": "2026-03-28T20:58:02.642935+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "483147df-52e7-43c9-aa6c-eb88bde66572",
+    "fields": {
+      "name": "Séchage à froid sous vide – Lyophilisation",
+      "code": "EGTP-Lyoph",
+      "description": "Lyophilisation (séchage à froid sous vide) d’échantillons biologiques afin d’éliminer l’eau par sublimation sous vide à basse température, en utilisant le lyophilisateur Beta 2-8 LSCplus (Martin Christ, Allemagne).\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "2000.00",
+      "genoclab_price": "2000.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.905889+00:00",
+      "updated_at": "2026-03-28T20:58:02.654454+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "12cb565f-1cb5-44b5-80c1-e9b84bb92d92",
+    "fields": {
+      "name": "PCR (Polymerase Chain Reaction)",
+      "code": "EGTP-PCR",
+      "description": "PCR (Polymerase Chain Reaction) is a molecular biology technique used to amplify specific DNA sequences. The service includes reaction setup using requester-supplied primers, amplification on a gradient thermal cycler, and verification by agarose gel electrophoresis.\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "1500.00",
+      "genoclab_price": "1500.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.911389+00:00",
+      "updated_at": "2026-03-28T20:58:02.659019+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "8a5e1bcf-d9d4-440d-bd56-5dd091b0fc5d",
+    "fields": {
+      "name": "Custom DNA Primer Synthesis",
+      "code": "EGTP-PS",
+      "description": "Custom synthesis of DNA oligonucleotide primer pairs (Forward + Reverse) performed on a MerMade 4 phosphoramidite synthesizer. Primers are synthesized strictly according to sequences provided by the requester. The service includes standard butanol desalting purification and delivery at defined concentration. No primer design, validation, or sequence verification is performed.\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "8500.00",
+      "genoclab_price": "8500.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.917372+00:00",
+      "updated_at": "2026-03-28T20:58:02.663381+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "52ae9972-033d-4036-85f6-e29089d2d7e7",
+    "fields": {
+      "name": "Microbial Identification via Sequencing",
+      "code": "EGTP-Seq02",
+      "description": "Accurate taxonomic identification of microorganisms using PCR amplicon Sanger sequencing with universal genetic markers such as 16S rRNA, ITS, and 18S rRNA. The workflow includes DNA extraction, PCR amplification, amplicon cleanup, and Sanger sequencing. Identification is reported at species level when sequence quality and database coverage allow.\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "8000.00",
+      "genoclab_price": "8000.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.922360+00:00",
+      "updated_at": "2026-03-28T20:58:02.668448+00:00"
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": "5b5c01a3-7a40-4f64-b200-901c64240ea6",
+    "fields": {
+      "name": "DNA Sequencing via Sanger Method",
+      "code": "EGTP-SeqS",
+      "description": "High-quality DNA sequencing using the Sanger method for PCR amplicons. The service supports sequencing of purified or non-purified PCR products using forward, reverse, or bidirectional reads. Results are delivered as chromatograms and FASTA sequence files. No identification or interpretation is included.\n",
+      "channel_availability": "BOTH",
+      "service_type": "Analysis",
+      "ibtikar_price": "5500.00",
+      "genoclab_price": "5500.00",
+      "turnaround_days": 7,
+      "active": true,
+      "created_at": "2026-03-28T12:34:04.927892+00:00",
+      "updated_at": "2026-03-28T20:58:02.671933+00:00"
+    }
+  }
+]
