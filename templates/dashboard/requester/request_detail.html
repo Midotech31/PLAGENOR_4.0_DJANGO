@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1 style="margin-bottom:4px;">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</h1>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            {% if req.urgency != 'Normal' %}
+            <span class="badge-status" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">{{ req.get_urgency_display }}</span>
+            {% endif %}
+        </div>
+        <p class="text-sm text-muted" style="margin-top:6px;">
+            {% trans "Créée le" %} {{ req.created_at|date:"d/m/Y H:i" }}
+            {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
+        </p>
+    </div>
+    <a href="{% url 'dashboard:requester' %}" class="btn btn-outline">
+        &larr; {% trans "Retour au tableau de bord" %}
+    </a>
+</div>
+
+<div class="grid-2" style="gap:24px; margin-top:24px;">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- Service Details -->
+        {% if req.service %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails du service" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Code" %}</span><strong>{{ req.service.code }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom" %}</span><strong>{{ req.service.name }}</strong></div>
+                {% if req.service.description %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Description" %}</span><strong>{{ req.service.description|truncatechars:200 }}</strong></div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Request Details -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Détails de la demande" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Titre" %}</span><strong>{{ req.title }}</strong></div>
+                {% if req.description %}
+                <div style="margin-top:12px;">
+                    <span class="text-muted text-sm">{% trans "Description" %}</span>
+                    <div style="margin-top:4px; padding:12px; background:var(--slate-50, #f8fafc); border-radius:8px;">{{ req.description|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+                <div class="data-card-row" style="margin-top:8px;"><span class="text-muted">{% trans "Urgence" %}</span><strong>{{ req.get_urgency_display }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Service Parameters -->
+        {% if params_display %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Paramètres du service" %}</h3></div>
+            <div class="card-body">
+                {% for label, value in params_display %}
+                <div class="data-card-row">
+                    <span class="text-muted">{{ label }}</span>
+                    <strong>{{ value }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sample Table -->
+        {% if req.sample_table %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Tableau des échantillons" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        {% if sample_headers %}
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                {% for header in sample_headers %}
+                                <th>{{ header }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        {% endif %}
+                        <tbody>
+                            {% for row in req.sample_table %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                {% for key, val in row.items %}
+                                <td>{{ val|default:"—" }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+        <!-- Financial -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
+            <div class="card-body">
+                {% if req.budget_amount %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
+                {% endif %}
+                {% if req.declared_ibtikar_balance %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
+                {% endif %}
+                {% if not req.budget_amount and not req.declared_ibtikar_balance %}
+                <div class="text-muted">{% trans "Aucune information financière." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Status Info (no analyst identity — anonymity) -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Suivi" %}</h3></div>
+            <div class="card-body">
+                {% if req.assigned_to %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Analyste assigné" %}</span><strong>{% trans "Oui" %}</strong></div>
+                {% if req.assignment_accepted %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Tâche acceptée" %}</span><strong style="color:#059669;">{% trans "Oui" %}</strong></div>
+                {% endif %}
+                {% if req.appointment_date %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Date de RDV" %}</span><strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></div>
+                {% endif %}
+                <div class="data-card-row"><span class="text-muted">{% trans "RDV confirmé" %}</span><strong>{% if req.appointment_confirmed %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</strong></div>
+                {% else %}
+                <div class="text-muted">{% trans "En attente d'assignation." %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pipeline visualization -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Pipeline" %}</h3></div>
+            <div class="card-body">
+                <div class="pipeline">
+                    {% with s=req.status %}
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
+                    </div>
+                    <div class="pipeline-line{% if s != 'SUBMITTED' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
+                    </div>
+                    <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
+                    </div>
+                    <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
+                    </div>
+                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
+                <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- IBTIKAR post-validation workflow -->
+{% if req.channel == 'IBTIKAR' %}
+{% if req.status == 'IBTIKAR_SUBMISSION_PENDING' or req.status == 'IBTIKAR_CODE_SUBMITTED' %}
+{% url 'documents:ibtikar_form' req.pk as ibkformurl %}
+{% url 'dashboard:requester_ibtikar_code' req.pk as ibkcodeurl %}
+{% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
+{% endif %}
+{% endif %}
+
+<!-- Report delivery + receipt confirmation + rating -->
+{% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
+<div class="card mb-4" style="margin-top:24px; border:2px solid #bbf7d0;">
+    <div class="card-body" style="padding:24px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:#d1fae5; display:flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:22px;height:22px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+                <h3 style="margin:0; color:#065f46;">{% trans "Votre rapport d'analyse est prêt" %}</h3>
+                <p class="text-muted" style="margin:2px 0 0; font-size:0.85rem;">{% trans "Téléchargez-le et confirmez la réception pour finaliser votre demande." %}</p>
+            </div>
+        </div>
+        {% if req.report_file and req.report_token %}
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <!-- Step 1: View report with citation clause -->
+            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+            <!-- Step 2: Confirm receipt after reading -->
+            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Confirmer la réception" %}
+                </button>
+            </form>
+        </div>
+        {% elif req.report_file %}
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Confirmer la réception" %}
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
+                {% trans "Confirmer la réception du rapport" %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if req.status == 'COMPLETED' and not req.service_rating %}
+<div class="card mb-4" style="margin-top:24px; border:2px solid #fde68a;">
+    <div class="card-body" style="padding:24px;" x-data="{rating: 5, hover: 0}">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:#fef3c7; display:flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1" style="width:22px;height:22px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+                <h3 style="margin:0; color:#92400e;">{% trans "Évaluez le service" %}</h3>
+                <p class="text-muted" style="margin:2px 0 0; font-size:0.85rem;">{% trans "Votre avis nous aide à améliorer nos services." %}</p>
+            </div>
+        </div>
+        {% if req.report_file %}
+        <div style="margin-bottom:16px;">
+            <a href="{% if req.report_token %}{% url 'report_view' req.report_token %}{% else %}{{ req.report_file.url }}{% endif %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="rating" :value="rating">
+            <div style="display:flex; gap:6px; cursor:pointer; margin-bottom:16px;">
+                {% for i in "12345" %}
+                <span @click="rating = {{ i }}" @mouseover="hover = {{ i }}" @mouseleave="hover = 0"
+                      :style="(hover ? hover >= {{ i }} : rating >= {{ i }}) ? 'color:#f59e0b; transform:scale(1.15)' : 'color:#d1d5db'"
+                      style="font-size:36px; transition:all 0.15s;">&#9733;</span>
+                {% endfor %}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px;">
+                <button type="submit" class="btn btn-primary" style="padding:10px 24px;">{% trans "Envoyer mon évaluation" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% elif req.service_rating %}
+<div class="card mb-4" style="margin-top:24px;">
+    <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
+        <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
+        {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
+        {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if messages_list %}
+<!-- Messages from analyst/operator -->
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Messages" %} <span class="badge" style="background:#e0e7ff; color:#4f46e5; border-radius:12px; padding:2px 8px; font-size:0.8rem;">{{ messages_list.count }}</span></h3></div>
+    <div class="card-body" style="max-height:400px; overflow-y:auto;">
+        {% for msg in messages_list %}
+        <div class="msg-bubble {% if msg.from_user.role == 'MEMBER' %}msg-from-analyst{% else %}msg-from-admin{% endif %}">
+            <div class="msg-header">
+                <strong style="font-size:0.9rem;">{{ msg.from_user.get_full_name }}</strong>
+                <span class="text-xs text-muted">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="text-sm">{{ msg.text }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+<h2 style="color:#4F46E5;">PLAGENOR 4.0 — Mise à jour de statut</h2>
+<p>Bonjour,</p>
+<p>Le statut de votre demande <strong>{{ request_obj.display_id }}</strong> a été mis à jour.</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Référence</td><td style="padding:8px;border:1px solid #ddd;">{{ request_obj.display_id }}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Ancien statut</td><td style="padding:8px;border:1px solid #ddd;">{{ old_status }}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Nouveau statut</td><td style="padding:8px;border:1px solid #ddd;">{{ new_status }}</td></tr>
+</table>
+<p>Connectez-vous à PLAGENOR pour plus de détails.</p>
+<p style="color:#6B7280;font-size:12px;">ESSBO — PLAGENOR 4.0</p>
+</body></html>

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{% trans "Supprimer le Modèle" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting text-danger">{% trans "Confirmer la suppression" %}</h1>
+</div>
+
+<div class="alert alert-warning">
+    <h4 class="alert-heading">
+        <i class="fa fa-exclamation-triangle"></i> {% trans "Attention !" %}
+    </h4>
+    <p>
+        {% trans "Êtes-vous sûr de vouloir supprimer le modèle" %}
+        <strong>"{{ template.name }}"</strong> ?
+    </p>
+    <hr>
+    <p class="mb-0">
+        {% trans "Cette action est irréversible. Le fichier sera définitivement supprimé." %}
+    </p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-borderless">
+            <tr>
+                <th width="30%">{% trans "Nom" %}</th>
+                <td>{{ template.name }}</td>
+            </tr>
+            <tr>
+                <th>{% trans "Service" %}</th>
+                <td>{{ template.service.name }}</td>
+            </tr>
+            <tr>
+                <th>{% trans "Type" %}</th>
+                <td>{{ template.get_template_type_display }}</td>
+            </tr>
+            <tr>
+                <th>{% trans "Fichier" %}</th>
+                <td>{{ template.file.name|filename }}</td>
+            </tr>
+        </table>
+        
+        <hr>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa fa-trash"></i> {% trans "Oui, supprimer définitivement" %}
+                </button>
+                <a href="{% url 'documents:template_detail' template.pk %}" class="btn btn-secondary">
+                    {% trans "Annuler" %}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'documents:template_list' %}" class="btn btn-secondary">
+        <i class="fa fa-arrow-left"></i> {% trans "Retour à la liste" %}
+    </a>
+</div>
+{% endblock %}

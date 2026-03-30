@@ -1,0 +1,121 @@
+# =====================================================
+# PLAGENOR / IBTIKAR — Service Registry
+# Service: EGTP-Lyoph
+# =====================================================
+
+service_code: EGTP-Lyoph
+service_name: Séchage à froid sous vide – Lyophilisation
+category: Sample Preparation
+type: Analysis
+version: "1.0"
+
+description: >
+  Lyophilisation (séchage à froid sous vide) d’échantillons biologiques
+  afin d’éliminer l’eau par sublimation sous vide à basse température,
+  en utilisant le lyophilisateur Beta 2-8 LSCplus (Martin Christ, Allemagne).
+
+# -----------------------------------------------------
+# PARAMETERS
+# -----------------------------------------------------
+parameters:
+  - name: sample_type
+    label: Type d’échantillon
+    type: enum
+    required: true
+    options:
+      - Bactérie
+      - Levure
+      - Moisissure
+      - Plantes
+      - EPS
+      - Autre
+
+  - name: volume_ml
+    label: Volume par échantillon (mL)
+    type: float
+    required: true
+    min: 0.1
+
+  - name: drying_level
+    label: Niveau de lyophilisation
+    type: enum
+    required: true
+    options:
+      - Primaire
+      - Secondaire
+
+  - name: duration_units_24h
+    label: Durée (unités de 24 h)
+    type: enum
+    required: true
+    options:
+      - 1
+      - 2
+      - 3
+
+  - name: sample_origin
+    label: Origine des échantillons
+    type: enum
+    required: true
+    options:
+      - Environmental
+      - Food
+      - Hospital / Clinical
+
+  - name: pathogenic
+    label: Échantillon pathogène
+    type: boolean
+    required: true
+
+# -----------------------------------------------------
+# SAMPLE TABLE
+# -----------------------------------------------------
+sample_table:
+  enabled: true
+  min_rows: 1
+
+  columns:
+    - name: sample_code
+      type: string
+      required: true
+
+    - name: volume_ml
+      type: float
+      required: true
+
+# -----------------------------------------------------
+# PRICING (SUPPORTED MODEL)
+# -----------------------------------------------------
+pricing:
+  model: per_sample_table_row_with_multiplier
+  currency: DZD
+
+  base_price:
+    non_pathogenic: 2000
+    pathogenic: 2000
+
+  multipliers:
+    "1": 1
+    "2": 2
+    "3": 3
+
+# -----------------------------------------------------
+# REQUIRED BY REGISTRY LOADER
+# -----------------------------------------------------
+deliverables:
+  - Produit lyophilisé sec remis au demandeur
+  - Notification de fin de traitement
+  - Observations techniques si anomalies détectées
+
+turnaround_time: >
+  La durée minimale de traitement est de 24 h.
+  Le délai final dépend de la charge instrumentale.
+
+compliance:
+  - Déclaration de risque biologique obligatoire si applicable
+  - Respect des règles de transport et de biosécurité PLAGENOR
+
+override_policy:
+  admin_override_allowed: true
+  justification_required: true
+  audit_required: true

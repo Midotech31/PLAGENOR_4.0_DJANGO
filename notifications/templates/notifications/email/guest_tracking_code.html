@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+<h2 style="color:#4F46E5;">PLAGENOR 4.0 — Votre code de suivi</h2>
+<p>Bonjour {{ request_obj.guest_name }},</p>
+<p>Merci pour votre demande. Voici vos informations de suivi:</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Code de suivi</td><td style="padding:8px;border:1px solid #ddd;font-size:18px;color:#4F46E5;">{{ request_obj.display_id }}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Token</td><td style="padding:8px;border:1px solid #ddd;font-size:12px;">{{ request_obj.guest_token }}</td></tr>
+<tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Service</td><td style="padding:8px;border:1px solid #ddd;">{{ request_obj.service.name|default:"—" }}</td></tr>
+</table>
+<p>Conservez ce code pour suivre l'avancement de votre demande sur la plateforme PLAGENOR.</p>
+<p style="color:#6B7280;font-size:12px;">ESSBO — PLAGENOR 4.0</p>
+</body></html>

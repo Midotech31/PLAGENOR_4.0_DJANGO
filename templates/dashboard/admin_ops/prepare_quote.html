@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Préparer le devis" %} — {{ req.display_id }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1 style="margin-bottom:4px;">{% trans "Préparer le devis" %} — {{ req.display_id }}</h1>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            <span class="badge-status genoclab">GENOCLAB</span>
+        </div>
+        <p class="text-sm text-muted" style="margin-top:6px;">{{ req.title|truncatechars:80 }}</p>
+    </div>
+    <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-outline">
+        &larr; {% trans "Retour au détail" %}
+    </a>
+</div>
+
+<div class="grid-2" style="gap:24px; margin-top:24px;">
+    <!-- LEFT COLUMN: Request info + auto-estimate -->
+    <div>
+        <!-- Auto-estimate from YAML -->
+        {% if auto_estimate %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Estimation automatique (YAML)" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Modèle de tarification" %}</span><strong>{{ auto_estimate.pricing_model }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Nombre d'unités" %}</span><strong>{{ auto_estimate.number_of_units }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Prix unitaire" %}</span><strong>{{ auto_estimate.unit_price }} DA</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Total estimé" %}</span><strong style="color:#059669; font-size:1.1rem;">{{ auto_estimate.total }} DA</strong></div>
+                {% if auto_estimate.breakdown %}
+                <div style="margin-top:8px; padding:8px 12px; background:var(--slate-50, #f8fafc); border-radius:6px; font-size:0.85rem;">
+                    {% for key, val in auto_estimate.breakdown.items %}
+                    <div class="data-card-row"><span class="text-muted">{{ key }}</span><strong>{{ val }}</strong></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Service Parameters -->
+        {% if req.service_params %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Paramètres du service" %}</h3></div>
+            <div class="card-body">
+                {% for key, value in req.service_params.items %}
+                <div class="data-card-row">
+                    <span class="text-muted">{{ key|cut:"param_"|title }}</span>
+                    <strong>{{ value }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sample Table -->
+        {% if req.sample_table %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Tableau des échantillons" %} ({{ req.sample_table|length }})</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table style="font-size:0.85rem;">
+                        {% if req.sample_table.0 %}
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                {% for key, val in req.sample_table.0.items %}
+                                <th>{{ key|title }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        {% endif %}
+                        <tbody>
+                            {% for row in req.sample_table %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                {% for key, val in row.items %}
+                                <td>{{ val|default:"—" }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Service Info -->
+        {% if req.service %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Service" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card-row"><span class="text-muted">{% trans "Code" %}</span><strong>{{ req.service.code }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Nom" %}</span><strong>{{ req.service.name }}</strong></div>
+                <div class="data-card-row"><span class="text-muted">{% trans "Prix GENOCLAB" %}</span><strong>{{ req.service.genoclab_price }} DA</strong></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN: Quote form -->
+    <div>
+        <form method="post" id="quoteForm">
+            {% csrf_token %}
+            <div class="card mb-4">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>{% trans "Lignes du devis" %}</h3>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addLineItem()">+ {% trans "Ajouter une ligne" %}</button>
+                </div>
+                <div class="card-body">
+                    <div id="line-items-container">
+                        <!-- Line items will be rendered here by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h3>{% trans "Frais et TVA" %}</h3></div>
+                <div class="card-body">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="text-sm">{% trans "Frais administratifs (DA)" %}</label>
+                            <input type="number" name="admin_fees" id="admin_fees" step="0.01" value="{{ existing_quote.admin_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="text-sm">{% trans "Frais de rapport (DA)" %}</label>
+                            <input type="number" name="report_fees" id="report_fees" step="0.01" value="{{ existing_quote.report_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label class="text-sm">{% trans "Taux TVA (%)" %}</label>
+                        <input type="number" name="vat_rate" id="vat_rate_input" step="0.01" value="19" class="form-control" style="width:120px;" oninput="recalcTotals()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Totals summary -->
+            <div class="card mb-4">
+                <div class="card-header"><h3>{% trans "Récapitulatif" %}</h3></div>
+                <div class="card-body">
+                    <div class="data-card-row"><span class="text-muted">{% trans "Sous-total HT" %}</span><strong id="subtotal_ht">0.00 DA</strong></div>
+                    <div class="data-card-row"><span class="text-muted">{% trans "Frais administratifs" %}</span><strong id="disp_admin_fees">0.00 DA</strong></div>
+                    <div class="data-card-row"><span class="text-muted">{% trans "Frais de rapport" %}</span><strong id="disp_report_fees">0.00 DA</strong></div>
+                    <div class="data-card-row" style="border-top:1px solid var(--slate-200, #e2e8f0); padding-top:8px;"><span class="text-muted">{% trans "Sous-total avant TVA" %}</span><strong id="subtotal_before_tax">0.00 DA</strong></div>
+                    <div class="data-card-row"><span class="text-muted">{% trans "TVA" %}</span><strong id="vat_amount">0.00 DA</strong></div>
+                    <div class="data-card-row" style="border-top:2px solid var(--slate-300, #cbd5e1); padding-top:8px; font-size:1.1rem;">
+                        <span style="font-weight:600;">{% trans "Total TTC" %}</span>
+                        <strong id="total_ttc" style="color:#059669; font-size:1.2rem;">0.00 DA</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card mb-4">
+                <div class="card-header"><h3>{% trans "Notes" %}</h3></div>
+                <div class="card-body">
+                    <textarea name="quote_notes" class="form-control" rows="3" placeholder="{% trans 'Notes internes ou commentaires pour le client...' %}">{{ existing_quote.notes|default:"" }}</textarea>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button type="submit" name="action" value="save" class="btn btn-outline">
+                    {% trans "Enregistrer brouillon" %}
+                </button>
+                <button type="submit" name="action" value="send" class="btn btn-primary">
+                    {% trans "Envoyer au client" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById('line-items-container');
+    let itemCount = 0;
+
+    // Template for a line item row
+    function createLineItemRow(idx, data) {
+        data = data || {};
+        const div = document.createElement('div');
+        div.className = 'line-item-row';
+        div.dataset.idx = idx;
+        div.style.cssText = 'display:grid; grid-template-columns:2fr 1fr 80px 1fr 40px; gap:8px; align-items:end; margin-bottom:8px; padding:8px; background:var(--slate-50, #f8fafc); border-radius:8px;';
+        div.innerHTML = `
+            <div>
+                <label class="text-xs text-muted">Description</label>
+                <input type="text" name="item_label_${idx}" value="${data.label || ''}" class="form-control" style="font-size:0.85rem;" placeholder="Ex: Analyse par échantillon">
+            </div>
+            <div>
+                <label class="text-xs text-muted">P.U. (DA)</label>
+                <input type="number" name="item_unit_price_${idx}" value="${data.unit_price || 0}" step="0.01" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
+            </div>
+            <div>
+                <label class="text-xs text-muted">Qté</label>
+                <input type="number" name="item_quantity_${idx}" value="${data.quantity || 1}" min="0" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
+            </div>
+            <div>
+                <label class="text-xs text-muted">Total</label>
+                <input type="text" class="form-control line-total" style="font-size:0.85rem; background:var(--slate-100, #f1f5f9);" readonly value="0.00 DA">
+            </div>
+            <div style="text-align:center;">
+                <button type="button" class="btn btn-sm" style="color:#dc2626; background:transparent; border:none; font-size:1.2rem; cursor:pointer;" onclick="removeLineItem(this)" title="Supprimer">&times;</button>
+            </div>
+        `;
+        return div;
+    }
+
+    // Initialize from existing quote or auto-estimate
+    window.initLineItems = function() {
+        const existingItems = {{ existing_items_json|safe }};
+        if (existingItems.length > 0) {
+            existingItems.forEach(function(item) {
+                const row = createLineItemRow(itemCount, item);
+                container.appendChild(row);
+                itemCount++;
+            });
+        }
+        {% if auto_estimate and not existing_quote.items %}
+        // Pre-populate from auto-estimate
+        const autoItem = {
+            label: '{{ req.service.name|default:"Analyse" }}' + ' (x{{ auto_estimate.number_of_units }})',
+            unit_price: {{ auto_estimate.unit_price|default:0 }},
+            quantity: {{ auto_estimate.number_of_units|default:1 }},
+        };
+        const row = createLineItemRow(itemCount, autoItem);
+        container.appendChild(row);
+        itemCount++;
+        {% endif %}
+        if (itemCount === 0) {
+            addLineItem();
+        }
+        recalcTotals();
+    };
+
+    window.addLineItem = function() {
+        const row = createLineItemRow(itemCount, {});
+        container.appendChild(row);
+        itemCount++;
+    };
+
+    window.removeLineItem = function(btn) {
+        const row = btn.closest('.line-item-row');
+        row.remove();
+        // Re-index all remaining items
+        const rows = container.querySelectorAll('.line-item-row');
+        itemCount = 0;
+        rows.forEach(function(r, i) {
+            r.dataset.idx = i;
+            r.querySelectorAll('input[name^="item_"]').forEach(function(inp) {
+                const nameParts = inp.name.split('_');
+                nameParts[nameParts.length - 1] = i;
+                inp.name = nameParts.join('_');
+            });
+            itemCount = i + 1;
+        });
+        recalcTotals();
+    };
+
+    window.recalcTotals = function() {
+        let subtotalHT = 0;
+        const rows = container.querySelectorAll('.line-item-row');
+        rows.forEach(function(row) {
+            const idx = row.dataset.idx;
+            const up = parseFloat(row.querySelector('[name="item_unit_price_' + idx + '"]').value) || 0;
+            const qty = parseInt(row.querySelector('[name="item_quantity_' + idx + '"]').value) || 0;
+            const lineTotal = up * qty;
+            row.querySelector('.line-total').value = lineTotal.toFixed(2) + ' DA';
+            subtotalHT += lineTotal;
+        });
+
+        const adminFees = parseFloat(document.getElementById('admin_fees').value) || 0;
+        const reportFees = parseFloat(document.getElementById('report_fees').value) || 0;
+        const vatRatePct = parseFloat(document.getElementById('vat_rate_input').value) || 0;
+        const vatRate = vatRatePct / 100;
+
+        const subtotalBeforeTax = subtotalHT + adminFees + reportFees;
+        const vatAmount = subtotalBeforeTax * vatRate;
+        const totalTTC = subtotalBeforeTax + vatAmount;
+
+        document.getElementById('subtotal_ht').textContent = subtotalHT.toFixed(2) + ' DA';
+        document.getElementById('disp_admin_fees').textContent = adminFees.toFixed(2) + ' DA';
+        document.getElementById('disp_report_fees').textContent = reportFees.toFixed(2) + ' DA';
+        document.getElementById('subtotal_before_tax').textContent = subtotalBeforeTax.toFixed(2) + ' DA';
+        document.getElementById('vat_amount').textContent = vatAmount.toFixed(2) + ' DA';
+        document.getElementById('total_ttc').textContent = totalTTC.toFixed(2) + ' DA';
+    };
+
+    // Set VAT rate from existing quote (stored as decimal, display as %)
+    {% if existing_quote.vat_rate %}
+    document.getElementById('vat_rate_input').value = {{ existing_quote.vat_rate }} * 100;
+    {% endif %}
+
+    // Init on DOM ready
+    document.addEventListener('DOMContentLoaded', initLineItems);
+})();
+</script>
+{% endblock %}

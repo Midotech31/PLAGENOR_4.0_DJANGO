@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Archives de revenus" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Archives de revenus" %}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Archives mensuelles des revenus IBTIKAR & GENOCLAB" %}</p>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>{% trans "Archives mensuelles" %}</h3></div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" style="border: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% trans "Période" %}</th>
+                        <th>{% trans "Canal" %}</th>
+                        <th>{% trans "Revenu total" %}</th>
+                        <th>{% trans "Nombre demandes" %}</th>
+                        <th>{% trans "Archivé le" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for archive in archives %}
+                <tr>
+                    <td><strong>{{ archive.month }}/{{ archive.year }}</strong></td>
+                    <td><span class="badge-status {% if archive.channel == 'IBTIKAR' %}info{% else %}completed{% endif %}">{{ archive.channel }}</span></td>
+                    <td>{{ archive.total_revenue|floatformat:2 }} DA</td>
+                    <td>{{ archive.request_count }}</td>
+                    <td class="text-sm text-muted">{{ archive.archived_at|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">{% trans "Aucune archive. Exécutez" %} <code>python manage.py archive_revenue</code> {% trans "pour générer les archives." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

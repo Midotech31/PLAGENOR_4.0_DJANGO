@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Demandeur IBTIKAR" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Espace IBTIKAR" %}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    {% trans "Total demandes" as lbl_total %}
+    {% trans "En cours" as lbl_progress %}
+    {% trans "Complétées" as lbl_completed %}
+    {% trans "Rejetées" as lbl_rejected %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total label=lbl_total color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='activity' value=active label=lbl_progress color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed label=lbl_completed color='green' %}
+    {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label=lbl_rejected color='red' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'new' && 'active'" @click="tab = 'new'">{% trans "Nouvelle demande" %}</button>
+        <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
+        <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
+        <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
+    </div>
+
+    <!-- New Request -->
+    <div x-show="tab === 'new'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande IBTIKAR" %}</h3></div>
+            <div class="card-body">
+                <form method="post" action="{% url 'dashboard:requester_create' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>{% trans "Service" %}</label>
+                        <select name="service_id" class="form-control" required>
+                            <option value="">{% trans "Sélectionner un service..." %}</option>
+                            {% for s in services %}
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="dynamic-service-form"></div>
+                    <div class="form-group">
+                        <label>{% trans "Titre de la demande" %}</label>
+                        <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse DRX échantillon...' %}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Description" %}</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Urgence" %}</label>
+                            <select name="urgency" class="form-control">
+                                <option value="Normal">{% trans "Normal" %}</option>
+                                <option value="Urgent">{% trans "Urgent" %}</option>
+                                <option value="Très urgent">{% trans "Très urgent" %}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
+                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                        </div>
+                    </div>
+                    <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
+                    </div>
+                    <button type="button" id="btn-submit-request" class="btn btn-primary" onclick="showFormPreview(this.closest('form'))">{% trans "Vérifier et soumettre" %}</button>
+                </form>
+                <script>
+                (function() {
+                    var serviceSelect = document.querySelector('select[name="service_id"]');
+                    var balanceInput = document.getElementById('declared_balance');
+                    var warning = document.getElementById('budget-warning');
+                    var submitBtn = document.getElementById('btn-submit-request');
+
+                    function checkBudget() {
+                        if (!serviceSelect || !balanceInput || !warning) return;
+                        var opt = serviceSelect.options[serviceSelect.selectedIndex];
+                        if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
+                        var balance = parseFloat(balanceInput.value) || 0;
+                        // Read the actual computed cost from the cost-estimate element
+                        var costEl = document.getElementById('cost-estimate');
+                        var estimated = 0;
+                        if (costEl && costEl.textContent && costEl.textContent !== '—') {
+                            estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
+                        }
+
+                        if (balance < 0 || balance > 200000) {
+                            warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
+                            warning.style.display = 'block';
+                            submitBtn.disabled = true;
+                        } else if (estimated > 0 && estimated > balance) {
+                            warning.innerHTML = '{% trans "Attention: le coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "dépasse votre solde déclaré" %} (' + balance.toLocaleString('fr-FR') + ' DA).';
+                            warning.style.display = 'block';
+                            submitBtn.disabled = true;
+                        } else {
+                            warning.style.display = 'none';
+                            submitBtn.disabled = false;
+                        }
+                    }
+
+                    if (serviceSelect) serviceSelect.addEventListener('change', function(){ setTimeout(checkBudget, 100); });
+                    if (balanceInput) balanceInput.addEventListener('input', checkBudget);
+                    // Re-check when cost estimate updates
+                    document.addEventListener('costUpdated', checkBudget);
+                })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Requests -->
+    <div x-show="tab === 'requests'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Mes demandes actives" %}</h3></div>
+            <div class="card-body">
+                {% for req in active_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }} &middot; {{ req.get_urgency_display }}</span>
+                        <span>{{ req.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="data-card-row mt-1">
+                        <a href="{% url 'dashboard:requester_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                    </div>
+                    {% if req.assigned_to %}
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{% trans "Analyste assigné" %}</span>
+                        {% if req.appointment_date %}<span>{% trans "RDV" %}: {{ req.appointment_date|date:"d/m/Y" }}{% if req.appointment_confirmed %} ({% trans "confirmé" %}){% endif %}</span>{% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- IBTIKAR post-validation workflow -->
+                    {% if req.channel == 'IBTIKAR' %}
+                    {% if req.status == 'IBTIKAR_SUBMISSION_PENDING' or req.status == 'IBTIKAR_CODE_SUBMITTED' %}
+                    {% url 'documents:ibtikar_form' req.pk as ibkformurl %}
+                    {% url 'dashboard:requester_ibtikar_code' req.pk as ibkcodeurl %}
+                    {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
+                    {% else %}
+                    <div class="data-card-row mt-1" style="gap: 0.5rem;">
+                        <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    <!-- Appointment section -->
+                    {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date %}
+                    <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-top:8px;">
+                        <div style="font-weight:600; margin-bottom:8px;">
+                            {% trans "Rendez-vous proposé" %}: {{ req.appointment_date|date:"d/m/Y" }}
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <!-- Confirm -->
+                            <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
+                            </form>
+                            <!-- Suggest alternative -->
+                            <form method="post" action="{% url 'dashboard:requester_alt_date' req.pk %}" style="display:inline;" x-data="{ showAlt: false }">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
+                                <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                    <div>
+                                        <label class="text-sm">{% trans "Date souhaitée" %}</label>
+                                        <input type="date" name="alt_date" class="form-control" required style="font-size:0.85rem;">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm">{% trans "Message" %}</label>
+                                        <input type="text" name="alt_note" class="form-control" placeholder="{% trans 'Raison du changement...' %}" style="font-size:0.85rem; width:200px;">
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% elif req.appointment_date and not req.appointment_confirmed %}
+                    <div class="data-card-row mt-1" style="gap: 0.5rem;">
+                        <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Pipeline visualization -->
+                    <div class="pipeline mt-2">
+                        {% with s=req.status %}
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
+                        </div>
+                        <div class="pipeline-line{% if s != 'SUBMITTED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
+                        </div>
+                        <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-step">
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
+                        </div>
+                        {% endwith %}
+                    </div>
+
+                    <!-- Report delivery + receipt confirmation + rating -->
+                    {% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:16px; margin-top:12px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <strong style="color:#065f46;">{% trans "Votre rapport est prêt" %}</strong>
+                        </div>
+                        {% if req.report_file %}
+                        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                {% trans "Télécharger le rapport et confirmer la réception" %}
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                {% trans "Confirmer la réception du rapport" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if req.status == 'COMPLETED' and not req.service_rating %}
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:16px; margin-top:12px;" x-data="{rating: 5, hover: 0}">
+                        <div style="margin-bottom:10px;">
+                            <strong style="color:#92400e; font-size:0.9rem;">{% trans "Évaluez le service" %}</strong>
+                            <p class="text-muted" style="font-size:0.8rem; margin:4px 0 0;">{% trans "Votre avis nous aide à améliorer nos services." %}</p>
+                        </div>
+                        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="rating" :value="rating">
+                            <div style="display:flex; gap:4px; cursor:pointer; margin-bottom:12px;">
+                                {% for i in "12345" %}
+                                <span @click="rating = {{ i }}" @mouseover="hover = {{ i }}" @mouseleave="hover = 0"
+                                      :style="(hover ? hover >= {{ i }} : rating >= {{ i }}) ? 'color:#f59e0b; transform:scale(1.1)' : 'color:#d1d5db'"
+                                      style="font-size:32px; transition:all 0.15s;">&#9733;</span>
+                                {% endfor %}
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% elif req.service_rating %}
+                    <div class="data-card-row mt-2 text-sm">
+                        <span>{% trans "Note" %}: {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b;">&#9733;</span>{% else %}<span style="color:#d1d5db;">&#9733;</span>{% endif %}{% endfor %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande active. Soumettez votre première demande!" %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Archives -->
+    <div x-show="tab === 'archives'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Archives" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Note" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in archived %}
+                        <tr>
+                            <td>{{ req.display_id }}</td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.service.name|default:"—" }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{% if req.service_rating %}{{ req.service_rating }}/5{% else %}—{% endif %}</td>
+                            <td>{{ req.updated_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune archive." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div x-show="tab === 'notifs'">
+        {% include 'includes/notification_list.html' %}
+        {% if not notifications %}
+        <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Inscription" %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card wide">
+        <h2>{% trans "Créer un compte" %}</h2>
+        <p class="auth-subtitle">{% trans "Inscrivez-vous pour soumettre des demandes d'analyses" %}</p>
+
+        {% if form.errors %}
+        <div class="alert alert-danger" style="margin-bottom:20px;">
+            {% trans "Veuillez corriger les erreurs ci-dessous." %}
+            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            {% if request.GET.service %}
+            <input type="hidden" name="next_service" value="{{ request.GET.service }}">
+            <div class="alert alert-info" style="margin-bottom:16px;">
+                {% trans "Après inscription, vous serez redirigé vers le formulaire de soumission pour le service" %}: <strong>{{ request.GET.service }}</strong>
+            </div>
+            {% endif %}
+
+            <!-- Role Selection -->
+            <div class="role-selector">
+                <label class="role-option {% if form.role.value == 'REQUESTER' or not form.role.value %}selected{% endif %}">
+                    <input type="radio" name="role" value="REQUESTER" {% if form.role.value == 'REQUESTER' or not form.role.value %}checked{% endif %}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+                    <div class="role-name">IBTIKAR</div>
+                    <div class="role-desc">{% trans "Étudiant / Chercheur" %}</div>
+                </label>
+                <label class="role-option {% if form.role.value == 'CLIENT' %}selected{% endif %}">
+                    <input type="radio" name="role" value="CLIENT" {% if form.role.value == 'CLIENT' %}checked{% endif %}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    <div class="role-name">GENOCLAB</div>
+                    <div class="role-desc">{% trans "Client externe" %}</div>
+                </label>
+            </div>
+
+            <!-- Form fields -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">{% trans "Prénom" %}</label>
+                    <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                    {% if form.first_name.errors %}<div class="form-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">{% trans "Nom" %}</label>
+                    <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                    {% if form.last_name.errors %}<div class="form-error">{{ form.last_name.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_username">{% trans "Identifiant souhaité" %} *</label>
+                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
+                {% if form.username.errors %}<div class="form-error">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_email">{% trans "Email" %} *</label>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_organization">{% trans "Université / Organisation" %}</label>
+                <input type="text" name="organization" id="id_organization" class="form-control" value="{{ form.organization.value|default:'' }}" required>
+                {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div id="academic-fields" style="display:none;">
+                <div class="form-group">
+                    <label for="id_student_level">{% trans "Niveau" %}</label>
+                    <select name="student_level" id="id_student_level" class="form-control">
+                        <option value="">— {% trans "Sélectionner" %} —</option>
+                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master (fin de cycle)" %}</option>
+                        <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>{% trans "Ingéniorat (fin de cycle)" %}</option>
+                        <option value="doctorat" {% if form.student_level.value == 'doctorat' %}selected{% endif %}>{% trans "Doctorat" %}</option>
+                    </select>
+                    <small class="text-muted">{% trans "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités algériennes" %}</small>
+                    {% if form.student_level.errors %}<div class="form-error">{{ form.student_level.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_laboratory">{% trans "Laboratoire" %}</label>
+                    <input type="text" name="laboratory" id="id_laboratory" class="form-control" value="{{ form.laboratory.value|default:'' }}" placeholder="{% trans 'Nom du laboratoire' %}">
+                    {% if form.laboratory.errors %}<div class="form-error">{{ form.laboratory.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_supervisor">{% trans "Directeur de recherche" %}</label>
+                    <input type="text" name="supervisor" id="id_supervisor" class="form-control" value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
+                    {% if form.supervisor.errors %}<div class="form-error">{{ form.supervisor.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %}</label>
+                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
+                    <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
+                    {% if form.ibtikar_id.errors %}<div class="form-error">{{ form.ibtikar_id.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_phone">{% trans "Téléphone" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+                {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_password1">{% trans "Mot de passe" %}</label>
+                    <input type="password" name="password1" id="id_password1" class="form-control" required>
+                    {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_password2">{% trans "Confirmer le mot de passe" %}</label>
+                    <input type="password" name="password2" id="id_password2" class="form-control" required>
+                    {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">{% trans "Créer mon compte" %}</button>
+        </form>
+
+        <div class="auth-links">
+            <p>{% trans "Vous avez déjà un compte ?" %} <a href="{% url 'accounts:login' %}">{% trans "Se connecter" %}</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var roleInputs = document.querySelectorAll('input[name="role"]');
+    var academicFields = document.getElementById('academic-fields');
+    var studentLevel = document.getElementById('id_student_level');
+    var supervisor = document.getElementById('id_supervisor');
+
+    function toggleAcademic() {
+        var selected = document.querySelector('input[name="role"]:checked');
+        if (selected && selected.value === 'REQUESTER') {
+            academicFields.style.display = '';
+            studentLevel.required = true;
+            supervisor.required = true;
+        } else {
+            academicFields.style.display = 'none';
+            studentLevel.required = false;
+            supervisor.required = false;
+        }
+    }
+
+    roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
+    toggleAcademic();
+
+    // Validate ibtikar_id on form submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        var selected = document.querySelector('input[name="role"]:checked');
+        if (selected && selected.value === 'REQUESTER') {
+            var ibtId = document.getElementById('id_ibtikar_id').value.trim();
+            if (ibtId && !/^IDGRSTD\d{5}$/.test(ibtId)) {
+                e.preventDefault();
+                var field = document.getElementById('id_ibtikar_id');
+                var err = field.parentElement.querySelector('.form-error');
+                if (!err) {
+                    err = document.createElement('div');
+                    err.className = 'form-error';
+                    field.parentElement.appendChild(err);
+                }
+                err.textContent = 'L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)';
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

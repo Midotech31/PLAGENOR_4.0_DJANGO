@@ -1,0 +1,96 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Suivi" %}{% endblock %}
+
+{% block content %}
+<div class="track-section">
+    <h2>{% trans "Suivi de votre demande" %}</h2>
+    <p>{% trans "Entrez votre identifiant de demande ou votre token de suivi pour consulter l'état d'avancement." %}</p>
+    <form class="track-form" method="get" action="{% url 'track' %}">
+        <input type="text" name="q" class="form-control" placeholder="{% trans 'Ex: IBT-2026-0042 ou votre token...' %}" value="{{ request.GET.q|default:'' }}" required>
+        <button type="submit" class="btn btn-primary">{% trans "Rechercher" %}</button>
+    </form>
+
+    {% if request.GET.q %}
+    <div class="card mt-24" style="margin-top:24px;text-align:left;">
+        <div class="card-body">
+            {% if tracked_request %}
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">{{ tracked_request.display_id }} — {{ tracked_request.title }}</h3>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;">
+                <div>
+                    <span class="text-muted">{% trans "Statut" %}:</span>
+                    <span class="badge-status badge-submitted">{{ tracked_request.get_status_display }}</span>
+                </div>
+                <div>
+                    <span class="text-muted">{% trans "Canal" %}:</span>
+                    {{ tracked_request.channel }}
+                </div>
+                <div>
+                    <span class="text-muted">{% trans "Date" %}:</span>
+                    {{ tracked_request.created_at|date:"d/m/Y" }}
+                </div>
+            </div>
+            {% if tracked_request.service %}
+            <div style="margin-top:8px;"><span class="text-muted">{% trans "Service" %}:</span> {{ tracked_request.service.code }} — {{ tracked_request.service.name }}</div>
+            {% endif %}
+            {% if tracked_request.appointment_date %}
+            <div><span class="text-muted">{% trans "Rendez-vous" %}:</span> {{ tracked_request.appointment_date|date:"d/m/Y" }}</div>
+            {% endif %}
+            {% if tracked_request.assigned_to %}
+            <div><span class="text-muted">{% trans "Analyste" %}:</span> {{ tracked_request.assigned_to.user.first_name }}</div>
+            {% endif %}
+            {% if history %}
+            <div style="margin-top:16px;">
+                <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:8px;">{% trans "Historique" %}</h4>
+                <div style="border-left:2px solid #e2e8f0; padding-left:16px;">
+                    {% for h in history %}
+                    <div style="margin-bottom:12px; position:relative;">
+                        <div style="position:absolute; left:-21px; top:4px; width:8px; height:8px; border-radius:50%; background:var(--indigo-600);"></div>
+                        <div style="font-size:0.8rem; color:var(--slate-500);">{{ h.created_at|date:"d/m/Y H:i" }}</div>
+                        <div style="font-size:0.85rem;">
+                            <span class="badge-status" style="font-size:0.7rem;">{{ h.to_status }}</span>
+                            {% if h.notes %}<span class="text-muted"> — {{ h.notes }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <!-- IBTIKAR post-validation workflow for guests -->
+            {% if tracked_request.channel == 'IBTIKAR' %}
+            {% if tracked_request.status == 'IBTIKAR_SUBMISSION_PENDING' or tracked_request.status == 'IBTIKAR_CODE_SUBMITTED' %}
+            <div style="margin-top:20px;">
+                {% url 'documents:ibtikar_form' tracked_request.pk as ibkformurl %}
+                {% url 'guest_ibtikar_code' tracked_request.pk as ibkcodeurl %}
+                {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=tracked_request ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Report download for guests -->
+            {% if tracked_request.report_file and tracked_request.status == 'SENT_TO_REQUESTER' or tracked_request.status == 'SENT_TO_CLIENT' or tracked_request.status == 'COMPLETED' %}
+            <div style="margin-top:16px; padding:16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
+                <a href="{{ tracked_request.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le rapport" %}
+                </a>
+            </div>
+            {% endif %}
+
+            {% if tracked_request.submitted_as_guest and tracked_request.guest_email %}
+            <div style="margin-top:12px;">
+                <a href="{% url 'accounts:convert_guest' %}?email={{ tracked_request.guest_email|urlencode }}" class="btn btn-sm btn-primary">{% trans "Créer un compte pour gérer vos demandes" %}</a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state" style="padding:24px;">
+                <h3>{% trans "Aucun résultat" %}</h3>
+                <p>{% trans "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Finance" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Gestion financière IBTIKAR & GENOCLAB" %}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    {% trans "Budget IBTIKAR (virtuel)" as lbl_ibt %}
+    {% trans "Revenus GENOCLAB (réel)" as lbl_gen %}
+    {% trans "Factures" as lbl_inv %}
+    {% trans "Étudiants IBTIKAR" as lbl_students %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_virtual label=lbl_ibt color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_real label=lbl_gen color='green' %}
+    {% include 'includes/kpi_card.html' with icon='file' value=total_invoices label=lbl_inv color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='users' value=ibtikar_students label=lbl_students color='orange' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'validation'}">
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'validation' && 'active'" @click="tab = 'validation'">{% trans "Validation IBTIKAR" %} ({{ pending_validation.count }})</button>
+        <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
+        <button class="tab-item" :class="tab === 'invoices' && 'active'" @click="tab = 'invoices'">{% trans "Factures GENOCLAB" %}</button>
+        <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
+        <button class="tab-item" :class="tab === 'history' && 'active'" @click="tab = 'history'">{% trans "Historique" %}</button>
+    </div>
+
+    <!-- IBTIKAR Validation -->
+    <div x-show="tab === 'validation'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Demandes IBTIKAR — Validation financière" %}</h3></div>
+            <div class="card-body">
+                {% for req in pending_validation %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status validation_finance">{{ req.get_status_display }}</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{% trans "Budget" %}: {{ req.budget_amount }} DA &middot; {% trans "Solde déclaré" %}: {{ req.declared_ibtikar_balance }} DA</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                        <form method="post" action="{% url 'dashboard:finance_validate' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:finance_validate' req.pk %}" style="display:inline;" x-data="{show: false}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Rejeter" %}</button>
+                            <div x-show="show" style="display:inline;">
+                                <input type="text" name="reason" placeholder="{% trans 'Raison du rejet...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;" required>
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en attente de validation financière." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Overview -->
+    <div x-show="tab === 'budget'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Budget IBTIKAR par statut" %}</h3></div>
+            <div class="card-body">
+                {% if ibtikar_by_status %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>{% trans "Statut" %}</th><th>{% trans "Budget total" %}</th></tr></thead>
+                        <tbody>
+                        {% for item in ibtikar_by_status %}
+                        <tr>
+                            <td><span class="badge-status {{ item.status|lower }}">{{ item.status }}</span></td>
+                            <td>{{ item.total_budget|floatformat:2 }} DA</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state"><p>{% trans "Aucune donnée budgétaire." %}</p></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices -->
+    <div x-show="tab === 'invoices'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Factures GENOCLAB" %}</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "N° Facture" %}</th>
+                                <th>{% trans "Client" %}</th>
+                                <th>{% trans "Demande" %}</th>
+                                <th>{% trans "HT" %}</th>
+                                <th>{% trans "TVA" %}</th>
+                                <th>{% trans "TTC" %}</th>
+                                <th>{% trans "Paiement" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in invoices %}
+                        <tr>
+                            <td><strong>{{ inv.invoice_number }}</strong></td>
+                            <td>{{ inv.client.get_full_name|default:"—" }}</td>
+                            <td>{{ inv.request.display_id|default:"—" }}</td>
+                            <td>{{ inv.subtotal_ht|floatformat:2 }} DA</td>
+                            <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
+                            <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
+                            <td>
+                                <form method="post" action="{% url 'dashboard:finance_payment_status' inv.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <select name="payment_status" class="form-control" style="width:auto; font-size:0.8rem; display:inline-block;" onchange="this.form.submit()">
+                                        <option value="PENDING" {% if inv.payment_status == 'PENDING' %}selected{% endif %}>{% trans "En attente" %}</option>
+                                        <option value="PARTIAL" {% if inv.payment_status == 'PARTIAL' %}selected{% endif %}>{% trans "Partiel" %}</option>
+                                        <option value="COMPLETED" {% if inv.payment_status == 'COMPLETED' %}selected{% endif %}>{% trans "Payé" %}</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td>{{ inv.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archives -->
+    <div x-show="tab === 'archives'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Archives des revenus" %}</h3></div>
+            <div class="card-body">
+                <div class="grid-2">
+                    <div class="data-card">
+                        <div class="data-card-row"><strong>{% trans "IBTIKAR complétés" %}</strong><span>{{ completed_ibtikar|floatformat:2 }} DA</span></div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-card-row"><strong>{% trans "GENOCLAB complétés" %}</strong><span>{{ completed_genoclab|floatformat:2 }} DA</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div x-show="tab === 'history'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Historique financier" %}</h3></div>
+            <div class="card-body">
+                <div class="data-card">
+                    <div class="data-card-row"><strong>{% trans "Total IBTIKAR (virtuel)" %}</strong><span>{{ ibtikar_virtual|floatformat:2 }} DA</span></div>
+                    <div class="data-card-row"><strong>{% trans "Total GENOCLAB (réel)" %}</strong><span>{{ genoclab_real|floatformat:2 }} DA</span></div>
+                    <div class="data-card-row"><strong>{% trans "Factures émises" %}</strong><span>{{ total_invoices }}</span></div>
+                    <div class="data-card-row"><strong>{% trans "Étudiants uniques" %}</strong><span>{{ ibtikar_students }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

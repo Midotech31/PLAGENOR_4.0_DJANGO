@@ -1,0 +1,22 @@
+{% load i18n %}
+<div class="data-card">
+    <div class="data-card-row">
+        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</div>
+        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+    </div>
+    <div class="data-card-row text-sm text-muted">
+        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }}</span>
+        <span>{{ req.created_at|date:"d/m/Y" }}</span>
+    </div>
+    {% if req.assigned_to %}
+    <div class="data-card-row text-sm text-muted">
+        <span>{% trans "Assigné" %}: {{ req.assigned_to.user.get_full_name }}</span>
+        <span>{{ req.get_urgency_display }}</span>
+    </div>
+    {% endif %}
+    {% if show_actions %}
+    <div class="data-card-row mt-2" style="gap: 0.5rem;">
+        {% block card_actions %}{% endblock %}
+    </div>
+    {% endif %}
+</div>

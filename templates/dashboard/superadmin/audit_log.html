@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Journal d'audit" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Journal d'audit" %}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Historique des actions sur la plateforme" %}</p>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body">
+        <form method="get" action="" class="flex gap-2" style="flex-wrap: wrap; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>{% trans "Date début" %}</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="width:auto;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>{% trans "Date fin" %}</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="width:auto;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>{% trans "Action/Statut" %}</label>
+                <input type="text" name="action" value="{{ action_filter }}" placeholder="{% trans 'Ex: ASSIGNED...' %}" class="form-control" style="width:150px;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>{% trans "Utilisateur" %}</label>
+                <input type="text" name="user" value="{{ user_filter }}" placeholder="{% trans 'Nom...' %}" class="form-control" style="width:150px;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="height:38px;">{% trans "Filtrer" %}</button>
+            <a href="{% url 'dashboard:audit_log' %}" class="btn btn-outline btn-sm" style="height:38px;">{% trans "Réinitialiser" %}</a>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Entries -->
+<div class="card">
+    <div class="card-header">
+        <h3>{% trans "Entrées d'audit" %} ({{ page_obj.paginator.count }})</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" style="border: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Demande" %}</th>
+                        <th>{% trans "De" %}</th>
+                        <th>{% trans "Vers" %}</th>
+                        <th>{% trans "Acteur" %}</th>
+                        <th>{% trans "Notes" %}</th>
+                        <th>{% trans "Forcé" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for entry in page_obj %}
+                <tr>
+                    <td class="text-sm">{{ entry.created_at|date:"d/m/Y H:i" }}</td>
+                    <td><strong>{{ entry.request.display_id|default:"—" }}</strong></td>
+                    <td><span class="badge-status {{ entry.from_status|lower }}">{{ entry.from_status|default:"—" }}</span></td>
+                    <td><span class="badge-status {{ entry.to_status|lower }}">{{ entry.to_status }}</span></td>
+                    <td>{{ entry.actor.get_full_name|default:"Système" }}</td>
+                    <td class="text-sm">{{ entry.notes|truncatechars:50 }}</td>
+                    <td>{% if entry.forced %}<span class="badge-status rejected">{% trans "Oui" %}</span>{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">{% trans "Aucune entrée d'audit." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div style="display:flex; justify-content:center; gap:8px; margin-top:24px;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-outline btn-sm">{% trans "Précédent" %}</a>
+    {% endif %}
+    <span class="btn btn-sm" style="cursor:default;">{% trans "Page" %} {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-outline btn-sm">{% trans "Suivant" %}</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

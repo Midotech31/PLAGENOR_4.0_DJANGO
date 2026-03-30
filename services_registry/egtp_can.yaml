@@ -1,0 +1,131 @@
+# =====================================================
+# PLAGENOR / IBTIKAR — Service Registry
+# Service: EGTP-CAN
+# =====================================================
+
+service_code: EGTP-CAN
+service_name: Nucleic Acid Quality Control
+category: Quality Control
+type: Analysis
+version: "1.0"
+
+description: >
+  Quality control of nucleic acids (DNA or RNA) including fluorimetric
+  quantification and integrity assessment by agarose gel electrophoresis.
+  This service is intended to assess sample suitability prior to downstream
+  molecular analyses.
+
+# -----------------------------------------------------
+# PARAMETERS (REGISTRY-DRIVEN UI)
+# -----------------------------------------------------
+parameters:
+  - name: nucleic_acid_type
+    label: Type of nucleic acid
+    type: enum
+    required: true
+    options:
+      - DNA
+      - RNA
+    help: Nature of the nucleic acid to be analyzed.
+
+  - name: origin
+    label: Origin of nucleic acids
+    type: text
+    required: true
+    help: Biological source of the nucleic acids (e.g. plant tissue, bacteria, blood).
+
+  - name: extraction_method
+    label: Extraction method
+    type: text
+    required: true
+    help: Method or kit used for nucleic acid extraction.
+
+  # ---- QC TECHNIQUES (MULTI-CHOICE VIA BOOLEANS) ----
+  - name: qc_fluorimetry
+    label: Fluorimetric quantification
+    type: boolean
+    required: true
+    help: Fluorimetric quantification of nucleic acids.
+
+  - name: qc_agarose_gel
+    label: Agarose gel electrophoresis
+    type: boolean
+    required: true
+    help: Integrity assessment by agarose gel electrophoresis.
+
+  - name: agarose_gel_percentage
+    label: Agarose gel percentage
+    type: integer
+    required: false
+    min: 1
+    max: 5
+    help: Percentage of agarose gel used (only if gel electrophoresis is requested).
+
+  - name: size_marker
+    label: Size marker
+    type: text
+    required: false
+    help: Size marker used for gel electrophoresis (e.g. 100 bp ladder).
+
+# -----------------------------------------------------
+# SAMPLE TABLE (ONE ROW = ONE SAMPLE)
+# -----------------------------------------------------
+sample_table:
+  enabled: true
+  min_rows: 1
+
+  columns:
+    - name: sample_code
+      label: Sample code
+      type: string
+      required: true
+
+# -----------------------------------------------------
+# PRICING (ENGINE-COMPATIBLE)
+# -----------------------------------------------------
+pricing:
+  model: per_sample_fixed
+  currency: DZD
+
+  unit_price: 3000
+
+# -----------------------------------------------------
+# TURNAROUND TIME
+# -----------------------------------------------------
+turnaround_time: >
+  Samples are typically processed within a few working days after receipt
+  of compliant samples and complete documentation.
+
+# -----------------------------------------------------
+# DELIVERABLES
+# -----------------------------------------------------
+deliverables:
+  - PDF quality control report per sample including:
+      - Nucleic acid concentration
+      - Integrity assessment
+      - Gel image (if applicable)
+      - Technical comments
+
+# -----------------------------------------------------
+# LIMITATIONS
+# -----------------------------------------------------
+limitations:
+  - Degraded samples may yield inconclusive integrity results.
+  - Contaminants from extraction may interfere with quantification accuracy.
+  - Insufficient sample volume may prevent analysis.
+
+# -----------------------------------------------------
+# COMPLIANCE
+# -----------------------------------------------------
+compliance:
+  - Samples must be clearly labeled and properly sealed.
+  - Samples must be transported at 4°C or on dry ice depending on stability.
+  - Minimum volume: 10 µL for fluorimetry, 15 µL for gel electrophoresis.
+
+# -----------------------------------------------------
+# OVERRIDE POLICY
+# -----------------------------------------------------
+override_policy:
+  admin_override_allowed: true
+  justification_required: true
+  audit_required: true

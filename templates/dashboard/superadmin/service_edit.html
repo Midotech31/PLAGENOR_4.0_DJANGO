@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Modifier service" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
+</div>
+
+<div class="card" style="max-width:800px;">
+    <div class="card-header"><h3>{{ service.name }}</h3></div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Nom" %}</label>
+                    <input type="text" name="name" class="form-control" value="{{ service.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Canal" %}</label>
+                    <select name="channel_availability" class="form-control">
+                        <option value="BOTH" {% if service.channel_availability == 'BOTH' %}selected{% endif %}>IBTIKAR & GENOCLAB</option>
+                        <option value="IBTIKAR" {% if service.channel_availability == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
+                        <option value="GENOCLAB" {% if service.channel_availability == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Prix IBTIKAR (DA)" %}</label>
+                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Prix GENOCLAB (DA)" %}</label>
+                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Délai (jours)" %}</label>
+                    <input type="number" name="turnaround_days" class="form-control" value="{{ service.turnaround_days }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Description" %}</label>
+                <textarea name="description" class="form-control" rows="3">{{ service.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Image" %}</label>
+                <input type="file" name="image" class="form-control" accept="image/*">
+                {% if service.image %}<p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
+            </div>
+
+            <hr style="margin:24px 0;">
+            <h4>{% trans "Champs personnalisés du formulaire" %}</h4>
+            <div id="custom-fields-container">
+                {% for field in custom_fields %}
+                <div class="form-row custom-field-row" style="align-items:flex-end;">
+                    <div class="form-group">
+                        <label>{% trans "Nom" %}</label>
+                        <input type="text" name="field_name" class="form-control" value="{{ field.name }}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Label" %}</label>
+                        <input type="text" name="field_label" class="form-control" value="{{ field.label }}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Type" %}</label>
+                        <select name="field_type" class="form-control">
+                            <option value="string" {% if field.field_type == 'string' %}selected{% endif %}>{% trans "Texte" %}</option>
+                            <option value="enum" {% if field.field_type == 'enum' %}selected{% endif %}>{% trans "Liste" %}</option>
+                            <option value="boolean" {% if field.field_type == 'boolean' %}selected{% endif %}>{% trans "Oui/Non" %}</option>
+                            <option value="number" {% if field.field_type == 'number' %}selected{% endif %}>{% trans "Nombre" %}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Options (virgules)" %}</label>
+                        <input type="text" name="field_options" class="form-control" value="{{ field.options|join:', ' }}">
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="addFieldRow()" style="margin-bottom:24px;">+ {% trans "Ajouter un champ" %}</button>
+
+            <div>
+                <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+var fieldCount = {{ custom_fields.count }};
+function addFieldRow() {
+    var container = document.getElementById('custom-fields-container');
+    var html = '<div class="form-row custom-field-row" style="align-items:flex-end;">' +
+        '<div class="form-group"><label>Nom</label><input type="text" name="field_name" class="form-control"></div>' +
+        '<div class="form-group"><label>Label</label><input type="text" name="field_label" class="form-control"></div>' +
+        '<div class="form-group"><label>Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
+        '<div class="form-group"><label>Options</label><input type="text" name="field_options" class="form-control"></div>' +
+        '<div class="form-group"><label><input type="checkbox" name="field_required" value="' + fieldCount + '"> Requis</label></div>' +
+        '</div>';
+    container.insertAdjacentHTML('beforeend', html);
+    fieldCount++;
+}
+</script>
+{% endblock %}

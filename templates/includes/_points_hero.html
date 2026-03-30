@@ -1,0 +1,44 @@
+{% load i18n %}
+{% comment %}
+  Context vars: pts (total points), lvl (level name), lvl_color (hex), next (next level threshold)
+{% endcomment %}
+{% with progress_pct=pts|default:0 %}
+<div style="background: linear-gradient(135deg, {{ lvl_color }}15, {{ lvl_color }}30); border: 1px solid {{ lvl_color }}40; border-radius: 16px; padding: 28px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap;">
+    <!-- Points counter -->
+    <div style="text-align: center; min-width: 120px;">
+        <div style="font-size: 3.5rem; font-weight: 800; color: {{ lvl_color }}; line-height: 1;">{{ pts }}</div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-top: 4px;">{% trans "Points" %}</div>
+    </div>
+
+    <!-- Divider -->
+    <div style="width: 1px; height: 80px; background: {{ lvl_color }}30; flex-shrink: 0;"></div>
+
+    <!-- Level info + progress bar -->
+    <div style="flex: 1; min-width: 200px;">
+        <div style="font-size: 1.3rem; font-weight: 700; color: {{ lvl_color }}; margin-bottom: 6px;">{{ lvl }}</div>
+        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">
+            {% trans "Prochain palier" %}: <strong>{{ next }} pts</strong>
+        </div>
+        <!-- Progress bar -->
+        <div style="background: #e2e8f0; border-radius: 100px; height: 10px; overflow: hidden;">
+            <div style="height: 100%; background: {{ lvl_color }}; border-radius: 100px; width: {% widthratio pts next 100 %}%; transition: width 1s ease;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+            <span style="font-size: 0.72rem; color: #94a3b8;">{{ pts }} pts</span>
+            <span style="font-size: 0.72rem; color: #94a3b8;">{{ next }} pts</span>
+        </div>
+    </div>
+
+    <!-- Motivational message -->
+    <div style="text-align: center; min-width: 140px;">
+        <div style="font-size: 0.9rem; color: #475569; margin-bottom: 4px;">
+            {% if pts >= next %}
+                🎉 {% trans "Niveau atteint !" %}
+            {% else %}
+                💪 {% trans "Objectif" %}: <strong>{{ next }} pts</strong>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.78rem; color: #94a3b8;">{% trans "Continuez comme ça !" %}</div>
+    </div>
+</div>
+{% endwith %}

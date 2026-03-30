@@ -1,0 +1,103 @@
+{% load static %}
+{% load i18n %}
+
+<header class="topbar">
+    <div class="topbar-left">
+        <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="topbar-title">{% block page_title %}{% trans "Tableau de bord" %}{% endblock %}</h1>
+    </div>
+    <div class="topbar-right">
+        <div class="topbar-search">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="{% trans 'Rechercher...' %}" />
+        </div>
+        <!-- Notification Bell -->
+        <div x-data="{ notifOpen: false }" style="position:relative; margin-right:8px;">
+            <button @click="notifOpen = !notifOpen" class="topbar-bell" style="position:relative; border:none; padding:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_count %}
+                <span class="badge" style="position:absolute; top:2px; right:2px;">{{ unread_count }}</span>
+                {% endif %}
+            </button>
+            <div x-show="notifOpen" @click.outside="notifOpen = false" class="notif-dropdown">
+                <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong>{% trans "Notifications" %}</strong>
+                    {% if unread_count %}<span class="badge-status" style="font-size:0.7rem;">{{ unread_count }} {% trans "non lues" %}</span>{% endif %}
+                </div>
+                <div class="dropdown-divider"></div>
+                <div style="max-height:300px; overflow-y:auto;">
+                    {% for notif in recent_notifications %}
+                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
+                        <div style="font-size:0.85rem; color:#1e293b;">{{ notif.message|truncatechars:60 }}</div>
+                        <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                    </a>
+                    {% empty %}
+                    <div class="dropdown-item text-muted" style="display:flex; justify-content:center; padding:16px;">{% trans "Aucune notification" %}</div>
+                    {% endfor %}
+                </div>
+                {% if unread_count %}
+                <div style="border-top:1px solid #e2e8f0; padding:8px 16px;">
+                    <form method="post" action="{% url 'notifications:mark_all_read' %}" style="text-align:center;">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none; border:none; color:#2563eb; cursor:pointer; font-size:0.8rem; font-weight:500;">{% trans "Tout marquer comme lu" %}</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Profile Dropdown -->
+        <div x-data="{ profileOpen: false }" style="position:relative;">
+            <button @click="profileOpen = !profileOpen" class="topbar-avatar-btn" style="display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; padding:4px 8px; border-radius:8px;">
+                <div class="topbar-avatar" style="overflow:hidden;">{% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}{% endif %}</div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div x-show="profileOpen" @click.outside="profileOpen = false" class="profile-dropdown" style="position:absolute; right:0; top:calc(100% + 8px); width:220px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.12); z-index:200; overflow:hidden;">
+                <div style="padding:12px 16px;">
+                    <strong style="font-size:0.9rem;">{{ user.get_full_name }}</strong>
+                    <div class="text-muted" style="font-size:0.75rem;">{{ user.get_role_display }}</div>
+                </div>
+                <div style="height:1px; background:#e2e8f0;"></div>
+                <a href="{% url 'accounts:profile' %}" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#1e293b; text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {% trans "Mon Profil" %}
+                </a>
+                <a href="{% url 'dashboard:router' %}" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#1e293b; text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    {% trans "Tableau de bord" %}
+                </a>
+                <div style="height:1px; background:#e2e8f0;"></div>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" style="display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:0.85rem; color:#dc2626; background:none; border:none; width:100%; cursor:pointer; text-align:left;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        {% trans "Déconnexion" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Language Switch -->
+        <form method="post" class="no-validation" action="{% url 'set_language' %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="topbar-btn" title="{% if LANGUAGE_CODE == 'fr' %}English{% else %}Français{% endif %}">
+                🌐 {% if LANGUAGE_CODE == 'fr' %}EN{% else %}FR{% endif %}
+            </button>
+        </form>
+
+        <!-- Logout -->
+        <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="topbar-btn topbar-logout" title="{% trans 'Déconnexion' %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+        </form>
+    </div>
+</header>

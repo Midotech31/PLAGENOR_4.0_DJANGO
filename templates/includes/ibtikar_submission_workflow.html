@@ -1,0 +1,94 @@
+{% load i18n %}
+{# Shared IBTIKAR post-validation workflow — used in requester dashboard, detail page, and guest tracking #}
+{# Requires: ibk_req (the Request object), ibk_form_url (IBTIKAR form download URL), ibk_code_submit_url (code submission URL) #}
+
+{% if ibk_req.status == 'IBTIKAR_SUBMISSION_PENDING' %}
+<!-- Step 1: Approval modal + Step 2: Enter IBTIKAR code -->
+<div class="card mb-4" style="border:2px solid #818cf8;">
+    <div class="card-body" style="padding:24px;" x-data="{ showModal: true, codeStep: false }">
+        <!-- APPROVAL MODAL -->
+        <div x-show="showModal" style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:24px; margin-bottom:16px;">
+            <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;">
+                <div style="width:40px; height:40px; border-radius:50%; background:#c7d2fe; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <div>
+                    <h3 style="margin:0 0 8px; color:#312e81; font-size:1.1rem;">{% trans "Votre demande a été acceptée" %}</h3>
+                    <p style="color:#4338ca; font-size:0.9rem; margin:0 0 16px; line-height:1.6;">
+                        {% trans "Cher(e) étudiant(e) / doctorant(e)," %}<br>
+                        {% trans "Veuillez suivre les étapes ci-dessous :" %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 1: Download form -->
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:10px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                <div style="flex:1;">
+                    <span style="font-size:0.9rem; font-weight:600;">{% trans "Téléchargez le formulaire IBTIKAR" %}</span>
+                </div>
+                <a href="{{ ibk_form_url }}" class="btn btn-sm btn-outline" style="white-space:nowrap;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger" %}
+                </a>
+            </div>
+
+            <!-- Step 2: Go to IBTIKAR-DGRSDT -->
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:10px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                <div style="flex:1;">
+                    <span style="font-size:0.9rem; font-weight:600;">{% trans "Soumettez votre demande sur IBTIKAR-DGRSDT" %}</span>
+                </div>
+                <a href="https://ibtikar.dgrsdt.dz" target="_blank" rel="noopener" class="btn btn-sm btn-primary" style="white-space:nowrap;" @click="showModal = false; codeStep = true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    {% trans "Accéder à IBTIKAR-DGRSDT" %}
+                </a>
+            </div>
+
+            <!-- Step 3: Come back with code -->
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#fff; border-radius:8px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                <div style="flex:1;">
+                    <span style="font-size:0.9rem; font-weight:600;">{% trans "Revenez ici et saisissez votre code IBTIKAR" %}</span>
+                    <p class="text-muted" style="font-size:0.8rem; margin:4px 0 0;">{% trans "Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on vous fixe un rendez-vous." %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CODE INPUT (always visible when modal is closed, or user scrolled down) -->
+        <div x-show="!showModal || codeStep" x-cloak>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
+                <h4 style="margin:0 0 12px; font-size:0.95rem;">{% trans "Saisissez votre code IBTIKAR" %}</h4>
+                <form method="post" action="{{ ibk_code_submit_url }}" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                    {% csrf_token %}
+                    <div style="flex:1; min-width:200px;">
+                        <label class="text-sm" style="font-size:0.8rem; color:#64748b;">{% trans "Code de votre demande IBTIKAR" %}</label>
+                        <input type="text" name="ibtikar_code" class="form-control" placeholder="{% trans 'Ex: IBK-DGRSDT-2026-XXXX' %}" required style="font-family:monospace; font-size:0.95rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding:10px 20px;">{% trans "Soumettre le code" %}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Show steps button if modal was closed -->
+        <div x-show="!showModal" style="margin-top:12px;">
+            <button type="button" class="btn btn-sm btn-outline" @click="showModal = true" style="font-size:0.8rem;">{% trans "Revoir les instructions" %}</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if ibk_req.status == 'IBTIKAR_CODE_SUBMITTED' %}
+<!-- Code submitted — waiting for admin -->
+<div class="card mb-4" style="border:2px solid #bbf7d0;">
+    <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
+        <div style="width:40px; height:40px; border-radius:50%; background:#d1fae5; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+            <strong style="color:#065f46;">{% trans "Code IBTIKAR soumis" %}: <span style="font-family:monospace;">{{ ibk_req.ibtikar_external_code }}</span></strong>
+            <p class="text-muted" style="font-size:0.85rem; margin:4px 0 0;">{% trans "Votre code a été transmis au responsable de la plateforme. Une proposition de date pour la réception de vos échantillons vous sera communiquée prochainement." %}</p>
+        </div>
+    </div>
+</div>
+{% endif %}

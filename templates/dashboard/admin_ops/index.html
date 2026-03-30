@@ -1,0 +1,854 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{% trans "Administration" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Gestion des demandes et assignations" %}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    {% trans "Total demandes" as lbl_total %}
+    {% trans "En attente" as lbl_pending %}
+    {% trans "Complétées" as lbl_completed %}
+    {% include 'includes/kpi_card.html' with icon='clipboard' value=total_requests label=lbl_total color='blue' %}
+    {% include 'includes/kpi_card.html' with icon='clock' value=pending_count label=lbl_pending color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='graduation-cap' value=ibtikar_count label='IBTIKAR' color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='check' value=completed_count label=lbl_completed color='green' %}
+</div>
+
+<!-- Tab Navigation -->
+<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'pending'}">
+    <div class="tab-list" style="margin-bottom: 24px;">
+        <button class="tab-item" :class="tab === 'pending' && 'active'" @click="tab = 'pending'">{% trans "En attente" %} ({{ pending_count }})</button>
+        <button class="tab-item" :class="tab === 'all' && 'active'" @click="tab = 'all'">{% trans "Toutes les demandes" %}</button>
+        <button class="tab-item" :class="tab === 'assign' && 'active'" @click="tab = 'assign'">{% trans "Assignation" %}</button>
+        <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
+        <button class="tab-item" :class="tab === 'performance' && 'active'" @click="tab = 'performance'">{% trans "Performance" %}</button>
+        <button class="tab-item" :class="tab === 'ratings' && 'active'" @click="tab = 'ratings'">{% trans "Avis" %} ({{ total_ratings }})</button>
+        <button class="tab-item" :class="tab === 'reports' && 'active'" @click="tab = 'reports'">{% trans "Rapports" %}</button>
+    </div>
+
+    <!-- Pending Requests — organized by action type -->
+    <div x-show="tab === 'pending'">
+
+        <!-- Section 1: Demandes à valider -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Demandes à valider" %}</h3></div>
+            <div class="card-body">
+                {% for req in validation_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Invité" %}{% endif %}</span>
+                        <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        {% if req.status == 'SUBMITTED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="VALIDATION_PEDAGOGIQUE">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Validation Pédagogique" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <input type="hidden" name="notes" value="Rejeté par admin">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="VALIDATION_FINANCE">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Validation Finance" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'VALIDATION_FINANCE' %}
+                        <!-- Cost display + adjustment -->
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:12px;">
+                            <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">{% trans "Coût de la prestation" %}</div>
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Coût estimé" %}:</span>
+                                    <strong>{{ req.budget_amount|default:req.quote_amount|default:0 }} DA</strong>
+                                </div>
+                                {% if req.admin_validated_price %}
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Coût validé" %}:</span>
+                                    <strong style="color:#059669;">{{ req.admin_validated_price }} DA</strong>
+                                </div>
+                                {% endif %}
+                                {% if req.channel == 'IBTIKAR' and req.declared_ibtikar_balance %}
+                                <div>
+                                    <span class="text-muted text-sm">{% trans "Solde IBTIKAR déclaré" %}:</span>
+                                    <strong>{{ req.declared_ibtikar_balance }} DA</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <form method="post" action="{% url 'dashboard:admin_adjust_cost' req.pk %}" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                                {% csrf_token %}
+                                <div>
+                                    <label class="text-sm" style="font-size:0.75rem;">{% trans "Ajuster le coût (DA)" %}</label>
+                                    <input type="number" name="admin_price" step="0.01" value="{{ req.admin_validated_price|default:req.budget_amount|default:req.quote_amount }}" class="form-control" style="width:140px; font-size:0.85rem;">
+                                </div>
+                                <div>
+                                    <label class="text-sm" style="font-size:0.75rem;">{% trans "Justification" %}</label>
+                                    <input type="text" name="cost_justification" placeholder="{% trans 'Raison du changement...' %}" class="form-control" style="width:200px; font-size:0.85rem;">
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-outline">{% trans "Ajuster" %}</button>
+                            </form>
+                        </div>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="PLATFORM_NOTE_GENERATED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider & Générer Note" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'REQUEST_CREATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="QUOTE_DRAFT">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Préparer devis" %}</button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="REJECTED">
+                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Rejeter" %}</button>
+                        </form>
+
+                        {% elif req.status == 'QUOTE_DRAFT' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="QUOTE_SENT">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer devis" %}</button>
+                        </form>
+
+                        {% elif req.status == 'QUOTE_SENT' %}
+                        <span class="text-sm text-muted">{% trans "En attente de réponse du client" %}</span>
+
+                        {% elif req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="INVOICE_GENERATED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer facture" %}</button>
+                        </form>
+
+                        {% elif req.status == 'INVOICE_GENERATED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="PAYMENT_CONFIRMED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer paiement" %}</button>
+                        </form>
+                        {% endif %}
+
+                        {# Contact button for any request with email #}
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% elif req.guest_email %}
+                        <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" style="margin-left:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en attente de validation." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 2: Demandes à assigner -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Demandes à assigner" %}</h3></div>
+            <div class="card-body">
+                {% for req in assignable_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Invité" %}{% endif %}</span>
+                        <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div style="margin:8px 0;">
+                        <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline" style="margin-bottom:8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            {% trans "Télécharger la Note de Plateforme" %}
+                        </a>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="member_id" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                                <option value="">— {% trans "Assigner à" %} —</option>
+                                {% for m in available_members %}
+                                <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+                        </form>
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% elif req.guest_email %}
+                        <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" style="margin-left:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer par la validation." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 3: Rapports à réviser -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Rapports à réviser" %}</h3></div>
+            <div class="card-body">
+                {% for req in review_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
+                        <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'dashboard:admin_report_review' req.pk %}" class="btn btn-sm btn-primary">{% trans "Réviser rapport" %}</a>
+                        {% if req.report_file %}
+                        <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Télécharger" %}</a>
+                        {% endif %}
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucun rapport en attente de révision." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 4: Complétions et clôtures -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Complétions et clôtures" %}</h3></div>
+            <div class="card-body">
+                {% for req in completion_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
+                        <span>{{ req.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        {% if req.status == 'REPORT_VALIDATED' and req.channel == 'IBTIKAR' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SENT_TO_REQUESTER">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                                {% trans "Transmettre au demandeur" %}
+                            </button>
+                        </form>
+
+                        {% elif req.status == 'REPORT_VALIDATED' and req.channel == 'GENOCLAB' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SENT_TO_CLIENT">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                                {% trans "Transmettre au client" %}
+                            </button>
+                        </form>
+
+                        {% elif req.status == 'COMPLETED' and req.channel == 'IBTIKAR' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="CLOSED">
+                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Clôturer" %}</button>
+                        </form>
+
+                        {% elif req.status == 'COMPLETED' and req.channel == 'GENOCLAB' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="ARCHIVED">
+                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Archiver" %}</button>
+                        </form>
+                        {% endif %}
+
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en attente de complétion." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 5: En cours de traitement -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "En cours de traitement" %}</h3></div>
+            <div class="card-body">
+                {% for req in in_progress_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{{ req.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date and not req.appointment_confirmed %}
+                        <span class="text-sm text-muted">{% trans "RDV proposé" %}: {{ req.appointment_date|date:"d/m/Y" }} — {% trans "En attente de confirmation du demandeur" %}</span>
+                        <form method="post" action="{% url 'dashboard:admin_modify_appointment' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="date" name="appointment_date" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" value="{{ req.appointment_date|date:'Y-m-d' }}">
+                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Modifier RDV" %}</button>
+                        </form>
+
+                        {% elif req.status == 'APPOINTMENT_CONFIRMED' %}
+                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Marquer échantillon reçu" %}</button>
+                        </form>
+
+                        {% else %}
+                        <span class="text-sm text-muted">{% trans "En cours" %} — {{ req.get_status_display }}</span>
+                        {% endif %}
+
+                        {% if req.requester and req.requester.email %}
+                        <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" style="margin-left:4px;" title="{% trans 'Contacter par email' %}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% elif req.guest_email %}
+                        <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" style="margin-left:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {% trans "Contacter" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if req.assigned_to %}
+                    <div class="data-card-row mt-2" x-data="{showMsg: false}">
+                        <button type="button" class="btn btn-sm btn-outline" @click="showMsg = !showMsg">{% trans "Envoyer message" %}</button>
+                        <form x-show="showMsg" method="post" action="{% url 'dashboard:send_message' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="text" name="message_text" placeholder="{% trans 'Message...' %}" class="form-control" style="display:inline-block; width:250px; font-size:0.85rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {% for msg in req.messages.all|slice:":3" %}
+                    <div class="data-card-row text-sm" style="background: var(--slate-50); padding: 4px 8px; border-radius: 4px; margin-top: 4px;">
+                        <span><strong>{{ msg.from_user.get_full_name }}</strong>: {{ msg.text|truncatechars:60 }}</span>
+                        <span class="text-xs text-muted">{{ msg.created_at|date:"d/m H:i" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en cours de traitement." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- All Requests -->
+    <div x-show="tab === 'all'">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% trans "Toutes les demandes" %}</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" action="" class="flex gap-2 mb-4" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <input type="hidden" name="tab" value="all">
+                    <select name="channel" class="form-control" style="width:auto;">
+                        <option value="">{% trans "Tous les canaux" %}</option>
+                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
+                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                    </select>
+                    <select name="status" class="form-control" style="width:auto;">
+                        <option value="">{% trans "Tous les statuts" %}</option>
+                        <optgroup label="{% trans 'Commun' %}">
+                            <option value="ASSIGNED" {% if status_filter == 'ASSIGNED' %}selected{% endif %}>{% trans "Assigné" %}</option>
+                            <option value="APPOINTMENT_PROPOSED" {% if status_filter == 'APPOINTMENT_PROPOSED' %}selected{% endif %}>{% trans "RDV Proposé" %}</option>
+                            <option value="APPOINTMENT_CONFIRMED" {% if status_filter == 'APPOINTMENT_CONFIRMED' %}selected{% endif %}>{% trans "RDV Confirmé" %}</option>
+                            <option value="SAMPLE_RECEIVED" {% if status_filter == 'SAMPLE_RECEIVED' %}selected{% endif %}>{% trans "Échantillon Reçu" %}</option>
+                            <option value="ANALYSIS_STARTED" {% if status_filter == 'ANALYSIS_STARTED' %}selected{% endif %}>{% trans "Analyse Démarrée" %}</option>
+                            <option value="ANALYSIS_FINISHED" {% if status_filter == 'ANALYSIS_FINISHED' %}selected{% endif %}>{% trans "Analyse Terminée" %}</option>
+                            <option value="REPORT_UPLOADED" {% if status_filter == 'REPORT_UPLOADED' %}selected{% endif %}>{% trans "Rapport Uploadé" %}</option>
+                            <option value="REPORT_VALIDATED" {% if status_filter == 'REPORT_VALIDATED' %}selected{% endif %}>{% trans "Rapport Validé" %}</option>
+                            <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>{% trans "Complété" %}</option>
+                            <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>{% trans "Rejeté" %}</option>
+                        </optgroup>
+                        <optgroup label="IBTIKAR">
+                            <option value="SUBMITTED" {% if status_filter == 'SUBMITTED' %}selected{% endif %}>{% trans "Soumis" %}</option>
+                            <option value="VALIDATION_PEDAGOGIQUE" {% if status_filter == 'VALIDATION_PEDAGOGIQUE' %}selected{% endif %}>{% trans "Validation Pédagogique" %}</option>
+                            <option value="VALIDATION_FINANCE" {% if status_filter == 'VALIDATION_FINANCE' %}selected{% endif %}>{% trans "Validation Finance" %}</option>
+                            <option value="PLATFORM_NOTE_GENERATED" {% if status_filter == 'PLATFORM_NOTE_GENERATED' %}selected{% endif %}>{% trans "Note Générée" %}</option>
+                            <option value="IBTIKAR_SUBMISSION_PENDING" {% if status_filter == 'IBTIKAR_SUBMISSION_PENDING' %}selected{% endif %}>{% trans "En attente soumission IBTIKAR" %}</option>
+                            <option value="IBTIKAR_CODE_SUBMITTED" {% if status_filter == 'IBTIKAR_CODE_SUBMITTED' %}selected{% endif %}>{% trans "Code IBTIKAR soumis" %}</option>
+                            <option value="SENT_TO_REQUESTER" {% if status_filter == 'SENT_TO_REQUESTER' %}selected{% endif %}>{% trans "Transmis au Demandeur" %}</option>
+                            <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>{% trans "Clôturé" %}</option>
+                        </optgroup>
+                        <optgroup label="GENOCLAB">
+                            <option value="REQUEST_CREATED" {% if status_filter == 'REQUEST_CREATED' %}selected{% endif %}>{% trans "Demande Créée" %}</option>
+                            <option value="QUOTE_DRAFT" {% if status_filter == 'QUOTE_DRAFT' %}selected{% endif %}>{% trans "Devis En Cours" %}</option>
+                            <option value="QUOTE_SENT" {% if status_filter == 'QUOTE_SENT' %}selected{% endif %}>{% trans "Devis Envoyé" %}</option>
+                            <option value="QUOTE_VALIDATED_BY_CLIENT" {% if status_filter == 'QUOTE_VALIDATED_BY_CLIENT' %}selected{% endif %}>{% trans "Devis Accepté" %}</option>
+                            <option value="QUOTE_REJECTED_BY_CLIENT" {% if status_filter == 'QUOTE_REJECTED_BY_CLIENT' %}selected{% endif %}>{% trans "Devis Refusé" %}</option>
+                            <option value="INVOICE_GENERATED" {% if status_filter == 'INVOICE_GENERATED' %}selected{% endif %}>{% trans "Facture Émise" %}</option>
+                            <option value="PAYMENT_CONFIRMED" {% if status_filter == 'PAYMENT_CONFIRMED' %}selected{% endif %}>{% trans "Paiement Confirmé" %}</option>
+                            <option value="SENT_TO_CLIENT" {% if status_filter == 'SENT_TO_CLIENT' %}selected{% endif %}>{% trans "Transmis au Client" %}</option>
+                            <option value="ARCHIVED" {% if status_filter == 'ARCHIVED' %}selected{% endif %}>{% trans "Archivé" %}</option>
+                        </optgroup>
+                    </select>
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Rechercher...' %}" class="form-control" style="width:200px;">
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filtrer" %}</button>
+                    {% if channel_filter or status_filter or search_q %}
+                    <a href="?tab=all" class="btn btn-outline btn-sm">{% trans "Réinitialiser" %}</a>
+                    {% endif %}
+                </form>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Canal" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Demandeur" %}</th>
+                                <th>{% trans "Assigné" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Contact" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in all_requests %}
+                        <tr>
+                            <td><strong>{{ req.display_id }}</strong></td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.get_channel_display }}</td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{{ req.requester.get_full_name|default:"—" }}</td>
+                            <td>{{ req.assigned_to.user.get_full_name|default:"—" }}</td>
+                            <td>{{ req.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if req.requester and req.requester.email %}
+                                <a href="mailto:{{ req.requester.email }}?subject=PLAGENOR%20{{ req.display_id }}%20-%20{{ req.title|urlencode }}" class="btn btn-sm btn-outline" title="{% trans 'Contacter par email' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </a>
+                                {% elif req.guest_email %}
+                                <a href="mailto:{{ req.guest_email }}?subject=PLAGENOR%20{{ req.display_id }}" class="btn btn-sm btn-outline" title="{% trans 'Contacter par email' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </a>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td><a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" class="text-center text-muted">{% trans "Aucune demande trouvée." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Panel -->
+    <div x-show="tab === 'assign'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Panneau d'assignation" %}</h3></div>
+            <div class="card-body">
+                <h4 class="mb-2">{% trans "Analystes disponibles" %}</h4>
+                <p class="text-sm text-muted" style="margin-bottom:12px;">
+                    {% trans "Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet" %}
+                    <a href="#" @click.prevent="tab = 'performance'" style="color:var(--primary); font-weight:500;">{% trans "Performance" %}</a>.
+                </p>
+                <div class="table-wrapper mb-4">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "Analyste" %}</th>
+                                <th>{% trans "Charge" %}</th>
+                                <th>{% trans "Productivité" %}</th>
+                                <th>{% trans "Points" %}</th>
+                                <th>{% trans "Disponible" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in available_members %}
+                        <tr>
+                            <td>
+                                {% if m.user.avatar %}
+                                <img src="{{ m.user.avatar.url }}" alt="" style="width:28px; height:28px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px; border:1px solid #e2e8f0;">
+                                {% endif %}
+                                <strong>{{ m.user.get_full_name }}</strong>
+                            </td>
+                            <td>{{ m.current_load }}/{{ m.max_load }}</td>
+                            <td>{{ m.productivity_score }}%</td>
+                            <td>{{ m.total_points }}</td>
+                            <td>
+                                {% if m.available %}
+                                <span class="badge-status completed">{% trans "Oui" %}</span>
+                                {% else %}
+                                <span class="badge-status rejected">{% trans "Non" %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4 class="mb-2">{% trans "Demandes à assigner" %}</h4>
+                {% for req in assignable_requests %}
+                <div class="data-card mb-2">
+                    <div class="data-card-row">
+                        <span><strong>{{ req.display_id }}</strong> — {{ req.title|truncatechars:40 }}</span>
+                        <div>
+                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir" %}</a>
+                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Invité" %}{% endif %}</span>
+                        <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" class="data-card-row mt-2" style="gap: 0.5rem;">
+                        {% csrf_token %}
+                        <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>
+                            <option value="">— {% trans "Assigner à" %} —</option>
+                            {% for m in available_members %}
+                            <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer par la validation." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget -->
+    <div x-show="tab === 'budget'">
+        <div class="grid-2 mb-4">
+            {% trans "Budget IBTIKAR (virtuel)" as lbl_ibt_budget %}
+            {% trans "Revenus GENOCLAB (réel)" as lbl_gen_rev %}
+            {% include 'includes/kpi_card.html' with icon='dollar' value=ibtikar_budget label=lbl_ibt_budget color='blue' %}
+            {% include 'includes/kpi_card.html' with icon='dollar' value=genoclab_revenue label=lbl_gen_rev color='green' %}
+        </div>
+
+        <!-- No more static table here — moved to Performance tab -->
+    </div>
+
+    <!-- Performance & Points Ranking -->
+    <div x-show="tab === 'performance'">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% trans "Performance & Points" %}</h3>
+                <span class="badge-status" style="background:#e0f2fe;color:#0369a1;">{{ all_members_ranked|length }} {% trans "analystes" %}</span>
+            </div>
+            <div class="card-body" style="padding: 24px;">
+                {% if all_members_ranked %}
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    {% for m in all_members_ranked %}
+                    {% with pct_prod=m.productivity_score|add:0 %}
+                    {% with pct_pts=m.total_points|default:0 %}
+                    {% with bar_width_prod=pct_prod %}
+                    {% with bar_width_pts=pct_pts|add:0 %}
+                    {% with member_name=m.user.get_full_name|default:m.user.username %}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden;" x-data="{ open{{ m.pk }}: false }">
+                        <!-- Top row: rank, avatar, name, points, actions -->
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <!-- Rank badge -->
+                            <div style="min-width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; {% if forloop.first %}background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;{% elif forloop.counter == 2 %}background:linear-gradient(135deg,#94a3b8,#64748b);color:white;{% elif forloop.counter == 3 %}background:linear-gradient(135deg,#d97706,#b45309);color:white;{% else %}background:#f1f5f9;color:#64748b;{% endif %}">
+                                {{ forloop.counter }}
+                            </div>
+                            <!-- Avatar -->
+                            <img src="{% if m.user.avatar %}{{ m.user.avatar.url }}{% else %}/static/images/plagenor_logo.png{% endif %}" alt="{{ member_name }}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid {% if forloop.first %}#f59e0b{% elif forloop.counter == 2 %}#94a3b8{% elif forloop.counter == 3 %}#d97706{% else %}#e2e8f0{% endif %};">
+                            <!-- Name & Load -->
+                            <div style="flex:1; min-width:120px;">
+                                <div style="font-weight:600; font-size:0.95rem; color:#1e293b;">{{ member_name }}</div>
+                                <div style="font-size:0.78rem; color:#94a3b8;">
+                                    {% trans "Charge" %}: {{ m.current_load }}/{{ m.max_load }} ({{ m.load_percentage }}%)
+                                    {% if m.available %}<span style="color:#059669;margin-left:6px;">●</span>{% else %}<span style="color:#dc2626;margin-left:6px;">○</span>{% endif %}
+                                </div>
+                            </div>
+                            <!-- Points display -->
+                            <div style="text-align:center; min-width:80px;">
+                                <div style="font-size:1.4rem; font-weight:800; color:#7c3aed; line-height:1;">{{ m.total_points }}</div>
+                                <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:#a78bfa;">{% trans "pts" %}</div>
+                            </div>
+                            <!-- Productivity score -->
+                            <div style="text-align:center; min-width:80px;">
+                                <div style="font-size:1.4rem; font-weight:800; color:#0891b2; line-height:1;">{{ m.productivity_score }}%</div>
+                                <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:#22d3ee;">{% trans "prod." %}</div>
+                            </div>
+                            <!-- Action buttons -->
+                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                                <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                    {% csrf_token %}
+                                    <input type="number" name="points" min="1" max="100" value="10" class="form-control" style="width:52px; font-size:0.8rem; height:32px; padding:4px 6px;" title="{% trans 'Points' %}">
+                                    <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:100px; font-size:0.8rem; height:32px; padding:4px 8px;">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="height:32px; font-size:0.78rem; padding:4px 10px;" title="{% trans 'Attribuer points' %}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        {% trans "Pts" %}
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:admin_send_cheer' m.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                    {% csrf_token %}
+                                    <input type="text" name="message" placeholder="{% trans 'Message encourageant...' %}" class="form-control" style="width:140px; font-size:0.8rem; height:32px; padding:4px 8px;" title="{% trans 'Message' %}">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="height:32px; font-size:0.78rem; padding:4px 10px; color:#d97706; border-color:#d97706;" title="{% trans 'Envoyer un encouragement' %}">
+                                        💪
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Performance bar -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.72rem; color:#64748b; font-weight:500;">{% trans "Performance" %}</span>
+                                <span style="font-size:0.72rem; color:#0891b2; font-weight:600;">{{ m.productivity_score }}%</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:100px; height:8px; overflow:hidden;">
+                                <div style="height:100%; border-radius:100px; width:{{ bar_width_prod }}%; background:linear-gradient(90deg, #06b6d4, #0891b2); transition:width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                        <!-- Points bar -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.72rem; color:#64748b; font-weight:500;">{% trans "Points" %}</span>
+                                <span style="font-size:0.72rem; color:#7c3aed; font-weight:600;">{{ m.total_points }} pts</span>
+                            </div>
+                            <div style="background:#ede9fe; border-radius:100px; height:8px; overflow:hidden;">
+                                <div style="height:100%; border-radius:100px; width:{% widthratio m.total_points max_points 100 %}%; background:linear-gradient(90deg, #8b5cf6, #7c3aed); transition:width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                        <!-- Gift box section -->
+                        {% if m.total_points >= 100 or m.gift_unlocked %}
+                        <div style="border-top:1px solid #e2e8f0; padding-top:10px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <span style="font-size:1.3rem;">🎁</span>
+                            <div style="flex:1; min-width:120px;">
+                                {% if m.gift_collected %}
+                                <span style="font-size:0.82rem; color:#059669; font-weight:600;">✅ {% trans "Cadeau récupéré" %}</span>
+                                {% elif m.gift_image %}
+                                <span style="font-size:0.82rem; color:#d97706; font-weight:600;">⏳ {% trans "En attente de récupération" %}</span>
+                                <img src="{{ m.gift_image.url }}" alt="" style="width:40px; height:40px; border-radius:6px; object-fit:cover; margin-left:8px; vertical-align:middle; border:1px solid #fde68a;">
+                                {% else %}
+                                <span style="font-size:0.82rem; color:#7c3aed; font-weight:600;">🔓 {% trans "Boîte débloquée — ajoutez une récompense" %}</span>
+                                {% endif %}
+                            </div>
+                            {% if not m.gift_collected %}
+                            <form method="post" action="{% url 'dashboard:admin_upload_gift' m.pk %}" enctype="multipart/form-data" style="display:inline-flex; gap:6px; align-items:center;">
+                                {% csrf_token %}
+                                <input type="file" name="gift_image" accept="image/*" class="form-control" style="width:160px; font-size:0.78rem; height:32px; padding:4px 6px;" title="{% trans 'Image récompense' %}">
+                                <button type="submit" class="btn btn-sm btn-outline" style="height:32px; font-size:0.78rem; padding:4px 10px; color:#7c3aed; border-color:#7c3aed;" title="{% trans 'Déposer la récompense' %}">
+                                    {% trans "Déposer" %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>{% trans "Aucun analyste enregistré." %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports -->
+    <div x-show="tab === 'reports'">
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Rapports en attente de révision" %}</h3></div>
+            <div class="card-body">
+                {% for req in pending_requests %}
+                    {% if req.status == 'REPORT_UPLOADED' or req.status == 'ADMIN_REVIEW' %}
+                    <div class="data-card mb-2">
+                        <div class="data-card-row">
+                            <span><strong>{{ req.display_id }}</strong> — {{ req.title|truncatechars:40 }}</span>
+                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                        </div>
+                        <div class="data-card-row text-sm text-muted">
+                            <span>{% trans "Analyste" %}: {{ req.assigned_to.user.get_full_name|default:"—" }}</span>
+                            {% if req.report_file %}
+                            <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Télécharger" %}</a>
+                            {% endif %}
+                        </div>
+                        <div class="data-card-row mt-2" style="gap: 0.5rem;">
+                            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="to_status" value="REPORT_VALIDATED">
+                                <input type="text" name="notes" placeholder="{% trans 'Notes...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Valider" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
+                                <input type="text" name="notes" placeholder="{% trans 'Raison du renvoi...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Renvoyer" %}</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucun rapport en attente." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ratings & Reviews -->
+    <div x-show="tab === 'ratings'">
+        <!-- Rating Overview KPIs -->
+        <div class="grid-2 mb-4">
+            <div class="kpi-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="kpi-icon" style="background: rgba(255,255,255,0.2); color: white;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" style="color: white; font-size: 2.5rem;">{{ avg_rating|floatformat:1 }} <span style="font-size: 1rem;">/ 5</span></div>
+                    <div class="kpi-label" style="color: rgba(255,255,255,0.9);">{% trans "Note moyenne" %}</div>
+                </div>
+            </div>
+            <div class="kpi-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <div class="kpi-icon" style="background: rgba(255,255,255,0.2); color: white;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" style="color: white;">{{ total_ratings }}</div>
+                    <div class="kpi-label" style="color: rgba(255,255,255,0.9);">{% trans "Total avis" %}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Répartition des notes" %}</h3></div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for star, count in rating_distribution.items %}
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="min-width: 60px; font-weight: 600;">{{ star }} ★</span>
+                        <div style="flex: 1; background: #e2e8f0; border-radius: 4px; height: 24px; overflow: hidden;">
+                            {% if total_ratings > 0 %}
+                            <div style="background: linear-gradient(90deg, #f59e0b, #fbbf24); height: 100%; border-radius: 4px; width: {{ rating_percentages|get_item:star }}%;"></div>
+                            {% endif %}
+                        </div>
+                        <span style="min-width: 50px; text-align: right; font-size: 0.9rem; color: #64748b;">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reviews -->
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Avis récents" %}</h3></div>
+            <div class="card-body">
+                {% for review in recent_reviews %}
+                <div class="data-card mb-3" style="border-left: 4px solid #f59e0b;">
+                    <div class="data-card-row" style="justify-content: space-between;">
+                        <div>
+                            <strong>{{ review.display_id }}</strong> — {{ review.title|truncatechars:50 }}
+                            <span class="badge-status {{ review.channel|lower }}" style="margin-left: 8px;">{{ review.get_channel_display }}</span>
+                        </div>
+                        <div style="color: #f59e0b; font-size: 1.2rem;">
+                            {% for i in "12345" %}{% if forloop.counter <= review.service_rating %}★{% else %}☆{% endif %}{% endfor %}
+                            <span style="color: #64748b; font-size: 0.9rem; margin-left: 4px;">{{ review.service_rating }}/5</span>
+                        </div>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{% trans "Par" %}: {{ review.requester.get_full_name|default:"—" }}</span>
+                        <span>{{ review.rated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    {% if review.rating_comment %}
+                    <div class="data-card-row" style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-top: 8px;">
+                        <span style="font-style: italic; color: #92400e;">"{{ review.rating_comment }}"</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <p>{% trans "Aucun avis pour le moment." %}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

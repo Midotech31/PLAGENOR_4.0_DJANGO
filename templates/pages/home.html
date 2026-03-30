@@ -1,0 +1,168 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+{% load cms %}
+
+{% block title %}PLAGENOR 4.0 — {% trans "Accueil" %}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+    <!-- DNA Double Helix — decorative SVG accent (right side) -->
+    <svg aria-hidden="true" focusable="false"
+         style="position:absolute; right:0; top:0; height:100%; width:auto; max-width:340px; opacity:0.13; pointer-events:none; user-select:none;"
+         viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid meet">
+        <!-- Strand A: sine wave going right-to-left -->
+        <path d="M80,0 C120,20 40,60 80,80 C120,100 40,140 80,160 C120,180 40,220 80,240 C120,260 40,300 80,320 C120,340 40,380 80,400 C120,420 40,460 80,480"
+              fill="none" stroke="#67e8f9" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Strand B: sine wave going left-to-right (phase shifted 180°) -->
+        <path d="M80,0 C40,20 120,60 80,80 C40,100 120,140 80,160 C40,180 120,220 80,240 C40,260 120,300 80,320 C40,340 120,380 80,400 C40,420 120,460 80,480"
+              fill="none" stroke="#a5f3fc" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Base pairs (rungs) — horizontal connectors at crossing points -->
+        <!-- Each rung at the midpoint between crossings (every 40px) -->
+        <line x1="80" y1="40"  x2="80" y2="40"  stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
+        <!-- Rungs at the widest separation points -->
+        <line x1="40"  y1="40"  x2="120" y2="40"  stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="120" x2="120" y2="120" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="200" x2="120" y2="200" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="280" x2="120" y2="280" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="360" x2="120" y2="360" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="440" x2="120" y2="440" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <!-- Rungs at crossing points (narrower) -->
+        <line x1="68"  y1="80"  x2="92"  y2="80"  stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="160" x2="92"  y2="160" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="240" x2="92"  y2="240" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="320" x2="92"  y2="320" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="68"  y1="400" x2="92"  y2="400" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <!-- Nucleotide dots on strand A -->
+        <circle cx="120" cy="40"  r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="120" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="120" cy="200" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="280" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="120" cy="360" r="4" fill="#67e8f9" opacity="0.9"/>
+        <circle cx="40"  cy="440" r="4" fill="#67e8f9" opacity="0.9"/>
+        <!-- Nucleotide dots on strand B -->
+        <circle cx="40"  cy="40"  r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="120" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="40"  cy="200" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="280" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="40"  cy="360" r="4" fill="#a5f3fc" opacity="0.9"/>
+        <circle cx="120" cy="440" r="4" fill="#a5f3fc" opacity="0.9"/>
+    </svg>
+    <!-- DNA Double Helix — left side mirror -->
+    <svg aria-hidden="true" focusable="false"
+         style="position:absolute; left:0; top:0; height:100%; width:auto; max-width:340px; opacity:0.08; pointer-events:none; user-select:none; transform:scaleX(-1);"
+         viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid meet">
+        <path d="M80,0 C120,20 40,60 80,80 C120,100 40,140 80,160 C120,180 40,220 80,240 C120,260 40,300 80,320 C120,340 40,380 80,400 C120,420 40,460 80,480"
+              fill="none" stroke="#67e8f9" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M80,0 C40,20 120,60 80,80 C40,100 120,140 80,160 C40,180 120,220 80,240 C40,260 120,300 80,320 C40,340 120,380 80,400 C40,420 120,460 80,480"
+              fill="none" stroke="#a5f3fc" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="40"  y1="40"  x2="120" y2="40"  stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="120" x2="120" y2="120" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="200" x2="120" y2="200" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="280" x2="120" y2="280" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="360" x2="120" y2="360" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+        <line x1="40"  y1="440" x2="120" y2="440" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+    </svg>
+
+    <div style="text-align:center; position:relative;">
+        <h1 style="font-size:2.5rem; margin-bottom:8px;">{% cms 'hero_title' 'PLAGENOR 4.0' %}</h1>
+        <p style="font-size:1.1rem; opacity:0.85;">{% cms 'hero_subtitle' 'Plateforme Technologique de Génomique — ESSBO · ORAN' %}</p>
+    </div>
+    <p style="position:relative;">{% cms 'hero_description' "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
+    <div class="btn-group" style="position:relative;">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% cms 'hero_btn_submit' 'Soumettre une demande' %}</a>
+        <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_guest' 'Soumission invité' %}</a>
+        <a href="{% url 'services' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_services' 'Voir les services' %}</a>
+        <a href="{% url 'track' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_track' 'Suivi de demande' %}</a>
+    </div>
+</section>
+
+<!-- Channel Cards -->
+<div class="channel-cards">
+    <div class="channel-card">
+        <h3>{% cms 'ibtikar_title' 'IBTIKAR' %}</h3>
+        <p>{% cms 'ibtikar_description' "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR." %}</p>
+    </div>
+    <div class="channel-card genoclab">
+        <h3>{% cms 'genoclab_title' 'GENOCLAB' %}</h3>
+        <p>{% cms 'genoclab_description' "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques." %}</p>
+    </div>
+</div>
+
+<!-- Institutional Partners -->
+<section class="section" style="background:#f8fafc; padding:48px 0;">
+    <div style="max-width:1100px; margin:0 auto; text-align:center; padding:0 32px;">
+        <style>
+            @keyframes logoFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-6px); }
+            }
+            .partner-logo { animation: logoFloat 3s ease-in-out infinite; transition: opacity 0.2s, transform 0.2s; }
+            .partner-logo:nth-child(1) { animation-delay: 0s; }
+            .partner-logo:nth-child(2) { animation-delay: 0.4s; }
+            .partner-logo:nth-child(3) { animation-delay: 0.8s; }
+            .partner-logo:nth-child(4) { animation-delay: 1.2s; }
+            .partner-logo:nth-child(5) { animation-delay: 1.6s; }
+            .partner-logo:hover { opacity: 1 !important; transform: translateY(-8px) scale(1.05); }
+        </style>
+        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:28px; font-weight:500;">{% cms 'institutions_title' 'INSTITUTIONS & PARTENAIRES' %}</h3>
+        <div style="display:flex; align-items:center; justify-content:center; gap:48px; flex-wrap:wrap;">
+            <a href="https://www.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="height:65px; width:auto;">
+            </a>
+            <a href="http://www.essb-oran.edu.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="height:75px; width:auto;">
+            </a>
+            <div class="partner-logo" style="display:flex; align-items:center; opacity:0.9;">
+                <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="height:110px; width:auto;">
+            </div>
+            <a href="https://ibtikar.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" style="height:60px; width:auto;">
+            </a>
+            <a href="https://genoclab.my.canva.site/genoclab-essbo" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
+                <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" style="height:65px; width:auto;">
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Services -->
+{% if services %}
+<section class="section">
+    <h2 class="section-title">{% cms 'services_title' 'Nos Services' %}</h2>
+    <p class="section-subtitle">{% cms 'services_subtitle' 'Analyses scientifiques et techniques proposées par le laboratoire ESSBO' %}</p>
+    <div class="services-grid" style="padding:0;">
+        {% for service in services %}
+        <a href="{% url 'service_landing' service.code %}" style="text-decoration:none; color:inherit;">
+        <div class="service-card">
+            {% if service.image %}
+            <div class="service-icon">
+                <img src="{{ service.image.url }}" alt="{{ service.name }}" style="max-width:64px; max-height:64px; object-fit:contain;">
+            </div>
+            {% else %}
+            <div class="service-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="M17 6l-2.5-2.5"/><path d="M14 8l-1-1"/><path d="M7 18l2.5 2.5"/><path d="M3.5 14.5l.5.5"/><path d="M20 9l.5.5"/><path d="M6.5 12.5l1 1"/><path d="M16.5 10.5l1 1"/></svg>
+            </div>
+            {% endif %}
+            <div class="service-code">{{ service.code }}</div>
+            <h4>{{ service.name }}</h4>
+            <p>{{ service.description|truncatewords:20 }}</p>
+        </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Institutional Context -->
+<section class="section" style="text-align:center;">
+    <h2 class="section-title">{% cms 'org_title' 'Organisation' %}</h2>
+    <p class="section-subtitle">{% cms 'org_subtitle' 'ESSBO → PLAGENOR → GENOCLAB' %}</p>
+    <div style="max-width:600px;margin:0 auto;">
+        <p class="text-muted">
+            {% cms 'org_description' "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes." %}
+        </p>
+    </div>
+</section>
+{% endblock %}
