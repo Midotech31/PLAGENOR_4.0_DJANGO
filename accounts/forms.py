@@ -24,14 +24,14 @@ class RegistrationForm(UserCreationForm):
         label=_('Université / Organisation'),
     )
     student_level = forms.ChoiceField(
-        choices=[
-            ('', _('— Sélectionner —')),
-            ('master', _('Master (fin de cycle)')),
-            ('ingenieur', _('Ingéniorat (fin de cycle)')),
-            ('doctorat', _('Doctorat')),
-        ],
+        choices=[('', _('— Sélectionner —'))] + User.STUDENT_LEVEL_CHOICES,
         required=False,
         label=_('Niveau'),
+    )
+    student_level_other = forms.CharField(
+        max_length=200, required=False,
+        label=_('Autre niveau (à préciser)'),
+        widget=forms.TextInput(attrs={'placeholder': _('Préciser...')}),
     )
     laboratory = forms.CharField(max_length=200, required=False, label=_('Laboratoire'))
     supervisor = forms.CharField(max_length=200, required=False, label=_('Directeur de recherche'))
@@ -51,7 +51,7 @@ class RegistrationForm(UserCreationForm):
         model = User
         fields = (
             'username', 'first_name', 'last_name', 'email',
-            'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
+            'role', 'organization', 'student_level', 'student_level_other', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
             'password1', 'password2',
         )
 

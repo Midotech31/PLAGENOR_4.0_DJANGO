@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Rapport téléchargé" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Merci de faire confiance à PLAGENOR" %}</h1>
+    <p class="greeting-date">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</p>
+</div>
+
+<!-- Download Report Card -->
+{% if req.report_file %}
+<div class="card mb-4" style="border:2px solid #3b82f6; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <div class="card-body" style="padding:24px; text-align:center;">
+        <div style="font-size:3rem; margin-bottom:12px;">📥</div>
+        <h3 style="color:#1d4ed8; margin-bottom:12px;">{% trans "Télécharger votre rapport" %}</h3>
+        <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px; font-size:1rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            {% trans "Télécharger le rapport" %}
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Acknowledgment Card -->
+<div class="card mb-4" style="border:2px solid #bbf7d0; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+    <div class="card-body" style="padding:32px; text-align:center;">
+        <div style="font-size:4rem; margin-bottom:16px;">🎉</div>
+        <h2 style="color:#166534; margin-bottom:12px;">{% trans "Merci d'utiliser PLAGENOR !" %}</h2>
+        <p style="color:#15803d; font-size:1.05rem; max-width:600px; margin:0 auto;">
+            {% trans "Merci d'avoir utilisé la plateforme PLAGENOR pour vos besoins en analyse. Votre confiance nous motive à améliorer continuellement nos services." %}
+        </p>
+    </div>
+</div>
+
+<!-- Citation Clause -->
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Clause de citation" %}</h3></div>
+    <div class="card-body">
+        <div class="alert alert-info" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px;">
+            <div class="text-sm" style="color:#1e40af; line-height:1.6;">
+                <strong>{% trans "Citation recommandée" %}</strong><br><br>
+                {% trans "Si vous utilisez les résultats de ce laboratoire dans vos publications, veuillez citer PLAGENOR comme suit :" %}<br><br>
+                <em>"Ce travail a été réalisé grâce aux services de séquençage et d'analyse du laboratoire PLAGENOR,还在 DGRSDT, Algérie."</em>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rating Form -->
+<div class="card mb-4" style="border:2px solid #fde68a;">
+    <div class="card-body" style="padding:32px;" x-data="{rating: 5, hover: 0}">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="font-size:2.5rem; margin-bottom:8px;">⭐</div>
+            <h3 style="margin:0 0 8px; color:#92400e;">{% trans "Évaluez votre expérience" %}</h3>
+            <p class="text-muted">{% trans "Votre avis nous aide à améliorer continuellement nos services." %}</p>
+        </div>
+        
+        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}" style="max-width:500px; margin:0 auto;">
+            {% csrf_token %}
+            <input type="hidden" name="rating" :value="rating">
+            
+            <!-- Star Rating -->
+            <div style="text-align:center; margin-bottom:24px;">
+                <div style="display:inline-flex; gap:8px; cursor:pointer;">
+                    {% for i in "12345" %}
+                    <span @click="rating = {{ i }}" @mouseover="hover = {{ i }}" @mouseleave="hover = 0"
+                          :style="(hover ? hover >= {{ i }} : rating >= {{ i }}) ? 'color:#f59e0b; transform:scale(1.2)' : 'color:#d1d5db'"
+                          style="font-size:48px; transition:all 0.15s; display:inline-block;">&#9733;</span>
+                    {% endfor %}
+                </div>
+                <div style="margin-top:8px; font-size:0.9rem; color:#64748b;">
+                    <span x-text="rating"></span> / 5
+                </div>
+            </div>
+            
+            <!-- Comment -->
+            <div style="margin-bottom:20px;">
+                <label class="text-sm" style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">
+                    {% trans "Votre commentaire" %}
+                    <span class="text-muted" style="font-weight:normal;">({% trans "optionnel" %})</span>
+                </label>
+                <textarea name="comment" rows="4" class="form-control" 
+                          placeholder="{% trans 'Partagez votre expérience avec PLAGENOR...' %}"
+                          style="resize:vertical; min-height:100px;"></textarea>
+            </div>
+            
+            <!-- Submit -->
+            <div style="text-align:center;">
+                <button type="submit" class="btn btn-primary" style="padding:14px 32px; font-size:1rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:middle;margin-right:8px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Envoyer mon évaluation" %}
+                </button>
+            </div>
+        </form>
+        
+        {% if req.service_rating %}
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid #e5e7eb; text-align:center;">
+            <p class="text-muted text-sm">{% trans "Vous avez déjà évalué ce service" %}</p>
+            <div style="margin-top:8px;">
+                {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:28px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:28px;">&#9733;</span>{% endif %}{% endfor %}
+            </div>
+            {% if req.rating_comment %}
+            <p class="text-muted text-sm" style="margin-top:8px; font-style:italic;">"{{ req.rating_comment }}"</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Back to Dashboard -->
+<div style="text-align:center; margin-top:24px;">
+    <a href="{% url 'dashboard:requester' %}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        {% trans "Retour au tableau de bord" %}
+    </a>
+</div>
+
+<!-- Confirmer la réception si pas encore confirmé -->
+{% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
+<div style="text-align:center; margin-top:16px;">
+    <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success" style="padding:12px 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>
+            {% trans "Confirmer la réception du rapport" %}
+        </button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

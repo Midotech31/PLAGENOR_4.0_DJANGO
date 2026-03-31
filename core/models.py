@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 import uuid
 
 
@@ -241,6 +242,14 @@ class Request(models.Model):
     # Citation acknowledgment (Prompt 10)
     citation_acknowledged = models.BooleanField(default=False, verbose_name='Citation acknowledgée')
 
+    # IBTIKAR Form Generation
+    generated_ibtikar_form = models.FileField(
+        upload_to='ibtikar_generated/',
+        null=True,
+        blank=True,
+        verbose_name=_('Generated IBTIKAR Form')
+    )
+
     # Guest
     submitted_as_guest = models.BooleanField(default=False)
     guest_token = models.UUIDField(null=True, blank=True, unique=True)
@@ -303,6 +312,26 @@ class RequestComment(models.Model):
     class Meta:
         db_table = 'request_comments'
         ordering = ['created_at']
+
+
+class ReportVersion(models.Model):
+    """
+    Stores archived versions of reports for each request.
+    Allows members to upload new versions even after request completion.
+    """
+    request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='report_versions')
+    file = models.FileField(upload_to='reports/versions/')
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    version_number = models.PositiveIntegerField(default=1)
+    notes = models.TextField(default='', blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'report_versions'
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"{self.request.display_id} - v{self.version_number}"
 
 
 class Invoice(models.Model):

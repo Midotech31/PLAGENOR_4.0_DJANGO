@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from dashboard.decorators import analyst_required
 
 from accounts.models import MemberProfile
 from core.models import Request
@@ -11,15 +12,6 @@ from core.workflow import get_allowed_transitions, transition
 from core.productivity import compute_member_productivity
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
-
-
-def analyst_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role != 'MEMBER':
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
 
 
 @analyst_required
@@ -346,13 +338,39 @@ def upload_report(request, pk):
         return redirect_back(request, 'dashboard:analyst')
     
     if 'report_file' in request.FILES:
+        # Archive the previous report version if exists
+        from core.models import ReportVersion
+        if req.report_file:
+            ReportVersion.objects.create(
+                request=req,
+                file=req.report_file,
+                uploaded_by=request.user,
+                version_number=req.report_versions.count() + 1,
+                notes=f"Version {req.report_versions.count() + 1} uploaded"
+            )
+        
         req.report_file = request.FILES['report_file']
         req.save(update_fields=['report_file'])
-        try:
-            transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
-            messages.success(request, f"Rapport uploadé pour {req.display_id}.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
+        
+        # Only transition if request is not already closed
+        if req.status not in ['CLOSED']:
+            try:
+                transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
+                messages.success(request, f"Rapport uploadé pour {req.display_id}.")
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                messages.error(request, str(e))
+        else:
+            # Just save the new version for closed requests
+            messages.success(request, f"Nouvelle version du rapport uploadée pour {req.display_id}.")
+            
+            # Notify requester about new revision
+            if req.requester:
+                Notification.objects.create(
+                    user=req.requester,
+                    message=f"{req.display_id}: Nouvelle version du rapport disponible",
+                    request=req,
+                    notification_type='WORKFLOW',
+                )
     else:
         messages.error(request, "Veuillez sélectionner un fichier.")
     return redirect_back(request, 'dashboard:analyst')

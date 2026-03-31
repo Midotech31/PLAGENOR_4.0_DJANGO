@@ -25,8 +25,72 @@
     </a>
 </div>
 
-{# Pipeline visualization for GENOCLAB #}
-{% if req.channel == 'GENOCLAB' %}
+{# Pipeline visualization for IBTIKAR requests (detailed) #}
+{% if req.channel == 'IBTIKAR' %}
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Pipeline IBTIKAR" %}</h3></div>
+    <div class="card-body">
+        <div class="pipeline">
+            {% with s=req.status %}
+            {# Step 1: Submitted #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s != 'SUBMITTED' %} done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'VALIDATION_PEDAGOGIQUE,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 2: Validation #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 3: Assigned #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ASSIGNED,PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 4: Appointment #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'APPOINTMENT_PROPOSED' %}active{% elif s in 'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "RDV" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 5: Sample Received #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'SAMPLE_RECEIVED' %}active{% elif s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Échantillon" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 6: Analysis #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ANALYSIS_STARTED' %}active{% elif s in 'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 7: Report Ready #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'REPORT_UPLOADED,ADMIN_REVIEW' %}active{% elif s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Rapport" %}</div>
+            </div>
+            <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            {# Step 8: Sent #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'SENT_TO_REQUESTER' %}active{% elif s in 'COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Envoyé" %}</div>
+            </div>
+            <div class="pipeline-line{% if s == 'COMPLETED' %} done{% endif %}"></div>
+            {# Step 9: Completed #}
+            <div class="pipeline-step">
+                <div class="pipeline-node"><div class="pipeline-dot{% if s == 'COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
+            </div>
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% else %}
+{# Pipeline visualization for GENOCLAB requests #}
 <div class="card mb-4">
     <div class="card-header"><h3>{% trans "Pipeline GENOCLAB" %}</h3></div>
     <div class="card-body">
@@ -67,6 +131,68 @@
                 <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
             </div>
             {% endwith %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Report Versions Section - Show all versions for completed requests #}
+{% if req.status == 'COMPLETED' or req.report_versions %}
+<div class="card mb-4">
+    <div class="card-header"><h3>{% trans "Versions du rapport" %}</h3></div>
+    <div class="card-body">
+        {% if req.report_file %}
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <div style="flex:1; min-width:200px;">
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px;">
+                    <div style="font-weight:600; color:#166534; margin-bottom:4px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        {% trans "Rapport actuel" %}
+                    </div>
+                    <div class="text-sm text-muted">{{ req.report_file.name|filename }}</div>
+                </div>
+            </div>
+            <a href="{{ req.report_file.url }}" class="btn btn-sm btn-primary" target="_blank">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Télécharger" %}
+            </a>
+        </div>
+        {% endif %}
+        
+        {# Show archived versions if available #}
+        {% if req.report_versions %}
+        <div style="margin-top:16px;">
+            <h4 class="text-sm font-semibold text-muted" style="margin-bottom:8px;">{% trans "Versions archivées" %}</h4>
+            {% for rv in req.report_versions.all %}
+            <div style="display:flex; gap:8px; align-items:center; padding:8px; background:#f8fafc; border-radius:6px; margin-bottom:6px;">
+                <span class="badge-status" style="background:#e2e8f0; color:#475569;">v{{ rv.version_number }}</span>
+                <span class="text-sm" style="flex:1;">{{ rv.file.name|filename }}</span>
+                <span class="text-xs text-muted">{{ rv.uploaded_at|date:"d/m/Y H:i" }}</span>
+                <a href="{{ rv.file.url }}" class="btn btn-xs btn-outline" target="_blank">{% trans "Voir" %}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {# Upload new version even if closed - member can always add revisions #}
+        <div style="margin-top:16px; background:#fef3c7; border:1px dashed #f59e0b; border-radius:8px; padding:16px;">
+            <div style="font-weight:600; color:#92400e; margin-bottom:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                {% trans "Uploader une nouvelle version" %}
+            </div>
+            <p class="text-sm text-muted" style="margin-bottom:12px;">{% trans "Vous pouvez toujours envoyer des versions révisées au demandeur." %}</p>
+            <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                        <input type="file" name="report_file" class="form-control" style="font-size:0.85rem;" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        {% trans "Uploader" %}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

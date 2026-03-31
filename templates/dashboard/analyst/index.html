@@ -426,9 +426,9 @@
             </div>
         </div>
 
-        <!-- Surprise Box (unlocked at 100 pts) -->
+        <!-- Surprise Box (unlocked at 1000 pts per milestone) -->
         {% if profile.gift_unlocked %}
-        <div style="margin-bottom:24px;">
+        <div style="margin-bottom:24px;" x-data="{show: true}">
             {% if profile.gift_collected %}
             <!-- Already collected -->
             <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px solid #86efac; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
@@ -439,12 +439,12 @@
                 </div>
             </div>
             {% else %}
-            <!-- Gift available to collect -->
-            <div style="background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;" x-data="{opened: false}">
-                <div style="font-size:3.5rem; cursor:pointer; transition:transform 0.3s;" @click="opened = !opened" :style="opened ? 'transform:scale(1.2) rotate(10deg)' : ''">🎁</div>
+            <!-- Gift available to collect with celebration animation -->
+            <div style="background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;" x-data="{opened: false, celebrating: true}">
+                <div style="font-size:3.5rem; cursor:pointer; transition:transform 0.3s;" x-show="celebrating" x-init="setTimeout(() => celebrating = false, 3000)" :style="celebrating ? 'animation:celebrate 0.5s ease-in-out infinite alternate;' : ''">🎁</div>
                 <div style="flex:1;">
-                    <div style="font-size:1.2rem; font-weight:700; color:#92400e;">{% trans "🎉 Boîte surprise débloquée !" %}</div>
-                    <div style="font-size:0.88rem; color:#78350f; margin-top:4px;">{% trans "Vous avez cumulé 100 points ! Une récompense vous attend chez l'administrateur." %}</div>
+                    <div style="font-size:1.2rem; font-weight:700; color:#92400e;">🎉 {% trans "Boîte surprise débloquée !" %}</div>
+                    <div style="font-size:0.88rem; color:#78350f; margin-top:4px;">{% blocktrans with milestone=profile.milestone_count points=profile.total_points %}Vous avez débloqué la boîte #{{ milestone }} à {{ points }} points ! Une récompense vous attend chez l'administrateur.{% endblocktrans %}</div>
                     {% if profile.gift_image %}
                     <div x-show="opened" style="margin-top:12px;">
                         <img src="{{ profile.gift_image.url }}" alt="{% trans 'Récompense' %}" style="max-width:200px; max-height:200px; border-radius:10px; border:2px solid #f59e0b; object-fit:cover;">
@@ -463,19 +463,23 @@
             </div>
             {% endif %}
         </div>
-        {% elif profile.total_points >= 80 %}
-        <!-- Almost there -->
-        <div style="margin-bottom:24px; background:linear-gradient(135deg,#f8fafc,#f1f5f9); border:1px dashed #cbd5e1; border-radius:16px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
-            <div style="font-size:2.5rem;">🔒</div>
-            <div>
-                <div style="font-size:1rem; font-weight:600; color:#475569;">{% trans "Boîte surprise presque débloquée !" %}</div>
-                <div style="font-size:0.85rem; color:#94a3b8; margin-top:4px;">{% trans "Objectif : 100 points" %} — {{ profile.total_points }}/100</div>
-                <div style="background:#e2e8f0; border-radius:100px; height:8px; overflow:hidden; margin-top:8px; max-width:300px;">
-                    <div style="height:100%; border-radius:100px; width:{% widthratio profile.total_points 100 100 %}%; background:linear-gradient(90deg,#f59e0b,#fbbf24); transition:width 0.8s ease;"></div>
+        {% endif %}
+
+        <!-- Progress to next milestone (1000 pts) -->
+        <div style="margin-bottom:24px; background:linear-gradient(135deg,#f8fafc,#f1f5f9); border:1px solid #e2e8f0; border-radius:16px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
+            <div style="font-size:2.5rem;">🎯</div>
+            <div style="flex:1;">
+                <div style="font-size:1rem; font-weight:600; color:#475569;">{% trans "Progression vers la prochaine boîte surprise" %}</div>
+                <div style="font-size:0.85rem; color:#94a3b8; margin-top:4px;">
+                    {% blocktrans with current=profile.total_points next=profile.points_to_next_milestone %}{{ current }} points — {{ next }} points restants{% endblocktrans %}
                 </div>
+                <div style="background:#e2e8f0; border-radius:100px; height:12px; overflow:hidden; margin-top:10px; max-width:400px; position:relative;">
+                    <div style="position:absolute; left:50%; top:-2px; width:2px; height:16px; background:#94a3b8;"></div>
+                    <div style="height:100%; border-radius:100px; width:{{ profile.progress_to_next_milestone }}%; background:linear-gradient(90deg,#7c3aed,#a855f7); transition:width 0.8s ease;"></div>
+                </div>
+                <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">{% blocktrans with milestone=profile.milestone_count %}Boîte #{{ milestone }} débloquée sur {{ milestone }} total{% endblocktrans %}</div>
             </div>
         </div>
-        {% endif %}
 
         <!-- Hero: Level + Total Points -->
         {% with pts=profile.total_points %}

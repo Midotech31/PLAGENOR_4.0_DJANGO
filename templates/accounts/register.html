@@ -79,12 +79,22 @@
                     <label for="id_student_level">{% trans "Niveau" %}</label>
                     <select name="student_level" id="id_student_level" class="form-control">
                         <option value="">— {% trans "Sélectionner" %} —</option>
-                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master (fin de cycle)" %}</option>
-                        <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>{% trans "Ingéniorat (fin de cycle)" %}</option>
-                        <option value="doctorat" {% if form.student_level.value == 'doctorat' %}selected{% endif %}>{% trans "Doctorat" %}</option>
+                        <option value="phd_student" {% if form.student_level.value == 'phd_student' %}selected{% endif %}>{% trans "PhD Student / Doctorant" %}</option>
+                        <option value="phd_intern" {% if form.student_level.value == 'phd_intern' %}selected{% endif %}>{% trans "PhD Intern / Stagiaire Doctorant" %}</option>
+                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master's Student / Étudiant en Master" %}</option>
+                        <option value="analyst" {% if form.student_level.value == 'analyst' %}selected{% endif %}>{% trans "Analyst / Analyste" %}</option>
+                        <option value="intern" {% if form.student_level.value == 'intern' %}selected{% endif %}>{% trans "Intern / Stagiaire" %}</option>
+                        <option value="lecturer" {% if form.student_level.value == 'lecturer' %}selected{% endif %}>{% trans "Lecturer / Enseignant-Chercheur" %}</option>
+                        <option value="other" {% if form.student_level.value == 'other' %}selected{% endif %}>{% trans "Other / Autre" %}</option>
                     </select>
-                    <small class="text-muted">{% trans "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités algériennes" %}</small>
+                    <small class="text-muted">{% trans "Toutes universités algériennes" %}</small>
                     {% if form.student_level.errors %}<div class="form-error">{{ form.student_level.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div class="form-group" id="student_level_other_group" style="display:none;">
+                    <label for="id_student_level_other">{% trans "Autre niveau (à préciser)" %}</label>
+                    <input type="text" name="student_level_other" id="id_student_level_other" class="form-control" value="{{ form.student_level_other.value|default:'' }}" placeholder="{% trans 'Préciser...' %}">
+                    {% if form.student_level_other.errors %}<div class="form-error">{{ form.student_level_other.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div class="form-group">
@@ -140,6 +150,7 @@
     var roleInputs = document.querySelectorAll('input[name="role"]');
     var academicFields = document.getElementById('academic-fields');
     var studentLevel = document.getElementById('id_student_level');
+    var studentLevelOtherGroup = document.getElementById('student_level_other_group');
     var supervisor = document.getElementById('id_supervisor');
 
     function toggleAcademic() {
@@ -154,9 +165,19 @@
             supervisor.required = false;
         }
     }
+    
+    function toggleStudentLevelOther() {
+        if (studentLevel.value === 'other') {
+            studentLevelOtherGroup.style.display = '';
+        } else {
+            studentLevelOtherGroup.style.display = 'none';
+        }
+    }
 
     roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
+    studentLevel.addEventListener('change', toggleStudentLevelOther);
     toggleAcademic();
+    toggleStudentLevelOther();
 
     // Validate ibtikar_id on form submit
     document.querySelector('form').addEventListener('submit', function(e) {

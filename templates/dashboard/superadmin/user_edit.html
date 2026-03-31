@@ -63,17 +63,64 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>{% trans "Niveau étudiant" %}</label>
-                    <input type="text" name="student_level" class="form-control" value="{{ user_obj.student_level }}">
+                    <select name="student_level" id="id_student_level" class="form-control">
+                        <option value="">— {% trans "Sélectionner" %} —</option>
+                        {% for value, label in student_level_choices %}
+                        <option value="{{ value }}" {% if user_obj.student_level == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if user_obj.student_level == 'other' %}
+                    <input type="text" name="student_level_other" class="form-control" style="margin-top:8px;" placeholder="{% trans 'Préciser...' %}" value="{{ user_obj.student_level_other|default:'' }}">
+                    {% else %}
+                    <input type="text" name="student_level_other" id="id_student_level_other" class="form-control" style="margin-top:8px; display:none;" placeholder="{% trans 'Préciser...' %}">
+                    {% endif %}
                 </div>
                 <div class="form-group">
                     <label>{% trans "Nouveau mot de passe" %} <small class="text-muted">({% trans "laisser vide pour ne pas changer" %})</small></label>
-                    <input type="password" name="new_password" class="form-control" autocomplete="new-password">
+                    <div class="password-input-wrapper">
+                        <input type="password" name="new_password" id="id_new_password" class="form-control" autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('id_new_password', this)">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="eye-off-icon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div style="margin-top: 16px;">
                 <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
                 <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="margin-left:8px;">{% trans "Annuler" %}</a>
             </div>
+            
+            <script>
+            // Toggle student level "other" text field
+            document.getElementById('id_student_level').addEventListener('change', function() {
+                var otherField = document.getElementById('id_student_level_other');
+                if (this.value === 'other') {
+                    otherField.style.display = 'block';
+                    otherField.focus();
+                } else {
+                    otherField.style.display = 'none';
+                    otherField.value = '';
+                }
+            });
+            
+            // Password visibility toggle function
+            function togglePasswordVisibility(inputId, btn) {
+                var input = document.getElementById(inputId);
+                var eyeIcon = btn.querySelector('.eye-icon');
+                var eyeOffIcon = btn.querySelector('.eye-off-icon');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeIcon.style.display = 'none';
+                    eyeOffIcon.style.display = 'block';
+                } else {
+                    input.type = 'password';
+                    eyeIcon.style.display = 'block';
+                    eyeOffIcon.style.display = 'none';
+                }
+            }
+            </script>
         </form>
     </div>
 </div>

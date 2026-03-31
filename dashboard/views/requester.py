@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from dashboard.decorators import requester_required
 
 from core.models import Service, Request
 from core.services.ibtikar import submit_ibtikar_request, get_ibtikar_request_context
@@ -12,18 +13,9 @@ from core.financial import check_ibtikar_budget
 from notifications.models import Notification
 
 
-def requester_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role != 'REQUESTER':
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
-
-
 @requester_required
 def index(request):
-    from django.db.models import Case, When, IntegerField
+    from django.db.models import Case, When, Count, IntegerField
     
     # Base queryset for this user's requests
     my_requests = Request.objects.filter(requester=request.user, channel='IBTIKAR')
@@ -110,6 +102,8 @@ def index(request):
 
 @requester_required
 def request_detail(request, pk):
+    from documents.ibtikar_form_generator import check_template_status
+    
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
@@ -145,11 +139,15 @@ def request_detail(request, pk):
         request=req, to_user=request.user
     ).select_related('from_user').order_by('created_at')
 
+    # Check IBTIKAR form status
+    ibtikar_form_status = check_template_status(req) if req.channel == 'IBTIKAR' else None
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
+        'ibtikar_form_status': ibtikar_form_status,
     }
     return render(request, 'dashboard/requester/request_detail.html', context)
 
@@ -350,4 +348,21 @@ def rate_service(request, pk):
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
-    return redirect_back(request, 'dashboard:requester')
+    return redirect('dashboard:requester_request_detail', pk=pk)
+
+
+@requester_required
+def post_download(request, pk):
+    """Post-download acknowledgment page with rating form."""
+    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    
+    # Only allow access if the request has a report
+    if not req.report_file:
+        messages.warning(request, "Aucun rapport disponible pour cette demande.")
+        return redirect('dashboard:requester_request_detail', pk=pk)
+    
+    # Build context for the template
+    context = {
+        'req': req,
+    }
+    return render(request, 'dashboard/requester/post_download.html', context)

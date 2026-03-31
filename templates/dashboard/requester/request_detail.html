@@ -117,6 +117,18 @@
                 {% if req.declared_ibtikar_balance %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
                 {% endif %}
+                
+                <!-- IBTIKAR Budget Clarification Notice -->
+                {% if req.channel == 'IBTIKAR' %}
+                <div class="ibtikar-budget-notice">
+                    <div class="notice-icon">ℹ️</div>
+                    <div class="notice-content">
+                        <div class="notice-text-fr">🇫🇷 Ce budget est entièrement pris en charge par l'allocation annuelle IBTIKAR-DGRSDT. Aucun frais n'est à la charge de l'étudiant.</div>
+                        <div class="notice-text-en">🇬🇧 This budget is fully covered by the IBTIKAR-DGRSDT annual allocation. No cost is charged to the student.</div>
+                    </div>
+                </div>
+                {% endif %}
+                
                 {% if not req.budget_amount and not req.declared_ibtikar_balance %}
                 <div class="text-muted">{% trans "Aucune information financière." %}</div>
                 {% endif %}
@@ -177,12 +189,41 @@
             </div>
         </div>
 
-        <!-- Documents -->
+        <!-- Documents / Reports -->
         {% if req.channel == 'IBTIKAR' %}
         <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
-            <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
-                <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+            <div class="card-header"><h3>{% trans "Documents & Rapports" %}</h3></div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:12px;">
+                {# Primary: Download Report #}
+                {% if req.report_file %}
+                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px; font-size:0.95rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le Rapport" %}
+                </a>
+                {% endif %}
+                
+                {# Secondary: IBTIKAR Form #}
+                {% if req.generated_ibtikar_form %}
+                <a href="{{ req.generated_ibtikar_form.url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    {% trans "Formulaire IBTIKAR" %}
+                </a>
+                {% else %}
+                <div class="text-muted text-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {% trans "Le formulaire IBTIKAR sera disponible une fois votre demande approuvée." %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% elif req.report_file %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Rapport" %}</h3></div>
+            <div class="card-body">
+                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le Rapport" %}
+                </a>
             </div>
         </div>
         {% endif %}
@@ -213,33 +254,18 @@
         </div>
         {% if req.report_file and req.report_token %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <!-- Step 1: View report with citation clause -->
-            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+            <!-- Step 1: View report with citation clause (redirects to post-download page) -->
+            <a href="{% url 'dashboard:requester_post_download' req.pk %}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
-            <!-- Step 2: Confirm receipt after reading -->
-            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
-                    {% trans "Confirmer la réception" %}
-                </button>
-            </form>
         </div>
         {% elif req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+            <a href="{% url 'dashboard:requester_post_download' req.pk %}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
-            <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
-                    {% trans "Confirmer la réception" %}
-                </button>
-            </form>
         </div>
         {% else %}
         <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}">

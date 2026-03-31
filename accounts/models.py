@@ -32,13 +32,24 @@ class User(AbstractUser):
         ('REQUESTER', 'Demandeur IBTIKAR'),
         ('CLIENT', 'Client GENOCLAB'),
     ]
+    
+    STUDENT_LEVEL_CHOICES = [
+        ('phd_student', 'PhD Student / Doctorant'),
+        ('phd_intern', 'PhD Intern / Stagiaire Doctorant'),
+        ('master', "Master's Student / Étudiant en Master"),
+        ('analyst', 'Analyst / Analyste'),
+        ('intern', 'Intern / Stagiaire'),
+        ('lecturer', 'Lecturer / Enseignant-Chercheur'),
+        ('other', 'Other / Autre'),
+    ]
 
     objects = UserManager()
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='REQUESTER')
     organization = models.CharField(max_length=200, default='', blank=True)
     phone = models.CharField(max_length=50, default='', blank=True)
-    student_level = models.CharField(max_length=100, default='', blank=True)
+    student_level = models.CharField(max_length=50, default='', blank=True, choices=STUDENT_LEVEL_CHOICES)
+    student_level_other = models.CharField(max_length=200, default='', blank=True, verbose_name='Autre niveau (à préciser)')
     supervisor = models.CharField(max_length=200, default='', blank=True)
     laboratory = models.CharField(max_length=200, default='', blank=True)
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
@@ -101,6 +112,9 @@ class MemberProfile(models.Model):
     gift_unlocked = models.BooleanField(default=False)
     gift_image = models.ImageField(upload_to='gifts/', null=True, blank=True)
     gift_collected = models.BooleanField(default=False)
+    # New: Milestone tracking (every 1000 points = 1 milestone)
+    milestone_count = models.IntegerField(default=0)
+    last_milestone_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'member_profiles'
@@ -113,6 +127,43 @@ class MemberProfile(models.Model):
         if self.max_load <= 0:
             return 0
         return round(self.current_load / self.max_load * 100, 1)
+    
+    @property
+    def points_to_next_milestone(self):
+        """Returns points needed to reach the next 1000-point milestone."""
+        return 1000 - (self.total_points % 1000)
+    
+    @property
+    def progress_to_next_milestone(self):
+        """Returns progress percentage to next milestone (0-100)."""
+        return (self.total_points % 1000) / 10
+    
+    def award_points(self, points, reason, awarded_by=None, save=True):
+        """Award points to the member and check for milestone unlock."""
+        from django.utils import timezone
+        from notifications.models import Notification
+        
+        # Add to total
+        self.total_points += points
+        
+        # Check for milestone (every 1000 points)
+        new_milestone = self.total_points // 1000
+        if new_milestone > self.milestone_count:
+            self.milestone_count = new_milestone
+            self.last_milestone_at = timezone.now()
+            self.gift_unlocked = True
+            self.gift_collected = False
+            # Create notification for the milestone
+            Notification.objects.create(
+                user=self.user,
+                message=f"🎉 Félicitations ! Vous avez débloqué la boîte surprise #{self.milestone_count} ! ({self.total_points} points)",
+                notification_type='POINTS',
+            )
+        
+        if save:
+            self.save(update_fields=['total_points', 'milestone_count', 'last_milestone_at', 'gift_unlocked', 'gift_collected'])
+        
+        return self
 
 
 class PointsHistory(models.Model):

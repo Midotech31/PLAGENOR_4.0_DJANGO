@@ -642,7 +642,7 @@ input, select, textarea { font-family: inherit; }
 .nav-badge {
     margin-left: auto;
     min-width: 20px; height: 20px;
-    background: var(--primary);
+    background: #ef4444; /* Red notification badge */
     color: #fff;
     border-radius: var(--radius-full);
     font-size: 0.65rem;
@@ -1081,6 +1081,37 @@ input, select, textarea { font-family: inherit; }
     background: var(--bg);
 }
 
+/* IBTIKAR Budget Notice */
+.ibtikar-budget-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+}
+.ibtikar-budget-notice .notice-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+.ibtikar-budget-notice .notice-content {
+    flex: 1;
+}
+.ibtikar-budget-notice .notice-text-fr,
+.ibtikar-budget-notice .notice-text-en {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1e40af;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+.ibtikar-budget-notice .notice-text-fr {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
 /* ============================================================
    Tabs — Clean pill style
    ============================================================ */
@@ -1309,6 +1340,37 @@ textarea.form-control {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
+}
+
+/* Password input with visibility toggle */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.password-input-wrapper input[type="password"],
+.password-input-wrapper input[type="text"] {
+    padding-right: 44px;
+}
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+.password-toggle:hover {
+    color: var(--primary);
+}
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Checkbox */
