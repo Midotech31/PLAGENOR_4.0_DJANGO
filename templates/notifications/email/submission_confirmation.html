@@ -1,0 +1,146 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+
+{% block email_content %}
+<h2 style="margin: 0 0 20px; color: #1f2937;">
+    {% if language == 'en' %}Request Submitted Successfully{% else %}Demande soumise avec succès{% endif %}
+</h2>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Hello {{ user_name }},
+    {% else %}
+    Bonjour {{ user_name }},
+    {% endif %}
+</p>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Thank you for submitting your analysis request. We have received your submission and will process it shortly.
+    {% else %}
+    Merci d'avoir soumis votre demande d'analyse. Nous avons bien reçu votre soumission et la traiterons shortly.
+    {% endif %}
+</p>
+
+<div class="request-id">
+    <div class="label">{% if language == 'en' %}Your Request ID{% else %}Votre identifiant de demande{% endif %}</div>
+    <div class="value">{{ request.display_id }}</div>
+</div>
+
+<p style="background: #eff6ff; border-left: 4px solid #4F46E5; padding: 16px; margin: 20px 0; color: #1e40af;">
+    {% if language == 'en' %}
+    <strong>Important:</strong> Please save this ID to track your request status.
+    {% else %}
+    <strong>Important :</strong> Veuillez conserver cet identifiant pour suivre le statut de votre demande.
+    {% endif %}
+</p>
+
+<div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Service{% else %}Service{% endif %}</span>
+        <span class="info-value">{{ request.service.name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Channel{% else %}Canal{% endif %}</span>
+        <span class="info-value">{{ request.get_channel_display }}</span>
+    </div>
+    {% if request.title %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Title{% else %}Titre{% endif %}</span>
+        <span class="info-value">{{ request.title|truncatechars:40 }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Submitted on{% else %}Soumis le{% endif %}</span>
+        <span class="info-value">{{ request.created_at|date:"d/m/Y H:i" }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Status{% else %}Statut{% endif %}</span>
+        <span class="info-value"><span class="status-badge">{{ request.get_status_display }}</span></span>
+    </div>
+</div>
+
+<h3 style="color: #1f2937; margin-top: 30px;">{% if language == 'en' %}What happens next?{% else %}Que se passe-t-il ensuite ?{% endif %}</h3>
+<ol style="color: #4b5563; padding-left: 20px;">
+    {% if request.channel == 'IBTIKAR' %}
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Validation:</strong> Your request will be validated by our team.
+        {% else %}
+        <strong>Validation :</strong> Votre demande sera validée par notre équipe.
+        {% endif %}
+    </li>
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Budget Check:</strong> Your IBTIKAR budget allocation will be verified.
+        {% else %}
+        <strong>Vérification du budget :</strong> Votre allocation budgétaire IBTIKAR sera vérifiée.
+        {% endif %}
+    </li>
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Assignment:</strong> A qualified analyst will be assigned to your request.
+        {% else %}
+        <strong>Assignation :</strong> Un analyste qualifié sera assigné à votre demande.
+        {% endif %}
+    </li>
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Analysis:</strong> Your samples will be analyzed.
+        {% else %}
+        <strong>Analyse :</strong> Vos échantillons seront analysés.
+        {% endif %}
+    </li>
+    <li>
+        {% if language == 'en' %}
+        <strong>Report:</strong> You will receive your analysis report.
+        {% else %}
+        <strong>Rapport :</strong> Vous recevrez votre rapport d'analyse.
+        {% endif %}
+    </li>
+    {% else %}
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Quote:</strong> We will prepare a detailed quote for your review.
+        {% else %}
+        <strong>Devis :</strong> Nous préparerons un devis détaillé pour votre examen.
+        {% endif %}
+    </li>
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Payment:</strong> After accepting the quote, you will proceed with payment.
+        {% else %}
+        <strong>Paiement :</strong> Après avoir accepté le devis, vous procéderez au paiement.
+        {% endif %}
+    </li>
+    <li style="margin-bottom: 12px;">
+        {% if language == 'en' %}
+        <strong>Analysis:</strong> Your samples will be analyzed.
+        {% else %}
+        <strong>Analyse :</strong> Vos échantillons seront analysés.
+        {% endif %}
+    </li>
+    <li>
+        {% if language == 'en' %}
+        <strong>Report:</strong> You will receive your analysis report with invoice.
+        {% else %}
+        <strong>Rapport :</strong> Vous recevrez votre rapport d'analyse avec la facture.
+        {% endif %}
+    </li>
+    {% endif %}
+</ol>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ dashboard_url }}" class="button">
+        {% if language == 'en' %}Track Your Request{% else %}Suivre votre demande{% endif %}
+    </a>
+</div>
+
+<p style="color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
+    {% if language == 'en' %}
+    You can track your request status at any time using your request ID.
+    {% else %}
+    Vous pouvez suivre le statut de votre demande à tout moment en utilisant votre identifiant de demande.
+    {% endif %}
+</p>
+{% endblock %}

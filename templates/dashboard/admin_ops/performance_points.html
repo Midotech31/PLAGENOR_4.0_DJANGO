@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block extra_css %}
+<style>
+.reward-box {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+.reward-box.opened {
+    background: linear-gradient(135deg, #34d399, #10b981);
+}
+.milestone-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+.milestone-ring svg {
+    transform: rotate(-90deg);
+}
+.milestone-ring circle {
+    fill: none;
+    stroke-width: 8;
+}
+.milestone-ring .bg {
+    stroke: #e5e7eb;
+}
+.milestone-ring .progress {
+    stroke: #8b5cf6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+}
+</style>
+{% endblock %}
+
+{% block title %}{% trans "Performance & Points" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Performance & Points Reward System" %}</h1>
+    <p class="greeting-date">{% trans "Track member performance and award bonus points" %}</p>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>{% trans "Filter & Sort" %}</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Sort By" %}</label>
+                <select name="sort" class="form-control">
+                    <option value="total_points" {% if sort_by == 'total_points' %}selected{% endif %}>{% trans "Total Points" %}</option>
+                    <option value="efficiency" {% if sort_by == 'efficiency' %}selected{% endif %}>{% trans "Efficiency Rate" %}</option>
+                    <option value="services" {% if sort_by == 'services' %}selected{% endif %}>{% trans "Completed Services" %}</option>
+                    <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>{% trans "Most Recent" %}</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Min Points" %}</label>
+                <input type="number" name="min_points" value="{{ min_points }}" class="form-control" placeholder="0">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Max Points" %}</label>
+                <input type="number" name="max_points" value="{{ max_points }}" class="form-control" placeholder="999999">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Apply" %}</button>
+            <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline">{% trans "Clear" %}</a>
+        </form>
+    </div>
+</div>
+
+<!-- Points Rules Card -->
+<div class="card mb-4" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+    <div class="card-body">
+        <h3 style="margin-top: 0; color: #7c3aed;">{% trans "Points Calculation Rules" %}</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 16px; border-radius: 8px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+                <div style="font-weight: 600; color: #1f2937;">{% trans "Service Completion" %}</div>
+                <div style="color: #6b7280; font-size: 14px;">{% trans "Each finalized service earns" %} <strong>10 {% trans "points" %}</strong></div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">⚡</div>
+                <div style="font-weight: 600; color: #1f2937;">{% trans "Efficiency Bonus" %}</div>
+                <div style="color: #6b7280; font-size: 14px;">{% trans "Early completion earns" %} <strong>+5 {% trans "bonus points" %}</strong></div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">🎁</div>
+                <div style="font-weight: 600; color: #1f2937;">{% trans "Reward Milestone" %}</div>
+                <div style="color: #6b7280; font-size: 14px;">{% trans "Every" %} <strong>1,000 {% trans "points" %}</strong> = {% trans "1 reward box" %}</div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">👑</div>
+                <div style="font-weight: 600; color: #1f2937;">{% trans "Admin Bonus" %}</div>
+                <div style="color: #6b7280; font-size: 14px;">{% trans "Manual bonus with reason" %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Members Ranking -->
+<div class="card">
+    <div class="card-header">
+        <h3>{% trans "Members by Performance" %}</h3>
+        <span class="text-muted">{% trans "Ranked by total points" %}</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div style="max-height: 600px; overflow-y: auto;">
+            {% for member_data in members_data %}
+            <div class="data-card mb-2 member-row" style="margin: 0; padding: 16px; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <!-- Rank -->
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: {% if forloop.counter <= 3 %}#fbbf24{% else %}#e5e7eb{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if forloop.counter <= 3 %}white{% else %}#6b7280{% endif %};">
+                        {{ forloop.counter }}
+                    </div>
+                    
+                    <!-- Avatar -->
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                        {% if member_data.member.user.avatar %}
+                        <img src="{{ member_data.member.user.avatar.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px; color: #9ca3af;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Info -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">{{ member_data.member.user.get_full_name }}</div>
+                                <div style="font-size: 12px; color: #6b7280;">
+                                    {% trans "Services" %}: {{ member_data.completed_services }} &middot;
+                                    {% trans "Efficiency" %}: {{ member_data.efficiency_rate }}%
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 24px; font-weight: 700; color: #8b5cf6;">{{ member_data.member.total_points }}</div>
+                                <div style="font-size: 11px; color: #6b7280;">{% trans "points" %}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Bar with Avatar -->
+                        <div class="performance-bar-container" style="position: relative; height: 8px; background: #e5e7eb; border-radius: 4px; margin-top: 8px;">
+                            <div class="performance-bar-fill" style="width: {{ member_data.progress_percentage }}%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div>
+                            <div class="performance-avatar" style="position: absolute; top: -6px; left: calc({{ member_data.progress_percentage }}% - 10px);">
+                                {% if member_data.member.user.avatar %}
+                                <img src="{{ member_data.member.user.avatar.url }}" alt="" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-top: 4px;">
+                            <span>{{ member_data.current_milestone }} pts</span>
+                            <span>{{ member_data.progress_to_next }} / 1,000 pts</span>
+                            <span>{{ member_data.next_milestone }} pts</span>
+                        </div>
+                        
+                        <!-- Reward Boxes -->
+                        {% if member_data.reward_boxes > 0 %}
+                        <div style="margin-top: 8px; display: flex; gap: 4px;">
+                            {% for i in ""|ljust:member_data.reward_boxes %}
+                            <div class="reward-box opened" title="{% trans 'Reward Box' %}">
+                                🎁
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                        <a href="{% url 'dashboard:admin_member_points' member_data.member.pk %}" class="btn btn-sm btn-outline">
+                            {% trans "Details" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+                {% trans "No members found." %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if paginator %}
+        <div class="pagination" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; padding: 16px; border-top: 1px solid #e5e7eb;">
+            {% if members_page.has_previous %}
+            <a href="?page={{ members_page.previous_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+            {% endif %}
+            <span class="btn btn-sm" style="background: #e5e7eb; cursor: default;">{% trans "Page" %} {{ members_page.number }} {% trans "of" %} {{ members_page.paginator.num_pages }}</span>
+            {% if members_page.has_next %}
+            <a href="?page={{ members_page.next_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
+        ← {% trans "Back to Dashboard" %}
+    </a>
+</div>
+{% endblock %}

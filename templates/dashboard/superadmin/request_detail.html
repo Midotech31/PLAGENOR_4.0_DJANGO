@@ -1,0 +1,598 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Détails de la demande" %} {{ req.display_id }} — PLAGENOR 4.0{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .detail-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0;
+    }
+    .detail-subtitle {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+    .detail-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .info-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+    }
+    .info-card-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .info-card-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .section-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .section-header {
+        background: #f1f5f9;
+        padding: 14px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+    }
+    .section-body {
+        padding: 20px;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -26px;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid white;
+    }
+    .timeline-dot.forced {
+        background: #dc2626;
+    }
+    .timeline-time {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .timeline-content {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 12px;
+    }
+    .timeline-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    .timeline-actor {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .timeline-notes {
+        font-size: 0.85rem;
+        color: #475569;
+        margin-top: 6px;
+        font-style: italic;
+    }
+    .message-item {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+    }
+    .message-item.admin {
+        background: #eff6ff;
+        border-left: 3px solid var(--primary);
+    }
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+    .message-author {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .message-date {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    .message-text {
+        color: #475569;
+        line-height: 1.5;
+    }
+    .file-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    .file-icon {
+        width: 40px;
+        height: 40px;
+        background: #eff6ff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+    }
+    .file-info {
+        flex: 1;
+    }
+    .file-name {
+        font-weight: 500;
+        color: #1e293b;
+    }
+    .file-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    .assign-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .comment-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .comment-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .comment-item:last-child {
+        border-bottom: none;
+    }
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+    .comment-author {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .comment-step {
+        font-size: 0.75rem;
+        background: #e2e8f0;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #64748b;
+    }
+    .comment-text {
+        color: #475569;
+        line-height: 1.5;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #64748b;
+    }
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .detail-header {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="request-detail-container">
+    <!-- Header -->
+    <div class="detail-header">
+        <div>
+            <h1 class="detail-title">{{ req.display_id }}</h1>
+            <p class="detail-subtitle">{{ req.title }}</p>
+        </div>
+        <div class="detail-badges">
+            <span class="badge-role {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            {% if req.urgency and req.urgency != 'Normal' %}
+            <span class="badge-status urgent">{{ req.get_urgency_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Info Cards Grid -->
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Service" %}</div>
+            <div class="info-card-value">
+                {% if req.service %}
+                    <span class="font-mono">{{ req.service.code }}</span> — {{ req.service.name }}
+                {% else %}
+                    <span style="color:#94a3b8;">—</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Demandeur" %}</div>
+            <div class="info-card-value">
+                {% if req.requester %}
+                    {{ req.requester.get_full_name|default:req.requester.username }}
+                    {% if req.requester.organization %}
+                    <br><span style="font-size:0.85rem; color:#64748b;">{{ req.requester.organization }}</span>
+                    {% endif %}
+                {% elif req.submitted_as_guest %}
+                    {{ req.guest_name|default:_("Invité") }}
+                    <br><span style="font-size:0.85rem; color:#64748b;">{{ req.guest_email }}</span>
+                {% else %}
+                    <span style="color:#94a3b8;">—</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Analyste assigné" %}</div>
+            <div class="info-card-value">
+                {% if req.assigned_to %}
+                    {{ req.assigned_to.user.get_full_name }}
+                    {% if req.assignment_accepted %}
+                    <span class="badge-status completed" style="font-size:0.7rem; margin-left:6px;">{% trans "Confirmé" %}</span>
+                    {% elif req.assignment_declined %}
+                    <span class="badge-status rejected" style="font-size:0.7rem; margin-left:6px;">{% trans "Refusé" %}</span>
+                    {% else %}
+                    <span class="badge-status" style="font-size:0.7rem; margin-left:6px; background:#fef3c7; color:#d97706;">{% trans "En attente" %}</span>
+                    {% endif %}
+                {% else %}
+                    <span style="color:#94a3b8;">{% trans "Non assigné" %}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Date de création" %}</div>
+            <div class="info-card-value">{{ req.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Budget déclaré" %}</div>
+            <div class="info-card-value">{{ req.budget_amount|floatformat:2 }} DA</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Code IBTIKAR" %}</div>
+            <div class="info-card-value">{{ req.ibtikar_external_code|default:"—"|default:_("Non soumis") }}</div>
+        </div>
+        {% elif req.channel == 'GENOCLAB' %}
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Montant du devis" %}</div>
+            <div class="info-card-value">{{ req.quote_amount|floatformat:2|default:"0.00" }} DA</div>
+        </div>
+        {% endif %}
+        {% if req.appointment_date %}
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Date de rendez-vous" %}</div>
+            <div class="info-card-value">
+                {{ req.appointment_date|date:"d/m/Y" }}
+                {% if req.appointment_confirmed %}
+                <span class="badge-status completed" style="font-size:0.7rem; margin-left:6px;">{% trans "Confirmé" %}</span>
+                {% else %}
+                <span class="badge-status" style="font-size:0.7rem; margin-left:6px; background:#fef3c7; color:#d97706;">{% trans "En attente" %}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% if req.service_rating %}
+        <div class="info-card">
+            <div class="info-card-label">{% trans "Note du service" %}</div>
+            <div class="info-card-value">
+                {% trans "Note" %} {{ req.service_rating }}/5
+                {% if req.rating_comment %}
+                <br><span style="font-size:0.85rem; color:#64748b; font-style:italic;">"{{ req.rating_comment|truncatechars:50 }}"</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Description -->
+    {% if req.description %}
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Description" %}</h3>
+        </div>
+        <div class="section-body">
+            <p style="margin:0; line-height:1.6; color:#475569;">{{ req.description|linebreaks }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Assign to Analyst Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Assigner à un analyste" %}</h3>
+        </div>
+        <div class="section-body">
+            <form method="post" action="{% url 'dashboard:superadmin_request_assign' req.pk %}" class="assign-form">
+                {% csrf_token %}
+                <div class="form-group" style="margin:0; flex:1; min-width:200px;">
+                    <label style="font-size:0.85rem; color:#64748b; margin-bottom:4px;">{% trans "Sélectionner un analyste" %}</label>
+                    <select name="member_id" class="form-control" required>
+                        <option value="">{% trans "Choisir un analyste..." %}</option>
+                        {% for member in available_members %}
+                        <option value="{{ member.pk }}">
+                            {{ member.user.get_full_name }} 
+                            ({{ member.current_load }}/{{ member.max_load }} — {{ member.techniques.count }} {% trans "tech." %})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <button type="submit" class="btn btn-primary">{% trans "Assigner" %}</button>
+                </div>
+            </form>
+            {% if not available_members %}
+            <p style="color:#64748b; font-size:0.9rem; margin-top:8px;">
+                {% trans "Aucun analyste disponible pour le moment." %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Documents" %}</h3>
+        </div>
+        <div class="section-body">
+            {% if req.report_file %}
+            <ul class="file-list">
+                <li class="file-item">
+                    <div class="file-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">{% trans "Rapport" %}</div>
+                        <div class="file-meta">{{ req.updated_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                        {% trans "Télécharger" %}
+                    </a>
+                </li>
+                {% if req.order_file %}
+                <li class="file-item">
+                    <div class="file-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">{% trans "Bon de commande" %}</div>
+                        <div class="file-meta">{{ req.order_uploaded_at|date:"d/m/Y H:i"|default:"—" }}</div>
+                    </div>
+                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                        {% trans "Télécharger" %}
+                    </a>
+                </li>
+                {% endif %}
+                {% if req.payment_receipt_file %}
+                <li class="file-item">
+                    <div class="file-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">{% trans "Reçu de paiement" %}</div>
+                        <div class="file-meta">{{ req.payment_uploaded_at|date:"d/m/Y H:i"|default:"—" }}</div>
+                    </div>
+                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                        {% trans "Télécharger" %}
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <p>{% trans "Aucun document disponible." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- History / Timeline -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Historique des actions" %}</h3>
+        </div>
+        <div class="section-body">
+            {% if history %}
+            <div class="timeline">
+                {% for entry in history %}
+                <div class="timeline-item">
+                    <div class="timeline-dot {% if entry.forced %}forced{% endif %}"></div>
+                    <div class="timeline-time">{{ entry.created_at|date:"d/m/Y H:i" }}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            {% if entry.from_status %}
+                            {{ entry.get_from_status_display|default:entry.from_status }} → {{ entry.get_to_status_display|default:entry.to_status }}
+                            {% else %}
+                            {{ entry.get_to_status_display|default:entry.to_status }}
+                            {% endif %}
+                            {% if entry.forced %}
+                            <span class="badge-status rejected" style="font-size:0.7rem; margin-left:6px;">{% trans "Forcé" %}</span>
+                            {% endif %}
+                        </div>
+                        <div class="timeline-actor">
+                            {% trans "Par" %} {{ entry.actor.get_full_name|default:entry.actor.username|default:_("Système") }}
+                        </div>
+                        {% if entry.notes %}
+                        <div class="timeline-notes">{{ entry.notes }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <p>{% trans "Aucun historique disponible." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Messages" %}</h3>
+        </div>
+        <div class="section-body">
+            {% if messages_list %}
+            {% for msg in messages_list %}
+            <div class="message-item {% if msg.from_user.role == 'SUPER_ADMIN' or msg.from_user.role == 'PLATFORM_ADMIN' %}admin{% endif %}">
+                <div class="message-header">
+                    <span class="message-author">{{ msg.from_user.get_full_name|default:msg.from_user.username }}</span>
+                    <span class="message-date">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="message-text">{{ msg.text|linebreaks }}</div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <p>{% trans "Aucun message." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">{% trans "Commentaires" %}</h3>
+        </div>
+        <div class="section-body">
+            {% if comments %}
+            <ul class="comment-list">
+                {% for comment in comments %}
+                <li class="comment-item">
+                    <div class="comment-header">
+                        <span class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                        {% if comment.step %}
+                        <span class="comment-step">{{ comment.step }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="comment-text">{{ comment.text|linebreaks }}</div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">{{ comment.created_at|date:"d/m/Y H:i" }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <p>{% trans "Aucun commentaire." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Link -->
+    <div style="margin-top:24px;">
+        <a href="{% url 'dashboard:superadmin' %}?tab=requests" class="btn btn-outline">
+            ← {% trans "Retour aux demandes" %}
+        </a>
+    </div>
+</div>
+{% endblock %}

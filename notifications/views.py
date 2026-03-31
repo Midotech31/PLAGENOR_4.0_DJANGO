@@ -44,8 +44,8 @@ def _get_detail_url(user, req):
         try:
             if req.assigned_to and req.assigned_to.user_id == user.pk:
                 return reverse('dashboard:analyst_request_detail', args=[req.pk])
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to get analyst request detail URL for request {req.pk}: {e}")
         return None
     elif role == 'REQUESTER':
         if req.requester_id == user.pk:

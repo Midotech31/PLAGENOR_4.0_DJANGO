@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "User Management" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "User Oversight" %}</h1>
+    <p class="greeting-date">{% trans "Manage all registered students and clients" %}</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>{% trans "Filter Users" %}</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Search" %}</label>
+                <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Name, email, username...' %}" class="form-control">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Role" %}</label>
+                <select name="role" class="form-control">
+                    <option value="">{% trans "All Roles" %}</option>
+                    <option value="REQUESTER" {% if role_filter == 'REQUESTER' %}selected{% endif %}>{% trans "IBTIKAR Requester" %}</option>
+                    <option value="CLIENT" {% if role_filter == 'CLIENT' %}selected{% endif %}>{% trans "GENOCLAB Client" %}</option>
+                    <option value="MEMBER" {% if role_filter == 'MEMBER' %}selected{% endif %}>{% trans "Analyst" %}</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Status" %}</label>
+                <select name="status" class="form-control">
+                    <option value="">{% trans "All Statuses" %}</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "From Date" %}</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "To Date" %}</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+            <a href="{% url 'dashboard:admin_users_list' %}" class="btn btn-outline">{% trans "Clear" %}</a>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>{% trans "Users" %}</h3>
+        <span class="text-muted">{{ paginator.count }} {% trans "users" %}</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table class="table" style="width: 100%; margin: 0;">
+            <thead>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Email" %}</th>
+                    <th>{% trans "Role" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Registered" %}</th>
+                    <th>{% trans "Requests" %}</th>
+                    <th>{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #9ca3af;">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">{{ user.get_full_name|default:user.username }}</div>
+                                <div style="font-size: 11px; color: #6b7280;">{{ user.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if user.email %}
+                        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.role == 'REQUESTER' %}
+                        <span class="badge-status ibtikar">IBTIKAR</span>
+                        {% elif user.role == 'CLIENT' %}
+                        <span class="badge-status genoclab">GENOCLAB</span>
+                        {% elif user.role == 'MEMBER' %}
+                        <span class="badge-status member">{% trans "Analyst" %}</span>
+                        {% else %}
+                        <span class="badge-status">{{ user.get_role_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                        <span style="color: #10b981;">●</span> {% trans "Active" %}
+                        {% else %}
+                        <span style="color: #ef4444;">●</span> {% trans "Inactive" %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-size: 12px;">{{ user.date_joined|date:"d/m/Y" }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">{{ user.date_joined|timesince }}</div>
+                    </td>
+                    <td style="text-align: center;">
+                        {{ user.total_requests|default:0 }}
+                    </td>
+                    <td>
+                        <a href="{% url 'dashboard:admin_user_detail' user.pk %}" class="btn btn-sm btn-outline">
+                            {% trans "View History" %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                        {% trans "No users found." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if paginator %}
+        <div class="pagination" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; padding: 16px; border-top: 1px solid #e5e7eb;">
+            {% if users.has_previous %}
+            <a href="?page={{ users.previous_page_number }}&q={{ search_q }}&role={{ role_filter }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+            {% endif %}
+            <span class="btn btn-sm" style="background: #e5e7eb; cursor: default;">{% trans "Page" %} {{ users.number }} {% trans "of" %} {{ users.paginator.num_pages }}</span>
+            {% if users.has_next %}
+            <a href="?page={{ users.next_page_number }}&q={{ search_q }}&role={{ role_filter }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
+        ← {% trans "Back to Dashboard" %}
+    </a>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
 
@@ -53,21 +53,25 @@ def index(request):
         ]
     ).select_related('service', 'requester').prefetch_related('comments').order_by('-updated_at')
 
-    # Completed history
-    history = Request.objects.filter(
+    # Completed history - paginated
+    history_qs = Request.objects.filter(
         assigned_to=profile,
         status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
-    ).select_related('service', 'requester').order_by('-updated_at')[:30]
+    ).select_related('service', 'requester').order_by('-updated_at')
+    history_paginator, history, _ = paginate_queryset(history_qs, request, per_page=25, page_param='history_page')
 
-    # Points and cheers
-    points_history = profile.points_history.order_by('-created_at')[:10]
-    cheers = profile.cheers.order_by('-created_at')[:10]
+    # Points and cheers - paginated
+    points_paginator, points_history, _ = paginate_queryset(profile.points_history.order_by('-created_at'), request, per_page=10, page_param='points_page')
+    cheers_paginator, cheers, _ = paginate_queryset(profile.cheers.order_by('-created_at'), request, per_page=10, page_param='cheers_page')
 
     # Productivity from engine
     productivity_data = compute_member_productivity(profile)
 
-    # Notifications
-    notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
+    # Notifications - paginated
+    notifications_paginator, notifications, _ = paginate_queryset(
+        Notification.objects.filter(user=request.user, read=False).order_by('-created_at'),
+        request, per_page=10, page_param='notif_page'
+    )
 
     # Ranking position among all members (sorted by productivity_score desc, total_points desc)
     all_members = list(MemberProfile.objects.order_by('-productivity_score', '-total_points').values_list('pk', flat=True))
@@ -100,9 +104,13 @@ def index(request):
         'pending_tasks': pending_tasks,
         'in_progress': in_progress,
         'history': history,
+        'history_paginator': history_paginator,
         'points_history': points_history,
+        'points_paginator': points_paginator,
         'cheers': cheers,
+        'cheers_paginator': cheers_paginator,
         'notifications': notifications,
+        'notifications_paginator': notifications_paginator,
         'now': timezone.now(),
         'rank_position': rank_position,
         'total_members_count': total_members_count,
@@ -124,9 +132,9 @@ def accept_task(request, pk):
     req.save(update_fields=['assignment_accepted', 'assignment_accepted_at'])
     try:
         transition(req, 'APPOINTMENT_PROPOSED', request.user, notes='Tâche acceptée')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
-    messages.success(request, f"Tâche {req.display_id} acceptée.")
+        messages.success(request, f"Tâche {req.display_id} acceptée.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, f"Erreur: {str(e)}")
     return redirect_back(request, 'dashboard:analyst')
 
 
@@ -144,9 +152,9 @@ def decline_task(request, pk):
     req.save(update_fields=['assignment_declined', 'assignment_decline_reason', 'assigned_to'])
     try:
         transition(req, 'ASSIGNED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
-    messages.success(request, f"Tâche {req.display_id} déclinée.")
+        messages.success(request, f"Tâche {req.display_id} déclinée.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, f"Erreur: {str(e)}")
     return redirect_back(request, 'dashboard:analyst')
 
 
@@ -204,8 +212,8 @@ def suggest_appointment(request, pk):
             if req.status == 'ASSIGNED':
                 try:
                     transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=transition_notes)
-                except (InvalidTransitionError, AuthorizationError, ValueError):
-                    pass
+                except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                    messages.error(request, f"Erreur: {str(e)}")
             messages.success(request, f"Date de RDV proposée: {req.appointment_date}" + (f" à {time_str}" if time_str else ""))
         except ValueError:
             messages.error(request, "Date invalide.")
@@ -266,8 +274,8 @@ def accept_alt_date(request, pk):
                 req, 'APPOINTMENT_CONFIRMED', request.user,
                 notes=f"Date alternative acceptée: {req.appointment_date.strftime('%d/%m/%Y')} (ancienne: {old_date})"
             )
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            messages.error(request, f"Erreur: {str(e)}")
 
     # Notify the requester/client
     if req.requester:

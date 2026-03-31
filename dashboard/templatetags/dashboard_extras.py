@@ -39,3 +39,21 @@ def filename(path):
         return path.name
     # Handle string paths
     return path.split('/')[-1].split('\\')[-1]
+
+
+@register.filter
+def min_filter(value, arg):
+    """Return minimum of value and arg."""
+    try:
+        return min(float(value), float(arg))
+    except (ValueError, TypeError):
+        return value
+
+
+@register.filter
+def max_filter(value, arg):
+    """Return maximum of value and arg."""
+    try:
+        return max(float(value), float(arg))
+    except (ValueError, TypeError):
+        return value

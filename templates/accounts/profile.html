@@ -3,78 +3,705 @@
 
 {% block title %}{% trans "Mon Profil" %} — PLAGENOR 4.0{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1 class="greeting">{% trans "Mon Profil" %}</h1>
-    <p class="greeting-date">{{ request.user.get_role_display }}</p>
-</div>
+{% block extra_css %}
+<style>
+    .profile-page {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .profile-header {
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+        border-radius: 16px;
+        padding: 32px;
+        color: white;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        overflow: hidden;
+        border: 3px solid rgba(255,255,255,0.3);
+        flex-shrink: 0;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-info h1 {
+        margin: 0 0 4px;
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+    .profile-info .role-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+    .profile-info .member-since {
+        font-size: 0.9rem;
+        opacity: 0.85;
+        margin-top: 8px;
+    }
+    .profile-stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+    .stat-item {
+        text-align: center;
+        background: rgba(255,255,255,0.1);
+        padding: 8px 16px;
+        border-radius: 8px;
+        min-width: 80px;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        opacity: 0.85;
+        margin-top: 4px;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .profile-stats {
+            justify-content: center;
+        }
+    }
+    .profile-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .profile-card-header {
+        background: #F8FAFC;
+        padding: 16px 20px;
+        border-bottom: 1px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .profile-card-header svg {
+        width: 20px;
+        height: 20px;
+        color: #4F46E5;
+    }
+    .profile-card-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1E293B;
+    }
+    .profile-card-body {
+        padding: 20px;
+    }
+    .avatar-upload {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .avatar-upload-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #EEF2FF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #4F46E5;
+        margin: 0 auto 12px;
+        overflow: hidden;
+    }
+    .avatar-upload-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    .password-strength {
+        height: 4px;
+        background: #E5E7EB;
+        border-radius: 2px;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+    .password-strength-bar {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.3s, background 0.3s;
+    }
+    .strength-weak { width: 33%; background: #EF4444; }
+    .strength-medium { width: 66%; background: #F59E0B; }
+    .strength-strong { width: 100%; background: #10B981; }
+    .btn-primary {
+        background: #4F46E5;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-primary:hover {
+        background: #4338CA;
+    }
+    .btn-secondary {
+        background: #F1F5F9;
+        color: #475569;
+        border: 1px solid #E2E8F0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1rem;
+    }
+    .activity-icon.request { background: #EEF2FF; color: #4F46E5; }
+    .activity-icon.completed { background: #ECFDF5; color: #10B981; }
+    .activity-icon.pending { background: #FEF3C7; color: #D97706; }
+    .activity-icon.notification { background: #F5F3FF; color: #7C3AED; }
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .activity-title {
+        font-size: 0.9rem;
+        color: #1E293B;
+        margin-bottom: 2px;
+    }
+    .activity-meta {
+        font-size: 0.8rem;
+        color: #94A3B8;
+    }
+    .empty-activity {
+        text-align: center;
+        padding: 32px 16px;
+        color: #94A3B8;
+    }
+    .empty-activity svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #F1F5F9;
+        font-size: 0.9rem;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        color: #64748B;
+    }
+    .info-value {
+        color: #1E293B;
+        font-weight: 500;
+        text-align: right;
+    }
+    .info-value a {
+        color: #4F46E5;
+        text-decoration: none;
+    }
+    .info-value a:hover {
+        text-decoration: underline;
+    }
+    .language-selector {
+        display: flex;
+        gap: 8px;
+    }
+    .language-option {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #E2E8F0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .language-option:hover {
+        border-color: #C7D2FE;
+    }
+    .language-option.active {
+        border-color: #4F46E5;
+        background: #EEF2FF;
+    }
+    .language-option input {
+        display: none;
+    }
+    .language-flag {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+    .language-name {
+        font-size: 0.85rem;
+        color: #374151;
+    }
+    .error-message {
+        background: #FEF2F2;
+        color: #DC2626;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+    .success-message {
+        background: #F0FDF4;
+        color: #16A34A;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
 
-<div class="card" style="max-width:700px;">
-    <div class="card-header"><h3>{% trans "Informations personnelles" %}</h3></div>
-    <div class="card-body">
-        <form method="post" enctype="multipart/form-data" action="{% url 'accounts:profile' %}">
-            {% csrf_token %}
-            <!-- Profile Picture -->
-            <div class="form-group" style="text-align:center; margin-bottom:24px;">
-                <div style="width:80px; height:80px; border-radius:50%; background:var(--indigo-100, #e0e7ff); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:2rem; font-weight:700; color:var(--indigo-600, #4F46E5); overflow:hidden;">
-                    {% if user.avatar %}
-                    <img src="{{ user.avatar.url }}" style="width:100%; height:100%; object-fit:cover;">
-                    {% else %}
-                    {{ user.first_name|first|default:"U" }}{{ user.last_name|first }}
+{% block content %}
+<div class="profile-page">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="{{ user.get_full_name }}">
+            {% else %}
+            {{ user.first_name|slice:":1"|default:"U" }}{{ user.last_name|slice:":1"|default:"" }}
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <h1>{{ user.get_full_name|default:user.username }}</h1>
+            <span class="role-badge">{{ user.get_role_display }}</span>
+            <p class="member-since">{% trans "Membre depuis" %} {{ user.date_joined|date:"d/m/Y" }}</p>
+            <div class="profile-stats">
+                {% if activity_summary.total_requests %}
+                <div class="stat-item">
+                    <div class="stat-value">{{ activity_summary.total_requests }}</div>
+                    <div class="stat-label">{% trans "Demandes" %}</div>
+                </div>
+                {% endif %}
+                {% if activity_summary.completed_requests %}
+                <div class="stat-item">
+                    <div class="stat-value">{{ activity_summary.completed_requests }}</div>
+                    <div class="stat-label">{% trans "Terminées" %}</div>
+                </div>
+                {% endif %}
+                {% if activity_summary.pending_requests %}
+                <div class="stat-item">
+                    <div class="stat-value">{{ activity_summary.pending_requests }}</div>
+                    <div class="stat-label">{% trans "En cours" %}</div>
+                </div>
+                {% endif %}
+                {% if activity_summary.total_points %}
+                <div class="stat-item">
+                    <div class="stat-value">{{ activity_summary.total_points }}</div>
+                    <div class="stat-label">{% trans "Points" %}</div>
+                </div>
+                {% endif %}
+                {% if activity_summary.notifications_count %}
+                <div class="stat-item">
+                    <div class="stat-value">{{ activity_summary.notifications_count }}</div>
+                    <div class="stat-label">{% trans "Notifications" %}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- Left Column: Profile Edit & Password -->
+        <div>
+            <!-- Personal Information Card -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <h3>{% trans "Informations personnelles" %}</h3>
+                </div>
+                <div class="profile-card-body">
+                    <form method="post" action="{% url 'accounts:profile' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="profile">
+                        
+                        <!-- Avatar Upload -->
+                        <div class="avatar-upload">
+                            <div class="avatar-upload-preview">
+                                {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="">
+                                {% else %}
+                                {{ user.first_name|slice:":1"|default:"U" }}{{ user.last_name|slice:":1"|default:"" }}
+                                {% endif %}
+                            </div>
+                            <label class="btn-secondary" style="cursor: pointer;">
+                                {% trans "Changer la photo" %}
+                                <input type="file" name="avatar" accept="image/*" style="display: none;" onchange="this.form.submit()">
+                            </label>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">{% trans "Prénom" %}</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{% trans "Nom" %}</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Email" %}</label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Téléphone" %}</label>
+                            <input type="tel" name="phone" class="form-control" value="{{ user.phone|default:'' }}" placeholder="{% trans 'Ex: +213 XX XXX XXXX' %}">
+                        </div>
+                        
+                        {% if user.role == 'REQUESTER' or user.role == 'CLIENT' %}
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Organisation / Université" %}</label>
+                            <input type="text" name="organization" class="form-control" value="{{ user.organization|default:'' }}">
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.role == 'REQUESTER' %}
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">{% trans "Laboratoire" %}</label>
+                                <input type="text" name="laboratory" class="form-control" value="{{ user.laboratory|default:'' }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{% trans "Directeur de recherche" %}</label>
+                                <input type="text" name="supervisor" class="form-control" value="{{ user.supervisor|default:'' }}">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if techniques %}
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Techniques maîtrisées" %}</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                                {% for t in techniques %}
+                                <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.9rem; cursor: pointer;">
+                                    <input type="checkbox" name="techniques" value="{{ t.pk }}"
+                                        {% if t in user.member_profile.techniques.all %}checked{% endif %}>
+                                    {{ t.name }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            {% trans "Enregistrer les modifications" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Password Change Card -->
+            <div class="profile-card" style="margin-top: 24px;">
+                <div class="profile-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <h3>{% trans "Modifier le mot de passe" %}</h3>
+                </div>
+                <div class="profile-card-body">
+                    <form method="post" action="{% url 'accounts:profile' %}" id="password-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="password">
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans "Mot de passe actuel" %}</label>
+                            <input type="password" name="old_password" class="form-control" required autocomplete="current-password">
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Nouveau mot de passe" %}</label>
+                            <input type="password" name="new_password1" class="form-control" required autocomplete="new-password" 
+                                   id="new-password" minlength="8"
+                                   oninput="updatePasswordStrength(this.value)">
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="strength-bar"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.8rem; color: #64748B;">{% trans "Minimum 8 caractères" %}</small>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Confirmer le nouveau mot de passe" %}</label>
+                            <input type="password" name="new_password2" class="form-control" required autocomplete="new-password">
+                        </div>
+                        
+                        <button type="submit" class="btn-secondary" style="margin-top: 20px; width: 100%;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            {% trans "Changer le mot de passe" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Language, Info & Activity -->
+        <div>
+            <!-- Language Preference Card -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <h3>{% trans "Langue préférée" %}</h3>
+                </div>
+                <div class="profile-card-body">
+                    <div class="language-selector">
+                        <label class="language-option {% if LANGUAGE_CODE == 'fr' %}active{% endif %}">
+                            <input type="radio" name="language" value="fr" {% if LANGUAGE_CODE == 'fr' %}checked{% endif %}
+                                   onchange="setLanguage('fr')">
+                            <div class="language-flag">🇩🇿</div>
+                            <div class="language-name">{% trans "Français" %}</div>
+                        </label>
+                        <label class="language-option {% if LANGUAGE_CODE == 'en' %}active{% endif %}">
+                            <input type="radio" name="language" value="en" {% if LANGUAGE_CODE == 'en' %}checked{% endif %}
+                                   onchange="setLanguage('en')">
+                            <div class="language-flag">🇬🇧</div>
+                            <div class="language-name">English</div>
+                        </label>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #64748B; margin-top: 12px; text-align: center;">
+                        {% trans "La langue sélectionnée sera utilisée pour l'affichage de l'interface." %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Account Information Card -->
+            <div class="profile-card" style="margin-top: 24px;">
+                <div class="profile-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <h3>{% trans "Informations du compte" %}</h3>
+                </div>
+                <div class="profile-card-body" style="padding: 0 20px;">
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Nom d'utilisateur" %}</span>
+                        <span class="info-value">{{ user.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Email" %}</span>
+                        <span class="info-value">{{ user.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Rôle" %}</span>
+                        <span class="info-value">{{ user.get_role_display }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Date d'inscription" %}</span>
+                        <span class="info-value">{{ user.date_joined|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Dernière connexion" %}</span>
+                        <span class="info-value">{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</span>
+                    </div>
+                    {% if user.last_seen %}
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Dernière activité" %}</span>
+                        <span class="info-value">{{ user.last_seen|date:"d/m/Y H:i" }}</span>
+                    </div>
                     {% endif %}
                 </div>
-                <label class="text-sm">{% trans "Photo de profil" %}</label>
-                <input type="file" name="avatar" accept="image/*" class="form-control" style="font-size:0.85rem;">
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>{% trans "Prénom" %}</label>
-                    <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}">
+            <!-- Activity Summary Card -->
+            <div class="profile-card" style="margin-top: 24px;">
+                <div class="profile-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    <h3>{% trans "Activité récente" %}</h3>
                 </div>
-                <div class="form-group">
-                    <label>{% trans "Nom" %}</label>
-                    <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>{% trans "Email" %}</label>
-                <input type="email" name="email" class="form-control" value="{{ request.user.email }}">
-            </div>
-            <div class="form-group">
-                <label>{% trans "Téléphone" %}</label>
-                <input type="text" name="phone" class="form-control" value="{{ request.user.phone }}">
-            </div>
-            <div class="form-group">
-                <label>{% trans "Organisation / Université" %}</label>
-                <input type="text" name="organization" class="form-control" value="{{ request.user.organization }}">
-            </div>
-            <div class="form-group">
-                <label>{% trans "Laboratoire" %}</label>
-                <input type="text" name="laboratory" class="form-control" value="{{ request.user.laboratory }}">
-            </div>
-            <div class="form-group">
-                <label>{% trans "Directeur de recherche" %}</label>
-                <input type="text" name="supervisor" class="form-control" value="{{ request.user.supervisor }}">
-            </div>
-
-            {% if techniques %}
-            <div class="form-group">
-                <label>{% trans "Techniques maîtrisées" %}</label>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                    {% for t in techniques %}
-                    <label style="display:inline-flex; align-items:center; gap:4px; font-size:0.9rem;">
-                        <input type="checkbox" name="techniques" value="{{ t.pk }}"
-                            {% if t in request.user.member_profile.techniques.all %}checked{% endif %}>
-                        {{ t.name }}
-                    </label>
+                <div class="profile-card-body" style="padding: 0;">
+                    {% if activity_summary.recent_activity %}
+                    {% for activity in activity_summary.recent_activity %}
+                    <div class="activity-item">
+                        <div class="activity-icon {% if activity.status == 'COMPLETED' %}completed{% elif activity.status in 'SUBMITTED,PENDING' %}pending{% else %}request{% endif %}">
+                            {% if activity.status == 'COMPLETED' %}✓{% elif activity.status in 'SUBMITTED,PENDING' %}⏳{% else %}📋{% endif %}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">
+                                <strong>{{ activity.display_id }}</strong> — {{ activity.title|truncatechars:40 }}
+                            </div>
+                            <div class="activity-meta">
+                                {{ activity.service__name|default:"—"|truncatechars:30 }} · {{ activity.updated_at|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
+                    <div style="padding: 12px 20px; text-align: center; border-top: 1px solid #F1F5F9;">
+                        <a href="#" style="color: #4F46E5; font-size: 0.85rem; text-decoration: none;">
+                            {% trans "Voir toute l'activité" %} →
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="empty-activity">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        <p>{% trans "Aucune activité récente" %}</p>
+                        <p style="font-size: 0.85rem;">{% trans "Vos demandes et actions apparaîtront ici." %}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-            {% endif %}
-
-            <button type="submit" class="btn btn-primary">{% trans "Mettre à jour" %}</button>
-        </form>
+        </div>
     </div>
 </div>
+
+<script>
+function updatePasswordStrength(password) {
+    const bar = document.getElementById('strength-bar');
+    let strength = 0;
+    
+    if (password.length >= 8) strength++;
+    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^a-zA-Z0-9]/)) strength++;
+    
+    bar.className = 'password-strength-bar';
+    if (strength === 1) bar.classList.add('strength-weak');
+    else if (strength === 2 || strength === 3) bar.classList.add('strength-medium');
+    else if (strength === 4) bar.classList.add('strength-strong');
+}
+
+function setLanguage(lang) {
+    // Update active state
+    document.querySelectorAll('.language-option').forEach(opt => {
+        opt.classList.remove('active');
+    });
+    event.target.closest('.language-option').classList.add('active');
+    
+    // Set language via AJAX
+    fetch('/i18n/setlang/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: 'language=' + lang
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 {% endblock %}

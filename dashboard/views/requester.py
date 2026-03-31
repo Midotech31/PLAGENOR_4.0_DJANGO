@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
 
@@ -23,21 +23,49 @@ def requester_required(view_func):
 
 @requester_required
 def index(request):
+    from django.db.models import Case, When, IntegerField
+    
+    # Base queryset for this user's requests
     my_requests = Request.objects.filter(requester=request.user, channel='IBTIKAR')
-    total = my_requests.count()
-    active = my_requests.exclude(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']).count()
-    completed = my_requests.filter(status__in=['COMPLETED', 'CLOSED']).count()
-    rejected = my_requests.filter(status='REJECTED').count()
+    
+    # Consolidated count queries
+    counts = my_requests.aggregate(
+        total=Count('id'),
+        active=Count(
+            Case(
+                When(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED'], then=None),
+                default=1,
+                output_field=IntegerField()
+            )
+        ),
+        completed=Count(
+            Case(
+                When(status__in=['COMPLETED', 'CLOSED'], then=1),
+                output_field=IntegerField()
+            )
+        ),
+        rejected=Count(
+            Case(
+                When(status='REJECTED', then=1),
+                output_field=IntegerField()
+            )
+        )
+    )
+    total = counts['total']
+    active = counts['active'] or 0
+    completed = counts['completed'] or 0
+    rejected = counts['rejected'] or 0
 
     # Active requests
     active_requests = my_requests.exclude(
         status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']
     ).select_related('service', 'assigned_to__user').order_by('-created_at')
 
-    # Archives
-    archived = my_requests.filter(
+    # Archives - paginated
+    archived_qs = my_requests.filter(
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
-    ).select_related('service').order_by('-updated_at')[:30]
+    ).select_related('service').order_by('-updated_at')
+    archived_paginator, archived, _ = paginate_queryset(archived_qs, request, per_page=25, page_param='archived_page')
 
     # Available services for new request
     services = Service.objects.filter(
@@ -47,8 +75,20 @@ def index(request):
     # Budget context from IBTIKAR service
     budget_context = get_ibtikar_request_context(request.user)
 
-    # Notifications
-    notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
+    # Notifications - paginated
+    notifications_paginator, notifications, _ = paginate_queryset(
+        Notification.objects.filter(user=request.user, read=False).order_by('-created_at'),
+        request, per_page=10, page_param='notif_page'
+    )
+    
+    # Profile stats for profile tab
+    unread_notifications = Notification.objects.filter(user=request.user, read=False).count()
+    profile_stats = {
+        'total_requests': total,
+        'completed_requests': completed,
+        'pending_requests': active,
+        'notifications_count': unread_notifications,
+    }
 
     context = {
         'total': total,
@@ -57,9 +97,12 @@ def index(request):
         'rejected': rejected,
         'active_requests': active_requests,
         'archived': archived,
+        'archived_paginator': archived_paginator,
         'services': services,
         'budget_context': budget_context,
         'notifications': notifications,
+        'notifications_paginator': notifications_paginator,
+        'profile_stats': profile_stats,
         'now': timezone.now(),
     }
     return render(request, 'dashboard/requester/index.html', context)
@@ -191,8 +234,8 @@ def confirm_receipt(request, pk):
             from core.workflow import transition
             from core.exceptions import InvalidTransitionError, AuthorizationError
             transition(req, 'COMPLETED', request.user, notes='Réception confirmée par le demandeur')
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            messages.error(request, f"Erreur: {str(e)}")
     # Notify admin + analyst that report was downloaded/confirmed
     from accounts.models import User
     admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
@@ -229,8 +272,8 @@ def confirm_appointment(request, pk):
         from core.workflow import transition
         from core.exceptions import InvalidTransitionError, AuthorizationError
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, f"Erreur: {str(e)}")
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
     return redirect_back(request, 'dashboard:requester')
 
@@ -289,8 +332,8 @@ def submit_ibtikar_code(request, pk):
             from core.workflow import transition
             from core.exceptions import InvalidTransitionError, AuthorizationError
             transition(req, 'IBTIKAR_CODE_SUBMITTED', request.user, notes=f'Code IBTIKAR: {code}')
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            messages.error(request, f"Erreur: {str(e)}")
     messages.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
     return redirect_back(request, 'dashboard:requester')
 

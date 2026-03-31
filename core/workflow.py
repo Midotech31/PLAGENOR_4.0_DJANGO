@@ -3,6 +3,11 @@
 
 import logging
 
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.utils import timezone
+
 from core.models import Request, RequestHistory
 
 logger = logging.getLogger('plagenor.workflow')
@@ -196,10 +201,409 @@ def _create_notifications(request_obj, to_status):
 
 
 def _send_transition_emails(request_obj, old_status, to_status):
-    """Send email notifications for key transitions. Placeholder for future SMTP integration."""
-    pass
+    """Send email notifications for key workflow transitions.
+    
+    Implements bilingual (FR/EN) email notifications using Django's email backend
+    configured in settings.py. Each notification type uses appropriate templates
+    and includes proper error handling with logging.
+    """
+    try:
+        # Check if email is configured
+        if not getattr(settings, 'EMAIL_HOST', None) or settings.EMAIL_HOST in ('', 'localhost'):
+            logger.debug(f"Email not configured, skipping notification for request {request_obj.display_id}")
+            return
+        
+        _notify_requester_on_transition(request_obj, old_status, to_status)
+        _notify_analyst_on_transition(request_obj, old_status, to_status)
+        _notify_admins_on_transition(request_obj, old_status, to_status)
+        
+    except Exception as e:
+        logger.error(
+            f"Failed to send transition emails for request {request_obj.display_id}: {str(e)}",
+            extra={
+                'request_id': str(request_obj.id),
+                'request_display_id': request_obj.display_id,
+                'old_status': old_status,
+                'to_status': to_status,
+            },
+            exc_info=True
+        )
+
+
+def _get_user_language(user):
+    """Get user's preferred language, defaulting to French."""
+    if hasattr(user, 'language'):
+        return user.language
+    return 'fr'
+
+
+def _render_bilingual_email(template_name, context, subject_fr, subject_en):
+    """Render email content in both French and English."""
+    from django.template.loader import render_to_string
+    
+    base_url = getattr(settings, 'BASE_URL', 'https://plagenor.essbo.dz')
+    support_email = getattr(settings, 'SUPPORT_EMAIL', 'contact@plagenor.essbo.dz')
+    
+    # Add common context
+    context['base_url'] = base_url
+    context['support_email'] = support_email
+    context['dashboard_url'] = f"{base_url}/dashboard/"
+    context['request'] = context.get('request_obj', context.get('request'))
+    
+    # Render French version
+    context['language'] = 'fr'
+    html_fr = render_to_string(template_name, context)
+    
+    # Render English version
+    context['language'] = 'en'
+    html_en = render_to_string(template_name, context)
+    
+    return html_fr, html_en
+
+
+def _send_email(to_email, subject, html_content, recipient_name=''):
+    """Send HTML email with proper error handling."""
+    from django.core.mail import EmailMultiAlternatives
+    from django.conf import settings
+    
+    try:
+        # Create plain text version by stripping HTML
+        import re
+        text_content = re.sub(r'<[^>]+>', '', html_content)
+        text_content = re.sub(r'\n+', '\n', text_content).strip()
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email] if isinstance(to_email, str) else to_email,
+        )
+        email.attach_alternative(html_content, 'text/html')
+        email.send(fail_silently=False)
+        
+        logger.info(
+            f"Email sent successfully to {to_email}: {subject}",
+            extra={'recipient': to_email, 'subject': subject}
+        )
+        return True
+        
+    except Exception as e:
+        logger.error(
+            f"Failed to send email to {to_email}: {str(e)}",
+            extra={'recipient': to_email, 'subject': subject},
+            exc_info=True
+        )
+        return False
+
+
+def _notify_requester_on_transition(request_obj, old_status, to_status):
+    """Send email to requester/client on relevant status changes."""
+    from django.conf import settings
+    
+    # Determine recipient
+    if request_obj.requester and request_obj.requester.email:
+        recipient = request_obj.requester
+        recipient_email = recipient.email
+        recipient_name = recipient.get_full_name() or recipient.username
+    elif request_obj.guest_email:
+        recipient_email = request_obj.guest_email
+        recipient_name = request_obj.guest_name or 'Guest'
+        recipient = None
+    else:
+        return  # No email available
+    
+    # Statuses that warrant email to requester
+    notification_statuses = {
+        'VALIDATION_PEDAGOGIQUE': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Validation pédagogique",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Pedagogical Validation",
+            'next_steps_fr': [
+                "Votre demande est en cours de validation pédagogique",
+                "Vous recevrez une notification une fois la validation terminée"
+            ],
+            'next_steps_en': [
+                "Your request is being validated pedagogically",
+                "You will receive a notification once validation is complete"
+            ]
+        },
+        'VALIDATION_FINANCE': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Validation financière",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Financial Validation",
+            'next_steps_fr': [
+                "Votre demande est en cours de validation financière IBTIKAR",
+                "Veuillez attendre la confirmation de votre budget"
+            ],
+            'next_steps_en': [
+                "Your request is being validated financially",
+                "Please wait for budget confirmation"
+            ]
+        },
+        'ASSIGNED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Analyste assigné",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Analyst Assigned",
+            'next_steps_fr': [
+                "Un analyste a été assigné à votre demande",
+                "Vous recevrez les détails du rendez-vous bientôt"
+            ],
+            'next_steps_en': [
+                "An analyst has been assigned to your request",
+                "You will receive appointment details soon"
+            ]
+        },
+        'APPOINTMENT_PROPOSED': {
+            'template': 'notifications/email/appointment_notification.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Proposition de rendez-vous",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Appointment Proposed",
+            'is_appointment': True,
+        },
+        'APPOINTMENT_CONFIRMED': {
+            'template': 'notifications/email/appointment_notification.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Rendez-vous confirmé",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Appointment Confirmed",
+            'is_appointment': True,
+        },
+        'QUOTE_SENT': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Devis prêt",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Quote Ready",
+            'next_steps_fr': [
+                "Votre devis est prêt et en attente de votre validation",
+                "Veuillez vous connecter pour accepter ou refuser le devis"
+            ],
+            'next_steps_en': [
+                "Your quote is ready and awaiting your validation",
+                "Please log in to accept or reject the quote"
+            ]
+        },
+        'PAYMENT_CONFIRMED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Paiement confirmé",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Payment Confirmed",
+            'next_steps_fr': [
+                "Votre paiement a été confirmé",
+                "L'analyse de vos échantillons va commencer"
+            ],
+            'next_steps_en': [
+                "Your payment has been confirmed",
+                "Analysis of your samples will begin"
+            ]
+        },
+        'REPORT_UPLOADED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Rapport uploadé",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Report Uploaded",
+            'next_steps_fr': [
+                "Votre rapport d'analyse a été uploadé",
+                "Il est en cours de validation par l'administrateur"
+            ],
+            'next_steps_en': [
+                "Your analysis report has been uploaded",
+                "It is being validated by the administrator"
+            ]
+        },
+        'REPORT_VALIDATED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Rapport validé",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Report Validated",
+            'next_steps_fr': [
+                "Votre rapport a été validé",
+                "Vous recevrez une notification lorsqu'il sera prêt"
+            ],
+            'next_steps_en': [
+                "Your report has been validated",
+                "You will receive a notification when it's ready"
+            ]
+        },
+        'SENT_TO_REQUESTER': {
+            'template': 'notifications/email/report_delivery.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Rapport disponible",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Report Available",
+            'is_report': True,
+        },
+        'SENT_TO_CLIENT': {
+            'template': 'notifications/email/report_delivery.html',
+            'subject_fr': f"[PLAGENOR] Facture {request_obj.display_id} — Rapport disponible",
+            'subject_en': f"[PLAGENOR] Invoice {request_obj.display_id} — Report Available",
+            'is_report': True,
+        },
+        'COMPLETED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Complétée",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Completed",
+            'next_steps_fr': [
+                "Votre demande est maintenant complétée",
+                "Merci d'évaluer notre service"
+            ],
+            'next_steps_en': [
+                "Your request is now complete",
+                "Thank you for rating our service"
+            ]
+        },
+        'REJECTED': {
+            'template': 'notifications/email/request_status_change.html',
+            'subject_fr': f"[PLAGENOR] Demande {request_obj.display_id} — Demande rejetée",
+            'subject_en': f"[PLAGENOR] Request {request_obj.display_id} — Request Rejected",
+            'next_steps_fr': [
+                "Malheureusement, votre demande a été rejetée",
+                "Veuillez contacter le support pour plus d'informations"
+            ],
+            'next_steps_en': [
+                "Unfortunately, your request has been rejected",
+                "Please contact support for more information"
+            ]
+        },
+    }
+    
+    if to_status not in notification_statuses:
+        return
+    
+    config = notification_statuses[to_status]
+    template = config['template']
+    
+    # Build context
+    context = {
+        'request_obj': request_obj,
+        'user_name': recipient_name,
+        'new_status_display': request_obj.get_status_display(),
+        'status_message': None,
+    }
+    
+    if 'next_steps_fr' in config:
+        lang = _get_user_language(recipient) if recipient else 'fr'
+        context['next_steps'] = config['next_steps_fr'] if lang == 'fr' else config['next_steps_en']
+    
+    if config.get('is_appointment'):
+        context['appointment_date'] = request_obj.appointment_date
+        context['appointment_time'] = getattr(request_obj, 'appointment_time', None)
+        context['appointment_note'] = getattr(request_obj, 'appointment_note', None)
+        if request_obj.assigned_to:
+            context['analyst_name'] = request_obj.assigned_to.user.get_full_name()
+    
+    if config.get('is_report'):
+        base_url = getattr(settings, 'BASE_URL', 'https://plagenor.essbo.dz')
+        context['report_url'] = f"{base_url}/reports/{request_obj.report_token}/"
+    
+    # Render and send email
+    html_fr, html_en = _render_bilingual_email(
+        template, context,
+        config['subject_fr'], config['subject_en']
+    )
+    
+    # Determine subject based on user language
+    lang = _get_user_language(recipient) if recipient else 'fr'
+    subject = config['subject_fr'] if lang == 'fr' else config['subject_en']
+    html_content = html_fr if lang == 'fr' else html_en
+    
+    _send_email(recipient_email, subject, html_content, recipient_name)
+
+
+def _notify_analyst_on_transition(request_obj, old_status, to_status):
+    """Send email to assigned analyst on relevant status changes."""
+    if not request_obj.assigned_to:
+        return
+    
+    analyst = request_obj.assigned_to.user
+    if not analyst.email:
+        return
+    
+    analyst_name = analyst.get_full_name() or analyst.username
+    notification_statuses = ['ASSIGNED', 'PAYMENT_CONFIRMED']
+    
+    if to_status not in notification_statuses:
+        return
+    
+    if to_status == 'ASSIGNED':
+        template = 'notifications/email/assignment_notification.html'
+        subject_fr = f"[PLAGENOR] Nouvelle assignation — {request_obj.display_id}"
+        subject_en = f"[PLAGENOR] New Assignment — {request_obj.display_id}"
+        
+        base_url = getattr(settings, 'BASE_URL', 'https://plagenor.essbo.dz')
+        context = {
+            'request': request_obj,
+            'member': request_obj.assigned_to,
+            'dashboard_url': f"{base_url}/dashboard/analyst/",
+        }
+        
+        html_fr, html_en = _render_bilingual_email(template, context, subject_fr, subject_en)
+        
+        lang = _get_user_language(analyst)
+        subject = subject_fr if lang == 'fr' else subject_en
+        html_content = html_fr if lang == 'fr' else html_en
+        
+        _send_email(analyst.email, subject, html_content, analyst_name)
+
+
+def _notify_admins_on_transition(request_obj, old_status, to_status):
+    """Send email to admins on important status changes."""
+    from accounts.models import User
+    from django.conf import settings
+    
+    # Only notify admins for critical transitions
+    critical_statuses = ['SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'REPORT_UPLOADED']
+    
+    if to_status not in critical_statuses:
+        return
+    
+    admins = User.objects.filter(
+        role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+        is_active=True
+    ).exclude(email='')
+    
+    base_url = getattr(settings, 'BASE_URL', 'https://plagenor.essbo.dz')
+    subject_fr = f"[PLAGENOR] Action requise — {request_obj.display_id}"
+    subject_en = f"[PLAGENOR] Action Required — {request_obj.display_id}"
+    
+    context = {
+        'request': request_obj,
+        'user_name': 'Admin',
+        'new_status_display': request_obj.get_status_display(),
+        'dashboard_url': f"{base_url}/dashboard/admin/",
+        'next_steps_fr': ["Veuillez examiner cette demande depuis le tableau de bord admin"],
+        'next_steps_en': ["Please review this request from the admin dashboard"],
+    }
+    
+    html_fr, html_en = _render_bilingual_email(
+        'notifications/email/request_status_change.html',
+        context, subject_fr, subject_en
+    )
+    
+    for admin in admins:
+        lang = _get_user_language(admin)
+        subject = subject_fr if lang == 'fr' else subject_en
+        html_content = html_fr if lang == 'fr' else html_en
+        _send_email(admin.email, subject, html_content, admin.get_full_name())
 
 
 def _auto_generate_documents(request_obj, to_status):
     """Auto-generate documents on specific transitions."""
-    pass
+    # Document generation is handled by separate document generation services
+    # This function can be extended to trigger automatic document creation
+    # for specific workflow states (e.g., generating quote PDF on QUOTE_SENT)
+    try:
+        # Example: Generate platform note when entering PLATFORM_NOTE_GENERATED
+        if to_status == 'PLATFORM_NOTE_GENERATED':
+            logger.info(f"Auto-generating platform note for request {request_obj.display_id}")
+            # TODO: Call document generation service
+            # from documents.generators import generate_ibtikar_form
+            # generate_ibtikar_form(request_obj)
+            
+        # Example: Generate quote PDF when entering QUOTE_SENT
+        elif to_status == 'QUOTE_SENT' and request_obj.channel == 'GENOCLAB':
+            logger.info(f"Auto-generating quote for request {request_obj.display_id}")
+            # TODO: Call document generation service
+            # from documents.generators import generate_quote_pdf
+            # generate_quote_pdf(request_obj)
+            
+    except Exception as e:
+        logger.error(
+            f"Failed to auto-generate document for request {request_obj.display_id}: {str(e)}",
+            extra={
+                'request_id': str(request_obj.id),
+                'request_display_id': request_obj.display_id,
+                'to_status': to_status,
+            },
+            exc_info=True
+        )

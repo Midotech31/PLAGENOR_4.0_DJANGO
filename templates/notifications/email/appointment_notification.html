@@ -1,0 +1,77 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+
+{% block email_content %}
+<h2 style="margin: 0 0 20px; color: #1f2937;">
+    {% if language == 'en' %}Appointment Scheduled{% else %}Rendez-vous programmé{% endif %}
+</h2>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Hello {{ user_name }},
+    {% else %}
+    Bonjour {{ user_name }},
+    {% endif %}
+</p>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    An appointment has been scheduled for your analysis request:
+    {% else %}
+    Un rendez-vous a été programmé pour votre demande d'analyse :
+    {% endif %}
+</p>
+
+<div class="request-id">
+    <div class="label">{% if language == 'en' %}Request ID{% else %}Identifiant de demande{% endif %}</div>
+    <div class="value">{{ request.display_id }}</div>
+</div>
+
+<div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
+    <div style="font-size: 2.5rem; margin-bottom: 8px;">📅</div>
+    <div style="font-size: 1.5rem; font-weight: 700; color: #166534;">
+        {{ appointment_date|date:"d/m/Y"|default:appointment_date }}
+    </div>
+    {% if appointment_time %}
+    <div style="font-size: 1.2rem; color: #166534; margin-top: 4px;">
+        {{ appointment_time }}
+    </div>
+    {% endif %}
+</div>
+
+{% if appointment_note %}
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; color: #92400e;">
+    <strong>{% if language == 'en' %}Note:{% else %}Note :{% endif %}</strong> {{ appointment_note }}
+</div>
+{% endif %}
+
+<div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Service{% else %}Service{% endif %}</span>
+        <span class="info-value">{{ request.service.name }}</span>
+    </div>
+    {% if analyst_name %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Analyst{% else %}Analyste{% endif %}</span>
+        <span class="info-value">{{ analyst_name }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ dashboard_url }}" class="button">
+        {% if language == 'en' %}View Appointment Details{% else %}Voir les détails du rendez-vous{% endif %}
+    </a>
+</div>
+
+{% if request.channel == 'IBTIKAR' %}
+<p style="background: #eff6ff; border-left: 4px solid #4F46E5; padding: 16px; margin: 20px 0; color: #1e40af;">
+    {% if language == 'en' %}
+    <strong>IBTIKAR Notice:</strong> Please bring your IBTIKAR-DGRSDT card and any relevant documentation on the day of your appointment.
+    {% else %}
+    <strong>Note IBTIKAR :</strong> Veuillez apporter votre carte IBTIKAR-DGRSDT et toute documentation pertinente le jour de votre rendez-vous.
+    {% endif %}
+</p>
+{% endif %}
+
+{% endblock %}

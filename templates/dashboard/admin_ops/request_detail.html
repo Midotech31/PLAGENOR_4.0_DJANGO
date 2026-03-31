@@ -845,9 +845,61 @@
     </div>
 </div>
 
+<!-- Requester's Previous Submissions (Task 5) -->
+{% if user_history %}
+<div class="card mb-4" style="margin-top:24px;" x-data="{open: false}">
+    <div class="card-header" style="cursor: pointer;" @click="open = !open">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px;">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                </svg>
+                {% trans "Requester's Previous Submissions" %}
+            </h3>
+            <span x-show="!open">▼</span>
+            <span x-show="open">▲</span>
+        </div>
+    </div>
+    <div class="card-body" x-show="open" x-transition>
+        <table class="table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>{% trans "Request ID" %}</th>
+                    <th>{% trans "Title" %}</th>
+                    <th>{% trans "Service" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Date" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prev_req in user_history %}
+                <tr>
+                    <td>
+                        <a href="{% url 'dashboard:admin_request_detail' prev_req.pk %}">{{ prev_req.display_id }}</a>
+                    </td>
+                    <td>{{ prev_req.title|truncatechars:40 }}</td>
+                    <td>{{ prev_req.service.name|default:"—" }}</td>
+                    <td>
+                        <span class="badge-status {{ prev_req.status|lower }}">{{ prev_req.get_status_display }}</span>
+                    </td>
+                    <td>{{ prev_req.created_at|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top: 12px;">
+            <a href="{% url 'dashboard:admin_user_detail' req.requester.pk %}" class="btn btn-sm btn-outline">
+                {% trans "View Full User History" %} →
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Workflow Timeline -->
 <div class="card mb-4" style="margin-top:24px;">
-    <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
+    <div class="card-header"><h3>{% trans "Workflow History" %}</h3></div>
     <div class="card-body">
         {% for h in history %}
         <div style="display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--slate-100);">

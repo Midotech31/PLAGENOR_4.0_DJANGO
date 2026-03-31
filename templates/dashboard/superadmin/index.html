@@ -233,6 +233,7 @@
                                 <th>{% trans "Email" %}</th>
                                 <th>{% trans "Rôle" %}</th>
                                 <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Dernière activité" %}</th>
                                 <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
@@ -247,6 +248,13 @@
                                 <span class="badge-status completed">{% trans "Actif" %}</span>
                                 {% else %}
                                 <span class="badge-status rejected">{% trans "Inactif" %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted" style="font-size:0.85rem;">
+                                {% if u.last_seen %}
+                                    {{ u.last_seen|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span style="color:#94a3b8;">—</span>
                                 {% endif %}
                             </td>
                             <td style="white-space:nowrap;">
@@ -660,7 +668,11 @@
                         {% for r in all_requests %}
                         <tbody x-data="{ expanded: false }">
                         <tr>
-                            <td><span class="font-mono">{{ r.display_id }}</span></td>
+                            <td>
+                                <a href="{% url 'dashboard:superadmin_request_detail' r.pk %}" class="font-mono" style="color:var(--primary); text-decoration:underline;" title="{% trans 'Voir les détails' %}">
+                                    {{ r.display_id }}
+                                </a>
+                            </td>
                             <td>{{ r.title|truncatechars:40 }}</td>
                             <td><span class="badge-role {{ r.channel|lower }}">{{ r.channel }}</span></td>
                             <td><span class="badge-status {{ r.status|lower }}">{{ r.status }}</span></td>
@@ -965,9 +977,9 @@
                             <strong class="font-mono">{{ svc.code }}</strong> — {{ svc.name }}
                         </div>
                         <div>
-                            {% with yaml_def=yaml_registry|default_if_none:"" %}
+                            {% if yaml_registry and svc.code in yaml_registry %}
                             <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
-                            {% endwith %}
+                            {% endif %}
                             <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>
                         </div>
                     </div>

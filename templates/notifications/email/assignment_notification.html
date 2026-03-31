@@ -1,0 +1,76 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+
+{% block email_content %}
+<h2 style="margin: 0 0 20px; color: #1f2937;">
+    {% if language == 'en' %}New Request Assignment{% else %}Nouvelle assignation de demande{% endif %}
+</h2>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Hello {{ member.user.get_full_name }},
+    {% else %}
+    Bonjour {{ member.user.get_full_name }},
+    {% endif %}
+</p>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    A new request has been assigned to you. Please review the details below:
+    {% else %}
+    Une nouvelle demande vous a été assignée. Veuillez consulter les détails ci-dessous :
+    {% endif %}
+</p>
+
+<div class="request-id">
+    <div class="label">{% if language == 'en' %}Request ID{% else %}Identifiant de demande{% endif %}</div>
+    <div class="value">{{ request.display_id }}</div>
+</div>
+
+<div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Service{% else %}Service{% endif %}</span>
+        <span class="info-value">{{ request.service.name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Channel{% else %}Canal{% endif %}</span>
+        <span class="info-value">{{ request.get_channel_display }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Requester{% else %}Demandeur{% endif %}</span>
+        <span class="info-value">{{ request.requester.get_full_name|default:request.requester.username }}</span>
+    </div>
+    {% if request.requester.organization %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Organization{% else %}Organisation{% endif %}</span>
+        <span class="info-value">{{ request.requester.organization }}</span>
+    </div>
+    {% endif %}
+    {% if request.title %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Title{% else %}Titre{% endif %}</span>
+        <span class="info-value">{{ request.title|truncatechars:40 }}</span>
+    </div>
+    {% endif %}
+    {% if request.urgency and request.urgency != 'Normal' %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Urgency{% else %}Urgence{% endif %}</span>
+        <span class="info-value" style="color: #dc2626;">{{ request.urgency }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ dashboard_url }}" class="button">
+        {% if language == 'en' %}View & Accept Task{% else %}Voir et accepter la tâche{% endif %}
+    </a>
+</div>
+
+<p style="color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
+    {% if language == 'en' %}
+    Please review the request and accept or decline it from your dashboard.
+    {% else %}
+    Veuillez examiner la demande et l'accepter ou la refuser depuis votre tableau de bord.
+    {% endif %}
+</p>
+{% endblock %}

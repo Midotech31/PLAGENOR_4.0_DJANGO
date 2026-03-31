@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Activity Log" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Activity Log" %}</h1>
+    <p class="greeting-date">{% trans "Audit trail of all request-related actions" %}</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>{% trans "Filter Activity" %}</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Search" %}</label>
+                <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Request ID, title, user...' %}" class="form-control">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "Action Type" %}</label>
+                <select name="action" class="form-control">
+                    <option value="">{% trans "All Actions" %}</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if action_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "From Date" %}</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">{% trans "To Date" %}</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+            <a href="{% url 'dashboard:admin_activity_log' %}" class="btn btn-outline">{% trans "Clear" %}</a>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>{% trans "Activity Entries" %}</h3>
+        <span class="text-muted">{{ paginator.count }} {% trans "entries" %}</span>
+    </div>
+    <div class="card-body">
+        <table class="table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 150px;">{% trans "Timestamp" %}</th>
+                    <th style="width: 150px;">{% trans "Action" %}</th>
+                    <th>{% trans "Request" %}</th>
+                    <th>{% trans "User" %}</th>
+                    <th>{% trans "Details" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in activity_logs %}
+                <tr>
+                    <td>
+                        <div style="font-size: 12px;">{{ entry.created_at|date:"d/m/Y" }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">{{ entry.created_at|time:"H:i" }}</div>
+                    </td>
+                    <td>
+                        {% if entry.to_status %}
+                        <span class="badge-status {{ entry.to_status|lower }}">{{ entry.get_to_status_display|default:entry.to_status }}</span>
+                        {% else %}
+                        <span class="badge-status">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.request %}
+                        <a href="{% url 'dashboard:admin_request_detail' entry.request.pk %}">{{ entry.request.display_id }}</a>
+                        <div style="font-size: 12px; color: #6b7280;">{{ entry.request.title|truncatechars:40 }}</div>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.actor %}
+                        {{ entry.actor.get_full_name }}
+                        <div style="font-size: 11px; color: #6b7280;">{{ entry.actor.role }}</div>
+                        {% else %}
+                        System
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.from_status %}
+                        <span class="text-sm">{{ entry.from_status }} → {{ entry.to_status }}</span>
+                        {% endif %}
+                        {% if entry.notes %}
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">{{ entry.notes|truncatechars:60 }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #6b7280;">
+                        {% trans "No activity entries found." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if paginator %}
+        <div class="pagination" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
+            {% if activity_logs.has_previous %}
+            <a href="?page={{ activity_logs.previous_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+            {% endif %}
+            <span class="btn btn-sm" style="background: #e5e7eb; cursor: default;">{% trans "Page" %} {{ activity_logs.number }} {% trans "of" %} {{ activity_logs.paginator.num_pages }}</span>
+            {% if activity_logs.has_next %}
+            <a href="?page={{ activity_logs.next_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
+        ← {% trans "Back to Dashboard" %}
+    </a>
+</div>
+{% endblock %}

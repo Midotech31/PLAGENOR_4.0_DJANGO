@@ -21,14 +21,15 @@
     {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label=lbl_rejected color='red' %}
 </div>
 
-<!-- Tab Navigation -->
-<div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
-    <div class="tab-list" style="margin-bottom: 24px;">
-        <button class="tab-item" :class="tab === 'new' && 'active'" @click="tab = 'new'">{% trans "Nouvelle demande" %}</button>
-        <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
-        <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
-        <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
-    </div>
+    <!-- Tab Navigation -->
+    <div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
+        <div class="tab-list" style="margin-bottom: 24px;">
+            <button class="tab-item" :class="tab === 'new' && 'active'" @click="tab = 'new'">{% trans "Nouvelle demande" %}</button>
+            <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Mes demandes" %} ({{ active_requests.count }})</button>
+            <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
+            <button class="tab-item" :class="tab === 'profile' && 'active'" @click="tab = 'profile'">{% trans "Profil" %}</button>
+            <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
+        </div>
 
     <!-- New Request -->
     <div x-show="tab === 'new'">
@@ -317,6 +318,107 @@
                         {% endfor %}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile -->
+    <div x-show="tab === 'profile'">
+        <div class="card" style="max-width: 900px; margin: 0 auto;">
+            <div class="card-header">
+                <h3>{% trans "Mon Profil" %}</h3>
+            </div>
+            <div class="card-body">
+                <!-- Profile Header -->
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px; flex-wrap: wrap;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: #EEF2FF; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #4F46E5; overflow: hidden; flex-shrink: 0;">
+                        {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        {{ request.user.first_name|slice:":1"|default:"R" }}{{ request.user.last_name|slice:":1"|default:"" }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h2 style="margin: 0 0 4px; font-size: 1.5rem; color: #1E293B;">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                        <span style="display: inline-block; background: #ECFDF5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">{{ request.user.get_role_display }}</span>
+                        <p style="margin: 8px 0 0; color: #64748B; font-size: 0.9rem;">{% trans "Membre depuis" %} {{ request.user.date_joined|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+
+                <!-- Profile Stats -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                    <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #1E293B;">{{ profile_stats.total_requests }}</div>
+                        <div style="font-size: 0.8rem; color: #64748B;">{% trans "Total demandes" %}</div>
+                    </div>
+                    <div style="background: #F0FDF4; border-radius: 8px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #059669;">{{ profile_stats.completed_requests }}</div>
+                        <div style="font-size: 0.8rem; color: #64748B;">{% trans "Terminées" %}</div>
+                    </div>
+                    <div style="background: #FEF3C7; border-radius: 8px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #D97706;">{{ profile_stats.pending_requests }}</div>
+                        <div style="font-size: 0.8rem; color: #64748B;">{% trans "En cours" %}</div>
+                    </div>
+                    <div style="background: #F5F3FF; border-radius: 8px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #7C3AED;">{{ profile_stats.notifications_count }}</div>
+                        <div style="font-size: 0.8rem; color: #64748B;">{% trans "Notifications" %}</div>
+                    </div>
+                </div>
+
+                <!-- Account Info -->
+                <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 12px; font-size: 0.95rem; color: #374151;">{% trans "Informations du compte" %}</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "Email" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.email }}</p>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "Téléphone" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.phone|default:"—" }}</p>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "Organisation" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.organization|default:"—" }}</p>
+                        </div>
+                        {% if request.user.laboratory %}
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "Laboratoire" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.laboratory }}</p>
+                        </div>
+                        {% endif %}
+                        {% if request.user.supervisor %}
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "Directeur de recherche" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.supervisor }}</p>
+                        </div>
+                        {% endif %}
+                        {% if request.user.ibtikar_id %}
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748B;">{% trans "ID IBTIKAR" %}</span>
+                            <p style="margin: 2px 0 0; color: #1E293B;">{{ request.user.ibtikar_id }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        {% trans "Modifier mon profil" %}
+                    </a>
+                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        {% trans "Changer le mot de passe" %}
+                    </a>
                 </div>
             </div>
         </div>

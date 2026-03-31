@@ -52,9 +52,9 @@ def _get_uploaded_template(service, template_type):
             file_path = Path(settings.MEDIA_ROOT) / template.file.name
             if file_path.exists():
                 return file_path
-    except (AttributeError, ObjectDoesNotExist):
+    except (AttributeError, ObjectDoesNotExist) as e:
         # Template or file not found
-        pass
+        logger.debug(f"Template not found for service={service}, type={template_type}: {e}")
     
     return None
 

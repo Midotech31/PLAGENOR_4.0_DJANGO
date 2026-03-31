@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block extra_css %}
+<style>
+@keyframes confetti-fall {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confetti-fall 3s ease-out forwards;
+    z-index: 9999;
+}
+</style>
+{% endblock %}
+
+{% block title %}{{ member.user.get_full_name }} — {% trans "Points Detail" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline" style="padding: 8px;">
+            ←
+        </a>
+        <div>
+            <h1 class="greeting">{{ member.user.get_full_name }}</h1>
+            <p class="greeting-date">{% trans "Points & Performance Detail" %}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Member Overview -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+            <!-- Avatar -->
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                {% if member.user.avatar %}
+                <img src="{{ member.user.avatar.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; color: #9ca3af;">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                {% endif %}
+            </div>
+            
+            <!-- Stats -->
+            <div style="flex: 1;">
+                <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #8b5cf6;">{{ member.total_points }}</div>
+                        <div style="font-size: 12px; color: #6b7280;">{% trans "Total Points" %}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #10b981;">{{ completed_services }}</div>
+                        <div style="font-size: 12px; color: #6b7280;">{% trans "Completed Services" %}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 700; color: #f59e0b;">{{ reward_boxes }}</div>
+                        <div style="font-size: 12px; color: #6b7280;">{% trans "Reward Boxes" %}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Milestone Progress -->
+            <div style="text-align: center;">
+                <div class="milestone-ring" style="position: relative; width: 100px; height: 100px;">
+                    <svg viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" stroke-width="3"/>
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#8b5cf6" stroke-width="3" 
+                                stroke-dasharray="{{ member.total_points|add:'-1000'|default:0|add:1000 }} {{ member.total_points|add:'-1000'|default:1000 }}"
+                                stroke-dashoffset="25"/>
+                    </svg>
+                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-size: 18px; font-weight: 700;">{{ member.total_points|add:'-1000'|default:0|add:1000 }}</div>
+                        <div style="font-size: 9px; color: #6b7280;">/ 1000</div>
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">{% trans "Next Milestone" %}</div>
+            </div>
+        </div>
+        
+        <!-- Milestone Bar -->
+        <div style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 8px;">
+                <span>{{ member.total_points|add:'-1000'|default:0|add:1000 }} pts</span>
+                <span>{{ member.total_points }} pts</span>
+                <span>{% trans "Next reward at" %} {{ member.total_points|add:'-1000'|default:0|add:2000 }} pts</span>
+            </div>
+            <div style="height: 16px; background: #e5e7eb; border-radius: 8px; overflow: hidden;">
+                <div style="height: 100%; width: {{ member.total_points|add:'-1000'|default:0|add:1000 }}%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); border-radius: 8px; transition: width 0.8s ease;"></div>
+            </div>
+        </div>
+        
+        <!-- Reward Boxes -->
+        {% if reward_boxes > 0 %}
+        <div style="margin-top: 20px;">
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">{% trans "Earned Reward Boxes" %}</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% for i in ''|ljust:reward_boxes %}
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);" title="{% trans 'Reward Box' %}">
+                    🎁
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Award Points Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>{% trans "Award Bonus Points" %}</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'dashboard:admin_award_points' member.pk %}" class="ajax-form" x-data="{showForm: false}">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                <div>
+                    <label style="font-size: 12px; color: #6b7280;">{% trans "Points" %}</label>
+                    <input type="number" name="points" min="1" class="form-control" style="width: 120px;" required>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="font-size: 12px; color: #6b7280;">{% trans "Reason" %} ({% trans "Required" %})</label>
+                    <input type="text" name="reason" class="form-control" placeholder="{% trans 'Enter reason for bonus...' %}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    {% trans "Award Points" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Points History -->
+<div class="card">
+    <div class="card-header">
+        <h3>{% trans "Points History" %}</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table class="table" style="width: 100%; margin: 0;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px 16px;">{% trans "Date" %}</th>
+                    <th style="padding: 12px 16px;">{% trans "Points" %}</th>
+                    <th style="padding: 12px 16px;">{% trans "Reason" %}</th>
+                    <th style="padding: 12px 16px;">{% trans "Awarded By" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in points_history %}
+                <tr>
+                    <td style="padding: 12px 16px;">
+                        <div style="font-size: 13px;">{{ entry.created_at|date:"d/m/Y" }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">{{ entry.created_at|time:"H:i" }}</div>
+                    </td>
+                    <td style="padding: 12px 16px;">
+                        <span style="color: #10b981; font-weight: 600;">+{{ entry.points }}</span>
+                    </td>
+                    <td style="padding: 12px 16px;">
+                        {{ entry.reason|truncatechars:60 }}
+                    </td>
+                    <td style="padding: 12px 16px;">
+                        {% if entry.awarded_by %}
+                        {{ entry.awarded_by.get_full_name }}
+                        {% else %}
+                        <span class="text-muted">System</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: #6b7280;">
+                        {% trans "No points history yet." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline">
+        ← {% trans "Back to Performance" %}
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // AJAX form handling
+    document.querySelectorAll('.ajax-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const url = form.action;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Points awarded!', 'success');
+                    
+                    // Check if milestone reached
+                    if (data.gift_unlocked) {
+                        showConfetti();
+                    }
+                    
+                    // Reload page after short delay
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error || 'Error', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                form.submit();
+            });
+        });
+    });
+});
+
+function showConfetti() {
+    const colors = ['#8b5cf6', '#a78bfa', '#fbbf24', '#f59e0b', '#10b981', '#34d399'];
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 5000);
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

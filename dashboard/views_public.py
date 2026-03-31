@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction, IntegrityError
 from datetime import datetime
 
 from core.models import Service, Request, RequestHistory
@@ -104,12 +104,58 @@ def guest_submit(request):
                 'services': services_qs,
             })
 
-        # Generate display_id
+        # Generate display_id with atomic transaction to prevent race conditions
         year = datetime.now().year
         prefix = 'IBT' if channel == 'IBTIKAR' else 'GCL'
-        count = Request.objects.filter(channel=channel, created_at__year=year).count() + 1
-        display_id = f"{prefix}-{year}-{count:04d}"
         guest_token = uuid_lib.uuid4()
+        
+        # Atomic transaction with retry loop to handle concurrent requests
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                with transaction.atomic():
+                    # Lock the rows for this channel to prevent race conditions
+                    existing_count = Request.objects.filter(
+                        channel=channel, 
+                        created_at__year=year
+                    ).select_for_update().count()
+                    count = existing_count + 1
+                    display_id = f"{prefix}-{year}-{count:04d}"
+                    
+                    # Check if display_id already exists (edge case)
+                    if Request.objects.filter(display_id=display_id).exists():
+                        continue  # Retry with incremented count
+                    
+                    # Create the request within the transaction
+                    req = Request.objects.create(
+                        display_id=display_id,
+                        title=title or f"Demande {service.name}",
+                        description=description,
+                        channel=channel,
+                        status='REQUEST_CREATED',
+                        urgency=urgency,
+                        service=service,
+                        quote_amount=quote,
+                        submitted_as_guest=True,
+                        guest_token=guest_token,
+                        guest_name=guest_name,
+                        guest_email=guest_email,
+                        guest_phone=guest_phone,
+                        service_params=service_params,
+                        sample_table=sample_table_data,
+                        requester_data=requester_data,
+                    )
+                    break
+            except IntegrityError:
+                if attempt < max_retries - 1:
+                    continue
+                raise
+        
+        RequestHistory.objects.create(
+            request=req,
+            from_status='',
+            to_status='REQUEST_CREATED',
+        )
 
         # Collect YAML parameter values
         service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -140,30 +186,8 @@ def guest_submit(request):
 
         quote = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
 
-        req = Request.objects.create(
-            display_id=display_id,
-            title=title or f"Demande {service.name}",
-            description=description,
-            channel=channel,
-            status='REQUEST_CREATED',
-            urgency=urgency,
-            service=service,
-            quote_amount=quote,
-            submitted_as_guest=True,
-            guest_token=guest_token,
-            guest_name=guest_name,
-            guest_email=guest_email,
-            guest_phone=guest_phone,
-            service_params=service_params,
-            sample_table=sample_table_data,
-            requester_data=requester_data,
-        )
-
-        RequestHistory.objects.create(
-            request=req,
-            from_status='',
-            to_status='REQUEST_CREATED',
-        )
+        # Request was already created inside the atomic transaction above
+        # RequestHistory was already created inside the atomic transaction above
 
         # Send email with tracking code
         try:

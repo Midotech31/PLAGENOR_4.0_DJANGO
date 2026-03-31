@@ -35,6 +35,8 @@ urlpatterns = [
     path('home/restore/', superadmin.restore_db, name='superadmin_restore'),
     path('home/export-emails/', superadmin.export_emails, name='superadmin_export_emails'),
     path('home/user/<int:pk>/reset/', superadmin.reset_account, name='superadmin_reset_account'),
+    path('home/request/<uuid:pk>/detail/', superadmin.request_detail, name='superadmin_request_detail'),
+    path('home/request/<uuid:pk>/assign/', superadmin.assign_request_direct, name='superadmin_request_assign'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),
@@ -50,6 +52,26 @@ urlpatterns = [
     path('ops/quote/<uuid:pk>/', admin_ops.prepare_quote, name='admin_prepare_quote'),
     path('ops/invoice/<uuid:pk>/', admin_ops.generate_invoice, name='admin_generate_invoice'),
     path('ops/payment/<uuid:pk>/', admin_ops.confirm_payment, name='admin_confirm_payment'),
+    
+    # Activity Log (Task 1)
+    path('ops/activity-log/', admin_ops.activity_log, name='admin_activity_log'),
+    
+    # Notifications API (Task 2)
+    path('ops/notifications/', admin_ops.notifications_api, name='admin_notifications_api'),
+    
+    # User Oversight (Task 3)
+    path('ops/users/', admin_ops.users_list, name='admin_users_list'),
+    path('ops/user/<int:pk>/', admin_ops.user_detail, name='admin_user_detail'),
+    
+    # Bulk Actions (Task 6)
+    path('ops/bulk-action/', admin_ops.bulk_action, name='admin_bulk_action'),
+    
+    # CSV Export (Task 6)
+    path('ops/export-csv/', admin_ops.export_requests_csv, name='admin_export_csv'),
+    
+    # Performance & Points (Task 7)
+    path('ops/performance/', admin_ops.performance_points, name='admin_performance'),
+    path('ops/member/<int:member_pk>/points/', admin_ops.member_points_detail, name='admin_member_points'),
 
     # Analyst
     path('analyst/', analyst.index, name='analyst'),

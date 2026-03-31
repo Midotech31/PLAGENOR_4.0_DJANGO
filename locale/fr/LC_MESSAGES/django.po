@@ -1,4 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
+﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
@@ -2333,3 +2333,567 @@ msgstr ""
 #: templates/pages/track.html:42
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr ""
+
+# Nouvelles traductions Admin Ops (Tâches 1-7)
+
+# Journal d'activité
+msgid "Activity Log"
+msgstr "Journal d'activité"
+
+msgid "Audit trail of all request-related actions"
+msgstr "Piste d'audit de toutes les actions liées aux demandes"
+
+msgid "Filter Activity"
+msgstr "Filtrer l'activité"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Action Type"
+msgstr "Type d'action"
+
+msgid "All Actions"
+msgstr "Toutes les actions"
+
+msgid "From Date"
+msgstr "Date de début"
+
+msgid "To Date"
+msgstr "Date de fin"
+
+msgid "Clear"
+msgstr "Effacer"
+
+msgid "Activity Entries"
+msgstr "Entrées d'activité"
+
+msgid "entries"
+msgstr "entrées"
+
+msgid "Timestamp"
+msgstr "Horodatage"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Request"
+msgstr "Demande"
+
+msgid "User"
+msgstr "Utilisateur"
+
+msgid "Details"
+msgstr "Détails"
+
+msgid "No activity entries found."
+msgstr "Aucune entrée d'activité trouvée."
+
+msgid "Back to Dashboard"
+msgstr "Retour au tableau de bord"
+
+# Cloche de notification
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Mark all as read"
+msgstr "Tout marquer comme lu"
+
+msgid "Loading notifications..."
+msgstr "Chargement des notifications..."
+
+msgid "No notifications"
+msgstr "Aucune notification"
+
+# Supervision utilisateur
+msgid "User Management"
+msgstr "Gestion des utilisateurs"
+
+msgid "Manage all registered students and clients"
+msgstr "Gérer tous les étudiants et clients inscrits"
+
+msgid "Filter Users"
+msgstr "Filtrer les utilisateurs"
+
+msgid "All Roles"
+msgstr "Tous les rôles"
+
+msgid "IBTIKAR Requester"
+msgstr "Demandeur IBTIKAR"
+
+msgid "GENOCLAB Client"
+msgstr "Client GENOCLAB"
+
+msgid "Analyst"
+msgstr "Analyste"\n\n# Nouvelles traductions pour admin_ops.py (Messages)\nmsgid "Request %(display_id)s transitioned to %(status)s"\nmsgstr "Demande %(display_id)s transférée vers %(status)s"\n\nmsgid "Request %(display_id)s transitioned to %(status)s."\nmsgstr "Demande %(display_id)s transférée vers %(status)s."\n\nmsgid "No requests selected."\nmsgstr "Aucune demande sélectionnée."\n\nmsgid "Please select a member for assignment."\nmsgstr "Veuillez sélectionner un analyste pour l'assignation."\n\nmsgid "Member required for assignment"\nmsgstr "Analyste requis pour l'assignation"\n\nmsgid "Bulk assign to %(member)s"\nmsgstr "Assignation groupée à %(member)s"\n\nmsgid "Assigned %(count)s requests to %(member)s"\nmsgstr "%(count)s demandes assignées à %(member)s"\n\nmsgid "Status required for transition"\nmsgstr "Statut requis pour la transition"\n\nmsgid "Please select a target status."\nmsgstr "Veuillez sélectionner un statut cible."\n\nmsgid "Bulk transition"\nmsgstr "Transition groupée"\n\nmsgid "Transitioned %(count)s requests to %(status)s"\nmsgstr "%(count)s demandes transitionnées vers %(status)s"\n\nmsgid "Invalid action"\nmsgstr "Action invalide"\n\nmsgid "Invalid bulk action."\nmsgstr "Action groupée invalide."\n\nmsgid "Please select an analyst"\nmsgstr "Veuillez sélectionner un analyste"\n\nmsgid "Please select an analyst."\nmsgstr "Veuillez sélectionner un analyste."\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\nmsgstr "La demande %(display_id)s n'est pas prête pour l'assignation (statut actuel: %(status)s)"\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\nmsgstr "La demande %(display_id)s n'est pas prête pour l'assignation (statut actuel: %(status)s)."\n\nmsgid "Assigned to %(member)s"\nmsgstr "Assignée à %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s"\nmsgstr "Demande %(display_id)s assignée à %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s."\nmsgstr "Demande %(display_id)s assignée à %(member)s."\n\nmsgid "Assignment error: %(error)s"\nmsgstr "Erreur d'assignation: %(error)s"\n\nmsgid "Points must be positive"\nmsgstr "Les points doivent être positifs"\n\nmsgid "Points must be positive."\nmsgstr "Les points doivent être positifs."\n\nmsgid "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\nmsgstr "🎁 Félicitations! Vous avez débloqué une boîte cadeau surprise! Visitez votre espace Points."\n\nmsgid "%(points)s points received! %(reason)s"\nmsgstr "%(points)s points reçus! %(reason)s"\n\nmsgid "%(points)s points received!"\nmsgstr "%(points)s points reçus!"\n\nmsgid "%(points)s points awarded to %(member)s"\nmsgstr "%(points)s points accordés à %(member)s"\n\nmsgid "%(points)s points awarded to %(member)s."\nmsgstr "%(points)s points accordés à %(member)s."\n\nmsgid "Reward added for %(member)s."\nmsgstr "Récompense ajoutée pour %(member)s."\n\nmsgid "Please select an image."\nmsgstr "Veuillez sélectionner une image."\n\nmsgid "Encouragement received: %(message)s"\nmsgstr "Encouragement reçu: %(message)s"\n\nmsgid "You received an encouragement!"\nmsgstr "Vous avez reçu un encouragement!"\n\nmsgid "Encouragement sent to %(member)s."\nmsgstr "Encouragement envoyé à %(member)s."\n\nmsgid "The appointment is already confirmed, cannot modify."\nmsgstr "Le rendez-vous est déjà confirmé, impossible de modifier."\n\nmsgid "Appointment date modified: %(date)s"\nmsgstr "Date de rendez-vous modifiée: %(date)s"\n\nmsgid "Report validated by admin"\nmsgstr "Rapport validé par l'administrateur"\n\nmsgid "Report %(display_id)s validated."\nmsgstr "Rapport %(display_id)s validé."\n\nmsgid "Report sent back for revision. %(notes)s"\nmsgstr "Rapport renvoyé pour révision. %(notes)s"\n\nmsgid "%(display_id)s: Report sent back for revision. %(notes)s"\nmsgstr "%(display_id)s: Rapport renvoyé pour révision. %(notes)s"\n\nmsgid "Report %(display_id)s sent back for revision."\nmsgstr "Rapport %(display_id)s renvoyé pour révision."\n\nmsgid "Please enter an amount."\nmsgstr "Veuillez entrer un montant."\n\nmsgid "Invalid amount."\nmsgstr "Montant invalide."\n\nmsgid "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\nmsgstr "Coût ajusté pour %(display_id)s: %(price)s DA. %(justification)s"\n\nmsgid "Justification: %(justification)s"\nmsgstr "Justification: %(justification)s"\n\nmsgid "Quote prepared"\nmsgstr "Devis préparé"\n\nmsgid "Quote sent to client"\nmsgstr "Devis envoyé au client"\n\nmsgid "Quote sent to client for %(display_id)s."\nmsgstr "Devis envoyé au client pour %(display_id)s."\n\nmsgid "Quote saved for %(display_id)s."\nmsgstr "Devis enregistré pour %(display_id)s."\n\nmsgid "Error generating invoice: %(error)s"\nmsgstr "Erreur lors de la génération de la facture: %(error)s"\n\nmsgid "Payment confirmed by admin"\nmsgstr "Paiement confirmé par l'administrateur"\n\nmsgid "Payment confirmed for %(display_id)s."\nmsgstr "Paiement confirmé pour %(display_id)s."\n\nmsgid "Please upload a payment receipt."\nmsgstr "Veuillez télécharger un reçu de paiement."
+
+msgid "All Statuses"
+msgstr "Tous les statuts"
+
+msgid "Active"
+msgstr "Actif"
+
+msgid "Inactive"
+msgstr "Inactif"
+
+msgid "users"
+msgstr "utilisateurs"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Role"
+msgstr "Rôle"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Registered"
+msgstr "Inscrit"
+
+msgid "Requests"
+msgstr "Demandes"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "View History"
+msgstr "Voir l'historique"
+
+msgid "No users found."
+msgstr "Aucun utilisateur trouvé."
+
+# Détail utilisateur
+msgid "User Information"
+msgstr "Informations utilisateur"
+
+msgid "Full Name"
+msgstr "Nom complet"
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "User Detail"
+msgstr "Détail utilisateur"
+
+msgid "Request Statistics"
+msgstr "Statistiques des demandes"
+
+msgid "Total Requests"
+msgstr "Total des demandes"
+
+msgid "Pending"
+msgstr "En attente"
+
+msgid "Request History"
+msgstr "Historique des demandes"
+
+msgid "Request ID"
+msgstr "ID de demande"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Service"
+msgstr "Service"
+
+msgid "Channel"
+msgstr "Canal"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "No requests found for this user."
+msgstr "Aucune demande trouvée pour cet utilisateur."
+
+msgid "Back to User List"
+msgstr "Retour à la liste des utilisateurs"
+
+# Historique des demandes de l'utilisateur
+msgid "Requester's Previous Submissions"
+msgstr "Soumissions précédentes du demandeur"
+
+msgid "View Full User History"
+msgstr "Voir l'historique complet de l'utilisateur"
+
+msgid "Workflow History"
+msgstr "Historique du workflow"
+
+msgid "Aucun historique."
+msgstr "Aucun historique disponible."
+
+# Système de performance et points
+msgid "Performance & Points"
+msgstr "Performance et Points"
+
+msgid "Track member performance and award bonus points"
+msgstr "Suivre la performance des membres et attribuer des points bonus"
+
+msgid "Filter & Sort"
+msgstr "Filtrer et trier"
+
+msgid "Sort By"
+msgstr "Trier par"
+
+msgid "Total Points"
+msgstr "Points totaux"
+
+msgid "Efficiency Rate"
+msgstr "Taux d'efficacité"
+
+msgid "Completed Services"
+msgstr "Services terminés"
+
+msgid "Most Recent"
+msgstr "Plus récent"
+
+msgid "Min Points"
+msgstr "Points min"
+
+msgid "Max Points"
+msgstr "Points max"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Points Calculation Rules"
+msgstr "Règles de calcul des points"
+
+msgid "Service Completion"
+msgstr "Achèvement du service"
+
+msgid "Each finalized service earns"
+msgstr "Chaque service finalisé rapporte"
+
+msgid "points"
+msgstr "points"
+
+msgid "Efficiency Bonus"
+msgstr "Bonus d'efficacité"
+
+msgid "Early completion earns"
+msgstr "L'achèvement anticipé rapporte"
+
+msgid "bonus points"
+msgstr "points bonus"
+
+msgid "Reward Milestone"
+msgstr "Jalon de récompense"
+
+msgid "Every"
+msgstr "Tous les"
+
+msgid "1 reward box"
+msgstr "1 boîte de récompense"
+
+msgid "Admin Bonus"
+msgstr "Bonus administrateur"
+
+msgid "Manual bonus with reason"
+msgstr "Bonus manuel avec justification"
+
+msgid "Members by Performance"
+msgstr "Membres par performance"
+
+msgid "Ranked by total points"
+msgstr "Classés par points totaux"
+
+msgid "Services"
+msgstr "Services"
+
+msgid "Efficiency"
+msgstr "Efficacité"
+
+msgid "Reward Box"
+msgstr "Boîte de récompense"
+
+msgid "Details"
+msgstr "Détails"
+
+# Détail points membre
+msgid "Points & Performance Detail"
+msgstr "Détail points et performance"
+
+msgid "Reward Boxes"
+msgstr "Boîtes de récompense"
+
+msgid "Next Milestone"
+msgstr "Prochain jalon"
+
+msgid "Next reward at"
+msgstr "Prochaine récompense à"
+
+msgid "Earned Reward Boxes"
+msgstr "Boîtes de récompense obtenues"
+
+msgid "Award Bonus Points"
+msgstr "Attribuer des points bonus"
+
+msgid "Reason"
+msgstr "Raison"
+
+msgid "Required"
+msgstr "Requis"
+
+msgid "Enter reason for bonus..."
+msgstr "Entrez la raison du bonus..."
+
+msgid "Award Points"
+msgstr "Attribuer des points"
+
+msgid "Points History"
+msgstr "Historique des points"
+
+msgid "Points"
+msgstr "Points"
+
+msgid "Awarded By"
+msgstr "Attribué par"
+
+msgid "No points history yet."
+msgstr "Pas encore d'historique des points."
+
+msgid "Back to Performance"
+msgstr "Retour à la performance"
+
+# Étiquettes des onglets
+msgid "All Requests"
+msgstr "Toutes les demandes"
+
+msgid "Assignment"
+msgstr "Assignation"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Reviews"
+msgstr "Avis"
+
+msgid "Reports"
+msgstr "Rapports"
+
+msgid "Users"
+msgstr "Utilisateurs"
+
+msgid "Points System"
+msgstr "Système de points"
+
+# Améliorations du tableau de bord
+msgid "Hello"
+msgstr "Bonjour"
+
+msgid "Request and Assignment Management"
+msgstr "Gestion des demandes et assignations"
+
+msgid "Total requests"
+msgstr "Total des demandes"
+
+msgid "IBTIKAR Pending"
+msgstr "IBTIKAR en attente"
+
+msgid "GENOCLAB Pending"
+msgstr "GENOCLAB en attente"
+
+msgid "Overdue Requests"
+msgstr "Demandes en retard"
+
+msgid "Stuck in same status for more than 7 days"
+msgstr "Bloqué au même statut depuis plus de 7 jours"
+
+msgid "Last updated"
+msgstr "Dernière mise à jour"
+
+msgid "Requests to Validate"
+msgstr "Demandes à valider"
+
+msgid "Pedagogical Validation"
+msgstr "Validation pédagogique"
+
+msgid "Financial Validation"
+msgstr "Validation financière"
+
+msgid "Service Cost"
+msgstr "Coût du service"
+
+msgid "Estimated Cost"
+msgstr "Coût estimé"
+
+msgid "Validated Cost"
+msgstr "Coût validé"
+
+msgid "Adjust Cost (DA)"
+msgstr "Ajuster le coût (DA)"
+
+msgid "Justification"
+msgstr "Justification"
+
+msgid "Reason for change..."
+msgstr "Raison du changement..."
+
+msgid "Adjust"
+msgstr "Ajuster"
+
+msgid "Validate & Generate Note"
+msgstr "Valider et générer la note"
+
+msgid "Prepare Quote"
+msgstr "Préparer le devis"
+
+msgid "Send Quote"
+msgstr "Envoyer le devis"
+
+msgid "Awaiting client response"
+msgstr "En attente de réponse du client"
+
+msgid "Generate Invoice"
+msgstr "Générer la facture"
+
+msgid "Download Invoice"
+msgstr "Télécharger la facture"
+
+msgid "Confirm Payment"
+msgstr "Confirmer le paiement"
+
+msgid "Reports to Review"
+msgstr "Rapports à réviser"
+
+msgid "Review Report"
+msgstr "Réviser le rapport"
+
+msgid "Completions and Closures"
+msgstr "Achèvements et fermetures"
+
+msgid "Send to Requester"
+msgstr "Envoyer au demandeur"
+
+msgid "Send to Client"
+msgstr "Envoyer au client"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Archive"
+msgstr "Archiver"
+
+msgid "In Progress"
+msgstr "En cours"
+
+msgid "Proposed appointment"
+msgstr "Rendez-vous proposé"
+
+msgid "Awaiting requester confirmation"
+msgstr "En attente de confirmation du demandeur"
+
+msgid "Modify Appointment"
+msgstr "Modifier le rendez-vous"
+
+msgid "Mark Sample Received"
+msgstr "Marquer échantillon reçu"
+
+msgid "in progress"
+msgstr "en cours"
+
+msgid "Ready for Assignment"
+msgstr "Prêt pour l'assignation"
+
+msgid "No requests ready for assignment. Requests must first go through validation."
+msgstr "Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer par la validation."
+
+msgid "Download Platform Note"
+msgstr "Télécharger la note de plateforme"
+
+msgid "Assign to"
+msgstr "Assigner à"
+
+msgid "Budget Overview"
+msgstr "Aperçu du budget"
+
+msgid "IBTIKAR Budget"
+msgstr "Budget IBTIKAR"
+
+msgid "GENOCLAB Revenue"
+msgstr "Revenus GENOCLAB"
+
+msgid "Member Performance Ranking"
+msgstr "Classement des membres par performance"
+
+msgid "Productivity"
+msgstr "Productivité"
+
+msgid "Load"
+msgstr "Charge"
+
+msgid "No members found."
+msgstr "Aucun membre trouvé."
+
+msgid "Reviews & Ratings"
+msgstr "Avis et évaluations"
+
+msgid "Average Rating"
+msgstr "Note moyenne"
+
+msgid "No reviews yet."
+msgstr "Pas encore d'avis."
+
+msgid "Export Requests CSV"
+msgstr "Exporter les demandes CSV"
+
+msgid "Activity Log"
+msgstr "Journal d'activité"
+
+msgid "Open full activity log"
+msgstr "Ouvrir le journal d'activité complet"
+
+msgid "Open user management"
+msgstr "Ouvrir la gestion des utilisateurs"
+
+msgid "Open performance dashboard"
+msgstr "Ouvrir le tableau de bord de performance"
+
+# Actions groupées
+msgid "selected"
+msgstr "sélectionné(s)"
+
+msgid "Bulk Assign"
+msgstr "Assignation groupée"
+
+msgid "Bulk Transition"
+msgstr "Transition groupée"
+
+msgid "Clear Selection"
+msgstr "Effacer la sélection"
+
+# Pagination
+msgid "Page"
+msgstr "Page"
+
+msgid "of"
+msgstr "sur"
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Next"
+msgstr "Suivant"
+
+# Traductions communes supplémentaires
+msgid "View"
+msgstr "Voir"
+
+msgid "Guest"
+msgstr "Invité"
+
+msgid "Filter"
+msgstr "Filtrer"
+
+msgid "Search by ID or title..."
+msgstr "Rechercher par ID ou titre..."
+
+msgid "All Channels"
+msgstr "Tous les canaux"
+
+msgid "No requests found."
+msgstr "Aucune demande trouvée."
+
+msgid "Analyst"
+msgstr "Analyste"\n\n# Nouvelles traductions pour admin_ops.py (Messages)\nmsgid "Request %(display_id)s transitioned to %(status)s"\nmsgstr "Demande %(display_id)s transférée vers %(status)s"\n\nmsgid "Request %(display_id)s transitioned to %(status)s."\nmsgstr "Demande %(display_id)s transférée vers %(status)s."\n\nmsgid "No requests selected."\nmsgstr "Aucune demande sélectionnée."\n\nmsgid "Please select a member for assignment."\nmsgstr "Veuillez sélectionner un analyste pour l'assignation."\n\nmsgid "Member required for assignment"\nmsgstr "Analyste requis pour l'assignation"\n\nmsgid "Bulk assign to %(member)s"\nmsgstr "Assignation groupée à %(member)s"\n\nmsgid "Assigned %(count)s requests to %(member)s"\nmsgstr "%(count)s demandes assignées à %(member)s"\n\nmsgid "Status required for transition"\nmsgstr "Statut requis pour la transition"\n\nmsgid "Please select a target status."\nmsgstr "Veuillez sélectionner un statut cible."\n\nmsgid "Bulk transition"\nmsgstr "Transition groupée"\n\nmsgid "Transitioned %(count)s requests to %(status)s"\nmsgstr "%(count)s demandes transitionnées vers %(status)s"\n\nmsgid "Invalid action"\nmsgstr "Action invalide"\n\nmsgid "Invalid bulk action."\nmsgstr "Action groupée invalide."\n\nmsgid "Please select an analyst"\nmsgstr "Veuillez sélectionner un analyste"\n\nmsgid "Please select an analyst."\nmsgstr "Veuillez sélectionner un analyste."\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\nmsgstr "La demande %(display_id)s n'est pas prête pour l'assignation (statut actuel: %(status)s)"\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\nmsgstr "La demande %(display_id)s n'est pas prête pour l'assignation (statut actuel: %(status)s)."\n\nmsgid "Assigned to %(member)s"\nmsgstr "Assignée à %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s"\nmsgstr "Demande %(display_id)s assignée à %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s."\nmsgstr "Demande %(display_id)s assignée à %(member)s."\n\nmsgid "Assignment error: %(error)s"\nmsgstr "Erreur d'assignation: %(error)s"\n\nmsgid "Points must be positive"\nmsgstr "Les points doivent être positifs"\n\nmsgid "Points must be positive."\nmsgstr "Les points doivent être positifs."\n\nmsgid "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\nmsgstr "🎁 Félicitations! Vous avez débloqué une boîte cadeau surprise! Visitez votre espace Points."\n\nmsgid "%(points)s points received! %(reason)s"\nmsgstr "%(points)s points reçus! %(reason)s"\n\nmsgid "%(points)s points received!"\nmsgstr "%(points)s points reçus!"\n\nmsgid "%(points)s points awarded to %(member)s"\nmsgstr "%(points)s points accordés à %(member)s"\n\nmsgid "%(points)s points awarded to %(member)s."\nmsgstr "%(points)s points accordés à %(member)s."\n\nmsgid "Reward added for %(member)s."\nmsgstr "Récompense ajoutée pour %(member)s."\n\nmsgid "Please select an image."\nmsgstr "Veuillez sélectionner une image."\n\nmsgid "Encouragement received: %(message)s"\nmsgstr "Encouragement reçu: %(message)s"\n\nmsgid "You received an encouragement!"\nmsgstr "Vous avez reçu un encouragement!"\n\nmsgid "Encouragement sent to %(member)s."\nmsgstr "Encouragement envoyé à %(member)s."\n\nmsgid "The appointment is already confirmed, cannot modify."\nmsgstr "Le rendez-vous est déjà confirmé, impossible de modifier."\n\nmsgid "Appointment date modified: %(date)s"\nmsgstr "Date de rendez-vous modifiée: %(date)s"\n\nmsgid "Report validated by admin"\nmsgstr "Rapport validé par l'administrateur"\n\nmsgid "Report %(display_id)s validated."\nmsgstr "Rapport %(display_id)s validé."\n\nmsgid "Report sent back for revision. %(notes)s"\nmsgstr "Rapport renvoyé pour révision. %(notes)s"\n\nmsgid "%(display_id)s: Report sent back for revision. %(notes)s"\nmsgstr "%(display_id)s: Rapport renvoyé pour révision. %(notes)s"\n\nmsgid "Report %(display_id)s sent back for revision."\nmsgstr "Rapport %(display_id)s renvoyé pour révision."\n\nmsgid "Please enter an amount."\nmsgstr "Veuillez entrer un montant."\n\nmsgid "Invalid amount."\nmsgstr "Montant invalide."\n\nmsgid "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\nmsgstr "Coût ajusté pour %(display_id)s: %(price)s DA. %(justification)s"\n\nmsgid "Justification: %(justification)s"\nmsgstr "Justification: %(justification)s"\n\nmsgid "Quote prepared"\nmsgstr "Devis préparé"\n\nmsgid "Quote sent to client"\nmsgstr "Devis envoyé au client"\n\nmsgid "Quote sent to client for %(display_id)s."\nmsgstr "Devis envoyé au client pour %(display_id)s."\n\nmsgid "Quote saved for %(display_id)s."\nmsgstr "Devis enregistré pour %(display_id)s."\n\nmsgid "Error generating invoice: %(error)s"\nmsgstr "Erreur lors de la génération de la facture: %(error)s"\n\nmsgid "Payment confirmed by admin"\nmsgstr "Paiement confirmé par l'administrateur"\n\nmsgid "Payment confirmed for %(display_id)s."\nmsgstr "Paiement confirmé pour %(display_id)s."\n\nmsgid "Please upload a payment receipt."\nmsgstr "Veuillez télécharger un reçu de paiement."
+

@@ -1,5 +1,7 @@
-from django.contrib.auth import login
+import logging
+from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic import CreateView
 from django.shortcuts import render, redirect
@@ -7,8 +9,11 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, OperationalError
+from django.db.models import Count, Q
 from .models import User
 from .forms import RegistrationForm
+
+logger = logging.getLogger('plagenor')
 
 
 class CustomLoginView(LoginView):
@@ -34,40 +39,148 @@ class RegisterView(CreateView):
 
 @login_required
 def profile(request):
+    user = request.user
+    
+    # Handle profile update
     if request.method == 'POST':
-        user = request.user
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = request.POST.get('email', user.email)
-        user.phone = request.POST.get('phone', user.phone or '')
-        user.organization = request.POST.get('organization', user.organization or '')
-        user.laboratory = request.POST.get('laboratory', user.laboratory or '')
-        user.supervisor = request.POST.get('supervisor', user.supervisor or '')
-        if 'avatar' in request.FILES:
-            user.avatar = request.FILES['avatar']
-        user.save()
+        action = request.POST.get('action', 'profile')
+        
+        if action == 'profile':
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.phone = request.POST.get('phone', user.phone or '')
+            user.organization = request.POST.get('organization', user.organization or '')
+            user.laboratory = request.POST.get('laboratory', user.laboratory or '')
+            user.supervisor = request.POST.get('supervisor', user.supervisor or '')
+            if 'avatar' in request.FILES:
+                user.avatar = request.FILES['avatar']
+            user.save()
 
-        # Member technique update
-        if user.role == 'MEMBER':
-            try:
-                member_profile = user.member_profile
-                technique_ids = request.POST.getlist('techniques')
-                member_profile.techniques.set(technique_ids)
-            except (AttributeError, ObjectDoesNotExist):
-                # User doesn't have a member profile
-                pass
+            # Member technique update
+            if user.role == 'MEMBER':
+                try:
+                    member_profile = user.member_profile
+                    technique_ids = request.POST.getlist('techniques')
+                    member_profile.techniques.set(technique_ids)
+                except (AttributeError, ObjectDoesNotExist):
+                    pass
+                except Exception as e:
+                    logger.warning(f"Failed to update techniques for user {user.pk}: {e}")
 
-        messages.success(request, _("Profil mis à jour."))
+            messages.success(request, _("Profil mis à jour avec succès."))
+            
+        elif action == 'password':
+            form = PasswordChangeForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, _("Mot de passe modifié avec succès."))
+            else:
+                for error in form.errors.values():
+                    messages.error(request, error.as_text())
+                
         return redirect('accounts:profile')
 
+    # Prepare data for profile display
     techniques = None
-    if request.user.role == 'MEMBER':
+    if user.role == 'MEMBER':
         from accounts.models import Technique
         techniques = Technique.objects.filter(active=True)
 
+    # Activity summary
+    activity_summary = _get_user_activity_summary(user)
+    
+    # Password change form
+    password_form = PasswordChangeForm(user)
+    
+    # Language options
+    language_choices = [
+        ('fr', _('Français')),
+        ('en', _('English')),
+    ]
+
     return render(request, 'accounts/profile.html', {
         'techniques': techniques,
+        'activity_summary': activity_summary,
+        'password_form': password_form,
+        'language_choices': language_choices,
     })
+
+
+def _get_user_activity_summary(user):
+    """Get activity summary for the user based on their role."""
+    from core.models import Request
+    from notifications.models import Notification
+    
+    summary = {
+        'total_requests': 0,
+        'completed_requests': 0,
+        'pending_requests': 0,
+        'rejected_requests': 0,
+        'total_downloads': 0,
+        'ratings_given': 0,
+        'avg_rating': 0,
+        'notifications_count': 0,
+        'recent_activity': [],
+    }
+    
+    # For requesters and clients
+    if user.role in ['REQUESTER', 'CLIENT']:
+        requests = Request.objects.filter(requester=user)
+        summary['total_requests'] = requests.count()
+        summary['completed_requests'] = requests.filter(status='COMPLETED').count()
+        summary['pending_requests'] = requests.exclude(status__in=['COMPLETED', 'REJECTED']).count()
+        summary['rejected_requests'] = requests.filter(status='REJECTED').count()
+        summary['ratings_given'] = requests.filter(service_rating__isnull=False).count()
+        
+        # Calculate average rating given
+        rated = requests.filter(service_rating__isnull=False)
+        if rated.exists():
+            summary['avg_rating'] = round(sum(rated.values_list('service_rating', flat=True)) / rated.count(), 1)
+        
+        # Count reports downloaded (requests with completed status)
+        summary['total_downloads'] = requests.filter(status__in=['COMPLETED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']).count()
+        
+        # Recent activity
+        summary['recent_activity'] = list(requests.order_by('-updated_at')[:5].values(
+            'display_id', 'title', 'status', 'updated_at', 'service__name'
+        ))
+    
+    # For analysts/members
+    elif user.role == 'MEMBER':
+        from accounts.models import MemberProfile
+        try:
+            profile = user.member_profile
+            assigned = Request.objects.filter(assigned_to=user)
+            summary['total_requests'] = assigned.count()
+            summary['completed_requests'] = assigned.filter(status__in=['COMPLETED', 'REPORT_UPLOADED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']).count()
+            summary['pending_requests'] = assigned.exclude(status__in=['COMPLETED', 'REJECTED']).count()
+            summary['rejected_requests'] = assigned.filter(status='REJECTED').count()
+            summary['productivity_score'] = profile.productivity_score
+            summary['total_points'] = profile.total_points
+            summary['total_downloads'] = assigned.filter(report_file__isnull=False).count()
+        except (AttributeError, ObjectDoesNotExist):
+            pass
+        
+        # Recent activity
+        summary['recent_activity'] = list(assigned.order_by('-updated_at')[:5].values(
+            'display_id', 'title', 'status', 'updated_at', 'service__name'
+        ))
+    
+    # For admins
+    elif user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']:
+        total_requests = Request.objects.count()
+        summary['total_requests'] = total_requests
+        summary['completed_requests'] = Request.objects.filter(status='COMPLETED').count()
+        summary['pending_requests'] = Request.objects.exclude(status__in=['COMPLETED', 'REJECTED']).count()
+        summary['total_users'] = User.objects.count()
+        summary['total_members'] = User.objects.filter(role='MEMBER').count()
+    
+    # Notifications count
+    summary['notifications_count'] = Notification.objects.filter(user=user, is_read=False).count()
+    
+    return summary
 
 
 def convert_guest(request):
@@ -193,6 +306,7 @@ def check_email(request):
 
         exists = User.objects.filter(email__iexact=email).exists()
         return JsonResponse({'exists': exists})
-    except (DatabaseError, OperationalError):
+    except (DatabaseError, OperationalError) as e:
         # Database error - return False to be safe
+        logger.error(f"Database error checking email existence: {e}")
         return JsonResponse({'exists': False})

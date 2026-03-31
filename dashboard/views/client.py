@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
 
@@ -23,11 +23,38 @@ def client_required(view_func):
 
 @client_required
 def index(request):
+    from django.db.models import Case, When, IntegerField
+    
+    # Base queryset for this user's requests
     my_requests = Request.objects.filter(requester=request.user, channel='GENOCLAB')
-    total = my_requests.count()
-    active = my_requests.exclude(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']).count()
-    completed = my_requests.filter(status__in=['COMPLETED', 'CLOSED']).count()
-    rejected = my_requests.filter(status__in=['REJECTED', 'QUOTE_REJECTED_BY_CLIENT']).count()
+    
+    # Consolidated count queries
+    counts = my_requests.aggregate(
+        total=Count('id'),
+        active=Count(
+            Case(
+                When(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED', 'QUOTE_REJECTED_BY_CLIENT'], then=None),
+                default=1,
+                output_field=IntegerField()
+            )
+        ),
+        completed=Count(
+            Case(
+                When(status__in=['COMPLETED', 'CLOSED'], then=1),
+                output_field=IntegerField()
+            )
+        ),
+        rejected=Count(
+            Case(
+                When(status__in=['REJECTED', 'QUOTE_REJECTED_BY_CLIENT'], then=1),
+                output_field=IntegerField()
+            )
+        )
+    )
+    total = counts['total']
+    active = counts['active'] or 0
+    completed = counts['completed'] or 0
+    rejected = counts['rejected'] or 0
 
     # Active requests
     active_requests = my_requests.exclude(
@@ -37,18 +64,31 @@ def index(request):
     # Invoices for this client
     invoices = Invoice.objects.filter(client=request.user).select_related('request').order_by('-created_at')
 
-    # Archives
-    archived = my_requests.filter(
+    # Archives - paginated
+    archived_qs = my_requests.filter(
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
-    ).select_related('service').order_by('-updated_at')[:30]
+    ).select_related('service').order_by('-updated_at')
+    archived_paginator, archived, _ = paginate_queryset(archived_qs, request, per_page=25, page_param='archived_page')
 
     # Services for new request
     services = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'GENOCLAB']
     ).order_by('code')
 
-    # Notifications
-    notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
+    # Notifications - paginated
+    notifications_paginator, notifications, _ = paginate_queryset(
+        Notification.objects.filter(user=request.user, read=False).order_by('-created_at'),
+        request, per_page=10, page_param='notif_page'
+    )
+    
+    # Profile stats for profile tab
+    unread_notifications = Notification.objects.filter(user=request.user, read=False).count()
+    profile_stats = {
+        'total_requests': total,
+        'completed_requests': completed,
+        'pending_requests': active,
+        'notifications_count': unread_notifications,
+    }
 
     context = {
         'total': total,
@@ -58,8 +98,11 @@ def index(request):
         'active_requests': active_requests,
         'invoices': invoices,
         'archived': archived,
+        'archived_paginator': archived_paginator,
         'services': services,
         'notifications': notifications,
+        'notifications_paginator': notifications_paginator,
+        'profile_stats': profile_stats,
         'now': timezone.now(),
     }
     return render(request, 'dashboard/client/index.html', context)
@@ -275,9 +318,9 @@ def confirm_appointment(request, pk):
     req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
     try:
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
-    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+        messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, f"Erreur: {str(e)}")
     return redirect_back(request, 'dashboard:client')
 
 
@@ -293,8 +336,8 @@ def confirm_receipt(request, pk):
     if req.status == 'SENT_TO_CLIENT':
         try:
             transition(req, 'COMPLETED', request.user, notes='Réception confirmée par le client')
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
+        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            messages.error(request, f"Erreur lors de la finalisation: {str(e)}")
     # Notify admin + analyst that report was downloaded/confirmed
     from accounts.models import User
     from notifications.models import Notification

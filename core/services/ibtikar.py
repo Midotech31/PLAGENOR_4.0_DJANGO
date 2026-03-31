@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import DatabaseError, IntegrityError
 
 from core.models import Request, RequestHistory
 from core.financial import check_ibtikar_budget
+
+logger = logging.getLogger('plagenor.services')
 
 
 def submit_ibtikar_request(data: dict, user) -> Request:
@@ -61,8 +67,16 @@ def submit_ibtikar_request(data: dict, user) -> Request:
                 request=request_obj,
                 notification_type='WORKFLOW',
             )
-    except Exception:
-        pass
+    except (DatabaseError, IntegrityError, ObjectDoesNotExist) as e:
+        # Log the error but don't fail the request creation
+        logger.error(
+            f"Failed to create admin notifications for IBTIKAR request {display_id}: {str(e)}",
+            extra={
+                'request_display_id': display_id,
+                'request_id': str(request_obj.id),
+            },
+            exc_info=True
+        )
 
     return request_obj
 

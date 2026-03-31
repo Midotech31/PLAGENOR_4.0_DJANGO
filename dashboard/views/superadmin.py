@@ -1,18 +1,22 @@
+import logging
 from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.conf import settings
 
+logger = logging.getLogger('plagenor')
+
 from accounts.models import User, MemberProfile, Technique
 from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
+from core.registry import get_service_def
 
 
 def superadmin_required(view_func):
@@ -28,12 +32,29 @@ def superadmin_required(view_func):
 def index(request):
     from django.core.paginator import Paginator
 
-    total_users = User.objects.count()
-    total_members = MemberProfile.objects.count()
-    total_requests = Request.objects.filter(archived=False).count()
-    completed_requests = Request.objects.filter(status='COMPLETED').count()
-    ibtikar_count = Request.objects.filter(channel='IBTIKAR', archived=False).count()
-    genoclab_count = Request.objects.filter(channel='GENOCLAB', archived=False).count()
+    # Consolidate count queries into single aggregated queries
+    from django.db.models import Sum, Case, When, IntegerField
+    
+    user_stats = User.objects.aggregate(
+        total_users=Count('id'),
+        total_members=Count(
+            Case(When(member_profile__isnull=False, then=1), output_field=IntegerField())
+        )
+    )
+    total_users = user_stats['total_users']
+    total_members = user_stats['total_members']
+    
+    request_stats = Request.objects.aggregate(
+        total_requests=Count('id', filter=Q(archived=False)),
+        completed_requests=Count('id', filter=Q(status='COMPLETED')),
+        ibtikar_count=Count('id', filter=Q(channel='IBTIKAR', archived=False)),
+        genoclab_count=Count('id', filter=Q(channel='GENOCLAB', archived=False))
+    )
+    total_requests = request_stats['total_requests']
+    completed_requests = request_stats['completed_requests']
+    ibtikar_count = request_stats['ibtikar_count']
+    genoclab_count = request_stats['genoclab_count']
+    
     total_services = Service.objects.filter(active=True).count()
     total_techniques = Technique.objects.filter(active=True).count()
 
@@ -62,7 +83,7 @@ def index(request):
     techniques = Technique.objects.order_by('name')
     platform_content = PlatformContent.objects.all()
 
-    recent_requests = Request.objects.filter(archived=False).order_by('-created_at')[:5]
+    recent_requests = Request.objects.filter(archived=False).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')[:5]
     recent_users = User.objects.order_by('-date_joined')[:5]
 
     status_dist = (
@@ -96,15 +117,17 @@ def index(request):
     invoices_page = invoices_paginator.get_page(request.GET.get('invoices_page', 1))
     payment_methods = PaymentMethod.objects.all()
 
-    # Documents tab
-    requests_with_reports = Request.objects.exclude(report_file='').exclude(report_file__isnull=True).order_by('-updated_at')[:20]
+    # Documents tab - paginated
+    reports_qs = Request.objects.exclude(report_file='').exclude(report_file__isnull=True).select_related('service', 'requester', 'assigned_to__user').order_by('-updated_at')
+    reports_paginator, requests_with_reports, _reports = paginate_queryset(reports_qs, request, per_page=25, page_param='reports_page')
 
     # Forms tab
     all_form_fields = ServiceFormField.objects.select_related('service').order_by('service__code', 'sort_order')
     try:
         from core.registry import load_service_registry
         yaml_registry = load_service_registry()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to load service registry: {e}")
         yaml_registry = {}
 
     # KPI - average rating
@@ -717,9 +740,10 @@ def restore_db(request):
         conn = sqlite3.connect(str(temp_path))
         conn.execute("SELECT count(*) FROM sqlite_master")
         conn.close()
-    except Exception:
+    except Exception as e:
         temp_path.unlink(missing_ok=True)
         messages.error(request, "Fichier invalide — ce n'est pas une base de données SQLite valide.")
+        logger.error(f"Invalid SQLite file uploaded: {e}")
         return redirect_back(request, 'dashboard:superadmin')
     db_path = settings.BASE_DIR / 'data' / 'plagenor.db'
     if db_path.exists():
@@ -788,8 +812,8 @@ def reset_account(request, pk):
                     html_message=html_body,
                     fail_silently=True,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to send password reset email to {target_user.email}: {e}")
 
         messages.success(
             request,
@@ -801,3 +825,88 @@ def reset_account(request, pk):
     return render(request, 'dashboard/superadmin/reset_account_confirm.html', {
         'target_user': target_user,
     })
+
+
+# --- Superadmin Request Detail View ---
+@superadmin_required
+def request_detail(request, pk):
+    """Full request detail view for SUPER_ADMIN with all information."""
+    from core.models import Message
+    from accounts.models import MemberProfile
+
+    req = get_object_or_404(Request, pk=pk)
+    history = req.history.select_related('actor').order_by('created_at')
+    comments = req.comments.select_related('author').order_by('created_at')
+    messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
+    
+    # Load YAML service definition for parameter labels
+    yaml_def = None
+    if req.service:
+        yaml_def = get_service_def(req.service.code)
+
+    # Available members for assignment
+    available_members = MemberProfile.objects.filter(available=True).select_related('user').order_by('user__first_name', 'user__last_name')
+
+    context = {
+        'req': req,
+        'history': history,
+        'comments': comments,
+        'messages_list': messages_list,
+        'yaml_def': yaml_def,
+        'available_members': available_members,
+        'status_choices': Request.STATUS_CHOICES,
+        'now': timezone.now(),
+    }
+    return render(request, 'dashboard/superadmin/request_detail.html', context)
+
+
+# --- Superadmin Direct Assignment ---
+@superadmin_required
+def assign_request_direct(request, pk):
+    """Directly assign a request to an analyst from superadmin dashboard."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    
+    req = get_object_or_404(Request, pk=pk)
+    member_id = request.POST.get('member_id')
+    
+    if not member_id:
+        messages.error(request, _("Veuillez sélectionner un analyste."))
+        return redirect('dashboard:superadmin_request_detail', pk=pk)
+    
+    member = get_object_or_404(MemberProfile, pk=member_id)
+    
+    # Check if request is in a state that allows assignment
+    assignable_states = ['IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED', 'ASSIGNED', 'PENDING_ACCEPTANCE']
+    if req.status not in assignable_states and req.assigned_to is None:
+        messages.warning(
+            request,
+            _("La demande %(id)s n'est pas dans un état permettant l'assignation directe (statut: %(status)s). L'assignation sera quand même effectuée.") % {
+                'id': req.display_id,
+                'status': req.get_status_display()
+            }
+        )
+    
+    req.assigned_to = member
+    req.save(update_fields=['assigned_to'])
+    
+    # Log the assignment
+    log_action(
+        action='DIRECT_ASSIGNMENT',
+        entity_type='REQUEST',
+        entity_id=str(req.pk),
+        actor=request.user,
+        details={
+            'assigned_to': member.user.get_full_name(),
+            'previous_status': req.status,
+        }
+    )
+    
+    messages.success(
+        request,
+        _("Demande %(id)s assignée à %(member)s.") % {
+            'id': req.display_id,
+            'member': member.user.get_full_name()
+        }
+    )
+    return redirect('dashboard:superadmin_request_detail', pk=pk)

@@ -112,7 +112,12 @@ def get_all_yaml_files() -> list[dict]:
                     'service_name': data.get('service_name', data.get('name', '')),
                     'data': data,
                 })
-        except Exception:
+        except (yaml.YAMLError, IOError, UnicodeDecodeError) as e:
+            logger.warning(
+                f"Failed to parse YAML file {yaml_file.name}: {str(e)}",
+                extra={'filepath': str(yaml_file)},
+                exc_info=True
+            )
             continue
     return results
 

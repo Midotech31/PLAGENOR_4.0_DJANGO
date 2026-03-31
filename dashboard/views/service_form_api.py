@@ -22,8 +22,8 @@ def service_form_fragment(request, service_code):
         svc = Service.objects.filter(code=service_code).first()
         if svc:
             db_fields = list(svc.custom_fields.all().values('name', 'label', 'field_type', 'options', 'required'))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Failed to load custom fields for service {service_code}: {e}")
 
     pricing_json = json.dumps(pricing) if pricing else '{}'
 

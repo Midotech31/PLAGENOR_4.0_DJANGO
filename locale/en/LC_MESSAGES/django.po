@@ -1,4 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
+﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
@@ -2435,3 +2435,586 @@ msgstr "Format: IDGRSTDXXXXX"
 
 msgid "Téléphone"
 msgstr "Phone"
+  
+# Superadmin Request Detail New Strings  
+msgid "Assign to Analyst"  
+msgstr "Assign to Analyst"  
+  
+msgid "S�lectionner un analyste"  
+msgstr "Select an Analyst"  
+  
+msgid "Choisir un analyste..."  
+msgstr "Choose an analyst..."  
+  
+msgid "tech."  
+msgstr "tech."
+
+# New Admin Ops Feature Translations (Task 1-7)
+
+# Activity Log
+msgid "Activity Log"
+msgstr "Activity Log"
+
+msgid "Audit trail of all request-related actions"
+msgstr "Audit trail of all request-related actions"
+
+msgid "Filter Activity"
+msgstr "Filter Activity"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Action Type"
+msgstr "Action Type"
+
+msgid "All Actions"
+msgstr "All Actions"
+
+msgid "From Date"
+msgstr "From Date"
+
+msgid "To Date"
+msgstr "To Date"
+
+msgid "Clear"
+msgstr "Clear"
+
+msgid "Activity Entries"
+msgstr "Activity Entries"
+
+msgid "entries"
+msgstr "entries"
+
+msgid "Timestamp"
+msgstr "Timestamp"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Request"
+msgstr "Request"
+
+msgid "User"
+msgstr "User"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "No activity entries found."
+msgstr "No activity entries found."
+
+msgid "Back to Dashboard"
+msgstr "Back to Dashboard"
+
+# Notification Bell
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Mark all as read"
+msgstr "Mark all as read"
+
+msgid "Loading notifications..."
+msgstr "Loading notifications..."
+
+msgid "No notifications"
+msgstr "No notifications"
+
+# User Oversight
+msgid "User Management"
+msgstr "User Management"
+
+msgid "Manage all registered students and clients"
+msgstr "Manage all registered students and clients"
+
+msgid "Filter Users"
+msgstr "Filter Users"
+
+msgid "All Roles"
+msgstr "All Roles"
+
+msgid "IBTIKAR Requester"
+msgstr "IBTIKAR Requester"
+
+msgid "GENOCLAB Client"
+msgstr "GENOCLAB Client"
+
+msgid "Analyst"
+msgstr "Analyst"\n\n# New translations for admin_ops.py (Messages)\nmsgid "Request %(display_id)s transitioned to %(status)s"\nmsgstr "Request %(display_id)s transitioned to %(status)s"\n\nmsgid "Request %(display_id)s transitioned to %(status)s."\nmsgstr "Request %(display_id)s transitioned to %(status)s."\n\nmsgid "No requests selected."\nmsgstr "No requests selected."\n\nmsgid "Please select a member for assignment."\nmsgstr "Please select a member for assignment."\n\nmsgid "Member required for assignment"\nmsgstr "Member required for assignment"\n\nmsgid "Bulk assign to %(member)s"\nmsgstr "Bulk assign to %(member)s"\n\nmsgid "Assigned %(count)s requests to %(member)s"\nmsgstr "Assigned %(count)s requests to %(member)s"\n\nmsgid "Status required for transition"\nmsgstr "Status required for transition"\n\nmsgid "Please select a target status."\nmsgstr "Please select a target status."\n\nmsgid "Bulk transition"\nmsgstr "Bulk transition"\n\nmsgid "Transitioned %(count)s requests to %(status)s"\nmsgstr "Transitioned %(count)s requests to %(status)s"\n\nmsgid "Invalid action"\nmsgstr "Invalid action"\n\nmsgid "Invalid bulk action."\nmsgstr "Invalid bulk action."\n\nmsgid "Please select an analyst"\nmsgstr "Please select an analyst"\n\nmsgid "Please select an analyst."\nmsgstr "Please select an analyst."\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\n\nmsgid "Assigned to %(member)s"\nmsgstr "Assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s"\nmsgstr "Request %(display_id)s assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s."\nmsgstr "Request %(display_id)s assigned to %(member)s."\n\nmsgid "Assignment error: %(error)s"\nmsgstr "Assignment error: %(error)s"\n\nmsgid "Points must be positive"\nmsgstr "Points must be positive"\n\nmsgid "Points must be positive."\nmsgstr "Points must be positive."\n\nmsgid "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\nmsgstr "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\n\nmsgid "%(points)s points received! %(reason)s"\nmsgstr "%(points)s points received! %(reason)s"\n\nmsgid "%(points)s points received!"\nmsgstr "%(points)s points received!"\n\nmsgid "%(points)s points awarded to %(member)s"\nmsgstr "%(points)s points awarded to %(member)s"\n\nmsgid "%(points)s points awarded to %(member)s."\nmsgstr "%(points)s points awarded to %(member)s."\n\nmsgid "Reward added for %(member)s."\nmsgstr "Reward added for %(member)s."\n\nmsgid "Please select an image."\nmsgstr "Please select an image."\n\nmsgid "Encouragement received: %(message)s"\nmsgstr "Encouragement received: %(message)s"\n\nmsgid "You received an encouragement!"\nmsgstr "You received an encouragement!"\n\nmsgid "Encouragement sent to %(member)s."\nmsgstr "Encouragement sent to %(member)s."\n\nmsgid "The appointment is already confirmed, cannot modify."\nmsgstr "The appointment is already confirmed, cannot modify."\n\nmsgid "Appointment date modified: %(date)s"\nmsgstr "Appointment date modified: %(date)s"\n\nmsgid "Report validated by admin"\nmsgstr "Report validated by admin"\n\nmsgid "Report %(display_id)s validated."\nmsgstr "Report %(display_id)s validated."\n\nmsgid "Report sent back for revision. %(notes)s"\nmsgstr "Report sent back for revision. %(notes)s"\n\nmsgid "%(display_id)s: Report sent back for revision. %(notes)s"\nmsgstr "%(display_id)s: Report sent back for revision. %(notes)s"\n\nmsgid "Report %(display_id)s sent back for revision."\nmsgstr "Report %(display_id)s sent back for revision."\n\nmsgid "Please enter an amount."\nmsgstr "Please enter an amount."\n\nmsgid "Invalid amount."\nmsgstr "Invalid amount."\n\nmsgid "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\nmsgstr "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\n\nmsgid "Justification: %(justification)s"\nmsgstr "Justification: %(justification)s"\n\nmsgid "Quote prepared"\nmsgstr "Quote prepared"\n\nmsgid "Quote sent to client"\nmsgstr "Quote sent to client"\n\nmsgid "Quote sent to client for %(display_id)s."\nmsgstr "Quote sent to client for %(display_id)s."\n\nmsgid "Quote saved for %(display_id)s."\nmsgstr "Quote saved for %(display_id)s."\n\nmsgid "Error generating invoice: %(error)s"\nmsgstr "Error generating invoice: %(error)s"\n\nmsgid "Payment confirmed by admin"\nmsgstr "Payment confirmed by admin"\n\nmsgid "Payment confirmed for %(display_id)s."\nmsgstr "Payment confirmed for %(display_id)s."\n\nmsgid "Please upload a payment receipt."\nmsgstr "Please upload a payment receipt."
+
+msgid "All Statuses"
+msgstr "All Statuses"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Inactive"
+msgstr "Inactive"
+
+msgid "users"
+msgstr "users"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Registered"
+msgstr "Registered"
+
+msgid "Requests"
+msgstr "Requests"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "View History"
+msgstr "View History"
+
+msgid "No users found."
+msgstr "No users found."
+
+# User Detail
+msgid "User Information"
+msgstr "User Information"
+
+msgid "Full Name"
+msgstr "Full Name"
+
+msgid "Username"
+msgstr "Username"
+
+msgid "User Detail"
+msgstr "User Detail"
+
+msgid "Request Statistics"
+msgstr "Request Statistics"
+
+msgid "Total Requests"
+msgstr "Total Requests"
+
+msgid "Pending"
+msgstr "Pending"
+
+msgid "Request History"
+msgstr "Request History"
+
+msgid "Request ID"
+msgstr "Request ID"
+
+msgid "Title"
+msgstr "Title"
+
+msgid "Service"
+msgstr "Service"
+
+msgid "Channel"
+msgstr "Channel"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "No requests found for this user."
+msgstr "No requests found for this user."
+
+msgid "Back to User List"
+msgstr "Back to User List"
+
+# Request Detail User History
+msgid "Requester's Previous Submissions"
+msgstr "Requester's Previous Submissions"
+
+msgid "View Full User History"
+msgstr "View Full User History"
+
+msgid "Workflow History"
+msgstr "Workflow History"
+
+msgid "Aucun historique."
+msgstr "No history available."
+
+# Performance & Points System
+msgid "Performance & Points"
+msgstr "Performance & Points"
+
+msgid "Track member performance and award bonus points"
+msgstr "Track member performance and award bonus points"
+
+msgid "Filter & Sort"
+msgstr "Filter & Sort"
+
+msgid "Sort By"
+msgstr "Sort By"
+
+msgid "Total Points"
+msgstr "Total Points"
+
+msgid "Efficiency Rate"
+msgstr "Efficiency Rate"
+
+msgid "Completed Services"
+msgstr "Completed Services"
+
+msgid "Most Recent"
+msgstr "Most Recent"
+
+msgid "Min Points"
+msgstr "Min Points"
+
+msgid "Max Points"
+msgstr "Max Points"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Points Calculation Rules"
+msgstr "Points Calculation Rules"
+
+msgid "Service Completion"
+msgstr "Service Completion"
+
+msgid "Each finalized service earns"
+msgstr "Each finalized service earns"
+
+msgid "points"
+msgstr "points"
+
+msgid "Efficiency Bonus"
+msgstr "Efficiency Bonus"
+
+msgid "Early completion earns"
+msgstr "Early completion earns"
+
+msgid "bonus points"
+msgstr "bonus points"
+
+msgid "Reward Milestone"
+msgstr "Reward Milestone"
+
+msgid "Every"
+msgstr "Every"
+
+msgid "1 reward box"
+msgstr "1 reward box"
+
+msgid "Admin Bonus"
+msgstr "Admin Bonus"
+
+msgid "Manual bonus with reason"
+msgstr "Manual bonus with reason"
+
+msgid "Members by Performance"
+msgstr "Members by Performance"
+
+msgid "Ranked by total points"
+msgstr "Ranked by total points"
+
+msgid "Services"
+msgstr "Services"
+
+msgid "Efficiency"
+msgstr "Efficiency"
+
+msgid "points"
+msgstr "points"
+
+msgid "Reward Box"
+msgstr "Reward Box"
+
+msgid "Details"
+msgstr "Details"
+
+# Member Points Detail
+msgid "Points & Performance Detail"
+msgstr "Points & Performance Detail"
+
+msgid "Reward Boxes"
+msgstr "Reward Boxes"
+
+msgid "Next Milestone"
+msgstr "Next Milestone"
+
+msgid "Next reward at"
+msgstr "Next reward at"
+
+msgid "Earned Reward Boxes"
+msgstr "Earned Reward Boxes"
+
+msgid "Award Bonus Points"
+msgstr "Award Bonus Points"
+
+msgid "Reason"
+msgstr "Reason"
+
+msgid "Required"
+msgstr "Required"
+
+msgid "Enter reason for bonus..."
+msgstr "Enter reason for bonus..."
+
+msgid "Award Points"
+msgstr "Award Points"
+
+msgid "Points History"
+msgstr "Points History"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Points"
+msgstr "Points"
+
+msgid "Awarded By"
+msgstr "Awarded By"
+
+msgid "No points history yet."
+msgstr "No points history yet."
+
+msgid "Back to Performance"
+msgstr "Back to Performance"
+
+# Tab Labels
+msgid "All Requests"
+msgstr "All Requests"
+
+msgid "Assignment"
+msgstr "Assignment"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Reviews"
+msgstr "Reviews"
+
+msgid "Reports"
+msgstr "Reports"
+
+msgid "Users"
+msgstr "Users"
+
+msgid "Points System"
+msgstr "Points System"
+
+# Dashboard Improvements
+msgid "Hello"
+msgstr "Hello"
+
+msgid "Request and Assignment Management"
+msgstr "Request and Assignment Management"
+
+msgid "Total requests"
+msgstr "Total requests"
+
+msgid "IBTIKAR Pending"
+msgstr "IBTIKAR Pending"
+
+msgid "GENOCLAB Pending"
+msgstr "GENOCLAB Pending"
+
+msgid "Overdue Requests"
+msgstr "Overdue Requests"
+
+msgid "Stuck in same status for more than 7 days"
+msgstr "Stuck in same status for more than 7 days"
+
+msgid "Last updated"
+msgstr "Last updated"
+
+msgid "Requests to Validate"
+msgstr "Requests to Validate"
+
+msgid "Pedagogical Validation"
+msgstr "Pedagogical Validation"
+
+msgid "Financial Validation"
+msgstr "Financial Validation"
+
+msgid "Service Cost"
+msgstr "Service Cost"
+
+msgid "Estimated Cost"
+msgstr "Estimated Cost"
+
+msgid "Validated Cost"
+msgstr "Validated Cost"
+
+msgid "Adjust Cost (DA)"
+msgstr "Adjust Cost (DA)"
+
+msgid "Justification"
+msgstr "Justification"
+
+msgid "Reason for change..."
+msgstr "Reason for change..."
+
+msgid "Adjust"
+msgstr "Adjust"
+
+msgid "Validate & Generate Note"
+msgstr "Validate & Generate Note"
+
+msgid "Prepare Quote"
+msgstr "Prepare Quote"
+
+msgid "Send Quote"
+msgstr "Send Quote"
+
+msgid "Awaiting client response"
+msgstr "Awaiting client response"
+
+msgid "Generate Invoice"
+msgstr "Generate Invoice"
+
+msgid "Download Invoice"
+msgstr "Download Invoice"
+
+msgid "Confirm Payment"
+msgstr "Confirm Payment"
+
+msgid "Reports to Review"
+msgstr "Reports to Review"
+
+msgid "Review Report"
+msgstr "Review Report"
+
+msgid "Completions and Closures"
+msgstr "Completions and Closures"
+
+msgid "Send to Requester"
+msgstr "Send to Requester"
+
+msgid "Send to Client"
+msgstr "Send to Client"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Archive"
+msgstr "Archive"
+
+msgid "In Progress"
+msgstr "In Progress"
+
+msgid "Proposed appointment"
+msgstr "Proposed appointment"
+
+msgid "Awaiting requester confirmation"
+msgstr "Awaiting requester confirmation"
+
+msgid "Modify Appointment"
+msgstr "Modify Appointment"
+
+msgid "Mark Sample Received"
+msgstr "Mark Sample Received"
+
+msgid "in progress"
+msgstr "in progress"
+
+msgid "Ready for Assignment"
+msgstr "Ready for Assignment"
+
+msgid "No requests ready for assignment. Requests must first go through validation."
+msgstr "No requests ready for assignment. Requests must first go through validation."
+
+msgid "Download Platform Note"
+msgstr "Download Platform Note"
+
+msgid "Assign to"
+msgstr "Assign to"
+
+msgid "Budget Overview"
+msgstr "Budget Overview"
+
+msgid "IBTIKAR Budget"
+msgstr "IBTIKAR Budget"
+
+msgid "GENOCLAB Revenue"
+msgstr "GENOCLAB Revenue"
+
+msgid "Member Performance Ranking"
+msgstr "Member Performance Ranking"
+
+msgid "Productivity"
+msgstr "Productivity"
+
+msgid "Load"
+msgstr "Load"
+
+msgid "No members found."
+msgstr "No members found."
+
+msgid "Reviews & Ratings"
+msgstr "Reviews & Ratings"
+
+msgid "Average Rating"
+msgstr "Average Rating"
+
+msgid "No reviews yet."
+msgstr "No reviews yet."
+
+msgid "Export Requests CSV"
+msgstr "Export Requests CSV"
+
+msgid "Activity Log"
+msgstr "Activity Log"
+
+msgid "Open full activity log"
+msgstr "Open full activity log"
+
+msgid "Open user management"
+msgstr "Open user management"
+
+msgid "Open performance dashboard"
+msgstr "Open performance dashboard"
+
+# Bulk Actions
+msgid "selected"
+msgstr "selected"
+
+msgid "Bulk Assign"
+msgstr "Bulk Assign"
+
+msgid "Bulk Transition"
+msgstr "Bulk Transition"
+
+msgid "Clear Selection"
+msgstr "Clear Selection"
+
+# Pagination
+msgid "Page"
+msgstr "Page"
+
+msgid "of"
+msgstr "of"
+
+msgid "Previous"
+msgstr "Previous"
+
+msgid "Next"
+msgstr "Next"
+
+# Additional Common Translations
+msgid "View"
+msgstr "View"
+
+msgid "Guest"
+msgstr "Guest"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Search by ID or title..."
+msgstr "Search by ID or title..."
+
+msgid "All Channels"
+msgstr "All Channels"
+
+msgid "No requests found."
+msgstr "No requests found."
+
+msgid "Analyst"
+msgstr "Analyst"\n\n# New translations for admin_ops.py (Messages)\nmsgid "Request %(display_id)s transitioned to %(status)s"\nmsgstr "Request %(display_id)s transitioned to %(status)s"\n\nmsgid "Request %(display_id)s transitioned to %(status)s."\nmsgstr "Request %(display_id)s transitioned to %(status)s."\n\nmsgid "No requests selected."\nmsgstr "No requests selected."\n\nmsgid "Please select a member for assignment."\nmsgstr "Please select a member for assignment."\n\nmsgid "Member required for assignment"\nmsgstr "Member required for assignment"\n\nmsgid "Bulk assign to %(member)s"\nmsgstr "Bulk assign to %(member)s"\n\nmsgid "Assigned %(count)s requests to %(member)s"\nmsgstr "Assigned %(count)s requests to %(member)s"\n\nmsgid "Status required for transition"\nmsgstr "Status required for transition"\n\nmsgid "Please select a target status."\nmsgstr "Please select a target status."\n\nmsgid "Bulk transition"\nmsgstr "Bulk transition"\n\nmsgid "Transitioned %(count)s requests to %(status)s"\nmsgstr "Transitioned %(count)s requests to %(status)s"\n\nmsgid "Invalid action"\nmsgstr "Invalid action"\n\nmsgid "Invalid bulk action."\nmsgstr "Invalid bulk action."\n\nmsgid "Please select an analyst"\nmsgstr "Please select an analyst"\n\nmsgid "Please select an analyst."\nmsgstr "Please select an analyst."\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\n\nmsgid "Assigned to %(member)s"\nmsgstr "Assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s"\nmsgstr "Request %(display_id)s assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s."\nmsgstr "Request %(display_id)s assigned to %(member)s."\n\nmsgid "Assignment error: %(error)s"\nmsgstr "Assignment error: %(error)s"\n\nmsgid "Points must be positive"\nmsgstr "Points must be positive"\n\nmsgid "Points must be positive."\nmsgstr "Points must be positive."\n\nmsgid "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\nmsgstr "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\n\nmsgid "%(points)s points received! %(reason)s"\nmsgstr "%(points)s points received! %(reason)s"\n\nmsgid "%(points)s points received!"\nmsgstr "%(points)s points received!"\n\nmsgid "%(points)s points awarded to %(member)s"\nmsgstr "%(points)s points awarded to %(member)s"\n\nmsgid "%(points)s points awarded to %(member)s."\nmsgstr "%(points)s points awarded to %(member)s."\n\nmsgid "Reward added for %(member)s."\nmsgstr "Reward added for %(member)s."\n\nmsgid "Please select an image."\nmsgstr "Please select an image."\n\nmsgid "Encouragement received: %(message)s"\nmsgstr "Encouragement received: %(message)s"\n\nmsgid "You received an encouragement!"\nmsgstr "You received an encouragement!"\n\nmsgid "Encouragement sent to %(member)s."\nmsgstr "Encouragement sent to %(member)s."\n\nmsgid "The appointment is already confirmed, cannot modify."\nmsgstr "The appointment is already confirmed, cannot modify."\n\nmsgid "Appointment date modified: %(date)s"\nmsgstr "Appointment date modified: %(date)s"\n\nmsgid "Report validated by admin"\nmsgstr "Report validated by admin"\n\nmsgid "Report %(display_id)s validated."\nmsgstr "Report %(display_id)s validated."\n\nmsgid "Report sent back for revision. %(notes)s"\nmsgstr "Report sent back for revision. %(notes)s"\n\nmsgid "%(display_id)s: Report sent back for revision. %(notes)s"\nmsgstr "%(display_id)s: Report sent back for revision. %(notes)s"\n\nmsgid "Report %(display_id)s sent back for revision."\nmsgstr "Report %(display_id)s sent back for revision."\n\nmsgid "Please enter an amount."\nmsgstr "Please enter an amount."\n\nmsgid "Invalid amount."\nmsgstr "Invalid amount."\n\nmsgid "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\nmsgstr "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\n\nmsgid "Justification: %(justification)s"\nmsgstr "Justification: %(justification)s"\n\nmsgid "Quote prepared"\nmsgstr "Quote prepared"\n\nmsgid "Quote sent to client"\nmsgstr "Quote sent to client"\n\nmsgid "Quote sent to client for %(display_id)s."\nmsgstr "Quote sent to client for %(display_id)s."\n\nmsgid "Quote saved for %(display_id)s."\nmsgstr "Quote saved for %(display_id)s."\n\nmsgid "Error generating invoice: %(error)s"\nmsgstr "Error generating invoice: %(error)s"\n\nmsgid "Payment confirmed by admin"\nmsgstr "Payment confirmed by admin"\n\nmsgid "Payment confirmed for %(display_id)s."\nmsgstr "Payment confirmed for %(display_id)s."\n\nmsgid "Please upload a payment receipt."\nmsgstr "Please upload a payment receipt." 
+
