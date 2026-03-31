@@ -1,0 +1,56 @@
+# =============================================================================
+# PLAGENOR 4.0 - Uptime Monitoring Configuration
+# =============================================================================
+# Use this file to configure uptime monitoring services like UptimeRobot, HetrixTools, etc.
+# 
+# UptimeRobot (Free - 50 monitors):
+#   1. Sign up at https://uptimerobot.com
+#   2. Add your website URL
+#   3. Set check interval (1-5 minutes)
+#   4. Configure alert contacts (email, SMS, Discord, etc.)
+#
+# Alternative: HetrixTools (Free - 3 monitors), Pingdom, Better Uptime
+# =============================================================================
+
+# Your deployed URLs to monitor
+monitoring:
+  primary_url: "https://plagenor.up.railway.app"
+  secondary_url: "https://www.plagenor.essbo.dz"
+  
+  # Endpoints to check
+  endpoints:
+    - path: "/"
+      name: "Home Page"
+      expected_status: 200
+    - path: "/accounts/login/"
+      name: "Login Page"
+      expected_status: 200
+    - path: "/dashboard/"
+      name: "Dashboard"
+      expected_status: 302  # Redirects to login if not authenticated
+      
+  # Health check endpoint (add to urls.py for more accurate monitoring)
+  health_check:
+    path: "/health/"
+    name: "API Health"
+    expected_status: 200
+    expected_response: "ok"
+
+# Alert contacts
+alerts:
+  email:
+    - "admin@essbo.dz"
+    - "support@plagenor.dz"
+  discord_webhook: ""  # Optional Discord webhook for instant alerts
+  telegram_bot: ""     # Optional Telegram bot token
+
+# Monitoring settings
+settings:
+  # Check interval in minutes (UptimeRobot free: 5 min minimum)
+  check_interval: 5
+  
+  # Timeout in seconds
+  timeout: 30
+  
+  # Auto-restart on failure (requires Railway CLI integration)
+  auto_restart: false

@@ -129,6 +129,10 @@ msgstr "Enter your password"
 msgid "Se souvenir de moi"
 msgstr "Remember me"
 
+#: templates/accounts/login.html:56
+msgid "Mot de passe: minimum 8 caractères, au moins 1 lettre majuscule et 1 chiffre"
+msgstr "Password: minimum 8 characters, at least 1 uppercase letter and 1 number"
+
 #: templates/accounts/login.html:41 templates/accounts/register.html:120
 msgid "Se connecter"
 msgstr "Sign In"

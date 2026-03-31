@@ -51,7 +51,10 @@
                     {% trans "Se souvenir de moi" %}
                 </label>
             </div>
-            <button type="submit" class="btn btn-primary">{% trans "Se connecter" %}</button>
+            <div class="btn-wrapper">
+                <button type="submit" class="btn btn-primary">{% trans "Se connecter" %}</button>
+            </div>
+            <p class="password-hint">{% trans "Mot de passe: minimum 8 caractères, au moins 1 lettre majuscule et 1 chiffre" %}</p>
         </form>
 
         <div class="auth-divider">{% trans "ou" %}</div>

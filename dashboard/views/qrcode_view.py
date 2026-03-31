@@ -9,7 +9,7 @@ from core.models import Request
 
 @login_required
 def report_qr(request, pk):
-    """Generate QR code PNG linking to the public report page."""
+    """Generate QR code PNG linking to the public report detail page."""
     req = Request.objects.filter(pk=pk).first()
     if not req:
         raise Http404
@@ -32,8 +32,8 @@ def report_qr(request, pk):
         req.report_token = uuid.uuid4()
         req.save(update_fields=['report_token'])
 
-    # Build the public report URL
-    report_url = request.build_absolute_uri(f'/report/{req.report_token}/')
+    # Build the public report detail URL (includes embedded report)
+    report_url = request.build_absolute_uri(f'/report/{req.report_token}/detail/')
 
     # Generate QR code
     qr = qrcode.QRCode(version=1, box_size=8, border=2)

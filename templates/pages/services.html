@@ -11,10 +11,20 @@
     {% if services %}
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
-        <div class="service-card">
+        <div class="service-card" style="overflow:hidden;">
+            {% if service.image %}
+            <!-- Service Image - Square, larger than icon (120x120px) -->
+            <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                <div style="width:120px; height:120px; overflow:hidden; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.15); border:2px solid var(--border-color, #e5e7eb);">
+                    <img src="{{ service.image.url }}" alt="{{ service.name }}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            </div>
+            {% else %}
+            <!-- Default Icon -->
             <div class="service-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
+            {% endif %}
             <div class="service-code">{{ service.code }}</div>
             <h4>{{ service.name }}</h4>
             <p>{{ service.description|truncatewords:25 }}</p>

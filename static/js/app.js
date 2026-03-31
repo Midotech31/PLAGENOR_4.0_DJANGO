@@ -1,5 +1,9 @@
 /* PLAGENOR 4.0 — Main JS */
 
+// =============================================================================
+// PAGE TRANSITIONS & ANIMATIONS
+// =============================================================================
+
 // Clickable table rows — navigate to data-href on click
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('tr.clickable-row[data-href]').forEach(function (row) {
@@ -7,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = row.dataset.href;
         });
     });
+    
+    // Page ready animation
+    document.body.classList.add('page-ready');
 });
 
 // HTMX: include CSRF token in all requests
@@ -17,8 +24,41 @@ document.body.addEventListener('htmx:configRequest', (e) => {
         || '';
 });
 
-// Notification count is injected server-side via context processor (unread_count).
-// No client-side polling needed.
+// HTMX: Enhanced page transitions
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    const loadingBar = document.getElementById('loading-bar');
+    if (loadingBar) {
+        loadingBar.classList.add('active');
+        loadingBar.style.transform = 'scaleX(0)';
+        loadingBar.offsetHeight; // Trigger reflow
+        loadingBar.style.transform = 'scaleX(0.5)';
+    }
+});
+
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    const loadingBar = document.getElementById('loading-bar');
+    if (loadingBar) {
+        loadingBar.classList.remove('active');
+        loadingBar.style.transform = 'scaleX(1)';
+    }
+    
+    // Re-trigger animations for newly loaded content
+    const newContent = evt.detail.target;
+    if (newContent) {
+        const animatedElements = newContent.querySelectorAll('.card, .kpi-card');
+        animatedElements.forEach((el, index) => {
+            el.style.animation = 'none';
+            el.offsetHeight; // Trigger reflow
+            el.style.animation = null;
+            el.style.animationDelay = (index * 0.05) + 's';
+        });
+    }
+});
+
+document.body.addEventListener('htmx:afterSettle', function() {
+    // Smooth scroll to top after content swap
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 // Language toggle
 function toggleLanguage() {

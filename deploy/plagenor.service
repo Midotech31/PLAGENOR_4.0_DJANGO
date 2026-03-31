@@ -1,0 +1,53 @@
+[Unit]
+Description=PLAGENOR Django Application
+After=network.target postgresql.service
+
+[Service]
+# Run as the specified user and group
+User=www-data
+Group=www-data
+
+# Working directory
+WorkingDirectory=/opt/plagenor
+
+# Virtual environment
+PythonHome=/opt/plagenor/venv
+
+# Environment variables
+EnvironmentFile=/opt/plagenor/.env
+
+# Gunicorn command
+# Using socket for better performance with nginx
+ExecStart=/opt/plagenor/venv/bin/gunicorn \
+    --config /opt/plagenor/gunicorn.conf.py \
+    --bind unix:/run/plagenor/plagenor.sock \
+    plagenor.wsgi:application
+
+# Graceful reload
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Soft terminate workers
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+
+# Time to wait before force kill
+KillMode=mixed
+TimeoutStopSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=plagenor
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/plagenor/data /opt/plagenor/logs /run/plagenor /var/log/plagenor
+
+[Install]
+WantedBy=multi-user.target

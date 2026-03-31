@@ -8,12 +8,98 @@
     <meta name="description" content="PLAGENOR 4.0 — Plateforme de Gestion des Opérations Scientifiques">
     <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/favicon.svg' %}">
+    
     <title>{% block title %}PLAGENOR 4.0{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'icons/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script src="https://unpkg.com/alpinejs@3.14.3" defer></script>
     {% block extra_css %}{% endblock %}
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- Page Transition Loading Bar -->
+    <div class="loading-bar" id="loading-bar"></div>
+    
+    <!-- Dark Mode & PWA Script -->
+    <script>
+        // Dark mode toggle
+        function initDarkMode() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedMode = localStorage.getItem('dark-mode');
+            
+            if (savedMode === 'true' || (savedMode === null && prefersDark)) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDark = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('dark-mode', isDark);
+                });
+            }
+        }
+        
+        // Page transition with loading indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            initDarkMode();
+            document.body.classList.add('page-ready');
+            
+            // HTMX event handlers for smooth transitions
+            document.body.addEventListener('htmx:beforeSwap', function(evt) {
+                const loadingBar = document.getElementById('loading-bar');
+                if (loadingBar) {
+                    loadingBar.classList.add('active');
+                    loadingBar.style.transform = 'scaleX(0)';
+                    loadingBar.offsetHeight;
+                    loadingBar.style.transform = 'scaleX(0.5)';
+                }
+            });
+            
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                const loadingBar = document.getElementById('loading-bar');
+                if (loadingBar) {
+                    loadingBar.classList.remove('active');
+                    loadingBar.style.transform = 'scaleX(1)';
+                    setTimeout(() => { loadingBar.style.transform = ''; }, 100);
+                }
+                
+                // Re-init dark mode for new content
+                initDarkMode();
+                
+                // Re-trigger animations
+                const newContent = evt.detail.target;
+                const animatedElements = newContent.querySelectorAll('.card, .kpi-card');
+                animatedElements.forEach((el, index) => {
+                    el.style.animationDelay = (index * 0.05) + 's';
+                });
+            });
+            
+            document.body.addEventListener('htmx:afterSettle', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
 </head>
 <body>
     {% include 'includes/sidebar.html' %}

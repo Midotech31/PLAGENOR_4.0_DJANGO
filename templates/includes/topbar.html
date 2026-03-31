@@ -31,10 +31,17 @@
                 </div>
                 <div class="dropdown-divider"></div>
                 <div style="max-height:300px; overflow-y:auto;">
+                    {% load notification_icons %}
                     {% for notif in recent_notifications %}
-                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
-                        <div style="font-size:0.85rem; color:#1e293b;">{{ notif.message|truncatechars:60 }}</div>
-                        <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; align-items:center; gap:10px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
+                        <!-- Notification Icon -->
+                        <div style="flex-shrink:0; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:{{ notif.message|notification_icon_color }}15; color:{{ notif.message|notification_icon_color }};">
+                            {{ notif.message|notification_icon|safe }}
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:0.85rem; color:#1e293b; {% if not notif.read %}font-weight:500;{% endif %}">{{ notif.message|truncatechars:50 }}</div>
+                            <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                        </div>
                     </a>
                     {% empty %}
                     <div class="dropdown-item text-muted" style="display:flex; justify-content:center; padding:16px;">{% trans "Aucune notification" %}</div>

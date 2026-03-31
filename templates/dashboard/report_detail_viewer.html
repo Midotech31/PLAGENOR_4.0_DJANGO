@@ -1,0 +1,391 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Rapport Détaillé" %} — {{ req.display_id }} | PLAGENOR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-detail-container {
+        max-width: 900px;
+        margin: 32px auto;
+        padding: 0 24px;
+    }
+    .report-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 16px;
+        padding: 32px;
+        color: white;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    .report-header h1 {
+        font-size: 2rem;
+        margin: 0 0 8px;
+        font-weight: 700;
+    }
+    .report-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+    .report-thanks-banner {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .report-thanks-banner h2 {
+        color: #15803d;
+        margin: 0 0 8px;
+        font-size: 1.25rem;
+    }
+    .report-thanks-banner p {
+        color: #166534;
+        margin: 0;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+    }
+    .info-card .label {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+    .info-card .value {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+    .info-card .value.status-completed {
+        color: #15803d;
+    }
+    .info-card .value.status-pending {
+        color: #d97706;
+    }
+    .report-section {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+    }
+    .report-section h3 {
+        margin: 0 0 16px;
+        color: #1e293b;
+        font-size: 1.125rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .report-embed {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+    .report-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        text-align: center;
+        color: #64748b;
+    }
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
+        background: #4f46e5;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+    .download-btn:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+    }
+    .timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4f46e5;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #4f46e5;
+    }
+    .timeline-date {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    .timeline-action {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .star-rating {
+        text-align: center;
+        padding: 24px;
+    }
+    .star-rating h3 {
+        margin: 0 0 16px;
+        color: #334155;
+    }
+    .stars {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .stars input[type="radio"] {
+        display: none;
+    }
+    .stars label {
+        font-size: 2rem;
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+    .stars label:hover,
+    .stars label:hover ~ label,
+    .stars input:checked ~ label {
+        color: #facc15;
+    }
+    .stars {
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+    .rating-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+        margin-bottom: 16px;
+    }
+    .rating-form button {
+        padding: 10px 24px;
+        background: #4f46e5;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .rated-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #f0fdf4;
+        color: #15803d;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    @media (max-width: 600px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .report-embed {
+            height: 400px;
+        }
+        .report-header {
+            padding: 20px;
+        }
+        .report-header h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-detail-container">
+    <!-- Header -->
+    <div class="report-header">
+        <h1>PLAGENOR 4.0</h1>
+        <p>{% trans "Plateforme de Gestion des Opérations Scientifiques — ESSBO" %}</p>
+    </div>
+
+    <!-- Thank You Banner -->
+    <div class="report-thanks-banner">
+        <h2>{% trans "Merci pour votre confiance" %}</h2>
+        <p>{% trans "Votre rapport d'analyse est prêt. Vous pouvez le consulter ci-dessous ou le télécharger." %}</p>
+    </div>
+
+    <!-- Request Information Grid -->
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="label">{% trans "Référence" %}</div>
+            <div class="value">{{ req.display_id }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">{% trans "Service" %}</div>
+            <div class="value">{{ req.service.name|default:"—" }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">{% trans "Canal" %}</div>
+            <div class="value">{{ req.channel }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">{% trans "Date de soumission" %}</div>
+            <div class="value">{{ req.created_at|date:"d/m/Y" }}</div>
+        </div>
+        <div class="info-card">
+            <div class="label">{% trans "Statut" %}</div>
+            <div class="value {% if req.status == 'COMPLETED' %}status-completed{% else %}status-pending{% endif %}">
+                {{ req.get_status_display }}
+            </div>
+        </div>
+        {% if req.assigned_to %}
+        <div class="info-card">
+            <div class="label">{% trans "Analyste" %}</div>
+            <div class="value">{{ req.assigned_to.user.get_full_name|default:req.assigned_to.user.email }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Report Display Section -->
+    {% if req.report_file %}
+    <div class="report-section">
+        <h3>
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            {% trans "Rapport d'Analyse" %}
+        </h3>
+        
+        {% if req.report_file.url|slice:"-4:" == ".pdf" %}
+            <iframe src="{{ req.report_file.url }}" class="report-embed" title="{% trans 'Rapport PDF' %}"></iframe>
+        {% else %}
+            <div class="report-placeholder">
+                <svg width="64" height="64" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 16px;">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p>{% trans "Le rapport est disponible au format" %} {{ req.report_file.name|slice:"-4:"|upper }}</p>
+            </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{% url 'report_download' token=req.report_token %}" class="download-btn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Request Timeline -->
+    {% if history %}
+    <div class="report-section">
+        <h3>
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {% trans "Historique de la demande" %}
+        </h3>
+        <div class="timeline">
+            {% for event in history %}
+            <div class="timeline-item">
+                <div class="timeline-date">{{ event.created_at|date:"d/m/Y H:i" }}</div>
+                <div class="timeline-action">{{ event.get_action_display }}</div>
+                {% if event.notes %}
+                <div style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">{{ event.notes }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Rating Section -->
+    <div class="report-section">
+        {% if req.service_rating %}
+            <div class="star-rating">
+                <h3>{% trans "Votre évaluation" %}</h3>
+                <div class="stars" style="flex-direction: row; pointer-events: none;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= req.service_rating %}
+                            <span style="font-size:2rem;color:#facc15;">&#9733;</span>
+                        {% else %}
+                            <span style="font-size:2rem;color:#cbd5e1;">&#9733;</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% if req.rating_comment %}
+                    <p style="color:#475569;font-style:italic;">"{{ req.rating_comment }}"</p>
+                {% endif %}
+                <div class="rated-badge">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    {% trans "Merci pour votre évaluation" %}
+                </div>
+            </div>
+        {% else %}
+            <div class="star-rating">
+                <h3>{% trans "Évaluez notre service" %}</h3>
+                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form">
+                    {% csrf_token %}
+                    <div class="stars">
+                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4">&#9733;</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3">&#9733;</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2">&#9733;</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1">&#9733;</label>
+                    </div>
+                    <textarea name="comment" placeholder="{% trans 'Votre commentaire (optionnel)...' %}"></textarea>
+                    <button type="submit">{% trans "Envoyer" %}</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

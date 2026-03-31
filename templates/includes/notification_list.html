@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load notification_icons %}
 {% if notifications %}
 <div class="card">
     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -15,7 +16,10 @@
         {% for notif in notifications %}
         <a href="{% url 'notifications:click' notif.pk %}" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-bottom:1px solid var(--slate-100, #f1f5f9); text-decoration:none; color:inherit; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
             <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-                <div style="flex-shrink:0; width:8px; height:8px; border-radius:50%; {% if not notif.read %}background:#2563eb;{% else %}background:#d1d5db;{% endif %}"></div>
+                <!-- Notification Icon -->
+                <div style="flex-shrink:0; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:{{ notif.message|notification_icon_color }}15; color:{{ notif.message|notification_icon_color }};">
+                    {{ notif.message|notification_icon|safe }}
+                </div>
                 <div style="flex:1; min-width:0;">
                     <div style="font-size:0.9rem; color:#1e293b; {% if not notif.read %}font-weight:600;{% endif %}">{{ notif.message }}</div>
                     {% if notif.request %}

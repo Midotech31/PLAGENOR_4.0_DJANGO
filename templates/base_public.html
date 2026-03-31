@@ -11,8 +11,40 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}PLAGENOR 4.0{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'icons/favicon.svg' %}">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=3">
     {% block extra_css %}{% endblock %}
+    
+    <!-- Page Transition Loading Bar -->
+    <div class="loading-bar" id="loading-bar"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('page-ready');
+            
+            // Smooth page transitions
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                if (link.href && !link.href.startsWith('javascript:') && !link.target) {
+                    link.addEventListener('click', function(e) {
+                        const loadingBar = document.getElementById('loading-bar');
+                        if (loadingBar) {
+                            loadingBar.classList.add('active');
+                        }
+                    });
+                }
+            });
+            
+            // Remove loading bar on page load complete
+            window.addEventListener('load', function() {
+                const loadingBar = document.getElementById('loading-bar');
+                if (loadingBar) {
+                    setTimeout(() => {
+                        loadingBar.classList.remove('active');
+                    }, 300);
+                }
+            });
+        });
+    </script>
 </head>
 <body class="auth-page">
     <nav class="public-nav">

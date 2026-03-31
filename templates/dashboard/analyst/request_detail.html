@@ -302,7 +302,7 @@
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
                     </form>
                     {% endif %}
-                    {% if req.status == 'ANALYSIS_FINISHED' %}
+                    {% if req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
                     <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data" style="display:inline;">
                         {% csrf_token %}
                         <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>

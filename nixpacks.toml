@@ -1,0 +1,16 @@
+# Railway deployment configuration for PLAGENOR 4.0
+
+[phases.build]
+cmds = [
+    "pip install -r requirements.txt",
+    "python manage.py collectstatic --noinput"
+]
+
+[phases.setup]
+nixPkgs = ["python311", "gcc"]
+
+[start]
+cmd = "gunicorn plagenor.wsgi:application --bind 0.0.0.0:$PORT"
+
+[variables]
+PYTHON_VERSION = "3.11"

@@ -6,6 +6,418 @@
 /* --- Reset & Fonts --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
+/* ============================================================
+   DARK MODE SUPPORT
+   ============================================================ */
+:root {
+    /* Light mode (default) */
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+}
+
+/* Dark mode toggle - applied via JavaScript */
+body.dark-mode {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --border: #334155;
+    --border-light: #475569;
+    
+    --text: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+    
+    --primary: #6366F1;
+    --primary-light: #312E81;
+    --primary-dark: #818CF8;
+    
+    --success: #10B981;
+    --success-light: #064E3B;
+    --warning: #F59E0B;
+    --warning-light: #78350F;
+    --danger: #EF4444;
+    --danger-light: #7F1D1D;
+    --info: #0EA5E9;
+    --info-light: #0C4A6E;
+    
+    --slate-50: #1E293B;
+    --slate-100: #334155;
+    --slate-200: #475569;
+    --slate-300: #64748B;
+    --slate-400: #94A3B8;
+    --slate-500: #CBD5E1;
+    --slate-600: #E2E8F0;
+    --slate-700: #F1F5F9;
+    --slate-800: #F8FAFC;
+    --slate-900: #FFFFFF;
+}
+
+/* Dark mode specific overrides */
+body.dark-mode .card,
+body.dark-mode .kpi-card {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+body.dark-mode .sidebar {
+    background: #020617;
+}
+
+body.dark-mode .public-nav {
+    background: rgba(30, 41, 59, 0.95);
+    border-bottom-color: var(--border);
+}
+
+body.dark-mode .public-footer {
+    background: #020617;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+body.dark-mode .table {
+    --table-bg: var(--surface);
+}
+
+body.dark-mode .table tbody tr:hover {
+    background-color: var(--primary-light);
+}
+
+body.dark-mode .btn-secondary {
+    background: var(--slate-700);
+    color: var(--text);
+}
+
+body.dark-mode .alert-success {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+body.dark-mode .alert-error,
+body.dark-mode .alert-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+}
+
+.dark-mode-toggle:hover {
+    background: var(--primary-50);
+    color: var(--primary);
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background: var(--primary-light);
+}
+
+.dark-mode-toggle .icon-sun { display: none; }
+.dark-mode-toggle .icon-moon { display: inline; }
+
+body.dark-mode .dark-mode-toggle .icon-sun { display: inline; }
+body.dark-mode .dark-mode-toggle .icon-moon { display: none; }
+
+/* ============================================================
+   PAGE TRANSITIONS & ANIMATIONS
+   ============================================================ */
+
+/* Page transition overlay */
+.page-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary);
+    z-index: 9999;
+    transform: translateY(100%);
+    pointer-events: none;
+}
+
+/* Initial page load animation */
+.page-ready .content-area {
+    animation: pageEnter 0.4s ease-out;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card entrance animations */
+.card {
+    animation: cardFadeIn 0.3s ease-out backwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+.card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* KPI Cards staggered entrance */
+.kpi-card {
+    animation: kpiEnter 0.4s ease-out backwards;
+}
+
+.kpi-card:nth-child(1) { animation-delay: 0.1s; }
+.kpi-card:nth-child(2) { animation-delay: 0.15s; }
+.kpi-card:nth-child(3) { animation-delay: 0.2s; }
+.kpi-card:nth-child(4) { animation-delay: 0.25s; }
+.kpi-card:nth-child(5) { animation-delay: 0.3s; }
+.kpi-card:nth-child(6) { animation-delay: 0.35s; }
+
+@keyframes kpiEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button press effect */
+.btn {
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.btn:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* Link hover effects */
+a {
+    transition: all 0.2s ease;
+}
+
+/* Form field focus animation */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    animation: inputFocus 0.2s ease;
+}
+
+@keyframes inputFocus {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.01); }
+    100% { transform: scale(1); }
+}
+
+/* Sidebar link hover */
+.sidebar-nav a:hover,
+.nav-item:hover {
+    transform: translateX(4px);
+}
+
+/* Toast slide in animation */
+.toast {
+    animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Modal backdrop animation */
+.modal-backdrop {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Modal content animation */
+.modal-content {
+    animation: modalEnter 0.3s ease-out;
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Tab transition */
+.tab-content {
+    animation: tabContentFade 0.2s ease;
+}
+
+@keyframes tabContentFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Table row hover animation */
+.table tbody tr {
+    transition: all 0.15s ease;
+}
+
+.table tbody tr:hover {
+    background-color: var(--primary-50);
+    transform: scale(1.005);
+}
+
+/* Loading spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Skeleton loading animation */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--slate-100) 0%,
+        var(--slate-200) 50%,
+        var(--slate-100) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Page loading indicator */
+.loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--primary);
+    z-index: 10000;
+    transform: scaleX(0);
+    transform-origin: left;
+}
+
+.loading-bar.active {
+    animation: loadingProgress 1.5s ease-in-out;
+}
+
+@keyframes loadingProgress {
+    0% { transform: scaleX(0); }
+    40% { transform: scaleX(0.7); }
+    100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* Hover lift effect for cards */
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Badge bounce animation */
+.badge-new {
+    animation: badgeBounce 0.5s ease;
+}
+
+@keyframes badgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -1531,11 +1943,25 @@ a:has(.service-card):hover .service-card,
     text-align: center;
     margin-bottom: 32px;
 }
+.auth-card .btn-wrapper {
+    text-align: center;
+    margin: 20px 0 10px;
+}
 .auth-card .btn-primary {
-    width: 100%;
-    padding: 13px;
+    width: auto;
+    min-width: 200px;
+    padding: 13px 40px;
     font-size: 0.95rem;
-    margin-top: 8px;
+    display: inline-block;
+}
+.auth-card .password-hint {
+    font-size: 0.7rem;
+    color: #cbd5e1;
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    font-style: italic;
 }
 .auth-links {
     text-align: center;

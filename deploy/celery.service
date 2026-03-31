@@ -1,0 +1,42 @@
+[Unit]
+Description=PLAGENOR Celery Worker
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+
+# Working directory
+WorkingDirectory=/opt/plagenor
+
+# Virtual environment
+PythonHome=/opt/plagenor/venv
+
+# Environment variables
+EnvironmentFile=/opt/plagenor/.env
+
+# Celery command
+ExecStart=/opt/plagenor/venv/bin/celery -A plagenor worker --loglevel=info --concurrency=4 --max-tasks-per-child=1000
+
+# Graceful shutdown
+ExecStop=/bin/kill -s TERM $MAINPID
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=celery
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/plagenor
+
+[Install]
+WantedBy=multi-user.target

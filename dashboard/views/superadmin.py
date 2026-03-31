@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -392,9 +393,29 @@ def service_edit(request, pk):
         service.name = request.POST.get('name', service.name)
         service.description = request.POST.get('description', service.description)
         service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
-        service.ibtikar_price = request.POST.get('ibtikar_price', service.ibtikar_price)
-        service.genoclab_price = request.POST.get('genoclab_price', service.genoclab_price)
-        service.turnaround_days = request.POST.get('turnaround_days', service.turnaround_days)
+        
+        # Handle decimal fields with proper conversion
+        ibtikar_price = request.POST.get('ibtikar_price', '').strip().replace('\xa0', '').replace(',', '.')
+        if ibtikar_price:
+            try:
+                service.ibtikar_price = Decimal(ibtikar_price)
+            except (ValueError, InvalidOperation):
+                pass  # Keep existing value if invalid
+        
+        genoclab_price = request.POST.get('genoclab_price', '').strip().replace('\xa0', '').replace(',', '.')
+        if genoclab_price:
+            try:
+                service.genoclab_price = Decimal(genoclab_price)
+            except (ValueError, InvalidOperation):
+                pass  # Keep existing value if invalid
+        
+        turnaround_days = request.POST.get('turnaround_days', '').strip()
+        if turnaround_days:
+            try:
+                service.turnaround_days = int(turnaround_days)
+            except ValueError:
+                pass  # Keep existing value if invalid
+        
         if 'image' in request.FILES:
             service.image = request.FILES['image']
         service.save()
@@ -506,6 +527,16 @@ def create_user(request):
 def user_edit(request, pk):
     user_obj = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
+        # Check if username is being changed and if it's already taken
+        new_username = request.POST.get('username', user_obj.username).strip()
+        if new_username != user_obj.username:
+            if User.objects.filter(username=new_username).exclude(pk=user_obj.pk).exists():
+                messages.error(request, f"Le nom d'utilisateur '{new_username}' est déjà utilisé.")
+                return render(request, 'dashboard/superadmin/user_edit.html', {
+                    'user_obj': user_obj,
+                    'role_choices': User.ROLE_CHOICES,
+                })
+            user_obj.username = new_username
         user_obj.first_name = request.POST.get('first_name', user_obj.first_name)
         user_obj.last_name = request.POST.get('last_name', user_obj.last_name)
         user_obj.email = request.POST.get('email', user_obj.email)

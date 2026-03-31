@@ -9,19 +9,46 @@
         <a href="{% url 'services' %}" class="text-muted" style="font-size:0.85rem;">&larr; {% trans "Retour aux services" %}</a>
     </div>
 
-    <div style="text-align:center; margin-bottom:32px;">
-        <div class="service-code" style="font-size:0.85rem; color:var(--indigo-600, #4F46E5); font-weight:600; margin-bottom:8px;">{{ service.code }}</div>
-        <h2 class="section-title" style="margin-bottom:8px;">{{ service.name }}</h2>
-        <p class="text-muted" style="max-width:600px; margin:0 auto;">{{ service.description }}</p>
+    <!-- Service Header with Floating Image -->
+    <div style="margin-bottom:32px;">
+        <div class="service-code" style="font-size:0.85rem; color:var(--indigo-600, #4F46E5); font-weight:600; margin-bottom:8px; text-align:center;">{{ service.code }}</div>
+        <h2 class="section-title" style="margin-bottom:16px; text-align:center;">{{ service.name }}</h2>
+        
+        {% if service.image %}
+        <!-- Floating Image Layout -->
+        <div style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin-bottom:20px;">
+            <div style="flex:0 0 280px; max-width:100%;">
+                <div style="border-radius:12px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.12); border:1px solid var(--border-color, #e5e7eb);">
+                    <img src="{{ service.image.url }}" alt="{{ service.name }}" style="width:100%; height:auto; display:block; object-fit:cover; max-height:200px;">
+                </div>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <p class="text-muted" style="font-size:1rem; line-height:1.6;">{{ service.description }}</p>
+                {% if service.channel_availability == 'BOTH' %}
+                <div style="margin-top:16px; display:flex; gap:8px;">
+                    <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span>
+                    <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span>
+                </div>
+                {% elif service.channel_availability == 'IBTIKAR' %}
+                <div style="margin-top:16px;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
+                {% else %}
+                <div style="margin-top:16px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- No Image - Centered Layout -->
+        <p class="text-muted" style="max-width:600px; margin:0 auto 12px; text-align:center;">{{ service.description }}</p>
         {% if service.channel_availability == 'BOTH' %}
         <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
             <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span>
             <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span>
         </div>
         {% elif service.channel_availability == 'IBTIKAR' %}
-        <div style="margin-top:12px;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
+        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
         {% else %}
-        <div style="margin-top:12px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+        {% endif %}
         {% endif %}
     </div>
 
