@@ -136,8 +136,10 @@ LOGGING = {
     },
 }
 
-# Create logs directory if it doesn't exist
+# Create necessary directories if they don't exist
 (BASE_DIR / 'logs').mkdir(exist_ok=True)
+(BASE_DIR / 'data').mkdir(exist_ok=True)
+(BASE_DIR / 'media').mkdir(exist_ok=True, parents=True)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
