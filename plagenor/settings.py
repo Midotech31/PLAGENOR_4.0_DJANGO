@@ -140,6 +140,7 @@ LOGGING = {
 (BASE_DIR / 'logs').mkdir(exist_ok=True)
 (BASE_DIR / 'data').mkdir(exist_ok=True)
 (BASE_DIR / 'media').mkdir(exist_ok=True, parents=True)
+(BASE_DIR / 'staticfiles').mkdir(exist_ok=True, parents=True)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
