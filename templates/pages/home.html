@@ -67,9 +67,9 @@
 
     <div style="text-align:center; position:relative;">
         <h1 style="font-size:2.5rem; margin-bottom:8px;">{% cms 'hero_title' 'PLAGENOR 4.0' %}</h1>
-        <p style="font-size:1.1rem; opacity:0.85;">{% cms 'hero_subtitle' 'Plateforme Technologique de Génomique — ESSBO · ORAN' %}</p>
+        <p style="font-size:1.1rem; opacity:0.85;">{% cms 'hero_subtitle' 'Genomics Technology Platform — Higher School of Biological Sciences of Oran · ORAN' %}</p>
     </div>
-    <p style="position:relative;">{% cms 'hero_description' "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO." %}</p>
+    <p style="position:relative;">{% cms 'hero_description' "Integrated solution for managing analysis requests, operations tracking and billing within the Higher School of Biological Sciences of Oran." %}</p>
     <div class="btn-group" style="position:relative;">
         <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">{% cms 'hero_btn_submit' 'Soumettre une demande' %}</a>
         <a href="{% url 'guest_submit' %}" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.5);">{% cms 'hero_btn_guest' 'Soumission invité' %}</a>
@@ -82,7 +82,7 @@
 <div class="channel-cards">
     <div class="channel-card">
         <h3>{% cms 'ibtikar_title' 'IBTIKAR' %}</h3>
-        <p>{% cms 'ibtikar_description' "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR." %}</p>
+        <p>{% cms 'ibtikar_description' "Channel dedicated to students and researchers of the Higher School of Biological Sciences of Oran. Submit your analysis requests as part of your research projects with IBTIKAR budget funding." %}</p>
     </div>
     <div class="channel-card genoclab">
         <h3>{% cms 'genoclab_title' 'GENOCLAB' %}</h3>
@@ -131,7 +131,7 @@
 {% if services %}
 <section class="section">
     <h2 class="section-title">{% cms 'services_title' 'Nos Services' %}</h2>
-    <p class="section-subtitle">{% cms 'services_subtitle' 'Analyses scientifiques et techniques proposées par le laboratoire ESSBO' %}</p>
+    <p class="section-subtitle">{% cms 'services_subtitle' 'Scientific and technical analyses offered by the Higher School of Biological Sciences of Oran laboratory' %}</p>
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
         <a href="{% url 'service_landing' service.code %}" style="text-decoration:none; color:inherit;">
@@ -158,10 +158,10 @@
 <!-- Institutional Context -->
 <section class="section" style="text-align:center;">
     <h2 class="section-title">{% cms 'org_title' 'Organisation' %}</h2>
-    <p class="section-subtitle">{% cms 'org_subtitle' 'ESSBO → PLAGENOR → GENOCLAB' %}</p>
+    <p class="section-subtitle">{% cms 'org_subtitle' 'HSBSO → PLAGENOR → GENOCLAB' %}</p>
     <div style="max-width:600px;margin:0 auto;">
         <p class="text-muted">
-            {% cms 'org_description' "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes." %}
+            {% cms 'org_description' "The Higher School of Biological Sciences of Oran (HSBSO) hosts the PLAGENOR platform, which manages two service channels: IBTIKAR for the internal academic community, and GENOCLAB for external services." %}
         </p>
     </div>
 </section>

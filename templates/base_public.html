@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PLAGENOR 4.0 — Plateforme de Gestion des Opérations Scientifiques — ESSBO">
+    <meta name="description" content="PLAGENOR 4.0 — Plateforme de Gestion des Opérations Scientifiques — Higher School of Biological Sciences of Oran">
     <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}PLAGENOR 4.0{% endblock %}</title>
@@ -90,10 +90,10 @@
             <div>
                 <div class="footer-brand">{% cms 'footer_brand' 'PLAGENOR 4.0' %}</div>
                 <p class="footer-desc">
-                    {% cms 'footer_description' "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB." %}
+                    {% cms 'footer_description' "Scientific Operations Management Platform of the Higher School of Biological Sciences of Oran. Developed for managing IBTIKAR and GENOCLAB channels." %}
                 </p>
                 <p class="footer-desc" style="margin-top:12px">
-                    {% cms 'footer_copyright' '© 2026 ESSBO — Tous droits réservés' %}
+                    {% cms 'footer_copyright' '© 2026 Higher School of Biological Sciences of Oran — All Rights Reserved' %}
                 </p>
             </div>
             <div class="footer-col">
@@ -106,14 +106,14 @@
             </div>
             <div class="footer-col">
                 <h4>{% trans "Contact" %}</h4>
-                <a href="#">{% cms 'footer_contact_1' "ESSBO — Université d'Oran" %}</a>
+                <a href="#">{% cms 'footer_contact_1' "Higher School of Biological Sciences of Oran" %}</a>
                 <a href="#">{% cms 'footer_contact_2' 'Prof. Mohamed Merzoug' %}</a>
                 <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
                 <a href="{% url 'accounts:register' %}">{% trans "Inscription" %}</a>
             </div>
         </div>
         <div class="footer-bottom">
-            {% cms 'footer_credit' 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO' %}
+            {% cms 'footer_credit' 'PLAGENOR 4.0 — Designed by Prof. Mohamed Merzoug | Higher School of Biological Sciences of Oran' %}
         </div>
     </footer>
 
