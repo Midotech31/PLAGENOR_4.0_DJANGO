@@ -14,47 +14,35 @@
             <form method="post" action="{% url 'guest_submit' %}">
                 {% csrf_token %}
 
-                <h4 style="margin-bottom: 16px;">{% trans "Vos informations" %}</h4>
                 <div class="form-group">
-                    <label>{% trans "Nom complet" %} *</label>
-                    <input type="text" name="guest_name" class="form-control" required placeholder="{% trans 'Votre nom complet' %}">
+                    <input type="text" name="guest_name" class="form-control" required placeholder="{% trans 'Nom complet' %} *">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Email" %} *</label>
-                    <input type="email" name="guest_email" class="form-control" required placeholder="{% trans 'votre@email.com' %}">
+                    <input type="email" name="guest_email" class="form-control" required placeholder="{% trans 'Email' %} *">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Téléphone" %}</label>
-                    <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Numéro de téléphone' %}">
+                    <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Téléphone' %}">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Organisation" %}</label>
-                    <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}">
+                    <input type="text" name="organization" class="form-control" placeholder="{% trans 'Organisation / Institution' %}">
                 </div>
-
-                <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
                 <div class="form-group">
-                    <label>{% trans "Canal" %} *</label>
                     <select name="channel" id="id_channel" class="form-control" required>
-                        <option value="GENOCLAB">GENOCLAB ({% trans "externe" %})</option>
-                        <option value="IBTIKAR">IBTIKAR ({% trans "académique" %})</option>
+                        <option value="GENOCLAB">{% trans "Canal" %}: GENOCLAB ({% trans "externe" %})</option>
+                        <option value="IBTIKAR">{% trans "Canal" %}: IBTIKAR ({% trans "académique" %})</option>
                     </select>
                 </div>
                 <div id="ibtikar-guest-fields" style="display:none;">
                     <div class="form-group">
-                        <label>{% trans "Identifiant IBTIKAR-DGRSDT" %} *</label>
-                        <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
-                        <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
+                        <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="{% trans 'Identifiant IBTIKAR-DGRSDT (IDGRSTDXXXXX)' %} *" pattern="IDGRSTD[0-9]{5}">
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                        <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                        <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000" placeholder="{% trans 'Solde IBTIKAR déclaré (DA)' %}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Service" %} *</label>
                     <select name="service_id" class="form-control" required>
-                        <option value="">{% trans "Sélectionner un service..." %}</option>
+                        <option value="">{% trans "Service" %} *</option>
                         {% for s in services %}
                         <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
                         {% endfor %}
@@ -62,19 +50,16 @@
                 </div>
                 <div id="dynamic-service-form"></div>
                 <div class="form-group">
-                    <label>{% trans "Titre de la demande" %}</label>
-                    <input type="text" name="title" class="form-control" placeholder="{% trans 'Ex: Analyse DRX...' %}">
+                    <input type="text" name="title" class="form-control" placeholder="{% trans 'Titre de la demande' %}">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Description" %}</label>
-                    <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                    <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Description de votre demande...' %}"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Urgence" %}</label>
                     <select name="urgency" class="form-control">
-                        <option value="Normal">{% trans "Normal" %}</option>
-                        <option value="Urgent">{% trans "Urgent" %}</option>
-                        <option value="Très urgent">{% trans "Très urgent" %}</option>
+                        <option value="Normal">{% trans "Urgence" %}: {% trans "Normal" %}</option>
+                        <option value="Urgent">{% trans "Urgence" %}: {% trans "Urgent" %}</option>
+                        <option value="Très urgent">{% trans "Urgence" %}: {% trans "Très urgent" %}</option>
                     </select>
                 </div>
 

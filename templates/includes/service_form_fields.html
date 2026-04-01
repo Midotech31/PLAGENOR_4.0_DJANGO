@@ -1,45 +1,44 @@
 {% load i18n %}
 {% if parameters or db_fields %}
 <div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
-    <h4 style="margin-bottom:12px;">{% trans "Paramètres du service" %}</h4>
     {% for param in parameters %}
+    {% if not sample_table.enabled or param.name not in sample_table.column_names %}
     <div class="form-group">
-        <label>{{ param.label|default:param.name }}{% if param.required %} *{% endif %}</label>
+        {% if param.type == 'boolean' %}
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;">
+            <label for="param_{{ param.name }}" style="margin:0; font-weight:500;">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+        </div>
+        {% else %}
+        <label style="{% if param.placeholder %}display:none;{% endif %}">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
         {% if param.type == 'string' or param.type == 'text' %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:'' }}">
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
         {% elif param.type == 'enum' %}
         <select name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
-            <option value="">-- {% trans "Choisir" %} --</option>
+            <option value="">{{ param.placeholder|default:param.label }}{% if param.required %} *{% endif %}</option>
             {% for opt in param.options %}
             <option value="{{ opt }}">{{ opt }}</option>
             {% endfor %}
         </select>
-        {% elif param.type == 'boolean' %}
-        <div><input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}"> <label for="param_{{ param.name }}" style="display:inline;">{{ param.label|default:param.name }}</label></div>
         {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
-        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %}>
+        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
         {% else %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
+        {% endif %}
         {% endif %}
     </div>
+    {% endif %}
     {% endfor %}
 
     {% for field in db_fields %}
     <div class="form-group">
-        <label>{{ field.label }}{% if field.required %} *{% endif %}</label>
-        {% if field.field_type == 'string' %}
-        <input type="text" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
-        {% elif field.field_type == 'enum' %}
-        <select name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
-            <option value="">-- {% trans "Choisir" %} --</option>
-            {% for opt in field.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
-            {% endfor %}
-        </select>
-        {% elif field.field_type == 'boolean' %}
-        <div><input type="checkbox" name="param_{{ field.name }}" value="true"> <label style="display:inline;">{{ field.label }}</label></div>
-        {% elif field.field_type == 'number' %}
-        <input type="number" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
+        {% if field.field_type == 'boolean' %}
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;">
+            <label for="param_{{ field.name }}" style="margin:0; font-weight:500;">{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        </div>
+        {% else %}
+        <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label }}{% if field.required %} *{% endif %}">
         {% endif %}
     </div>
     {% endfor %}
@@ -48,7 +47,6 @@
 
 {% if sample_table.enabled %}
 <div class="sample-table-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
-    <h4 style="margin-bottom:12px;">{% trans "Tableau des échantillons" %}</h4>
     <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse;">
         <thead>
             <tr>

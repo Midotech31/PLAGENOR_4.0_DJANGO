@@ -39,9 +39,8 @@
                 <form method="post" action="{% url 'dashboard:requester_create' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label>{% trans "Service" %}</label>
                         <select name="service_id" class="form-control" required>
-                            <option value="">{% trans "Sélectionner un service..." %}</option>
+                            <option value="">{% trans "Service" %} *</option>
                             {% for s in services %}
                             <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
                             {% endfor %}
@@ -49,13 +48,11 @@
                     </div>
                     <div id="dynamic-service-form"></div>
                     <div class="form-group">
-                        <label>{% trans "Titre de la demande" %}</label>
-                        <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse DRX échantillon...' %}">
+                        <input type="text" name="title" class="form-control" required placeholder="{% trans 'Titre de la demande' %} *">
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Cadre de l'analyse" %} <span style="color:red;">*</span></label>
                         <select name="analysis_framework" class="form-control" required>
-                            <option value="">{% trans "— Sélectionner —" %}</option>
+                            <option value="">{% trans "Cadre de l'analyse" %} *</option>
                             <option value="memoire_fin_cycle">{% trans "Mémoire de fin de cycle" %}</option>
                             <option value="these_doctorat">{% trans "Thèse de doctorat" %}</option>
                             <option value="projet_recherche">{% trans "Projet de recherche" %}</option>
@@ -65,34 +62,28 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group" style="flex:1;">
-                            <label>{% trans "Directeur de recherche" %} <span style="color:red;">*</span></label>
-                            <input type="text" name="pi_name" class="form-control" required placeholder="{% trans 'Prénom et Nom' %}">
+                            <input type="text" name="pi_name" class="form-control" required placeholder="{% trans 'Directeur de recherche (Prénom et Nom)' %} *">
                         </div>
                         <div class="form-group" style="flex:1;">
-                            <label>{% trans "Email du directeur" %}</label>
-                            <input type="email" name="pi_email" class="form-control" placeholder="directeur@univ.dz">
+                            <input type="email" name="pi_email" class="form-control" placeholder="{% trans 'Email du directeur' %}">
                         </div>
                         <div class="form-group" style="flex:1;">
-                            <label>{% trans "Téléphone du directeur" %}</label>
-                            <input type="text" name="pi_phone" class="form-control" placeholder="+213 XX XXX XXXX">
+                            <input type="text" name="pi_phone" class="form-control" placeholder="{% trans 'Téléphone du directeur' %}">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Description" %}</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                        <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Description de votre demande...' %}"></textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>{% trans "Urgence" %}</label>
                             <select name="urgency" class="form-control">
-                                <option value="Normal">{% trans "Normal" %}</option>
-                                <option value="Urgent">{% trans "Urgent" %}</option>
-                                <option value="Très urgent">{% trans "Très urgent" %}</option>
+                                <option value="Normal">{% trans "Urgence" %}: {% trans "Normal" %}</option>
+                                <option value="Urgent">{% trans "Urgence" %}: {% trans "Urgent" %}</option>
+                                <option value="Très urgent">{% trans "Urgence" %}: {% trans "Très urgent" %}</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000" placeholder="{% trans 'Solde IBTIKAR déclaré (DA)' %}">
                         </div>
                     </div>
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
