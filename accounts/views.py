@@ -11,7 +11,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, OperationalError
 from django.db.models import Count, Q
 from .models import User
-from .forms import RegistrationForm
+from .forms import (
+    IbtikarRegistrationForm,
+    GenoclabRegistrationForm,
+    ProfileUpdateForm,
+)
 
 logger = logging.getLogger('plagenor')
 
@@ -27,49 +31,100 @@ class CustomLogoutView(LogoutView):
 
 class RegisterView(CreateView):
     model = User
-    form_class = RegistrationForm
     template_name = 'accounts/register.html'
     success_url = '/dashboard/'
 
+    def get_form_class(self):
+        channel = self.request.GET.get('channel') or self.request.POST.get('channel')
+        if channel == 'IBTIKAR':
+            return IbtikarRegistrationForm
+        elif channel == 'GENOCLAB':
+            return GenoclabRegistrationForm
+        return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        channel = self.request.GET.get('channel') or self.request.POST.get('channel')
+        context['channel'] = channel
+        context['show_channel_selector'] = not channel
+        return context
+
+    def get(self, request, *args, **kwargs):
+        channel = request.GET.get('channel')
+        if not channel:
+            return render(request, 'accounts/register.html', {
+                'show_channel_selector': True,
+                'channel': None,
+            })
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, self.object)
-        return response
+        channel = self.request.GET.get('channel') or self.request.POST.get('channel')
+
+        if channel == 'IBTIKAR':
+            first_name, last_name = form.get_first_name_last_name()
+            user = User.objects.create_user(
+                username=form.cleaned_data['email'].split('@')[0],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=first_name,
+                last_name=last_name,
+                phone=form.cleaned_data['phone'],
+                organization=form.cleaned_data['institution'],
+                laboratory=form.cleaned_data.get('laboratory', ''),
+                position=form.cleaned_data['position'],
+                role='REQUESTER',
+            )
+        elif channel == 'GENOCLAB':
+            first_name, last_name = form.get_first_name_last_name()
+            user = User.objects.create_user(
+                username=form.cleaned_data['email'].split('@')[0],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=first_name,
+                last_name=last_name,
+                phone=form.cleaned_data['phone'],
+                organization=form.cleaned_data['organization'],
+                position=form.cleaned_data['sector'],
+                role='CLIENT',
+            )
+        else:
+            messages.error(self.request, _('Veuillez sélectionner un canal d\'inscription valide.'))
+            return redirect('accounts:register')
+
+        login(self.request, user)
+        return redirect(self.success_url)
 
 
 @login_required
 def profile(request):
     user = request.user
-    
+
     # Handle profile update
     if request.method == 'POST':
         action = request.POST.get('action', 'profile')
-        
+
         if action == 'profile':
-            user.first_name = request.POST.get('first_name', user.first_name)
-            user.last_name = request.POST.get('last_name', user.last_name)
-            user.email = request.POST.get('email', user.email)
-            user.phone = request.POST.get('phone', user.phone or '')
-            user.organization = request.POST.get('organization', user.organization or '')
-            user.laboratory = request.POST.get('laboratory', user.laboratory or '')
-            user.supervisor = request.POST.get('supervisor', user.supervisor or '')
-            if 'avatar' in request.FILES:
-                user.avatar = request.FILES['avatar']
-            user.save()
+            form = ProfileUpdateForm(request.POST, instance=user)
+            if form.is_valid():
+                form.save()
 
-            # Member technique update
-            if user.role == 'MEMBER':
-                try:
-                    member_profile = user.member_profile
-                    technique_ids = request.POST.getlist('techniques')
-                    member_profile.techniques.set(technique_ids)
-                except (AttributeError, ObjectDoesNotExist):
-                    pass
-                except Exception as e:
-                    logger.warning(f"Failed to update techniques for user {user.pk}: {e}")
+                # Member technique update
+                if user.role == 'MEMBER':
+                    try:
+                        member_profile = user.member_profile
+                        technique_ids = request.POST.getlist('techniques')
+                        member_profile.techniques.set(technique_ids)
+                    except (AttributeError, ObjectDoesNotExist):
+                        pass
+                    except Exception as e:
+                        logger.warning(f"Failed to update techniques for user {user.pk}: {e}")
 
-            messages.success(request, _("Profil mis à jour avec succès."))
-            
+                messages.success(request, _("Profil mis à jour avec succès."))
+            else:
+                for error in form.errors.values():
+                    messages.error(request, error.as_text())
+
         elif action == 'password':
             form = PasswordChangeForm(user, request.POST)
             if form.is_valid():
@@ -79,10 +134,11 @@ def profile(request):
             else:
                 for error in form.errors.values():
                     messages.error(request, error.as_text())
-                
+
         return redirect('accounts:profile')
 
     # Prepare data for profile display
+    profile_form = ProfileUpdateForm(instance=user)
     techniques = None
     if user.role == 'MEMBER':
         from accounts.models import Technique
@@ -90,10 +146,10 @@ def profile(request):
 
     # Activity summary
     activity_summary = _get_user_activity_summary(user)
-    
+
     # Password change form
     password_form = PasswordChangeForm(user)
-    
+
     # Language options
     language_choices = [
         ('fr', _('Français')),
@@ -101,6 +157,7 @@ def profile(request):
     ]
 
     return render(request, 'accounts/profile.html', {
+        'profile_form': profile_form,
         'techniques': techniques,
         'activity_summary': activity_summary,
         'password_form': password_form,
@@ -152,7 +209,7 @@ def _get_user_activity_summary(user):
         from accounts.models import MemberProfile
         try:
             profile = user.member_profile
-            assigned = Request.objects.filter(assigned_to=user)
+            assigned = Request.objects.filter(assigned_to=profile)
             summary['total_requests'] = assigned.count()
             summary['completed_requests'] = assigned.filter(status__in=['COMPLETED', 'REPORT_UPLOADED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']).count()
             summary['pending_requests'] = assigned.exclude(status__in=['COMPLETED', 'REJECTED']).count()
@@ -178,7 +235,7 @@ def _get_user_activity_summary(user):
         summary['total_members'] = User.objects.filter(role='MEMBER').count()
     
     # Notifications count
-    summary['notifications_count'] = Notification.objects.filter(user=user, is_read=False).count()
+    summary['notifications_count'] = Notification.objects.filter(user=user, read=False).count()
     
     return summary
 

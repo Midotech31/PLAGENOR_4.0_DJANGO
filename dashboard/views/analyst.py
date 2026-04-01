@@ -9,6 +9,7 @@ from dashboard.decorators import analyst_required
 from accounts.models import MemberProfile
 from core.models import Request
 from core.workflow import get_allowed_transitions, transition
+from core.state_machine import get_decline_return_state, is_acceptance_state
 from core.productivity import compute_member_productivity
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
@@ -123,8 +124,8 @@ def accept_task(request, pk):
     req.assignment_accepted_at = timezone.now()
     req.save(update_fields=['assignment_accepted', 'assignment_accepted_at'])
     try:
-        transition(req, 'APPOINTMENT_PROPOSED', request.user, notes='Tâche acceptée')
-        messages.success(request, f"Tâche {req.display_id} acceptée.")
+        transition(req, 'ACCEPTED', request.user, notes='Tâche acceptée')
+        messages.success(request, f"Tâche {req.display_id} acceptée. Proposez un rendez-vous pour continuer.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur: {str(e)}")
     return redirect_back(request, 'dashboard:analyst')
@@ -140,11 +141,26 @@ def decline_task(request, pk):
         return HttpResponseForbidden()
     req.assignment_declined = True
     req.assignment_decline_reason = request.POST.get('reason', '')
-    req.assigned_to = None
-    req.save(update_fields=['assignment_declined', 'assignment_decline_reason', 'assigned_to'])
+    req.save(update_fields=['assignment_declined', 'assignment_decline_reason'])
     try:
-        transition(req, 'ASSIGNED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-        messages.success(request, f"Tâche {req.display_id} déclinée.")
+        # First transition to DECLINED state
+        transition(req, 'DECLINED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
+
+        # Get return state for reassignment by admin
+        return_state = get_decline_return_state(req.channel)
+
+        # Clear assignment before returning to admin
+        req.assigned_to = None
+        req.save(update_fields=['assigned_to'])
+
+        # Transition to return state for reassignment
+        transition(req, return_state, request.user, notes='Retour pour réassignation après refus')
+
+        # Notify admin that task was declined
+        from notifications.services import notify_admin_task_declined
+        notify_admin_task_declined(req, profile, req.assignment_decline_reason)
+
+        messages.success(request, f"Tâche {req.display_id} déclinée. L'administrateur va être notifié.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur: {str(e)}")
     return redirect_back(request, 'dashboard:analyst')

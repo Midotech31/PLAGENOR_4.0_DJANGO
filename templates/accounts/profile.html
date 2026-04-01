@@ -52,6 +52,15 @@
         font-size: 0.85rem;
         margin-top: 8px;
     }
+    .profile-info .position-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.15);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+        margin-left: 8px;
+    }
     .profile-info .member-since {
         font-size: 0.9rem;
         opacity: 0.85;
@@ -350,6 +359,53 @@
         <div class="profile-info">
             <h1>{{ user.get_full_name|default:user.username }}</h1>
             <span class="role-badge">{{ user.get_role_display }}</span>
+            {% if user.position %}
+                {% if user.role == 'REQUESTER' %}
+                    {% if user.position == 'doctorant' %}
+                        <span class="position-badge">{% trans "Doctorant(e) / PhD Student" %}</span>
+                    {% elif user.position == 'etudiant_licence' %}
+                        <span class="position-badge">{% trans "Étudiant(e) en fin de cycle — Licence" %}</span>
+                    {% elif user.position == 'etudiant_master_ingenieur' %}
+                        <span class="position-badge">{% trans "Étudiant(e) en fin de cycle — Master / Ingénieur" %}</span>
+                    {% else %}
+                        <span class="position-badge">{{ user.position }}</span>
+                    {% endif %}
+                {% elif user.role == 'CLIENT' %}
+                    {% if user.position == 'academique' %}
+                        <span class="position-badge">{% trans "Accadémique / Academic" %}</span>
+                    {% elif user.position == 'industriel' %}
+                        <span class="position-badge">{% trans "Industriel / Industrial" %}</span>
+                    {% elif user.position == 'hospitalier' %}
+                        <span class="position-badge">{% trans "Hospitalier / Hospital" %}</span>
+                    {% elif user.position == 'independant' %}
+                        <span class="position-badge">{% trans "Indépendant / Independent" %}</span>
+                    {% elif user.position == 'autre' %}
+                        <span class="position-badge">{% trans "Autre / Other" %}</span>
+                    {% else %}
+                        <span class="position-badge">{{ user.position }}</span>
+                    {% endif %}
+                {% elif user.role == 'MEMBER' %}
+                    {% if user.position == 'chercheur' %}
+                        <span class="position-badge">{% trans "Chercheur" %}</span>
+                    {% elif user.position == 'mca' %}
+                        <span class="position-badge">{% trans "MCA" %}</span>
+                    {% elif user.position == 'mcb' %}
+                        <span class="position-badge">{% trans "MCB" %}</span>
+                    {% elif user.position == 'professeur' %}
+                        <span class="position-badge">{% trans "Professeur" %}</span>
+                    {% elif user.position == 'ingenieur' %}
+                        <span class="position-badge">{% trans "Ingénieur" %}</span>
+                    {% elif user.position == 'technicien' %}
+                        <span class="position-badge">{% trans "Technicien" %}</span>
+                    {% elif user.position == 'doctorant' %}
+                        <span class="position-badge">{% trans "Doctorant(e)" %}</span>
+                    {% else %}
+                        <span class="position-badge">{{ user.position }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="position-badge">{{ user.position }}</span>
+                {% endif %}
+            {% endif %}
             <p class="member-since">{% trans "Membre depuis" %} {{ user.date_joined|date:"d/m/Y" }}</p>
             <div class="profile-stats">
                 {% if activity_summary.total_requests %}
@@ -402,7 +458,7 @@
                     <form method="post" action="{% url 'accounts:profile' %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="profile">
-                        
+
                         <!-- Avatar Upload -->
                         <div class="avatar-upload">
                             <div class="avatar-upload-preview">
@@ -428,36 +484,71 @@
                                 <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
                             </div>
                         </div>
-                        
+
                         <div class="form-group" style="margin-top: 16px;">
                             <label class="form-label">{% trans "Email" %}</label>
                             <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
                         </div>
-                        
+
                         <div class="form-group" style="margin-top: 16px;">
                             <label class="form-label">{% trans "Téléphone" %}</label>
                             <input type="tel" name="phone" class="form-control" value="{{ user.phone|default:'' }}" placeholder="{% trans 'Ex: +213 XX XXX XXXX' %}">
                         </div>
-                        
-                        {% if user.role == 'REQUESTER' or user.role == 'CLIENT' %}
+
+                        {% if user.role == 'REQUESTER' %}
+                        <!-- IBTIKAR-specific fields -->
                         <div class="form-group" style="margin-top: 16px;">
-                            <label class="form-label">{% trans "Organisation / Université" %}</label>
+                            <label class="form-label">{% trans "Université / École" %}</label>
                             <input type="text" name="organization" class="form-control" value="{{ user.organization|default:'' }}">
                         </div>
-                        {% endif %}
-                        
-                        {% if user.role == 'REQUESTER' %}
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-                            <div class="form-group">
-                                <label class="form-label">{% trans "Laboratoire" %}</label>
-                                <input type="text" name="laboratory" class="form-control" value="{{ user.laboratory|default:'' }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">{% trans "Directeur de recherche" %}</label>
-                                <input type="text" name="supervisor" class="form-control" value="{{ user.supervisor|default:'' }}">
-                            </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Laboratoire" %}</label>
+                            <input type="text" name="laboratory" class="form-control" value="{{ user.laboratory|default:'' }}">
                         </div>
-                        {% endif %}
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Position" %}</label>
+                            <select name="position" class="form-control">
+                                <option value="">{% trans "— Sélectionner —" %}</option>
+                                <option value="doctorant" {% if user.position == 'doctorant' %}selected{% endif %}>{% trans "Doctorant(e) / PhD Student" %}</option>
+                                <option value="etudiant_licence" {% if user.position == 'etudiant_licence' %}selected{% endif %}>{% trans "Étudiant(e) en fin de cycle — Licence" %}</option>
+                                <option value="etudiant_master_ingenieur" {% if user.position == 'etudiant_master_ingenieur' %}selected{% endif %}>{% trans "Étudiant(e) en fin de cycle — Master / Ingénieur" %}</option>
+                            </select>
+                        </div>
+                        {% elif user.role == 'CLIENT' %}
+                        <!-- GENOCLAB-specific fields -->
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Organisation / Institution" %}</label>
+                            <input type="text" name="organization" class="form-control" value="{{ user.organization|default:'' }}">
+                        </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Secteur / Position" %}</label>
+                            <select name="position" class="form-control">
+                                <option value="">{% trans "— Sélectionner —" %}</option>
+                                <option value="academique" {% if user.position == 'academique' %}selected{% endif %}>{% trans "Accadémique / Academic" %}</option>
+                                <option value="industriel" {% if user.position == 'industriel' %}selected{% endif %}>{% trans "Industriel / Industrial" %}</option>
+                                <option value="hospitalier" {% if user.position == 'hospitalier' %}selected{% endif %}>{% trans "Hospitalier / Hospital" %}</option>
+                                <option value="independant" {% if user.position == 'independant' %}selected{% endif %}>{% trans "Indépendant / Independent" %}</option>
+                                <option value="autre" {% if user.position == 'autre' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
+                            </select>
+                        </div>
+                        {% elif user.role == 'MEMBER' %}
+                        <!-- MEMBER-specific fields -->
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Position" %}</label>
+                            <select name="position" class="form-control">
+                                <option value="">{% trans "— Sélectionner —" %}</option>
+                                <option value="chercheur" {% if user.position == 'chercheur' %}selected{% endif %}>{% trans "Chercheur" %}</option>
+                                <option value="mca" {% if user.position == 'mca' %}selected{% endif %}>{% trans "MCA" %}</option>
+                                <option value="mcb" {% if user.position == 'mcb' %}selected{% endif %}>{% trans "MCB" %}</option>
+                                <option value="professeur" {% if user.position == 'professeur' %}selected{% endif %}>{% trans "Professeur" %}</option>
+                                <option value="ingenieur" {% if user.position == 'ingenieur' %}selected{% endif %}>{% trans "Ingénieur" %}</option>
+                                <option value="technicien" {% if user.position == 'technicien' %}selected{% endif %}>{% trans "Technicien" %}</option>
+                                <option value="doctorant" {% if user.position == 'doctorant' %}selected{% endif %}>{% trans "Doctorant(e)" %}</option>
+                            </select>
+                        </div>
 
                         {% if techniques %}
                         <div class="form-group" style="margin-top: 16px;">
@@ -472,6 +563,7 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
                         {% endif %}
 
                         <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">
@@ -499,15 +591,15 @@
                     <form method="post" action="{% url 'accounts:profile' %}" id="password-form">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="password">
-                        
+
                         <div class="form-group">
                             <label class="form-label">{% trans "Mot de passe actuel" %}</label>
                             <input type="password" name="old_password" class="form-control" required autocomplete="current-password">
                         </div>
-                        
+
                         <div class="form-group" style="margin-top: 16px;">
                             <label class="form-label">{% trans "Nouveau mot de passe" %}</label>
-                            <input type="password" name="new_password1" class="form-control" required autocomplete="new-password" 
+                            <input type="password" name="new_password1" class="form-control" required autocomplete="new-password"
                                    id="new-password" minlength="8"
                                    oninput="updatePasswordStrength(this.value)">
                             <div class="password-strength">
@@ -515,12 +607,12 @@
                             </div>
                             <small class="text-muted" style="font-size: 0.8rem; color: #64748B;">{% trans "Minimum 8 caractères" %}</small>
                         </div>
-                        
+
                         <div class="form-group" style="margin-top: 16px;">
                             <label class="form-label">{% trans "Confirmer le nouveau mot de passe" %}</label>
                             <input type="password" name="new_password2" class="form-control" required autocomplete="new-password">
                         </div>
-                        
+
                         <button type="submit" class="btn-secondary" style="margin-top: 20px; width: 100%;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -550,7 +642,7 @@
                         <label class="language-option {% if LANGUAGE_CODE == 'fr' %}active{% endif %}">
                             <input type="radio" name="language" value="fr" {% if LANGUAGE_CODE == 'fr' %}checked{% endif %}
                                    onchange="setLanguage('fr')">
-                            <div class="language-flag">🇩🇿</div>
+                            <div class="language-flag">🇫🇷</div>
                             <div class="language-name">{% trans "Français" %}</div>
                         </label>
                         <label class="language-option {% if LANGUAGE_CODE == 'en' %}active{% endif %}">
@@ -589,6 +681,56 @@
                         <span class="info-label">{% trans "Rôle" %}</span>
                         <span class="info-value">{{ user.get_role_display }}</span>
                     </div>
+                    {% if user.position %}
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Position" %}</span>
+                        <span class="info-value">
+                            {% if user.role == 'REQUESTER' %}
+                                {% if user.position == 'doctorant' %}{% trans "Doctorant(e) / PhD Student" %}
+                                {% elif user.position == 'etudiant_licence' %}{% trans "Étudiant(e) en fin de cycle — Licence" %}
+                                {% elif user.position == 'etudiant_master_ingenieur' %}{% trans "Étudiant(e) en fin de cycle — Master / Ingénieur" %}
+                                {% else %}{{ user.position }}
+                                {% endif %}
+                            {% elif user.role == 'CLIENT' %}
+                                {% if user.position == 'academique' %}{% trans "Accadémique / Academic" %}
+                                {% elif user.position == 'industriel' %}{% trans "Industriel / Industrial" %}
+                                {% elif user.position == 'hospitalier' %}{% trans "Hospitalier / Hospital" %}
+                                {% elif user.position == 'independant' %}{% trans "Indépendant / Independent" %}
+                                {% elif user.position == 'autre' %}{% trans "Autre / Other" %}
+                                {% else %}{{ user.position }}
+                                {% endif %}
+                            {% elif user.role == 'MEMBER' %}
+                                {% if user.position == 'chercheur' %}{% trans "Chercheur" %}
+                                {% elif user.position == 'mca' %}{% trans "MCA" %}
+                                {% elif user.position == 'mcb' %}{% trans "MCB" %}
+                                {% elif user.position == 'professeur' %}{% trans "Professeur" %}
+                                {% elif user.position == 'ingenieur' %}{% trans "Ingénieur" %}
+                                {% elif user.position == 'technicien' %}{% trans "Technicien" %}
+                                {% elif user.position == 'doctorant' %}{% trans "Doctorant(e)" %}
+                                {% else %}{{ user.position }}
+                                {% endif %}
+                            {% else %}
+                                {{ user.position }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% if user.organization %}
+                    <div class="info-row">
+                        <span class="info-label">
+                            {% if user.role == 'REQUESTER' %}{% trans "Université / École" %}
+                            {% else %}{% trans "Organisation" %}
+                            {% endif %}
+                        </span>
+                        <span class="info-value">{{ user.organization }}</span>
+                    </div>
+                    {% endif %}
+                    {% if user.laboratory %}
+                    <div class="info-row">
+                        <span class="info-label">{% trans "Laboratoire" %}</span>
+                        <span class="info-value">{{ user.laboratory }}</span>
+                    </div>
+                    {% endif %}
                     <div class="info-row">
                         <span class="info-label">{% trans "Date d'inscription" %}</span>
                         <span class="info-value">{{ user.date_joined|date:"d/m/Y" }}</span>
@@ -655,12 +797,12 @@
 function updatePasswordStrength(password) {
     const bar = document.getElementById('strength-bar');
     let strength = 0;
-    
+
     if (password.length >= 8) strength++;
     if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
     if (password.match(/[0-9]/)) strength++;
     if (password.match(/[^a-zA-Z0-9]/)) strength++;
-    
+
     bar.className = 'password-strength-bar';
     if (strength === 1) bar.classList.add('strength-weak');
     else if (strength === 2 || strength === 3) bar.classList.add('strength-medium');
@@ -673,7 +815,7 @@ function setLanguage(lang) {
         opt.classList.remove('active');
     });
     event.target.closest('.language-option').classList.add('active');
-    
+
     // Set language via AJAX
     fetch('/i18n/setlang/', {
         method: 'POST',

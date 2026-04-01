@@ -21,7 +21,10 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
     "PLATFORM_NOTE_GENERATED":  {"IBTIKAR_SUBMISSION_PENDING"},
     "IBTIKAR_SUBMISSION_PENDING": {"IBTIKAR_CODE_SUBMITTED"},
     "IBTIKAR_CODE_SUBMITTED":   {"ASSIGNED"},
-    "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},
+    "ASSIGNED":                 {"PENDING_ACCEPTANCE"},
+    "PENDING_ACCEPTANCE":       {"ACCEPTED", "DECLINED"},
+    "ACCEPTED":                 {"APPOINTMENT_PROPOSED"},
+    "DECLINED":                 {"IBTIKAR_CODE_SUBMITTED"},  # Returns for reassignment
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
@@ -53,7 +56,10 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
     "ORDER_UPLOADED":           {"ASSIGNED"},  # Admin assigns after order verified
     "QUOTE_REJECTED_BY_CLIENT": set(),     # terminal
-    "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},
+    "ASSIGNED":                 {"PENDING_ACCEPTANCE"},
+    "PENDING_ACCEPTANCE":       {"ACCEPTED", "DECLINED"},
+    "ACCEPTED":                 {"APPOINTMENT_PROPOSED"},
+    "DECLINED":                 {"ORDER_UPLOADED"},  # Returns for reassignment
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
@@ -110,3 +116,27 @@ def is_terminal(channel: str, state: str) -> bool:
 def get_all_states(channel: str) -> list[str]:
     graph = get_graph(channel)
     return list(graph.keys())
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Acceptance Workflow Helpers
+# ═══════════════════════════════════════════════════════════════════════════
+
+ACCEPTANCE_STATES: set[str] = {"PENDING_ACCEPTANCE"}
+
+
+def is_acceptance_state(state: str) -> bool:
+    """Check if the state requires member acceptance."""
+    return state in ACCEPTANCE_STATES
+
+
+def get_decline_return_state(channel: str) -> str:
+    """
+    Returns the state to transition back to after a decline.
+    This allows admin to reassign to another member.
+    """
+    if channel == "IBTIKAR":
+        return "IBTIKAR_CODE_SUBMITTED"
+    elif channel == "GENOCLAB":
+        return "ORDER_UPLOADED"
+    raise InvalidTransitionError(f"Canal inconnu: {channel}")

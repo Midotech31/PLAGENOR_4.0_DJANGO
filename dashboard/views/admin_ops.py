@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -7,9 +8,13 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import gettext_lazy as _, gettext
+from django.conf import settings
+from dashboard.decorators import admin_required
+
+logger = logging.getLogger('plagenor')
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
-from core.models import Request, RequestHistory, RequestComment, Invoice
+from core.models import Request, RequestHistory, RequestComment, Invoice, PaymentSettings
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
 from core.registry import get_service_def
@@ -22,16 +27,6 @@ from dashboard.utils import redirect_back, paginate_queryset
 from datetime import timedelta
 import csv
 import io
-
-
-def admin_required(view_func):
-    """Decorator requiring PLATFORM_ADMIN or SUPER_ADMIN role."""
-    def wrapper(request, *args, **kwargs):
-        if request.user.role not in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
 
 
 # =============================================================================
@@ -716,7 +711,7 @@ def assign_request(request, pk):
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
     try:
-        transition(req, 'ASSIGNED', request.user, notes=gettext("Assigned to %(member)s") % {'member': member.user.get_full_name()})
+        transition(req, 'PENDING_ACCEPTANCE', request.user, notes=gettext("Assigned to %(member)s") % {'member': member.user.get_full_name()})
         
         # Log to audit
         log_action(
@@ -1216,3 +1211,194 @@ def confirm_payment(request, pk):
         messages.error(request, gettext("Please upload a payment receipt."))
 
     return redirect_back(request, 'dashboard:admin_ops')
+
+
+# =============================================================================
+# GENOCLAB INVOICE WORKFLOW
+# =============================================================================
+
+@admin_required
+def generate_genoclab_invoice(request, pk):
+    """
+    Generate an Excel invoice for a GENOCLAB request.
+    The invoice is auto-generated with client info, service details, and payment info.
+    Only Admin Ops can access this view.
+    """
+    from documents.generators import generate_invoice_excel
+    from django.core.files.base import ContentFile
+    
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Only for GENOCLAB channel
+    if req.channel != 'GENOCLAB':
+        messages.error(request, gettext("Invoice generation is only available for GENOCLAB requests."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Only allow after analysis is finished
+    finished_statuses = ['ANALYSIS_FINISHED', 'REPORT_UPLOADED', 'REPORT_VALIDATED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED']
+    if req.status not in finished_statuses:
+        messages.error(
+            request,
+            gettext("Invoice can only be generated after analysis is finished (status: %(status)s).") % {
+                'status': req.get_status_display()
+            }
+        )
+        return redirect_back(request, 'dashboard:admin_request_detail', pk=pk)
+    
+    try:
+        # Generate Excel invoice
+        excel_data = generate_invoice_excel(req)
+        
+        # Save to Request model
+        invoice_filename = f"invoice-{req.display_id}-{timezone.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+        req.generated_invoice.save(invoice_filename, ContentFile(excel_data))
+        req.save(update_fields=['generated_invoice'])
+        
+        messages.success(
+            request,
+            gettext("Invoice generated successfully for %(display_id)s. Please download, sign, and upload the signed version.") % {
+                'display_id': req.display_id
+            }
+        )
+        
+        return redirect('dashboard:admin_request_detail', pk=pk)
+        
+    except Exception as e:
+        messages.error(request, gettext("Error generating invoice: %(error)s") % {'error': str(e)})
+        return redirect('dashboard:admin_request_detail', pk=pk)
+
+
+@admin_required
+def upload_signed_invoice(request, pk):
+    """
+    Upload a signed invoice for a GENOCLAB request.
+    Admin Ops downloads the generated invoice, signs it, and uploads it back.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Only for GENOCLAB channel
+    if req.channel != 'GENOCLAB':
+        messages.error(request, gettext("Signed invoice upload is only available for GENOCLAB requests."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    if request.method != 'POST':
+        messages.error(request, gettext("Please use the form to upload the signed invoice."))
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    signed_file = request.FILES.get('signed_invoice')
+    if not signed_file:
+        messages.error(request, gettext("Please select a file to upload."))
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    # Validate file type
+    allowed_extensions = ['.pdf', '.xlsx', '.docx']
+    file_ext = signed_file.name.lower().split('.')[-1]
+    if f'.{file_ext}' not in allowed_extensions:
+        messages.error(
+            request,
+            gettext("Invalid file type. Allowed types: PDF, XLSX, DOCX")
+        )
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    try:
+        # Save signed invoice
+        req.signed_invoice = signed_file
+        req.save(update_fields=['signed_invoice'])
+        
+        messages.success(
+            request,
+            gettext("Signed invoice uploaded successfully for %(display_id)s. You can now send it to the client.") % {
+                'display_id': req.display_id
+            }
+        )
+        
+        return redirect('dashboard:admin_request_detail', pk=pk)
+        
+    except Exception as e:
+        messages.error(request, gettext("Error uploading signed invoice: %(error)s") % {'error': str(e)})
+        return redirect('dashboard:admin_request_detail', pk=pk)
+
+
+@admin_required
+def send_invoice_to_client(request, pk):
+    """
+    Send the signed invoice to the client via email and in-app notification.
+    Only available after a signed invoice has been uploaded.
+    """
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
+    from accounts.models import User
+    
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Only for GENOCLAB channel
+    if req.channel != 'GENOCLAB':
+        messages.error(request, gettext("Invoice sending is only available for GENOCLAB requests."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Check if signed invoice exists
+    if not req.signed_invoice:
+        messages.error(
+            request,
+            gettext("Please upload a signed invoice before sending to the client.")
+        )
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    # Get client
+    client = req.requester
+    if not client:
+        messages.error(request, gettext("No client associated with this request."))
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    try:
+        # Update request with invoice sent timestamp
+        req.invoice_sent_at = timezone.now()
+        req.save(update_fields=['invoice_sent_at'])
+        
+        # Create in-app notification for client
+        Notification.objects.create(
+            user=client,
+            message=gettext("Your invoice for request %(display_id)s is ready for download. Please proceed with payment.") % {
+                'display_id': req.display_id
+            },
+            request=req,
+            notification_type='INVOICE_READY'
+        )
+        
+        # Send email notification
+        payment_settings = PaymentSettings.get_settings()
+        try:
+            email_context = {
+                'user': client,
+                'request': req,
+                'payment_settings': payment_settings,
+                'platform_name': 'PLAGENOR 4.0',
+                'invoice_url': request.build_absolute_uri(
+                    f"/dashboard/client/invoice/{req.pk}/download/"
+                ),
+            }
+            html_body = render_to_string('dashboard/emails/invoice_notification.html', email_context, request=request)
+            
+            send_mail(
+                subject=gettext("Invoice Ready for %(display_id)s — PLAGENOR") % {'display_id': req.display_id},
+                message='',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[client.email],
+                html_message=html_body,
+                fail_silently=True,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send invoice email to {client.email}: {e}")
+        
+        messages.success(
+            request,
+            gettext("Invoice sent to client %(client_name)s successfully!") % {
+                'client_name': client.get_full_name()
+            }
+        )
+        
+        return redirect('dashboard:admin_request_detail', pk=pk)
+        
+    except Exception as e:
+        messages.error(request, gettext("Error sending invoice: %(error)s") % {'error': str(e)})
+        return redirect('dashboard:admin_request_detail', pk=pk)

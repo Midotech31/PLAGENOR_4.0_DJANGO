@@ -26,40 +26,28 @@
             </div>
             {% endif %}
 
-            <!-- Role Selection -->
-            <div class="role-selector">
-                <label class="role-option {% if form.role.value == 'REQUESTER' or not form.role.value %}selected{% endif %}">
-                    <input type="radio" name="role" value="REQUESTER" {% if form.role.value == 'REQUESTER' or not form.role.value %}checked{% endif %}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
-                    <div class="role-name">IBTIKAR</div>
-                    <div class="role-desc">{% trans "Étudiant / Chercheur" %}</div>
-                </label>
-                <label class="role-option {% if form.role.value == 'CLIENT' %}selected{% endif %}">
-                    <input type="radio" name="role" value="CLIENT" {% if form.role.value == 'CLIENT' %}checked{% endif %}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    <div class="role-name">GENOCLAB</div>
-                    <div class="role-desc">{% trans "Client externe" %}</div>
-                </label>
+            <!-- Channel Selection -->
+            <div class="channel-selector" style="display: flex; gap: 16px; margin-bottom: 24px;">
+                <button type="button" id="btn-ibtikar" class="channel-btn {% if channel == 'IBTIKAR' or not channel %}active{% endif %}" style="flex: 1; padding: 20px; border: 2px solid #E2E8F0; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 32px; height: 32px; margin-bottom: 8px; color: #4F46E5;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+                    <div style="font-weight: 600; font-size: 1.1rem; color: #1E293B;">IBTIKAR</div>
+                    <div style="font-size: 0.85rem; color: #64748B; margin-top: 4px;">{% trans "Étudiant / Chercheur" %}</div>
+                </button>
+                <button type="button" id="btn-genoclab" class="channel-btn {% if channel == 'GENOCLAB' %}active{% endif %}" style="flex: 1; padding: 20px; border: 2px solid #E2E8F0; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 32px; height: 32px; margin-bottom: 8px; color: #059669;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    <div style="font-weight: 600; font-size: 1.1rem; color: #1E293B;">GENOCLAB</div>
+                    <div style="font-size: 0.85rem; color: #64748B; margin-top: 4px;">{% trans "Client externe" %}</div>
+                </button>
             </div>
 
-            <!-- Form fields -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_first_name">{% trans "Prénom" %}</label>
-                    <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
-                    {% if form.first_name.errors %}<div class="form-error">{{ form.first_name.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label for="id_last_name">{% trans "Nom" %}</label>
-                    <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
-                    {% if form.last_name.errors %}<div class="form-error">{{ form.last_name.errors.0 }}</div>{% endif %}
-                </div>
-            </div>
+            <input type="hidden" name="channel" id="id_channel" value="{{ channel|default:'IBTIKAR' }}">
+            <input type="hidden" name="role" id="id_role" value="{% if channel == 'GENOCLAB' %}CLIENT{% else %}REQUESTER{% endif %}">
 
+            <!-- Common Fields -->
             <div class="form-group">
-                <label for="id_username">{% trans "Identifiant souhaité" %} *</label>
-                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
-                {% if form.username.errors %}<div class="form-error">{{ form.username.errors.0 }}</div>{% endif %}
+                <label for="id_full_name">{% trans "Nom complet" %} *</label>
+                <input type="text" name="full_name" id="id_full_name" class="form-control" value="{{ form.full_name.value|default:'' }}" placeholder="{% trans 'Prénom et nom de famille' %}" required>
+                {% if form.full_name.errors %}<div class="form-error">{{ form.full_name.errors.0 }}</div>{% endif %}
             </div>
 
             <div class="form-group">
@@ -69,32 +57,17 @@
             </div>
 
             <div class="form-group">
-                <label for="id_organization">{% trans "Université / Organisation" %}</label>
-                <input type="text" name="organization" id="id_organization" class="form-control" value="{{ form.organization.value|default:'' }}" required>
-                {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
+                <label for="id_phone">{% trans "Téléphone" %} *</label>
+                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}" placeholder="{% trans 'Ex: +213 XX XXX XXXX' %}" required>
+                {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
             </div>
 
-            <div id="academic-fields" style="display:none;">
+            <!-- IBTIKAR-specific Fields -->
+            <div id="ibtikar-fields" style="display: {% if channel == 'IBTIKAR' or not channel %}block{% else %}none{% endif %};">
                 <div class="form-group">
-                    <label for="id_student_level">{% trans "Niveau" %}</label>
-                    <select name="student_level" id="id_student_level" class="form-control">
-                        <option value="">— {% trans "Sélectionner" %} —</option>
-                        <option value="phd_student" {% if form.student_level.value == 'phd_student' %}selected{% endif %}>{% trans "PhD Student / Doctorant" %}</option>
-                        <option value="phd_intern" {% if form.student_level.value == 'phd_intern' %}selected{% endif %}>{% trans "PhD Intern / Stagiaire Doctorant" %}</option>
-                        <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master's Student / Étudiant en Master" %}</option>
-                        <option value="analyst" {% if form.student_level.value == 'analyst' %}selected{% endif %}>{% trans "Analyst / Analyste" %}</option>
-                        <option value="intern" {% if form.student_level.value == 'intern' %}selected{% endif %}>{% trans "Intern / Stagiaire" %}</option>
-                        <option value="lecturer" {% if form.student_level.value == 'lecturer' %}selected{% endif %}>{% trans "Lecturer / Enseignant-Chercheur" %}</option>
-                        <option value="other" {% if form.student_level.value == 'other' %}selected{% endif %}>{% trans "Other / Autre" %}</option>
-                    </select>
-                    <small class="text-muted">{% trans "Toutes universités algériennes" %}</small>
-                    {% if form.student_level.errors %}<div class="form-error">{{ form.student_level.errors.0 }}</div>{% endif %}
-                </div>
-                
-                <div class="form-group" id="student_level_other_group" style="display:none;">
-                    <label for="id_student_level_other">{% trans "Autre niveau (à préciser)" %}</label>
-                    <input type="text" name="student_level_other" id="id_student_level_other" class="form-control" value="{{ form.student_level_other.value|default:'' }}" placeholder="{% trans 'Préciser...' %}">
-                    {% if form.student_level_other.errors %}<div class="form-error">{{ form.student_level_other.errors.0 }}</div>{% endif %}
+                    <label for="id_institution">{% trans "Université / École" %} *</label>
+                    <input type="text" name="institution" id="id_institution" class="form-control" value="{{ form.institution.value|default:'' }}" required>
+                    {% if form.institution.errors %}<div class="form-error">{{ form.institution.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div class="form-group">
@@ -104,35 +77,62 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="id_supervisor">{% trans "Directeur de recherche" %}</label>
-                    <input type="text" name="supervisor" id="id_supervisor" class="form-control" value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
-                    {% if form.supervisor.errors %}<div class="form-error">{{ form.supervisor.errors.0 }}</div>{% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %}</label>
-                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
-                    <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
-                    {% if form.ibtikar_id.errors %}<div class="form-error">{{ form.ibtikar_id.errors.0 }}</div>{% endif %}
+                    <label for="id_position_ibtikar">{% trans "Position" %} *</label>
+                    <select name="position" id="id_position_ibtikar" class="form-control" required>
+                        <option value="">{% trans "— Sélectionner —" %}</option>
+                        <option value="doctorant" {% if form.position.value == 'doctorant' %}selected{% endif %}>{% trans "Doctorant(e) / PhD Student" %}</option>
+                        <option value="etudiant_licence" {% if form.position.value == 'etudiant_licence' %}selected{% endif %}>{% trans "Étudiant(e) en fin de cycle — Licence" %}</option>
+                        <option value="etudiant_master_ingenieur" {% if form.position.value == 'etudiant_master_ingenieur' %}selected{% endif %}>{% trans "Étudiant(e) en fin de cycle — Master / Ingénieur" %}</option>
+                    </select>
+                    {% if form.position.errors %}<div class="form-error">{{ form.position.errors.0 }}</div>{% endif %}
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="id_phone">{% trans "Téléphone" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
-                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
-                {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
+            <!-- GENOCLAB-specific Fields -->
+            <div id="genoclab-fields" style="display: {% if channel == 'GENOCLAB' %}block{% else %}none{% endif %};">
+                <div class="form-group">
+                    <label for="id_organization">{% trans "Organisation / Institution" %} *</label>
+                    <input type="text" name="organization" id="id_organization" class="form-control" value="{{ form.organization.value|default:'' }}" required>
+                    {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_sector">{% trans "Secteur / Position" %} *</label>
+                    <select name="sector" id="id_sector" class="form-control" required>
+                        <option value="">{% trans "— Sélectionner —" %}</option>
+                        <option value="academique" {% if form.sector.value == 'academique' %}selected{% endif %}>{% trans "Accadémique / Academic" %}</option>
+                        <option value="industriel" {% if form.sector.value == 'industriel' %}selected{% endif %}>{% trans "Industriel / Industrial" %}</option>
+                        <option value="hospitalier" {% if form.sector.value == 'hospitalier' %}selected{% endif %}>{% trans "Hospitalier / Hospital" %}</option>
+                        <option value="independant" {% if form.sector.value == 'independant' %}selected{% endif %}>{% trans "Indépendant / Independent" %}</option>
+                        <option value="autre" {% if form.sector.value == 'autre' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
+                    </select>
+                    {% if form.sector.errors %}<div class="form-error">{{ form.sector.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_address">{% trans "Adresse" %} *</label>
+                    <input type="text" name="address" id="id_address" class="form-control" value="{{ form.address.value|default:'' }}" required>
+                    {% if form.address.errors %}<div class="form-error">{{ form.address.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_country">{% trans "Pays" %} *</label>
+                    <input type="text" name="country" id="id_country" class="form-control" value="{{ form.country.value|default:'' }}" required>
+                    {% if form.country.errors %}<div class="form-error">{{ form.country.errors.0 }}</div>{% endif %}
+                </div>
             </div>
 
-            <div class="form-row">
+            <!-- Password Fields -->
+            <div class="form-row" style="margin-top: 16px;">
                 <div class="form-group">
-                    <label for="id_password1">{% trans "Mot de passe" %}</label>
-                    <input type="password" name="password1" id="id_password1" class="form-control" required>
-                    {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors.0 }}</div>{% endif %}
+                    <label for="id_password">{% trans "Mot de passe" %} *</label>
+                    <input type="password" name="password" id="id_password" class="form-control" required>
+                    {% if form.password.errors %}<div class="form-error">{{ form.password.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_password2">{% trans "Confirmer le mot de passe" %}</label>
-                    <input type="password" name="password2" id="id_password2" class="form-control" required>
-                    {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors.0 }}</div>{% endif %}
+                    <label for="id_password_confirm">{% trans "Confirmer le mot de passe" %} *</label>
+                    <input type="password" name="password_confirm" id="id_password_confirm" class="form-control" required>
+                    {% if form.password_confirm.errors %}<div class="form-error">{{ form.password_confirm.errors.0 }}</div>{% endif %}
                 </div>
             </div>
 
@@ -145,58 +145,62 @@
     </div>
 </div>
 
+<style>
+.channel-btn.active {
+    border-color: #4F46E5 !important;
+    background: #EEF2FF !important;
+}
+.channel-btn:hover {
+    border-color: #C7D2FE !important;
+}
+</style>
+
 <script>
 (function() {
-    var roleInputs = document.querySelectorAll('input[name="role"]');
-    var academicFields = document.getElementById('academic-fields');
-    var studentLevel = document.getElementById('id_student_level');
-    var studentLevelOtherGroup = document.getElementById('student_level_other_group');
-    var supervisor = document.getElementById('id_supervisor');
+    var btnIbtikar = document.getElementById('btn-ibtikar');
+    var btnGenoclab = document.getElementById('btn-genoclab');
+    var channelInput = document.getElementById('id_channel');
+    var roleInput = document.getElementById('id_role');
+    var ibtikarFields = document.getElementById('ibtikar-fields');
+    var genoclabFields = document.getElementById('genoclab-fields');
 
-    function toggleAcademic() {
-        var selected = document.querySelector('input[name="role"]:checked');
-        if (selected && selected.value === 'REQUESTER') {
-            academicFields.style.display = '';
-            studentLevel.required = true;
-            supervisor.required = true;
+    function selectChannel(channel) {
+        channelInput.value = channel;
+        if (channel === 'IBTIKAR') {
+            roleInput.value = 'REQUESTER';
+            btnIbtikar.classList.add('active');
+            btnGenoclab.classList.remove('active');
+            ibtikarFields.style.display = 'block';
+            genoclabFields.style.display = 'none';
+            // Update required attributes
+            document.getElementById('id_institution').required = true;
+            document.getElementById('id_position_ibtikar').required = true;
+            document.getElementById('id_organization').required = false;
+            document.getElementById('id_sector').required = false;
+            document.getElementById('id_address').required = false;
+            document.getElementById('id_country').required = false;
         } else {
-            academicFields.style.display = 'none';
-            studentLevel.required = false;
-            supervisor.required = false;
+            roleInput.value = 'CLIENT';
+            btnGenoclab.classList.add('active');
+            btnIbtikar.classList.remove('active');
+            ibtikarFields.style.display = 'none';
+            genoclabFields.style.display = 'block';
+            // Update required attributes
+            document.getElementById('id_institution').required = false;
+            document.getElementById('id_position_ibtikar').required = false;
+            document.getElementById('id_organization').required = true;
+            document.getElementById('id_sector').required = true;
+            document.getElementById('id_address').required = true;
+            document.getElementById('id_country').required = true;
         }
     }
-    
-    function toggleStudentLevelOther() {
-        if (studentLevel.value === 'other') {
-            studentLevelOtherGroup.style.display = '';
-        } else {
-            studentLevelOtherGroup.style.display = 'none';
-        }
-    }
 
-    roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
-    studentLevel.addEventListener('change', toggleStudentLevelOther);
-    toggleAcademic();
-    toggleStudentLevelOther();
+    btnIbtikar.addEventListener('click', function() { selectChannel('IBTIKAR'); });
+    btnGenoclab.addEventListener('click', function() { selectChannel('GENOCLAB'); });
 
-    // Validate ibtikar_id on form submit
-    document.querySelector('form').addEventListener('submit', function(e) {
-        var selected = document.querySelector('input[name="role"]:checked');
-        if (selected && selected.value === 'REQUESTER') {
-            var ibtId = document.getElementById('id_ibtikar_id').value.trim();
-            if (ibtId && !/^IDGRSTD\d{5}$/.test(ibtId)) {
-                e.preventDefault();
-                var field = document.getElementById('id_ibtikar_id');
-                var err = field.parentElement.querySelector('.form-error');
-                if (!err) {
-                    err = document.createElement('div');
-                    err.className = 'form-error';
-                    field.parentElement.appendChild(err);
-                }
-                err.textContent = 'L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)';
-            }
-        }
-    });
+    // Initialize based on current selection
+    var currentChannel = channelInput.value || 'IBTIKAR';
+    selectChannel(currentChannel);
 })();
 </script>
 {% endblock %}

@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from .choices import ALL_POSITION_CHOICES
 
 
 class UserManager(BaseUserManager):
@@ -42,6 +45,17 @@ class User(AbstractUser):
         ('lecturer', 'Lecturer / Enseignant-Chercheur'),
         ('other', 'Other / Autre'),
     ]
+    
+    POSITION_CHOICES = [
+        ('etudiant_doctorant', 'Étudiant/Doctorant'),
+        ('chercheur', 'Chercheur'),
+        ('mca', 'MCA'),
+        ('mcb', 'MCB'),
+        ('professeur', 'Professeur'),
+        ('ingenieur', 'Ingénieur'),
+        ('technicien', 'Technicien'),
+        ('autre', 'Autre'),
+    ]
 
     objects = UserManager()
 
@@ -51,7 +65,20 @@ class User(AbstractUser):
     student_level = models.CharField(max_length=50, default='', blank=True, choices=STUDENT_LEVEL_CHOICES)
     student_level_other = models.CharField(max_length=200, default='', blank=True, verbose_name='Autre niveau (à préciser)')
     supervisor = models.CharField(max_length=200, default='', blank=True)
-    laboratory = models.CharField(max_length=200, default='', blank=True)
+    laboratory = models.CharField(max_length=200, default='', blank=True, verbose_name=_('Laboratory'))
+    position = models.CharField(
+        max_length=50,
+        choices=ALL_POSITION_CHOICES,
+        default='',
+        blank=True,
+        verbose_name=_('Position / Fonction')
+    )
+    department = models.CharField(
+        max_length=200, 
+        default='', 
+        blank=True,
+        verbose_name=_('Department')
+    )
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
 
     # Login security
