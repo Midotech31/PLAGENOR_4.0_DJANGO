@@ -9,23 +9,15 @@ from django.db.models import Count, Q, Avg
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.conf import settings
+from dashboard.decorators import superadmin_required
 
 logger = logging.getLogger('plagenor')
 
 from accounts.models import User, MemberProfile, Technique
-from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField
+from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField, PaymentSettings
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
 from core.registry import get_service_def
-
-
-def superadmin_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role != 'SUPER_ADMIN':
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
 
 
 @superadmin_required
@@ -410,7 +402,7 @@ def service_edit(request, pk):
     """Edit a service and its custom form fields."""
     from core.models import ServiceFormField
     service = get_object_or_404(Service, pk=pk)
-    custom_fields = service.custom_fields.all()
+    form_fields = service.form_fields.all()
 
     if request.method == 'POST':
         service.name = request.POST.get('name', service.name)
@@ -443,8 +435,8 @@ def service_edit(request, pk):
             service.image = request.FILES['image']
         service.save()
 
-        # Handle custom fields: delete existing and recreate from POST
-        service.custom_fields.all().delete()
+        # Handle form fields: delete existing and recreate from POST
+        service.form_fields.all().delete()
         field_names = request.POST.getlist('field_name')
         field_labels = request.POST.getlist('field_label')
         field_types = request.POST.getlist('field_type')
@@ -475,7 +467,7 @@ def service_edit(request, pk):
 
     return render(request, 'dashboard/superadmin/service_edit.html', {
         'service': service,
-        'custom_fields': custom_fields,
+        'form_fields': form_fields,
     })
 
 
@@ -558,6 +550,7 @@ def user_edit(request, pk):
                 return render(request, 'dashboard/superadmin/user_edit.html', {
                     'user_obj': user_obj,
                     'role_choices': User.ROLE_CHOICES,
+                    'student_level_choices': User.STUDENT_LEVEL_CHOICES,
                 })
             user_obj.username = new_username
         user_obj.first_name = request.POST.get('first_name', user_obj.first_name)
@@ -570,9 +563,12 @@ def user_edit(request, pk):
         user_obj.laboratory = request.POST.get('laboratory', user_obj.laboratory or '')
         user_obj.supervisor = request.POST.get('supervisor', user_obj.supervisor or '')
         user_obj.student_level = request.POST.get('student_level', user_obj.student_level or '')
+        user_obj.student_level_other = request.POST.get('student_level_other', user_obj.student_level_other or '')
         new_pass = request.POST.get('new_password', '').strip()
         if new_pass:
             user_obj.set_password(new_pass)
+            # Clear the must_change_password flag when admin sets a new password
+            user_obj.must_change_password = False
         user_obj.save()
         if user_obj.role == 'MEMBER' and old_role != 'MEMBER':
             MemberProfile.objects.get_or_create(user=user_obj)
@@ -581,6 +577,7 @@ def user_edit(request, pk):
     return render(request, 'dashboard/superadmin/user_edit.html', {
         'user_obj': user_obj,
         'role_choices': User.ROLE_CHOICES,
+        'student_level_choices': User.STUDENT_LEVEL_CHOICES,
     })
 
 
@@ -833,6 +830,7 @@ def request_detail(request, pk):
     """Full request detail view for SUPER_ADMIN with all information."""
     from core.models import Message
     from accounts.models import MemberProfile
+    from documents.pdf_generators import check_template_status
 
     req = get_object_or_404(Request, pk=pk)
     history = req.history.select_related('actor').order_by('created_at')
@@ -847,6 +845,9 @@ def request_detail(request, pk):
     # Available members for assignment
     available_members = MemberProfile.objects.filter(available=True).select_related('user').order_by('user__first_name', 'user__last_name')
 
+    # Check IBTIKAR form status
+    ibtikar_form_status = check_template_status(req) if req.channel == 'IBTIKAR' else None
+
     context = {
         'req': req,
         'history': history,
@@ -856,6 +857,7 @@ def request_detail(request, pk):
         'available_members': available_members,
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
+        'ibtikar_form_status': ibtikar_form_status,
     }
     return render(request, 'dashboard/superadmin/request_detail.html', context)
 
@@ -910,3 +912,37 @@ def assign_request_direct(request, pk):
         }
     )
     return redirect('dashboard:superadmin_request_detail', pk=pk)
+
+
+# =============================================================================
+# PAYMENT SETTINGS (Finance/Invoice Configuration)
+# =============================================================================
+
+@superadmin_required
+def payment_settings(request):
+    """
+    Configure payment settings for GENOCLAB invoices.
+    These settings are used to auto-fill invoices and payment instructions.
+    """
+    settings_obj = PaymentSettings.get_settings()
+    
+    if request.method == 'POST':
+        bank_account = request.POST.get('bank_account', '').strip()
+        beneficiary_name = request.POST.get('beneficiary_name', '').strip()
+        bank_name = request.POST.get('bank_name', '').strip()
+        payment_instructions = request.POST.get('payment_instructions', '').strip()
+        
+        settings_obj.bank_account = bank_account
+        settings_obj.beneficiary_name = beneficiary_name
+        settings_obj.bank_name = bank_name
+        settings_obj.payment_instructions = payment_instructions
+        settings_obj.updated_by = request.user
+        settings_obj.save()
+        
+        messages.success(request, _("Paramètres de paiement mis à jour avec succès."))
+        return redirect('dashboard:superadmin')
+    
+    context = {
+        'settings': settings_obj,
+    }
+    return render(request, 'dashboard/superadmin/payment_settings.html', context)

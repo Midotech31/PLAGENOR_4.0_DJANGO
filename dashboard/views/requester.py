@@ -102,7 +102,7 @@ def index(request):
 
 @requester_required
 def request_detail(request, pk):
-    from documents.ibtikar_form_generator import check_template_status
+    from documents.pdf_generators import check_template_status
     
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     from core.registry import get_service_def
