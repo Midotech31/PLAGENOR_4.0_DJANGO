@@ -46,6 +46,10 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         pricing=data.get('pricing', {}),
         sample_table=data.get('sample_table', []),
         requester_data=data.get('requester_data', {}),
+        analysis_framework=data.get('analysis_framework', ''),
+        pi_name=data.get('pi_name', ''),
+        pi_email=data.get('pi_email', ''),
+        pi_phone=data.get('pi_phone', ''),
     )
 
     RequestHistory.objects.create(

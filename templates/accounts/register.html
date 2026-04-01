@@ -88,8 +88,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %}</label>
-                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345">
+                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %} <span style="color:red;">*</span></label>
+                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD00001" required pattern="IDGRSTD[0-9]{5}">
+                    <small class="form-text text-muted">{% trans "Format: IDGRSTD[XXXXX] ex: IDGRSTD00001" %}</small>
                     {% if form.ibtikar_id.errors %}<div class="form-error">{{ form.ibtikar_id.errors.0 }}</div>{% endif %}
                 </div>
             </div>
@@ -181,6 +182,7 @@
             // Update required attributes
             document.getElementById('id_institution').required = true;
             document.getElementById('id_position_ibtikar').required = true;
+            document.getElementById('id_ibtikar_id').required = true;
             document.getElementById('id_organization').required = false;
             document.getElementById('id_sector').required = false;
             document.getElementById('id_address').required = false;
@@ -194,6 +196,7 @@
             // Update required attributes
             document.getElementById('id_institution').required = false;
             document.getElementById('id_position_ibtikar').required = false;
+            document.getElementById('id_ibtikar_id').required = false;
             document.getElementById('id_organization').required = true;
             document.getElementById('id_sector').required = true;
             document.getElementById('id_address').required = true;

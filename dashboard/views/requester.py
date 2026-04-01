@@ -211,6 +211,10 @@ def create_request(request):
             'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
             'service_params': service_params,
             'sample_table': sample_table_data,
+            'analysis_framework': request.POST.get('analysis_framework', ''),
+            'pi_name': request.POST.get('pi_name', ''),
+            'pi_email': request.POST.get('pi_email', ''),
+            'pi_phone': request.POST.get('pi_phone', ''),
         },
         user=request.user,
     )

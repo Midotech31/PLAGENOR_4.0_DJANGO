@@ -480,6 +480,11 @@ def build_analysis_section(request_obj, labels, page_width, styles):
     else:
         framework_display = ''
     
+    # Get PI name - check model field first, then fall back to service_params
+    pi_name = getattr(request_obj, 'pi_name', '') or ''
+    if not pi_name:
+        pi_name = request_obj.service_params.get('supervisor', '')
+    
     # Build table
     data = [
         [Paragraph(labels['analysis_framework'], styles['Label']), 
@@ -487,7 +492,7 @@ def build_analysis_section(request_obj, labels, page_width, styles):
         [Paragraph(labels['project_title'], styles['Label']), 
          Paragraph(str(request_obj.title or ''), styles['Value'])],
         [Paragraph(labels['pi_name'], styles['Label']), 
-         Paragraph(str(getattr(request_obj, 'pi_name', '') or ''), styles['Value'])],
+         Paragraph(str(pi_name), styles['Value'])],
     ]
     
     table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])

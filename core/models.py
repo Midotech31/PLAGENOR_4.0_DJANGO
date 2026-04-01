@@ -12,7 +12,7 @@ class Service(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=50, unique=True, help_text='Short code (e.g., EGTP-Seq02)')
     name = models.CharField(max_length=200)
     description = models.TextField(default='', blank=True)
     channel_availability = models.CharField(max_length=10, choices=CHANNEL_CHOICES, default='BOTH')
@@ -24,32 +24,138 @@ class Service(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # New IBTIKAR-specific fields
+    service_code = models.CharField(
+        max_length=50, 
+        unique=True, 
+        null=True, 
+        blank=True,
+        help_text='Official service code (e.g., EGTP-Seq02) — mirrors code field for IBTIKAR forms'
+    )
+    form_version = models.CharField(
+        max_length=20, 
+        default='V 01',
+        help_text='Form version number (e.g., V 01)'
+    )
+    ibtikar_instructions = models.TextField(
+        blank=True,
+        help_text="'Tres important' warning block text in French"
+    )
+    ibtikar_instructions_en = models.TextField(
+        blank=True,
+        help_text="'Very important' warning block text in English"
+    )
+    checklist_items = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text='PLAGENOR validation checklist items as JSON list of strings'
+    )
+    deliverables = models.TextField(
+        blank=True,
+        help_text='Expected deliverables description'
+    )
+    processing_steps = models.TextField(
+        blank=True,
+        help_text='Processing/analysis workflow steps'
+    )
+    analysis_workflow = models.TextField(
+        blank=True,
+        help_text='Analysis workflow description'
+    )
 
     class Meta:
         db_table = 'services'
         ordering = ['code']
+        verbose_name = 'Service'
+        verbose_name_plural = 'Services'
 
     def __str__(self):
         return f"{self.code} — {self.name}"
+    
+    def get_service_code(self):
+        """Get the official service code, falling back to code."""
+        return self.service_code or self.code
 
 
 class ServiceFormField(models.Model):
-    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='custom_fields')
-    name = models.CharField(max_length=100)
-    label = models.CharField(max_length=200)
-    field_type = models.CharField(max_length=20, choices=[
-        ('string', 'Texte'), ('enum', 'Liste'), ('boolean', 'Oui/Non'), ('number', 'Nombre'),
-    ], default='string')
-    options = models.JSONField(default=list, blank=True, help_text='Options for enum type')
-    required = models.BooleanField(default=False)
-    sort_order = models.IntegerField(default=0)
-
+    """
+    Dynamic form fields for service-specific forms.
+    
+    These fields are used to:
+    1. Define sample table columns (field_category='sample_table')
+    2. Define additional information fields (field_category='additional_info')
+    """
+    
+    CATEGORY_CHOICES = [
+        ('sample_table', 'Sample Table Column'),
+        ('additional_info', 'Additional Info Field'),
+    ]
+    
+    WIDGET_CHOICES = [
+        ('text', 'Text Input'),
+        ('dropdown', 'Dropdown Select'),
+        ('checkbox', 'Checkbox'),
+        ('textarea', 'Textarea'),
+        ('string', 'Texte'),
+        ('enum', 'Liste'),
+        ('boolean', 'Oui/Non'),
+        ('number', 'Nombre'),
+    ]
+    
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='form_fields')
+    field_category = models.CharField(
+        max_length=20, 
+        choices=CATEGORY_CHOICES,
+        default='sample_table',
+        help_text='Whether this field is a sample table column or additional info field'
+    )
+    name = models.CharField(max_length=100, help_text='Field identifier for data storage')
+    label = models.CharField(max_length=200, help_text='Display label (bilingual in FR/EN)')
+    label_fr = models.CharField(max_length=255, blank=True, help_text='Label in French')
+    label_en = models.CharField(max_length=255, blank=True, help_text='Label in English')
+    field_type = models.CharField(
+        max_length=20, 
+        choices=WIDGET_CHOICES,
+        default='text',
+        help_text='Widget type for form rendering'
+    )
+    options = models.JSONField(default=list, blank=True, help_text='Options for dropdown/checkbox as JSON list')
+    choices_json = models.JSONField(
+        blank=True, 
+        null=True, 
+        help_text='Options for dropdown/checkbox as JSON list (alternative to options field)'
+    )
+    is_required = models.BooleanField(default=False, help_text='Whether this field is required')
+    required = models.BooleanField(default=False)  # Keep for backward compatibility
+    sort_order = models.IntegerField(default=0, help_text='Display order')
+    order = models.PositiveIntegerField(
+        default=0, 
+        help_text='Order within the field category'
+    )
+    
     class Meta:
         db_table = 'service_form_fields'
-        ordering = ['sort_order', 'pk']
+        ordering = ['field_category', 'order', 'sort_order', 'pk']
+        verbose_name = 'Champ de formulaire'
+        verbose_name_plural = 'Champs de formulaire'
 
     def __str__(self):
         return f"{self.service.code} — {self.label}"
+    
+    def get_label(self, lang='fr'):
+        """Get the appropriate label based on language."""
+        if lang == 'en' and self.label_en:
+            return self.label_en
+        if self.label_fr:
+            return self.label_fr
+        return self.label
+    
+    def get_choices(self):
+        """Get the list of choices for dropdown/checkbox fields."""
+        if self.choices_json:
+            return self.choices_json
+        return self.options or []
 
 
 class ServicePricing(models.Model):
@@ -239,8 +345,9 @@ class Request(models.Model):
     receipt_confirmed = models.BooleanField(default=False)
     receipt_confirmed_at = models.DateTimeField(null=True, blank=True)
 
-    # Citation acknowledgment (Prompt 10)
-    citation_acknowledged = models.BooleanField(default=False, verbose_name='Citation acknowledgée')
+    # Citation acknowledgment (Prompt 10) - for download acceptance
+    citation_accepted = models.BooleanField(default=False, verbose_name='Citation accepted')
+    citation_accepted_at = models.DateTimeField(null=True, blank=True, verbose_name='Citation accepted at')
 
     # IBTIKAR Form Generation
     generated_ibtikar_form = models.FileField(
@@ -248,6 +355,22 @@ class Request(models.Model):
         null=True,
         blank=True,
         verbose_name=_('Generated IBTIKAR Form')
+    )
+
+    # Platform Note (IBTIKAR) - Programmatic PDF generation
+    generated_platform_note = models.FileField(
+        upload_to='platform_notes/',
+        null=True,
+        blank=True,
+        verbose_name=_('Generated Platform Note')
+    )
+
+    # Sample Reception Form - Programmatic PDF generation
+    generated_reception_form = models.FileField(
+        upload_to='sample_reception_forms/',
+        null=True,
+        blank=True,
+        verbose_name=_('Generated Reception Form')
     )
 
     # Guest
@@ -262,12 +385,77 @@ class Request(models.Model):
     pricing = models.JSONField(default=dict, blank=True)
     sample_table = models.JSONField(default=list, blank=True)
     requester_data = models.JSONField(default=dict, blank=True)
+    
+    # Additional data from dynamic service-specific fields (ServiceFormField)
+    additional_data = models.JSONField(default=dict, blank=True, 
+                                        verbose_name=_('Additional Data'))
+    
+    # Research Director (PI) information for IBTIKAR
+    pi_name = models.CharField(
+        max_length=200, 
+        default='', 
+        blank=True,
+        verbose_name=_('Research Director Name')
+    )
+    pi_email = models.EmailField(
+        default='', 
+        blank=True,
+        verbose_name=_('Research Director Email')
+    )
+    pi_phone = models.CharField(
+        max_length=50, 
+        default='', 
+        blank=True,
+        verbose_name=_('Research Director Phone')
+    )
+    
+    # Analysis framework (required for IBTIKAR)
+    analysis_framework = models.CharField(
+        max_length=50, 
+        choices=[
+            ('memoire_fin_cycle', _('Mémoire de fin de cycle')),
+            ('these_doctorat', _('Thèse de doctorat')),
+            ('projet_recherche', _('Projet de recherche')),
+            ('habilitation', _('Habilitation universitaire')),
+            ('autre', _('Autre')),
+        ],
+        blank=True,
+        verbose_name=_('Analysis Framework')
+    )
 
     # Metadata
     ibtikar_external_code = models.CharField(max_length=50, default='', blank=True, verbose_name='Code demande IBTIKAR-DGRSDT')
     rejection_reason = models.TextField(default='', blank=True)
     archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)
+    
+    # Client archive visibility (True = hidden from requester's archive list)
+    hidden_from_archive = models.BooleanField(default=False, verbose_name=_('Hidden from archive'))
+    
+    # GENOCLAB Invoice fields
+    generated_invoice = models.FileField(
+        upload_to='invoices/generated/',
+        null=True,
+        blank=True,
+        verbose_name=_('Generated Invoice (Excel)')
+    )
+    signed_invoice = models.FileField(
+        upload_to='invoices/signed/',
+        null=True,
+        blank=True,
+        verbose_name=_('Signed Invoice')
+    )
+    invoice_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Invoice Sent At')
+    )
+    invoice_downloaded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Invoice Downloaded At')
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -419,3 +607,67 @@ class RevenueArchive(models.Model):
 
     def __str__(self):
         return f"{self.channel} {self.month}/{self.year} — {self.total_revenue} DA"
+
+
+class PaymentSettings(models.Model):
+    """
+    Singleton model for payment configuration settings.
+    These settings are used to auto-fill invoices and payment instructions.
+    """
+    bank_account = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name=_('Bank Account Number'),
+        help_text=_('Account number for bank transfers')
+    )
+    beneficiary_name = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name=_('Beneficiary Name'),
+        help_text=_('Name of the account holder')
+    )
+    bank_name = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name=_('Bank Name'),
+        help_text=_('Name of the bank')
+    )
+    payment_instructions = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_('Payment Instructions'),
+        help_text=_('Additional instructions for making payment (free text)')
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payment_settings_updates'
+    )
+
+    class Meta:
+        db_table = 'payment_settings'
+        verbose_name = _('Payment Settings')
+        verbose_name_plural = _('Payment Settings')
+
+    def __str__(self):
+        return _('Payment Settings')
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists (singleton pattern)
+        if not self.pk and PaymentSettings.objects.exists():
+            # Update existing instance instead of creating new one
+            existing = PaymentSettings.objects.first()
+            self.pk = existing.pk
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_settings(cls):
+        """Get or create payment settings singleton."""
+        settings, _ = cls.objects.get_or_create(pk=1)
+        return settings

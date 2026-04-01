@@ -53,6 +53,31 @@
                         <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse DRX échantillon...' %}">
                     </div>
                     <div class="form-group">
+                        <label>{% trans "Cadre de l'analyse" %} <span style="color:red;">*</span></label>
+                        <select name="analysis_framework" class="form-control" required>
+                            <option value="">{% trans "— Sélectionner —" %}</option>
+                            <option value="memoire_fin_cycle">{% trans "Mémoire de fin de cycle" %}</option>
+                            <option value="these_doctorat">{% trans "Thèse de doctorat" %}</option>
+                            <option value="projet_recherche">{% trans "Projet de recherche" %}</option>
+                            <option value="habilitation">{% trans "Habilitation universitaire" %}</option>
+                            <option value="autre">{% trans "Autre" %}</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>{% trans "Directeur de recherche" %} <span style="color:red;">*</span></label>
+                            <input type="text" name="pi_name" class="form-control" required placeholder="{% trans 'Prénom et Nom' %}">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>{% trans "Email du directeur" %}</label>
+                            <input type="email" name="pi_email" class="form-control" placeholder="directeur@univ.dz">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>{% trans "Téléphone du directeur" %}</label>
+                            <input type="text" name="pi_phone" class="form-control" placeholder="+213 XX XXX XXXX">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label>{% trans "Description" %}</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
                     </div>

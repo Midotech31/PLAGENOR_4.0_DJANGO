@@ -133,10 +133,10 @@ class IbtikarRegistrationForm(forms.Form):
     )
     ibtikar_id = forms.CharField(
         max_length=20,
-        required=False,
+        required=True,
         label=_('Identifiant IBTIKAR-DGRSDT'),
-        help_text=_('Format: IDGRSTDXXXXX'),
-        widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD12345'})
+        help_text=_('Format: IDGRSTD[XXXXX] Ex: IDGRSTD00001'),
+        widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD00001', 'pattern': 'IDGRSTD[0-9]{5}'})
     )
     password = forms.CharField(
         widget=forms.PasswordInput,
