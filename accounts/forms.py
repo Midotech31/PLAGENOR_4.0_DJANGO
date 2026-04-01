@@ -131,6 +131,13 @@ class IbtikarRegistrationForm(forms.Form):
         required=True,
         label=_('Position'),
     )
+    ibtikar_id = forms.CharField(
+        max_length=20,
+        required=False,
+        label=_('Identifiant IBTIKAR-DGRSDT'),
+        help_text=_('Format: IDGRSTDXXXXX'),
+        widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD12345'})
+    )
     password = forms.CharField(
         widget=forms.PasswordInput,
         required=True,

@@ -1,0 +1,26 @@
+{% load i18n %}
+
+{% if form_status %}
+<div class="ibtikar-template-status mt-2">
+    {% if form_status.has_template %}
+        <span class="badge bg-success">
+            <i class="fas fa-check"></i>
+            {% if LANGUAGE_CODE == 'en' %}
+                Template: {{ form_status.template_source|title }}
+            {% else %}
+                Modèle: 
+                {% if form_status.template_source == 'uploaded' %}Téléversé{% elif form_status.template_source == 'service_specific' %}Service{% else %}Générique{% endif %}
+            {% endif %}
+        </span>
+    {% else %}
+        <span class="badge bg-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            {% if LANGUAGE_CODE == 'en' %}
+                No template configured
+            {% else %}
+                Aucun modèle configuré
+            {% endif %}
+        </span>
+    {% endif %}
+</div>
+{% endif %}

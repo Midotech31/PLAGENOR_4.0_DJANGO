@@ -1,0 +1,90 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+
+{% block email_content %}
+<h2 style="margin: 0 0 20px; color: #1f2937;">
+    {% if language == 'en' %}
+    Your Invoice is Ready
+    {% else %}
+    Votre facture est prête
+    {% endif %}
+</h2>
+
+<p style="margin: 0 0 20px; color: #4b5563;">
+    {% if language == 'en' %}
+    Dear {{ user.get_full_name|default:user.username }},
+    {% else %}
+    Bonjour {{ user.get_full_name|default:user.username }},
+    {% endif %}
+</p>
+
+<p style="margin: 0 0 20px; color: #4b5563;">
+    {% if language == 'en' %}
+    Your invoice for request <strong>{{ request.display_id }}</strong> is now ready. Please download it from your dashboard and proceed with payment.
+    {% else %}
+    Votre facture pour la demande <strong>{{ request.display_id }}</strong> est maintenant prête. Veuillez la télécharger depuis votre tableau de bord et procéder au paiement.
+    {% endif %}
+</p>
+
+<div class="request-id">
+    <div class="label">
+        {% if language == 'en' %}Request ID{% else %}ID Demande{% endif %}
+    </div>
+    <div class="value">{{ request.display_id }}</div>
+</div>
+
+<div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin: 0 0 16px; color: #065f46; font-size: 1rem;">
+        {% if language == 'en' %}Payment Instructions{% else %}Instructions de Paiement{% endif %}
+    </h3>
+    
+    {% if payment_settings.bank_account %}
+    <div style="margin-bottom: 12px;">
+        <span style="font-weight: 600; color: #374151;">{% if language == 'en' %}Bank Account{% else %}Compte bancaire{% endif %}:</span>
+        <span style="font-family: monospace; font-size: 1.1rem; margin-left: 8px;">{{ payment_settings.bank_account }}</span>
+    </div>
+    {% endif %}
+    
+    {% if payment_settings.beneficiary_name %}
+    <div style="margin-bottom: 12px;">
+        <span style="font-weight: 600; color: #374151;">{% if language == 'en' %}Beneficiary{% else %}Bénéficiaire{% endif %}:</span>
+        <span style="margin-left: 8px;">{{ payment_settings.beneficiary_name }}</span>
+    </div>
+    {% endif %}
+    
+    {% if payment_settings.bank_name %}
+    <div style="margin-bottom: 12px;">
+        <span style="font-weight: 600; color: #374151;">{% if language == 'en' %}Bank{% else %}Banque{% endif %}:</span>
+        <span style="margin-left: 8px;">{{ payment_settings.bank_name }}</span>
+    </div>
+    {% endif %}
+    
+    {% if payment_settings.payment_instructions %}
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1fae5;">
+        <p style="margin: 0; color: #4b5563; font-size: 0.9rem; line-height: 1.6;">
+            {{ payment_settings.payment_instructions|linebreaksbr }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin: 24px 0;">
+    <a href="{{ invoice_url }}" class="button" style="background: #059669;">
+        {% if language == 'en' %}
+        Download Invoice
+        {% else %}
+        Télécharger la Facture
+        {% endif %}
+    </a>
+</div>
+
+{% if language == 'en' %}
+<p style="margin: 0; color: #6b7280; font-size: 0.9rem;">
+    If you have any questions, please contact us at <a href="mailto:{{ support_email }}" style="color: #4F46E5;">{{ support_email }}</a>.
+</p>
+{% else %}
+<p style="margin: 0; color: #6b7280; font-size: 0.9rem;">
+    Si vous avez des questions, contactez-nous à <a href="mailto:{{ support_email }}" style="color: #4F46E5;">{{ support_email }}</a>.
+</p>
+{% endif %}
+{% endblock %}

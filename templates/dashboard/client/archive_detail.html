@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Détail de l'archive" %} — {{ req.display_id }} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <a href="{% url 'dashboard:client' %}?tab=archives" class="btn btn-secondary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            {% trans "Retour aux archives" %}
+        </a>
+        <h1 style="margin:0;">{% trans "Détail de l'archive" %} — {{ req.display_id }}</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>{{ req.title }}</h3>
+        <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+    </div>
+    <div class="card-body">
+        <!-- Request Info -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "ID Demande" %}</span>
+                <p style="margin: 2px 0 0; font-weight: 600;">{{ req.display_id }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Service" %}</span>
+                <p style="margin: 2px 0 0;">{{ req.service.name|default:"—" }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Canal" %}</span>
+                <p style="margin: 2px 0 0;">{{ req.get_channel_display }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Date de soumission" %}</span>
+                <p style="margin: 2px 0 0;">{{ req.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Date de complétion" %}</span>
+                <p style="margin: 2px 0 0;">{{ req.updated_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Type d'analyse" %}</span>
+                <p style="margin: 2px 0 0;">{{ req.service.service_type|default:"—" }}</p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Analyste assigné" %}</span>
+                <p style="margin: 2px 0 0;">
+                    {% if req.assigned_to %}
+                        {{ req.assigned_to.user.get_full_name|default:req.assigned_to.user.username }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: #64748B;">{% trans "Statut" %}</span>
+                <p style="margin: 2px 0 0;">
+                    <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Sample Table -->
+        {% if req.sample_table and req.sample_table|length > 0 %}
+        <div style="margin-bottom: 24px;">
+            <h4 style="margin-bottom: 12px;">{% trans "Tableau des échantillons" %}</h4>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for header in sample_headers %}
+                            <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in req.sample_table %}
+                        <tr>
+                            {% for value in row.values %}
+                            <td>{{ value|default:"—" }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Workflow Notes -->
+        {% if req.admin_revision_notes %}
+        <div style="margin-bottom: 24px;">
+            <h4 style="margin-bottom: 12px;">{% trans "Notes du workflow" %}</h4>
+            <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; white-space: pre-wrap;">{{ req.admin_revision_notes }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Report Download Section (Feature 2b) -->
+        <div style="margin-top: 24px; padding: 20px; background: #F0FDF4; border-radius: 12px; border: 1px solid #BBF7D0;">
+            <h4 style="margin: 0 0 16px; color: #065F46; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                {% trans "Rapport d'analyse" %}
+            </h4>
+            
+            {% if req.report_file %}
+            <div x-data="{ accepted: {{ req.citation_accepted|yesno:'true,false' }}, showModal: false }">
+                <!-- Report exists -->
+                {% if not req.citation_accepted %}
+                <div style="margin-bottom: 16px;">
+                    <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h5 style="margin: 0 0 12px; color: #92400E; display: flex; align-items: center; gap: 8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="width:18px;height:18px;">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            {% trans "Clause de citation et d'accusé de réception" %}
+                        </h5>
+                        <div style="font-size: 0.9rem; color: #78350F; margin-bottom: 16px;">
+                            <p><strong>{% trans "Clause de citation :" %}</strong></p>
+                            <p style="margin: 8px 0; font-style: italic;">
+                                {% trans "Toute utilisation des résultats d'analyse fournis par PLAGENOR dans une publication, rapport ou document académique doit être accompagnée d'une citation appropriée согласно les normes scientifiques en vigueur." %}
+                            </p>
+                            <p style="margin: 8px 0 0;"><strong>{% trans "Clause d'accusé de réception :" %}</strong></p>
+                            <p style="margin: 8px 0 0; font-style: italic;">
+                                {% trans "En téléchargeant ce rapport, vous reconnaissez avoir pris connaissance des résultats et vous engagez à les utiliser conformément aux conditions générales du laboratoire." %}
+                            </p>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" x-model="accepted" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span style="font-weight: 500; color: #78350F;">{% trans "J'ai lu et j'accepte les conditions" %}</span>
+                        </label>
+                    </div>
+                    {% url 'dashboard:client_accept_citation' req.pk as client_accept_citation_url %}
+                    {% if client_accept_citation_url %}
+                    <button type="button" class="btn btn-primary" :disabled="!accepted" @click="if(accepted) { fetch('{{ client_accept_citation_url }}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'}}) .then(() => window.location.reload()); }">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        {% trans "Accepter et continuer" %}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    {% trans "Télécharger le rapport" %}
+                </a>
+                <p style="margin: 8px 0 0; font-size: 0.8rem; color: #059669;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:14px;height:14px; vertical-align: middle; margin-right: 4px;">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    {% trans "Clause acceptée le" %} {{ req.citation_accepted_at|date:"d/m/Y H:i" }}
+                </p>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #FEF3C7; border-radius: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="width:24px;height:24px; flex-shrink: 0;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                    <p style="margin: 0; font-weight: 500; color: #92400E;">{% trans "Rapport non encore disponible" %}</p>
+                    <p style="margin: 4px 0 0; font-size: 0.85rem; color: #B45309;">{% trans "Le rapport d'analyse n'a pas encore été généré ou n'est pas disponible pour cette demande." %}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

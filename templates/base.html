@@ -38,6 +38,15 @@
     
     <!-- Page Transition Loading Bar -->
     <div class="loading-bar" id="loading-bar"></div>
+
+    <!-- Tab Navigation Helper -->
+    <script>
+        function setTab(tabName) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+            window.location.href = url.toString();
+        }
+    </script>
     
     <!-- Dark Mode & PWA Script -->
     <script>

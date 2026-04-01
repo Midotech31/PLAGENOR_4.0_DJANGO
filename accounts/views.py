@@ -73,6 +73,7 @@ class RegisterView(CreateView):
                 organization=form.cleaned_data['institution'],
                 laboratory=form.cleaned_data.get('laboratory', ''),
                 position=form.cleaned_data['position'],
+                ibtikar_id=form.cleaned_data.get('ibtikar_id', ''),
                 role='REQUESTER',
             )
         elif channel == 'GENOCLAB':

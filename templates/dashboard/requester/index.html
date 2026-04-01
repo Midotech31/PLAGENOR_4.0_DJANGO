@@ -133,7 +133,10 @@
                         <span>{{ req.created_at|date:"d/m/Y" }}</span>
                     </div>
                     <div class="data-card-row mt-1">
-                        <a href="{% url 'dashboard:requester_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% url 'dashboard:requester_request_detail' req.pk as request_detail_url %}
+                        {% if request_detail_url %}
+                        <a href="{{ request_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% endif %}
                     </div>
                     {% if req.assigned_to %}
                     <div class="data-card-row text-sm text-muted">
@@ -149,9 +152,12 @@
                     {% url 'dashboard:requester_ibtikar_code' req.pk as ibkcodeurl %}
                     {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
                     {% else %}
+                    {% url 'documents:ibtikar_form' req.pk as ibk_dl_url %}
+                    {% if ibk_dl_url %}
                     <div class="data-card-row mt-1" style="gap: 0.5rem;">
-                        <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+                        <a href="{{ ibk_dl_url }}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
                     </div>
+                    {% endif %}
                     {% endif %}
                     {% endif %}
 
@@ -162,13 +168,16 @@
                             {% trans "Rendez-vous proposé" %}: {{ req.appointment_date|date:"d/m/Y" }}
                         </div>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <!-- Confirm -->
-                            <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
+                            {% url 'dashboard:requester_confirm_appointment' req.pk as confirm_appt_url %}
+                            {% if confirm_appt_url %}
+                            <form method="post" action="{{ confirm_appt_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
                             </form>
-                            <!-- Suggest alternative -->
-                            <form method="post" action="{% url 'dashboard:requester_alt_date' req.pk %}" style="display:inline;" x-data="{ showAlt: false }">
+                            {% endif %}
+                            {% url 'dashboard:requester_alt_date' req.pk as alt_date_url %}
+                            {% if alt_date_url %}
+                            <form method="post" action="{{ alt_date_url }}" style="display:inline;" x-data="{ showAlt: false }">
                                 {% csrf_token %}
                                 <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
                                 <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
@@ -183,14 +192,18 @@
                                     <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
                                 </div>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     {% elif req.appointment_date and not req.appointment_confirmed %}
                     <div class="data-card-row mt-1" style="gap: 0.5rem;">
-                        <form method="post" action="{% url 'dashboard:requester_confirm_appointment' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:requester_confirm_appointment' req.pk as confirm_appt_url2 %}
+                        {% if confirm_appt_url2 %}
+                        <form method="post" action="{{ confirm_appt_url2 }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
                         </form>
+                        {% endif %}
                     </div>
                     {% endif %}
 
@@ -232,21 +245,16 @@
                             <strong style="color:#065f46;">{% trans "Votre rapport est prêt" %}</strong>
                         </div>
                         {% if req.report_file %}
-                        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:requester_confirm' req.pk as requester_confirm_url %}
+                        {% if requester_confirm_url %}
+                        <form method="post" action="{{ requester_confirm_url }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger le rapport et confirmer la réception" %}
                             </button>
                         </form>
-                        {% else %}
-                        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
-                                {% trans "Confirmer la réception du rapport" %}
-                            </button>
-                        </form>
+                        {% endif %}
                         {% endif %}
                     </div>
                     {% endif %}
@@ -257,7 +265,9 @@
                             <strong style="color:#92400e; font-size:0.9rem;">{% trans "Évaluez le service" %}</strong>
                             <p class="text-muted" style="font-size:0.8rem; margin:4px 0 0;">{% trans "Votre avis nous aide à améliorer nos services." %}</p>
                         </div>
-                        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}">
+                        {% url 'dashboard:requester_rate' req.pk as requester_rate_url %}
+                        {% if requester_rate_url %}
+                        <form method="post" action="{{ requester_rate_url }}">
                             {% csrf_token %}
                             <input type="hidden" name="rating" :value="rating">
                             <div style="display:flex; gap:4px; cursor:pointer; margin-bottom:12px;">
@@ -272,6 +282,7 @@
                                 <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
                             </div>
                         </form>
+                        {% endif %}
                     </div>
                     {% elif req.service_rating %}
                     <div class="data-card-row mt-2 text-sm">

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Paramètres de paiement" %} — PLAGENOR{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1>{% trans "Paramètres de paiement" %}</h1>
+        <p class="text-sm text-muted" style="margin-top:4px;">
+            {% trans "Configurez les informations de paiement pour les factures GENOCLAB" %}
+        </p>
+    </div>
+    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">
+        &larr; {% trans "Retour au tableau de bord" %}
+    </a>
+</div>
+
+<div class="card" style="margin-top:24px;">
+    <div class="card-header">
+        <h3>{% trans "Informations de paiement" %}</h3>
+    </div>
+    <div class="card-body">
+        <p class="text-muted" style="margin-bottom:20px;">
+            {% trans "Ces informations seront automatiquement incluses dans les factures générées pour les clients GENOCLAB." %}
+        </p>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom:20px;">
+                <label for="bank_account">
+                    <strong>{% trans "Numéro de compte bancaire" %}</strong>
+                </label>
+                <input type="text" 
+                       id="bank_account" 
+                       name="bank_account" 
+                       class="form-control" 
+                       value="{{ settings.bank_account }}"
+                       placeholder="{% trans 'Ex: 001002345678901234567890' %}">
+                <small class="text-muted">{% trans "Numéro de compte pour les virements bancaires" %}</small>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:20px;">
+                <label for="beneficiary_name">
+                    <strong>{% trans "Nom du bénéficiaire" %}</strong>
+                </label>
+                <input type="text" 
+                       id="beneficiary_name" 
+                       name="beneficiary_name" 
+                       class="form-control" 
+                       value="{{ settings.beneficiary_name }}"
+                       placeholder="{% trans 'Ex: ESSBO / Université' %}">
+                <small class="text-muted">{% trans "Nom du titulaire du compte" %}</small>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:20px;">
+                <label for="bank_name">
+                    <strong>{% trans "Nom de la banque" %}</strong>
+                </label>
+                <input type="text" 
+                       id="bank_name" 
+                       name="bank_name" 
+                       class="form-control" 
+                       value="{{ settings.bank_name }}"
+                       placeholder="{% trans 'Ex: Banque Nationale d Algérie (BNA)' %}">
+                <small class="text-muted">{% trans "Nom de la banque destinataire" %}</small>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:20px;">
+                <label for="payment_instructions">
+                    <strong>{% trans "Instructions de paiement" %}</strong>
+                </label>
+                <textarea id="payment_instructions" 
+                          name="payment_instructions" 
+                          class="form-control" 
+                          rows="5"
+                          placeholder="{% trans 'Ex: Merci de bien vouloir effectuer le virement sur le compte ci-dessus. La facture doit être jointe au paiement.' %}">{{ settings.payment_instructions }}</textarea>
+                <small class="text-muted">{% trans "Instructions supplémentaires pour le client (visible sur la facture)" %}</small>
+            </div>
+            
+            <div style="display:flex; gap:12px; margin-top:24px;">
+                <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    {% trans "Enregistrer les modifications" %}
+                </button>
+                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">
+                    {% trans "Annuler" %}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% load i18n %}
+{% load ibtikar_tags %}
+
+{% if request_obj.channel == 'IBTIKAR' and can_access %}
+<div class="ibtikar-form-section mb-4">
+    {% if has_form %}
+        {# Form exists - show download button #}
+        <a href="{{ form_url }}" class="btn btn-success" target="_blank">
+            <i class="fas fa-download"></i>
+            {% if lang == 'en' %}
+                Download IBTIKAR Form
+            {% else %}
+                Télécharger le Formulaire IBTIKAR
+            {% endif %}
+        </a>
+    {% elif is_admin %}
+        {# Admin can generate if no form exists #}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            {% if lang == 'en' %}
+                IBTIKAR form not yet generated.
+            {% else %}
+                Formulaire IBTIKAR pas encore généré.
+            {% endif %}
+            <button type="button" class="btn btn-primary btn-sm ms-2" onclick="generateIbtikarForm('{{ request_obj.id }}')">
+                <i class="fas fa-file-export"></i>
+                {% if lang == 'en' %}
+                    Generate Form
+                {% else %}
+                    Générer le Formulaire
+                {% endif %}
+            </button>
+        </div>
+        {% if show_status and form_status %}
+            {% ibtikar_form_status_badge request_obj %}
+        {% endif %}
+    {% else %}
+        {# Requester without form - show pending message #}
+        <div class="alert alert-secondary">
+            <i class="fas fa-clock"></i>
+            {% if lang == 'en' %}
+                IBTIKAR form will be available once your request is approved.
+            {% else %}
+                Le formulaire IBTIKAR sera disponible une fois votre demande approuvée.
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% if is_admin %}
+<script>
+async function generateIbtikarForm(requestId) {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {% if lang == "en" %}Generating...{% else %}Génération...{% endif %}';
+    
+    try {
+        const response = await fetch(`/documents/ibtikar-form/${requestId}/generate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            // Refresh page to show download button
+            window.location.reload();
+        } else {
+            alert(data.error || '{% if lang == "en" %}Error generating form{% else %}Erreur lors de la génération{% endif %}');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (error) {
+        alert('{% if lang == "en" %}Network error{% else %}Erreur réseau{% endif %}');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endif %}
+{% endif %}
