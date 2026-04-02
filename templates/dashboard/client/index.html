@@ -87,7 +87,10 @@
                         <span>{{ req.created_at|date:"d/m/Y" }}</span>
                     </div>
                     <div class="data-card-row mt-1">
-                        <a href="{% url 'dashboard:client_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% url 'dashboard:client_request_detail' req.pk as client_detail_url %}
+                        {% if client_detail_url %}
+                        <a href="{{ client_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% endif %}
                     </div>
 
                     <!-- Pipeline visualization -->
@@ -128,12 +131,17 @@
                         </div>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <!-- Confirm -->
-                            <form method="post" action="{% url 'dashboard:client_confirm_appointment' req.pk %}" style="display:inline;">
+                            {% url 'dashboard:client_confirm_appointment' req.pk as client_confirm_appt_url %}
+                            {% if client_confirm_appt_url %}
+                            <form method="post" action="{{ client_confirm_appt_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
                             </form>
+                            {% endif %}
                             <!-- Suggest alternative -->
-                            <form method="post" action="{% url 'dashboard:client_alt_date' req.pk %}" style="display:inline;" x-data="{ showAlt: false }">
+                            {% url 'dashboard:client_alt_date' req.pk as client_alt_date_url %}
+                            {% if client_alt_date_url %}
+                            <form method="post" action="{{ client_alt_date_url }}" style="display:inline;" x-data="{ showAlt: false }">
                                 {% csrf_token %}
                                 <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
                                 <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
@@ -148,15 +156,18 @@
                                     <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
                                 </div>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                     {% elif req.appointment_date and not req.appointment_confirmed %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem;">
                         <span class="text-sm">{% trans "RDV proposé" %}: <strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></span>
-                        <form method="post" action="{% url 'dashboard:client_confirm_appointment' req.pk %}" style="display:inline;">
+                        {% if client_confirm_appt_url %}
+                        <form method="post" action="{{ client_confirm_appt_url }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
                         </form>
+                        {% endif %}
                     </div>
                     {% endif %}
 
@@ -194,15 +205,23 @@
                         </div>
                         {% endif %}
                         <div style="display:flex; gap:8px;">
-                            <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}" style="display:inline;">
+                            {% url 'dashboard:client_accept_quote' req.pk as client_accept_quote_url %}
+                            {% if client_accept_quote_url %}
+                            <form method="post" action="{{ client_accept_quote_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-primary" style="background:#059669;">{% trans "Accepter le devis" %}</button>
                             </form>
-                            <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}" style="display:inline;">
+                            {% endif %}
+                            {% url 'dashboard:client_reject_quote' req.pk as client_reject_quote_url %}
+                            {% if client_reject_quote_url %}
+                            <form method="post" action="{{ client_reject_quote_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Refuser le devis" %}</button>
                             </form>
-                            <a href="{% url 'dashboard:client_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détail" %}</a>
+                            {% endif %}
+                            {% if client_detail_url %}
+                            <a href="{{ client_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détail" %}</a>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
@@ -222,7 +241,9 @@
                                 {% trans "Télécharger le rapport" %}
                             </a>
                             {# Confirm receipt button #}
-                            <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}" style="display:inline;">
+                            {% url 'dashboard:client_confirm' req.pk as client_confirm_url %}
+                            {% if client_confirm_url %}
+                            <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>
@@ -231,13 +252,15 @@
                             </form>
                         </div>
                         {% else %}
-                        <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}" style="display:inline;">
+                        {% if client_confirm_url %}
+                        <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
                                 {% trans "Confirmer la réception du rapport" %}
                             </button>
                         </form>
+                        {% endif %}
                         {% endif %}
                     </div>
                     {% endif %}
@@ -248,7 +271,9 @@
                             <strong style="color:#92400e; font-size:0.9rem;">{% trans "Évaluez le service" %}</strong>
                             <p class="text-muted" style="font-size:0.8rem; margin:4px 0 0;">{% trans "Votre avis nous aide à améliorer nos services." %}</p>
                         </div>
-                        <form method="post" action="{% url 'dashboard:client_rate' req.pk %}">
+                        {% url 'dashboard:client_rate' req.pk as client_rate_url %}
+                        {% if client_rate_url %}
+                        <form method="post" action="{{ client_rate_url }}">
                             {% csrf_token %}
                             <input type="hidden" name="rating" :value="rating">
                             <div style="display:flex; gap:4px; cursor:pointer; margin-bottom:12px;">
@@ -263,6 +288,7 @@
                                 <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
                             </div>
                         </form>
+                        {% endif %}
                     </div>
                     {% elif req.service_rating %}
                     <div class="data-card-row mt-2 text-sm">
@@ -314,18 +340,60 @@
         </div>
     </div>
 
-    <!-- Archives -->
+    <!-- Archives (Feature 2) -->
     <div x-show="tab === 'archives'">
         <div class="card">
-            <div class="card-header"><h3>{% trans "Archives" %}</h3></div>
+            <div class="card-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <h3 style="margin: 0;">{% trans "Archives" %}</h3>
+                    {% if archived %}
+                    <div style="display: flex; gap: 8px; align-items: center;" x-data="{ selectedCount: 0 }">
+                        <span class="text-sm text-muted">{% trans "Sélectionné(s)" %}: <span x-text="selectedCount">0</span></span>
+                        <button type="button" class="btn btn-sm btn-outline" @click="
+                            document.querySelectorAll('.archive-checkbox:checked').forEach(cb => cb.checked = false);
+                            selectedCount = 0;
+                            document.querySelectorAll('.archive-checkbox').forEach(cb => cb.checked ? selectedCount++ : null);
+                        ">{% trans "Tout désélectionner" %}</button>
+                        <button type="button" class="btn btn-sm btn-danger" @click="
+                            const checked = document.querySelectorAll('.archive-checkbox:checked');
+                            if(checked.length === 0) { alert('{% trans "Veuillez sélectionner au moins une demande" %}'); return; }
+                            if(!confirm('{% trans "Retirer les demandes sélectionnées de vos archives ?" %}')) return;
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{% url 'dashboard:client_archive_remove_selected' %}';
+                            form.innerHTML = '{% csrf_token %}<input type=\"hidden\" name=\"action\" value=\"remove_selected\">';
+                            checked.forEach(cb => { form.innerHTML += '<input type=\"hidden\" name=\"selected_requests\" value=\"' + cb.value + '\">'; });
+                            document.body.appendChild(form);
+                            form.submit();
+                        ">{% trans "Retirer la sélection" %}</button>
+                        <button type="button" class="btn btn-sm btn-danger" @click="
+                            if(!confirm('{% trans "Retirer TOUTES les demandes de vos archives ?" %}\n{% trans "Cette action masquera toutes vos demandes terminées." %}')) return;
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{% url 'dashboard:client_archive_remove_selected' %}';
+                            form.innerHTML = '{% csrf_token %}<input type=\"hidden\" name=\"action\" value=\"clear_all\">';
+                            document.body.appendChild(form);
+                            form.submit();
+                        ">{% trans "Tout retirer" %}</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
             <div class="card-body">
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAllArchives" @change="
+                                        document.querySelectorAll('.archive-checkbox').forEach(cb => cb.checked = this.checked);
+                                        document.querySelectorAll('.archive-checkbox:checked').length ? selectedCount = document.querySelectorAll('.archive-checkbox:checked').length : selectedCount = 0;
+                                    ">
+                                </th>
                                 <th>{% trans "ID" %}</th>
                                 <th>{% trans "Titre" %}</th>
                                 <th>{% trans "Service" %}</th>
+                                <th>{% trans "Canal" %}</th>
                                 <th>{% trans "Statut" %}</th>
                                 <th>{% trans "Note" %}</th>
                                 <th>{% trans "Date" %}</th>
@@ -333,20 +401,32 @@
                         </thead>
                         <tbody>
                         {% for req in archived %}
-                        <tr>
+                        {% url 'dashboard:client_archive_detail' req.pk as client_archive_url %}
+                        <tr class="archive-row" style="cursor: pointer;" {% if client_archive_url %}@click="window.location.href = '{{ client_archive_url }}'"{% endif %}>
+                            <td @click.stop>
+                                <input type="checkbox" class="archive-checkbox" value="{{ req.pk }}" @change="
+                                    selectedCount = document.querySelectorAll('.archive-checkbox:checked').length;
+                                ">
+                            </td>
                             <td>{{ req.display_id }}</td>
                             <td>{{ req.title|truncatechars:40 }}</td>
                             <td>{{ req.service.name|default:"—" }}</td>
+                            <td>{{ req.get_channel_display }}</td>
                             <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
                             <td>{% if req.service_rating %}{{ req.service_rating }}/5{% else %}—{% endif %}</td>
                             <td>{{ req.updated_at|date:"d/m/Y" }}</td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune archive." %}</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted">{% trans "Aucune archive." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% if archived_paginator %}
+                <div style="margin-top: 16px; display: flex; justify-content: center;">
+                    {% include 'includes/pagination.html' with paginator=archived_paginator %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

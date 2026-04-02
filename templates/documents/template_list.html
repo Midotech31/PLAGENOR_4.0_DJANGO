@@ -73,6 +73,10 @@
             </thead>
             <tbody>
                 {% for template in templates %}
+                {% url 'documents:template_detail' template.pk as template_detail_url %}
+                {% url 'documents:template_edit' template.pk as template_edit_url %}
+                {% url 'documents:template_toggle' template.pk as template_toggle_url %}
+                {% url 'documents:template_delete' template.pk as template_delete_url %}
                 <tr>
                     <td>
                         <strong>{{ template.name }}</strong>
@@ -95,30 +99,30 @@
                     <td>{{ template.created_at|date:"d/m/Y H:i" }}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{% url 'documents:template_detail' template.pk %}" class="btn btn-sm btn-outline-primary" title="{% trans 'Voir' %}">
+                            {% if template_detail_url %}<a href="{{ template_detail_url }}" class="btn btn-sm btn-outline-primary" title="{% trans 'Voir' %}">
                                 <i class="fa fa-eye"></i>
-                            </a>
-                            <a href="{% url 'documents:template_edit' template.pk %}" class="btn btn-sm btn-outline-secondary" title="{% trans 'Modifier' %}">
+                            </a>{% endif %}
+                            {% if template_edit_url %}<a href="{{ template_edit_url }}" class="btn btn-sm btn-outline-secondary" title="{% trans 'Modifier' %}">
                                 <i class="fa fa-edit"></i>
-                            </a>
+                            </a>{% endif %}
                             {% if template.is_active %}
-                            <form method="post" action="{% url 'documents:template_toggle' template.pk %}" style="display:inline;">
+                            {% if template_toggle_url %}<form method="post" action="{{ template_toggle_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-warning" title="{% trans 'Désactiver' %}">
                                     <i class="fa fa-toggle-on"></i>
                                 </button>
-                            </form>
+                            </form>{% endif %}
                             {% else %}
-                            <form method="post" action="{% url 'documents:template_toggle' template.pk %}" style="display:inline;">
+                            {% if template_toggle_url %}<form method="post" action="{{ template_toggle_url }}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-success" title="{% trans 'Activer' %}">
                                     <i class="fa fa-toggle-off"></i>
                                 </button>
-                            </form>
+                            </form>{% endif %}
                             {% endif %}
-                            <a href="{% url 'documents:template_delete' template.pk %}" class="btn btn-sm btn-outline-danger" title="{% trans 'Supprimer' %}">
+                            {% if template_delete_url %}<a href="{{ template_delete_url }}" class="btn btn-sm btn-outline-danger" title="{% trans 'Supprimer' %}">
                                 <i class="fa fa-trash"></i>
-                            </a>
+                            </a>{% endif %}
                         </div>
                     </td>
                 </tr>

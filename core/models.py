@@ -19,7 +19,44 @@ class Service(models.Model):
     service_type = models.CharField(max_length=50, default='Analysis')
     ibtikar_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     genoclab_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    turnaround_days = models.IntegerField(default=7)
+
+    # Turnaround time per channel (Part M)
+    turnaround_days = models.IntegerField(default=7, help_text='Deprecated: use turnaround_ibtikar and turnaround_genoclab')
+    turnaround_ibtikar = models.IntegerField(
+        default=7,
+        verbose_name='Délai IBTIKAR (jours)',
+        help_text='Turnaround time in business days for IBTIKAR channel'
+    )
+    turnaround_genoclab = models.IntegerField(
+        default=7,
+        verbose_name='Délai GENOCLAB (jours)',
+        help_text='Turnaround time in business days for GENOCLAB channel'
+    )
+    turnaround_unit = models.CharField(
+        max_length=20,
+        default='business_days',
+        verbose_name='Unité de délai',
+        choices=[
+            ('business_days', 'Jours ouvrables / Business days'),
+            ('calendar_days', 'Jours calendaires / Calendar days'),
+            ('weeks', 'Semaines / Weeks'),
+        ]
+    )
+
+    # Citation clause (Part K3) - Superadmin editable
+    citation_clause_fr = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Clause de citation (FR)',
+        help_text='Texte de citation obligatoire pour les demandes IBTIKAR (Français)'
+    )
+    citation_clause_en = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Citation clause (EN)',
+        help_text='Mandatory citation text for IBTIKAR requests (English)'
+    )
+
     image = models.ImageField(upload_to='service_images/', null=True, blank=True)
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,19 +125,23 @@ class ServiceFormField(models.Model):
     """
     
     CATEGORY_CHOICES = [
+        ('parameter', 'Service Parameter'),
         ('sample_table', 'Sample Table Column'),
         ('additional_info', 'Additional Info Field'),
     ]
     
     WIDGET_CHOICES = [
-        ('text', 'Text Input'),
-        ('dropdown', 'Dropdown Select'),
-        ('checkbox', 'Checkbox'),
+        ('text', 'Text'),
         ('textarea', 'Textarea'),
-        ('string', 'Texte'),
-        ('enum', 'Liste'),
-        ('boolean', 'Oui/Non'),
-        ('number', 'Nombre'),
+        ('number', 'Number'),
+        ('date', 'Date'),
+        ('select', 'Select'),
+        ('multiselect', 'Multi-select'),
+        ('boolean', 'Yes/No'),
+        ('checkbox', 'Checkbox'),
+        ('string', 'Text (legacy)'),
+        ('enum', 'Enum (legacy)'),
+        ('dropdown', 'Dropdown (legacy)'),
     ]
     
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='form_fields')
@@ -133,6 +174,54 @@ class ServiceFormField(models.Model):
         default=0, 
         help_text='Order within the field category'
     )
+    help_text_fr = models.CharField(max_length=500, blank=True, help_text='Help text in French')
+    help_text_en = models.CharField(max_length=500, blank=True, help_text='Help text in English')
+    channel = models.CharField(
+        max_length=10,
+        choices=[
+            ('IBTIKAR', 'IBTIKAR'),
+            ('GENOCLAB', 'GENOCLAB'),
+            ('BOTH', 'IBTIKAR & GENOCLAB'),
+        ],
+        default='BOTH',
+        help_text='Channel availability: IBTIKAR only, GENOCLAB only, or BOTH'
+    )
+    
+    # Variable pricing fields
+    affects_pricing = models.BooleanField(
+        default=False,
+        help_text='Whether selecting this option affects the price'
+    )
+    price_modifier_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('add', 'Surcharge / Supplément'),
+            ('set', 'Override / Forfait'),
+            ('multiply', 'Multiplier'),
+        ],
+        blank=True,
+        default='',
+        help_text='How this option modifies the price'
+    )
+    price_modifier_value = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Value of the price modifier (amount, new price, or multiplier)'
+    )
+    condition_note_fr = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text='French notice shown to user about additional charges'
+    )
+    condition_note_en = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text='English notice shown to user about additional charges'
+    )
     
     class Meta:
         db_table = 'service_form_fields'
@@ -156,6 +245,16 @@ class ServiceFormField(models.Model):
         if self.choices_json:
             return self.choices_json
         return self.options or []
+    
+    def get_choices_list(self):
+        """Get choices as a plain list (for API serialization)."""
+        return self.get_choices() or []
+    
+    def get_help_text(self, lang='fr'):
+        """Get help text in the requested language."""
+        if lang == 'en' and self.help_text_en:
+            return self.help_text_en
+        return self.help_text_fr or ''
 
 
 class ServicePricing(models.Model):
@@ -264,7 +363,10 @@ class Request(models.Model):
         ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
         ('ASSIGNED', 'Assigné'),
         ('PENDING_ACCEPTANCE', 'En Attente Acceptation'),
+        ('ACCEPTED', 'Accepté'),
+        ('DECLINED', 'Refusé'),
         ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
+        ('APPOINTMENT_RESCHEDULING_REQUESTED', 'Reprogrammation Demandée'),
         ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
         ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
         ('ANALYSIS_STARTED', 'Analyse Démarrée'),
@@ -284,7 +386,9 @@ class Request(models.Model):
         ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
         ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
         ('PAYMENT_PENDING', 'En Attente Paiement'),
+        ('PAYMENT_UPLOADED', 'Reçu de Paiement Uploadé'),
         ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
+        ('INVOICE_GENERATED', 'Facture Générée'),
         ('SENT_TO_CLIENT', 'Transmis Client'),
         ('ARCHIVED', 'Archivé'),
     ]
@@ -294,7 +398,7 @@ class Request(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(default='', blank=True)
     channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='SUBMITTED')
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='SUBMITTED')
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='Normal')
 
     # Relationships
@@ -308,7 +412,23 @@ class Request(models.Model):
     quote_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quote_detail = models.JSONField(default=dict, blank=True, verbose_name='Détail du devis')
     admin_validated_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    
+
+    # Tracking IDs (Part J)
+    ibtikar_id = models.CharField(
+        max_length=20,
+        blank=True,
+        default='',
+        verbose_name='Identifiant IBTIKAR-DGRSDT',
+        help_text='IBTIKAR tracking ID provided by requester (e.g., IDGRSTD00001)'
+    )
+    tracking_number = models.CharField(
+        max_length=20,
+        blank=True,
+        default='',
+        verbose_name='Numéro de suivi',
+        help_text='Auto-generated tracking number for GENOCLAB (GCL-YYYY-XXXXX)'
+    )
+
     # GENOCLAB: Purchase Order (Bon de commande - mandatory per Algerian commercial code)
     order_file = models.FileField(upload_to='orders/', null=True, blank=True, verbose_name='Bon de commande')
     order_uploaded_at = models.DateTimeField(null=True, blank=True)

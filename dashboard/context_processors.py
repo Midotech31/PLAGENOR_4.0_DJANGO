@@ -1,5 +1,17 @@
+from django.conf import settings
 from notifications.models import Notification
 from core.models import Request
+
+
+def language_context(request):
+    """Add language context to all templates."""
+    from django.utils import translation
+    current_lang = translation.get_language() or settings.LANGUAGE_CODE
+    return {
+        'CURRENT_LANG': current_lang,
+        'CURRENT_LANG_NAME': dict(settings.LANGUAGES).get(current_lang, current_lang),
+        'AVAILABLE_LANGUAGES': settings.LANGUAGES,
+    }
 
 
 def notifications(request):

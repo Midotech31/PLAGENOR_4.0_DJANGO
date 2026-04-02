@@ -25,22 +25,56 @@ def services(request):
 
 
 def track(request):
+    """
+    Public tracking page for both IBTIKAR and GENOCLAB requests.
+    Supports search by:
+    - Display ID (e.g., IBT-2026-0042, GCL-2026-0001)
+    - IBTIKAR ID (e.g., IDGRSTD00001)
+    - GENOCLAB Tracking Number (e.g., GCL-2026-00001)
+    - Guest token (UUID)
+    """
     tracked_request = None
     history = []
+    search_type = None
     q = request.GET.get('q', '').strip()
+
     if q:
+        # Try display_id first (exact match, case insensitive)
         tracked_request = Request.objects.filter(display_id__iexact=q).first()
+        if tracked_request:
+            search_type = 'display_id'
+
+        # Try IBTIKAR ID (for IBTIKAR requests)
+        if not tracked_request and q.upper().startswith('IDGRSTD'):
+            tracked_request = Request.objects.filter(ibtikar_id__iexact=q).first()
+            if tracked_request:
+                search_type = 'ibtikar_id'
+
+        # Try GENOCLAB tracking number
+        if not tracked_request and q.upper().startswith('GCL-'):
+            tracked_request = Request.objects.filter(tracking_number__iexact=q).first()
+            if tracked_request:
+                search_type = 'tracking_number'
+
+        # Try guest token (UUID format)
         if not tracked_request:
             try:
                 token = uuid_lib.UUID(q)
                 tracked_request = Request.objects.filter(guest_token=token).first()
+                if tracked_request:
+                    search_type = 'guest_token'
             except (ValueError, AttributeError):
                 pass
+
+        # Get history if request found
         if tracked_request:
             history = tracked_request.history.select_related('actor').order_by('created_at')
+
     return render(request, 'pages/track.html', {
         'tracked_request': tracked_request,
         'history': history,
+        'search_type': search_type,
+        'search_query': q,
     })
 
 

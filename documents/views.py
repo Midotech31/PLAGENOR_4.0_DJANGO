@@ -1,231 +1,299 @@
+# documents/views.py — PLAGENOR 4.0 PDF Document Views
+# Handles PDF download and regeneration for IBTIKAR forms
+
 from pathlib import Path
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, FileResponse, Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse, HttpResponseForbidden, FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 
-from core.models import Request, Service
-from dashboard.views.admin_ops import admin_required
-from documents.generators import (
-    generate_ibtikar_form,
-    generate_platform_note,
-    generate_quote,
-    generate_reception_form,
-)
-from documents.models import ServiceTemplate
+from core.models import Request
+
+from documents.pdf_generators import generate_ibtikar_form_pdf
+from documents.pdf_generator_platform_note import generate_platform_note_pdf
+from documents.pdf_generator_reception import generate_reception_form_pdf
 
 
-def _serve_docx(filepath, filename):
-    """Serve a DOCX file as a download response."""
-    if not Path(filepath).exists():
-        raise Http404("Document non trouvé.")
-    response = FileResponse(
-        open(filepath, 'rb'),
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    )
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+# =============================================================================
+# PDF Generation + Download Views
+# =============================================================================
+
+import logging
+from django.utils.translation import get_language
+
+logger = logging.getLogger('plagenor.documents')
+
+
+@login_required
+def ibtikar_form_pdf(request, pk):
+    """
+    Generate (or retrieve cached) and serve an IBTIKAR form as PDF.
+    Returns PDF bytes inline — no file is saved to disk for the response.
+    The generated PDF is also stored in request.generated_ibtikar_form for future use.
+    """
+    req = get_object_or_404(Request, pk=pk)
+
+    is_admin = getattr(request.user, 'is_admin', False) or request.user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+    is_requester = request.user == req.requester
+
+    if not is_admin and not is_requester:
+        return HttpResponseForbidden(_("Vous n'avez pas la permission d'accéder à ce document."))
+
+    lang = get_language() or 'fr'
+
+    try:
+        pdf_bytes = generate_ibtikar_form_pdf(req, lang=lang)
+    except ValueError as e:
+        logger.error(f"PDF generation failed for {req.display_id}: {e}")
+        messages.error(request, _("Erreur lors de la génération du formulaire : service manquant."))
+        return redirect('dashboard:requester_request_detail', pk=pk)
+    except Exception as e:
+        logger.error(f"PDF generation failed for {req.display_id}: {e}", exc_info=True)
+        messages.error(request, _("Erreur lors de la génération du formulaire."))
+        return redirect('dashboard:requester_request_detail', pk=pk)
+
+    filename = f"PLAGENOR_IBTIKAR_{req.service.code}_{req.display_id}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
 
 
 @login_required
+def download_ibtikar_form(request, pk):
+    """
+    Download the IBTIKAR Form PDF for a request (serves saved FileField).
+    Available to the request owner and admins.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Check permissions
+    is_admin = getattr(request.user, 'is_admin', False) or request.user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+    is_requester = request.user == req.requester
+    
+    if not is_admin and not is_requester:
+        return HttpResponseForbidden(_("Vous n'avez pas la permission d'accéder à ce document."))
+    
+    # Check if form exists
+    if not req.generated_ibtikar_form or not req.generated_ibtikar_form.name:
+        messages.warning(request, _("Formulaire IBTIKAR non encore généré."))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+    
+    try:
+        file_path = Path(settings.MEDIA_ROOT) / req.generated_ibtikar_form.name
+        if not file_path.exists():
+            messages.error(request, _("Fichier non trouvé."))
+            return redirect('dashboard:request_detail', request_id=req.pk)
+        
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type='application/pdf',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{file_path.name}"'
+        return response
+    except Exception as e:
+        messages.error(request, _(f"Erreur: {str(e)}"))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+
+
+@login_required
+def download_platform_note(request, pk):
+    """
+    Download the Platform Note PDF for a request.
+    Available to the request owner (after validation) and admins.
+    Only for IBTIKAR requests.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Check permissions
+    is_admin = getattr(request.user, 'is_admin', False) or request.user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+    is_requester = request.user == req.requester
+    
+    if not is_admin and not is_requester:
+        return HttpResponseForbidden(_("Vous n'avez pas la permission d'accéder à ce document."))
+    
+    # Only for IBTIKAR requests
+    if req.channel != 'IBTIKAR':
+        messages.error(request, _("La Note de Plateforme n'est disponible que pour les demandes IBTIKAR."))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+    
+    # Requester can only download after validation
+    if not is_admin and is_requester:
+        validated_states = ['PLATFORM_NOTE_GENERATED', 'ASSIGNED', 'PENDING_ACCEPTANCE',
+                          'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
+                          'ANALYSIS_STARTED', 'ANALYSIS_FINISHED', 'REPORT_UPLOADED',
+                          'ADMIN_REVIEW', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED']
+        if req.status not in validated_states and not req.generated_platform_note:
+            return HttpResponseForbidden(_("Ce document n'est pas encore disponible."))
+    
+    # Check if note exists
+    if not req.generated_platform_note or not req.generated_platform_note.name:
+        messages.warning(request, _("Note de Plateforme non encore générée."))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+    
+    try:
+        file_path = Path(settings.MEDIA_ROOT) / req.generated_platform_note.name
+        if not file_path.exists():
+            messages.error(request, _("Fichier non trouvé."))
+            return redirect('dashboard:request_detail', request_id=req.pk)
+        
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type='application/pdf',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{file_path.name}"'
+        return response
+    except Exception as e:
+        messages.error(request, _(f"Erreur: {str(e)}"))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+
+
+@login_required
+def download_reception_form(request, pk):
+    """
+    Download the Sample Reception Form PDF for a request.
+    Available to the request owner and admins.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Check permissions
+    is_admin = getattr(request.user, 'is_admin', False) or request.user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+    is_requester = request.user == req.requester
+    
+    if not is_admin and not is_requester:
+        return HttpResponseForbidden(_("Vous n'avez pas la permission d'accéder à ce document."))
+    
+    # Check if form exists
+    if not req.generated_reception_form or not req.generated_reception_form.name:
+        messages.warning(request, _("Formulaire de réception non encore généré."))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+    
+    try:
+        file_path = Path(settings.MEDIA_ROOT) / req.generated_reception_form.name
+        if not file_path.exists():
+            messages.error(request, _("Fichier non trouvé."))
+            return redirect('dashboard:request_detail', request_id=req.pk)
+        
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type='application/pdf',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{file_path.name}"'
+        return response
+    except Exception as e:
+        messages.error(request, _(f"Erreur: {str(e)}"))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+
+
+# =============================================================================
+# PDF Regeneration Views (Admin Only)
+# =============================================================================
+
+@staff_member_required
+def regenerate_pdf(request, pk, doc_type):
+    """
+    Regenerate a specific PDF document for a request.
+    Staff/Admin only.
+    
+    Args:
+        doc_type: One of 'ibtikar', 'platform_note', or 'reception'
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    # Only for IBTIKAR requests when regenerating platform note
+    if doc_type == 'platform_note' and req.channel != 'IBTIKAR':
+        messages.error(request, _("La Note de Plateforme n'est disponible que pour les demandes IBTIKAR."))
+        return redirect('dashboard:request_detail', request_id=req.pk)
+    
+    try:
+        error = None
+        success_msg = None
+        error_msg = None
+        if doc_type == 'ibtikar':
+            try:
+                generate_ibtikar_form_pdf(req, lang='fr', force_regenerate=True)
+                success_msg = _("Formulaire IBTIKAR régénéré avec succès.")
+            except ValueError as e:
+                error_msg = str(e)
+            except Exception as e:
+                error_msg = str(e)
+
+        elif doc_type == 'platform_note':
+            filepath, error = generate_platform_note_pdf(req, force_regenerate=True)
+            success_msg = _("Note de Plateforme régénérée avec succès.")
+            error_msg = _("La régénération de la Note de Plateforme a échoué.")
+
+        elif doc_type == 'reception':
+            filepath, error = generate_reception_form_pdf(req, force_regenerate=True)
+            success_msg = _("Formulaire de réception régénéré avec succès.")
+            error_msg = _("La régénération du Formulaire de réception a échoué.")
+
+        else:
+            messages.error(request, _("Type de document invalide."))
+            return redirect('dashboard:request_detail', request_id=req.pk)
+
+        if error:
+            messages.error(request, error_msg)
+        elif success_msg:
+            messages.success(request, success_msg)
+            
+    except Exception as e:
+        messages.error(request, _(f"Erreur: {str(e)}"))
+    
+    return redirect('dashboard:request_detail', request_id=req.pk)
+
+
+# =============================================================================
+# Legacy/Deprecated Views (kept for backwards compatibility)
+# =============================================================================
+
+@login_required
 def ibtikar_form_view(request, request_id):
-    req = get_object_or_404(Request, pk=request_id)
-    if not request.user.is_admin and request.user != req.requester:
-        return HttpResponseForbidden()
-    filepath = generate_ibtikar_form(req)
-    return _serve_docx(filepath, Path(filepath).name)
+    """Legacy view - redirects to new download view."""
+    return download_ibtikar_form(request, request_id)
 
 
 @login_required
 def platform_note_view(request, request_id):
-    req = get_object_or_404(Request, pk=request_id)
-    if not request.user.is_admin:
-        return HttpResponseForbidden()
-    filepath = generate_platform_note(req)
-    return _serve_docx(filepath, Path(filepath).name)
-
-
-@login_required
-def quote_view(request, request_id):
-    req = get_object_or_404(Request, pk=request_id)
-    if not request.user.is_admin and request.user != req.requester:
-        return HttpResponseForbidden()
-    filepath = generate_quote(req)
-    return _serve_docx(filepath, Path(filepath).name)
+    """Legacy view - redirects to new download view."""
+    return download_platform_note(request, request_id)
 
 
 @login_required
 def reception_form_view(request, request_id):
-    req = get_object_or_404(Request, pk=request_id)
-    if not request.user.is_admin and request.user != req.requester:
-        return HttpResponseForbidden()
-    filepath = generate_reception_form(req)
-    return _serve_docx(filepath, Path(filepath).name)
+    """Legacy view - redirects to new download view."""
+    return download_reception_form(request, request_id)
 
 
-# ============================================================
-# Template Management Views (Super Admin)
-# ============================================================
+# =============================================================================
+# Status Check API (for AJAX calls)
+# =============================================================================
 
-@admin_required
-def template_list(request):
-    """List all document templates with filtering."""
-    template_type = request.GET.get('type')
-    service_id = request.GET.get('service')
-    is_active = request.GET.get('active')
+@login_required
+def check_pdf_status(request, pk):
+    """
+    API endpoint to check PDF generation status for a request.
+    Returns JSON with status information.
+    """
+    req = get_object_or_404(Request, pk=pk)
     
-    templates = ServiceTemplate.objects.select_related('service', 'created_by')
+    is_admin = getattr(request.user, 'is_admin', False) or request.user.role in ['SUPER_ADMIN', 'PLATFORM_ADMIN']
     
-    if template_type:
-        templates = templates.filter(template_type=template_type)
-    if service_id:
-        templates = templates.filter(service_id=service_id)
-    if is_active == '1':
-        templates = templates.filter(is_active=True)
-    elif is_active == '0':
-        templates = templates.filter(is_active=False)
-    
-    services = Service.objects.filter(is_active=True).order_by('name')
-    
-    context = {
-        'templates': templates,
-        'services': services,
-        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
-        'current_type': template_type,
-        'current_service': service_id,
-        'current_active': is_active,
-    }
-    return render(request, 'documents/template_list.html', context)
-
-
-@admin_required
-def template_create(request):
-    """Create a new document template."""
-    services = Service.objects.filter(is_active=True).order_by('name')
-    
-    if request.method == 'POST':
-        service_id = request.POST.get('service')
-        template_type = request.POST.get('template_type')
-        name = request.POST.get('name')
-        description = request.POST.get('description', '')
-        file = request.FILES.get('file')
-        
-        if not all([service_id, template_type, name, file]):
-            messages.error(request, 'Veuillez remplir tous les champs obligatoires.')
-        else:
-            # Deactivate existing templates of the same type for this service
-            ServiceTemplate.objects.filter(
-                service_id=service_id,
-                template_type=template_type,
-                is_active=True
-            ).update(is_active=False)
-            
-            template = ServiceTemplate.objects.create(
-                service_id=service_id,
-                template_type=template_type,
-                name=name,
-                description=description,
-                file=file,
-                is_active=True,
-                created_by=request.user,
-            )
-            messages.success(request, f'Modèle "{template.name}" créé avec succès.')
-            return redirect('template_detail', pk=template.pk)
-    
-    context = {
-        'services': services,
-        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
-    }
-    return render(request, 'documents/template_form.html', context)
-
-
-@admin_required
-def template_detail(request, pk):
-    """View template details."""
-    template = get_object_or_404(
-        ServiceTemplate.objects.select_related('service', 'created_by'),
-        pk=pk
-    )
-    return render(request, 'documents/template_detail.html', {'template': template})
-
-
-@admin_required
-def template_edit(request, pk):
-    """Edit an existing document template."""
-    template = get_object_or_404(ServiceTemplate, pk=pk)
-    services = Service.objects.filter(is_active=True).order_by('name')
-    
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description', '')
-        is_active = request.POST.get('is_active') == 'on'
-        new_file = request.FILES.get('file')
-        
-        if not name:
-            messages.error(request, 'Le nom est obligatoire.')
-        else:
-            template.name = name
-            template.description = description
-            template.is_active = is_active
-            
-            if new_file:
-                # Deactivate existing active templates of the same type for this service
-                ServiceTemplate.objects.filter(
-                    service=template.service,
-                    template_type=template.template_type,
-                    is_active=True
-                ).exclude(pk=template.pk).update(is_active=False)
-                template.file = new_file
-                # Make this one active
-                template.is_active = True
-            
-            template.save()
-            messages.success(request, f'Modèle "{template.name}" mis à jour.')
-            return redirect('template_detail', pk=template.pk)
-    
-    context = {
-        'template': template,
-        'services': services,
-        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
-    }
-    return render(request, 'documents/template_form.html', context)
-
-
-@admin_required
-def template_delete(request, pk):
-    """Delete a document template."""
-    template = get_object_or_404(ServiceTemplate, pk=pk)
-    
-    if request.method == 'POST':
-        template_name = template.name
-        template.delete()
-        messages.success(request, f'Modèle "{template_name}" supprimé.')
-        return redirect('template_list')
-    
-    return render(request, 'documents/template_confirm_delete.html', {'template': template})
-
-
-@admin_required
-def template_toggle_active(request, pk):
-    """Toggle template active status."""
-    template = get_object_or_404(ServiceTemplate, pk=pk)
-    
-    if request.method == 'POST':
-        if template.is_active:
-            # Deactivate
-            template.is_active = False
-            messages.info(request, f'Modèle "{template.name}" désactivé.')
-        else:
-            # Activate and deactivate others
-            ServiceTemplate.objects.filter(
-                service=template.service,
-                template_type=template.template_type,
-                is_active=True
-            ).exclude(pk=template.pk).update(is_active=False)
-            template.is_active = True
-            messages.success(request, f'Modèle "{template.name}" activé.')
-        
-        template.save()
-    
-    return redirect('template_detail', pk=template.pk)
+    return JsonResponse({
+        'ibtikar_form': {
+            'exists': bool(req.generated_ibtikar_form and req.generated_ibtikar_form.name),
+            'url': req.generated_ibtikar_form.url if req.generated_ibtikar_form else None,
+        },
+        'platform_note': {
+            'exists': bool(req.generated_platform_note and req.generated_platform_note.name),
+            'url': req.generated_platform_note.url if req.generated_platform_note else None,
+            'is_ibtikar_only': req.channel == 'IBTIKAR',
+        },
+        'reception_form': {
+            'exists': bool(req.generated_reception_form and req.generated_reception_form.name),
+            'url': req.generated_reception_form.url if req.generated_reception_form else None,
+        },
+        'can_regenerate': is_admin,
+    })

@@ -292,11 +292,12 @@
             </div>
             <div class="card-body">
                 {% for req in overdue_requests %}
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
                 <div class="data-card mb-2 overdue-alert">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -311,19 +312,20 @@
         </div>
         {% endif %}
 
-        <!-- Section 1: Requests to validate -->
+        <!-- Section 1: Requests to validate (ordered first per spec: Validate before Reports) -->
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Requests to Validate" %}</h3></div>
             <div class="card-body">
                 {% for req in validation_requests %}
-                <div class="data-card mb-2" x-data="{selected: false}">
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
+                <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div>
-                            <input type="checkbox" x-model="selected" @change="updateBulkSelection()" class="request-checkbox" value="{{ req.pk }}" style="margin-right: 8px;">
+                            <input type="checkbox" class="request-checkbox" value="{{ req.pk }}" style="margin-right: 8px;" onchange="updateBulkSelection()">
                         </div>
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -332,31 +334,35 @@
                         <span>{{ req.service.name|default:"—" }} &middot; {% if req.requester %}{{ req.requester.get_full_name }}{% else %}{% trans "Guest" %}{% endif %}</span>
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
+                    {% url 'dashboard:admin_transition' req.pk as admin_transition_url %}
+                    {% url 'dashboard:admin_adjust_cost' req.pk as admin_adjust_cost_url %}
+                    {% url 'dashboard:admin_generate_invoice' req.pk as admin_gen_invoice_url %}
+                    {% url 'dashboard:admin_confirm_payment' req.pk as admin_confirm_payment_url %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         {% if req.status == 'SUBMITTED' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="VALIDATION_PEDAGOGIQUE">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Pedagogical Validation" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        </form>{% endif %}
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
                             <input type="hidden" name="notes" value="Rejected by admin">
                             <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="VALIDATION_FINANCE">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Financial Validation" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        </form>{% endif %}
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
                             <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'VALIDATION_FINANCE' %}
                         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:12px;">
@@ -373,7 +379,7 @@
                                 </div>
                                 {% endif %}
                             </div>
-                            <form method="post" action="{% url 'dashboard:admin_adjust_cost' req.pk %}" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                            {% if admin_adjust_cost_url %}<form method="post" action="{{ admin_adjust_cost_url }}" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                                 {% csrf_token %}
                                 <div>
                                     <label class="text-sm" style="font-size:0.75rem;">{% trans "Adjust Cost (DA)" %}</label>
@@ -384,58 +390,58 @@
                                     <input type="text" name="cost_justification" placeholder="{% trans 'Reason for change...' %}" class="form-control" style="width:200px; font-size:0.85rem;">
                                 </div>
                                 <button type="submit" class="btn btn-sm btn-outline">{% trans "Adjust" %}</button>
-                            </form>
+                            </form>{% endif %}
                         </div>
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="PLATFORM_NOTE_GENERATED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Validate & Generate Note" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        </form>{% endif %}
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
                             <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'REQUEST_CREATED' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="QUOTE_DRAFT">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Prepare Quote" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        </form>{% endif %}
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
                             <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'QUOTE_DRAFT' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="QUOTE_SENT">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Send Quote" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'QUOTE_SENT' %}
                         <span class="text-sm text-muted">{% trans "Awaiting client response" %}</span>
 
                         {% elif req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="INVOICE_GENERATED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Generate Invoice" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'INVOICE_GENERATED' %}
-                        <form method="post" action="{% url 'dashboard:admin_generate_invoice' req.pk %}">
+                        {% if admin_gen_invoice_url %}<form method="post" action="{{ admin_gen_invoice_url }}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-outline">{% trans "Download Invoice" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:admin_confirm_payment' req.pk %}" enctype="multipart/form-data">
+                        </form>{% endif %}
+                        {% if admin_confirm_payment_url %}<form method="post" action="{{ admin_confirm_payment_url }}" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="file" name="payment_receipt" accept=".pdf,.jpg,.jpeg,.png" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirm Payment" %}</button>
-                        </form>
+                        </form>{% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -450,11 +456,13 @@
             <div class="card-header"><h3>{% trans "Reports to Review" %}</h3></div>
             <div class="card-body">
                 {% for req in review_requests %}
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
+                {% url 'dashboard:admin_report_review' req.pk as admin_report_review_url %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
                     </div>
@@ -463,7 +471,7 @@
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="{% url 'dashboard:admin_report_review' req.pk %}" class="btn btn-sm btn-primary">{% trans "Review Report" %}</a>
+                        {% if admin_report_review_url %}<a href="{{ admin_report_review_url }}" class="btn btn-sm btn-primary">{% trans "Review Report" %}</a>{% endif %}
                         {% if req.report_file %}
                         <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Download" %}</a>
                         {% endif %}
@@ -480,11 +488,13 @@
             <div class="card-header"><h3>{% trans "Completions and Closures" %}</h3></div>
             <div class="card-body">
                 {% for req in completion_requests %}
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
+                {% url 'dashboard:admin_transition' req.pk as admin_transition_url %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -495,38 +505,38 @@
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         {% if req.status == 'REPORT_VALIDATED' and req.channel == 'IBTIKAR' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SENT_TO_REQUESTER">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                                 {% trans "Send to Requester" %}
                             </button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'REPORT_VALIDATED' and req.channel == 'GENOCLAB' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SENT_TO_CLIENT">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                                 {% trans "Send to Client" %}
                             </button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'COMPLETED' and req.channel == 'IBTIKAR' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="CLOSED">
                             <button type="submit" class="btn btn-sm btn-outline">{% trans "Close" %}</button>
-                        </form>
+                        </form>{% endif %}
 
                         {% elif req.status == 'COMPLETED' and req.channel == 'GENOCLAB' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
+                        {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="ARCHIVED">
                             <button type="submit" class="btn btn-sm btn-outline">{% trans "Archive" %}</button>
-                        </form>
+                        </form>{% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -536,73 +546,31 @@
             </div>
         </div>
 
-        <!-- Section 4: In progress -->
-        <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "In Progress" %}</h3></div>
-            <div class="card-body">
-                {% for req in in_progress_requests %}
-                <div class="data-card mb-2">
-                    <div class="data-card-row">
-                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
-                        <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
-                            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
-                            <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
-                        </div>
-                    </div>
-                    <div class="data-card-row text-sm text-muted">
-                        <span>{% trans "Analyst" %}: {{ req.assigned_to.user.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
-                        <span>{{ req.updated_at|date:"d/m/Y H:i" }}</span>
-                    </div>
-                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        {% if req.status == 'APPOINTMENT_PROPOSED' and req.appointment_date and not req.appointment_confirmed %}
-                        <span class="text-sm text-muted">{% trans "Proposed appointment" %}: {{ req.appointment_date|date:"d/m/Y" }} — {% trans "Awaiting requester confirmation" %}</span>
-                        <form method="post" action="{% url 'dashboard:admin_modify_appointment' req.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="date" name="appointment_date" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" value="{{ req.appointment_date|date:'Y-m-d' }}">
-                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Modify Appointment" %}</button>
-                        </form>
-
-                        {% elif req.status == 'APPOINTMENT_CONFIRMED' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" class="ajax-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mark Sample Received" %}</button>
-                        </form>
-
-                        {% else %}
-                        <span class="text-sm text-muted">{% trans "In progress" %} — {{ req.get_status_display }}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                {% empty %}
-                <div class="empty-state"><p>{% trans "No requests in progress." %}</p></div>
-                {% endfor %}
-            </div>
-        </div>
     </div>
 
-    <!-- All Requests Tab with CSV Export -->
+    <!-- All Requests Tab with CSV Export and Bulk Validation -->
     <div x-show="tab === 'all'">
         <div class="card mb-4">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>{% trans "All Requests" %}</h3>
-                <a href="{% url 'dashboard:admin_export_csv' %}?channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-sm btn-outline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    {% trans "Export CSV" %}
-                </a>
+                <div style="display: flex; gap: 8px;">
+                    <a href="{% url 'dashboard:admin_export_csv' %}?channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-sm btn-outline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        {% trans "Export CSV" %}
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Filters -->
                 <form method="get" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                     <select name="channel" class="form-control" style="width: 150px;">
                         <option value="">{% trans "All Channels" %}</option>
-                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
-                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>{% trans "IBTIKAR" %}</option>
+                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>{% trans "GENOCLAB" %}</option>
                     </select>
                     <select name="status" class="form-control" style="width: 200px;">
                         <option value="">{% trans "All Statuses" %}</option>
@@ -616,11 +584,15 @@
                 </form>
 
                 {% for req in all_requests %}
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
+                        <div>
+                            <input type="checkbox" class="request-checkbox" value="{{ req.pk }}" style="margin-right: 8px;" onchange="updateBulkSelection()">
+                        </div>
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -655,11 +627,14 @@
             <div class="card-header"><h3>{% trans "Ready for Assignment" %}</h3></div>
             <div class="card-body">
                 {% for req in assignable_requests %}
+                {% url 'dashboard:admin_request_detail' req.pk as admin_req_detail_url %}
+                {% url 'documents:platform_note' req.pk as documents_platform_note_url %}
+                {% url 'dashboard:admin_assign' req.pk as admin_assign_url %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "View" %}</a>
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -669,13 +644,13 @@
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div style="margin:8px 0;">
-                        <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline" style="margin-bottom:8px;">
+                        {% if documents_platform_note_url %}<a href="{{ documents_platform_note_url }}" class="btn btn-sm btn-outline" style="margin-bottom:8px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             {% trans "Download Platform Note" %}
-                        </a>
+                        </a>{% endif %}
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" class="ajax-form" style="display:inline;">
+                        {% if admin_assign_url %}<form method="post" action="{{ admin_assign_url }}" class="ajax-form" style="display:inline;">
                             {% csrf_token %}
                             <select name="member_id" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
                                 <option value="">— {% trans "Assign to" %} —</option>
@@ -684,7 +659,7 @@
                                 {% endfor %}
                             </select>
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Assign" %}</button>
-                        </form>
+                        </form>{% endif %}
                     </div>
                 </div>
                 {% empty %}
@@ -824,32 +799,209 @@
         </div>
     </div>
 
-    <!-- Activity Log Tab (Task 1) -->
+    <!-- Activity Log Tab -->
     <div x-show="tab === 'activity'">
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Activity Log" %}</h3></div>
             <div class="card-body">
-                <p>{% trans "View the complete activity log" %}. <a href="{% url 'dashboard:admin_activity_log' %}">{% trans "Open full activity log" %} →</a></p>
+                <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;">
+                    <input type="hidden" name="tab" value="activity">
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Search" %}</label>
+                        <input type="text" name="activity_q" value="{{ activity_search }}" placeholder="{% trans 'Request ID, title, user...' %}" class="form-control">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "From Date" %}</label>
+                        <input type="date" name="activity_date_from" value="{{ activity_date_from }}" class="form-control">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "To Date" %}</label>
+                        <input type="date" name="activity_date_to" value="{{ activity_date_to }}" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                    <a href="?tab=activity" class="btn btn-outline">{% trans "Clear" %}</a>
+                </form>
+                {% for entry in activity_logs %}
+                <div class="data-card mb-2" style="padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <span class="badge-status {{ entry.to_status|lower }}">{{ entry.to_status }}</span>
+                            {% if entry.request %}
+                            <span class="text-sm" style="margin-left: 8px;">{{ entry.request.display_id }}</span>
+                            {% endif %}
+                            <div class="text-sm text-muted" style="margin-top: 4px;">
+                                {% if entry.actor %}{{ entry.actor.get_full_name }}{% else %}System{% endif %} &middot; {{ entry.created_at|date:"d/m/Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "No activity found." %}</p></div>
+                {% endfor %}
+                {% if activity_paginator %}
+                <div class="pagination" style="margin-top: 16px;">
+                    {% if activity_logs.has_previous %}
+                    <a href="?tab=activity&activity_page={{ activity_logs.previous_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    {% endif %}
+                    <span class="current">{% trans "Page" %} {{ activity_logs.number }} {% trans "of" %} {{ activity_logs.paginator.num_pages }}</span>
+                    {% if activity_logs.has_next %}
+                    <a href="?tab=activity&activity_page={{ activity_logs.next_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Users Tab (Task 3) -->
+    <!-- Users Tab -->
     <div x-show="tab === 'users'">
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "User Oversight" %}</h3></div>
             <div class="card-body">
-                <p>{% trans "Manage all registered students and clients" %}. <a href="{% url 'dashboard:admin_users_list' %}">{% trans "Open user management" %} →</a></p>
+                <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;">
+                    <input type="hidden" name="tab" value="users">
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Search" %}</label>
+                        <input type="text" name="user_q" value="{{ user_search_q }}" placeholder="{% trans 'Name, email, username...' %}" class="form-control">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Role" %}</label>
+                        <select name="user_role" class="form-control">
+                            <option value="">{% trans "All Roles" %}</option>
+                            <option value="REQUESTER" {% if user_role_filter == 'REQUESTER' %}selected{% endif %}>{% trans "IBTIKAR Requester" %}</option>
+                            <option value="CLIENT" {% if user_role_filter == 'CLIENT' %}selected{% endif %}>{% trans "GENOCLAB Client" %}</option>
+                            <option value="MEMBER" {% if user_role_filter == 'MEMBER' %}selected{% endif %}>{% trans "Analyst" %}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Status" %}</label>
+                        <select name="user_status" class="form-control">
+                            <option value="">{% trans "All" %}</option>
+                            <option value="active" {% if user_status_filter == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                            <option value="inactive" {% if user_status_filter == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                    <a href="?tab=users" class="btn btn-outline">{% trans "Clear" %}</a>
+                </form>
+                <div style="overflow-x: auto;">
+                    <table class="table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>{% trans "User" %}</th>
+                                <th>{% trans "Role" %}</th>
+                                <th>{% trans "Requests" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Joined" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.get_full_name|default:user.username }}<br><span class="text-sm text-muted">{{ user.email }}</span></td>
+                                <td><span class="badge-status {{ user.role|lower }}">{{ user.get_role_display }}</span></td>
+                                <td>{{ user.total_requests|default:0 }}</td>
+                                <td>{% if user.is_active %}<span style="color:#059669;">{% trans "Active" %}</span>{% else %}<span style="color:#dc2626;">{% trans "Inactive" %}</span>{% endif %}</td>
+                                <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% url 'dashboard:admin_user_detail' user.pk as admin_user_detail_url %}
+                                    {% if admin_user_detail_url %}<a href="{{ admin_user_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">{% trans "No users found." %}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if users_paginator %}
+                <div class="pagination" style="margin-top: 16px;">
+                    {% if users.has_previous %}
+                    <a href="?tab=users&users_page={{ users.previous_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    {% endif %}
+                    <span class="current">{% trans "Page" %} {{ users.number }} {% trans "of" %} {{ users.paginator.num_pages }}</span>
+                    {% if users.has_next %}
+                    <a href="?tab=users&users_page={{ users.next_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Points System Tab (Task 7) -->
+    <!-- Points System Tab -->
     <div x-show="tab === 'points'">
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Performance & Points Reward System" %}</h3></div>
             <div class="card-body">
-                <p>{% trans "Track member performance and award points" %}. <a href="{% url 'dashboard:admin_performance' %}">{% trans "Open performance dashboard" %} →</a></p>
+                <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;">
+                    <input type="hidden" name="tab" value="points">
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Sort by" %}</label>
+                        <select name="perf_sort" class="form-control">
+                            <option value="total_points" {% if perf_sort == 'total_points' %}selected{% endif %}>{% trans "Points" %}</option>
+                            <option value="efficiency" {% if perf_sort == 'efficiency' %}selected{% endif %}>{% trans "Efficiency" %}</option>
+                            <option value="services" {% if perf_sort == 'services' %}selected{% endif %}>{% trans "Services" %}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Min Points" %}</label>
+                        <input type="number" name="perf_min" value="{{ perf_min }}" class="form-control">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: #6b7280;">{% trans "Max Points" %}</label>
+                        <input type="number" name="perf_max" value="{{ perf_max }}" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                    <a href="?tab=points" class="btn btn-outline">{% trans "Clear" %}</a>
+                </form>
+                {% for member_data in perf_members %}
+                <div class="data-card mb-3 member-row">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            {% if member_data.member.user.avatar %}
+                            <img src="{{ member_data.member.user.avatar.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px; color: #9ca3af;">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">{{ member_data.member.user.get_full_name }}</div>
+                            <div class="text-sm text-muted">
+                                {% trans "Productivity" %}: {{ member_data.member.productivity_score|floatformat:1 }} &middot;
+                                {% trans "Points" %}: {{ member_data.member.total_points }} &middot;
+                                {% trans "Load" %}: {{ member_data.member.current_load }}/{{ member_data.member.max_load }} &middot;
+                                {% trans "Efficiency" %}: {{ member_data.efficiency_rate }}%
+                            </div>
+                            <div class="milestone-progress" style="margin-top: 6px;">
+                                <div class="milestone-fill" style="width: {{ member_data.progress_percentage }}%;"></div>
+                                <span class="milestone-label">{{ member_data.member.total_points }}/{{ member_data.next_milestone }}</span>
+                            </div>
+                        </div>
+                        <div style="width: 150px;">
+                            <div class="performance-bar-container">
+                                <div class="performance-bar-fill" style="width: {% widthratio member_data.member.productivity_score 100 100 %}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "No members found." %}</p></div>
+                {% endfor %}
+                {% if perf_paginator %}
+                <div class="pagination" style="margin-top: 16px;">
+                    {% if perf_members.has_previous %}
+                    <a href="?tab=points&perf_page={{ perf_members.previous_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    {% endif %}
+                    <span class="current">{% trans "Page" %} {{ perf_members.number }} {% trans "of" %} {{ perf_members.paginator.num_pages }}</span>
+                    {% if perf_members.has_next %}
+                    <a href="?tab=points&perf_page={{ perf_members.next_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

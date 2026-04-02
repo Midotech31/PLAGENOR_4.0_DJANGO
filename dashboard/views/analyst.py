@@ -216,8 +216,8 @@ def suggest_appointment(request, pk):
             if appointment_note:
                 notes_parts.append(f'Note: {appointment_note}')
             transition_notes = ' — '.join(notes_parts)
-            # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED
-            if req.status == 'ASSIGNED':
+            # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED or APPOINTMENT_RESCHEDULING_REQUESTED
+            if req.status in ['ASSIGNED', 'APPOINTMENT_RESCHEDULING_REQUESTED']:
                 try:
                     transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=transition_notes)
                 except (InvalidTransitionError, AuthorizationError, ValueError) as e:

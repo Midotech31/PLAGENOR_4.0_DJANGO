@@ -177,6 +177,8 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     total = Decimal('0')
     sample_count = len([s for s in sample_table if s]) if sample_table else 0
     
+    # First pass: calculate base costs from pricing configs
+    override_applied = False
     for config in pricing_configs:
         config_total = Decimal('0')
         quantity = 1
@@ -188,7 +190,6 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             quantity = sample_count
             config_total = config.amount * quantity
         elif config.pricing_type == 'PER_PARAMETER':
-            # Count parameters in service_params
             if service_params:
                 quantity = len([v for v in service_params.values() if v])
             config_total = config.amount * quantity
@@ -198,7 +199,23 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 config_total = config.amount
         elif config.pricing_type == 'DISCOUNT':
             quantity = 1
-            config_total = -config.amount  # Negative for discount
+            config_total = -config.amount
+        
+        # Check for override type (set)
+        if config.pricing_type == 'OVERRIDE' or config.pricing_type == 'BASE' and config.amount > 0:
+            # This is a total override, don't add to existing
+            if not override_applied:
+                total = Decimal(str(config.amount))
+                override_applied = True
+                breakdown.append({
+                    'name': config.name,
+                    'type': config.pricing_type,
+                    'amount': float(config.amount),
+                    'quantity': 1,
+                    'subtotal': float(config.amount),
+                    'is_override': True,
+                })
+                continue
         
         total += config_total
         breakdown.append({
@@ -215,4 +232,113 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
         'sample_count': sample_count,
         'total': float(total),
         'breakdown': breakdown,
+    }
+
+
+def get_field_price_modifiers(service, channel='BOTH'):
+    """
+    Get all form fields that affect pricing for a service.
+    
+    Returns list of fields with pricing modifier info.
+    """
+    from core.models import ServiceFormField
+    
+    fields = service.form_fields.filter(
+        affects_pricing=True,
+        price_modifier_type__in=['add', 'set', 'multiply']
+    ).filter(
+        models.Q(channel='BOTH') | models.Q(channel=channel)
+    )
+    
+    return list(fields)
+
+
+def apply_field_price_modifiers(base_cost, service_params, modifier_fields):
+    """
+    Apply field-level price modifiers to a base cost.
+    
+    Args:
+        base_cost: Decimal or float base cost
+        service_params: Dict of selected field values
+        modifier_fields: QuerySet of ServiceFormField with pricing modifiers
+    
+    Returns:
+        dict with modified total and warnings
+    """
+    from decimal import Decimal
+    
+    if not modifier_fields or not service_params:
+        return {'total': float(base_cost), 'warnings': [], 'modifiers_applied': []}
+    
+    total = Decimal(str(base_cost))
+    warnings = []
+    modifiers_applied = []
+    
+    for field in modifier_fields:
+        field_value = service_params.get(field.name)
+        
+        # Check if this field's value triggers a price modifier
+        if not field_value:
+            continue
+        
+        # For boolean fields, any truthy value triggers
+        # For select/multiselect, check if value is in options
+        should_apply = False
+        
+        if field.field_type in ['boolean', 'checkbox']:
+            should_apply = bool(field_value)
+        elif field.field_type in ['select', 'multiselect', 'dropdown']:
+            # Check if selected value triggers modifier
+            choices = field.get_choices() or []
+            if isinstance(field_value, list):
+                should_apply = any(str(v) in choices for v in field_value)
+            else:
+                should_apply = str(field_value) in choices
+        else:
+            # For text/number fields, apply if has value
+            should_apply = bool(field_value)
+        
+        if not should_apply or not field.price_modifier_value:
+            continue
+        
+        modifier_value = Decimal(str(field.price_modifier_value))
+        modifier_type = field.price_modifier_type
+        
+        if modifier_type == 'add':
+            total += modifier_value
+            modifiers_applied.append({
+                'field': field.name,
+                'label': field.get_label(),
+                'type': 'add',
+                'value': float(modifier_value),
+            })
+        elif modifier_type == 'set':
+            total = modifier_value
+            modifiers_applied.append({
+                'field': field.name,
+                'label': field.get_label(),
+                'type': 'set',
+                'value': float(modifier_value),
+            })
+        elif modifier_type == 'multiply':
+            total *= modifier_value
+            modifiers_applied.append({
+                'field': field.name,
+                'label': field.get_label(),
+                'type': 'multiply',
+                'value': float(modifier_value),
+            })
+        
+        # Add warning message
+        if field.condition_note_fr or field.condition_note_en:
+            warnings.append({
+                'field': field.name,
+                'note_fr': field.condition_note_fr,
+                'note_en': field.condition_note_en,
+            })
+    
+    return {
+        'total': float(total),
+        'warnings': warnings,
+        'modifiers_applied': modifiers_applied,
     }

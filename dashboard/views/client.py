@@ -4,21 +4,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from django.db.models import Count
+from dashboard.decorators import client_required
 
 from core.models import Service, Request, Invoice
 from core.workflow import transition
 from core.services.genoclab import submit_genoclab_request
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
-
-
-def client_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role != 'CLIENT':
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
 
 
 @client_required
@@ -64,10 +57,10 @@ def index(request):
     # Invoices for this client
     invoices = Invoice.objects.filter(client=request.user).select_related('request').order_by('-created_at')
 
-    # Archives - paginated
+    # Archives - paginated (exclude hidden from archive)
     archived_qs = my_requests.filter(
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
-    ).select_related('service').order_by('-updated_at')
+    ).exclude(hidden_from_archive=True).select_related('service').order_by('-updated_at')
     archived_paginator, archived, _ = paginate_queryset(archived_qs, request, per_page=25, page_param='archived_page')
 
     # Services for new request
@@ -112,6 +105,7 @@ def index(request):
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     from core.registry import get_service_def
+    from core.models import PaymentSettings
     yaml_def = get_service_def(req.service.code) if req.service else None
 
     # Build parameter labels from YAML for better display
@@ -144,12 +138,21 @@ def request_detail(request, pk):
     messages_list = Message.objects.filter(
         request=req, to_user=request.user
     ).select_related('from_user').order_by('created_at')
+    
+    # Get payment settings for invoice section
+    payment_settings = PaymentSettings.get_settings()
+    
+    # Get workflow history
+    from core.models import RequestStatusHistory
+    history = RequestStatusHistory.objects.filter(request=req).select_related('actor').order_by('created_at')
 
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
+        'payment_settings': payment_settings,
+        'history': history,
     }
     return render(request, 'dashboard/client/request_detail.html', context)
 
@@ -290,15 +293,22 @@ def upload_payment_receipt(request, pk):
     req.payment_uploaded_at = timezone.now()
     req.save(update_fields=['payment_receipt_file', 'payment_uploaded_at'])
     
-    # Transition to PAYMENT_CONFIRMED
+    # Transition to PAYMENT_UPLOADED (admin will confirm to PAYMENT_CONFIRMED)
     try:
-        transition(req, 'PAYMENT_CONFIRMED', request.user, notes='Reçu de paiement téléchargé par le client')
+        transition(req, 'PAYMENT_UPLOADED', request.user, notes='Reçu de paiement téléchargé par le client, en attente de confirmation admin')
         
-        # Notify assigned analyst that they can now upload the report
-        from notifications.services import notify_payment_received
-        notify_payment_received(req)
+        # Notify admin that payment receipt needs verification
+        from accounts.models import User
+        admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'], is_active=True)
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                message=f"{req.display_id}: Reçu de paiement uploadé par client — Confirmation requise",
+                request=req,
+                notification_type='PAYMENT',
+            )
         
-        messages.success(request, f"Paiement confirmé pour {req.display_id}. L'analyste assigné peut maintenant télécharger le rapport d'analyse.")
+        messages.success(request, f"Reçu de paiement uploadé pour {req.display_id}. L'administrateur va vérifier et confirmer le paiement.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     
@@ -362,6 +372,7 @@ def confirm_receipt(request, pk):
 
 @client_required
 def suggest_alternative_date(request, pk):
+    """Client requests appointment rescheduling with workflow transition and Admin Ops notification."""
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
@@ -370,30 +381,56 @@ def suggest_alternative_date(request, pk):
     if alt_date:
         from datetime import datetime as dt
         from core.models import RequestComment
+        from core.workflow import transition
+        from core.exceptions import InvalidTransitionError, AuthorizationError
         try:
             parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Date invalide.")
             return redirect_back(request, 'dashboard:client')
+        
+        # Perform workflow transition to APPOINTMENT_RESCHEDULING_REQUESTED
+        if req.status == 'APPOINTMENT_PROPOSED':
+            try:
+                transition(req, 'APPOINTMENT_RESCHEDULING_REQUESTED', request.user, 
+                          notes=f"Client requested alternative date: {alt_date}. {alt_note}".strip())
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                messages.error(request, f"Erreur de transition: {str(e)}")
+                return redirect_back(request, 'dashboard:client')
+        
         # Store the alternative date on the request
         req.alt_date_proposed = parsed_date
         req.alt_date_note = alt_note
         req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
-        # Also log as comment for audit trail
+        
+        # Log as comment for audit trail
         RequestComment.objects.create(
             request=req, author=request.user,
             text=f"Date alternative proposée: {alt_date}. {alt_note}".strip(),
             step=req.status
         )
-        # Notify the assigned analyst
-        if req.assigned_to:
+        
+        # Notify Admin Ops (primary notification)
+        from accounts.models import User
+        admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+        for admin in admins:
             Notification.objects.create(
-                user=req.assigned_to.user,
-                message=f"{req.display_id}: Date alternative proposée — {parsed_date.strftime('%d/%m/%Y')}",
+                user=admin,
+                message=f"{req.display_id}: Client a demandé une reprogrammation — {parsed_date.strftime('%d/%m/%Y')}",
                 request=req,
                 notification_type='WORKFLOW',
             )
-        messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
+        
+        # Also notify the assigned analyst
+        if req.assigned_to:
+            Notification.objects.create(
+                user=req.assigned_to.user,
+                message=f"{req.display_id}: Reprogrammation demandée par client — {parsed_date.strftime('%d/%m/%Y')}",
+                request=req,
+                notification_type='WORKFLOW',
+            )
+        
+        messages.success(request, f"Demande de reprogrammation envoyée: {parsed_date.strftime('%d/%m/%Y')}. L'administrateur va vous contacter.")
     return redirect_back(request, 'dashboard:client')
 
 
@@ -410,3 +447,181 @@ def rate_service(request, pk):
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
     return redirect_back(request, 'dashboard:client')
+
+
+# =============================================================================
+# Archive Feature (Feature 2)
+# =============================================================================
+
+@client_required
+def archive_detail(request, pk):
+    """View archived request details - read-only detail view."""
+    req = get_object_or_404(
+        Request.objects.filter(
+            requester=request.user,
+            status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
+        ).exclude(hidden_from_archive=True),
+        pk=pk
+    )
+    
+    from core.registry import get_service_def
+    yaml_def = get_service_def(req.service.code) if req.service else None
+    
+    # Build sample table column labels
+    sample_col_labels = {}
+    if yaml_def:
+        st = yaml_def.get('sample_table', {})
+        for col in st.get('columns', []):
+            sample_col_labels[col['name']] = col.get('label', col['name'])
+    
+    # Build display-ready sample headers
+    sample_headers = []
+    if req.sample_table and len(req.sample_table) > 0:
+        for key in req.sample_table[0].keys():
+            sample_headers.append(sample_col_labels.get(key, key.replace('_', ' ').title()))
+    
+    context = {
+        'req': req,
+        'sample_headers': sample_headers,
+    }
+    return render(request, 'dashboard/client/archive_detail.html', context)
+
+
+@client_required
+def hide_from_archive(request, pk):
+    """Hide a single request from the requester's archive."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    
+    req = get_object_or_404(
+        Request.objects.filter(
+            requester=request.user,
+            status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
+        ),
+        pk=pk
+    )
+    
+    req.hidden_from_archive = True
+    req.save(update_fields=['hidden_from_archive'])
+    messages.success(request, f"La demande {req.display_id} a été retirée de vos archives.")
+    return redirect('dashboard:client')
+
+
+@client_required
+def remove_from_archive(request):
+    """Remove multiple requests from the requester's archive (bulk action)."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    
+    action = request.POST.get('action', '')
+    selected_ids = request.POST.getlist('selected_requests', [])
+    
+    if action == 'clear_all':
+        # Hide all completed requests for this user
+        Request.objects.filter(
+            requester=request.user,
+            status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
+        ).update(hidden_from_archive=True)
+        messages.success(request, "Toutes les demandes ont été retirées de vos archives.")
+    elif selected_ids:
+        # Hide only selected requests
+        updated = Request.objects.filter(
+            pk__in=selected_ids,
+            requester=request.user,
+            status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
+        ).update(hidden_from_archive=True)
+        messages.success(request, f"{updated} demande(s) ont été retirée(s) de vos archives.")
+    
+    return redirect('dashboard:client')
+
+
+@client_required
+def accept_citation(request, pk):
+    """Accept citation terms before downloading report."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    
+    req = get_object_or_404(
+        Request.objects.filter(
+            requester=request.user,
+            status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
+        ),
+        pk=pk
+    )
+    
+    req.citation_accepted = True
+    req.citation_accepted_at = timezone.now()
+    req.save(update_fields=['citation_accepted', 'citation_accepted_at'])
+    
+    # Return JSON response for AJAX
+    from django.http import JsonResponse
+    return JsonResponse({'success': True})
+
+
+# =============================================================================
+# INVOICE DOWNLOAD FOR CLIENTS (GENOCLAB)
+# =============================================================================
+
+@client_required
+def download_invoice(request, pk):
+    """
+    Download the signed invoice for a GENOCLAB request.
+    When the client downloads the invoice, notify Admin Ops.
+    """
+    from django.http import HttpResponse
+    from accounts.models import User
+    
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
+    
+    # Check if invoice has been sent
+    if not req.signed_invoice:
+        from django.contrib import messages
+        messages.error(request, _("No signed invoice available for this request. Please contact support."))
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    if not req.invoice_sent_at:
+        from django.contrib import messages
+        messages.error(request, _("Invoice has not been sent yet. Please wait for notification."))
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Update download timestamp
+    if not req.invoice_downloaded_at:
+        req.invoice_downloaded_at = timezone.now()
+        req.save(update_fields=['invoice_downloaded_at'])
+        
+        # Notify Admin Ops about the invoice download
+        # Get all admin users
+        admin_users = User.objects.filter(role__in=['ADMIN', 'PLATFORM_ADMIN', 'SUPER_ADMIN'])
+        for admin in admin_users:
+            Notification.objects.create(
+                user=admin,
+                message=_("Client %(client_name)s has downloaded the invoice for request %(display_id)s.") % {
+                    'client_name': request.user.get_full_name(),
+                    'display_id': req.display_id
+                },
+                request=req,
+                notification_type='INVOICE_DOWNLOADED'
+            )
+    
+    # Serve the file
+    try:
+        file_obj = req.signed_invoice
+        content_type = 'application/octet-stream'
+        
+        # Try to determine content type based on file extension
+        filename = file_obj.name.lower()
+        if filename.endswith('.pdf'):
+            content_type = 'application/pdf'
+        elif filename.endswith('.xlsx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        elif filename.endswith('.docx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        
+        response = HttpResponse(file_obj.read(), content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{req.signed_invoice.name.split("/")[-1]}"'
+        return response
+        
+    except Exception as e:
+        from django.contrib import messages
+        messages.error(request, _("Error downloading invoice: %(error)s") % {'error': str(e)})
+        return redirect('dashboard:client_request_detail', pk=pk)

@@ -113,33 +113,111 @@
     </div>
 </div>
 
-<!-- Award Points Form -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h3>{% trans "Award Bonus Points" %}</h3>
-    </div>
-    <div class="card-body">
-        <form method="post" action="{% url 'dashboard:admin_award_points' member.pk %}" class="ajax-form" x-data="{showForm: false}">
-            {% csrf_token %}
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-                <div>
-                    <label style="font-size: 12px; color: #6b7280;">{% trans "Points" %}</label>
-                    <input type="number" name="points" min="1" class="form-control" style="width: 120px;" required>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="font-size: 12px; color: #6b7280;">{% trans "Reason" %} ({% trans "Required" %})</label>
-                    <input type="text" name="reason" class="form-control" placeholder="{% trans 'Enter reason for bonus...' %}" required>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                    {% trans "Award Points" %}
-                </button>
+    {% url 'dashboard:admin_award_points' member.pk as admin_award_points_url %}
+    {% url 'dashboard:admin_send_cheer' member.pk as admin_send_cheer_url %}
+    {% url 'dashboard:admin_upload_gift' member.pk as admin_upload_gift_url %}
+    
+    <!-- Interactive Rewards Panel -->
+    <div class="card mb-4">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>🎁 {% trans "Interactive Rewards Panel" %}</h3>
+            <span style="font-size:0.85rem; color:#6b7280;">{% trans "Send rewards to member" %}</span>
+        </div>
+        <div class="card-body">
+            <!-- Award Points Form -->
+            <div style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #e5e7eb;">
+                <h4 style="font-size:1rem; margin:0 0 12px; color:#4F46E5;">⭐ {% trans "Send Points" %}</h4>
+                {% if admin_award_points_url %}<form method="post" action="{{ admin_award_points_url }}" class="ajax-form">
+                    {% csrf_token %}
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                        <div>
+                            <label style="font-size: 12px; color: #6b7280;">{% trans "Points" %}</label>
+                            <input type="number" name="points" min="1" class="form-control" style="width: 120px;" required>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="font-size: 12px; color: #6b7280;">{% trans "Reason" %} ({% trans "Required" %})</label>
+                            <input type="text" name="reason" class="form-control" placeholder="{% trans 'e.g., Exceptional performance on urgent analysis' %}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            {% trans "Award Points" %}
+                        </button>
+                    </div>
+                </form>{% endif %}
             </div>
-        </form>
+            
+            <!-- Send Cheer Form -->
+            <div style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #e5e7eb;">
+                <h4 style="font-size:1rem; margin:0 0 12px; color:#059669;">👏 {% trans "Send Cheer" %}</h4>
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" onclick="fillCheer('Great work! 🎉')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">🎉 {% trans "Great work!" %}</button>
+                    <button type="button" onclick="fillCheer('Thank you for your dedication! 🙏')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">🙏 {% trans "Thank you!" %}</button>
+                    <button type="button" onclick="fillCheer('Excellent results! ⭐')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">⭐ {% trans "Excellent!" %}</button>
+                </div>
+                {% if admin_send_cheer_url %}<form method="post" action="{{ admin_send_cheer_url }}" class="ajax-form">
+                    {% csrf_token %}
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <input type="text" name="message" id="cheer-message" class="form-control" placeholder="{% trans 'Quick positive message...' %}">
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            👏 {% trans "Send Cheer" %}
+                        </button>
+                    </div>
+                </form>{% endif %}
+            </div>
+            
+            <!-- Send Encouragement Form -->
+            <div>
+                <h4 style="font-size:1rem; margin:0 0 12px; color:#d97706;">💪 {% trans "Send Encouragement" %}</h4>
+                {% if admin_send_cheer_url %}<form method="post" action="{{ admin_send_cheer_url }}" class="ajax-form">
+                    {% csrf_token %}
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <textarea name="message" class="form-control" rows="2" placeholder="{% trans 'Personalized encouragement message...' %}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline" style="border-color:#d97706; color:#d97706;">
+                            💪 {% trans "Send" %}
+                        </button>
+                    </div>
+                </form>{% endif %}
+            </div>
+        </div>
     </div>
-</div>
+    
+    <!-- 1000-Point Reward Box Upload -->
+    {% if member.total_points >= 1000 %}
+    <div class="card mb-4" style="border:3px solid #fbbf24; background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+        <div class="card-header" style="background:transparent;">
+            <h3>🎁 {% trans "1000-Point Reward Box" %}</h3>
+        </div>
+        <div class="card-body">
+            <p style="margin:0 0 16px; color:#92400e;">
+                {% trans "This member has reached 1000 points! Upload a photo of the physical gift to unlock their reward box." %}
+            </p>
+            
+            {% if member.gift_unlocked and member.gift_image %}
+            <div style="background:white; border-radius:12px; padding:20px; text-align:center;">
+                <p style="color:#059669; font-weight:500; margin:0 0 12px;">✅ {% trans "Gift already uploaded!" %}</p>
+                <img src="{{ member.gift_image.url }}" alt="{% trans 'Gift' %}" style="max-width:200px; max-height:200px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+            </div>
+            {% else %}
+            {% if admin_upload_gift_url %}<form method="post" action="{{ admin_upload_gift_url }}" enctype="multipart/form-data" class="ajax-form">
+                {% csrf_token %}
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <input type="file" name="gift_image" accept="image/*" class="form-control" style="flex:1; min-width:200px;" required>
+                    <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
+                        🎁 {% trans "Upload Gift Photo" %}
+                    </button>
+                </div>
+                <small style="color:#6b7280; margin-top:8px; display:block;">{% trans "Upload a photo of the reward (e.g., certificate, gift card, trophy)" %}</small>
+            </form>{% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
 <!-- Points History -->
 <div class="card">
@@ -247,6 +325,14 @@ function showConfetti() {
         confetti.style.animationDelay = Math.random() * 2 + 's';
         document.body.appendChild(confetti);
         setTimeout(() => confetti.remove(), 5000);
+    }
+}
+
+function fillCheer(message) {
+    const cheerInput = document.getElementById('cheer-message');
+    if (cheerInput) {
+        cheerInput.value = message;
+        cheerInput.focus();
     }
 }
 

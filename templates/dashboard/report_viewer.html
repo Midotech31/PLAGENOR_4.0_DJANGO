@@ -292,6 +292,17 @@
     .continue-btn:hover {
         background: #4338ca;
     }
+    .download-btn:not(:disabled) {
+        background: #4f46e5 !important;
+        cursor: pointer !important;
+    }
+    .download-btn:not(:disabled):hover {
+        background: #4338ca !important;
+    }
+    .cancel-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -320,30 +331,50 @@
 
 {% block extra_js %}
 <script>
-var citationAcknowledged = {{ req.citation_acknowledged|yesno:"true,false" }};
+// IBTIKAR citation acceptance
+var citationAccepted = {{ req.citation_accepted|yesno:"true,false" }};
+var isIbtikar = {{ req.channel|lower }} === 'ibtikar';
+var paymentCompleted = {{ payment_completed|yesno:"true,false" }};
 
-function showAcknowledgmentModal(event) {
+function showCitationModal(event) {
     event.preventDefault();
-    if (citationAcknowledged) {
-        // Already acknowledged: go straight to download
+    // Skip modal if not IBTIKAR or already accepted or payment completed
+    if (!isIbtikar || citationAccepted || paymentCompleted) {
         window.location.href = document.getElementById('download-btn').getAttribute('data-url');
         return;
     }
-    document.getElementById('acknowledgment-modal').style.display = 'flex';
+    // Reset checkbox state when opening modal
+    var checkbox = document.getElementById('citation-checkbox');
+    if (checkbox) checkbox.checked = false;
+    var downloadBtn = document.getElementById('modal-download-btn');
+    if (downloadBtn) downloadBtn.disabled = true;
+    document.getElementById('citation-modal').style.display = 'flex';
 }
 
-function closeAcknowledgmentModal(redirectToDownload) {
-    document.getElementById('acknowledgment-modal').style.display = 'none';
-    // Mark acknowledged on the server
-    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
-        document.querySelector('[name=csrfmiddlewaretoken]').value : '';
-    fetch('{% url "report_acknowledge" token=req.report_token %}', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-    }).catch(function(){});
-    citationAcknowledged = true;
-    if (redirectToDownload !== false) {
+function toggleDownloadButton() {
+    var checkbox = document.getElementById('citation-checkbox');
+    var downloadBtn = document.getElementById('modal-download-btn');
+    if (checkbox && downloadBtn) {
+        downloadBtn.disabled = !checkbox.checked;
+    }
+}
+
+{% url 'report_acknowledge' token=req.report_token as report_acknowledge_url %}
+function closeCitationModal(doDownload) {
+    document.getElementById('citation-modal').style.display = 'none';
+    if (doDownload) {
+        // Mark citation as accepted on the server
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+            document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+        {% if report_acknowledge_url %}
+        fetch('{{ report_acknowledge_url }}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(function(){});
+        {% endif %}
+        citationAccepted = true;
+        // Trigger download
         var downloadUrl = document.getElementById('download-btn').getAttribute('data-url');
         window.location.href = downloadUrl;
     }
@@ -362,10 +393,10 @@ function copyCitation() {
 
 // Close modal when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
-    var overlay = document.getElementById('acknowledgment-modal');
+    var overlay = document.getElementById('citation-modal');
     if (overlay) {
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) { closeAcknowledgmentModal(); }
+            if (e.target === overlay) { closeCitationModal(false); }
         });
     }
 });
@@ -406,19 +437,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
         {% if req.report_file %}
         <div class="report-download">
-            <a href="#" data-url="{{ req.report_file.url }}" id="download-btn" onclick="showAcknowledgmentModal(event)">
+            {% if req.channel == 'IBTIKAR' %}
+            <a href="#" data-url="{{ req.report_file.url }}" id="download-btn" onclick="showCitationModal(event)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
                 {% trans "Télécharger le rapport" %}
             </a>
+            {% else %}
+            <a href="{{ req.report_file.url }}" target="_blank">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                {% trans "Télécharger le rapport" %}
+            </a>
+            {% endif %}
         </div>
 
-        <!-- Acknowledgment & Citation Modal -->
-        <div id="acknowledgment-modal" class="modal-overlay" style="display:none;">
+        <!-- Citation & Download Modal (IBTIKAR only) -->
+        {% if req.channel == 'IBTIKAR' %}
+        <div id="citation-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content">
                 {% csrf_token %}
-                <button class="modal-close" onclick="closeAcknowledgmentModal(false)">&times;</button>
+                <button class="modal-close" onclick="closeCitationModal(false)">&times;</button>
                 
                 <!-- Animated DNA Illustration -->
                 <div class="dna-animation">
@@ -466,13 +507,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="mailto:plagenor@essbo.dz">plagenor@essbo.dz</a>
                 </p>
 
-                <button class="continue-btn" onclick="closeAcknowledgmentModal()">
-                    {% trans "Continuer vers l'évaluation" %}
-                </button>
+                <!-- Acceptance Checkbox -->
+                <div class="acceptance-checkbox-wrapper" style="margin: 24px 0 16px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" id="citation-checkbox" onchange="toggleDownloadButton()" style="width: 20px; height: 20px; margin-top: 2px; cursor: pointer;">
+                        <span style="color: #1e293b; font-size: 0.95rem; line-height: 1.5;">
+                            {% blocktrans %}I have read and I accept the terms and conditions of use{% endblocktrans %}
+                            <br>
+                            <span style="font-size: 0.85rem; color: #64748b;">{% trans "J'ai lu et j'accepte les conditions générales d'utilisation" %}</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Modal Action Buttons -->
+                <div style="display: flex; gap: 12px;">
+                    <button class="cancel-btn" onclick="closeCitationModal(false)" style="flex: 1; padding: 14px; background: #fff; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
+                        {% trans "Annuler" %}
+                    </button>
+                    <button id="modal-download-btn" class="download-btn" onclick="closeCitationModal(true)" disabled style="flex: 2; padding: 14px; background: #9ca3af; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: not-allowed; font-size: 1rem;">
+                        {% trans "Télécharger" %}
+                    </button>
+                </div>
             </div>
         </div>
         {% endif %}
+        {% endif %}
 
+        {% url 'report_rate' token=req.report_token as report_rate_url %}
         <div class="star-rating">
             {% if req.service_rating %}
                 <h3>{% trans "Votre évaluation" %}</h3>
@@ -496,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             {% else %}
                 <h3>{% trans "Évaluez notre service" %}</h3>
-                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form">
+                {% if report_rate_url %}<form method="post" action="{{ report_rate_url }}" class="rating-form">
                     {% csrf_token %}
                     <div class="stars">
                         {% for i in "54321" %}
@@ -507,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <textarea name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}"></textarea>
                     <br>
                     <button type="submit">{% trans "Envoyer" %}</button>
-                </form>
+                </form>{% endif %}
             {% endif %}
         </div>
     </div>

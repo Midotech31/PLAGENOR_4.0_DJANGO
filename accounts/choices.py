@@ -11,13 +11,14 @@ IBTIKAR_POSITION_CHOICES = [
     ('etudiant_master_ingenieur', _('Étudiant(e) en fin de cycle — Master / Ingénieur')),
 ]
 
-# GENOCLAB Position Choices (for external clients)
+# GENOCLAB Position Choices (for external clients - professional roles)
 GENOCLAB_POSITION_CHOICES = [
-    ('academique', _('Accadémique / Academic')),
-    ('industriel', _('Industriel / Industrial')),
-    ('hospitalier', _('Hospitalier / Hospital')),
-    ('independant', _('Indépendant / Independent')),
-    ('autre', _('Autre / Other')),
+    ('director', _('Directeur / Director')),
+    ('manager', _('Responsable / Manager')),
+    ('lab_technician', _('Technicien de laboratoire / Lab Technician')),
+    ('researcher', _('Chercheur / Researcher')),
+    ('engineer', _('Ingénieur / Engineer')),
+    ('other', _('Autre / Other')),
 ]
 
 # Member Position Choices (for analysts/operators - admin-created only)

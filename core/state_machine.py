@@ -60,12 +60,14 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "PENDING_ACCEPTANCE":       {"ACCEPTED", "DECLINED"},
     "ACCEPTED":                 {"APPOINTMENT_PROPOSED"},
     "DECLINED":                 {"ORDER_UPLOADED"},  # Returns for reassignment
-    "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
+    "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED", "APPOINTMENT_RESCHEDULING_REQUESTED"},
+    "APPOINTMENT_RESCHEDULING_REQUESTED": {"APPOINTMENT_PROPOSED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
     "ANALYSIS_STARTED":         {"ANALYSIS_FINISHED"},
     "ANALYSIS_FINISHED":        {"PAYMENT_PENDING"},  # Notify client to pay
-    "PAYMENT_PENDING":          {"PAYMENT_CONFIRMED"},  # Client uploads receipt
+    "PAYMENT_PENDING":          {"PAYMENT_UPLOADED"},  # Client uploads receipt
+    "PAYMENT_UPLOADED":         {"PAYMENT_CONFIRMED"},  # Admin confirms payment
     "PAYMENT_CONFIRMED":        {"REPORT_UPLOADED"},  # Member can upload report after payment
     "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},  # Admin validates or requests revision
     "REPORT_VALIDATED":         {"SENT_TO_CLIENT"},

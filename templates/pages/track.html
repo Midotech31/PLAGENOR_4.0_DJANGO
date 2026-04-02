@@ -1,15 +1,15 @@
 {% extends 'base_public.html' %}
 {% load i18n %}
 
-{% block title %}PLAGENOR 4.0 — {% trans "Suivi" %}{% endblock %}
+{% block title %}PLAGENOR 4.0 — {% trans "Suivi de demande" %} | {% trans "Request Tracking" %}{% endblock %}
 
 {% block content %}
 <div class="track-section">
-    <h2>{% trans "Suivi de votre demande" %}</h2>
-    <p>{% trans "Entrez votre identifiant de demande ou votre token de suivi pour consulter l'état d'avancement." %}</p>
+    <h2>{% trans "Suivi de votre demande" %} / {% trans "Request Tracking" %}</h2>
+    <p>{% trans "Entrez votre identifiant pour consulter l'état d'avancement." %} / {% trans "Enter your ID to check the status." %}</p>
     <form class="track-form" method="get" action="{% url 'track' %}">
-        <input type="text" name="q" class="form-control" placeholder="{% trans 'Ex: IBT-2026-0042 ou votre token...' %}" value="{{ request.GET.q|default:'' }}" required>
-        <button type="submit" class="btn btn-primary">{% trans "Rechercher" %}</button>
+        <input type="text" name="q" class="form-control" placeholder="{% trans 'Ex: IBT-2026-0042, IDGRSTD00001, GCL-2026-00001...' %}" value="{{ request.GET.q|default:'' }}" required>
+        <button type="submit" class="btn btn-primary">{% trans "Rechercher" %} / {% trans "Search" %}</button>
     </form>
 
     {% if request.GET.q %}

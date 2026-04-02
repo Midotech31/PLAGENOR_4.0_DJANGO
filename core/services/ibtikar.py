@@ -15,7 +15,7 @@ logger = logging.getLogger('plagenor.services')
 
 
 def submit_ibtikar_request(data: dict, user) -> Request:
-    """Submit a new IBTIKAR request with budget check."""
+    """Submit a new IBTIKAR request with budget check and IBTIKAR ID validation."""
     # Generate display_id
     year = datetime.now().year
     count = Request.objects.filter(channel='IBTIKAR', created_at__year=year).count() + 1
@@ -28,6 +28,24 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         if budget_check['exceeded']:
             # Store warning but don't block — SUPER_ADMIN can override
             data.setdefault('_budget_warning', budget_check)
+
+    # Get IBTIKAR ID from data or user's profile
+    ibtikar_id = data.get('ibtikar_id', '')
+    if not ibtikar_id and hasattr(user, 'ibtikar_id'):
+        ibtikar_id = user.ibtikar_id
+
+    # Check for duplicate IBTIKAR ID on active requests (warning only)
+    if ibtikar_id:
+        from core.models import Request as CoreRequest
+        duplicate_check = CoreRequest.objects.filter(
+            ibtikar_id=ibtikar_id,
+            channel='IBTIKAR'
+        ).exclude(
+            status__in=['COMPLETED', 'CLOSED', 'REJECTED']
+        ).exists()
+        if duplicate_check:
+            data.setdefault('_ibtikar_id_warning', 
+                'Cet identifiant IBTIKAR est déjà utilisé sur une autre demande active.')
 
     service_id = data.get('service_id')
 
@@ -42,6 +60,7 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         requester=user,
         budget_amount=budget_amount,
         declared_ibtikar_balance=data.get('declared_ibtikar_balance', 0),
+        ibtikar_id=ibtikar_id,
         service_params=data.get('service_params', {}),
         pricing=data.get('pricing', {}),
         sample_table=data.get('sample_table', []),

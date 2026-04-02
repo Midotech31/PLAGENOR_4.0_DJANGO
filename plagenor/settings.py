@@ -191,6 +191,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
+                'dashboard.context_processors.language_context',
                 'dashboard.context_processors.notifications',
             ],
         },

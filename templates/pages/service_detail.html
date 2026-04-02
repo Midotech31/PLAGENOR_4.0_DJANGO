@@ -26,13 +26,13 @@
                 <p class="text-muted" style="font-size:1rem; line-height:1.6;">{{ service.description }}</p>
                 {% if service.channel_availability == 'BOTH' %}
                 <div style="margin-top:16px; display:flex; gap:8px;">
-                    <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span>
-                    <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span>
+                    <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">{% trans "IBTIKAR" %}</span>
+                    <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">{% trans "GENOCLAB" %}</span>
                 </div>
                 {% elif service.channel_availability == 'IBTIKAR' %}
-                <div style="margin-top:16px;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
+                <div style="margin-top:16px;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">{% trans "IBTIKAR" %}</span></div>
                 {% else %}
-                <div style="margin-top:16px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+                <div style="margin-top:16px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">{% trans "GENOCLAB" %}</span></div>
                 {% endif %}
             </div>
         </div>
@@ -41,13 +41,13 @@
         <p class="text-muted" style="max-width:600px; margin:0 auto 12px; text-align:center;">{{ service.description }}</p>
         {% if service.channel_availability == 'BOTH' %}
         <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
-            <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span>
-            <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span>
+            <span class="badge-status" style="background:#e0e7ff; color:#4338ca;">{% trans "IBTIKAR" %}</span>
+            <span class="badge-status" style="background:#ccfbf1; color:#0d9488;">{% trans "GENOCLAB" %}</span>
         </div>
         {% elif service.channel_availability == 'IBTIKAR' %}
-        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">IBTIKAR</span></div>
+        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#e0e7ff; color:#4338ca;">{% trans "IBTIKAR" %}</span></div>
         {% else %}
-        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">GENOCLAB</span></div>
+        <div style="margin-top:12px; text-align:center;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">{% trans "GENOCLAB" %}</span></div>
         {% endif %}
         {% endif %}
     </div>
@@ -59,13 +59,13 @@
                 <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Tarification" %}</h4>
                 {% if service.ibtikar_price %}
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span class="text-muted text-sm">IBTIKAR</span>
+                    <span class="text-muted text-sm">{% trans "IBTIKAR" %}</span>
                     <strong>{{ service.ibtikar_price|floatformat:0 }} DA</strong>
                 </div>
                 {% endif %}
                 {% if service.genoclab_price %}
                 <div style="display:flex; justify-content:space-between;">
-                    <span class="text-muted text-sm">GENOCLAB</span>
+                    <span class="text-muted text-sm">{% trans "GENOCLAB" %}</span>
                     <strong>{{ service.genoclab_price|floatformat:0 }} DA</strong>
                 </div>
                 {% endif %}

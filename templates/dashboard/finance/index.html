@@ -37,6 +37,7 @@
             <div class="card-header"><h3>{% trans "Demandes IBTIKAR — Validation financière" %}</h3></div>
             <div class="card-body">
                 {% for req in pending_validation %}
+                {% url 'dashboard:finance_validate' req.pk as finance_validate_url %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
@@ -47,12 +48,12 @@
                         <span>{% trans "Budget" %}: {{ req.budget_amount }} DA &middot; {% trans "Solde déclaré" %}: {{ req.declared_ibtikar_balance }} DA</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem;">
-                        <form method="post" action="{% url 'dashboard:finance_validate' req.pk %}" style="display:inline;">
+                        {% if finance_validate_url %}<form method="post" action="{{ finance_validate_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="approve">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver" %}</button>
-                        </form>
-                        <form method="post" action="{% url 'dashboard:finance_validate' req.pk %}" style="display:inline;" x-data="{show: false}">
+                        </form>{% endif %}
+                        {% if finance_validate_url %}<form method="post" action="{{ finance_validate_url }}" style="display:inline;" x-data="{show: false}">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="reject">
                             <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Rejeter" %}</button>
@@ -60,7 +61,7 @@
                                 <input type="text" name="reason" placeholder="{% trans 'Raison du rejet...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;" required>
                                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
                             </div>
-                        </form>
+                        </form>{% endif %}
                     </div>
                 </div>
                 {% empty %}
@@ -117,6 +118,7 @@
                         </thead>
                         <tbody>
                         {% for inv in invoices %}
+                        {% url 'dashboard:finance_payment_status' inv.pk as finance_payment_status_url %}
                         <tr>
                             <td><strong>{{ inv.invoice_number }}</strong></td>
                             <td>{{ inv.client.get_full_name|default:"—" }}</td>
@@ -125,14 +127,14 @@
                             <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
                             <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
                             <td>
-                                <form method="post" action="{% url 'dashboard:finance_payment_status' inv.pk %}" style="display:inline;">
+                                {% if finance_payment_status_url %}<form method="post" action="{{ finance_payment_status_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <select name="payment_status" class="form-control" style="width:auto; font-size:0.8rem; display:inline-block;" onchange="this.form.submit()">
                                         <option value="PENDING" {% if inv.payment_status == 'PENDING' %}selected{% endif %}>{% trans "En attente" %}</option>
                                         <option value="PARTIAL" {% if inv.payment_status == 'PARTIAL' %}selected{% endif %}>{% trans "Partiel" %}</option>
                                         <option value="COMPLETED" {% if inv.payment_status == 'COMPLETED' %}selected{% endif %}>{% trans "Payé" %}</option>
                                     </select>
-                                </form>
+                                </form>{% endif %}
                             </td>
                             <td>{{ inv.created_at|date:"d/m/Y" }}</td>
                         </tr>

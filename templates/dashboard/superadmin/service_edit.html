@@ -1,111 +1,843 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Modifier service" %} — PLAGENOR 4.0{% endblock %}
+{% block title %}{% trans "Modifier service" %} — {{ service.code }} — PLAGENOR 4.0{% endblock %}
+
+{% block extra_css %}
+<style>
+.field-card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px; background: #fff; }
+.field-card-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: #f8fafc; border-radius: 7px 7px 0 0; }
+.field-card-body { padding: 14px; border-top: 1px solid #e2e8f0; }
+.field-meta { font-size: 0.8rem; color: #64748b; }
+.field-type-badge { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+.field-required-badge { background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+.field-category-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+.field-category-badge.parameter { background: #dbeafe; color: #1d4ed8; }
+.field-category-badge.sample_table { background: #dcfce7; color: #15803d; }
+.field-category-badge.additional_info { background: #fef3c7; color: #92400e; }
+.preview-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: none; }
+.preview-modal.show { display: flex; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.preview-content { background: #fff; border-radius: 12px; width: 900px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 24px; }
+.drag-handle { cursor: grab; color: #94a3b8; padding: 4px; }
+.drag-handle:active { cursor: grabbing; }
+.dragging { opacity: 0.5; }
+.drag-over { background: #f0fdf4 !important; }
+#field-list-parameter, #field-list-sample_table, #field-list-additional_info { min-height: 40px; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
+    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-sm btn-outline">← {% trans "Retour" %}</a>
 </div>
 
-<div class="card" style="max-width:800px;">
-    <div class="card-header"><h3>{{ service.name }}</h3></div>
-    <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-row">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <!-- LEFT: Service Info -->
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Informations du service" %}</h3></div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="service-form">
+                {% csrf_token %}
                 <div class="form-group">
                     <label>{% trans "Nom" %}</label>
                     <input type="text" name="name" class="form-control" value="{{ service.name }}" required>
                 </div>
                 <div class="form-group">
+                    <label>{% trans "Code" %}</label>
+                    <input type="text" class="form-control" value="{{ service.code }}" readonly style="background:#f1f5f9;">
+                </div>
+                <div class="form-group">
                     <label>{% trans "Canal" %}</label>
                     <select name="channel_availability" class="form-control">
-                        <option value="BOTH" {% if service.channel_availability == 'BOTH' %}selected{% endif %}>IBTIKAR & GENOCLAB</option>
-                        <option value="IBTIKAR" {% if service.channel_availability == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
-                        <option value="GENOCLAB" {% if service.channel_availability == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                        <option value="BOTH" {% if service.channel_availability == 'BOTH' %}selected{% endif %}>IBTIKAR &amp; GENOCLAB</option>
+                        <option value="IBTIKAR" {% if service.channel_availability == 'IBTIKAR' %}selected{% endif %}>IBTIKAR uniquement</option>
+                        <option value="GENOCLAB" {% if service.channel_availability == 'GENOCLAB' %}selected{% endif %}>GENOCLAB uniquement</option>
                     </select>
                 </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label>{% trans "Prix IBTIKAR (DA)" %}</label>
+                        <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Prix GENOCLAB (DA)" %}</label>
+                        <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
+                    </div>
+                </div>
+
+                <!-- Turnaround Time Per Channel (Part M) -->
+                <h4 style="margin-top:20px; margin-bottom:12px; color:#4F46E5;">{% trans "Délai de traitement / Turnaround Time" %}</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label>{% trans "Délai IBTIKAR (jours ouvrables)" %}</label>
+                        <input type="number" name="turnaround_ibtikar" class="form-control" value="{{ service.turnaround_ibtikar|default:7 }}">
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Délai GENOCLAB (jours ouvrables)" %}</label>
+                        <input type="number" name="turnaround_genoclab" class="form-control" value="{{ service.turnaround_genoclab|default:7 }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Unité de délai" %}</label>
+                    <select name="turnaround_unit" class="form-control">
+                        <option value="business_days" {% if service.turnaround_unit == 'business_days' %}selected{% endif %}>{% trans "Jours ouvrables / Business days" %}</option>
+                        <option value="calendar_days" {% if service.turnaround_unit == 'calendar_days' %}selected{% endif %}>{% trans "Jours calendaires / Calendar days" %}</option>
+                        <option value="weeks" {% if service.turnaround_unit == 'weeks' %}selected{% endif %}>{% trans "Semaines / Weeks" %}</option>
+                    </select>
+                </div>
+
+                <!-- Citation Clause (Part K3) -->
+                {% if service.channel_availability == 'IBTIKAR' or service.channel_availability == 'BOTH' %}
+                <h4 style="margin-top:20px; margin-bottom:12px; color:#4F46E5;">{% trans "Clause de citation (IBTIKAR) / Citation Clause" %}</h4>
+                <div class="form-group">
+                    <label>{% trans "Clause de citation (FR)" %}</label>
+                    <textarea name="citation_clause_fr" class="form-control" rows="4" placeholder="{% trans 'Texte obligatoire pour les demandes IBTIKAR...' %}">{{ service.citation_clause_fr }}</textarea>
+                    <small class="text-muted">{% trans "Ce texte apparaîtra dans la Note de Plateforme et doit être accepté par le demandeur." %}</small>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Citation clause (EN)" %}</label>
+                    <textarea name="citation_clause_en" class="form-control" rows="4" placeholder="{% trans 'Mandatory text for IBTIKAR requests...' %}">{{ service.citation_clause_en }}</textarea>
+                </div>
+                {% endif %}
+                <div class="form-group">
+                    <label>{% trans "Description" %}</label>
+                    <textarea name="description" class="form-control" rows="3">{{ service.description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Image" %}</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    {% if service.image %}<p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
+                </div>
+                <div style="display:flex; gap:8px; margin-top:16px;">
+                    <button type="submit" class="btn btn-primary">{% trans "Enregistrer les infos service" %}</button>
+                    <button type="button" class="btn btn-outline" onclick="showPreview()">👁 {% trans "Aperçu formulaire" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT: Quick Stats -->
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Champs de formulaire" %}</h3></div>
+        <div class="card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px;">
+                <div style="background:#eff6ff; border-radius:8px; padding:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:700;" id="count-parameter">—</div>
+                    <div style="font-size:0.75rem; color:#64748b;">{% trans "Paramètres" %}</div>
+                </div>
+                <div style="background:#f0fdf4; border-radius:8px; padding:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:700;" id="count-sample_table">—</div>
+                    <div style="font-size:0.75rem; color:#64748b;">{% trans "Colonnes tableau" %}</div>
+                </div>
+                <div style="background:#fefce8; border-radius:8px; padding:12px; text-align:center;">
+                    <div style="font-size:1.5rem; font-weight:700;" id="count-additional_info">—</div>
+                    <div style="font-size:0.75rem; color:#64748b;">{% trans "Info supplémentaire" %}</div>
+                </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>{% trans "Prix IBTIKAR (DA)" %}</label>
-                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
-                </div>
-                <div class="form-group">
-                    <label>{% trans "Prix GENOCLAB (DA)" %}</label>
-                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
-                </div>
-                <div class="form-group">
-                    <label>{% trans "Délai (jours)" %}</label>
-                    <input type="number" name="turnaround_days" class="form-control" value="{{ service.turnaround_days }}">
-                </div>
+            <p class="text-sm text-muted">{% trans "Gérez les champs ci-dessous. Les champs s'affichent automatiquement dans le formulaire IBTIKAR et le PDF." %}</p>
+        </div>
+    </div>
+</div>
+
+<!-- FORM FIELDS MANAGEMENT -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>{% trans "Champs de formulaire — glissez pour réorganiser" %}</h3>
+        <button type="button" class="btn btn-sm btn-primary" onclick="showAddFieldModal()">+ {% trans "Ajouter un champ" %}</button>
+    </div>
+    <div class="card-body">
+
+        <!-- PARAMETER FIELDS -->
+        <h5 style="color:#1d4ed8; margin-bottom:8px;">
+            <span class="field-category-badge parameter">{% trans "Paramètres" %}</span>
+            {% trans "Champs de configuration du service" %}
+        </h5>
+        <div id="field-list-parameter" class="field-list" data-category="parameter"></div>
+        <div id="empty-parameter" class="text-muted text-sm" style="padding:12px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
+            {% trans "Aucun champ параметр. Cliquez ci-dessus pour en ajouter." %}
+        </div>
+        <hr style="margin:20px 0;">
+
+        <!-- SAMPLE TABLE COLUMNS -->
+        <h5 style="color:#15803d; margin-bottom:8px;">
+            <span class="field-category-badge sample_table">{% trans "Tableau" %}</span>
+            {% trans "Colonnes du tableau d'échantillons" %}
+        </h5>
+        <div id="field-list-sample_table" class="field-list" data-category="sample_table"></div>
+        <div id="empty-sample_table" class="text-muted text-sm" style="padding:12px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
+            {% trans "Aucune colonne. Cliquez ci-dessus pour en ajouter." %}
+        </div>
+        <hr style="margin:20px 0;">
+
+        <!-- ADDITIONAL INFO FIELDS -->
+        <h5 style="color:#92400e; margin-bottom:8px;">
+            <span class="field-category-badge additional_info">{% trans "Info" %}</span>
+            {% trans "Champs d'information supplémentaire" %}
+        </h5>
+        <div id="field-list-additional_info" class="field-list" data-category="additional_info"></div>
+        <div id="empty-additional_info" class="text-muted text-sm" style="padding:12px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
+            {% trans "Aucun champ supplémentaire. Cliquez ci-dessus pour en ajouter." %}
+        </div>
+    </div>
+</div>
+
+<!-- PRICING CONFIGURATION -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>{% trans "Configuration des tarifs" %}</h3>
+        <button type="button" class="btn btn-sm btn-primary" onclick="showAddPricingModal()">+ {% trans "Ajouter un tarif" %}</button>
+    </div>
+    <div class="card-body">
+        <p class="text-sm text-muted" style="margin-bottom:16px;">
+            {% trans "Configurez les prix de base et les suppléments. Les changements affectent les nouvelles demandes uniquement." %}
+        </p>
+        <div id="pricing-list" style="display:grid; gap:12px;"></div>
+        <div id="pricing-empty" class="text-muted text-sm" style="padding:20px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
+            {% trans "Aucun tarif configuré. Cliquez ci-dessus pour en ajouter." %}
+        </div>
+    </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div id="pricing-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; width:480px; max-width:95vw; padding:24px; max-height:90vh; overflow-y:auto;">
+        <h4 id="pricing-modal-title">{% trans "Ajouter un tarif" %}</h4>
+        <input type="hidden" id="edit-pricing-id">
+        <div class="form-group">
+            <label>{% trans "Nom du tarif" %} *</label>
+            <input type="text" id="pricing-name" class="form-control" placeholder="e.g. Prix de base, Supplément urgence">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Type" %}</label>
+                <select id="pricing-type" class="form-control">
+                    <option value="BASE">{% trans "Prix de base" %}</option>
+                    <option value="PER_SAMPLE">{% trans "Par échantillon" %}</option>
+                    <option value="PER_PARAMETER">{% trans "Par paramètre" %}</option>
+                    <option value="URGENCY_SURCHARGE">{% trans "Majoration urgence" %}</option>
+                    <option value="DISCOUNT">{% trans "Remise" %}</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>{% trans "Description" %}</label>
-                <textarea name="description" class="form-control" rows="3">{{ service.description }}</textarea>
+                <label>{% trans "Canal" %}</label>
+                <select id="pricing-channel" class="form-control">
+                    <option value="BOTH">{% trans "Les deux" %}</option>
+                    <option value="IBTIKAR">IBTIKAR</option>
+                    <option value="GENOCLAB">GENOCLAB</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Montant (DZD)" %}</label>
+                <input type="number" id="pricing-amount" class="form-control" step="0.01" value="0">
             </div>
             <div class="form-group">
-                <label>{% trans "Image" %}</label>
-                <input type="file" name="image" class="form-control" accept="image/*">
-                {% if service.image %}<p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
+                <label>{% trans "Priorité" %}</label>
+                <input type="number" id="pricing-priority" class="form-control" value="0">
             </div>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Unité" %}</label>
+            <input type="text" id="pricing-unit" class="form-control" placeholder="e.g. par échantillon">
+        </div>
+        <div style="display:flex; gap:8px; margin-top:16px;">
+            <button type="button" class="btn btn-primary" onclick="savePricing()">{% trans "Enregistrer" %}</button>
+            <button type="button" class="btn btn-outline" onclick="closePricingModal()">{% trans "Annuler" %}</button>
+        </div>
+    </div>
+</div>
 
-            <hr style="margin:24px 0;">
-            <h4>{% trans "Champs personnalisés du formulaire" %}</h4>
-            <div id="custom-fields-container">
-                {% for field in custom_fields %}
-                <div class="form-row custom-field-row" style="align-items:flex-end;">
-                    <div class="form-group">
-                        <label>{% trans "Nom" %}</label>
-                        <input type="text" name="field_name" class="form-control" value="{{ field.name }}">
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Label" %}</label>
-                        <input type="text" name="field_label" class="form-control" value="{{ field.label }}">
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Type" %}</label>
-                        <select name="field_type" class="form-control">
-                            <option value="string" {% if field.field_type == 'string' %}selected{% endif %}>{% trans "Texte" %}</option>
-                            <option value="enum" {% if field.field_type == 'enum' %}selected{% endif %}>{% trans "Liste" %}</option>
-                            <option value="boolean" {% if field.field_type == 'boolean' %}selected{% endif %}>{% trans "Oui/Non" %}</option>
-                            <option value="number" {% if field.field_type == 'number' %}selected{% endif %}>{% trans "Nombre" %}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Options (virgules)" %}</label>
-                        <input type="text" name="field_options" class="form-control" value="{{ field.options|join:', ' }}">
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}</label>
-                    </div>
-                </div>
-                {% endfor %}
+<!-- ADD/EDIT FIELD MODAL -->
+<div id="field-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; width:560px; max-width:95vw; padding:24px; max-height:90vh; overflow-y:auto;">
+        <h4 id="modal-title">{% trans "Ajouter un champ" %}</h4>
+        <input type="hidden" id="edit-field-id">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Nom (clé)" %} *</label>
+                <input type="text" id="field-name" class="form-control" placeholder="e.g. organism_type">
+                <small class="text-muted">{% trans "Identifiant unique, lettres minuscules + underscores" %}</small>
             </div>
-            <button type="button" class="btn btn-sm btn-outline" onclick="addFieldRow()" style="margin-bottom:24px;">+ {% trans "Ajouter un champ" %}</button>
+            <div class="form-group">
+                <label>{% trans "Catégorie" %}</label>
+                <select id="field-category" class="form-control">
+                    <option value="parameter">{% trans "Paramètre" %}</option>
+                    <option value="sample_table">{% trans "Colonne tableau" %}</option>
+                    <option value="additional_info">{% trans "Info supplémentaire" %}</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Label FR" %} *</label>
+            <input type="text" id="field-label-fr" class="form-control" placeholder="e.g. Type de microorganisme">
+        </div>
+        <div class="form-group">
+            <label>{% trans "Label EN" %}</label>
+            <input type="text" id="field-label-en" class="form-control" placeholder="e.g. Microorganism type">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Type de champ" %}</label>
+                <select id="field-type" class="form-control" onchange="toggleOptions()">
+                    <option value="text">{% trans "Texte" %}</option>
+                    <option value="textarea">{% trans "Zone de texte" %}</option>
+                    <option value="number">{% trans "Nombre" %}</option>
+                    <option value="date">{% trans "Date" %}</option>
+                    <option value="select">{% trans "Liste déroulante" %}</option>
+                    <option value="multiselect">{% trans "Sélection multiple" %}</option>
+                    <option value="boolean">{% trans "Oui / Non" %}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Requis" %}</label>
+                <select id="field-required" class="form-control">
+                    <option value="false">{% trans "Non" %}</option>
+                    <option value="true">{% trans "Oui" %}</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" id="options-group" style="display:none;">
+            <label>{% trans "Options (une par ligne)" %}</label>
+            <textarea id="field-options" class="form-control" rows="4" placeholder="Bacterium&#10;Yeast&#10;Mould"></textarea>
+            <small class="text-muted">{% trans "Entrez une option par ligne" %}</small>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Canal" %}</label>
+            <select id="field-channel" class="form-control">
+                <option value="BOTH">{% trans "IBTIKAR & GENOCLAB" %}</option>
+                <option value="IBTIKAR">{% trans "IBTIKAR uniquement" %}</option>
+                <option value="GENOCLAB">{% trans "GENOCLAB uniquement" %}</option>
+            </select>
+            <small class="text-muted">{% trans "Ce champ ne s'affiche que pour le canal sélectionné" %}</small>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Texte d'aide FR" %}</label>
+            <input type="text" id="field-help-fr" class="form-control" placeholder="{% trans "Aide pour ce champ" %}">
+        </div>
+        <div class="form-group">
+            <label>{% trans "Texte d'aide EN" %}</label>
+            <input type="text" id="field-help-en" class="form-control" placeholder="{% trans "Help text" %}">
+        </div>
+        
+        <!-- PRICING MODIFIER SECTION -->
+        <hr style="margin:16px 0; border-color:#e2e8f0;">
+        <h5 style="margin-bottom:12px; color:#059669;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:middle;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            {% trans "Modificateur de prix" %}
+        </h5>
+        <div class="form-group">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="field-affects-pricing" value="true" style="width:18px; height:18px;">
+                <label for="field-affects-pricing" style="margin:0; font-weight:500;">{% trans "Cette option modifie le prix" %}</label>
+            </div>
+            <small class="text-muted">{% trans "Cochez si la sélection de cette option ajoute un supplément au coût" %}</small>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Type de modificateur" %}</label>
+                <select id="field-price-modifier-type" class="form-control">
+                    <option value="">— {% trans "Aucun" %} —</option>
+                    <option value="add">{% trans "Supplément (+)" %}</option>
+                    <option value="set">{% trans "Forfait fixe" %}</option>
+                    <option value="multiply">{% trans "Multiplicateur (×)" %}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Valeur (DZD ou ×)" %}</label>
+                <input type="number" id="field-price-modifier-value" class="form-control" step="0.01" placeholder="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Avertissement client FR" %}</label>
+            <input type="text" id="field-condition-note-fr" class="form-control" 
+                   placeholder="{% trans "Ex: Frais d'élimination inclus (+500 DA)" %}">
+            <small class="text-muted">{% trans "Message affiché au client quand cette option est sélectionnée" %}</small>
+        </div>
+        <div class="form-group">
+            <label>{% trans "Avertissement client EN" %}</label>
+            <input type="text" id="field-condition-note-en" class="form-control" 
+                   placeholder="{% trans "Ex: Disposal fees included (+500 DA)" %}">
+        </div>
+        
+        <div style="display:flex; gap:8px; margin-top:16px;">
+            <button type="button" class="btn btn-primary" onclick="saveField()">{% trans "Enregistrer" %}</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()">{% trans "Annuler" %}</button>
+        </div>
+    </div>
+</div>
 
-            <div>
-                <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
-                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
-            </div>
-        </form>
+<!-- PREVIEW MODAL -->
+<div id="preview-modal" class="preview-modal">
+    <div class="preview-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3>{% trans "Aperçu du formulaire" %}: {{ service.code }}</h3>
+            <button type="button" onclick="closePreview()" style="background:none; border:none; font-size:1.5rem;">&times;</button>
+        </div>
+        <div id="preview-html" style="border:1px solid #e2e8f0; border-radius:8px; padding:16px;"></div>
     </div>
 </div>
 
 <script>
-var fieldCount = {{ custom_fields.count }};
-function addFieldRow() {
-    var container = document.getElementById('custom-fields-container');
-    var html = '<div class="form-row custom-field-row" style="align-items:flex-end;">' +
-        '<div class="form-group"><label>Nom</label><input type="text" name="field_name" class="form-control"></div>' +
-        '<div class="form-group"><label>Label</label><input type="text" name="field_label" class="form-control"></div>' +
-        '<div class="form-group"><label>Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
-        '<div class="form-group"><label>Options</label><input type="text" name="field_options" class="form-control"></div>' +
-        '<div class="form-group"><label><input type="checkbox" name="field_required" value="' + fieldCount + '"> Requis</label></div>' +
-        '</div>';
-    container.insertAdjacentHTML('beforeend', html);
-    fieldCount++;
+var SERVICE_ID = '{{ service.id }}';
+var csrfToken = '{{ csrf_token }}';
+
+// Load fields on page load
+document.addEventListener('DOMContentLoaded', loadAllFields);
+
+function loadAllFields() {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/all-fields/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        renderFields('parameter', data.parameter_fields || []);
+        renderFields('sample_table', data.sample_table_columns || []);
+        renderFields('additional_info', data.additional_info_fields || []);
+        updateCounts(data);
+    })
+    .catch(err => console.error('Failed to load fields:', err));
 }
+
+function renderFields(category, fields) {
+    var list = document.getElementById('field-list-' + category);
+    var empty = document.getElementById('empty-' + category);
+    list.innerHTML = '';
+
+    if (!fields.length) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    fields.forEach(function(f) {
+        var optionsHtml = f.choices && f.choices.length
+            ? '<span class="field-meta">options: ' + f.choices.slice(0, 3).join(', ') + (f.choices.length > 3 ? '…' : '') + '</span>'
+            : '';
+        var requiredHtml = f.is_required
+            ? '<span class="field-required-badge">{% trans "Requis" %}</span>'
+            : '';
+        var channelBadge = f.channel === 'IBTIKAR'
+            ? '<span style="background:#f3e8ff; color:#7c3aed; padding:2px 8px; border-radius:12px; font-size:0.7rem;">IBTIKAR</span>'
+            : f.channel === 'GENOCLAB'
+            ? '<span style="background:#ecfeff; color:#0891b2; padding:2px 8px; border-radius:12px; font-size:0.7rem;">GENOCLAB</span>'
+            : '<span style="background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:12px; font-size:0.7rem;">BOTH</span>';
+        var typeLabel = f.field_type === 'select' ? 'select' : f.field_type;
+        var html = '<div class="field-card" draggable="true" data-id="' + f.id + '" data-category="' + category + '" style="cursor:default;">' +
+            '<div class="field-card-header">' +
+                '<div style="display:flex; align-items:center; gap:8px;">' +
+                    '<span class="drag-handle" title="{% trans "Glisser pour réorganiser" %}">☰</span>' +
+                    '<strong>' + escHtml(f.name) + '</strong>' +
+                    '<span class="field-type-badge">' + escHtml(typeLabel) + '</span>' +
+                    requiredHtml +
+                    channelBadge +
+                '</div>' +
+                '<div style="display:flex; gap:6px;">' +
+                    '<button type="button" class="btn btn-sm btn-outline" onclick="editField(\'' + f.id + '\')">✏️</button>' +
+                    '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deleteField(\'' + f.id + '\')">🗑</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="field-card-body">' +
+                '<div><strong>FR:</strong> ' + escHtml(f.label) + '</div>' +
+                optionsHtml +
+            '</div>' +
+        '</div>';
+        list.insertAdjacentHTML('beforeend', html);
+    });
+
+    // Make drag-and-drop work
+    initDragDrop(list, category);
+}
+
+function initDragDrop(listEl, category) {
+    var dragged = null;
+    listEl.querySelectorAll('.field-card').forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            dragged = card;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        });
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (dragged && dragged !== card) {
+                var rect = card.getBoundingClientRect();
+                var mid = rect.top + rect.height / 2;
+                if (e.clientY < mid) {
+                    card.classList.add('drag-over');
+                } else {
+                    card.classList.remove('drag-over');
+                    card.style.setProperty('border-top', '3px solid #22c55e');
+                }
+            }
+        });
+        card.addEventListener('dragleave', function() {
+            card.classList.remove('drag-over');
+            card.style.removeProperty('border-top');
+        });
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            card.style.removeProperty('border-top');
+            card.classList.remove('drag-over');
+            if (!dragged || dragged === card) return;
+            var ids = Array.from(listEl.querySelectorAll('.field-card')).map(c => c.dataset.id);
+            saveFieldOrder(category, ids);
+        });
+    });
+}
+
+function saveFieldOrder(category, ids) {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/field/reorder/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ field_ids: ids })
+    })
+    .then(r => r.json())
+    .then(() => loadAllFields())
+    .catch(err => console.error('Reorder failed:', err));
+}
+
+function updateCounts(data) {
+    document.getElementById('count-parameter').textContent = (data.parameter_fields || []).length;
+    document.getElementById('count-sample_table').textContent = (data.sample_table_columns || []).length;
+    document.getElementById('count-additional_info').textContent = (data.additional_info_fields || []).length;
+}
+
+function showAddFieldModal() {
+    document.getElementById('modal-title').textContent = '{% trans "Ajouter un champ" %}';
+    document.getElementById('edit-field-id').value = '';
+    document.getElementById('field-name').value = '';
+    document.getElementById('field-name').readOnly = false;
+    document.getElementById('field-label-fr').value = '';
+    document.getElementById('field-label-en').value = '';
+    document.getElementById('field-type').value = 'text';
+    document.getElementById('field-category').value = 'parameter';
+    document.getElementById('field-required').value = 'false';
+    document.getElementById('field-options').value = '';
+    document.getElementById('field-help-fr').value = '';
+    document.getElementById('field-help-en').value = '';
+    document.getElementById('field-channel').value = 'BOTH';
+    // Reset pricing fields
+    document.getElementById('field-affects-pricing').checked = false;
+    document.getElementById('field-price-modifier-type').value = '';
+    document.getElementById('field-price-modifier-value').value = '';
+    document.getElementById('field-condition-note-fr').value = '';
+    document.getElementById('field-condition-note-en').value = '';
+    toggleOptions();
+    document.getElementById('field-modal').style.display = 'flex';
+}
+
+function editField(fieldId) {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/all-fields/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        var allFields = [
+            ...(data.parameter_fields || []),
+            ...(data.sample_table_columns || []),
+            ...(data.additional_info_fields || [])
+        ];
+        var f = allFields.find(x => x.id === fieldId);
+        if (!f) return;
+
+        document.getElementById('modal-title').textContent = '{% trans "Modifier le champ" %}';
+        document.getElementById('edit-field-id').value = f.id;
+        document.getElementById('field-name').value = f.name;
+        document.getElementById('field-name').readOnly = true;
+        document.getElementById('field-label-fr').value = f.label || '';
+        document.getElementById('field-type').value = f.field_type || 'text';
+        document.getElementById('field-category').value = f.field_category || 'parameter';
+        document.getElementById('field-required').value = String(!!f.is_required);
+        document.getElementById('field-options').value = (f.choices || []).join('\n');
+        document.getElementById('field-channel').value = f.channel || 'BOTH';
+        // Populate pricing fields
+        document.getElementById('field-affects-pricing').checked = !!(f.affects_pricing);
+        document.getElementById('field-price-modifier-type').value = f.price_modifier_type || '';
+        document.getElementById('field-price-modifier-value').value = f.price_modifier_value || '';
+        document.getElementById('field-condition-note-fr').value = f.condition_note_fr || '';
+        document.getElementById('field-condition-note-en').value = f.condition_note_en || '';
+        toggleOptions();
+        document.getElementById('field-modal').style.display = 'flex';
+    });
+}
+
+function closeModal() {
+    document.getElementById('field-modal').style.display = 'none';
+}
+
+function toggleOptions() {
+    var type = document.getElementById('field-type').value;
+    var group = document.getElementById('options-group');
+    group.style.display = (type === 'select' || type === 'multiselect' || type === 'enum' || type === 'dropdown') ? 'block' : 'none';
+}
+
+function saveField() {
+    var editId = document.getElementById('edit-field-id').value;
+    var name = document.getElementById('field-name').value.trim();
+    if (!name) { alert('{% trans "Le nom est requis" %}'); return; }
+
+    var labelFr = document.getElementById('field-label-fr').value.trim() || name;
+    var fieldData = {
+        name: name,
+        label_fr: labelFr,
+        label_en: document.getElementById('field-label-en').value.trim(),
+        field_type: document.getElementById('field-type').value,
+        field_category: document.getElementById('field-category').value,
+        is_required: document.getElementById('field-required').value === 'true',
+        options: document.getElementById('field-options').value.split('\n').map(s => s.trim()).filter(Boolean),
+        help_text_fr: document.getElementById('field-help-fr').value.trim(),
+        help_text_en: document.getElementById('field-help-en').value.trim(),
+        channel: document.getElementById('field-channel').value,
+        affects_pricing: document.getElementById('field-affects-pricing').checked,
+        price_modifier_type: document.getElementById('field-price-modifier-type').value,
+        price_modifier_value: parseFloat(document.getElementById('field-price-modifier-value').value) || null,
+        condition_note_fr: document.getElementById('field-condition-note-fr').value.trim(),
+        condition_note_en: document.getElementById('field-condition-note-en').value.trim(),
+    };
+
+    var url = '/dashboard/api/service/' + SERVICE_ID + '/field/';
+    var method = 'POST';
+
+    if (editId) {
+        url = '/dashboard/api/service/field/' + editId + '/';
+        method = 'PUT';
+    }
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(fieldData)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert('Erreur: ' + data.error);
+        } else {
+            closeModal();
+            loadAllFields();
+        }
+    })
+    .catch(err => { console.error(err); alert('Erreur: ' + err); });
+}
+
+function deleteField(fieldId) {
+    if (!confirm('{% trans "Supprimer ce champ ?" %}')) return;
+    fetch('/dashboard/api/service/field/' + fieldId + '/delete/', {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) alert('Erreur: ' + data.error);
+        else loadAllFields();
+    })
+    .catch(err => console.error(err));
+}
+
+function showPreview() {
+    var modal = document.getElementById('preview-modal');
+    var htmlDiv = document.getElementById('preview-html');
+    htmlDiv.innerHTML = '<p>{% trans "Chargement…" %}</p>';
+    modal.classList.add('show');
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/field/preview/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        htmlDiv.innerHTML = data.html || '<p class="text-muted">{% trans "Aucun champ défini" %}</p>';
+    })
+    .catch(err => { htmlDiv.innerHTML = '<p class="text-danger">Erreur: ' + err + '</p>'; });
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.remove('show');
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modal on outside click
+document.getElementById('field-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+document.getElementById('preview-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePreview();
+});
+
+// Load pricing configs on page load
+document.addEventListener('DOMContentLoaded', loadPricingConfigs);
+
+function loadPricingConfigs() {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/pricing/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        renderPricingConfigs(data.configs || []);
+    })
+    .catch(err => console.error('Failed to load pricing:', err));
+}
+
+function renderPricingConfigs(configs) {
+    var list = document.getElementById('pricing-list');
+    var empty = document.getElementById('pricing-empty');
+    
+    if (!configs.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    
+    list.innerHTML = configs.map(function(cfg) {
+        var typeLabels = {
+            'BASE': '{% trans "Prix de base" %}',
+            'PER_SAMPLE': '{% trans "Par échantillon" %}',
+            'PER_PARAMETER': '{% trans "Par paramètre" %}',
+            'URGENCY_SURCHARGE': '{% trans "Majoration urgence" %}',
+            'DISCOUNT': '{% trans "Remise" %}'
+        };
+        var channelColors = {
+            'BOTH': '#f1f5f9',
+            'IBTIKAR': '#f3e8ff',
+            'GENOCLAB': '#ecfeff'
+        };
+        var channelText = {
+            'BOTH': '{% trans "Les deux" %}',
+            'IBTIKAR': 'IBTIKAR',
+            'GENOCLAB': 'GENOCLAB'
+        };
+        return '<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:' + channelColors[cfg.channel] + '; border-radius:8px; border:1px solid #e2e8f0;">' +
+            '<div>' +
+                '<strong>' + escHtml(cfg.name) + '</strong>' +
+                '<span style="margin-left:8px; font-size:0.8rem; color:#64748b;">' + typeLabels[cfg.pricing_type] + '</span>' +
+                '<span style="margin-left:8px; padding:2px 8px; border-radius:12px; font-size:0.7rem; background:#fff;">' + channelText[cfg.channel] + '</span>' +
+                '<span style="margin-left:8px; font-size:0.85rem; color:#059669; font-weight:600;">' + cfg.amount.toLocaleString() + ' DA</span>' +
+                (cfg.unit ? '<span style="margin-left:4px; font-size:0.8rem; color:#64748b;">/ ' + escHtml(cfg.unit) + '</span>' : '') +
+            '</div>' +
+            '<div style="display:flex; gap:8px;">' +
+                '<button type="button" class="btn btn-sm btn-outline" onclick="editPricing(\'' + cfg.id + '\')">✏️</button>' +
+                '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deletePricing(\'' + cfg.id + '\')">🗑</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function showAddPricingModal() {
+    document.getElementById('pricing-modal-title').textContent = '{% trans "Ajouter un tarif" %}';
+    document.getElementById('edit-pricing-id').value = '';
+    document.getElementById('pricing-name').value = '';
+    document.getElementById('pricing-type').value = 'BASE';
+    document.getElementById('pricing-channel').value = 'BOTH';
+    document.getElementById('pricing-amount').value = '0';
+    document.getElementById('pricing-priority').value = '0';
+    document.getElementById('pricing-unit').value = '';
+    document.getElementById('pricing-modal').style.display = 'flex';
+}
+
+function editPricing(configId) {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/pricing/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        var cfg = (data.configs || []).find(function(c) { return c.id === configId; });
+        if (!cfg) return;
+        document.getElementById('pricing-modal-title').textContent = '{% trans "Modifier le tarif" %}';
+        document.getElementById('edit-pricing-id').value = cfg.id;
+        document.getElementById('pricing-name').value = cfg.name;
+        document.getElementById('pricing-type').value = cfg.pricing_type;
+        document.getElementById('pricing-channel').value = cfg.channel;
+        document.getElementById('pricing-amount').value = cfg.amount;
+        document.getElementById('pricing-priority').value = cfg.priority;
+        document.getElementById('pricing-unit').value = cfg.unit || '';
+        document.getElementById('pricing-modal').style.display = 'flex';
+    })
+    .catch(err => console.error(err));
+}
+
+function savePricing() {
+    var editId = document.getElementById('edit-pricing-id').value;
+    var name = document.getElementById('pricing-name').value.trim();
+    if (!name) { alert('{% trans "Le nom est requis" %}'); return; }
+    
+    var url = '/dashboard/api/service/' + SERVICE_ID + '/pricing/add/';
+    var method = 'POST';
+    
+    if (editId) {
+        url = '/dashboard/api/pricing/' + editId + '/';
+        method = 'POST';
+    }
+    
+    var formData = new FormData();
+    formData.append('name', name);
+    formData.append('pricing_type', document.getElementById('pricing-type').value);
+    formData.append('channel', document.getElementById('pricing-channel').value);
+    formData.append('amount', document.getElementById('pricing-amount').value);
+    formData.append('priority', document.getElementById('pricing-priority').value);
+    formData.append('unit', document.getElementById('pricing-unit').value);
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert('Erreur: ' + data.error);
+        } else {
+            closePricingModal();
+            loadPricingConfigs();
+        }
+    })
+    .catch(err => { console.error(err); alert('Erreur: ' + err); });
+}
+
+function deletePricing(configId) {
+    if (!confirm('{% trans "Supprimer ce tarif ?" %}')) return;
+    fetch('/dashboard/api/pricing/' + configId + '/delete/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) alert('Erreur: ' + data.error);
+        else loadPricingConfigs();
+    })
+    .catch(err => console.error(err));
+}
+
+function closePricingModal() {
+    document.getElementById('pricing-modal').style.display = 'none';
+}
+
+document.getElementById('pricing-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePricingModal();
+});
 </script>
 {% endblock %}

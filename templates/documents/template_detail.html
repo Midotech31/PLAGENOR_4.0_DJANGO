@@ -104,6 +104,9 @@
         {% endif %}
     </div>
     
+    {% url 'documents:template_edit' template.pk as template_edit_url %}
+    {% url 'documents:template_toggle' template.pk as template_toggle_url %}
+    {% url 'documents:template_delete' template.pk as template_delete_url %}
     <div class="col-md-4">
         <!-- Actions Card -->
         <div class="card">
@@ -111,29 +114,29 @@
                 <h5 class="mb-0">{% trans "Actions" %}</h5>
             </div>
             <div class="card-body">
-                <a href="{% url 'documents:template_edit' template.pk %}" class="btn btn-primary btn-block mb-2">
+                {% if template_edit_url %}<a href="{{ template_edit_url }}" class="btn btn-primary btn-block mb-2">
                     <i class="fa fa-edit"></i> {% trans "Modifier" %}
-                </a>
+                </a>{% endif %}
                 
                 {% if template.is_active %}
-                <form method="post" action="{% url 'documents:template_toggle' template.pk %}" class="mb-2">
+                {% if template_toggle_url %}<form method="post" action="{{ template_toggle_url }}" class="mb-2">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-warning btn-block">
                         <i class="fa fa-toggle-off"></i> {% trans "Désactiver" %}
                     </button>
-                </form>
+                </form>{% endif %}
                 {% else %}
-                <form method="post" action="{% url 'documents:template_toggle' template.pk %}" class="mb-2">
+                {% if template_toggle_url %}<form method="post" action="{{ template_toggle_url }}" class="mb-2">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success btn-block">
                         <i class="fa fa-toggle-on"></i> {% trans "Activer" %}
                     </button>
-                </form>
+                </form>{% endif %}
                 {% endif %}
                 
-                <a href="{% url 'documents:template_delete' template.pk %}" class="btn btn-danger btn-block">
+                {% if template_delete_url %}<a href="{{ template_delete_url }}" class="btn btn-danger btn-block">
                     <i class="fa fa-trash"></i> {% trans "Supprimer" %}
-                </a>
+                </a>{% endif %}
             </div>
         </div>
         

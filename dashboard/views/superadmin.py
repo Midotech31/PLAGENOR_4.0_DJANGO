@@ -195,6 +195,13 @@ def index(request):
         'yaml_registry': yaml_registry,
         # KPI
         'avg_rating': avg_rating,
+        # Profile stats
+        'profile_stats': {
+            'total_users': total_users,
+            'total_requests': total_requests,
+            'total_services': total_services,
+            'total_techniques': total_techniques,
+        },
     }
     return render(request, 'dashboard/superadmin/index.html', context)
 
@@ -258,6 +265,19 @@ def service_delete(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     service = get_object_or_404(Service, pk=pk)
+    
+    # Check for active requests using this service
+    active_requests_count = Request.objects.filter(service=service, archived=False).exclude(
+        status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']
+    ).count()
+    
+    if active_requests_count > 0:
+        messages.error(
+            request, 
+            f"Impossible de désactiver le service « {service.name} » — {active_requests_count} demande(s) active(s) y sont associées."
+        )
+        return redirect_back(request, 'dashboard:superadmin')
+    
     service.active = False
     service.save(update_fields=['active'])
     messages.success(request, f"Service {service.name} désactivé.")
@@ -430,7 +450,28 @@ def service_edit(request, pk):
                 service.turnaround_days = int(turnaround_days)
             except ValueError:
                 pass  # Keep existing value if invalid
-        
+
+        # Handle per-channel turnaround times (Part M)
+        turnaround_ibtikar = request.POST.get('turnaround_ibtikar', '').strip()
+        if turnaround_ibtikar:
+            try:
+                service.turnaround_ibtikar = int(turnaround_ibtikar)
+            except ValueError:
+                pass
+
+        turnaround_genoclab = request.POST.get('turnaround_genoclab', '').strip()
+        if turnaround_genoclab:
+            try:
+                service.turnaround_genoclab = int(turnaround_genoclab)
+            except ValueError:
+                pass
+
+        service.turnaround_unit = request.POST.get('turnaround_unit', service.turnaround_unit)
+
+        # Handle citation clause fields (Part K3)
+        service.citation_clause_fr = request.POST.get('citation_clause_fr', service.citation_clause_fr)
+        service.citation_clause_en = request.POST.get('citation_clause_en', service.citation_clause_en)
+
         if 'image' in request.FILES:
             service.image = request.FILES['image']
         service.save()
@@ -586,7 +627,7 @@ def user_edit(request, pk):
 def force_transition_view(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    from core.workflow import force_transition
+    from core.workflow import transition
     req = get_object_or_404(Request, pk=pk)
     to_status = request.POST.get('to_status', '')
     justification = request.POST.get('justification', '')
@@ -594,7 +635,7 @@ def force_transition_view(request, pk):
         messages.error(request, "La justification doit comporter au moins 10 caractères.")
         return redirect_back(request, 'dashboard:superadmin')
     try:
-        force_transition(req, to_status, request.user, notes=f"[FORCÉ] {justification}")
+        transition(req, to_status, request.user, notes=f"[FORCÉ] {justification}", force=True)
         messages.success(request, f"Demande {req.display_id} forcée vers {to_status}.")
     except Exception as e:
         messages.error(request, str(e))

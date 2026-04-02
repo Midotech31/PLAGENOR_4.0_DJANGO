@@ -5,20 +5,12 @@ from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Sum
 from django.utils import timezone
+from dashboard.decorators import finance_required
 
 from core.models import Request, Invoice
 from core.workflow import transition
 from core.financial import get_budget_dashboard, get_revenue_summary
 from core.exceptions import InvalidTransitionError, AuthorizationError
-
-
-def finance_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.role not in ('FINANCE', 'SUPER_ADMIN'):
-            return HttpResponseForbidden()
-        return view_func(request, *args, **kwargs)
-    wrapper.__wrapped__ = view_func
-    return login_required(wrapper)
 
 
 @finance_required

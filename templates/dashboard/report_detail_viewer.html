@@ -290,6 +290,7 @@
         {% endif %}
     </div>
 
+    {% url 'report_download' token=req.report_token as report_download_url %}
     <!-- Report Display Section -->
     {% if req.report_file %}
     <div class="report-section">
@@ -312,12 +313,12 @@
         {% endif %}
         
         <div style="text-align: center; margin-top: 20px;">
-            <a href="{% url 'report_download' token=req.report_token %}" class="download-btn">
+            {% if report_download_url %}<a href="{{ report_download_url }}" class="download-btn">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
                 {% trans "Télécharger le rapport" %}
-            </a>
+            </a>{% endif %}
         </div>
     </div>
     {% endif %}
@@ -345,6 +346,7 @@
     </div>
     {% endif %}
 
+    {% url 'report_rate' token=req.report_token as report_rate_url %}
     <!-- Rating Section -->
     <div class="report-section">
         {% if req.service_rating %}
@@ -372,7 +374,7 @@
         {% else %}
             <div class="star-rating">
                 <h3>{% trans "Évaluez notre service" %}</h3>
-                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form">
+                {% if report_rate_url %}<form method="post" action="{{ report_rate_url }}" class="rating-form">
                     {% csrf_token %}
                     <div class="stars">
                         <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
@@ -383,7 +385,7 @@
                     </div>
                     <textarea name="comment" placeholder="{% trans 'Votre commentaire (optionnel)...' %}"></textarea>
                     <button type="submit">{% trans "Envoyer" %}</button>
-                </form>
+                </form>{% endif %}
             </div>
         {% endif %}
     </div>

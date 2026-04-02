@@ -1,12 +1,19 @@
 from .models import Notification
 
 
+def _get_client_link_url(request_obj):
+    """Get the correct link URL based on channel."""
+    if request_obj.channel == 'GENOCLAB':
+        return f"/dashboard/client/request/{request_obj.pk}/"
+    return f"/dashboard/ops/request/{request_obj.pk}/"
+
+
 def notify_user(user, message, notification_type='INFO', request_obj=None,
                link_url='', link_text='', action_url='', action_text=''):
     """Create an in-app notification for a user with deep linking support."""
     # Auto-generate link URL if request_obj is provided
     if not link_url and request_obj:
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+        link_url = _get_client_link_url(request_obj)
         link_text = f"Voir la demande {request_obj.display_id}"
     
     Notification.objects.create(
@@ -85,7 +92,7 @@ def notify_workflow_transition(request_obj, to_status, actor):
         action_url = entry.get('action_url', '')
         
         # Generate link URL for request
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+        link_url = _get_client_link_url(request_obj)
         link_text = f"Demande {request_obj.display_id}"
         
         for target in targets:
@@ -104,7 +111,7 @@ def notify_workflow_transition(request_obj, to_status, actor):
 
 def notify_assignment(request_obj, analyst, assigned_by=None):
     """Send assignment notification with deep linking."""
-    link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    link_url = _get_client_link_url(request_obj)
     link_text = f"Voir la demande {request_obj.display_id}"
     action_url = f"/dashboard/ops/request/{request_obj.pk}/accept/"
     
@@ -122,7 +129,7 @@ def notify_assignment(request_obj, analyst, assigned_by=None):
 
 def notify_status_change(request_obj, old_status, new_status, user=None):
     """Send status change notification with deep linking."""
-    link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
     # Notify the requester
@@ -139,7 +146,7 @@ def notify_status_change(request_obj, old_status, new_status, user=None):
 
 def notify_report_ready(request_obj):
     """Send notification when report is ready with deep linking."""
-    link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
     if request_obj.requester:
@@ -156,7 +163,7 @@ def notify_report_ready(request_obj):
 
 def notify_payment_required(request_obj, amount):
     """Send payment required notification."""
-    link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
     if request_obj.requester:
@@ -273,3 +280,77 @@ def notify_payment_request(request_obj):
             link_text=link_text,
             action_text='Effectuer le paiement',
         )
+
+
+def notify_admin_task_declined(request_obj, declined_by, reason=''):
+    """Notify admins that a member has declined an assigned task.
+    
+    This allows the admin to reassign the task to another member.
+    """
+    from accounts.models import User
+    
+    link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    link_text = f"Demande {request_obj.display_id}"
+    
+    reason_text = f" | Raison: {reason}" if reason else ""
+    
+    # Notify all admins
+    admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'])
+    
+    for admin in admins:
+        notify_user(
+            admin,
+            f"Tâche {request_obj.display_id} déclinée par {declined_by.user.get_full_name()}{reason_text}",
+            'WORKFLOW',
+            request_obj,
+            link_url=link_url,
+            link_text=link_text,
+            action_text='Réassigner',
+        )
+
+
+def notify_sample_received(request_obj):
+    """Notify user that sample has been received with tracking invitation.
+    
+    Bilingual FR/EN message confirming sample receipt and inviting to track progress.
+    """
+    if not request_obj.requester:
+        return
+    
+    # Determine tracking number/ID based on channel
+    if request_obj.channel == 'GENOCLAB':
+        tracking_number = request_obj.tracking_number or request_obj.display_id
+        channel_name = "GENOCLAB"
+    else:
+        tracking_number = request_obj.ibtikar_id or request_obj.display_id
+        channel_name = "IBTIKAR"
+    
+    # Bilingual message
+    message_fr = (
+        f"✓ Échantillon reçu pour {request_obj.display_id} ! "
+        f"N° suivi: {tracking_number}. "
+        f"Consultez votre profil ou suivez en ligne."
+    )
+    message_en = (
+        f"✓ Sample received for {request_obj.display_id}! "
+        f"Tracking: {tracking_number}. "
+        f"Check your profile or track online."
+    )
+    
+    # Get profile URL based on user role
+    if request_obj.requester.role == 'CLIENT':
+        profile_url = f"/dashboard/client/request/{request_obj.pk}/"
+    else:
+        profile_url = f"/dashboard/requester/request/{request_obj.pk}/"
+    
+    # Create notification with both links
+    notify_user(
+        request_obj.requester,
+        f"{message_fr} | {message_en}",
+        'STATUS_CHANGE',
+        request_obj,
+        link_url=profile_url,
+        link_text="Voir ma demande / View my request",
+        action_url="/track/",
+        action_text="Suivre en ligne / Track online",
+    )

@@ -278,7 +278,7 @@ def generate_ibtikar_form_pdf(request_obj, lang=None, force_regenerate=False):
         # -------------------------------------------------------------------------
         # SECTION 3: SAMPLE TABLE
         # -------------------------------------------------------------------------
-        story.extend(build_sample_table(request_obj, service, labels, page_width, styles))
+        story.extend(build_sample_table(request_obj, service, labels, page_width, styles, lang=lang))
         
         # -------------------------------------------------------------------------
         # "TRÈS IMPORTANT" BLOCK
@@ -286,9 +286,14 @@ def generate_ibtikar_form_pdf(request_obj, lang=None, force_regenerate=False):
         story.extend(build_important_block(service, labels, page_width, styles))
         
         # -------------------------------------------------------------------------
-        # SECTION 4: ADDITIONAL INFORMATION
+        # SECTION 4: SERVICE PARAMETERS (from DB ServiceFormField)
         # -------------------------------------------------------------------------
-        story.extend(build_additional_info_section(request_obj, service, labels, page_width, styles))
+        story.extend(build_service_parameters_section(request_obj, service, labels, page_width, styles, lang=lang))
+        
+        # -------------------------------------------------------------------------
+        # SECTION 5: ADDITIONAL INFORMATION (DB additional_info fields)
+        # -------------------------------------------------------------------------
+        story.extend(build_additional_info_section(request_obj, service, labels, page_width, styles, lang=lang))
         
         # -------------------------------------------------------------------------
         # ETHICAL DECLARATION
@@ -366,15 +371,51 @@ def build_header(request_obj, service, labels, page_width, styles):
     reference = format_reference(service.code, lang=labels.get('platform_note_title', 'fr')[:2] or 'fr')
     reference_text = f"<b>{labels.get('request_reference', 'N° de la demande')}</b><br/>{reference}"
     reference_para = Paragraph(reference_text, styles['Reference'])
-    
+
+    # Generate QR code for tracking
+    qr_img = None
+    try:
+        from core.qrcode_utils import generate_request_tracking_qr
+        from django.contrib.sites.models import Site
+        current_site = Site.objects.get_current()
+        base_url = f"https://{current_site.domain}" if current_site else None
+        qr_data_url = generate_request_tracking_qr(request_obj, base_url=base_url)
+        if qr_data_url:
+            # Convert data URL to ReportLab Image
+            import base64
+            from io import BytesIO
+            from reportlab.lib.utils import ImageReader
+            qr_data = qr_data_url.split(',')[1]  # Remove data:image/png;base64, prefix
+            qr_bytes = base64.b64decode(qr_data)
+            qr_img = ImageReader(BytesIO(qr_bytes))
+    except Exception as e:
+        logger.debug(f"Could not generate QR code for IBTIKAR form: {e}")
+
     # Create header table with logos on sides and reference centered
     logo_cell_left = essbo_logo if essbo_logo else Paragraph('', styles['Normal'])
     logo_cell_right = plagenor_logo if plagenor_logo else Paragraph('', styles['Normal'])
-    
-    header_table = Table(
-        [[logo_cell_left, reference_para, logo_cell_right]],
-        colWidths=[2.5*cm, page_width - 5*cm, 2.5*cm]
-    )
+
+    # If QR code generated, add it to the header
+    if qr_img:
+        # Table with QR code on the right side
+        ref_and_qr = Table(
+            [[reference_para, Image(qr_img, width=2*cm, height=2*cm)]],
+            colWidths=[page_width - 5*cm - 2.5*cm, 2.5*cm]
+        )
+        ref_and_qr.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        header_table = Table(
+            [[logo_cell_left, ref_and_qr, logo_cell_right]],
+            colWidths=[2.5*cm, page_width - 5*cm, 2.5*cm]
+        )
+    else:
+        header_table = Table(
+            [[logo_cell_left, reference_para, logo_cell_right]],
+            colWidths=[2.5*cm, page_width - 5*cm, 2.5*cm]
+        )
     header_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (0, 0), 'LEFT'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),
@@ -503,8 +544,8 @@ def build_analysis_section(request_obj, labels, page_width, styles):
     return story
 
 
-def build_sample_table(request_obj, service, labels, page_width, styles):
-    """Build Section 3: Sample table with dynamic columns."""
+def build_sample_table(request_obj, service, labels, page_width, styles, lang='fr'):
+    """Build Section 3: Sample table with dynamic columns from DB (ServiceFormField)."""
     story = []
     
     # Section title
@@ -512,19 +553,42 @@ def build_sample_table(request_obj, service, labels, page_width, styles):
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
     story.append(Spacer(1, 6))
     
-    # Get sample table columns from ServiceFormField
-    sample_fields = service.form_fields.filter(
-        field_category='sample_table'
-    ).order_by('sort_order', 'pk') if hasattr(service, 'form_fields') else []
+    # Get sample table columns from ServiceFormField (DB primary)
+    sample_fields = []
+    if hasattr(service, 'form_fields'):
+        sample_fields = list(service.form_fields.filter(
+            field_category='sample_table'
+        ).order_by('order', 'sort_order', 'pk'))
+    
+    # Fallback to YAML if no DB fields
+    if not sample_fields:
+        yaml_def = None
+        try:
+            from core.registry import get_service_def
+            yaml_def = get_service_def(service.code)
+        except Exception:
+            pass
+        if yaml_def:
+            for i, col in enumerate(yaml_def.get('sample_table', {}).get('columns', [])):
+                sample_fields.append(type('YAMLField', (), {
+                    'name': col.get('name', f'col_{i}'),
+                    'label': col.get('label', col.get('name', '')),
+                    'label_fr': col.get('label', col.get('name', '')),
+                    'label_en': '',
+                    'field_type': col.get('type', 'text'),
+                    'pk': None,
+                    'get_label': lambda self, l='fr': self.label_en if l == 'en' and self.label_en else self.label_fr,
+                })())
     
     # Build header row
     header_row = [Paragraph(labels['sample_id'], styles['TableHeader'])]
     column_keys = ['id']  # Row number key
     
     for field in sample_fields:
-        field_label = field.label if hasattr(field, 'label') else field.get('label', 'Field')
+        field_label = _get_field_label(field, lang)
         header_row.append(Paragraph(str(field_label), styles['TableHeader']))
-        column_keys.append(str(field.pk) if hasattr(field, 'pk') else field.get('name', 'field'))
+        # Use field NAME as key (not pk) — sample data is stored by field name
+        column_keys.append(getattr(field, 'name', str(field.pk) if hasattr(field, 'pk') else 'field'))
     
     # Also add standard columns if no custom fields
     if not sample_fields:
@@ -618,55 +682,131 @@ def build_important_block(service, labels, page_width, styles):
     return story
 
 
-def build_additional_info_section(request_obj, service, labels, page_width, styles):
-    """Build Section 4: Additional information from dynamic ServiceFormField."""
+def _get_field_label(field, lang='fr'):
+    """Get the appropriate label for a field based on language."""
+    if hasattr(field, 'get_label'):
+        return field.get_label(lang)
+    if lang == 'en' and hasattr(field, 'label_en') and field.label_en:
+        return field.label_en
+    if hasattr(field, 'label_fr') and field.label_fr:
+        return field.label_fr
+    return getattr(field, 'label', getattr(field, 'name', 'Field'))
+
+
+def _get_field_choices(field):
+    """Get choices/options for a field."""
+    if hasattr(field, 'get_choices'):
+        return field.get_choices() or []
+    if hasattr(field, 'options') and field.options:
+        return field.options
+    if hasattr(field, 'choices_json') and field.choices_json:
+        return field.choices_json
+    return []
+
+
+def build_service_parameters_section(request_obj, service, labels, page_width, styles, lang='fr'):
+    """Build Section 4: Service parameters from DB (ServiceFormField) + service_params values."""
     story = []
     
-    # Get additional info fields
-    additional_fields = service.form_fields.filter(
-        field_category='additional_info'
-    ).order_by('sort_order', 'pk') if hasattr(service, 'form_fields') else []
+    # Get parameter fields from DB (field_category='parameter')
+    param_fields = []
+    if hasattr(service, 'form_fields'):
+        param_fields = list(service.form_fields.filter(
+            field_category='parameter'
+        ).order_by('order', 'sort_order', 'pk'))
+    
+    # Get sample table column names (to exclude from parameter section)
+    sample_col_names = set()
+    if hasattr(service, 'form_fields'):
+        sample_col_names = set(
+            service.form_fields.filter(field_category='sample_table')
+            .values_list('name', flat=True)
+        )
+    
+    # Filter out fields that are sample table columns
+    param_fields = [f for f in param_fields if f.name not in sample_col_names]
+    
+    if not param_fields:
+        return story
+    
+    # Section title
+    story.append(Paragraph(labels.get('section_parameters', 'Section 4 - Service Parameters'), styles['SectionTitle']))
+    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
+    story.append(Spacer(1, 6))
+    
+    # Get service_params (all form field values stored here on submission)
+    service_params = getattr(request_obj, 'service_params', {}) or {}
+    
+    # Build rows for each parameter field
+    data = []
+    for field in param_fields:
+        field_label = _get_field_label(field, lang)
+        field_name = getattr(field, 'name', str(field.pk))
+        field_type = getattr(field, 'field_type', 'text')
+        
+        # Get value from service_params (stored as field.name key)
+        value = service_params.get(field_name, '') or ''
+        
+        # If value is from checkbox (boolean), show Yes/No
+        if field_type == 'boolean':
+            value = labels.get('yes', 'Oui') if value and str(value).lower() not in ('false', '0', 'no', 'non') else labels.get('no', 'Non')
+        elif not value:
+            value = labels.get('to_be_filled', 'A remplir')
+        
+        data.append([
+            Paragraph(str(field_label), styles['Label']),
+            Paragraph(str(value), styles['Value'])
+        ])
+    
+    if data:
+        table = Table(data, colWidths=[page_width * 0.4, page_width * 0.6])
+        style_label_value_table(table)
+        story.append(table)
+    
+    story.append(Spacer(1, 12))
+    return story
+
+
+def build_additional_info_section(request_obj, service, labels, page_width, styles, lang='fr'):
+    """Build Section 5: Additional information from ServiceFormField (additional_info category).
+    
+    Data is read from service_params (where all param_* fields are stored on submission),
+    NOT from additional_data (which is never written to).
+    """
+    story = []
+    
+    additional_fields = []
+    if hasattr(service, 'form_fields'):
+        additional_fields = list(service.form_fields.filter(
+            field_category='additional_info'
+        ).order_by('order', 'sort_order', 'pk'))
     
     if not additional_fields:
         return story
     
-    # Section title
-    story.append(Paragraph(labels['section_additional'], styles['SectionTitle']))
+    story.append(Paragraph(labels.get('section_additional', 'Section 5 - Additional Info'), styles['SectionTitle']))
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
     story.append(Spacer(1, 6))
     
-    # Get additional data from request
-    additional_data = getattr(request_obj, 'additional_data', {}) or {}
+    # Read from service_params — this is where ALL form field values are stored on submission
+    service_params = getattr(request_obj, 'service_params', {}) or {}
     
-    # Build rows for each additional field
     data = []
     for field in additional_fields:
-        field_id = str(field.pk) if hasattr(field, 'pk') else field.get('name', 'field')
-        field_label = field.label if hasattr(field, 'label') else field.get('label', 'Field')
+        field_name = getattr(field, 'name', str(field.pk))
+        field_label = _get_field_label(field, lang)
+        field_type = getattr(field, 'field_type', 'text')
         
-        # Get value from request
-        value = additional_data.get(field_id, '') or ''
+        value = service_params.get(field_name, '') or ''
         
-        # If field type is dropdown/checkbox, get display value
-        field_type = getattr(field, 'field_type', 'text') if hasattr(field, 'field_type') else field.get('field_type', 'text')
-        if field_type == 'dropdown' and hasattr(field, 'options'):
-            options = field.options or []
-            if isinstance(options, list) and value in options:
-                value = value  # Use value as-is
-            elif isinstance(options, list) and len(options) > 0:
-                # Try to find matching option
-                for opt in options:
-                    if isinstance(opt, dict) and opt.get('value') == value:
-                        value = opt.get('label', value)
-                        break
-        
-        # Handle checkbox (list of values)
-        if field_type == 'checkbox' and isinstance(value, list):
-            value = ', '.join(str(v) for v in value)
+        if field_type == 'boolean':
+            value = labels.get('yes', 'Oui') if value and str(value).lower() not in ('false', '0', 'no', 'non') else labels.get('no', 'Non')
+        elif not value:
+            value = labels.get('to_be_filled', 'A remplir')
         
         data.append([
             Paragraph(str(field_label), styles['Label']),
-            Paragraph(str(value) if value else labels.get('to_be_filled', 'À remplir'), styles['Value'])
+            Paragraph(str(value), styles['Value'])
         ])
     
     if data:

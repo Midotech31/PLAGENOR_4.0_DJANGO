@@ -37,6 +37,8 @@ ROLE_PERMISSIONS = {
     # Analyst workflow — appointment states
     ('ASSIGNED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'MEMBER'],
     ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER', 'CLIENT'],
+    ('APPOINTMENT_PROPOSED', 'APPOINTMENT_RESCHEDULING_REQUESTED'): ['CLIENT'],
+    ('APPOINTMENT_RESCHEDULING_REQUESTED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
     ('APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
     ('SAMPLE_RECEIVED', 'ANALYSIS_STARTED'): ['SUPER_ADMIN', 'MEMBER'],
     ('ANALYSIS_STARTED', 'ANALYSIS_FINISHED'): ['SUPER_ADMIN', 'MEMBER'],
@@ -55,9 +57,10 @@ ROLE_PERMISSIONS = {
     ('QUOTE_DRAFT', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
     ('QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
     ('QUOTE_SENT', 'QUOTE_REJECTED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
-    ('QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('INVOICE_GENERATED', 'PAYMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('PAYMENT_CONFIRMED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED'): ['CLIENT'],
+    ('ORDER_UPLOADED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('PAYMENT_PENDING', 'PAYMENT_UPLOADED'): ['CLIENT'],
+    ('PAYMENT_UPLOADED', 'PAYMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
     ('REPORT_VALIDATED', 'SENT_TO_CLIENT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
     ('SENT_TO_CLIENT', 'COMPLETED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'CLIENT'],
     ('COMPLETED', 'ARCHIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
@@ -137,6 +140,11 @@ def _create_notifications(request_obj, to_status):
     try:
         from notifications.models import Notification
         from accounts.models import User
+        from notifications.services import notify_sample_received
+
+        # Sample received notification with tracking invitation
+        if to_status == 'SAMPLE_RECEIVED':
+            notify_sample_received(request_obj)
 
         # Notify the assigned member on relevant transitions
         if request_obj.assigned_to and to_status in (
@@ -179,6 +187,8 @@ def _create_notifications(request_obj, to_status):
             'SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
             # GENOCLAB admin-relevant states
             'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'PAYMENT_CONFIRMED',
+            'APPOINTMENT_RESCHEDULING_REQUESTED',  # Client requested rescheduling
+            'PAYMENT_UPLOADED',  # Client uploaded payment receipt
         ):
             admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
             for admin in admins:
@@ -578,25 +588,72 @@ def _notify_admins_on_transition(request_obj, old_status, to_status):
 
 
 def _auto_generate_documents(request_obj, to_status):
-    """Auto-generate documents on specific transitions."""
-    # Document generation is handled by separate document generation services
-    # This function can be extended to trigger automatic document creation
-    # for specific workflow states (e.g., generating quote PDF on QUOTE_SENT)
+    """Auto-generate PDF documents on specific workflow transitions.
+    
+    PDF Generation Triggers:
+    - IBTIKAR Form: On request submission (SUBMITTED) or IBTIKAR submission (IBTIKAR_SUBMISSION_PENDING)
+    - Platform Note: On validation (PLATFORM_NOTE_GENERATED) - IBTIKAR only
+    - Reception Form: On appointment confirmation (APPOINTMENT_CONFIRMED) or sample receipt (SAMPLE_RECEIVED)
+    """
     try:
-        # Example: Generate platform note when entering PLATFORM_NOTE_GENERATED
-        if to_status == 'PLATFORM_NOTE_GENERATED':
-            logger.info(f"Auto-generating platform note for request {request_obj.display_id}")
-            # TODO: Call document generation service
-            # from documents.generators import generate_ibtikar_form
-            # generate_ibtikar_form(request_obj)
+        if request_obj.channel == 'IBTIKAR':
+            # Generate IBTIKAR Form PDF on submission
+            if to_status in ('SUBMITTED', 'IBTIKAR_SUBMISSION_PENDING', 'VALIDATION_PEDAGOGIQUE'):
+                logger.info(f"Auto-generating IBTIKAR form PDF for request {request_obj.display_id}")
+                try:
+                    from documents.pdf_generator_ibtikar import generate_ibtikar_form_pdf
+                    file_path, error = generate_ibtikar_form_pdf(request_obj, force_regenerate=False)
+                    if error:
+                        logger.warning(f"IBTIKAR form generation warning for {request_obj.display_id}: {error}")
+                    else:
+                        logger.info(f"IBTIKAR form PDF generated successfully: {file_path}")
+                except Exception as e:
+                    logger.error(f"Error generating IBTIKAR form PDF: {e}", exc_info=True)
             
-        # Example: Generate quote PDF when entering QUOTE_SENT
-        elif to_status == 'QUOTE_SENT' and request_obj.channel == 'GENOCLAB':
-            logger.info(f"Auto-generating quote for request {request_obj.display_id}")
-            # TODO: Call document generation service
-            # from documents.generators import generate_quote_pdf
-            # generate_quote_pdf(request_obj)
-            
+            # Generate Platform Note PDF on validation (after financial validation)
+            if to_status == 'PLATFORM_NOTE_GENERATED':
+                logger.info(f"Auto-generating Platform Note PDF for request {request_obj.display_id}")
+                try:
+                    from documents.pdf_generator_platform_note import generate_platform_note_pdf
+                    from notifications.services import notify_user
+                    
+                    file_path, error = generate_platform_note_pdf(request_obj, force_regenerate=True)
+                    if error:
+                        logger.warning(f"Platform Note PDF generation warning for {request_obj.display_id}: {error}")
+                    else:
+                        logger.info(f"Platform Note PDF generated successfully: {file_path}")
+                        
+                        # Send notification to requester
+                        if request_obj.requester:
+                            lang = getattr(request_obj.requester, 'language', 'fr') or 'fr'
+                            message = (
+                                f"Votre Note de Plateforme pour la demande {request_obj.display_id} "
+                                f"est maintenant disponible au téléchargement. / "
+                                f"Your Platform Note for request {request_obj.display_id} "
+                                f"is now available for download."
+                            )
+                            notify_user(
+                                user=request_obj.requester,
+                                message=message,
+                                notification_type='DOCUMENT_READY',
+                                request_obj=request_obj,
+                            )
+                except Exception as e:
+                    logger.error(f"Error generating Platform Note PDF: {e}", exc_info=True)
+        
+        # Generate Reception Form PDF on appointment confirmation or sample receipt
+        if to_status in ('APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED'):
+            logger.info(f"Auto-generating Reception Form PDF for request {request_obj.display_id}")
+            try:
+                from documents.pdf_generator_reception import generate_reception_form_pdf
+                file_path, error = generate_reception_form_pdf(request_obj, force_regenerate=True)
+                if error:
+                    logger.warning(f"Reception Form PDF generation warning for {request_obj.display_id}: {error}")
+                else:
+                    logger.info(f"Reception Form PDF generated successfully: {file_path}")
+            except Exception as e:
+                logger.error(f"Error generating Reception Form PDF: {e}", exc_info=True)
+                
     except Exception as e:
         logger.error(
             f"Failed to auto-generate document for request {request_obj.display_id}: {str(e)}",

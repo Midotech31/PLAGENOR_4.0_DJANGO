@@ -1,20 +1,25 @@
+# documents/urls.py — PLAGENOR 4.0 Document URLs
+
 from django.urls import path
-from . import views
+from documents import views
 
 app_name = 'documents'
 
 urlpatterns = [
-    # Document generation (existing)
-    path('ibtikar-form/<uuid:request_id>/', views.ibtikar_form_view, name='ibtikar_form'),
-    path('platform-note/<uuid:request_id>/', views.platform_note_view, name='platform_note'),
-    path('quote/<uuid:request_id>/', views.quote_view, name='quote'),
-    path('reception-form/<uuid:request_id>/', views.reception_form_view, name='reception_form'),
+    # PDF Download Views
+    path('ibtikar-form/<uuid:pk>/', views.ibtikar_form_pdf, name='ibtikar_form_pdf'),
+    path('ibtikar-form-download/<uuid:pk>/', views.download_ibtikar_form, name='ibtikar_form_download'),
+    path('platform-note/<uuid:pk>/', views.download_platform_note, name='platform_note'),
+    path('reception-form/<uuid:pk>/', views.download_reception_form, name='reception_form'),
     
-    # Template management (new)
-    path('templates/', views.template_list, name='template_list'),
-    path('templates/create/', views.template_create, name='template_create'),
-    path('templates/<int:pk>/', views.template_detail, name='template_detail'),
-    path('templates/<int:pk>/edit/', views.template_edit, name='template_edit'),
-    path('templates/<int:pk>/delete/', views.template_delete, name='template_delete'),
-    path('templates/<int:pk>/toggle/', views.template_toggle_active, name='template_toggle'),
+    # PDF Regeneration (Admin Only)
+    path('regenerate/<uuid:pk>/<str:doc_type>/', views.regenerate_pdf, name='regenerate_pdf'),
+    
+    # Legacy/Deprecated Views (redirects)
+    path('ibtikar/<uuid:request_id>/', views.ibtikar_form_view, name='ibtikar_form_legacy'),
+    path('platform_note/<uuid:request_id>/', views.platform_note_view, name='platform_note_legacy'),
+    path('reception/<uuid:request_id>/', views.reception_form_view, name='reception_form_legacy'),
+    
+    # Status Check API
+    path('status/<uuid:pk>/', views.check_pdf_status, name='pdf_status'),
 ]

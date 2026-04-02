@@ -75,7 +75,21 @@ def report_viewer(request, token):
         except Exception as e:
             logger.warning(f"Failed to create notification for report {req.display_id}: {e}")
 
-    return render(request, 'dashboard/report_viewer.html', {'req': req})
+    # Check if request has been paid (via Quote)
+    payment_completed = False
+    if hasattr(req, 'quote') and req.quote and req.quote.payment_status == 'COMPLETED':
+        payment_completed = True
+    
+    # Check if request has been paid (via Quote)
+    payment_completed = False
+    from core.models import Quote
+    if Quote.objects.filter(request=req, payment_status='COMPLETED').exists():
+        payment_completed = True
+    
+    return render(request, 'dashboard/report_viewer.html', {
+        'req': req,
+        'payment_completed': payment_completed
+    })
 
 
 def report_detail_viewer(request, token):
@@ -124,7 +138,7 @@ def report_detail_viewer(request, token):
 
 def download_report(request, token):
     """Download the report file directly — requires authentication and ownership/staff access."""
-    # Require login
+    from django.utils.translation import gettext as _
     if not request.user.is_authenticated:
         messages.warning(request, "Veuillez vous connecter pour télécharger ce rapport.")
         return redirect(f'/accounts/login/?next={request.path}')
@@ -134,10 +148,13 @@ def download_report(request, token):
     except Request.DoesNotExist:
         raise Http404("Report not found")
     
-    # Check permission
     if not _can_access_report(request.user, req):
         messages.error(request, "Vous n'avez pas la permission de télécharger ce rapport.")
         return HttpResponseForbidden("Accès interdit")
+    
+    if req.channel == 'IBTIKAR' and not req.citation_accepted:
+        messages.warning(request, _("Vous devez accepter la clause de citation avant de télécharger le rapport."))
+        return redirect('dashboard:requester_request_detail', pk=req.pk)
     
     if not req.report_file:
         raise Http404("No report file available")
@@ -195,8 +212,7 @@ def rate_report(request, token):
 
 @require_POST
 def acknowledge_citation(request, token):
-    """Mark citation as acknowledged for this report — requires authentication and ownership/staff access."""
-    # Require login
+    """Mark citation as accepted for this report — IBTIKAR ONLY. Requires authentication and ownership/staff access."""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Authentication required'}, status=401)
     
@@ -205,14 +221,17 @@ def acknowledge_citation(request, token):
     except Request.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Report not found'}, status=404)
     
-    # Check permission - only requester or staff can acknowledge
+    if req.channel != 'IBTIKAR':
+        return JsonResponse({'ok': False, 'error': 'Not applicable for this channel'}, status=400)
+    
     if not _can_access_report(request.user, req):
         return JsonResponse({'ok': False, 'error': 'Not authorized'}, status=403)
     
     try:
-        if not req.citation_acknowledged:
-            req.citation_acknowledged = True
-            req.save(update_fields=['citation_acknowledged'])
+        if not req.citation_accepted:
+            req.citation_accepted = True
+            req.citation_accepted_at = timezone.now()
+            req.save(update_fields=['citation_accepted', 'citation_accepted_at'])
         return JsonResponse({'ok': True})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)

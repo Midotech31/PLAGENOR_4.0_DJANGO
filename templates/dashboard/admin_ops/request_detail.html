@@ -740,25 +740,219 @@
             </div>
         </div>
         {% endif %}
+        
+        <!-- GENOCLAB Invoice Section -->
+        {% if req.channel == 'GENOCLAB' %}
+        {% with finished_statuses="ANALYSIS_FINISHED,REPORT_UPLOADED,REPORT_VALIDATED,PAYMENT_PENDING,PAYMENT_CONFIRMED" %}
+        <div class="card mb-4" style="border-left: 4px solid #059669;">
+            <div class="card-header" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:#059669;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    {% trans "Facture" %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Invoice Status -->
+                <div style="margin-bottom:16px;">
+                    {% if req.signed_invoice and req.invoice_sent_at %}
+                    <div style="padding:12px; background:#ecfdf5; border-radius:8px; border:1px solid #a7f3d0; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <div>
+                            <span style="font-weight:600; color:#059669;">{% trans "Facture envoyée au client" %}</span>
+                            <p style="margin:4px 0 0 0; font-size:0.85rem; color:#64748b;">
+                                {% trans "Envoyée le" %} {{ req.invoice_sent_at|date:"d/m/Y H:i" }}
+                                {% if req.invoice_downloaded_at %}
+                                — {% trans "Téléchargée le" %} {{ req.invoice_downloaded_at|date:"d/m/Y H:i" }}
+                                {% else %}
+                                — {% trans "En attente de téléchargement" %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% elif req.signed_invoice %}
+                    <div style="padding:12px; background:#fef3c7; border-radius:8px; border:1px solid #fcd34d; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span style="font-weight:600; color:#d97706;">{% trans "Facture signée — prête à envoyer" %}</span>
+                    </div>
+                    {% elif req.generated_invoice %}
+                    <div style="padding:12px; background:#fef3c7; border-radius:8px; border:1px solid #fcd34d; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span style="font-weight:600; color:#d97706;">{% trans "Facture générée — en attente de signature" %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Invoice Actions -->
+                {% if req.status in finished_statuses %}
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Step 1: Generate Invoice -->
+                    {% if not req.generated_invoice %}
+                    {% url 'dashboard:admin_genoclab_invoice_generate' req.pk as admin_gen_invoice_url %}
+                    {% if admin_gen_invoice_url %}
+                    <form action="{{ admin_gen_invoice_url }}" method="post" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                            {% trans "Générer la facture" %}
+                        </button>
+                        <p style="margin:6px 0 0 0; font-size:0.8rem; color:#64748b;">
+                            {% trans "Génère un fichier Excel pré-rempli avec les informations du client et du service." %}
+                        </p>
+                    </form>
+                    {% endif %}
+                    {% else %}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:18px;height:18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span style="color:#059669; font-weight:600;">{% trans "Facture Excel générée" %}</span>
+                        <a href="{{ req.generated_invoice.url }}" class="btn btn-sm btn-outline" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            {% trans "Télécharger" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Step 2: Upload Signed Invoice -->
+                    {% if req.generated_invoice and not req.signed_invoice %}
+                    {% url 'dashboard:admin_genoclab_invoice_upload_signed' req.pk as admin_upload_signed_url %}
+                    {% if admin_upload_signed_url %}
+                    <form action="{{ admin_upload_signed_url }}" method="post" enctype="multipart/form-data" style="margin:0;">
+                        {% csrf_token %}
+                        <label style="font-weight:600; margin-bottom:8px; display:block;">{% trans "2. Télécharger, signer, puis recharger la facture signée:" %}</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="file" name="signed_invoice" accept=".pdf,.xlsx,.docx" required style="flex:1; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+                            <button type="submit" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                {% trans "Uploader" %}
+                            </button>
+                        </div>
+                        <p style="margin:6px 0 0 0; font-size:0.8rem; color:#64748b;">
+                            {% trans "Formats acceptés: PDF, XLSX, DOCX" %}
+                        </p>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                    {% if req.signed_invoice %}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:18px;height:18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span style="color:#059669; font-weight:600;">{% trans "Facture signée uploadée" %}</span>
+                        <a href="{{ req.signed_invoice.url }}" class="btn btn-sm btn-outline" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            {% trans "Voir" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Step 3: Send Invoice to Client -->
+                    {% if req.signed_invoice and not req.invoice_sent_at %}
+                    {% url 'dashboard:admin_genoclab_invoice_send' req.pk as admin_send_invoice_url %}
+                    {% if admin_send_invoice_url %}
+                    <form action="{{ admin_send_invoice_url }}" method="post" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" style="width:100%; background: linear-gradient(135deg, #059669, #047857);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            {% trans "Envoyer la facture au client" %}
+                        </button>
+                        <p style="margin:6px 0 0 0; font-size:0.8rem; color:#64748b;">
+                            {% trans "Envoie une notification email et in-app au client." %}
+                        </p>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                    {% if req.invoice_sent_at %}
+                    <div style="padding:10px; background:#ecfdf5; border-radius:6px; border:1px solid #a7f3d0; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:18px;height:18px;"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                        <span style="color:#059669; font-weight:600;">{% trans "Facture envoyée au client" %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p style="margin:0; font-size:0.85rem; color:#64748b;">
+                    {% trans "La facture peut être générée une fois l'analyse terminée." %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endwith %}
+        {% endif %}
 
         <!-- Documents -->
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
             <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
                 {% if req.channel == 'IBTIKAR' %}
-                <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">
+                {% url 'documents:ibtikar_form_pdf' req.pk as ibtikar_form_url %}
+                {% if ibtikar_form_url %}
+                <a href="{{ ibtikar_form_url }}" class="btn btn-sm btn-outline">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     {% trans "Formulaire IBTIKAR" %}
                 </a>
                 {% endif %}
-                <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline">
+                {% endif %}
+                
+                {# Platform Note - IBTIKAR only (DOCX template-based) #}
+                {% if req.channel == 'IBTIKAR' %}
+                {% url 'documents:platform_note' req.pk as platform_note_url %}
+                {% if platform_note_url %}
+                <a href="{{ platform_note_url }}" class="btn btn-sm btn-outline">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    {% trans "Note de Plateforme" %}
+                    {% trans "Note de Plateforme" %} (DOCX)
                 </a>
-                <a href="{% url 'documents:reception_form' req.pk %}" class="btn btn-sm btn-outline">
+                {% endif %}
+                {% endif %}
+                
+                {# Platform Note - IBTIKAR only (DOCX template-based) #}
+                {% if req.channel == 'IBTIKAR' %}
+                <div style="display:flex; align-items:center; gap:8px;">
+                    {% if req.generated_platform_note %}
+                    {% url 'documents:platform_note_pdf' req.pk as platform_note_pdf_url %}
+                    {% if platform_note_pdf_url %}
+                    <a href="{{ platform_note_pdf_url }}" class="btn btn-sm btn-success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Note Plateforme" %} (PDF)
+                    </a>
+                    {% url 'documents:platform_note_pdf_regenerate' req.pk as platform_note_regen_url %}
+                    {% if platform_note_regen_url %}
+                    <a href="{{ platform_note_regen_url }}" class="btn btn-sm btn-outline" title="{% trans 'Régénérer' %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted text-sm">{% trans "Note de Plateforme PDF: non générée" %}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endif %}
+                
+                {# Sample Reception Form - DOCX template-based #}
+                {% url 'documents:reception_form' req.pk as reception_form_url %}
+                {% if reception_form_url %}
+                <a href="{{ reception_form_url }}" class="btn btn-sm btn-outline">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    {% trans "Fiche de réception" %}
+                    {% trans "Fiche de réception" %} (DOCX)
                 </a>
+                {% endif %}
+                
+                {# Sample Reception Form PDF - ReportLab-based #}
+                <div style="display:flex; align-items:center; gap:8px;">
+                    {% if req.generated_reception_form %}
+                    {% url 'documents:sample_reception_pdf' req.pk as sample_reception_pdf_url %}
+                    {% if sample_reception_pdf_url %}
+                    <a href="{{ sample_reception_pdf_url }}" class="btn btn-sm btn-success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Fiche Réception" %} (PDF)
+                    </a>
+                    {% url 'documents:sample_reception_pdf_regenerate' req.pk as sample_reception_regen_url %}
+                    {% if sample_reception_regen_url %}
+                    <a href="{{ sample_reception_regen_url }}" class="btn btn-sm btn-outline" title="{% trans 'Régénérer' %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted text-sm">{% trans "Fiche de Réception PDF: non générée" %}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
                 {% if req.report_file %}
                 <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -801,7 +995,10 @@
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "QR Code Rapport" %}</h3></div>
             <div class="card-body" style="text-align:center; padding:20px;">
-                <img src="{% url 'dashboard:report_qr' req.pk %}" alt="QR Code" style="width:180px; height:180px; border-radius:8px; border:1px solid #e2e8f0;">
+                {% url 'dashboard:report_qr' req.pk as report_qr_url %}
+                {% if report_qr_url %}
+                <img src="{{ report_qr_url }}" alt="QR Code" style="width:180px; height:180px; border-radius:8px; border:1px solid #e2e8f0;">
+                {% endif %}
                 <p class="text-muted" style="font-size:0.8rem; margin-top:10px;">{% trans "Scannez pour accéder à la page du rapport" %}</p>
             </div>
         </div>
@@ -876,7 +1073,12 @@
                 {% for prev_req in user_history %}
                 <tr>
                     <td>
-                        <a href="{% url 'dashboard:admin_request_detail' prev_req.pk %}">{{ prev_req.display_id }}</a>
+                        {% url 'dashboard:admin_request_detail' prev_req.pk as prev_detail_url %}
+                        {% if prev_detail_url %}
+                        <a href="{{ prev_detail_url }}">{{ prev_req.display_id }}</a>
+                        {% else %}
+                        {{ prev_req.display_id }}
+                        {% endif %}
                     </td>
                     <td>{{ prev_req.title|truncatechars:40 }}</td>
                     <td>{{ prev_req.service.name|default:"—" }}</td>
@@ -889,9 +1091,12 @@
             </tbody>
         </table>
         <div style="margin-top: 12px;">
-            <a href="{% url 'dashboard:admin_user_detail' req.requester.pk %}" class="btn btn-sm btn-outline">
+            {% url 'dashboard:admin_user_detail' req.requester.pk as admin_user_detail_url %}
+            {% if admin_user_detail_url %}
+            <a href="{{ admin_user_detail_url }}" class="btn btn-sm btn-outline">
                 {% trans "View Full User History" %} →
             </a>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -900,7 +1105,7 @@
 <!-- Workflow Timeline -->
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-header"><h3>{% trans "Workflow History" %}</h3></div>
-    <div class="card-body">
+    <div class="card-body" style="max-height:400px; overflow-y:auto;">
         {% for h in history %}
         <div style="display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--slate-100);">
             <div style="min-width:120px;">
@@ -937,7 +1142,9 @@
 
             {# Transition buttons based on allowed transitions #}
             {% for t in allowed_transitions %}
-            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+            {% url 'dashboard:admin_transition' req.pk as admin_transition_url %}
+            {% if admin_transition_url %}
+            <form method="post" action="{{ admin_transition_url }}" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="to_status" value="{{ t }}">
                 {% if t == 'REJECTED' %}
@@ -960,11 +1167,14 @@
                 <button type="submit" class="btn btn-sm btn-primary">{{ t }}</button>
                 {% endif %}
             </form>
+            {% endif %}
             {% endfor %}
 
             {# Assignment form #}
             {% if req.status == 'IBTIKAR_CODE_SUBMITTED' or req.status == 'PAYMENT_CONFIRMED' or req.status == 'ORDER_UPLOADED' %}
-            <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+            {% url 'dashboard:admin_assign' req.pk as admin_assign_url %}
+            {% if admin_assign_url %}
+            <form method="post" action="{{ admin_assign_url }}" style="display:inline-flex; gap:4px; align-items:center;">
                 {% csrf_token %}
                 <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>
                     <option value="">— {% trans "Assigner à" %} —</option>
@@ -975,54 +1185,70 @@
                 <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
             </form>
             {% endif %}
+            {% endif %}
 
             {# GENOCLAB: Quote preparation button #}
             {% if req.channel == 'GENOCLAB' and req.status == 'REQUEST_CREATED' or req.status == 'QUOTE_DRAFT' and req.channel == 'GENOCLAB' %}
-            <a href="{% url 'dashboard:admin_prepare_quote' req.pk %}" class="btn btn-sm btn-primary">
+            {% url 'dashboard:admin_prepare_quote' req.pk as admin_prepare_quote_url %}
+            {% if admin_prepare_quote_url %}
+            <a href="{{ admin_prepare_quote_url }}" class="btn btn-sm btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 {% trans "Préparer / Modifier le devis" %}
             </a>
             {% endif %}
+            {% endif %}
 
             {# GENOCLAB: Invoice generation button #}
             {% if req.channel == 'GENOCLAB' and req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
-            <form method="post" action="{% url 'dashboard:admin_generate_invoice' req.pk %}" style="display:inline;">
+            {% url 'dashboard:admin_generate_invoice' req.pk as admin_generate_invoice_url %}
+            {% if admin_generate_invoice_url %}
+            <form method="post" action="{{ admin_generate_invoice_url }}" style="display:inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     {% trans "Générer la facture" %}
-                </button>
+                    </button>
             </form>
+            {% endif %}
             {% endif %}
 
             {# GENOCLAB: Payment confirmation button #}
             {% if req.channel == 'GENOCLAB' and req.status == 'INVOICE_GENERATED' %}
-            <form method="post" action="{% url 'dashboard:admin_confirm_payment' req.pk %}" style="display:inline;">
+            {% url 'dashboard:admin_confirm_payment' req.pk as admin_confirm_payment_url %}
+            {% if admin_confirm_payment_url %}
+            <form method="post" action="{{ admin_confirm_payment_url }}" style="display:inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-primary" style="background:#059669;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     {% trans "Confirmer le paiement" %}
-                </button>
+                    </button>
             </form>
+            {% endif %}
             {% endif %}
 
             {# Cost adjustment for VALIDATION_FINANCE #}
             {% if req.status == 'VALIDATION_FINANCE' %}
-            <form method="post" action="{% url 'dashboard:admin_adjust_cost' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+            {% url 'dashboard:admin_adjust_cost' req.pk as admin_adjust_cost_url %}
+            {% if admin_adjust_cost_url %}
+            <form method="post" action="{{ admin_adjust_cost_url }}" style="display:inline-flex; gap:4px; align-items:center;">
                 {% csrf_token %}
                 <input type="number" name="admin_price" step="0.01" value="{{ req.admin_validated_price|default:req.budget_amount|default:req.quote_amount }}" class="form-control" style="width:120px; font-size:0.85rem;" placeholder="{% trans 'Coût DA' %}">
                 <input type="text" name="cost_justification" class="form-control" style="width:160px; font-size:0.85rem;" placeholder="{% trans 'Justification' %}">
                 <button type="submit" class="btn btn-sm btn-outline">{% trans "Ajuster coût" %}</button>
             </form>
             {% endif %}
+            {% endif %}
 
             {# Modify appointment #}
             {% if req.status == 'APPOINTMENT_PROPOSED' and not req.appointment_confirmed %}
-            <form method="post" action="{% url 'dashboard:admin_modify_appointment' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+            {% url 'dashboard:admin_modify_appointment' req.pk as admin_modify_appt_url %}
+            {% if admin_modify_appt_url %}
+            <form method="post" action="{{ admin_modify_appt_url }}" style="display:inline-flex; gap:4px; align-items:center;">
                 {% csrf_token %}
                 <input type="date" name="appointment_date" class="form-control" style="width:auto; font-size:0.85rem;" value="{{ req.appointment_date|date:'Y-m-d' }}">
                 <button type="submit" class="btn btn-sm btn-outline">{% trans "Modifier RDV" %}</button>
             </form>
+            {% endif %}
             {% endif %}
 
             {# Contact email #}
@@ -1040,10 +1266,13 @@
 
             {# Platform Note download #}
             {% if req.status == 'PLATFORM_NOTE_GENERATED' or req.status == 'ASSIGNED' or req.status == 'APPOINTMENT_PROPOSED' or req.status == 'APPOINTMENT_CONFIRMED' %}
-            <a href="{% url 'documents:platform_note' req.pk %}" class="btn btn-sm btn-outline">
+            {% url 'documents:platform_note' req.pk as documents_platform_note_url %}
+            {% if documents_platform_note_url %}
+            <a href="{{ documents_platform_note_url }}" class="btn btn-sm btn-outline">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger Note" %}
             </a>
+            {% endif %}
             {% endif %}
 
             {% if not allowed_transitions and req.status != 'PLATFORM_NOTE_GENERATED' and req.status != 'PAYMENT_CONFIRMED' and req.status != 'VALIDATION_FINANCE' and req.status != 'APPOINTMENT_PROPOSED' %}

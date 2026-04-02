@@ -2,6 +2,10 @@
 # PLAGENOR / IBTIKAR — Service Registry
 # Service: EGTP-Seq02
 # =====================================================
+# ARCHIVED VERSION - Pricing moved to Database
+# This file is kept for reference only. Pricing is now managed
+# via the Superadmin pricing editor in the database.
+# =====================================================
 
 service_code: EGTP-Seq02
 service_name: Microbial Identification via Sequencing
@@ -71,20 +75,11 @@ sample_table:
         - Biomass
 
 # -----------------------------------------------------
-# PRICING (SUPPORTED MODEL)
+# PRICING - MOVED TO DATABASE
 # -----------------------------------------------------
-pricing:
-  model: per_sample_table_row_with_multiplier
-  currency: DZD
-
-  base_price:
-    non_pathogenic: 8000
-    pathogenic: 8000
-
-  multipliers:
-    F: 1
-    F+R: 1.6
-    F+R-long: 1.8
+# Pricing is now managed via the Superadmin pricing editor.
+# See ServicePricing model in the database.
+# -----------------------------------------------------
 
 # -----------------------------------------------------
 # REQUIRED BY REGISTRY LOADER

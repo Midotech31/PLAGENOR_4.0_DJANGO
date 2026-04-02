@@ -524,15 +524,26 @@
                         </div>
 
                         <div class="form-group" style="margin-top: 16px;">
-                            <label class="form-label">{% trans "Secteur / Position" %}</label>
+                            <label class="form-label">{% trans "Fonction / Position" %}</label>
                             <select name="position" class="form-control">
                                 <option value="">{% trans "— Sélectionner —" %}</option>
-                                <option value="academique" {% if user.position == 'academique' %}selected{% endif %}>{% trans "Accadémique / Academic" %}</option>
-                                <option value="industriel" {% if user.position == 'industriel' %}selected{% endif %}>{% trans "Industriel / Industrial" %}</option>
-                                <option value="hospitalier" {% if user.position == 'hospitalier' %}selected{% endif %}>{% trans "Hospitalier / Hospital" %}</option>
-                                <option value="independant" {% if user.position == 'independant' %}selected{% endif %}>{% trans "Indépendant / Independent" %}</option>
-                                <option value="autre" {% if user.position == 'autre' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
+                                <option value="director" {% if user.position == 'director' %}selected{% endif %}>{% trans "Directeur / Director" %}</option>
+                                <option value="manager" {% if user.position == 'manager' %}selected{% endif %}>{% trans "Responsable / Manager" %}</option>
+                                <option value="lab_technician" {% if user.position == 'lab_technician' %}selected{% endif %}>{% trans "Technicien de laboratoire / Lab Technician" %}</option>
+                                <option value="researcher" {% if user.position == 'researcher' %}selected{% endif %}>{% trans "Chercheur / Researcher" %}</option>
+                                <option value="engineer" {% if user.position == 'engineer' %}selected{% endif %}>{% trans "Ingénieur / Engineer" %}</option>
+                                <option value="other" {% if user.position == 'other' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
                             </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Adresse" %}</label>
+                            <textarea name="address" class="form-control" rows="2">{{ user.address|default:'' }}</textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">{% trans "Pays" %}</label>
+                            <input type="text" name="country" class="form-control" value="{{ user.country|default:'' }}">
                         </div>
                         {% elif user.role == 'MEMBER' %}
                         <!-- MEMBER-specific fields -->

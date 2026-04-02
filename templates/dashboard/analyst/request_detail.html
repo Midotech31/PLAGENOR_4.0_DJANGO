@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load dashboard_extras %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -152,7 +153,7 @@
                     <div class="text-sm text-muted">{{ req.report_file.name|filename }}</div>
                 </div>
             </div>
-            <a href="{{ req.report_file.url }}" class="btn btn-sm btn-primary" target="_blank">
+            <a href="#" class="btn btn-sm btn-primary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger" %}
             </a>
@@ -181,7 +182,9 @@
                 {% trans "Uploader une nouvelle version" %}
             </div>
             <p class="text-sm text-muted" style="margin-bottom:12px;">{% trans "Vous pouvez toujours envoyer des versions révisées au demandeur." %}</p>
-            <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data">
+            {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url %}
+            {% if analyst_upload_url %}
+            <form method="post" action="{{ analyst_upload_url }}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:1; min-width:200px;">
@@ -193,6 +196,7 @@
                     </button>
                 </div>
             </form>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -309,20 +313,25 @@
                     {% endif %}
                     <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
                         <!-- Accept -->
-                        <form method="post" action="{% url 'dashboard:analyst_accept_alt_date' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:analyst_accept_alt_date' req.pk as analyst_accept_alt_url %}
+                        {% if analyst_accept_alt_url %}
+                        <form method="post" action="{{ analyst_accept_alt_url }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
                                 {% trans "Accepter cette date" %}
                             </button>
                         </form>
+                        {% endif %}
                         <!-- Decline -->
                         <div x-data="{ showDecline: false }">
                             <button type="button" class="btn btn-sm btn-outline" @click="showDecline = !showDecline" style="color:#dc2626; border-color:#fecaca;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 {% trans "Refuser" %}
                             </button>
-                            <form method="post" action="{% url 'dashboard:analyst_decline_alt_date' req.pk %}" x-show="showDecline" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                            {% url 'dashboard:analyst_decline_alt_date' req.pk as analyst_decline_alt_url %}
+                            {% if analyst_decline_alt_url %}
+                            <form method="post" action="{{ analyst_decline_alt_url }}" x-show="showDecline" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                                 {% csrf_token %}
                                 <div style="flex:1; min-width:200px;">
                                     <label class="text-sm">{% trans "Raison du refus" %}</label>
@@ -330,13 +339,16 @@
                                 </div>
                                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer le refus" %}</button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 {% endif %}
                 {% else %}
                 <!-- Propose appointment -->
-                <form method="post" action="{% url 'dashboard:analyst_suggest_appointment' req.pk %}">
+                {% url 'dashboard:analyst_suggest_appointment' req.pk as analyst_suggest_url %}
+                {% if analyst_suggest_url %}
+                <form method="post" action="{{ analyst_suggest_url }}">
                     {% csrf_token %}
                     <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                         <div>
@@ -363,6 +375,7 @@
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer" %}</button>
                     </div>
                 </form>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -394,11 +407,14 @@
                 <div class="text-muted text-sm">{% trans "Aucun message." %}</div>
                 {% endfor %}
                 <!-- Reply form -->
-                <form method="post" action="{% url 'dashboard:send_message' req.pk %}" style="margin-top:12px; display:flex; gap:8px;">
+                {% url 'dashboard:send_message' req.pk as analyst_send_msg_url %}
+                {% if analyst_send_msg_url %}
+                <form method="post" action="{{ analyst_send_msg_url }}" style="margin-top:12px; display:flex; gap:8px;">
                     {% csrf_token %}
                     <input type="text" name="message_text" placeholder="{% trans 'Répondre...' %}" class="form-control" style="font-size:0.85rem;" required>
                     <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
                 </form>
+                {% endif %}
             </div>
         </div>
 
@@ -408,35 +424,47 @@
             <div class="card-body">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     {% if req.status == 'APPOINTMENT_CONFIRMED' or req.status == 'APPOINTMENT_PROPOSED' %}
-                    <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                    {% url 'dashboard:analyst_action' req.pk as analyst_action_url1 %}
+                    {% if analyst_action_url1 %}
+                    <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
                     </form>
                     {% endif %}
+                    {% endif %}
                     {% if req.status == 'SAMPLE_RECEIVED' %}
-                    <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                    {% if analyst_action_url1 %}
+                    <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Démarrer analyse" %}</button>
                     </form>
                     {% endif %}
+                    {% endif %}
                     {% if req.status == 'ANALYSIS_STARTED' %}
-                    <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                    {% if analyst_action_url1 %}
+                    <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
                     </form>
                     {% endif %}
+                    {% endif %}
                     {% if req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
-                    <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data" style="display:inline;">
+                    {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
+                    {% if analyst_upload_url2 %}
+                    <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline;">
                         {% csrf_token %}
                         <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
                     </form>
                     {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
                     {% if req.report_file %}
-                    <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Voir rapport" %}</a>
+                    <a href="#" class="btn btn-sm btn-outline" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">{% trans "Voir rapport" %}</a>
                     {% endif %}
                 </div>
             </div>
@@ -492,4 +520,270 @@
     </div>
 </div>
 {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var analystCitationAccepted = {{ req.citation_accepted|yesno:"true,false" }};
+var analystPaymentCompleted = {{ payment_completed|default:False|yesno:"true,false" }};
+var currentDownloadUrl = '';
+
+function showAnalystCitationModal(event, downloadUrl) {
+    event.preventDefault();
+    currentDownloadUrl = downloadUrl;
+    
+    // Skip modal if already accepted or if payment is completed
+    if (analystCitationAccepted || analystPaymentCompleted) {
+        window.location.href = downloadUrl;
+        return;
+    }
+    
+    // Reset checkbox state when opening modal
+    var checkbox = document.getElementById('analyst-citation-checkbox');
+    if (checkbox) checkbox.checked = false;
+    var downloadBtn = document.getElementById('analyst-modal-download-btn');
+    if (downloadBtn) downloadBtn.disabled = true;
+    
+    document.getElementById('analyst-citation-modal').style.display = 'flex';
+}
+
+function toggleAnalystDownloadButton() {
+    var checkbox = document.getElementById('analyst-citation-checkbox');
+    var downloadBtn = document.getElementById('analyst-modal-download-btn');
+    if (checkbox && downloadBtn) {
+        downloadBtn.disabled = !checkbox.checked;
+    }
+}
+
+function closeAnalystCitationModal(doDownload) {
+    document.getElementById('analyst-citation-modal').style.display = 'none';
+    if (doDownload && currentDownloadUrl) {
+        // Mark citation as accepted on the server
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+            document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+        fetch('{% url "report_acknowledge" token=req.report_token %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(function(){});
+        analystCitationAccepted = true;
+        // Trigger download
+        window.location.href = currentDownloadUrl;
+    }
+}
+
+function copyAnalystCitation() {
+    var citationText = document.getElementById('analyst-citation-text').innerText;
+    navigator.clipboard.writeText(citationText).then(function() {
+        var tooltip = document.createElement('span');
+        tooltip.className = 'copy-tooltip';
+        tooltip.textContent = '{% trans "Copié !" %}';
+        tooltip.style.cssText = 'position:absolute;top:-30px;right:0;background:#10b981;color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;animation:fadeOut 2s forwards;';
+        var block = document.querySelector('.analyst-citation-block');
+        if (block) {
+            block.style.position = 'relative';
+            block.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 2000);
+        }
+    });
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('analyst-citation-modal');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) { closeAnalystCitationModal(false); }
+        });
+    }
+});
+</script>
+
+<style>
+@keyframes fadeOut {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.analyst-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.analyst-modal-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+.analyst-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px 8px;
+}
+.analyst-modal-close:hover { color: #1e293b; }
+.analyst-modal-content h2 {
+    color: #4338ca;
+    margin-bottom: 16px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+.analyst-citation-intro { color: #475569; margin-bottom: 16px; }
+.analyst-citation-block {
+    background: #f8fafc;
+    border-left: 4px solid #4f46e5;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    position: relative;
+}
+.analyst-citation-block p {
+    color: #1e293b;
+    font-style: italic;
+    margin: 0;
+    padding-right: 40px;
+}
+.analyst-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+}
+.analyst-copy-btn:hover { color: #4f46e5; }
+.analyst-authorship-clause, .analyst-collaboration-notice {
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+.analyst-platform-contact {
+    text-align: center;
+    margin-bottom: 24px;
+}
+.analyst-platform-contact a { color: #4f46e5; font-weight: 600; }
+.analyst-acceptance-wrapper {
+    margin: 24px 0 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.analyst-modal-actions {
+    display: flex;
+    gap: 12px;
+}
+.analyst-cancel-btn {
+    flex: 1;
+    padding: 14px;
+    background: #fff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.analyst-cancel-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+.analyst-download-btn {
+    flex: 2;
+    padding: 14px;
+    background: #9ca3af;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: not-allowed;
+    font-size: 1rem;
+}
+.analyst-download-btn:not(:disabled) {
+    background: #4f46e5 !important;
+    cursor: pointer !important;
+}
+.analyst-download-btn:not(:disabled):hover {
+    background: #4338ca !important;
+}
+</style>
+
+<!-- Citation & Download Modal for Analyst View -->
+<div id="analyst-citation-modal" class="analyst-modal-overlay">
+    <div class="analyst-modal-content">
+        {% csrf_token %}
+        <button class="analyst-modal-close" onclick="closeAnalystCitationModal(false)">&times;</button>
+        
+        <h2>{% trans "Clause de Citation" %}</h2>
+        
+        <p class="analyst-citation-intro">
+            {% trans "Pour reconnaître le soutien et les contributions de notre Plateforme de Technologie Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :" %}
+        </p>
+
+        <div class="analyst-citation-block">
+            <button class="analyst-copy-btn" onclick="copyAnalystCitation()" title="{% trans 'Copier' %}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+            </button>
+            <p id="analyst-citation-text">
+                {% trans "This research was conducted at the Genomic Technology Platform of the Higher School of Biological Sciences of Oran (HSBSO). We warmly thank the platform staff for their assistance in data analysis and interpretation." %}
+            </p>
+        </div>
+
+        <p class="analyst-authorship-clause">
+            {% trans "Veuillez également vous assurer que toute contribution substantielle du personnel de la plateforme est reconnue conformément aux directives standard en matière d'auteurs scientifiques." %}
+        </p>
+
+        <p class="analyst-collaboration-notice">
+            {% trans "Toute production scientifique incluant des analyses réalisées sur PLAGENOR implique l'inclusion des membres ayant contribué. Contactez le responsable via l'adresse email de la plateforme pour convenir des modalités." %}
+        </p>
+
+        <p class="analyst-platform-contact">
+            <a href="mailto:plagenor@essbo.dz">plagenor@essbo.dz</a>
+        </p>
+
+        <!-- Acceptance Checkbox -->
+        <div class="analyst-acceptance-wrapper">
+            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="analyst-citation-checkbox" onchange="toggleAnalystDownloadButton()" style="width: 20px; height: 20px; margin-top: 2px; cursor: pointer;">
+                <span style="color: #1e293b; font-size: 0.95rem; line-height: 1.5;">
+                    {% blocktrans %}I have read and I accept the terms and conditions of use{% endblocktrans %}
+                    <br>
+                    <span style="font-size: 0.85rem; color: #64748b;">{% trans "J'ai lu et j'accepte les conditions générales d'utilisation" %}</span>
+                </span>
+            </label>
+        </div>
+
+        <!-- Modal Action Buttons -->
+        <div class="analyst-modal-actions">
+            <button class="analyst-cancel-btn" onclick="closeAnalystCitationModal(false)">
+                {% trans "Annuler" %}
+            </button>
+            <button id="analyst-modal-download-btn" class="analyst-download-btn" onclick="closeAnalystCitationModal(true)" disabled>
+                {% trans "Télécharger" %}
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}

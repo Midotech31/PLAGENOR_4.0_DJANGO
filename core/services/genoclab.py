@@ -15,15 +15,18 @@ logger = logging.getLogger('plagenor.services')
 
 def submit_genoclab_request(data: dict, user) -> Request:
     """Submit a new GENOCLAB request."""
-    # Generate display_id
+    # Generate display_id and tracking_number
     year = datetime.now().year
     count = Request.objects.filter(channel='GENOCLAB', created_at__year=year).count() + 1
     display_id = f"GCL-{year}-{count:04d}"
+    # Tracking number format: GCL-YYYY-XXXXX (5 digits)
+    tracking_number = f"GCL-{year}-{count:05d}"
 
     service_id = data.get('service_id')
 
     request_obj = Request.objects.create(
         display_id=display_id,
+        tracking_number=tracking_number,
         title=data.get('title', ''),
         description=data.get('description', ''),
         channel='GENOCLAB',

@@ -3,6 +3,232 @@
 
 {% block title %}{% trans "Analyste" %} — PLAGENOR 4.0{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* 3D Badge Gallery Styles */
+    .badge-3d {
+        perspective: 1000px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .badge-3d:hover {
+        transform: translateY(-4px);
+    }
+    .badge-3d .badge-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .badge-3d:hover .badge-icon {
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .badge-3d.earned .badge-icon {
+        animation: badge-glow 2s ease-in-out infinite;
+    }
+    @keyframes badge-glow {
+        0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(124, 58, 237, 0); }
+        50% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 20px 4px rgba(124, 58, 237, 0.3); }
+    }
+    .badge-3d.locked .badge-icon {
+        opacity: 0.5;
+        filter: grayscale(100%);
+    }
+    .badge-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-align: center;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    .badge-points {
+        font-size: 0.75rem;
+        text-align: center;
+        color: #64748b;
+    }
+    .badge-level {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+    
+    /* Gift Box 3D Animation */
+    .gift-box-3d {
+        flex-shrink: 0;
+    }
+    .gift-box {
+        position: relative;
+        width: 100px;
+        height: 100px;
+    }
+    .gift-lid {
+        position: absolute;
+        top: -10px;
+        left: -5px;
+        width: 110px;
+        height: 30px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-radius: 4px;
+        transition: transform 0.5s ease;
+        transform-origin: bottom left;
+    }
+    .gift-box.opened .gift-lid {
+        transform: rotateX(-120deg) translateY(-20px);
+    }
+    .gift-body {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        width: 100px;
+        height: 80px;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .gift-ribbon-v {
+        position: absolute;
+        top: 20px;
+        left: 45px;
+        width: 10px;
+        height: 80px;
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        z-index: 1;
+    }
+    .gift-ribbon-h {
+        position: absolute;
+        top: 45px;
+        left: 0;
+        width: 100px;
+        height: 10px;
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        z-index: 1;
+    }
+    .gift-star {
+        z-index: 2;
+        animation: star-pulse 1s ease-in-out infinite;
+    }
+    @keyframes star-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    /* History Items */
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+    }
+    .history-item:hover {
+        background: #fafafa;
+    }
+    .history-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .history-icon.positive {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #059669;
+    }
+    .history-icon.negative {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #dc2626;
+    }
+    .history-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .history-reason {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .history-date {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+    .history-points {
+        font-size: 0.95rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .history-points.positive {
+        color: #059669;
+    }
+    .history-points.negative {
+        color: #dc2626;
+    }
+    
+    /* Cheer Items */
+    .cheer-item {
+        display: flex;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s;
+    }
+    .cheer-item:hover {
+        background: #fafafa;
+    }
+    .cheer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f472b6, #a78bfa);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .cheer-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .cheer-from {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .cheer-message {
+        font-size: 0.9rem;
+        color: #475569;
+        font-style: italic;
+        margin-top: 4px;
+    }
+    .cheer-date {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
@@ -48,11 +274,16 @@
                         <span>{{ req.get_urgency_display }} &middot; {{ req.created_at|date:"d/m/Y" }}</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem;">
-                        <form method="post" action="{% url 'dashboard:analyst_accept' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:analyst_accept' req.pk as analyst_accept_url %}
+                        {% if analyst_accept_url %}
+                        <form method="post" action="{{ analyst_accept_url }}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter" %}</button>
                         </form>
-                        <form method="post" action="{% url 'dashboard:analyst_decline' req.pk %}" style="display:inline;" x-data="{show: false}">
+                        {% endif %}
+                        {% url 'dashboard:analyst_decline' req.pk as analyst_decline_url %}
+                        {% if analyst_decline_url %}
+                        <form method="post" action="{{ analyst_decline_url }}" style="display:inline;" x-data="{show: false}">
                             {% csrf_token %}
                             <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Décliner" %}</button>
                             <div x-show="show" style="display:inline;">
@@ -60,20 +291,12 @@
                                 <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
                             </div>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
                 {% empty %}
-                <div class="empty-state"><p>{% trans "Aucune tâche en attente." %}</p></div>
+                <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>
                 {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- In Progress -->
-    <div x-show="tab === 'progress'">
-        <div class="card">
-            <div class="card-header"><h3>{% trans "Travaux en cours" %}</h3></div>
-            <div class="card-body">
                 {% for req in in_progress %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
@@ -100,7 +323,10 @@
                     {% endfor %}
                     {% endif %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="{% url 'dashboard:analyst_request_detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% url 'dashboard:analyst_request_detail' req.pk as analyst_detail_url %}
+                        {% if analyst_detail_url %}
+                        <a href="{{ analyst_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        {% endif %}
                     </div>
                     {# Compact Pipeline for GENOCLAB requests #}
                     {% if req.channel == 'GENOCLAB' %}
@@ -139,34 +365,51 @@
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <!-- Workflow action buttons based on status -->
                         {% if req.status == 'APPOINTMENT_CONFIRMED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
+                        {% if analyst_action_url %}
+                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
                         </form>
-                        {% elif req.status == 'SAMPLE_RECEIVED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                        {% endif %}
+                        {% if req.status == 'SAMPLE_RECEIVED' %}
+                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
+                        {% if analyst_action_url %}
+                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Démarrer analyse" %}</button>
                         </form>
-                        {% elif req.status == 'ANALYSIS_STARTED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_action' req.pk %}" style="display:inline;">
+                        {% endif %}
+                        {% if req.status == 'ANALYSIS_STARTED' %}
+                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
+                        {% if analyst_action_url %}
+                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
                         </form>
-                        {% elif req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_upload_report' req.pk %}" enctype="multipart/form-data" style="display:inline;">
+                        {% endif %}
+                        {% if req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
+                        {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url %}
+                        {% if analyst_upload_url %}
+                        <form method="post" action="{{ analyst_upload_url }}" enctype="multipart/form-data" style="display:inline;">
                             {% csrf_token %}
                             <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
                         </form>
                         {% endif %}
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
 
                         <!-- Suggest appointment date -->
                         {% if req.status == 'ASSIGNED' or req.status == 'PENDING_ACCEPTANCE' or req.status == 'APPOINTMENT_SCHEDULED' %}
-                        <form method="post" action="{% url 'dashboard:analyst_suggest_appointment' req.pk %}" style="margin-top:12px; width:100%;">
+                        {% url 'dashboard:analyst_suggest_appointment' req.pk as analyst_suggest_url %}
+                        {% if analyst_suggest_url %}
+                        <form method="post" action="{{ analyst_suggest_url }}" style="margin-top:12px; width:100%;">
                             {% csrf_token %}
                             <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
                                 <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">
@@ -198,11 +441,10 @@
                                         <label class="text-sm" style="font-size:0.75rem;">{% trans "Message au demandeur" %}</label>
                                         <input type="text" name="appointment_note" class="form-control" placeholder="{% trans 'Ex: Apportez vos échantillons frais' %}" style="font-size:0.85rem; width:250px;">
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer ce RDV" %}</button>
-                                </div>
-                                <p class="text-muted text-xs" style="margin-top:6px; font-size:0.7rem;">{% trans "Le demandeur recevra une notification pour confirmer ou demander un changement de date." %}</p>
-                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer ce RDV" %}</button>
+                        </div>
                         </form>
+                        {% endif %}
                         {% endif %}
 
                         <!-- Alternative date proposal from requester/client -->
@@ -216,14 +458,20 @@
                             <div style="font-size:0.8rem; color:#78350f; margin-bottom:8px;">{{ req.alt_date_note }}</div>
                             {% endif %}
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <form method="post" action="{% url 'dashboard:analyst_accept_alt_date' req.pk %}" style="display:inline;">
+                                {% url 'dashboard:analyst_accept_alt_date' req.pk as accept_alt_url %}
+                                {% if accept_alt_url %}
+                                <form method="post" action="{{ accept_alt_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter" %}</button>
                                 </form>
-                                <form method="post" action="{% url 'dashboard:analyst_decline_alt_date' req.pk %}" style="display:inline;">
+                                {% endif %}
+                                {% url 'dashboard:analyst_decline_alt_date' req.pk as decline_alt_url %}
+                                {% if decline_alt_url %}
+                                <form method="post" action="{{ decline_alt_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline" style="color:#dc2626; border-color:#fecaca;">{% trans "Refuser" %}</button>
                                 </form>
+                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -231,11 +479,14 @@
                     <!-- Message / Reply form -->
                     <div class="data-card-row mt-2" x-data="{showMsg: false}">
                         <button type="button" class="btn btn-sm btn-outline" @click="showMsg = !showMsg">{% trans "Répondre" %}</button>
-                        <form x-show="showMsg" method="post" action="{% url 'dashboard:send_message' req.pk %}" style="display:inline;">
+                        {% url 'dashboard:send_message' req.pk as send_msg_url %}
+                        {% if send_msg_url %}
+                        <form x-show="showMsg" method="post" action="{{ send_msg_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="text" name="message_text" placeholder="{% trans 'Message...' %}" class="form-control" style="display:inline-block; width:250px; font-size:0.85rem;">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
                         </form>
+                        {% endif %}
                     </div>
                     <!-- Messages display -->
                     {% for msg in req.messages.all|slice:":3" %}
@@ -244,7 +495,6 @@
                         <span class="text-xs text-muted">{{ msg.created_at|date:"d/m H:i" }}</span>
                     </div>
                     {% endfor %}
-                </div>
                 {% empty %}
                 <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>
                 {% endfor %}
@@ -270,7 +520,8 @@
                         </thead>
                         <tbody>
                         {% for req in history %}
-                        <tr class="clickable-row" data-href="{% url 'dashboard:analyst_request_detail' req.pk %}">
+                        {% url 'dashboard:analyst_request_detail' req.pk as analyst_history_url %}
+                        <tr class="clickable-row" {% if analyst_history_url %}data-href="{{ analyst_history_url }}"{% endif %}>
                             <td>{{ req.display_id }}</td>
                             <td>{{ req.title|truncatechars:40 }}</td>
                             <td>{{ req.service.name|default:"—" }}</td>
@@ -392,134 +643,327 @@
         </div>
     </div>
 
-    <!-- Points & Cheers — Gamified Dashboard -->
+    <!-- Points & Cheers — Modern 2D Flat Design with 3D Badge Gallery -->
     <div x-show="tab === 'points'">
 
-        <!-- Ranking Position + Performance Status Banner -->
-        <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
-            <!-- Rank card -->
-            <div style="flex:1; min-width:160px; background:linear-gradient(135deg,#1e293b,#334155); border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; color:white;">
-                <div style="font-size:2.5rem; line-height:1;">
-                    {% if rank_position == 1 %}🥇{% elif rank_position == 2 %}🥈{% elif rank_position == 3 %}🥉{% else %}#{% endif %}
+        <!-- Hero Section: Level + Points Ring -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); border: none;">
+            <div class="card-body" style="display: flex; align-items: center; gap: 32px; flex-wrap: wrap; padding: 32px;">
+                <!-- 3D Progress Ring -->
+                <div style="position: relative; width: 140px; height: 140px; flex-shrink: 0;">
+                    <svg viewBox="0 0 100 100" style="transform: rotate(-90deg);">
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#334155" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#purpleGradient)" stroke-width="8" 
+                                stroke-dasharray="264" stroke-dashoffset="264" 
+                                style="transition: stroke-dashoffset 1s ease-out;"
+                                id="progress-ring"/>
+                        <defs>
+                            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#7c3aed"/>
+                                <stop offset="100%" style="stop-color:#a855f7"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;">{{ profile.total_points }}</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em;">Points</div>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size:2rem; font-weight:800; line-height:1;">{{ rank_position|default:"—" }}</div>
-                    <div style="font-size:0.78rem; color:#94a3b8; margin-top:2px;">{% trans "sur" %} {{ total_members_count }} {% trans "analystes" %}</div>
+                
+                <!-- Level Info -->
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <span class="badge-level" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 4px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                            {% trans "Niveau" %} {{ profile.milestone_level|default:1 }}
+                        </span>
+                        <span style="color: #c4b5fd; font-weight: 600;">{{ profile.reward_level_name|default:"Bronze" }}</span>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 8px;">
+                        {% blocktrans with cycle_pts=profile.current_cycle_points %}{{ cycle_pts }} pts dans le cycle actuel{% endblocktrans %}
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">
+                        {% blocktrans with next=profile.points_to_next_milestone %}{{ next }} points pour le prochain niveau{% endblocktrans %}
+                    </div>
+                    <!-- Progress Bar -->
+                    <div style="margin-top: 16px; max-width: 400px;">
+                        <div style="background: #334155; border-radius: 100px; height: 8px; overflow: hidden;">
+                            <div style="height: 100%; width: {{ profile.progress_to_next_milestone|default:0 }}%; background: linear-gradient(90deg, #7c3aed, #a855f7); border-radius: 100px; transition: width 1s ease-out;"></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <!-- Performance status card -->
-            <div style="flex:2; min-width:200px; background:{{ perf_status.bg }}; border:1px solid {{ perf_status.color }}30; border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
-                <div style="font-size:2.5rem; line-height:1;">
-                    {% if profile.productivity_score >= 90 %}🔥{% elif profile.productivity_score >= 75 %}⭐{% elif profile.productivity_score >= 55 %}✅{% elif profile.productivity_score >= 35 %}👍{% else %}⏰{% endif %}
-                </div>
-                <div>
-                    <div style="font-size:1.3rem; font-weight:700; color:{{ perf_status.color }};">{{ perf_status.label }}</div>
-                    <div style="font-size:0.85rem; color:#64748b; margin-top:2px;">{% trans "Score de productivité" %}: <strong>{{ profile.productivity_score }}%</strong></div>
-                </div>
-            </div>
-            <!-- Points summary card -->
-            <div style="flex:1; min-width:140px; background:linear-gradient(135deg,#7c3aed,#6d28d9); border-radius:14px; padding:20px 24px; display:flex; align-items:center; gap:16px; color:white;">
-                <div>
-                    <div style="font-size:2.2rem; font-weight:800; line-height:1;">{{ profile.total_points }}</div>
-                    <div style="font-size:0.78rem; color:#c4b5fd; margin-top:2px; text-transform:uppercase; letter-spacing:0.06em;">{% trans "Points" %}</div>
+                
+                <!-- Quick Stats -->
+                <div style="display: flex; gap: 24px; flex-shrink: 0;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: white;">#{{ rank_position|default:"—" }}</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">{% trans "Rang" %}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #22d3ee;">{{ profile.milestone_count|default:0 }}</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">{% trans "Cycles" %}</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Surprise Box (unlocked at 1000 pts per milestone) -->
-        {% if profile.gift_unlocked %}
-        <div style="margin-bottom:24px;" x-data="{show: true}">
-            {% if profile.gift_collected %}
-            <!-- Already collected -->
-            <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px solid #86efac; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-                <div style="font-size:3rem;">✅</div>
-                <div>
-                    <div style="font-size:1.1rem; font-weight:700; color:#166534;">{% trans "Cadeau récupéré !" %}</div>
-                    <div style="font-size:0.88rem; color:#4ade80; margin-top:4px;">{% trans "Merci pour votre excellent travail. Continuez comme ça !" %}</div>
+        <!-- 3D Badge Gallery -->
+        <div class="card mb-4">
+            <div class="card-header" style="display: flex; align-items: center; gap: 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px; color: #f59e0b;">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <h3 style="margin: 0;">{% trans "Galerie des Badges" %}</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
+                    {% with lvl=profile.milestone_level|default:1 pts=profile.total_points %}
+                    <!-- Level 1: Bronze -->
+                    <div class="badge-3d {% if lvl >= 1 %}earned{% else %}locked{% endif %}" data-level="1">
+                        <div class="badge-icon" style="background: {% if lvl >= 1 %}linear-gradient(135deg, #cd7f32, #a0522d){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                <circle cx="12" cy="12" r="6"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Bronze</div>
+                        <div class="badge-points">0 pts</div>
+                    </div>
+                    <!-- Level 2: Silver -->
+                    <div class="badge-3d {% if lvl >= 2 %}earned{% else %}locked{% endif %}" data-level="2">
+                        <div class="badge-icon" style="background: {% if lvl >= 2 %}linear-gradient(135deg, #c0c0c0, #808080){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                <circle cx="12" cy="12" r="6"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Silver</div>
+                        <div class="badge-points">1,000 pts</div>
+                    </div>
+                    <!-- Level 3: Gold -->
+                    <div class="badge-3d {% if lvl >= 3 %}earned{% else %}locked{% endif %}" data-level="3">
+                        <div class="badge-icon" style="background: {% if lvl >= 3 %}linear-gradient(135deg, #ffd700, #daa520){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Gold</div>
+                        <div class="badge-points">2,000 pts</div>
+                    </div>
+                    <!-- Level 4: Platinum -->
+                    <div class="badge-3d {% if lvl >= 4 %}earned{% else %}locked{% endif %}" data-level="4">
+                        <div class="badge-icon" style="background: {% if lvl >= 4 %}linear-gradient(135deg, #e5e4e2, #b4b4b4){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Platinum</div>
+                        <div class="badge-points">3,000 pts</div>
+                    </div>
+                    <!-- Level 5: Diamond -->
+                    <div class="badge-3d {% if lvl >= 5 %}earned{% else %}locked{% endif %}" data-level="5">
+                        <div class="badge-icon" style="background: {% if lvl >= 5 %}linear-gradient(135deg, #b9f2ff, #7dd3fc){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2L2 9l10 13 10-13-10-7z"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Diamond</div>
+                        <div class="badge-points">4,000 pts</div>
+                    </div>
+                    <!-- Level 6: Master -->
+                    <div class="badge-3d {% if lvl >= 6 %}earned{% else %}locked{% endif %}" data-level="6">
+                        <div class="badge-icon" style="background: {% if lvl >= 6 %}linear-gradient(135deg, #7c3aed, #5b21b6){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Master</div>
+                        <div class="badge-points">5,000 pts</div>
+                    </div>
+                    <!-- Level 7: Grand Master -->
+                    <div class="badge-3d {% if lvl >= 7 %}earned{% else %}locked{% endif %}" data-level="7">
+                        <div class="badge-icon" style="background: {% if lvl >= 7 %}linear-gradient(135deg, #f59e0b, #d97706){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Grand Master</div>
+                        <div class="badge-points">6,000 pts</div>
+                    </div>
+                    <!-- Level 8: Elite -->
+                    <div class="badge-3d {% if lvl >= 8 %}earned{% else %}locked{% endif %}" data-level="8">
+                        <div class="badge-icon" style="background: {% if lvl >= 8 %}linear-gradient(135deg, #ef4444, #dc2626){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Elite</div>
+                        <div class="badge-points">7,000 pts</div>
+                    </div>
+                    <!-- Level 9: Champion -->
+                    <div class="badge-3d {% if lvl >= 9 %}earned{% else %}locked{% endif %}" data-level="9">
+                        <div class="badge-icon" style="background: {% if lvl >= 9 %}linear-gradient(135deg, #0ea5e9, #0284c7){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M6 9h12"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Champion</div>
+                        <div class="badge-points">8,000 pts</div>
+                    </div>
+                    <!-- Level 10: Legend -->
+                    <div class="badge-3d {% if lvl >= 10 %}earned{% else %}locked{% endif %}" data-level="10">
+                        <div class="badge-icon" style="background: {% if lvl >= 10 %}linear-gradient(135deg, #facc15, #eab308){% else %}#475569{% endif %};">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                <circle cx="12" cy="12" r="3" fill="#fff" opacity="0.3"/>
+                            </svg>
+                        </div>
+                        <div class="badge-name">Legend</div>
+                        <div class="badge-points">9,000 pts</div>
+                    </div>
+                    {% endwith %}
                 </div>
             </div>
-            {% else %}
-            <!-- Gift available to collect with celebration animation -->
-            <div style="background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:16px; padding:24px 28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;" x-data="{opened: false, celebrating: true}">
-                <div style="font-size:3.5rem; cursor:pointer; transition:transform 0.3s;" x-show="celebrating" x-init="setTimeout(() => celebrating = false, 3000)" :style="celebrating ? 'animation:celebrate 0.5s ease-in-out infinite alternate;' : ''">🎁</div>
-                <div style="flex:1;">
-                    <div style="font-size:1.2rem; font-weight:700; color:#92400e;">🎉 {% trans "Boîte surprise débloquée !" %}</div>
-                    <div style="font-size:0.88rem; color:#78350f; margin-top:4px;">{% blocktrans with milestone=profile.milestone_count points=profile.total_points %}Vous avez débloqué la boîte #{{ milestone }} à {{ points }} points ! Une récompense vous attend chez l'administrateur.{% endblocktrans %}</div>
-                    {% if profile.gift_image %}
-                    <div x-show="opened" style="margin-top:12px;">
-                        <img src="{{ profile.gift_image.url }}" alt="{% trans 'Récompense' %}" style="max-width:200px; max-height:200px; border-radius:10px; border:2px solid #f59e0b; object-fit:cover;">
-                        <div style="font-size:0.82rem; color:#92400e; margin-top:6px;">{% trans "Voici votre récompense — allez la récupérer !" %}</div>
+        </div>
+
+        <!-- Reward Box (1000 pts) with 3D Animation and Gift Display -->
+        {% if profile.gift_unlocked %}
+        <div class="card mb-4" style="border: 3px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #fef3c7); overflow: visible;">
+            <div class="card-body" style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                <!-- 3D Gift Box -->
+                <div class="gift-box-3d" x-data="{opened: false, showConfetti: false}" 
+                     :class="opened && 'opened'"
+                     x-init="$watch('opened', value => { if(value) { showConfetti = true; setTimeout(() => showConfetti = false, 5000); } })">
+                    
+                    <!-- Confetti Canvas -->
+                    <canvas x-show="showConfetti" x-transition.opacity.duration.500ms
+                            x-init="const canvas = $el; const ctx = canvas.getContext('2d'); 
+                                    canvas.width = 300; canvas.height = 300;
+                                    const particles = [];
+                                    const colors = ['#f59e0b', '#fbbf24', '#fcd34d', '#8b5cf6', '#a78bfa', '#10b981', '#34d399'];
+                                    for(let i = 0; i < 60; i++) {
+                                        particles.push({
+                                            x: 150, y: 100, vx: (Math.random() - 0.5) * 10, vy: -Math.random() * 15 - 5,
+                                            color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4, rotation: Math.random() * Math.PI * 2, vrot: (Math.random() - 0.5) * 0.3
+                                        });
+                                    }
+                                    function animate() {
+                                        if(!showConfetti) return;
+                                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                        particles.forEach(p => {
+                                            p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.rotation += p.vrot;
+                                            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation);
+                                            ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                                            ctx.restore();
+                                        });
+                                        requestAnimationFrame(animate);
+                                    }
+                                    $watch('showConfetti', v => { if(v) animate(); });"
+                            style="position: absolute; width: 300px; height: 300px; pointer-events: none; z-index: 100; margin-left: -100px; margin-top: -50px;">
+                    </canvas>
+                    
+                    <div class="gift-box" @click="opened = !opened" style="cursor: pointer; position: relative;">
+                        <div class="gift-lid"></div>
+                        <div class="gift-body">
+                            <div class="gift-star" x-show="!opened" x-transition.opacity.duration.300ms>
+                                <svg viewBox="0 0 24 24" fill="#f59e0b" style="width: 32px; height: 32px;">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                            </div>
+                            <!-- Gift Image Revealed When Opened -->
+                            {% if profile.gift_image %}
+                            <div x-show="opened" x-transition.scale.duration.500ms.delay.200ms style="position: absolute; inset: -20px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <img src="{{ profile.gift_image.url }}" alt="{% trans 'Your Reward' %}" style="max-width: 140px; max-height: 140px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: translateY(-20px); border: 4px solid white;">
+                            </div>
+                            {% else %}
+                            <div x-show="opened" x-transition.scale.duration.500ms.delay.200ms style="position: absolute; inset: -20px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; transform: translateY(-20px);">
+                                    <div style="font-size: 48px;">🎁</div>
+                                    <p style="margin: 8px 0 0; font-size: 12px; color: #92400e; font-weight: 600;">{% trans "Surprise!" %}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="gift-ribbon-v"></div>
+                        <div class="gift-ribbon-h"></div>
                     </div>
+                </div>
+                
+                <!-- Reward Info -->
+                <div style="flex: 1; min-width: 200px;">
+                    <h3 style="color: #92400e; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        {% trans "Boîte surprise débloquée ! / Surprise Box Unlocked!" %}
+                    </h3>
+                    <p style="color: #78350f; margin: 0 0 16px 0;">
+                        {% blocktrans with pts=profile.total_points level=profile.milestone_level %}{{ pts }} points — Niveau {{ level }} atteint. / Level {{ level }} reached!{% endblocktrans %}
+                    </p>
+                    
+                    <!-- Congratulations Message -->
+                    <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 0 0 8px; color: #1f2937; font-weight: 500;">
+                            🎉 {% trans "Félicitations! Vous avez atteint 1000 points!" %}
+                        </p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">
+                            {% trans "Congratulations! You've reached 1000 points!" %}
+                        </p>
+                        <p style="margin: 8px 0 0; color: #92400e; font-size: 0.85rem;">
+                            {% trans "Veuillez récupérer votre cadeau auprès du Responsable de la Plateforme. / Please collect your gift from the Platform Manager." %}
+                        </p>
+                    </div>
+                    
+                    {% if not profile.gift_collected %}
+                    <form method="post" action="{% url 'dashboard:analyst_collect_gift' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn" style="background: #f59e0b; color: white; font-weight: 600; border: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <span>🎁</span> {% trans "J'ai récupéré mon cadeau / I collected my gift" %}
+                        </button>
+                    </form>
                     {% else %}
-                    <div x-show="opened" style="margin-top:12px; font-size:0.88rem; color:#92400e;">{% trans "L'administrateur prépare votre récompense..." %}</div>
+                    <span class="badge-status completed" style="display: inline-flex; align-items: center; gap: 6px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        {% trans "Récompense récupérée / Gift collected" %}
+                    </span>
                     {% endif %}
                 </div>
-                <form method="post" action="{% url 'dashboard:analyst_collect_gift' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b; color:white; font-weight:600;">
-                        {% trans "Marquer comme récupéré" %}
-                    </button>
-                </form>
             </div>
-            {% endif %}
         </div>
         {% endif %}
 
-        <!-- Progress to next milestone (1000 pts) -->
-        <div style="margin-bottom:24px; background:linear-gradient(135deg,#f8fafc,#f1f5f9); border:1px solid #e2e8f0; border-radius:16px; padding:20px 24px; display:flex; align-items:center; gap:16px;">
-            <div style="font-size:2.5rem;">🎯</div>
-            <div style="flex:1;">
-                <div style="font-size:1rem; font-weight:600; color:#475569;">{% trans "Progression vers la prochaine boîte surprise" %}</div>
-                <div style="font-size:0.85rem; color:#94a3b8; margin-top:4px;">
-                    {% blocktrans with current=profile.total_points next=profile.points_to_next_milestone %}{{ current }} points — {{ next }} points restants{% endblocktrans %}
-                </div>
-                <div style="background:#e2e8f0; border-radius:100px; height:12px; overflow:hidden; margin-top:10px; max-width:400px; position:relative;">
-                    <div style="position:absolute; left:50%; top:-2px; width:2px; height:16px; background:#94a3b8;"></div>
-                    <div style="height:100%; border-radius:100px; width:{{ profile.progress_to_next_milestone }}%; background:linear-gradient(90deg,#7c3aed,#a855f7); transition:width 0.8s ease;"></div>
-                </div>
-                <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">{% blocktrans with milestone=profile.milestone_count %}Boîte #{{ milestone }} débloquée sur {{ milestone }} total{% endblocktrans %}</div>
-            </div>
-        </div>
-
-        <!-- Hero: Level + Total Points -->
-        {% with pts=profile.total_points %}
-        {% if pts >= 500 %}{% with lvl="🏆 Expert" lvl_color="#7c3aed" next=1000 %}
-        {% include 'includes/_points_hero.html' %}{% endwith %}
-        {% elif pts >= 200 %}{% with lvl="⭐ Confirmé" lvl_color="#0284c7" next=500 %}
-        {% include 'includes/_points_hero.html' %}{% endwith %}
-        {% elif pts >= 50 %}{% with lvl="🔵 Intermédiaire" lvl_color="#059669" next=200 %}
-        {% include 'includes/_points_hero.html' %}{% endwith %}
-        {% else %}{% with lvl="🌱 Débutant" lvl_color="#64748b" next=50 %}
-        {% include 'includes/_points_hero.html' %}{% endwith %}
-        {% endif %}
-        {% endwith %}
-
-        <div class="grid-2" style="margin-top:24px;">
-            <!-- Points History Feed -->
+        <!-- Points History + Cheers -->
+        <div class="grid-2" style="gap: 24px;">
+            <!-- Points History -->
             <div class="card">
-                <div class="card-header" style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.3rem;">⚡</span>
-                    <h3 style="margin:0;">{% trans "Activité & Points" %}</h3>
-                    <span style="margin-left:auto; background:#fef3c7; color:#92400e; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ points_history.count }} {% trans "événements" %}</span>
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #7c3aed;">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <h3 style="margin: 0;">{% trans "Historique des Points" %}</h3>
+                    </div>
+                    <span style="background: #ede9fe; color: #6d28d9; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">{{ points_history.count }} {% trans "événements" %}</span>
                 </div>
-                <div class="card-body" style="padding:0;">
+                <div class="card-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
                     {% for ph in points_history %}
-                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--slate-100); transition:background 0.15s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-                        <div style="width:38px; height:38px; border-radius:50%; background:{% if ph.points > 0 %}#d1fae5{% else %}#fee2e2{% endif %}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
-                            {% if ph.points > 0 %}⬆{% else %}⬇{% endif %}
+                    <div class="history-item">
+                        <div class="history-icon {% if ph.points > 0 %}positive{% else %}negative{% endif %}">
+                            {% if ph.points > 0 %}+{% else %}−{% endif %}
                         </div>
-                        <div style="flex:1; min-width:0;">
-                            <div style="font-size:0.9rem; font-weight:500; color:#1e293b;">{{ ph.reason }}</div>
-                            <div style="font-size:0.78rem; color:#94a3b8;">{{ ph.created_at|date:"d/m/Y H:i" }}</div>
+                        <div class="history-content">
+                            <div class="history-reason">{{ ph.reason }}</div>
+                            <div class="history-date">{{ ph.created_at|date:"d/m/Y H:i" }}</div>
                         </div>
-                        <div style="font-size:1rem; font-weight:700; color:{% if ph.points > 0 %}#059669{% else %}#dc2626{% endif %}; flex-shrink:0;">
-                            {% if ph.points > 0 %}+{% endif %}{{ ph.points }} pts
+                        <div class="history-points {% if ph.points > 0 %}positive{% else %}negative{% endif %}">
+                            {{ ph.points|add:"0" }} pts
                         </div>
                     </div>
                     {% empty %}
-                    <div style="padding:40px; text-align:center; color:#94a3b8;">
-                        <div style="font-size:2.5rem; margin-bottom:8px;">🎯</div>
-                        <p style="margin:0; font-size:0.95rem;">{% trans "Complétez des demandes pour gagner vos premiers points !" %}</p>
+                    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <p style="margin: 0;">{% trans "Aucune activité récente" %}</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -527,81 +971,33 @@
 
             <!-- Cheers / Encouragements -->
             <div class="card">
-                <div class="card-header" style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.3rem;">🎉</span>
-                    <h3 style="margin:0;">{% trans "Encouragements" %}</h3>
-                    {% if cheers %}<span style="margin-left:auto; background:#ede9fe; color:#6d28d9; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ cheers.count }}</span>{% endif %}
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #ec4899;">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        <h3 style="margin: 0;">{% trans "Encouragements" %}</h3>
+                    </div>
+                    {% if cheers %}<span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">{{ cheers.count }}</span>{% endif %}
                 </div>
-                <div class="card-body" style="padding:0;">
+                <div class="card-body" style="padding: 0; max-height: 400px; overflow-y: auto;">
                     {% for cheer in cheers %}
-                    <div style="padding:14px 16px; border-bottom:1px solid var(--slate-100);">
-                        <div style="display:flex; align-items:flex-start; gap:10px;">
-                            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#f472b6,#a78bfa); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.9rem; flex-shrink:0;">
-                                {{ cheer.from_user.first_name|first|upper }}
-                            </div>
-                            <div style="flex:1;">
-                                <div style="font-size:0.85rem; font-weight:600; color:#1e293b;">{{ cheer.from_user.get_full_name }}</div>
-                                <div style="font-size:0.9rem; color:#475569; margin-top:3px; font-style:italic;">"{{ cheer.message }}"</div>
-                                <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">{{ cheer.created_at|date:"d/m/Y" }}</div>
-                            </div>
+                    <div class="cheer-item">
+                        <div class="cheer-avatar">{{ cheer.from_user.first_name|slice:":1"|upper }}</div>
+                        <div class="cheer-content">
+                            <div class="cheer-from">{{ cheer.from_user.get_full_name }}</div>
+                            <div class="cheer-message">"{{ cheer.message }}"</div>
+                            <div class="cheer-date">{{ cheer.created_at|date:"d/m/Y" }}</div>
                         </div>
                     </div>
                     {% empty %}
-                    <div style="padding:40px; text-align:center; color:#94a3b8;">
-                        <div style="font-size:2.5rem; margin-bottom:8px;">💬</div>
-                        <p style="margin:0; font-size:0.95rem;">{% trans "Vos encouragements apparaîtront ici." %}</p>
+                    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        <p style="margin: 0;">{% trans "Aucun encouragement pour le moment" %}</p>
                     </div>
                     {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Achievements / Badges -->
-        <div class="card" style="margin-top:24px;">
-            <div class="card-header" style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:1.3rem;">🏅</span>
-                <h3 style="margin:0;">{% trans "Badges & Objectifs" %}</h3>
-            </div>
-            <div class="card-body">
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px;">
-                    {% with pts=profile.total_points comp=completed_count %}
-                    <!-- First Analysis -->
-                    <div style="background:{% if comp >= 1 %}linear-gradient(135deg,#d1fae5,#a7f3d0){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 1 %}#6ee7b7{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">🔬</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 1 %}#065f46{% else %}#94a3b8{% endif %};">{% trans "Première analyse" %}</div>
-                        <div style="font-size:0.72rem; color:{% if comp >= 1 %}#059669{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 1 %}✓ {% trans "Débloqué" %}{% else %}0/1{% endif %}</div>
-                    </div>
-                    <!-- 5 Analyses -->
-                    <div style="background:{% if comp >= 5 %}linear-gradient(135deg,#dbeafe,#bfdbfe){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 5 %}#93c5fd{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">📊</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 5 %}#1e3a8a{% else %}#94a3b8{% endif %};">{% trans "5 Analyses" %}</div>
-                        <div style="font-size:0.72rem; color:{% if comp >= 5 %}#1d4ed8{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 5 %}✓ {% trans "Débloqué" %}{% else %}{{ comp }}/5{% endif %}</div>
-                    </div>
-                    <!-- 50 Points -->
-                    <div style="background:{% if pts >= 50 %}linear-gradient(135deg,#fef3c7,#fde68a){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 50 %}#fcd34d{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">⭐</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 50 %}#92400e{% else %}#94a3b8{% endif %};">50 {% trans "Points" %}</div>
-                        <div style="font-size:0.72rem; color:{% if pts >= 50 %}#d97706{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 50 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/50{% endif %}</div>
-                    </div>
-                    <!-- 200 Points -->
-                    <div style="background:{% if pts >= 200 %}linear-gradient(135deg,#ede9fe,#ddd6fe){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 200 %}#c4b5fd{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">💎</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 200 %}#4c1d95{% else %}#94a3b8{% endif %};">200 {% trans "Points" %}</div>
-                        <div style="font-size:0.72rem; color:{% if pts >= 200 %}#7c3aed{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 200 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/200{% endif %}</div>
-                    </div>
-                    <!-- Expert 500 Points -->
-                    <div style="background:{% if pts >= 500 %}linear-gradient(135deg,#fce7f3,#fbcfe8){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if pts >= 500 %}#f9a8d4{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">🏆</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if pts >= 500 %}#9d174d{% else %}#94a3b8{% endif %};">500 {% trans "Points — Expert" %}</div>
-                        <div style="font-size:0.72rem; color:{% if pts >= 500 %}#be185d{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if pts >= 500 %}✓ {% trans "Débloqué" %}{% else %}{{ pts }}/500{% endif %}</div>
-                    </div>
-                    <!-- Speed Demon: 10 completed -->
-                    <div style="background:{% if comp >= 10 %}linear-gradient(135deg,#fff7ed,#fed7aa){% else %}#f1f5f9{% endif %}; border-radius:12px; padding:16px; text-align:center; border:1px solid {% if comp >= 10 %}#fdba74{% else %}#e2e8f0{% endif %};">
-                        <div style="font-size:2rem; margin-bottom:6px;">🚀</div>
-                        <div style="font-size:0.82rem; font-weight:600; color:{% if comp >= 10 %}#9a3412{% else %}#94a3b8{% endif %};">10 {% trans "Analyses" %}</div>
-                        <div style="font-size:0.72rem; color:{% if comp >= 10 %}#ea580c{% else %}#cbd5e1{% endif %}; margin-top:2px;">{% if comp >= 10 %}✓ {% trans "Débloqué" %}{% else %}{{ comp }}/10{% endif %}</div>
-                    </div>
-                    {% endwith %}
                 </div>
             </div>
         </div>

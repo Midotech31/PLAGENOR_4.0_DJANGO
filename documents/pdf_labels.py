@@ -169,6 +169,7 @@ LABELS_FR = {
     'checklist_title': 'Checklist de conformité (à remplir par PLAGENOR)',
     'optional_comment': 'Commentaire optionnel',
     'reception_date': 'Date de la réception',
+    'appointment_date': 'Date de rendez-vous prévue',
     'validation_chef': 'Validation Chef de Service',
     'validation_directeur': 'Visa du Directeur',
     
@@ -433,6 +434,7 @@ LABELS_EN = {
     'checklist_title': 'Compliance Checklist (to be filled by PLAGENOR)',
     'optional_comment': 'Optional comment',
     'reception_date': 'Reception Date',
+    'appointment_date': 'Scheduled Appointment Date',
     'validation_chef': 'Service Head Validation',
     'validation_directeur': 'Director Visa',
     

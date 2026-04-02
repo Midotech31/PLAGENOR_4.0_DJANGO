@@ -97,6 +97,7 @@
 <div x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'overview' }">
     <div class="tab-list" style="margin-bottom: 24px; flex-wrap: wrap;">
         <button class="tab-item" :class="tab === 'overview' && 'active'" @click="tab = 'overview'">{% trans "Vue d'ensemble" %}</button>
+        <button class="tab-item" :class="tab === 'profile' && 'active'" @click="tab = 'profile'">{% trans "Profil" %}</button>
         <button class="tab-item" :class="tab === 'users' && 'active'" @click="tab = 'users'" data-tab="users">{% trans "Utilisateurs" %}</button>
         <button class="tab-item" :class="tab === 'members' && 'active'" @click="tab = 'members'">{% trans "Analystes" %}</button>
         <button class="tab-item" :class="tab === 'requests' && 'active'" @click="tab = 'requests'">{% trans "Demandes" %}</button>
@@ -133,6 +134,102 @@
                     <p>{% trans "Aucune demande pour le moment. Les statistiques apparaîtront ici." %}</p>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div x-show="tab === 'profile'">
+        <div class="profile-grid">
+            <!-- Profile Header -->
+            <div class="card profile-header-card">
+                <div class="card-body" style="display:flex; align-items:center; gap:24px; padding:24px;">
+                    <div class="avatar avatar-xl {% if request.user.profile.picture %}avatar-img{% else %}avatar-initials{% endif %}" 
+                         style="--avatar-bg: var(--primary);">
+                        {% if request.user.profile.picture %}
+                        <img src="{{ request.user.profile.picture.url }}" alt="{{ request.user.get_full_name }}">
+                        {% else %}
+                        {{ request.user.get_initials }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h2 style="margin:0 0 4px 0;">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                        <span class="badge-role superadmin">{% trans "Super Administrateur" %}</span>
+                        <p style="margin:8px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {{ request.user.email }}
+                        </p>
+                        <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.85rem;">
+                            {% trans "Membre depuis" %} {{ request.user.date_joined|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="kpi-grid" style="margin-bottom:24px;">
+                <div class="card" style="padding:16px; text-align:center;">
+                    <div style="font-size:1.75rem; font-weight:700; color:var(--primary);">{{ profile_stats.total_users }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">{% trans "Utilisateurs" %}</div>
+                </div>
+                <div class="card" style="padding:16px; text-align:center;">
+                    <div style="font-size:1.75rem; font-weight:700; color:var(--green);">{{ profile_stats.total_requests }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">{% trans "Demandes" %}</div>
+                </div>
+                <div class="card" style="padding:16px; text-align:center;">
+                    <div style="font-size:1.75rem; font-weight:700; color:var(--blue);">{{ profile_stats.total_services }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">{% trans "Services" %}</div>
+                </div>
+                <div class="card" style="padding:16px; text-align:center;">
+                    <div style="font-size:1.75rem; font-weight:700; color:var(--orange);">{{ profile_stats.total_techniques }}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">{% trans "Techniques" %}</div>
+                </div>
+            </div>
+
+            <!-- Profile Actions -->
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Actions de profil" %}</h3></div>
+                <div class="card-body">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            {% trans "Modifier mon profil" %}
+                        </a>
+                        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            {% trans "Changer le mot de passe" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="card">
+                <div class="card-header"><h3>{% trans "Informations du compte" %}</h3></div>
+                <div class="card-body" style="padding:0;">
+                    <table style="width:100%;">
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:12px 16px; color:var(--text-secondary); font-size:0.85rem;">{% trans "Nom d'utilisateur" %}</td>
+                            <td style="padding:12px 16px; font-weight:500;">{{ request.user.username }}</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:12px 16px; color:var(--text-secondary); font-size:0.85rem;">{% trans "Email" %}</td>
+                            <td style="padding:12px 16px; font-weight:500;">{{ request.user.email|default:"—" }}</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:12px 16px; color:var(--text-secondary); font-size:0.85rem;">{% trans "Rôle" %}</td>
+                            <td style="padding:12px 16px; font-weight:500;"><span class="badge-role superadmin">{% trans "Super Administrateur" %}</span></td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <td style="padding:12px 16px; color:var(--text-secondary); font-size:0.85rem;">{% trans "Langue préférée" %}</td>
+                            <td style="padding:12px 16px; font-weight:500;">{{ request.user.get_language_display|default:"Français" }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:12px 16px; color:var(--text-secondary); font-size:0.85rem;">{% trans "Dernière connexion" %}</td>
+                            <td style="padding:12px 16px; font-weight:500;">{{ request.user.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -258,16 +355,24 @@
                                 {% endif %}
                             </td>
                             <td style="white-space:nowrap;">
-                                <a href="{% url 'dashboard:superadmin_user_edit' u.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
-                                <form method="post" action="{% url 'dashboard:superadmin_user_toggle' u.pk %}" style="display:inline;"
+                                {% url 'dashboard:superadmin_user_edit' u.pk as superadmin_user_edit_url %}
+                                {% if superadmin_user_edit_url %}
+                                <a href="{{ superadmin_user_edit_url }}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                                {% endif %}
+                                {% url 'dashboard:superadmin_user_toggle' u.pk as superadmin_user_toggle_url %}
+                                {% if superadmin_user_toggle_url %}
+                                <form method="post" action="{{ superadmin_user_toggle_url }}" style="display:inline;"
                                       onsubmit="return confirm('{% if u.is_active %}{% trans "Désactiver cet utilisateur ?" %}{% else %}{% trans "Activer cet utilisateur ?" %}{% endif %}')">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
                                         {% if u.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
                                     </button>
                                 </form>
+                                {% endif %}
                                 {% if u != request.user %}
-                                <a href="{% url 'dashboard:superadmin_reset_account' u.pk %}"
+                                {% url 'dashboard:superadmin_reset_account' u.pk as superadmin_reset_account_url %}
+                                {% if superadmin_reset_account_url %}
+                                <a href="{{ superadmin_reset_account_url }}"
                                    class="btn btn-sm btn-outline"
                                    style="color:#dc2626;border-color:#dc2626;"
                                    title="{% trans 'Réinitialiser / Reset Account' %}">
@@ -276,6 +381,7 @@
                                     </svg>
                                     {% trans "Réinitialiser" %}
                                 </a>
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -331,7 +437,9 @@
                                     {{ m.techniques.count }} {% trans "tech." %}
                                 </button>
                                 <div x-show="showTech" style="margin-top:6px;">
-                                    <form method="post" action="{% url 'dashboard:superadmin_member_techniques' m.pk %}">
+                                    {% url 'dashboard:superadmin_member_techniques' m.pk as superadmin_member_tech_url %}
+                                    {% if superadmin_member_tech_url %}
+                                    <form method="post" action="{{ superadmin_member_tech_url }}">
                                         {% csrf_token %}
                                         <div style="display:flex; flex-wrap:wrap; gap:4px; max-width:300px;">
                                             {% for t in techniques %}
@@ -343,6 +451,7 @@
                                         </div>
                                         <button type="submit" class="btn btn-sm btn-primary" style="margin-top:6px; font-size:0.78rem;">{% trans "Sauvegarder" %}</button>
                                     </form>
+                                    {% endif %}
                                 </div>
                             </td>
                             <td>
@@ -353,13 +462,18 @@
                                 {% endif %}
                             </td>
                             <td style="white-space:nowrap;">
-                                <form method="post" action="{% url 'dashboard:superadmin_member_toggle' m.pk %}" style="display:inline;">
+                                {% url 'dashboard:superadmin_member_toggle' m.pk as superadmin_member_toggle_url %}
+                                {% if superadmin_member_toggle_url %}
+                                <form method="post" action="{{ superadmin_member_toggle_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline">
                                         {% if m.available %}{% trans "Rendre indisponible" %}{% else %}{% trans "Rendre disponible" %}{% endif %}
                                     </button>
                                 </form>
-                                <form method="post" action="{% url 'dashboard:admin_award_points' m.pk %}" style="display:inline;" x-data="{show: false}">
+                                {% endif %}
+                                {% url 'dashboard:admin_award_points' m.pk as admin_award_points_url %}
+                                {% if admin_award_points_url %}
+                                <form method="post" action="{{ admin_award_points_url }}" style="display:inline;" x-data="{show: false}">
                                     {% csrf_token %}
                                     <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Points" %}</button>
                                     <div x-show="show" style="display:inline;">
@@ -368,6 +482,7 @@
                                         <button type="submit" class="btn btn-sm btn-primary">OK</button>
                                     </div>
                                 </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -411,9 +526,9 @@
                         <div class="form-group">
                             <label>{% trans "Canal" %}</label>
                             <select name="channel_availability" class="form-control">
-                                <option value="BOTH">IBTIKAR & GENOCLAB</option>
-                                <option value="IBTIKAR">IBTIKAR</option>
-                                <option value="GENOCLAB">GENOCLAB</option>
+                                <option value="BOTH">{% trans "IBTIKAR" %} & {% trans "GENOCLAB" %}</option>
+                                <option value="IBTIKAR">{% trans "IBTIKAR" %}</option>
+                                <option value="GENOCLAB">{% trans "GENOCLAB" %}</option>
                             </select>
                         </div>
                     </div>
@@ -469,17 +584,24 @@
                             <td>{{ s.genoclab_price }} DA</td>
                             <td>{% if s.active %}<span class="badge-status completed">{% trans "Oui" %}</span>{% else %}<span class="badge-status rejected">{% trans "Non" %}</span>{% endif %}</td>
                             <td style="white-space:nowrap;">
-                                <a href="{% url 'dashboard:superadmin_service_edit' s.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                                {% url 'dashboard:superadmin_service_edit' s.pk as superadmin_service_edit_url %}
+                                {% if superadmin_service_edit_url %}
+                                <a href="{{ superadmin_service_edit_url }}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                                {% endif %}
                                 {% if s.active %}
-                                <form method="post" action="{% url 'dashboard:superadmin_service_delete' s.pk %}" style="display:inline;">
+                                {% url 'dashboard:superadmin_service_delete' s.pk as superadmin_service_delete_url %}
+                                {% url 'dashboard:superadmin_service_reactivate' s.pk as superadmin_service_reactivate_url %}
+                                {% if superadmin_service_delete_url %}
+                                <form method="post" action="{{ superadmin_service_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
                                 </form>
-                                {% else %}
-                                <form method="post" action="{% url 'dashboard:superadmin_service_reactivate' s.pk %}" style="display:inline;">
+                                {% elif superadmin_service_reactivate_url %}
+                                <form method="post" action="{{ superadmin_service_reactivate_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
                                 </form>
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -527,12 +649,15 @@
                         <tr x-data="{editTech: false}">
                             <td>
                                 <span x-show="!editTech"><strong>{{ t.name }}</strong></span>
-                                <form x-show="editTech" method="post" action="{% url 'dashboard:superadmin_technique_edit' t.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
+                                {% url 'dashboard:superadmin_technique_edit' t.pk as superadmin_technique_edit_url %}
+                                {% if superadmin_technique_edit_url %}
+                                <form x-show="editTech" method="post" action="{{ superadmin_technique_edit_url }}" style="display:inline-flex; gap:4px; align-items:center;">
                                     {% csrf_token %}
                                     <input type="text" name="name" value="{{ t.name }}" class="form-control" style="width:120px; font-size:0.85rem; height:30px;">
                                     <input type="text" name="category" value="{{ t.category }}" class="form-control" style="width:100px; font-size:0.85rem; height:30px;" placeholder="{% trans 'Catégorie' %}">
                                     <button type="submit" class="btn btn-sm btn-primary" style="height:30px;">{% trans "OK" %}</button>
                                 </form>
+                                {% endif %}
                             </td>
                             <td>{{ t.category|default:"—" }}</td>
                             <td>
@@ -545,15 +670,21 @@
                             <td style="white-space:nowrap;">
                                 <button type="button" class="btn btn-sm btn-outline" @click="editTech = !editTech">{% trans "Modifier" %}</button>
                                 {% if t.active %}
-                                <form method="post" action="{% url 'dashboard:superadmin_technique_delete' t.pk %}" style="display:inline;">
+                                {% url 'dashboard:superadmin_technique_delete' t.pk as superadmin_technique_delete_url %}
+                                {% if superadmin_technique_delete_url %}
+                                <form method="post" action="{{ superadmin_technique_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
                                 </form>
                                 {% else %}
-                                <form method="post" action="{% url 'dashboard:superadmin_technique_reactivate' t.pk %}" style="display:inline;">
+                                {% url 'dashboard:superadmin_technique_reactivate' t.pk as superadmin_technique_reactivate_url %}
+                                {% if superadmin_technique_reactivate_url %}
+                                <form method="post" action="{{ superadmin_technique_reactivate_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
                                 </form>
+                                {% endif %}
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -591,15 +722,16 @@
                         <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th>{% trans "Actions" %}</th></tr></thead>
                         <tbody>
                         {% for pc in platform_content %}
+                        {% url 'dashboard:superadmin_content_delete' pc.pk as superadmin_content_delete_url %}
                         <tr>
                             <td><strong class="font-mono">{{ pc.key }}</strong></td>
                             <td>{{ pc.value|truncatechars:80 }}</td>
                             <td class="text-muted">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
                             <td>
-                                <form method="post" action="{% url 'dashboard:superadmin_content_delete' pc.pk %}" style="display:inline;">
+                                {% if superadmin_content_delete_url %}<form method="post" action="{{ superadmin_content_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
-                                </form>
+                                </form>{% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -650,6 +782,7 @@
                         </div>
                     </div>
                 </form>
+                {% if all_requests %}
                 <div class="table-wrapper" style="border:none;">
                     <table>
                         <thead>
@@ -665,13 +798,16 @@
                                 <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
+                        <tbody>
                         {% for r in all_requests %}
-                        <tbody x-data="{ expanded: false }">
-                        <tr>
+                        {% url 'dashboard:superadmin_request_detail' r.pk as superadmin_req_detail_url %}
+                        {% url 'dashboard:superadmin_force_transition' r.pk as superadmin_force_transition_url %}
+                        {% url 'dashboard:superadmin_budget_override' r.pk as superadmin_budget_override_url %}
+                        <tr x-data="{ expanded: false }">
                             <td>
-                                <a href="{% url 'dashboard:superadmin_request_detail' r.pk %}" class="font-mono" style="color:var(--primary); text-decoration:underline;" title="{% trans 'Voir les détails' %}">
+                                {% if superadmin_req_detail_url %}<a href="{{ superadmin_req_detail_url }}" class="font-mono" style="color:var(--primary); text-decoration:underline;" title="{% trans 'Voir les détails' %}">
                                     {{ r.display_id }}
-                                </a>
+                                </a>{% else %}{{ r.display_id }}{% endif %}
                             </td>
                             <td>{{ r.title|truncatechars:40 }}</td>
                             <td><span class="badge-role {{ r.channel|lower }}">{{ r.channel }}</span></td>
@@ -687,10 +823,9 @@
                         <tr x-show="expanded">
                             <td colspan="9" style="background:#f8f9fa; padding:16px;">
                                 <div class="grid-2" style="gap:16px;">
-                                    <!-- Force Transition -->
                                     <div>
                                         <strong>{% trans "Forcer une transition" %}</strong>
-                                        <form method="post" action="{% url 'dashboard:superadmin_force_transition' r.pk %}" style="margin-top:8px;">
+                                        {% if superadmin_force_transition_url %}<form method="post" action="{{ superadmin_force_transition_url }}" style="margin-top:8px;">
                                             {% csrf_token %}
                                             <div class="form-group">
                                                 <select name="to_status" class="form-control" required>
@@ -704,13 +839,12 @@
                                                 <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification (min. 10 caractères)' %}"></textarea>
                                             </div>
                                             <button type="submit" class="btn btn-sm btn-danger">{% trans "Forcer la transition" %}</button>
-                                        </form>
+                                        </form>{% endif %}
                                     </div>
-                                    <!-- Budget Override (IBTIKAR only) -->
                                     {% if r.channel == 'IBTIKAR' %}
                                     <div>
                                         <strong>{% trans "Override budgétaire" %}</strong>
-                                        <form method="post" action="{% url 'dashboard:superadmin_budget_override' r.pk %}" style="margin-top:8px;">
+                                        {% if superadmin_budget_override_url %}<form method="post" action="{{ superadmin_budget_override_url }}" style="margin-top:8px;">
                                             {% csrf_token %}
                                             <div class="form-group">
                                                 <label>{% trans "Montant budget" %}: {{ r.budget_amount }} DA</label>
@@ -719,18 +853,21 @@
                                                 <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification pour l override...' %}"></textarea>
                                             </div>
                                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver override" %}</button>
-                                        </form>
+                                        </form>{% endif %}
                                     </div>
                                     {% endif %}
                                 </div>
                             </td>
                         </tr>
-                        </tbody>
-                        {% empty %}
-                        <tbody><tr><td colspan="9" class="text-center text-muted" style="padding:32px;">{% trans "Aucune demande trouvée." %}</td></tr></tbody>
                         {% endfor %}
+                        </tbody>
                     </table>
                 </div>
+                {% else %}
+                <div class="empty-state" style="padding:48px; text-align:center;">
+                    <p>{% trans "Aucune demande trouvée." %}</p>
+                </div>
+                {% endif %}
                 <!-- Pagination -->
                 {% if requests_page.has_other_pages %}
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
@@ -977,10 +1114,11 @@
                             <strong class="font-mono">{{ svc.code }}</strong> — {{ svc.name }}
                         </div>
                         <div>
+                            {% url 'dashboard:superadmin_service_edit' svc.pk as superadmin_service_edit_url %}
                             {% if yaml_registry and svc.code in yaml_registry %}
                             <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
                             {% endif %}
-                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>
+                            {% if superadmin_service_edit_url %}<a href="{{ superadmin_service_edit_url }}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>{% endif %}
                         </div>
                     </div>
                 </div>

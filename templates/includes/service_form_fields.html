@@ -3,40 +3,52 @@
 <div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
     {% for param in parameters %}
     {% if not sample_table.enabled or param.name not in sample_table.column_names %}
-    <div class="form-group">
+    <div class="form-group" {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}>
         {% if param.type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;">
+            <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
             <label for="param_{{ param.name }}" style="margin:0; font-weight:500;">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+            {% if param.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">💰</span>{% endif %}
         </div>
+        {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% else %}
-        <label style="{% if param.placeholder %}display:none;{% endif %}">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
-        {% if param.type == 'string' or param.type == 'text' %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
-        {% elif param.type == 'enum' %}
-        <select name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
-            <option value="">{{ param.placeholder|default:param.label }}{% if param.required %} *{% endif %}</option>
+        <label>{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+        {% if param.type == 'select' or param.type == 'enum' or param.type == 'dropdown' %}
+        <select name="param_{{ param.name }}" id="select_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} onchange="handlePricingChange(this)">
+            <option value="">{% trans "Choisir" %}{% if param.required %} *{% endif %}</option>
             {% for opt in param.options %}
             <option value="{{ opt }}">{{ opt }}</option>
             {% endfor %}
         </select>
         {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
-        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
+        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
         {% else %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:param.label }}">
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
         {% endif %}
+        {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% endif %}
     </div>
     {% endif %}
     {% endfor %}
 
     {% for field in db_fields %}
-    <div class="form-group">
+    <div class="form-group" {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}>
         {% if field.field_type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;">
+            <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
             <label for="param_{{ field.name }}" style="margin:0; font-weight:500;">{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+            {% if field.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">💰</span>{% endif %}
         </div>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% elif field.field_type == 'select' or field.field_type == 'dropdown' or field.field_type == 'enum' %}
+        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <select name="param_{{ field.name }}" id="select_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} onchange="handlePricingChange(this)">
+            <option value="">{% trans "Choisir" %}{% if field.required %} *{% endif %}</option>
+            {% for opt in field.options %}
+            <option value="{{ opt }}">{{ opt }}</option>
+            {% endfor %}
+        </select>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% else %}
         <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label }}{% if field.required %} *{% endif %}">
         {% endif %}
@@ -51,7 +63,10 @@
         <thead>
             <tr>
                 {% for col in sample_table.columns %}
-                <th data-col="{{ col.name }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">{{ col.label|default:col.name }}</th>
+                <th data-col="{{ col.name }}" data-type="{{ col.type }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">
+                    {{ col.label|default:col.name }}
+                    {% if col.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 4px; border-radius:3px; font-size:0.65rem; margin-left:4px;">💰</span>{% endif %}
+                </th>
                 {% endfor %}
                 <th style="padding:8px; border:1px solid #e2e8f0; background:#fff; width:40px;"></th>
             </tr>
@@ -60,11 +75,22 @@
             <tr>
                 {% for col in sample_table.columns %}
                 <td style="padding:4px; border:1px solid #e2e8f0;">
+                    {% if col.type == 'select' or col.type == 'enum' or col.type == 'dropdown' %}
+                    <select name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
+                        <option value="">{% trans "Choisir" %}</option>
+                        {% for opt in col.options %}
+                        <option value="{{ opt }}">{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                    {% elif col.type == 'number' or col.type == 'integer' or col.type == 'float' %}
+                    <input type="number" name="sample_0_{{ col.name }}" class="form-control" step="{% if col.type == 'float' %}0.01{% else %}1{% endif %}" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
+                    {% else %}
                     <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;">
+                    {% endif %}
                 </td>
                 {% endfor %}
                 <td style="padding:4px; border:1px solid #e2e8f0; text-align:center;">
-                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()" style="padding:2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); updateCostEstimate();" style="padding:2px 8px;">&times;</button>
                 </td>
             </tr>
         </tbody>
@@ -94,5 +120,119 @@
      data-pricing='{{ pricing_json }}'>
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
     <div class="text-muted text-xs" style="margin-top:4px;">{% trans "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse." %}</div>
+    <div id="pricing-modifiers-summary" style="margin-top:8px; display:none;">
+        <div style="font-size:0.8rem; color:#059669; margin-bottom:4px;">{% trans "Suppléments actifs:" %}</div>
+        <div id="active-modifiers-list" style="font-size:0.8rem;"></div>
+    </div>
 </div>
 {% endif %}
+
+<!-- JavaScript for pricing warnings and dynamic calculation -->
+<script>
+(function() {
+    var pricingData = null;
+    try {
+        var pricingBox = document.getElementById('cost-estimate-box');
+        if (pricingBox) {
+            pricingData = JSON.parse(pricingBox.getAttribute('data-pricing') || '{}');
+        }
+    } catch(e) {}
+
+    window.handlePricingChange = function(element) {
+        var formGroup = element.closest('.form-group');
+        if (!formGroup) return;
+        
+        var fieldName = formGroup.getAttribute('data-pricing-field');
+        var pricingType = formGroup.getAttribute('data-pricing-type');
+        var pricingValue = parseFloat(formGroup.getAttribute('data-pricing-value')) || 0;
+        var warningDiv = document.querySelector('.pricing-warning-' + fieldName);
+        
+        if (!fieldName || !pricingType) return;
+        
+        var isChecked = element.type === 'checkbox' ? element.checked : element.value !== '';
+        var isSelected = element.tagName === 'SELECT' && element.value !== '';
+        
+        if (warningDiv) {
+            if ((isChecked || isSelected) && pricingValue > 0) {
+                warningDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+                    '{% trans "Cette option inclut des frais supplémentaires." %} ' +
+                    '<strong>' + pricingValue.toLocaleString() + ' DA</strong> ' +
+                    '{% trans "(sera ajouté au coût final)." %}';
+                warningDiv.style.display = 'block';
+            } else if ((isChecked || isSelected) && pricingValue === 0) {
+                warningDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' +
+                    '{% trans "Des frais supplémentaires s\'appliquent. Le montant exact sera communiqué lors de la validation." %}';
+                warningDiv.style.display = 'block';
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+        
+        updateCostEstimate();
+    };
+
+    window.updateCostEstimate = function() {
+        var costEl = document.getElementById('cost-estimate');
+        var summaryEl = document.getElementById('pricing-modifiers-summary');
+        var modifiersListEl = document.getElementById('active-modifiers-list');
+        
+        if (!costEl) return;
+        
+        var baseCost = 0;
+        var modifiers = [];
+        
+        if (pricingData && pricingData.base_price) {
+            var bp = pricingData.base_price;
+            baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
+        }
+        
+        document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
+            var input = group.querySelector('input, select');
+            if (!input) return;
+            
+            var isActive = (input.type === 'checkbox' && input.checked) || (input.tagName === 'SELECT' && input.value !== '');
+            if (!isActive) return;
+            
+            var pricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
+            var pricingType = group.getAttribute('data-pricing-type');
+            var label = group.querySelector('label');
+            var fieldLabel = label ? label.textContent : group.getAttribute('data-pricing-field');
+            
+            if (pricingType === 'add' && pricingValue > 0) {
+                modifiers.push('+' + pricingValue.toLocaleString() + ' DA');
+            } else if (pricingType === 'set' && pricingValue > 0) {
+                modifiers.push('{% trans "Forfait" %}: ' + pricingValue.toLocaleString() + ' DA');
+            } else if (pricingType === 'multiply' && pricingValue !== 1) {
+                modifiers.push('×' + pricingValue + ' {% trans "(multiplicateur)" %}');
+            }
+        });
+        
+        var sampleRows = document.querySelectorAll('#sample-table-body tr');
+        var sampleCount = sampleRows.length;
+        
+        var total = baseCost * sampleCount;
+        
+        modifiers.forEach(function(mod) {
+            if (mod.startsWith('+')) {
+                var addVal = parseInt(mod.replace(/[^\d]/g, ''));
+                total += addVal * sampleCount;
+            }
+        });
+        
+        costEl.textContent = total.toLocaleString() + ' DA';
+        
+        if (modifiers.length > 0) {
+            if (summaryEl) summaryEl.style.display = 'block';
+            if (modifiersListEl) modifiersListEl.innerHTML = modifiers.map(function(m) {
+                return '<div style="color:#059669;">' + m + '</div>';
+            }).join('');
+        } else {
+            if (summaryEl) summaryEl.style.display = 'none';
+        }
+    };
+
+    if (typeof updateCostEstimate === 'function') {
+        updateCostEstimate();
+    }
+})();
+</script>

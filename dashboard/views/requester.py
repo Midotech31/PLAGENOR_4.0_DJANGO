@@ -360,13 +360,23 @@ def post_download(request, pk):
     """Post-download acknowledgment page with rating form."""
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     
-    # Only allow access if the request has a report
     if not req.report_file:
         messages.warning(request, "Aucun rapport disponible pour cette demande.")
         return redirect('dashboard:requester_request_detail', pk=pk)
     
-    # Build context for the template
     context = {
         'req': req,
     }
     return render(request, 'dashboard/requester/post_download.html', context)
+
+
+@requester_required
+def accept_citation(request, pk):
+    """Accept citation clause for IBTIKAR report download."""
+    from django.http import JsonResponse
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
+    if not req.citation_accepted:
+        req.citation_accepted = True
+        req.citation_accepted_at = timezone.now()
+        req.save(update_fields=['citation_accepted', 'citation_accepted_at'])
+    return JsonResponse({'ok': True})

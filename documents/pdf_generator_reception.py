@@ -7,6 +7,7 @@ import logging
 
 from django.conf import settings
 from django.core.files import File
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from reportlab.lib.pagesizes import A4
@@ -139,7 +140,36 @@ def generate_reception_form_pdf(request_obj, lang=None, force_regenerate=False):
         # INSTITUTIONAL HEADER
         # -------------------------------------------------------------------------
         story.extend(build_institutional_header(labels, page_width, styles))
-        
+
+        # -------------------------------------------------------------------------
+        # QR CODE (Tracking)
+        # -------------------------------------------------------------------------
+        try:
+            from core.qrcode_utils import generate_request_tracking_qr
+            from django.contrib.sites.models import Site
+            from reportlab.lib.utils import ImageReader
+            import base64
+            current_site = Site.objects.get_current()
+            base_url = f"https://{current_site.domain}" if current_site else None
+            qr_data_url = generate_request_tracking_qr(request_obj, base_url=base_url)
+            if qr_data_url:
+                qr_data = qr_data_url.split(',')[1]
+                qr_bytes = base64.b64decode(qr_data)
+                qr_buffer = BytesIO(qr_bytes)
+                qr_img = ImageReader(qr_buffer)
+                # Add QR code aligned right
+                qr_table = Table([[Paragraph(f"<small>{request_obj.display_id}</small>", styles['SmallCenter']), Image(qr_img, width=2*cm, height=2*cm)]],
+                                 colWidths=[page_width - 3*cm, 2*cm])
+                qr_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+                    ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                story.append(qr_table)
+                story.append(Spacer(1, 4))
+        except Exception as e:
+            logger.debug(f"Could not generate QR code for Reception form: {e}")
+
         # -------------------------------------------------------------------------
         # TITLE
         # -------------------------------------------------------------------------
@@ -161,7 +191,7 @@ def generate_reception_form_pdf(request_obj, lang=None, force_regenerate=False):
         # -------------------------------------------------------------------------
         # SECTION 3: SAMPLE INFORMATION
         # -------------------------------------------------------------------------
-        story.extend(build_sample_section(request_obj, labels, page_width, styles))
+        story.extend(build_sample_section(request_obj, labels, page_width, styles, lang))
         
         # -------------------------------------------------------------------------
         # SECTION 4: TRANSPORT AND TRACKING
@@ -345,6 +375,14 @@ def build_project_section(request_obj, service, labels, page_width, styles):
             Paragraph(str(service.name), styles['Value'])
         ])
     
+    # Appointment date (set when requester confirms appointment)
+    appointment_date = getattr(request_obj, 'appointment_date', None)
+    if appointment_date:
+        data.append([
+            Paragraph(labels.get('appointment_date', 'Appointment Date'), styles['Label']),
+            Paragraph(format_date(appointment_date), styles['Value'])
+        ])
+    
     table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])
     style_label_value_table(table)
     story.append(table)
@@ -352,8 +390,8 @@ def build_project_section(request_obj, service, labels, page_width, styles):
     return story
 
 
-def build_sample_section(request_obj, labels, page_width, styles):
-    """Build Section 3: Sample Information table."""
+def build_sample_section(request_obj, labels, page_width, styles, lang='fr'):
+    """Build Section 3: Sample Information table with DB-driven columns filtered by channel."""
     story = []
     
     story.append(Spacer(1, 12))
@@ -361,15 +399,35 @@ def build_sample_section(request_obj, labels, page_width, styles):
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
     story.append(Spacer(1, 6))
     
-    # Define columns for reception form
-    columns = [
-        ('id', labels['sample_id']),
-        ('code', labels['sample_code']),
-        ('origin', labels['sample_origin']),
-        ('date', labels['sampling_date']),
-        ('storage', labels['storage_conditions']),
-        ('notes', labels.get('additional_notes', 'Notes')),
-    ]
+    # Get sample table columns from DB, filtered by channel (GENOCLAB or BOTH)
+    # This ensures GENOCLAB reception form only shows relevant fields
+    channel_filter = request_obj.channel if request_obj.channel in ['GENOCLAB', 'IBTIKAR'] else 'BOTH'
+    db_columns = []
+    if request_obj.service and hasattr(request_obj.service, 'form_fields'):
+        from core.models import ServiceFormField
+        db_columns = list(request_obj.service.form_fields.filter(
+            field_category='sample_table'
+        ).filter(
+            models.Q(channel='BOTH') | models.Q(channel=channel_filter)
+        ).order_by('order', 'sort_order', 'pk'))
+    
+    # Build dynamic columns list
+    if db_columns:
+        # Use DB-driven columns
+        columns = [('id', labels['sample_id'])]
+        for field in db_columns:
+            col_label = field.label_fr if lang == 'fr' else (field.label_en or field.label_fr)
+            columns.append((field.name, col_label))
+    else:
+        # Fallback to default columns
+        columns = [
+            ('id', labels['sample_id']),
+            ('code', labels['sample_code']),
+            ('origin', labels['sample_origin']),
+            ('date', labels['sampling_date']),
+            ('storage', labels['storage_conditions']),
+            ('notes', labels.get('additional_notes', 'Notes')),
+        ]
     
     # Build header
     header_row = [Paragraph(col[1], styles['TableHeader']) for col in columns]

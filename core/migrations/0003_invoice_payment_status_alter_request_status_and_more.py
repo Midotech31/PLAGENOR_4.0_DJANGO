@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('options', models.JSONField(blank=True, default=list, help_text='Options for enum type')),
                 ('required', models.BooleanField(default=False)),
                 ('sort_order', models.IntegerField(default=0)),
-                ('service', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='custom_fields', to='core.service')),
+                ('service', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='form_fields', to='core.service')),
             ],
             options={
                 'db_table': 'service_form_fields',

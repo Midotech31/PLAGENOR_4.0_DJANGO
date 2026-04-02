@@ -135,20 +135,24 @@ function addSampleRow() {
     var tbody = document.getElementById('sample-table-body');
     if (!tbody) { console.error('sample-table-body not found'); return; }
 
-    // Get columns from table header data attributes
     var headerCells = tbody.closest('table').querySelectorAll('thead th[data-col]');
     var columns = [];
     headerCells.forEach(function(th) {
-        columns.push(th.getAttribute('data-col'));
+        columns.push({
+            name: th.getAttribute('data-col'),
+            type: th.getAttribute('data-type') || 'text',
+        });
     });
 
     if (columns.length === 0) {
-        // Fallback: parse from first row input names
-        var firstInputs = tbody.querySelectorAll('tr:first-child input[name^="sample_"]');
-        firstInputs.forEach(function(input) {
-            var parts = input.name.split('_');
+        var firstInputs = tbody.querySelectorAll('tr:first-child [name^="sample_"]');
+        firstInputs.forEach(function(el) {
+            var parts = el.name.split('_');
             if (parts.length >= 3) {
-                columns.push(parts.slice(2).join('_'));
+                columns.push({
+                    name: parts.slice(2).join('_'),
+                    type: el.tagName === 'SELECT' ? 'select' : 'text',
+                });
             }
         });
     }
@@ -160,12 +164,35 @@ function addSampleRow() {
     columns.forEach(function(col) {
         var td = document.createElement('td');
         td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.name = 'sample_' + sampleRowCount + '_' + col;
-        input.className = 'form-control';
-        input.style.fontSize = '0.85rem';
-        td.appendChild(input);
+
+        if (col.type === 'select' || col.type === 'enum' || col.type === 'dropdown') {
+            var th = tbody.closest('table').querySelector('thead th[data-col="' + col.name + '"]');
+            var select = document.createElement('select');
+            select.name = 'sample_' + sampleRowCount + '_' + col.name;
+            select.className = 'form-control';
+            select.style.fontSize = '0.85rem';
+            select.innerHTML = '<option value="">{% trans "Choisir" %}</option>';
+            if (th && th.querySelector('select')) {
+                var opts = th.querySelectorAll('select option:not(:first-child)');
+                opts.forEach(function(o) { select.appendChild(o.cloneNode(true)); });
+            }
+            td.appendChild(select);
+        } else if (col.type === 'number' || col.type === 'integer' || col.type === 'float') {
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.name = 'sample_' + sampleRowCount + '_' + col.name;
+            input.className = 'form-control';
+            input.style.fontSize = '0.85rem';
+            if (col.type === 'float') input.step = '0.01';
+            td.appendChild(input);
+        } else {
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'sample_' + sampleRowCount + '_' + col.name;
+            input.className = 'form-control';
+            input.style.fontSize = '0.85rem';
+            td.appendChild(input);
+        }
         tr.appendChild(td);
     });
     var tdBtn = document.createElement('td');

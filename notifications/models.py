@@ -12,6 +12,7 @@ class Notification(models.Model):
         ('APPOINTMENT', 'Appointment'),
         ('REPORT', 'Report Ready'),
         ('PAYMENT', 'Payment'),
+        ('DOCUMENT_READY', 'Document Ready'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')

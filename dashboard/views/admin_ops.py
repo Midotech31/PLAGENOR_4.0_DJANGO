@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from django.db.models import Count, Sum, Q, Avg, Case, When, IntegerField, Value
+from django.db.models import Count, Sum, Q, Avg, Case, When, IntegerField, Value, F
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -256,11 +256,29 @@ def index(request):
     now = timezone.now()
     seven_days_ago = now - timedelta(days=7)
     
+    # All non-terminal statuses
+    active_statuses = [
+        'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
+        'PLATFORM_NOTE_GENERATED', 'IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED',
+        'ASSIGNED', 'PENDING_ACCEPTANCE', 'ACCEPTED',
+        'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+        'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
+        'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT',
+        'ORDER_UPLOADED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED',
+        'SENT_TO_REQUESTER',
+    ]
+    
     request_stats = Request.objects.aggregate(
         total_requests=Count('id'),
         pending_count=Count(
             'id',
-            filter=Q(status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED', 'ADMIN_REVIEW'])
+            filter=Q(status__in=[
+                'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
+                'PLATFORM_NOTE_GENERATED', 'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
+                'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_UPLOADED', 'REPORT_UPLOADED',
+                'ADMIN_REVIEW', 'REPORT_VALIDATED', 'COMPLETED',
+            ])
         ),
         ibtikar_count=Count('id', filter=Q(channel='IBTIKAR')),
         genoclab_count=Count('id', filter=Q(channel='GENOCLAB')),
@@ -304,18 +322,21 @@ def index(request):
             'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
             'COMPLETED',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
-            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_UPLOADED', 'PAYMENT_CONFIRMED',
+            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'APPOINTMENT_RESCHEDULING_REQUESTED',
         ]
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')
     pending_paginator, pending_requests, _ = paginate_queryset(pending_qs, request, per_page=25, page_param='pending_page')
 
     # Requests needing validation - paginated
+    # These are requests that need admin action to progress
     validation_qs = Request.objects.filter(
         status__in=[
             'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_UPLOADED',
+            'PLATFORM_NOTE_GENERATED',  # Missing status - needs IBTIKAR submission
+            'APPOINTMENT_RESCHEDULING_REQUESTED',  # Client requested rescheduling
         ]
     ).select_related('service', 'requester').order_by('-created_at')
     validation_paginator, validation_requests, _ = paginate_queryset(validation_qs, request, per_page=25, page_param='validation_page')
@@ -332,12 +353,16 @@ def index(request):
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')
     review_paginator, review_requests, _ = paginate_queryset(review_qs, request, per_page=25, page_param='review_page')
 
-    # In-progress requests - paginated
+    # In-progress requests - paginated (all analyst workflow statuses)
     in_progress_qs = Request.objects.filter(
         status__in=[
-            'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+            'ASSIGNED', 'PENDING_ACCEPTANCE', 'ACCEPTED',
+            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
             'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+            'PAYMENT_PENDING',
         ]
+    ).exclude(
+        status__in=['COMPLETED', 'CLOSED', 'ARCHIVED', 'REJECTED', 'CANCELLED']
     ).select_related('service', 'requester', 'assigned_to__user').prefetch_related('messages__from_user').order_by('-updated_at')
     in_progress_paginator, in_progress_requests, _ = paginate_queryset(in_progress_qs, request, per_page=25, page_param='in_progress_page')
 
@@ -403,6 +428,109 @@ def index(request):
     # Notification count for bell
     unread_notifications = Notification.objects.filter(user=request.user, read=False).count()
     
+    # Activity Log tab data (inline from activity_log view)
+    activity_filter = request.GET.get('activity_filter', '')
+    activity_date_from = request.GET.get('activity_date_from', '')
+    activity_date_to = request.GET.get('activity_date_to', '')
+    activity_search = request.GET.get('activity_q', '')
+    
+    history_qs = RequestHistory.objects.select_related('request', 'actor').filter(
+        Q(to_status__isnull=False)
+    ).order_by('-created_at')
+    
+    if activity_filter:
+        history_qs = history_qs.filter(to_status=activity_filter)
+    if activity_date_from:
+        history_qs = history_qs.filter(created_at__date__gte=activity_date_from)
+    if activity_date_to:
+        history_qs = history_qs.filter(created_at__date__lte=activity_date_to)
+    if activity_search:
+        history_qs = history_qs.filter(
+            Q(request__display_id__icontains=activity_search) |
+            Q(request__title__icontains=activity_search) |
+            Q(actor__first_name__icontains=activity_search) |
+            Q(actor__last_name__icontains=activity_search)
+        )
+    
+    activity_paginator, activity_logs, _ = paginate_queryset(history_qs, request, per_page=50, page_param='activity_page')
+    
+    # Users tab data (inline from users_list view)
+    user_role_filter = request.GET.get('user_role', '')
+    user_status_filter = request.GET.get('user_status', '')
+    user_date_from = request.GET.get('user_date_from', '')
+    user_date_to = request.GET.get('user_date_to', '')
+    user_search_q = request.GET.get('user_q', '')
+    
+    from accounts.models import User
+    users_qs = User.objects.exclude(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE']).order_by('-date_joined')
+    if user_role_filter:
+        users_qs = users_qs.filter(role=user_role_filter)
+    if user_status_filter:
+        if user_status_filter == 'active':
+            users_qs = users_qs.filter(is_active=True)
+        elif user_status_filter == 'inactive':
+            users_qs = users_qs.filter(is_active=False)
+    if user_date_from:
+        users_qs = users_qs.filter(date_joined__date__gte=user_date_from)
+    if user_date_to:
+        users_qs = users_qs.filter(date_joined__date__lte=user_date_to)
+    if user_search_q:
+        users_qs = users_qs.filter(
+            Q(first_name__icontains=user_search_q) |
+            Q(last_name__icontains=user_search_q) |
+            Q(email__icontains=user_search_q) |
+            Q(username__icontains=user_search_q)
+        )
+    users_qs = users_qs.annotate(total_requests=Count('requests_made'))
+    users_paginator, users_page, _ = paginate_queryset(users_qs, request, per_page=25, page_param='users_page')
+    
+    # Performance tab data
+    perf_sort = request.GET.get('perf_sort', 'total_points')
+    perf_min = request.GET.get('perf_min', '')
+    perf_max = request.GET.get('perf_max', '')
+    
+    perf_members_data = []
+    for member in all_members_ranked:
+        completed_services = Request.objects.filter(assigned_to=member, status='COMPLETED').count()
+        total_services = Request.objects.filter(
+            assigned_to=member, status__in=['ASSIGNED', 'COMPLETED', 'CLOSED']
+        ).count()
+        # Note: declared_deadline field doesn't exist in Request model
+        # Skipping early completion metric - efficiency based on completion rate only
+        early_completions = 0
+        efficiency_rate = round((completed_services / total_services * 100), 1) if total_services > 0 else 0
+        current_milestone = (member.total_points // 1000) * 1000
+        next_milestone = current_milestone + 1000
+        progress_to_next = member.total_points - current_milestone
+        progress_percentage = (progress_to_next / 1000) * 100 if next_milestone > current_milestone else 100
+        reward_boxes = member.total_points // 1000
+        
+        perf_members_data.append({
+            'member': member,
+            'completed_services': completed_services,
+            'total_services': total_services,
+            'efficiency_rate': efficiency_rate,
+            'current_milestone': current_milestone,
+            'next_milestone': next_milestone,
+            'progress_to_next': progress_to_next,
+            'progress_percentage': progress_percentage,
+            'reward_boxes': reward_boxes,
+        })
+    
+    if perf_sort == 'efficiency':
+        perf_members_data.sort(key=lambda x: x['efficiency_rate'], reverse=True)
+    elif perf_sort == 'services':
+        perf_members_data.sort(key=lambda x: x['completed_services'], reverse=True)
+    elif perf_sort == 'recent':
+        perf_members_data.sort(key=lambda x: x['member'].user.date_joined, reverse=True)
+    
+    if perf_min:
+        perf_members_data = [m for m in perf_members_data if m['member'].total_points >= int(perf_min)]
+    if perf_max:
+        perf_members_data = [m for m in perf_members_data if m['member'].total_points <= int(perf_max)]
+    
+    perf_paginator, perf_page, _ = paginate_queryset(perf_members_data, request, per_page=25, page_param='perf_page')
+    
     context = {
         'total_requests': total_requests,
         'pending_count': pending_count,
@@ -448,6 +576,27 @@ def index(request):
         'max_points': max_points,
         # Notifications
         'unread_notifications': unread_notifications,
+        # Activity Log tab
+        'activity_logs': activity_logs,
+        'activity_paginator': activity_paginator,
+        'activity_filter': activity_filter,
+        'activity_date_from': activity_date_from,
+        'activity_date_to': activity_date_to,
+        'activity_search': activity_search,
+        # Users tab
+        'users': users_page,
+        'users_paginator': users_paginator,
+        'user_role_filter': user_role_filter,
+        'user_status_filter': user_status_filter,
+        'user_date_from': user_date_from,
+        'user_date_to': user_date_to,
+        'user_search_q': user_search_q,
+        # Performance tab
+        'perf_members': perf_page,
+        'perf_paginator': perf_paginator,
+        'perf_sort': perf_sort,
+        'perf_min': perf_min,
+        'perf_max': perf_max,
     }
     return render(request, 'dashboard/admin_ops/index.html', context)
 
@@ -1158,7 +1307,7 @@ def prepare_quote(request, pk):
 @admin_required
 def generate_invoice(request, pk):
     """Generate invoice for a request."""
-    from documents.generators import generate_invoice_pdf
+    from documents.invoice import generate_invoice_pdf
     
     req = get_object_or_404(Request, pk=pk)
     if request.method == 'POST':
@@ -1190,25 +1339,42 @@ def generate_invoice(request, pk):
 
 @admin_required
 def confirm_payment(request, pk):
-    """Confirm payment for a request."""
+    """Confirm payment for a request - transitions from PAYMENT_UPLOADED to PAYMENT_CONFIRMED.
+    
+    The client uploads the receipt (PAYMENT_PENDING → PAYMENT_UPLOADED).
+    Admin verifies and confirms (PAYMENT_UPLOADED → PAYMENT_CONFIRMED).
+    """
     if request.method != 'POST':
         return HttpResponseForbidden()
     
     req = get_object_or_404(Request, pk=pk)
-    payment_receipt = request.FILES.get('payment_receipt')
     
+    # Verify the request is in PAYMENT_UPLOADED status
+    if req.status != 'PAYMENT_UPLOADED':
+        messages.error(request, gettext("Cette demande n'est pas en attente de confirmation de paiement."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Optional: admin can upload an additional verification document
+    payment_receipt = request.FILES.get('payment_receipt')
     if payment_receipt:
         req.payment_receipt = payment_receipt
-        req.payment_status = 'CONFIRMED'
-        req.save(update_fields=['payment_receipt', 'payment_status'])
+        req.save(update_fields=['payment_receipt'])
 
-        try:
-            transition(req, 'PAYMENT_CONFIRMED', request.user, notes=gettext('Payment confirmed by admin'))
-            messages.success(request, gettext("Payment confirmed for %(display_id)s.") % {'display_id': req.display_id})
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
-    else:
-        messages.error(request, gettext("Please upload a payment receipt."))
+    try:
+        # Transition from PAYMENT_UPLOADED to PAYMENT_CONFIRMED
+        transition(req, 'PAYMENT_CONFIRMED', request.user, notes=gettext('Payment verified and confirmed by admin'))
+        
+        # Update payment status
+        req.payment_status = 'CONFIRMED'
+        req.save(update_fields=['payment_status'])
+        
+        # Notify the assigned analyst that they can now upload the report
+        from notifications.services import notify_payment_received
+        notify_payment_received(req)
+        
+        messages.success(request, gettext("Paiement confirmé pour %(display_id)s. L'analyste assigné peut maintenant télécharger le rapport.") % {'display_id': req.display_id})
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
 
     return redirect_back(request, 'dashboard:admin_ops')
 
@@ -1224,7 +1390,7 @@ def generate_genoclab_invoice(request, pk):
     The invoice is auto-generated with client info, service details, and payment info.
     Only Admin Ops can access this view.
     """
-    from documents.generators import generate_invoice_excel
+    from documents.invoice import generate_invoice_excel
     from django.core.files.base import ContentFile
     
     req = get_object_or_404(Request, pk=pk)

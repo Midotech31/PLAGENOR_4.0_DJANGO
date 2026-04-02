@@ -104,14 +104,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="id_sector">{% trans "Secteur / Position" %} *</label>
+                    <label for="id_sector">{% trans "Fonction / Position" %} *</label>
                     <select name="sector" id="id_sector" class="form-control" required>
                         <option value="">{% trans "— Sélectionner —" %}</option>
-                        <option value="academique" {% if form.sector.value == 'academique' %}selected{% endif %}>{% trans "Accadémique / Academic" %}</option>
-                        <option value="industriel" {% if form.sector.value == 'industriel' %}selected{% endif %}>{% trans "Industriel / Industrial" %}</option>
-                        <option value="hospitalier" {% if form.sector.value == 'hospitalier' %}selected{% endif %}>{% trans "Hospitalier / Hospital" %}</option>
-                        <option value="independant" {% if form.sector.value == 'independant' %}selected{% endif %}>{% trans "Indépendant / Independent" %}</option>
-                        <option value="autre" {% if form.sector.value == 'autre' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
+                        <option value="director" {% if form.sector.value == 'director' %}selected{% endif %}>{% trans "Directeur / Director" %}</option>
+                        <option value="manager" {% if form.sector.value == 'manager' %}selected{% endif %}>{% trans "Responsable / Manager" %}</option>
+                        <option value="lab_technician" {% if form.sector.value == 'lab_technician' %}selected{% endif %}>{% trans "Technicien de laboratoire / Lab Technician" %}</option>
+                        <option value="researcher" {% if form.sector.value == 'researcher' %}selected{% endif %}>{% trans "Chercheur / Researcher" %}</option>
+                        <option value="engineer" {% if form.sector.value == 'engineer' %}selected{% endif %}>{% trans "Ingénieur / Engineer" %}</option>
+                        <option value="other" {% if form.sector.value == 'other' %}selected{% endif %}>{% trans "Autre / Other" %}</option>
                     </select>
                     {% if form.sector.errors %}<div class="form-error">{{ form.sector.errors.0 }}</div>{% endif %}
                 </div>

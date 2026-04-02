@@ -297,6 +297,17 @@ class ProfileUpdateForm(forms.ModelForm):
         required=False,
         label=_('Laboratoire'),
     )
+    address = forms.CharField(
+        max_length=300,
+        required=False,
+        label=_('Adresse'),
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    country = forms.CharField(
+        max_length=100,
+        required=False,
+        label=_('Pays'),
+    )
 
     class Meta:
         model = User
@@ -308,6 +319,8 @@ class ProfileUpdateForm(forms.ModelForm):
             'position',
             'organization',
             'laboratory',
+            'address',
+            'country',
         ]
 
     def __init__(self, *args, **kwargs):

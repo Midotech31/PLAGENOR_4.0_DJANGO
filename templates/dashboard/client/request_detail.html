@@ -111,20 +111,26 @@
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
             <div class="card-body">
-                {% if req.quote_amount %}
+                {% if req.quote_amount and req.quote_amount > 0 %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Montant du devis" %}</span><strong>{{ req.quote_amount }} DA</strong></div>
                 {% endif %}
-                {% if req.budget_amount %}
+                {% if req.budget_amount and req.budget_amount > 0 %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
                 {% endif %}
-                {% if not req.budget_amount and not req.quote_amount %}
+                {% if req.total_ttc and req.total_ttc > 0 %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Total TTC" %}</span><strong style="color:#059669;">{{ req.total_ttc }} DA</strong></div>
+                {% endif %}
+                {% if req.quote_detail.total_ttc and req.quote_detail.total_ttc > 0 %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Total TTC" %}</span><strong style="color:#059669;">{{ req.quote_detail.total_ttc|floatformat:2 }} DA</strong></div>
+                {% endif %}
+                {% if not req.quote_amount and not req.budget_amount and not req.total_ttc and not req.quote_detail.total_ttc %}
                 <div class="text-muted">{% trans "Aucune information financière." %}</div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Detailed Quote Display -->
-        {% if req.quote_detail and req.quote_detail.items %}
+        {% if req.quote_detail.items %}
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Détail du devis" %}</h3></div>
             <div class="card-body">
@@ -189,20 +195,26 @@
                 {# Accept/Reject buttons when quote is sent #}
                 {% if req.status == 'QUOTE_SENT' %}
                 <div style="display:flex; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid var(--slate-200, #e2e8f0);">
-                    <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}">
+                    {% url 'dashboard:client_accept_quote' req.pk as client_accept_quote_url %}
+                    {% if client_accept_quote_url %}
+                    <form method="post" action="{{ client_accept_quote_url }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" style="background:#059669;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
                             {% trans "Accepter le devis" %}
                         </button>
                     </form>
-                    <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}">
+                    {% endif %}
+                    {% url 'dashboard:client_reject_quote' req.pk as client_reject_quote_url %}
+                    {% if client_reject_quote_url %}
+                    <form method="post" action="{{ client_reject_quote_url }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             {% trans "Refuser le devis" %}
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -229,7 +241,9 @@
                     <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
-                <form method="post" action="{% url 'dashboard:client_upload_order' req.pk %}" enctype="multipart/form-data">
+                {% url 'dashboard:client_upload_order' req.pk as client_upload_order_url %}
+                {% if client_upload_order_url %}
+                <form method="post" action="{{ client_upload_order_url }}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div style="margin-bottom:12px;">
                         <input type="file" name="order_file" accept=".pdf,.jpg,.jpeg,.png" required style="width:100%; padding:8px; border:2px dashed #f59e0b; border-radius:8px; background:#fff;">
@@ -241,6 +255,7 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -272,7 +287,9 @@
                     <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
-                <form method="post" action="{% url 'dashboard:client_upload_payment' req.pk %}" enctype="multipart/form-data">
+                {% url 'dashboard:client_upload_payment' req.pk as client_upload_payment_url %}
+                {% if client_upload_payment_url %}
+                <form method="post" action="{{ client_upload_payment_url }}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div style="margin-bottom:12px;">
                         <label style="color:#991b1b; font-weight:600; display:block; margin-bottom:8px;">{% trans "Télécharger votre reçu de paiement:" %}</label>
@@ -285,6 +302,84 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {# Sample Reception Form - Visible after appointment is confirmed #}
+        {% if req.generated_reception_form %}
+        <div class="card mb-4" style="border:2px solid #8b5cf6; background:linear-gradient(135deg, #f5f3ff, #ede9fe);">
+            <div class="card-header" style="background:linear-gradient(135deg, #ede9fe, #ddd6fe);">
+                <h3 style="display:flex; align-items:center; gap:8px; color:#5b21b6;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    {% trans "Formulaire de Réception des Échantillons" %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="color:#5b21b6; margin-bottom:16px;">
+                    {% trans "Ce formulaire confirme les détails de votre rendez-vous et les échantillons à analyser." %}
+                    {% if req.appointment_date %}
+                    <br><strong>{% trans "Date de rendez-vous" %}:</strong> {{ req.appointment_date|date:"d/m/Y" }}
+                    {% endif %}
+                </p>
+                <a href="{{ req.generated_reception_form.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; font-size:1rem; background:#7c3aed;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le Formulaire de Réception" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        {# Invoice Download Section - Visible after Admin Ops sends the invoice #}
+        {% if req.signed_invoice and req.invoice_sent_at %}
+        <div class="card mb-4" style="border:2px solid #059669; background:linear-gradient(135deg, #ecfdf5, #d1fae5);">
+            <div class="card-header" style="background:linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                <h3 style="display:flex; align-items:center; gap:8px; color:#065f46;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    {% trans "Votre Facture est Prête" %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="color:#065f46; margin-bottom:16px;">
+                    {% trans "Votre facture a été envoyée. Veuillez la télécharger et procéder au paiement." %}
+                </p>
+                
+                <!-- Download Invoice Button -->
+                <div style="margin-bottom:16px;">
+                    {% url 'dashboard:client_invoice_download' req.pk as client_invoice_url %}
+                    {% if client_invoice_url %}
+                    <a href="{{ client_invoice_url }}" class="btn btn-success" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; font-size:1rem; background:#059669;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Télécharger la Facture" %}
+                    </a>
+                    {% if req.invoice_downloaded_at %}
+                    <p style="margin:8px 0 0 0; font-size:0.85rem; color:#059669;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        {% trans "Facture téléchargée le" %} {{ req.invoice_downloaded_at|date:"d/m/Y H:i" }}
+                    </p>
+                    {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# IBTIKAR Form Download - for IBTIKAR channel requests #}
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Formulaire IBTIKAR" %}</h3></div>
+            <div class="card-body">
+                <p style="margin-bottom:12px;">{% trans "Téléchargez votre formulaire IBTIKAR pour compléter votre demande." %}</p>
+                {% url 'documents:ibtikar_form_pdf' req.pk as ibtikar_form_url %}
+                {% if ibtikar_form_url %}
+                <a href="{{ ibtikar_form_url }}" class="btn btn-primary" target="_blank" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    {% trans "Télécharger le Formulaire IBTIKAR" %}
+                </a>
+                {% else %}
+                <p class="text-muted">{% trans "Formulaire non disponible." %}</p>
                 {% endif %}
             </div>
         </div>
@@ -353,6 +448,34 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Workflow History -->
+        {% if history %}
+        <div class="card mb-4">
+            <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
+            <div class="card-body" style="max-height:300px; overflow-y:auto;">
+                {% for h in history %}
+                <div style="display:flex; gap:16px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--slate-100);">
+                    <div style="min-width:120px;">
+                        <span class="text-xs text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            {% if h.from_status %}
+                            <span class="badge-status {{ h.from_status|lower }}" style="font-size:0.7rem;">{{ h.from_status }}</span>
+                            <span>&rarr;</span>
+                            {% endif %}
+                            <span class="badge-status {{ h.to_status|lower }}" style="font-size:0.7rem;">{{ h.to_status }}</span>
+                        </div>
+                        {% if h.notes %}
+                        <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -377,22 +500,16 @@
                 {% trans "Télécharger le rapport" %}
             </a>
             {# Confirm receipt button - separate form #}
-            <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
-                    {% trans "Confirmer la réception" %}
-                </button>
-            </form>
-        </div>
-        {% else %}
-        <form method="post" action="{% url 'dashboard:client_confirm' req.pk %}">
+        {% url 'dashboard:client_confirm' req.pk as client_confirm_url %}
+        {% if client_confirm_url %}
+        <form method="post" action="{{ client_confirm_url }}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
+            <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
-                {% trans "Confirmer la réception du rapport" %}
+                {% trans "Confirmer la réception" %}
             </button>
         </form>
+        {% endif %}
         {% endif %}
     </div>
 </div>
@@ -418,7 +535,9 @@
             </a>
         </div>
         {% endif %}
-        <form method="post" action="{% url 'dashboard:client_rate' req.pk %}">
+        {% url 'dashboard:client_rate' req.pk as client_rate_url %}
+        {% if client_rate_url %}
+        <form method="post" action="{{ client_rate_url }}">
             {% csrf_token %}
             <input type="hidden" name="rating" :value="rating">
             <div style="display:flex; gap:6px; cursor:pointer; margin-bottom:16px;">
@@ -433,14 +552,71 @@
                 <button type="submit" class="btn btn-primary" style="padding:10px 24px;">{% trans "Envoyer mon évaluation" %}</button>
             </div>
         </form>
+        {% endif %}
     </div>
 </div>
-{% elif req.service_rating %}
+{% else %}
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
         {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
         {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# END OF WORKFLOW README SECTION #}
+{% if req.status in 'COMPLETED,CLOSED,ARCHIVED' %}
+<div class="card mb-4" style="margin-top:24px; border:3px solid #4F46E5; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <div class="card-body" style="padding:32px; text-align:center;">
+        <!-- Celebration Icon -->
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #4F46E5, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 10px 25px rgba(79,70,229,0.3);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width:40px;height:40px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        
+        <h2 style="margin:0 0 8px; color:#4F46E5; font-size:1.8rem;">{% trans "Merci ! / Thank You!" %}</h2>
+        <p style="font-size:1.1rem; color:#64748b; margin:0 0 24px;">
+            {% trans "Votre demande a été traitée avec succès. / Your request has been successfully processed." %}
+        </p>
+        
+        <!-- Request Summary -->
+        <div style="background:white; border-radius:16px; padding:24px; margin:24px 0; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:left; max-width:500px; margin-left:auto; margin-right:auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "Service" %}</span>
+                <strong>{{ req.service.name }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "N° suivi / Tracking" %}</span>
+                <strong style="font-family:monospace;">{{ req.tracking_number|default:req.display_id }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "Créée le" %}</span>
+                <strong>{{ req.created_at|date:"d/m/Y" }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span class="text-muted">{% trans "Terminée le" %}</span>
+                <strong>{{ req.updated_at|date:"d/m/Y" }}</strong>
+            </div>
+        </div>
+        
+        <!-- Rating Invitation -->
+        {% if not req.service_rating %}
+        <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; padding:20px; margin:20px 0;">
+            <p style="margin:0 0 12px; color:#92400e; font-weight:500;">
+                ⭐ {% trans "Vous avez apprécié notre service ? / Enjoyed our service?" %}
+            </p>
+            <p style="margin:0 0 16px; color:#92400e;">
+                {% trans "Donnez-nous 5 étoiles et laissez un commentaire positif ! / Give us 5 stars and leave a positive review!" %}
+            </p>
+            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
+                {% trans "Évaluer maintenant / Rate now" %}
+            </a>
+        </div>
+        {% endif %}
+        
+        <p style="margin:24px 0 0; font-size:0.9rem; color:#6b7280;">
+            🔬 {% trans "PLAGENOR — Excellence en analyse scientifique / Excellence in scientific analysis" %}
+        </p>
     </div>
 </div>
 {% endif %}

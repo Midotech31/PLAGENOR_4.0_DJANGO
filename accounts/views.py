@@ -87,6 +87,8 @@ class RegisterView(CreateView):
                 phone=form.cleaned_data['phone'],
                 organization=form.cleaned_data['organization'],
                 position=form.cleaned_data['sector'],
+                address=form.cleaned_data.get('address', ''),
+                country=form.cleaned_data.get('country', ''),
                 role='CLIENT',
             )
         else:

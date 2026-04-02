@@ -81,6 +81,26 @@ class User(AbstractUser):
     )
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
 
+    # GENOCLAB-specific fields (for external clients)
+    address = models.CharField(max_length=300, blank=True, default='', verbose_name=_('Adresse'))
+    country = models.CharField(max_length=100, blank=True, default='', verbose_name=_('Pays'))
+
+    # IBTIKAR-specific academic fields (Part K4)
+    faculty = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name=_('Faculté / Faculty'),
+        help_text=_('Faculty or department within the university')
+    )
+    research_team = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name=_('Équipe de recherche / Research Team'),
+        help_text=_('Research team or laboratory unit')
+    )
+
     # Login security
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='Photo de profil')
     last_seen = models.DateTimeField(null=True, blank=True, verbose_name='Dernière activité')
@@ -139,9 +159,23 @@ class MemberProfile(models.Model):
     gift_unlocked = models.BooleanField(default=False)
     gift_image = models.ImageField(upload_to='gifts/', null=True, blank=True)
     gift_collected = models.BooleanField(default=False)
-    # New: Milestone tracking (every 1000 points = 1 milestone)
+    # Milestone tracking (every 1000 points = 1 milestone)
     milestone_count = models.IntegerField(default=0)
     last_milestone_at = models.DateTimeField(null=True, blank=True)
+    # Reward cycle tracking (new fields for redesigned rewards system)
+    milestone_level = models.IntegerField(
+        default=1,
+        help_text='Current reward cycle level (1=first 1000pts, 2=second 1000pts, etc.)'
+    )
+    milestone_history = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='History of milestones achieved with dates and rewards'
+    )
+    reward_points = models.IntegerField(
+        default=0,
+        help_text='Points accumulated in current reward cycle (resets at 1000)'
+    )
 
     class Meta:
         db_table = 'member_profiles'
@@ -165,30 +199,98 @@ class MemberProfile(models.Model):
         """Returns progress percentage to next milestone (0-100)."""
         return (self.total_points % 1000) / 10
     
+    @property
+    def current_cycle_points(self):
+        """Points in current reward cycle (0-999)."""
+        return self.total_points % 1000
+    
+    @property
+    def reward_level_name(self):
+        """Get the name of the current reward level."""
+        levels = {
+            1: 'Bronze', 2: 'Silver', 3: 'Gold', 4: 'Platinum',
+            5: 'Diamond', 6: 'Master', 7: 'Grand Master',
+            8: 'Elite', 9: 'Champion', 10: 'Legend'
+        }
+        return levels.get(self.milestone_level, f'Level {self.milestone_level}')
+    
+    @property
+    def next_level_name(self):
+        """Get the name of the next reward level."""
+        levels = {
+            1: 'Bronze', 2: 'Silver', 3: 'Gold', 4: 'Platinum',
+            5: 'Diamond', 6: 'Master', 7: 'Grand Master',
+            8: 'Elite', 9: 'Champion', 10: 'Legend'
+        }
+        return levels.get(self.milestone_level + 1, f'Level {self.milestone_level + 1}')
+    
+    @property
+    def level_display(self):
+        """Get display string for current level with cycle info."""
+        return f"Level {self.milestone_level} — {self.reward_level_name} ({self.total_points} pts)"
+    
+    @property
+    def badge_tier(self):
+        """Get badge tier name for the current level."""
+        if self.milestone_level <= 1:
+            return 'Bronze'
+        elif self.milestone_level <= 3:
+            return 'Silver'
+        elif self.milestone_level <= 5:
+            return 'Gold'
+        elif self.milestone_level <= 7:
+            return 'Platinum'
+        else:
+            return 'Diamond'
+    
     def award_points(self, points, reason, awarded_by=None, save=True):
         """Award points to the member and check for milestone unlock."""
         from django.utils import timezone
         from notifications.models import Notification
         
+        # Track previous milestone
+        prev_milestone = self.milestone_count
+        
         # Add to total
         self.total_points += points
+        self.reward_points = self.total_points % 1000
         
         # Check for milestone (every 1000 points)
         new_milestone = self.total_points // 1000
         if new_milestone > self.milestone_count:
+            old_level = self.milestone_level
             self.milestone_count = new_milestone
+            self.milestone_level = new_milestone
             self.last_milestone_at = timezone.now()
             self.gift_unlocked = True
             self.gift_collected = False
+            self.reward_points = 0
+            
+            # Add to milestone history
+            history_entry = {
+                'level': self.milestone_level,
+                'total_points': self.total_points,
+                'achieved_at': timezone.now().isoformat(),
+                'previous_level': old_level,
+            }
+            history = self.milestone_history or []
+            history.append(history_entry)
+            self.milestone_history = history[-10:]  # Keep last 10 entries
+            
             # Create notification for the milestone
+            level_name = self.reward_level_name
             Notification.objects.create(
                 user=self.user,
-                message=f"🎉 Félicitations ! Vous avez débloqué la boîte surprise #{self.milestone_count} ! ({self.total_points} points)",
+                message=f"🎉 Félicitations ! Vous avez atteint le niveau {self.milestone_level} — {level_name} ! ({self.total_points} points)",
                 notification_type='POINTS',
             )
         
         if save:
-            self.save(update_fields=['total_points', 'milestone_count', 'last_milestone_at', 'gift_unlocked', 'gift_collected'])
+            self.save(update_fields=[
+                'total_points', 'milestone_count', 'milestone_level',
+                'last_milestone_at', 'gift_unlocked', 'gift_collected',
+                'reward_points', 'milestone_history'
+            ])
         
         return self
 

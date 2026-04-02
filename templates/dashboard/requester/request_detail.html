@@ -3,7 +3,125 @@
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
+{% block extra_css %}
+<style>
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+.modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; font-size: 1.5rem;
+    cursor: pointer; color: #64748b; padding: 4px 8px;
+}
+.modal-close:hover { color: #1e293b; }
+.citation-block {
+    background: #f8fafc; border-left: 4px solid #4f46e5;
+    padding: 16px; border-radius: 8px; margin-bottom: 16px;
+}
+.citation-block p {
+    color: #1e293b; font-style: italic; margin: 0;
+}
+.platform-contact { text-align: center; margin-bottom: 24px; }
+.platform-contact a { color: #4f46e5; font-weight: 600; }
+.download-btn:not(:disabled) { background: #4f46e5 !important; cursor: pointer !important; }
+.download-btn:not(:disabled):hover { background: #4338ca !important; }
+.cancel-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.copy-tooltip {
+    position: absolute; top: -30px; right: 0;
+    background: #10b981; color: #fff;
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 0.75rem;
+    animation: fadeOut 2s forwards;
+}
+@keyframes fadeOut { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+</style>
+{% endblock %}
+
 {% block content %}
+
+{% block extra_js %}
+<script>
+var citationAccepted = {{ req.citation_accepted|yesno:"true,false" }};
+
+function showCitationModal(event) {
+    event.preventDefault();
+    if (citationAccepted) {
+        window.location.href = '{{ req.report_file.url }}';
+        return;
+    }
+    var checkbox = document.getElementById('citation-checkbox');
+    if (checkbox) checkbox.checked = false;
+    var downloadBtn = document.getElementById('modal-download-btn');
+    if (downloadBtn) downloadBtn.disabled = true;
+    document.getElementById('citation-modal').style.display = 'flex';
+}
+
+function toggleDownloadButton() {
+    var checkbox = document.getElementById('citation-checkbox');
+    var downloadBtn = document.getElementById('modal-download-btn');
+    if (checkbox && downloadBtn) {
+        downloadBtn.disabled = !checkbox.checked;
+    }
+}
+
+function closeCitationModal(doDownload) {
+    document.getElementById('citation-modal').style.display = 'none';
+    if (doDownload) {
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+            document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+        var acceptUrl = '{% url "dashboard:requester_accept_citation" req.pk %}';
+        fetch(acceptUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).then(function() {
+            citationAccepted = true;
+            window.location.href = '{{ req.report_file.url }}';
+        }).catch(function() {
+            window.location.href = '{{ req.report_file.url }}';
+        });
+    }
+}
+
+function copyCitation() {
+    var citationText = document.getElementById('citation-text').innerText;
+    navigator.clipboard.writeText(citationText).then(function() {
+        var tooltip = document.createElement('span');
+        tooltip.className = 'copy-tooltip';
+        tooltip.textContent = '{% trans "Copié !" %}';
+        document.querySelector('.citation-block').appendChild(tooltip);
+        setTimeout(function() { tooltip.remove(); }, 2000);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('citation-modal');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) { closeCitationModal(false); }
+        });
+    }
+});
+</script>
+{% endblock %}
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -196,10 +314,21 @@
             <div class="card-body" style="display:flex; flex-direction:column; gap:12px;">
                 {# Primary: Download Report #}
                 {% if req.report_file %}
+                {% if req.citation_accepted %}
                 <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px; font-size:0.95rem;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le Rapport" %}
                 </a>
+                <div class="text-sm" style="color:#059669; display:flex; align-items:center; gap:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                    {% trans "Clause acceptée le" %} {{ req.citation_accepted_at|date:"d/m/Y" }}
+                </div>
+                {% else %}
+                <button onclick="showCitationModal(event)" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px; font-size:0.95rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le Rapport" %}
+                </button>
+                {% endif %}
                 {% endif %}
                 
                 {# Secondary: IBTIKAR Form #}
@@ -213,6 +342,28 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     {% trans "Le formulaire IBTIKAR sera disponible une fois votre demande approuvée." %}
                 </div>
+                {% endif %}
+                
+                {# Platform Note PDF (IBTIKAR only, available after validation) #}
+                {% if req.channel == 'IBTIKAR' and req.generated_platform_note %}
+                {% url 'documents:platform_note_pdf' req.pk as platform_note_pdf_url %}
+                {% if platform_note_pdf_url %}
+                <a href="{{ platform_note_pdf_url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    {% trans "Note de Plateforme" %} (PDF)
+                </a>
+                {% endif %}
+                {% endif %}
+                
+                {# Sample Reception Form PDF (available after appointment confirmed) #}
+                {% if req.generated_reception_form %}
+                {% url 'documents:reception_form' req.pk as sample_reception_pdf_url %}
+                {% if sample_reception_pdf_url %}
+                <a href="{{ sample_reception_pdf_url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    {% trans "Formulaire de Réception" %} (PDF)
+                </a>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -230,10 +381,76 @@
     </div>
 </div>
 
+<!-- Citation & Download Modal (IBTIKAR only) -->
+{% if req.channel == 'IBTIKAR' and req.report_file and not req.citation_accepted %}
+<div id="citation-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        {% csrf_token %}
+        <button class="modal-close" onclick="closeCitationModal(false)">&times;</button>
+
+        <h2 style="color:#4338ca; margin-bottom:16px; text-align:center; font-size:1.4rem;">
+            {% trans "Remerciements et Clause de Citation" %}
+        </h2>
+
+        <p style="color:#15803d; font-weight:600; text-align:center; margin-bottom:16px;">
+            {% trans "Merci d'utiliser PLAGENOR 4.0 ! Votre rapport est prêt." %}
+        </p>
+
+        <p style="color:#475569; margin-bottom:12px;">
+            {% trans "Pour reconnaître le soutien et les contributions de notre Plateforme de Technologie Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :" %}
+        </p>
+
+        <div class="citation-block">
+            <button class="modal-close" onclick="copyCitation()" title="{% trans 'Copier' %}" style="position:absolute; top:8px; right:8px; background:none; border:none; cursor:pointer; color:#64748b;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+            </button>
+            <p id="citation-text">
+                {% trans "This research was conducted at the Genomic Technology Platform of the Higher School of Biological Sciences of Oran (HSBSO). We warmly thank the platform staff for their assistance in data analysis and interpretation." %}
+            </p>
+        </div>
+
+        <p style="color:#475569; font-size:0.9rem; margin-bottom:8px;">
+            {% trans "Veuillez également vous assurer que toute contribution substantielle du personnel de la plateforme est reconnue conformément aux directives standard en matière d'auteurs scientifiques." %}
+        </p>
+
+        <p style="color:#475569; font-size:0.9rem; margin-bottom:12px;">
+            {% trans "Toute production scientifique incluant des analyses réalisées sur PLAGENOR implique l'inclusion des membres ayant contribué." %}
+        </p>
+
+        <p class="platform-contact">
+            <a href="mailto:plagenor@essbo.dz">plagenor@essbo.dz</a>
+        </p>
+
+        <div class="acceptance-checkbox-wrapper" style="margin:20px 0 16px; padding:16px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+            <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+                <input type="checkbox" id="citation-checkbox" onchange="toggleDownloadButton()" style="width:20px; height:20px; margin-top:2px; cursor:pointer;">
+                <span style="color:#1e293b; font-size:0.95rem; line-height:1.5;">
+                    {% trans "I have read and I accept the terms and conditions of use" %}
+                    <br>
+                    <span style="font-size:0.85rem; color:#64748b;">{% trans "J'ai lu et j'accepte les conditions générales d'utilisation" %}</span>
+                </span>
+            </label>
+        </div>
+
+        <div style="display:flex; gap:12px;">
+            <button class="cancel-btn" onclick="closeCitationModal(false)" style="flex:1; padding:14px; background:#fff; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-weight:600; cursor:pointer; font-size:1rem;">
+                {% trans "Annuler" %}
+            </button>
+            <button id="modal-download-btn" class="download-btn" onclick="closeCitationModal(true)" disabled style="flex:2; padding:14px; background:#9ca3af; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:not-allowed; font-size:1rem;">
+                {% trans "Télécharger" %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- IBTIKAR post-validation workflow -->
 {% if req.channel == 'IBTIKAR' %}
 {% if req.status == 'IBTIKAR_SUBMISSION_PENDING' or req.status == 'IBTIKAR_CODE_SUBMITTED' %}
-{% url 'documents:ibtikar_form' req.pk as ibkformurl %}
+{% url 'documents:ibtikar_form_pdf' req.pk as ibkformurl %}
 {% url 'dashboard:requester_ibtikar_code' req.pk as ibkcodeurl %}
 {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
 {% endif %}
@@ -255,26 +472,34 @@
         {% if req.report_file and req.report_token %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
             <!-- Step 1: View report with citation clause (redirects to post-download page) -->
-            <a href="{% url 'dashboard:requester_post_download' req.pk %}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+            {% url 'dashboard:requester_post_download' req.pk as post_download_url %}
+            {% if post_download_url %}
+            <a href="{{ post_download_url }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
+            {% endif %}
         </div>
         {% elif req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <a href="{% url 'dashboard:requester_post_download' req.pk %}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+            {% if post_download_url %}
+            <a href="{{ post_download_url }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
+            {% endif %}
         </div>
         {% else %}
-        <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}">
+        {% url 'dashboard:requester_confirm' req.pk as requester_confirm_url %}
+        {% if requester_confirm_url %}
+        <form method="post" action="{{ requester_confirm_url }}">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
                 {% trans "Confirmer la réception du rapport" %}
             </button>
         </form>
+        {% endif %}
         {% endif %}
     </div>
 </div>
@@ -300,7 +525,9 @@
             </a>
         </div>
         {% endif %}
-        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}">
+        {% url 'dashboard:requester_rate' req.pk as requester_rate_url %}
+        {% if requester_rate_url %}
+        <form method="post" action="{{ requester_rate_url }}">
             {% csrf_token %}
             <input type="hidden" name="rating" :value="rating">
             <div style="display:flex; gap:6px; cursor:pointer; margin-bottom:16px;">
@@ -315,6 +542,7 @@
                 <button type="submit" class="btn btn-primary" style="padding:10px 24px;">{% trans "Envoyer mon évaluation" %}</button>
             </div>
         </form>
+        {% endif %}
     </div>
 </div>
 {% elif req.service_rating %}
@@ -323,6 +551,74 @@
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
         {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
         {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# END OF WORKFLOW README SECTION #}
+{% if req.status in 'COMPLETED,CLOSED' %}
+<div class="card mb-4" style="margin-top:24px; border:3px solid #4F46E5; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <div class="card-body" style="padding:32px; text-align:center;">
+        
+        <!-- Celebration Icon -->
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #4F46E5, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 10px 25px rgba(79,70,229,0.3);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width:40px;height:40px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        
+        <h2 style="margin:0 0 8px; color:#4F46E5; font-size:1.8rem;">{% trans "Merci ! / Thank You!" %}</h2>
+        
+        <p style="font-size:1.1rem; color:#64748b; margin:0 0 24px;">
+            {% trans "Votre demande a été traitée avec succès. / Your request has been successfully processed." %}
+        </p>
+        
+        <!-- Request Summary -->
+        <div style="background:white; border-radius:16px; padding:24px; margin:24px 0; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:left; max-width:500px; margin-left:auto; margin-right:auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "Service" %}</span>
+                <strong>{{ req.service.name }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "N° IBTIKAR" %}</span>
+                <strong style="font-family:monospace;">{{ req.ibtikar_id|default:req.display_id }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
+                <span class="text-muted">{% trans "Créée le" %}</span>
+                <strong>{{ req.created_at|date:"d/m/Y" }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span class="text-muted">{% trans "Terminée le" %}</span>
+                <strong>{{ req.updated_at|date:"d/m/Y" }}</strong>
+            </div>
+        </div>
+        
+        <!-- Rating Invitation -->
+        {% if not req.service_rating %}
+        <div style="background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; padding:20px; margin:20px 0;">
+            <p style="margin:0 0 12px; color:#92400e; font-weight:500;">
+                ⭐ {% trans "Vous avez apprécié notre service ? / Enjoyed our service?" %}
+            </p>
+            <p style="margin:0 0 16px; color:#92400e;">
+                {% trans "Donnez-nous 5 étoiles et laissez un commentaire positif ! / Give us 5 stars and leave a positive review!" %}
+            </p>
+            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
+                {% trans "Évaluer maintenant / Rate now" %}
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- Citation Reminder for IBTIKAR -->
+        <div style="background:#dbeafe; border:2px solid #3b82f6; border-radius:12px; padding:20px; margin:20px 0;">
+            <p style="margin:0 0 12px; color:#1e40af; font-weight:500;">
+                📚 {% trans "N'oubliez pas de citer PLAGENOR dans vos publications !" %}
+            </p>
+            <p style="margin:0; color:#1e40af; font-size:0.9rem;">
+                {% trans "Vous avez accepté la clause de citation lors du téléchargement de votre rapport." %}
+            </p>
+        </div>
+        
+        <p style="margin:24px 0 0; font-size:0.9rem; color:#6b7280;">
+            🔬 {% trans "PLAGENOR — Excellence en analyse scientifique / Excellence in scientific analysis" %}
+        </p>
     </div>
 </div>
 {% endif %}

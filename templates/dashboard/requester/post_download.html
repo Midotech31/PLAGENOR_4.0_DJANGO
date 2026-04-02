@@ -57,7 +57,9 @@
             <p class="text-muted">{% trans "Votre avis nous aide à améliorer continuellement nos services." %}</p>
         </div>
         
-        <form method="post" action="{% url 'dashboard:requester_rate' req.pk %}" style="max-width:500px; margin:0 auto;">
+        {% url 'dashboard:requester_rate' req.pk as requester_rate_url %}
+        {% if requester_rate_url %}
+        <form method="post" action="{{ requester_rate_url }}" style="max-width:500px; margin:0 auto;">
             {% csrf_token %}
             <input type="hidden" name="rating" :value="rating">
             
@@ -94,6 +96,7 @@
                 </button>
             </div>
         </form>
+        {% endif %}
         
         {% if req.service_rating %}
         <div style="margin-top:24px; padding-top:20px; border-top:1px solid #e5e7eb; text-align:center;">
@@ -120,13 +123,15 @@
 <!-- Confirmer la réception si pas encore confirmé -->
 {% if req.status == 'SENT_TO_REQUESTER' and not req.receipt_confirmed %}
 <div style="text-align:center; margin-top:16px;">
-    <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
+    {% url 'dashboard:requester_confirm' req.pk as requester_confirm_url %}
+    {% if requester_confirm_url %}
+    <form method="post" action="{{ requester_confirm_url }}" style="display:inline;">
         {% csrf_token %}
         <button type="submit" class="btn btn-success" style="padding:12px 24px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>
             {% trans "Confirmer la réception du rapport" %}
         </button>
     </form>
-</div>
+    {% endif %}
 {% endif %}
 {% endblock %}

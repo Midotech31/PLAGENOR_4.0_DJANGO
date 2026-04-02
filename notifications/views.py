@@ -1,6 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+import logging
 from .models import Notification
+
+logger = logging.getLogger('notifications')
 
 
 @login_required

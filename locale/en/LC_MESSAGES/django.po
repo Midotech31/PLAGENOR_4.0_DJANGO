@@ -3018,3 +3018,30 @@ msgstr "No requests found."
 msgid "Analyst"
 msgstr "Analyst"\n\n# New translations for admin_ops.py (Messages)\nmsgid "Request %(display_id)s transitioned to %(status)s"\nmsgstr "Request %(display_id)s transitioned to %(status)s"\n\nmsgid "Request %(display_id)s transitioned to %(status)s."\nmsgstr "Request %(display_id)s transitioned to %(status)s."\n\nmsgid "No requests selected."\nmsgstr "No requests selected."\n\nmsgid "Please select a member for assignment."\nmsgstr "Please select a member for assignment."\n\nmsgid "Member required for assignment"\nmsgstr "Member required for assignment"\n\nmsgid "Bulk assign to %(member)s"\nmsgstr "Bulk assign to %(member)s"\n\nmsgid "Assigned %(count)s requests to %(member)s"\nmsgstr "Assigned %(count)s requests to %(member)s"\n\nmsgid "Status required for transition"\nmsgstr "Status required for transition"\n\nmsgid "Please select a target status."\nmsgstr "Please select a target status."\n\nmsgid "Bulk transition"\nmsgstr "Bulk transition"\n\nmsgid "Transitioned %(count)s requests to %(status)s"\nmsgstr "Transitioned %(count)s requests to %(status)s"\n\nmsgid "Invalid action"\nmsgstr "Invalid action"\n\nmsgid "Invalid bulk action."\nmsgstr "Invalid bulk action."\n\nmsgid "Please select an analyst"\nmsgstr "Please select an analyst"\n\nmsgid "Please select an analyst."\nmsgstr "Please select an analyst."\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)"\n\nmsgid "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\nmsgstr "Request %(display_id)s is not ready for assignment (current status: %(status)s)."\n\nmsgid "Assigned to %(member)s"\nmsgstr "Assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s"\nmsgstr "Request %(display_id)s assigned to %(member)s"\n\nmsgid "Request %(display_id)s assigned to %(member)s."\nmsgstr "Request %(display_id)s assigned to %(member)s."\n\nmsgid "Assignment error: %(error)s"\nmsgstr "Assignment error: %(error)s"\n\nmsgid "Points must be positive"\nmsgstr "Points must be positive"\n\nmsgid "Points must be positive."\nmsgstr "Points must be positive."\n\nmsgid "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\nmsgstr "🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."\n\nmsgid "%(points)s points received! %(reason)s"\nmsgstr "%(points)s points received! %(reason)s"\n\nmsgid "%(points)s points received!"\nmsgstr "%(points)s points received!"\n\nmsgid "%(points)s points awarded to %(member)s"\nmsgstr "%(points)s points awarded to %(member)s"\n\nmsgid "%(points)s points awarded to %(member)s."\nmsgstr "%(points)s points awarded to %(member)s."\n\nmsgid "Reward added for %(member)s."\nmsgstr "Reward added for %(member)s."\n\nmsgid "Please select an image."\nmsgstr "Please select an image."\n\nmsgid "Encouragement received: %(message)s"\nmsgstr "Encouragement received: %(message)s"\n\nmsgid "You received an encouragement!"\nmsgstr "You received an encouragement!"\n\nmsgid "Encouragement sent to %(member)s."\nmsgstr "Encouragement sent to %(member)s."\n\nmsgid "The appointment is already confirmed, cannot modify."\nmsgstr "The appointment is already confirmed, cannot modify."\n\nmsgid "Appointment date modified: %(date)s"\nmsgstr "Appointment date modified: %(date)s"\n\nmsgid "Report validated by admin"\nmsgstr "Report validated by admin"\n\nmsgid "Report %(display_id)s validated."\nmsgstr "Report %(display_id)s validated."\n\nmsgid "Report sent back for revision. %(notes)s"\nmsgstr "Report sent back for revision. %(notes)s"\n\nmsgid "%(display_id)s: Report sent back for revision. %(notes)s"\nmsgstr "%(display_id)s: Report sent back for revision. %(notes)s"\n\nmsgid "Report %(display_id)s sent back for revision."\nmsgstr "Report %(display_id)s sent back for revision."\n\nmsgid "Please enter an amount."\nmsgstr "Please enter an amount."\n\nmsgid "Invalid amount."\nmsgstr "Invalid amount."\n\nmsgid "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\nmsgstr "Cost adjusted for %(display_id)s: %(price)s DA. %(justification)s"\n\nmsgid "Justification: %(justification)s"\nmsgstr "Justification: %(justification)s"\n\nmsgid "Quote prepared"\nmsgstr "Quote prepared"\n\nmsgid "Quote sent to client"\nmsgstr "Quote sent to client"\n\nmsgid "Quote sent to client for %(display_id)s."\nmsgstr "Quote sent to client for %(display_id)s."\n\nmsgid "Quote saved for %(display_id)s."\nmsgstr "Quote saved for %(display_id)s."\n\nmsgid "Error generating invoice: %(error)s"\nmsgstr "Error generating invoice: %(error)s"\n\nmsgid "Payment confirmed by admin"\nmsgstr "Payment confirmed by admin"\n\nmsgid "Payment confirmed for %(display_id)s."\nmsgstr "Payment confirmed for %(display_id)s."\n\nmsgid "Please upload a payment receipt."\nmsgstr "Please upload a payment receipt." 
 
+# PDF System translations
+msgid "Formulaire de Reception"
+msgstr "Reception Form"
+
+msgid "Note de Plateforme"
+msgstr "Platform Note"
+
+msgid "Note de Plateforme PDF: non generatee"
+msgstr "Platform Note PDF: not generated"
+
+msgid "Note de Plateforme (PDF)"
+msgstr "Platform Note (PDF)"
+
+msgid "Formulaire de Reception (PDF)"
+msgstr "Reception Form (PDF)"
+
+msgid "Telecharger le Formulaire IBTIKAR"
+msgstr "Download IBTIKAR Form"
+
+msgid "Le formulaire IBTIKAR sera disponible une fois votre demande approuvee."
+msgstr "The IBTIKAR form will be available once your request is approved."
+
+msgid "Formulaire IBTIKAR pas encore genere."
+msgstr "IBTIKAR form not yet generated."
+
+msgid "Note de Plateforme PDF"
+msgstr "Platform Note PDF"

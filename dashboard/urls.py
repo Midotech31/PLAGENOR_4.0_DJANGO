@@ -37,6 +37,9 @@ urlpatterns = [
     path('home/user/<int:pk>/reset/', superadmin.reset_account, name='superadmin_reset_account'),
     path('home/request/<uuid:pk>/detail/', superadmin.request_detail, name='superadmin_request_detail'),
     path('home/request/<uuid:pk>/assign/', superadmin.assign_request_direct, name='superadmin_request_assign'),
+    
+    # Finance/Payment Settings (Superadmin)
+    path('home/payment-settings/', superadmin.payment_settings, name='superadmin_payment_settings'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),
@@ -52,6 +55,11 @@ urlpatterns = [
     path('ops/quote/<uuid:pk>/', admin_ops.prepare_quote, name='admin_prepare_quote'),
     path('ops/invoice/<uuid:pk>/', admin_ops.generate_invoice, name='admin_generate_invoice'),
     path('ops/payment/<uuid:pk>/', admin_ops.confirm_payment, name='admin_confirm_payment'),
+    
+    # GENOCLAB Invoice Workflow
+    path('ops/invoice/genoclab/generate/<uuid:pk>/', admin_ops.generate_genoclab_invoice, name='admin_genoclab_invoice_generate'),
+    path('ops/invoice/genoclab/upload-signed/<uuid:pk>/', admin_ops.upload_signed_invoice, name='admin_genoclab_invoice_upload_signed'),
+    path('ops/invoice/genoclab/send/<uuid:pk>/', admin_ops.send_invoice_to_client, name='admin_genoclab_invoice_send'),
     
     # Activity Log (Task 1)
     path('ops/activity-log/', admin_ops.activity_log, name='admin_activity_log'),
@@ -100,6 +108,7 @@ urlpatterns = [
     path('requester/appointment/<uuid:pk>/confirm/', requester.confirm_appointment, name='requester_confirm_appointment'),
     path('requester/ibtikar-code/<uuid:pk>/', requester.submit_ibtikar_code, name='requester_ibtikar_code'),
     path('requester/alt-date/<uuid:pk>/', requester.suggest_alternative_date, name='requester_alt_date'),
+    path('requester/<uuid:pk>/accept-citation/', requester.accept_citation, name='requester_accept_citation'),
 
     # Client (GENOCLAB)
     path('client/', client.index, name='client'),
@@ -113,9 +122,32 @@ urlpatterns = [
     path('client/confirm/<uuid:pk>/', client.confirm_receipt, name='client_confirm'),
     path('client/rate/<uuid:pk>/', client.rate_service, name='client_rate'),
     path('client/alt-date/<uuid:pk>/', client.suggest_alternative_date, name='client_alt_date'),
+    path('client/invoice/<uuid:pk>/download/', client.download_invoice, name='client_invoice_download'),
+
+    # Client Archive (Feature 2)
+    path('dashboard/archive/<uuid:pk>/', client.archive_detail, name='client_archive_detail'),
+    path('dashboard/archive/<uuid:pk>/hide/', client.hide_from_archive, name='client_archive_hide'),
+    path('dashboard/archive/remove-selected/', client.remove_from_archive, name='client_archive_remove_selected'),
+    path('dashboard/archive/<uuid:pk>/accept-citation/', client.accept_citation, name='client_accept_citation'),
 
     # Service form API
     path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),
+    
+    # Dynamic ServiceFormField API (for IBTIKAR forms)
+    path('api/service/<uuid:service_id>/form-fields/', service_form_api.service_form_fields_api, name='service_form_fields_api'),
+    path('api/service/<uuid:service_id>/sample-table/', service_form_api.service_sample_table_columns, name='service_sample_table_columns'),
+    path('api/service/<uuid:service_id>/all-fields/', service_form_api.all_service_form_fields, name='all_service_form_fields'),
+    path('api/service/<uuid:service_id>/field/', service_form_api.service_field_create, name='service_field_create'),
+    path('api/service/<uuid:service_id>/field/reorder/', service_form_api.service_field_reorder, name='service_field_reorder'),
+    path('api/service/field/<uuid:field_id>/', service_form_api.service_field_update, name='service_field_update'),
+    path('api/service/field/<uuid:field_id>/delete/', service_form_api.service_field_delete, name='service_field_delete'),
+    path('api/service/<uuid:service_id>/field/preview/', service_form_api.service_field_preview, name='service_field_preview'),
+    
+    # Pricing Config API (Superadmin)
+    path('api/service/<uuid:service_pk>/pricing/', service_form_api.pricing_configs_list, name='service_pricing_list'),
+    path('api/service/<uuid:service_pk>/pricing/add/', service_form_api.pricing_config_create, name='service_pricing_create'),
+    path('api/pricing/<uuid:config_pk>/', service_form_api.pricing_config_update, name='service_pricing_update'),
+    path('api/pricing/<uuid:config_pk>/delete/', service_form_api.pricing_config_delete, name='service_pricing_delete'),
 
     # QR Code
     path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),

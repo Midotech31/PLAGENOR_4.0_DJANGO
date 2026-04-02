@@ -1,0 +1,6 @@
+Requirement already satisfied: docxtpl in C:\Python312\Lib\site-packages (0.20.2)
+Requirement already satisfied: python-docx in C:\Python312\Lib\site-packages (from docxtpl) (1.2.0)
+Requirement already satisfied: jinja2 in C:\Python312\Lib\site-packages (from docxtpl) (3.1.6)
+Requirement already satisfied: lxml in C:\Python312\Lib\site-packages (from docxtpl) (6.0.0)
+Requirement already satisfied: MarkupSafe>=2.0 in C:\Python312\Lib\site-packages (from jinja2->docxtpl) (3.0.2)
+Requirement already satisfied: typing_extensions>=4.9.0 in C:\Python312\Lib\site-packages (from python-docx->docxtpl) (4.15.0)
