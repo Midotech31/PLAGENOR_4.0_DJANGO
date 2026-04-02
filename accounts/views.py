@@ -331,6 +331,51 @@ def force_change_password(request):
     return render(request, 'accounts/force_change_password.html', {'form': form})
 
 
+@login_required
+def change_password(request):
+    """Allow users to change their password voluntarily."""
+    import django.forms as dj_forms
+    
+    class ChangePasswordForm(dj_forms.Form):
+        current_password = dj_forms.CharField(
+            label=_('Mot de passe actuel'),
+            widget=dj_forms.PasswordInput(attrs={'autocomplete': 'current-password'}),
+        )
+        new_password1 = dj_forms.CharField(
+            label=_('Nouveau mot de passe'),
+            widget=dj_forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+            min_length=8,
+        )
+        new_password2 = dj_forms.CharField(
+            label=_('Confirmer le mot de passe'),
+            widget=dj_forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+        )
+
+        def clean(self):
+            cleaned = super().clean()
+            p1 = cleaned.get('new_password1')
+            p2 = cleaned.get('new_password2')
+            if p1 and p2 and p1 != p2:
+                raise dj_forms.ValidationError(_('Les deux mots de passe ne correspondent pas.'))
+            return cleaned
+
+    form = ChangePasswordForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        current_password = form.cleaned_data.get('current_password')
+        if not request.user.check_password(current_password):
+            form.add_error('current_password', _('Le mot de passe actuel est incorrect.'))
+        else:
+            request.user.set_password(form.cleaned_data['new_password1'])
+            request.user.save(update_fields=['password'])
+            # Re-authenticate so the session stays valid
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, request.user)
+            messages.success(request, _('Votre mot de passe a été mis à jour avec succès.'))
+            return redirect('accounts:profile')
+
+    return render(request, 'accounts/change_password.html', {'form': form})
+
+
 def check_email(request):
     """AJAX endpoint to check if email is already registered.
     

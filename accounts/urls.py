@@ -11,4 +11,5 @@ urlpatterns = [
     path('convert-guest/', views.convert_guest, name='convert_guest'),
     path('check-email/', views.check_email, name='check_email'),
     path('force-change-password/', views.force_change_password, name='force_change_password'),
+    path('change-password/', views.change_password, name='change_password'),
 ]
