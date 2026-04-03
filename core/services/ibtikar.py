@@ -107,13 +107,28 @@ def submit_ibtikar_request(data: dict, user) -> Request:
 def get_ibtikar_request_context(user) -> dict:
     """Get context data for the IBTIKAR request form."""
     from core.financial import get_ibtikar_budget_used_by_requester
+    from core.models import Request
     from django.conf import settings
-
+    
+    # Get budget used (committed to active requests)
     used = get_ibtikar_budget_used_by_requester(user.id)
     cap = settings.IBTIKAR_BUDGET_CAP
+    
+    # Get the most recent declared balance from user's requests
+    last_request = Request.objects.filter(
+        channel='IBTIKAR',
+        requester=user
+    ).order_by('-created_at').first()
+    
+    declared = float(last_request.declared_ibtikar_balance) if last_request and last_request.declared_ibtikar_balance else cap
+    
+    # Calculate remaining (declared - used), minimum 0
+    remaining = max(0, declared - used)
+    
     return {
+        'declared': declared,
         'budget_used': used,
         'budget_cap': cap,
-        'budget_remaining': max(0, cap - used),
+        'budget_remaining': remaining,
         'budget_pct': round(used / cap * 100, 1) if cap > 0 else 0,
     }

@@ -21,6 +21,18 @@
     {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label=lbl_rejected color='red' %}
 </div>
 
+<!-- IBTIKAR Budget Card -->
+{% if budget_context %}
+<div class="kpi-grid" style="margin-top: 16px;">
+    {% trans "Budget déclaré" as lbl_declared %}
+    {% trans "Engagé" as lbl_committed %}
+    {% trans "Disponible" as lbl_available %}
+    {% include 'includes/kpi_card.html' with icon='wallet' value=budget_context.declared|default:0 label=lbl_declared color='purple' %}
+    {% include 'includes/kpi_card.html' with icon='credit-card' value=budget_context.budget_used label=lbl_committed color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='piggy-bank' value=budget_context.budget_remaining label=lbl_available color='green' %}
+</div>
+{% endif %}
+
     <!-- Tab Navigation -->
     <div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
         <div class="tab-list" style="margin-bottom: 24px;">
@@ -83,7 +95,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000" placeholder="{% trans 'Solde IBTIKAR déclaré (DA)' %}">
+                            <label for="declared_balance" style="font-weight: 500;">{% trans "Budget IBTIKAR restant (DA)" %} *</label>
+                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000" required placeholder="{% trans 'Entrez votre budget restant' %}">
+                            <small class="text-muted" style="display: block; margin-top: 4px;">{% trans "Entrez votre budget restant tel qu'affiché sur votre compte IBTIKAR-DGRSDT" %}</small>
                         </div>
                     </div>
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
