@@ -5,21 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from .choices import ALL_POSITION_CHOICES
 
 
-class SoftDeleteUserManager(models.Manager):
-    """Manager that excludes soft-deleted users by default."""
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(is_deleted=False)
-    
-    def all_with_deleted(self):
-        """Return all users including soft-deleted ones."""
-        return super().get_queryset()
-    
-    def deleted_only(self):
-        """Return only soft-deleted users."""
-        return super().get_queryset().filter(is_deleted=True)
-
-
 class UserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         if not username:
@@ -41,10 +26,25 @@ class UserManager(BaseUserManager):
         return self.create_user(username, email, password, **extra_fields)
 
 
+class SoftDeleteUserManager(UserManager):
+    """Manager that excludes soft-deleted users by default but inherits all auth methods."""
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+    
+    def all_with_deleted(self):
+        """Return all users including soft-deleted ones."""
+        return super().get_queryset()
+    
+    def deleted_only(self):
+        """Return only soft-deleted users."""
+        return super().get_queryset().filter(is_deleted=True)
+
+
 class User(AbstractUser):
     
     objects = SoftDeleteUserManager()
-    all_objects = models.Manager()
+    all_objects = UserManager()
     
     is_deleted = models.BooleanField(default=False, verbose_name=_('Soft deleted'))
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Deleted at'))
