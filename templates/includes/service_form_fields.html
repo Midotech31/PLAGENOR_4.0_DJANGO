@@ -95,7 +95,9 @@
             <tr>
                 {% for col in sample_table.columns %}
                 <td style="padding:4px; border:1px solid #e2e8f0;">
-                    {% if col.type == 'select' or col.type == 'enum' or col.type == 'dropdown' %}
+                    {% if col.name|lower == 'n°' or col.name|lower == 'no' or col.name|lower == 'num' %}
+                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem; background:#f8fafc;" value="1" readonly>
+                    {% elif col.type == 'select' or col.type == 'enum' or col.type == 'dropdown' %}
                     <select name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
                         <option value="">{% trans "Choisir" %}</option>
                         {% for opt in col.options %}
@@ -105,12 +107,12 @@
                     {% elif col.type == 'number' or col.type == 'integer' or col.type == 'float' %}
                     <input type="number" name="sample_0_{{ col.name }}" class="form-control" step="{% if col.type == 'float' %}0.01{% else %}1{% endif %}" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
                     {% else %}
-                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;">
+                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem; min-width: 120px;" {% if col.name|lower == 'code' %}maxlength="50"{% endif %}>
                     {% endif %}
                 </td>
                 {% endfor %}
                 <td style="padding:4px; border:1px solid #e2e8f0; text-align:center;">
-                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); updateCostEstimate();" style="padding:2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); reindexSampleRows(); updateCostEstimate();" style="padding:2px 8px;">&times;</button>
                 </td>
             </tr>
         </tbody>
@@ -221,7 +223,11 @@
             });
         } else if (pricingData && pricingData.base_price) {
             var bp = pricingData.base_price;
-            baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
+            if (typeof bp === 'number') {
+                baseCost = bp;
+            } else if (typeof bp === 'object') {
+                baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
+            }
         }
 
         document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
@@ -431,7 +437,117 @@
         });
     });
 
+    // Sample table row management with auto-numbering
+    window.addSampleRow = function() {
+        var tbody = document.getElementById('sample-table-body');
+        if (!tbody) return;
+        
+        var rowCount = tbody.querySelectorAll('tr').length;
+        var newRow = document.createElement('tr');
+        
+        // Get column definitions from the table header
+        var headers = document.querySelectorAll('#sample-table thead th[data-col]');
+        var cols = [];
+        headers.forEach(function(th) {
+            cols.push({
+                name: th.getAttribute('data-col'),
+                type: th.getAttribute('data-type') || 'text'
+            });
+        });
+        
+        cols.forEach(function(col) {
+            var td = document.createElement('td');
+            td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
+            
+            var input;
+            if (col.name.toLowerCase() === 'n°' || col.name.toLowerCase() === 'n°' || col.name.toLowerCase() === 'no' || col.name.toLowerCase() === 'num') {
+                // Auto-numbered column - readonly
+                input = document.createElement('input');
+                input.type = 'text';
+                input.name = 'sample_' + rowCount + '_' + col.name;
+                input.className = 'form-control';
+                input.style.cssText = 'font-size:0.85rem; background:#f8fafc;';
+                input.value = rowCount + 1;
+                input.readOnly = true;
+            } else if (col.type === 'select' || col.type === 'enum' || col.type === 'dropdown') {
+                input = document.createElement('select');
+                input.name = 'sample_' + rowCount + '_' + col.name;
+                input.className = 'form-control';
+                input.style.cssText = 'font-size:0.85rem;';
+                input.onchange = function() { handlePricingChange(this); };
+                // Options will be copied from first row
+                var firstSelect = tbody.querySelector('select[name*="' + col.name + '"]');
+                if (firstSelect) {
+                    input.innerHTML = firstSelect.innerHTML;
+                }
+            } else if (col.type === 'number' || col.type === 'integer' || col.type === 'float') {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.name = 'sample_' + rowCount + '_' + col.name;
+                input.className = 'form-control';
+                input.style.cssText = 'font-size:0.85rem;';
+                input.step = (col.type === 'float') ? '0.01' : '1';
+                input.onchange = function() { handlePricingChange(this); };
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.name = 'sample_' + rowCount + '_' + col.name;
+                input.className = 'form-control';
+                input.style.cssText = 'font-size:0.85rem; min-width: 120px;';
+                if (col.name.toLowerCase() === 'code') {
+                    input.maxLength = 50;
+                }
+            }
+            
+            td.appendChild(input);
+            newRow.appendChild(td);
+        });
+        
+        // Add delete button
+        var deleteTd = document.createElement('td');
+        deleteTd.style.cssText = 'padding:4px; border:1px solid #e2e8f0; text-align:center;';
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-sm btn-danger';
+        deleteBtn.style.cssText = 'padding:2px 8px;';
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.onclick = function() {
+            newRow.remove();
+            reindexSampleRows();
+            updateCostEstimate();
+        };
+        deleteTd.appendChild(deleteBtn);
+        newRow.appendChild(deleteTd);
+        
+        tbody.appendChild(newRow);
+        reindexSampleRows();
+        updateCostEstimate();
+    };
+    
+    window.reindexSampleRows = function() {
+        var tbody = document.getElementById('sample-table-body');
+        if (!tbody) return;
+        
+        var rows = tbody.querySelectorAll('tr');
+        rows.forEach(function(row, index) {
+            // Update row number in N° column
+            var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"], input[name*="N°"]');
+            if (numInput) {
+                numInput.value = index + 1;
+            }
+            // Update all input names to reflect new row index
+            var inputs = row.querySelectorAll('input, select');
+            inputs.forEach(function(input) {
+                var match = input.name.match(/^sample_(\d+)_(.+)$/);
+                if (match) {
+                    input.name = 'sample_' + index + '_' + match[2];
+                }
+            });
+        });
+    };
+
     // Initial evaluation
     evaluateConditionalLogic();
+    updateCostEstimate();
 })();
 </script>
