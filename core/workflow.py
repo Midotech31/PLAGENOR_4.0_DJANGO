@@ -72,6 +72,76 @@ def get_allowed_transitions(request_obj):
     return list(get_allowed_next_states(request_obj.channel, request_obj.status))
 
 
+def _award_completion_points(request_obj, to_status, actor):
+    """Award 50 points to assigned member when request reaches final state.
+    
+    - IBTIKAR: CLOSED (service completed and closed)
+    - GENOCLAB: ARCHIVED (service completed and archived)
+    
+    Prevents double awards by checking completion_points_awarded flag.
+    """
+    try:
+        # Check if this is a completion status
+        completion_statuses = {'CLOSED', 'ARCHIVED'}
+        if to_status not in completion_statuses:
+            return
+        
+        # Check if points already awarded (prevents double award on reopen/close cycle)
+        if request_obj.completion_points_awarded:
+            logger.debug(
+                f"Completion points already awarded for request {request_obj.display_id}, skipping"
+            )
+            return
+        
+        # Check if there's an assigned member
+        if not request_obj.assigned_to:
+            logger.debug(
+                f"No assigned member for request {request_obj.display_id}, skipping completion points"
+            )
+            return
+        
+        member = request_obj.assigned_to
+        
+        # Determine reason based on channel
+        if request_obj.channel == 'IBTIKAR' and to_status == 'CLOSED':
+            reason = f"Clôture de la demande IBTIKAR {request_obj.display_id}"
+        elif request_obj.channel == 'GENOCLAB' and to_status == 'ARCHIVED':
+            reason = f"Archivage de la demande GENOCLAB {request_obj.display_id}"
+        else:
+            reason = f"Complétion du service {request_obj.display_id}"
+        
+        # Award points (this also triggers badge/milestone/reward notifications)
+        member.award_points(50, reason=reason, awarded_by=actor, save=True)
+        
+        # Record in PointsHistory
+        from accounts.models import PointsHistory
+        PointsHistory.objects.create(
+            member=member,
+            points=50,
+            reason=reason,
+            awarded_by=actor,
+        )
+        
+        # Update the flag to prevent double awards
+        request_obj.completion_points_awarded = True
+        request_obj.save(update_fields=['completion_points_awarded'])
+        
+        logger.info(
+            f"Awarded 50 completion points to member {member} for request {request_obj.display_id}"
+        )
+        
+    except Exception as e:
+        # Log error but don't break the workflow
+        logger.exception(
+            f"Failed to award completion points for request {request_obj.display_id}: {str(e)}",
+            extra={
+                'request_id': str(request_obj.id),
+                'request_display_id': request_obj.display_id,
+                'to_status': to_status,
+            }
+        )
+
+
 def check_role_permission(request_obj, to_status, actor) -> bool:
     """Check if actor's role allows this transition. SUPER_ADMIN always allowed."""
     if getattr(actor, 'role', '') == 'SUPER_ADMIN':
@@ -110,6 +180,9 @@ def transition(request_obj, to_status, actor, notes='', force=False):
 
     request_obj.status = to_status
     request_obj.save(update_fields=['status', 'updated_at'])
+
+    # Award completion points to assigned member
+    _award_completion_points(request_obj, to_status, actor)
 
     RequestHistory.objects.create(
         request=request_obj,

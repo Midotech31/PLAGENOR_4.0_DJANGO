@@ -1,20 +1,39 @@
 from .models import Notification
 
 
-def _get_client_link_url(request_obj):
-    """Get the correct link URL based on channel."""
+def _get_request_link_url(request_obj, user=None):
+    """Get the correct link URL based on request channel and user role.
+    
+    Returns role-appropriate URL for viewing the request.
+    """
+    if user and hasattr(user, 'role'):
+        role = user.role
+        if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
+            return f"/dashboard/ops/request/{request_obj.pk}/"
+        elif role == 'MEMBER':
+            return f"/dashboard/analyst/request/{request_obj.pk}/"
+        elif role == 'FINANCE':
+            return f"/dashboard/ops/request/{request_obj.pk}/"
+    
     if request_obj.channel == 'GENOCLAB':
         return f"/dashboard/client/request/{request_obj.pk}/"
+    elif request_obj.channel == 'IBTIKAR':
+        return f"/dashboard/requester/request/{request_obj.pk}/"
     return f"/dashboard/ops/request/{request_obj.pk}/"
+
+
+def _get_client_link_url(request_obj):
+    """Legacy function for backward compatibility. Use _get_request_link_url instead."""
+    return _get_request_link_url(request_obj)
 
 
 def notify_user(user, message, notification_type='INFO', request_obj=None,
                link_url='', link_text='', action_url='', action_text=''):
     """Create an in-app notification for a user with deep linking support."""
-    # Auto-generate link URL if request_obj is provided
     if not link_url and request_obj:
-        link_url = _get_client_link_url(request_obj)
-        link_text = f"Voir la demande {request_obj.display_id}"
+        link_url = _get_request_link_url(request_obj, user)
+        if not link_text:
+            link_text = f"Voir la demande {request_obj.display_id}"
     
     Notification.objects.create(
         user=user,
@@ -90,13 +109,11 @@ def notify_workflow_transition(request_obj, to_status, actor):
         targets = entry['targets']
         action_text = entry.get('action_text', '')
         action_url = entry.get('action_url', '')
-        
-        # Generate link URL for request
-        link_url = _get_client_link_url(request_obj)
         link_text = f"Demande {request_obj.display_id}"
         
         for target in targets:
             if target and target != actor:
+                link_url = _get_request_link_url(request_obj, target)
                 notify_user(
                     target,
                     f"{msg} — {request_obj.display_id}",
@@ -111,7 +128,7 @@ def notify_workflow_transition(request_obj, to_status, actor):
 
 def notify_assignment(request_obj, analyst, assigned_by=None):
     """Send assignment notification with deep linking."""
-    link_url = _get_client_link_url(request_obj)
+    link_url = _get_request_link_url(request_obj, analyst)
     link_text = f"Voir la demande {request_obj.display_id}"
     action_url = f"/dashboard/ops/request/{request_obj.pk}/accept/"
     
@@ -129,11 +146,10 @@ def notify_assignment(request_obj, analyst, assigned_by=None):
 
 def notify_status_change(request_obj, old_status, new_status, user=None):
     """Send status change notification with deep linking."""
-    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
-    # Notify the requester
     if request_obj.requester and request_obj.requester != user:
+        link_url = _get_request_link_url(request_obj, request_obj.requester)
         notify_user(
             request_obj.requester,
             f"Statut de votre demande {request_obj.display_id} changé: {old_status} → {new_status}",
@@ -146,10 +162,10 @@ def notify_status_change(request_obj, old_status, new_status, user=None):
 
 def notify_report_ready(request_obj):
     """Send notification when report is ready with deep linking."""
-    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
     if request_obj.requester:
+        link_url = _get_request_link_url(request_obj, request_obj.requester)
         notify_user(
             request_obj.requester,
             f"Le rapport pour votre demande {request_obj.display_id} est prêt",
@@ -163,10 +179,10 @@ def notify_report_ready(request_obj):
 
 def notify_payment_required(request_obj, amount):
     """Send payment required notification."""
-    link_url = _get_client_link_url(request_obj)
     link_text = f"Demande {request_obj.display_id}"
     
     if request_obj.requester:
+        link_url = _get_request_link_url(request_obj, request_obj.requester)
         notify_user(
             request_obj.requester,
             f"Un paiement de {amount:,.0f} DZD est requis pour {request_obj.display_id}",
@@ -264,12 +280,11 @@ def notify_payment_request(request_obj):
     This is triggered when analysis is finished - client must pay before
     receiving the analysis report.
     """
-    link_url = f"/dashboard/client/request/{request_obj.pk}/"
     link_text = f"Demande {request_obj.display_id}"
     
     if request_obj.requester:
-        # Calculate the amount to pay
         amount = request_obj.admin_validated_price or request_obj.quote_amount or 0
+        link_url = _get_request_link_url(request_obj, request_obj.requester)
         
         notify_user(
             request_obj.requester,
@@ -294,7 +309,6 @@ def notify_admin_task_declined(request_obj, declined_by, reason=''):
     
     reason_text = f" | Raison: {reason}" if reason else ""
     
-    # Notify all admins
     admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'])
     
     for admin in admins:
@@ -317,15 +331,11 @@ def notify_sample_received(request_obj):
     if not request_obj.requester:
         return
     
-    # Determine tracking number/ID based on channel
     if request_obj.channel == 'GENOCLAB':
         tracking_number = request_obj.tracking_number or request_obj.display_id
-        channel_name = "GENOCLAB"
     else:
         tracking_number = request_obj.ibtikar_id or request_obj.display_id
-        channel_name = "IBTIKAR"
     
-    # Bilingual message
     message_fr = (
         f"✓ Échantillon reçu pour {request_obj.display_id} ! "
         f"N° suivi: {tracking_number}. "
@@ -337,19 +347,14 @@ def notify_sample_received(request_obj):
         f"Check your profile or track online."
     )
     
-    # Get profile URL based on user role
-    if request_obj.requester.role == 'CLIENT':
-        profile_url = f"/dashboard/client/request/{request_obj.pk}/"
-    else:
-        profile_url = f"/dashboard/requester/request/{request_obj.pk}/"
+    link_url = _get_request_link_url(request_obj, request_obj.requester)
     
-    # Create notification with both links
     notify_user(
         request_obj.requester,
         f"{message_fr} | {message_en}",
         'STATUS_CHANGE',
         request_obj,
-        link_url=profile_url,
+        link_url=link_url,
         link_text="Voir ma demande / View my request",
         action_url="/track/",
         action_text="Suivre en ligne / Track online",

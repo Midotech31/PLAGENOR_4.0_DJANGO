@@ -222,7 +222,21 @@ class ServiceFormField(models.Model):
         default='',
         help_text='English notice shown to user about additional charges'
     )
-    
+
+    # Conditional Logic - Field visibility/requirement based on other field values
+    conditional_logic = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='Conditional rules: [{"trigger_field": "field_name", "trigger_value": "value", "actions": ["show", "make_required"]}]'
+    )
+
+    # Option-level pricing for multi-choice fields
+    option_pricing = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Per-option pricing: {"option_value": 500, "other_option": 1000} - for multi-select fields'
+    )
+
     class Meta:
         db_table = 'service_form_fields'
         ordering = ['field_category', 'order', 'sort_order', 'pk']
@@ -551,6 +565,9 @@ class Request(models.Model):
     
     # Client archive visibility (True = hidden from requester's archive list)
     hidden_from_archive = models.BooleanField(default=False, verbose_name=_('Hidden from archive'))
+    
+    # Points awarded for service completion (prevents double awards)
+    completion_points_awarded = models.BooleanField(default=False, verbose_name=_('Completion points awarded'))
     
     # GENOCLAB Invoice fields
     generated_invoice = models.FileField(
