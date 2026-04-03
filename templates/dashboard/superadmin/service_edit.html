@@ -58,11 +58,11 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div class="form-group">
                         <label>{% trans "Prix IBTIKAR (DA)" %}</label>
-                        <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                        <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price|default:0|floatformat:2 }}">
                     </div>
                     <div class="form-group">
                         <label>{% trans "Prix GENOCLAB (DA)" %}</label>
-                        <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
+                        <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price|default:0|floatformat:2 }}">
                     </div>
                 </div>
 
