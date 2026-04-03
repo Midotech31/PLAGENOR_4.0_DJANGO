@@ -10,9 +10,28 @@
         perspective: 1000px;
         cursor: pointer;
         transition: transform 0.3s ease;
+        position: relative;
     }
     .badge-3d:hover {
         transform: translateY(-4px);
+    }
+    .badge-3d.current {
+        transform: scale(1.08);
+    }
+    .badge-3d.current::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #7c3aed, #f59e0b, #ec4899, #7c3aed);
+        background-size: 300% 300%;
+        animation: rainbow-border 2s linear infinite;
+        z-index: -1;
+    }
+    @keyframes rainbow-border {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     .badge-3d .badge-icon {
         width: 80px;
@@ -33,13 +52,21 @@
     .badge-3d.earned .badge-icon {
         animation: badge-glow 2s ease-in-out infinite;
     }
+    .badge-3d.current .badge-icon {
+        animation: badge-pulse 1.5s ease-in-out infinite;
+    }
     @keyframes badge-glow {
         0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(124, 58, 237, 0); }
         50% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 20px 4px rgba(124, 58, 237, 0.3); }
     }
+    @keyframes badge-pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+        50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(124, 58, 237, 0.6); }
+    }
     .badge-3d.locked .badge-icon {
-        opacity: 0.5;
+        opacity: 0.4;
         filter: grayscale(100%);
+        animation: none;
     }
     .badge-name {
         font-size: 0.9rem;
@@ -52,6 +79,21 @@
         font-size: 0.75rem;
         text-align: center;
         color: #64748b;
+    }
+    .badge-current-label {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .badge-level {
         font-size: 0.8rem;
@@ -717,8 +759,9 @@
             <div class="card-body">
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;">
                     {% with lvl=profile.milestone_level|default:1 pts=profile.total_points %}
-                    <!-- Level 1: Bronze -->
-                    <div class="badge-3d {% if lvl >= 1 %}earned{% else %}locked{% endif %}" data-level="1">
+                    <!-- Level 1: Bronze (0 pts) - Circle -->
+                    <div class="badge-3d {% if lvl >= 1 %}earned{% else %}locked{% endif %} {% if lvl == 1 %}current{% endif %}" data-level="1" data-threshold="0">
+                        {% if lvl == 1 %}<span class="badge-current-label">Actuel</span>{% endif %}
                         <div class="badge-icon" style="background: {% if lvl >= 1 %}linear-gradient(135deg, #cd7f32, #a0522d){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
                                 <circle cx="12" cy="12" r="10" opacity="0.3"/>
@@ -728,19 +771,20 @@
                         <div class="badge-name">Bronze</div>
                         <div class="badge-points">0 pts</div>
                     </div>
-                    <!-- Level 2: Silver -->
-                    <div class="badge-3d {% if lvl >= 2 %}earned{% else %}locked{% endif %}" data-level="2">
+                    <!-- Level 2: Silver (1000 pts) - Shield -->
+                    <div class="badge-3d {% if lvl >= 2 %}earned{% else %}locked{% endif %} {% if lvl == 2 %}current{% endif %}" data-level="2" data-threshold="1000">
+                        {% if lvl == 2 %}<span class="badge-current-label">Actuel</span>{% endif %}
                         <div class="badge-icon" style="background: {% if lvl >= 2 %}linear-gradient(135deg, #c0c0c0, #808080){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <circle cx="12" cy="12" r="10" opacity="0.3"/>
-                                <circle cx="12" cy="12" r="6"/>
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
                         </div>
                         <div class="badge-name">Silver</div>
                         <div class="badge-points">1,000 pts</div>
                     </div>
-                    <!-- Level 3: Gold -->
-                    <div class="badge-3d {% if lvl >= 3 %}earned{% else %}locked{% endif %}" data-level="3">
+                    <!-- Level 3: Gold (2000 pts) - 5-Point Star -->
+                    <div class="badge-3d {% if lvl >= 3 %}earned{% else %}locked{% endif %} {% if lvl == 3 %}current{% endif %}" data-level="3" data-threshold="2000">
+                        {% if lvl == 3 %}<span class="badge-current-label">Actuel</span>{% endif %}
                         <div class="badge-icon" style="background: {% if lvl >= 3 %}linear-gradient(135deg, #ffd700, #daa520){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -749,72 +793,83 @@
                         <div class="badge-name">Gold</div>
                         <div class="badge-points">2,000 pts</div>
                     </div>
-                    <!-- Level 4: Platinum -->
-                    <div class="badge-3d {% if lvl >= 4 %}earned{% else %}locked{% endif %}" data-level="4">
-                        <div class="badge-icon" style="background: {% if lvl >= 4 %}linear-gradient(135deg, #e5e4e2, #b4b4b4){% else %}#475569{% endif %};">
+                    <!-- Level 4: Platinum (3000 pts) - Hexagon -->
+                    <div class="badge-3d {% if lvl >= 4 %}earned{% else %}locked{% endif %} {% if lvl == 4 %}current{% endif %}" data-level="4" data-threshold="3000">
+                        {% if lvl == 4 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 4 %}linear-gradient(135deg, #8B5CF6, #6d28d9){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                             </svg>
                         </div>
                         <div class="badge-name">Platinum</div>
                         <div class="badge-points">3,000 pts</div>
                     </div>
-                    <!-- Level 5: Diamond -->
-                    <div class="badge-3d {% if lvl >= 5 %}earned{% else %}locked{% endif %}" data-level="5">
-                        <div class="badge-icon" style="background: {% if lvl >= 5 %}linear-gradient(135deg, #b9f2ff, #7dd3fc){% else %}#475569{% endif %};">
+                    <!-- Level 5: Diamond (4000 pts) - Diamond Gem -->
+                    <div class="badge-3d {% if lvl >= 5 %}earned{% else %}locked{% endif %} {% if lvl == 5 %}current{% endif %}" data-level="5" data-threshold="4000">
+                        {% if lvl == 5 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 5 %}linear-gradient(135deg, #3B82F6, #1d4ed8){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2L2 9l10 13 10-13-10-7z"/>
+                                <path d="M6 2l-4 8 10 12L22 10l-4-8H6z"/>
+                                <path d="M6 2h12l-2 6h-8l-2-6z" opacity="0.4"/>
                             </svg>
                         </div>
                         <div class="badge-name">Diamond</div>
                         <div class="badge-points">4,000 pts</div>
                     </div>
-                    <!-- Level 6: Master -->
-                    <div class="badge-3d {% if lvl >= 6 %}earned{% else %}locked{% endif %}" data-level="6">
-                        <div class="badge-icon" style="background: {% if lvl >= 6 %}linear-gradient(135deg, #7c3aed, #5b21b6){% else %}#475569{% endif %};">
+                    <!-- Level 6: Master (5000 pts) - Crown -->
+                    <div class="badge-3d {% if lvl >= 6 %}earned{% else %}locked{% endif %} {% if lvl == 6 %}current{% endif %}" data-level="6" data-threshold="5000">
+                        {% if lvl == 6 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 6 %}linear-gradient(135deg, #EF4444, #b91c1c){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                <path d="M2 20h20v2H2v-2zm2-8l4 4 4-8 4 8 4-4v8H4v-8z"/>
                             </svg>
                         </div>
                         <div class="badge-name">Master</div>
                         <div class="badge-points">5,000 pts</div>
                     </div>
-                    <!-- Level 7: Grand Master -->
-                    <div class="badge-3d {% if lvl >= 7 %}earned{% else %}locked{% endif %}" data-level="7">
-                        <div class="badge-icon" style="background: {% if lvl >= 7 %}linear-gradient(135deg, #f59e0b, #d97706){% else %}#475569{% endif %};">
+                    <!-- Level 7: Grand Master (6000 pts) - Eagle Wings -->
+                    <div class="badge-3d {% if lvl >= 7 %}earned{% else %}locked{% endif %} {% if lvl == 7 %}current{% endif %}" data-level="7" data-threshold="6000">
+                        {% if lvl == 7 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 7 %}linear-gradient(135deg, #F59E0B, #d97706){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                <path d="M12 12c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2s2 .9 2 2v4c0 1.1-.9 2-2 2z"/>
+                                <path d="M4 8c0 4 3 6 8 6s8-2 8-6c0 0-3 2-8 2s-8-2-8-2z" opacity="0.6"/>
+                                <path d="M2 14c2-2 4-3 10-3s8 1 10 3c-2 2-4 3-10 3s-8-1-10-3z"/>
                             </svg>
                         </div>
                         <div class="badge-name">Grand Master</div>
                         <div class="badge-points">6,000 pts</div>
                     </div>
-                    <!-- Level 8: Elite -->
-                    <div class="badge-3d {% if lvl >= 8 %}earned{% else %}locked{% endif %}" data-level="8">
-                        <div class="badge-icon" style="background: {% if lvl >= 8 %}linear-gradient(135deg, #ef4444, #dc2626){% else %}#475569{% endif %};">
+                    <!-- Level 8: Elite (7000 pts) - Lightning Bolt -->
+                    <div class="badge-3d {% if lvl >= 8 %}earned{% else %}locked{% endif %} {% if lvl == 8 %}current{% endif %}" data-level="8" data-threshold="7000">
+                        {% if lvl == 8 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 8 %}linear-gradient(135deg, #10B981, #059669){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                             </svg>
                         </div>
                         <div class="badge-name">Elite</div>
                         <div class="badge-points">7,000 pts</div>
                     </div>
-                    <!-- Level 9: Champion -->
-                    <div class="badge-3d {% if lvl >= 9 %}earned{% else %}locked{% endif %}" data-level="9">
-                        <div class="badge-icon" style="background: {% if lvl >= 9 %}linear-gradient(135deg, #0ea5e9, #0284c7){% else %}#475569{% endif %};">
+                    <!-- Level 9: Champion (8000 pts) - Laurel Wreath -->
+                    <div class="badge-3d {% if lvl >= 9 %}earned{% else %}locked{% endif %} {% if lvl == 9 %}current{% endif %}" data-level="9" data-threshold="8000">
+                        {% if lvl == 9 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 9 %}linear-gradient(135deg, #EC4899, #db2777){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M6 9h12"/>
+                                <ellipse cx="7" cy="12" rx="3" ry="6" transform="rotate(-20 7 12)"/>
+                                <ellipse cx="17" cy="12" rx="3" ry="6" transform="rotate(20 17 12)"/>
+                                <circle cx="12" cy="12" r="3"/>
                             </svg>
                         </div>
                         <div class="badge-name">Champion</div>
                         <div class="badge-points">8,000 pts</div>
                     </div>
-                    <!-- Level 10: Legend -->
-                    <div class="badge-3d {% if lvl >= 10 %}earned{% else %}locked{% endif %}" data-level="10">
-                        <div class="badge-icon" style="background: {% if lvl >= 10 %}linear-gradient(135deg, #facc15, #eab308){% else %}#475569{% endif %};">
+                    <!-- Level 10: Legend (9000 pts) - Flame Phoenix -->
+                    <div class="badge-3d {% if lvl >= 10 %}earned{% else %}locked{% endif %} {% if lvl == 10 %}current{% endif %}" data-level="10" data-threshold="9000">
+                        {% if lvl == 10 %}<span class="badge-current-label">Actuel</span>{% endif %}
+                        <div class="badge-icon" style="background: {% if lvl >= 10 %}linear-gradient(135deg, #F97316, #ea580c){% else %}#475569{% endif %};">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 40px; height: 40px; color: white;">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                <circle cx="12" cy="12" r="3" fill="#fff" opacity="0.3"/>
+                                <path d="M12 22c-4 0-7-3-7-7 0-2 1-4 3-6 0 2 1 3 2 3 0-3 2-6 5-9 0 3 1 5 2 7 1-2 2-4 2-4 2 3 3 6 3 9 0 4-3 7-7 7h-3z"/>
                             </svg>
                         </div>
                         <div class="badge-name">Legend</div>
