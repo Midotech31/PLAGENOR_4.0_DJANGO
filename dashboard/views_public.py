@@ -87,9 +87,22 @@ def service_detail(request, service_code):
     from core.registry import get_service_def
     service = get_object_or_404(Service, code=service_code, active=True)
     yaml_def = get_service_def(service_code)
+
+    # Get pricing from ServicePricing
+    pricing_configs = service.pricing_configs.filter(is_active=True).order_by('priority', 'pk')
+    service_pricing = []
+    for cfg in pricing_configs:
+        service_pricing.append({
+            'type': cfg.pricing_type,
+            'name': cfg.name,
+            'amount': cfg.amount,
+            'channel': cfg.channel,
+        })
+
     return render(request, 'pages/service_detail.html', {
         'service': service,
         'yaml_def': yaml_def,
+        'service_pricing': service_pricing,
     })
 
 
@@ -138,61 +151,9 @@ def guest_submit(request):
                 'services': services_qs,
             })
 
-        # Generate display_id with atomic transaction to prevent race conditions
-        year = datetime.now().year
-        prefix = 'IBT' if channel == 'IBTIKAR' else 'GCL'
-        guest_token = uuid_lib.uuid4()
-        
-        # Atomic transaction with retry loop to handle concurrent requests
-        max_retries = 5
-        for attempt in range(max_retries):
-            try:
-                with transaction.atomic():
-                    # Lock the rows for this channel to prevent race conditions
-                    existing_count = Request.objects.filter(
-                        channel=channel, 
-                        created_at__year=year
-                    ).select_for_update().count()
-                    count = existing_count + 1
-                    display_id = f"{prefix}-{year}-{count:04d}"
-                    
-                    # Check if display_id already exists (edge case)
-                    if Request.objects.filter(display_id=display_id).exists():
-                        continue  # Retry with incremented count
-                    
-                    # Create the request within the transaction
-                    req = Request.objects.create(
-                        display_id=display_id,
-                        title=title or f"Demande {service.name}",
-                        description=description,
-                        channel=channel,
-                        status='REQUEST_CREATED',
-                        urgency=urgency,
-                        service=service,
-                        quote_amount=quote,
-                        submitted_as_guest=True,
-                        guest_token=guest_token,
-                        guest_name=guest_name,
-                        guest_email=guest_email,
-                        guest_phone=guest_phone,
-                        service_params=service_params,
-                        sample_table=sample_table_data,
-                        requester_data=requester_data,
-                    )
-                    break
-            except IntegrityError:
-                if attempt < max_retries - 1:
-                    continue
-                raise
-        
-        RequestHistory.objects.create(
-            request=req,
-            from_status='',
-            to_status='REQUEST_CREATED',
-        )
-
-        # Collect YAML parameter values
+        # Collect service parameters
         service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+        
         # Collect sample table data
         sample_data = {}
         for key, val in request.POST.items():
@@ -218,10 +179,93 @@ def guest_submit(request):
             if declared_balance:
                 requester_data['declared_ibtikar_balance'] = declared_balance
 
-        quote = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+        # Server-side price calculation with validation
+        from core.pricing import validate_and_calculate_price
+        from decimal import Decimal
+        
+        submitted_price = request.POST.get('submitted_price')
+        if submitted_price:
+            try:
+                submitted_price = Decimal(submitted_price)
+            except (ValueError, TypeError):
+                submitted_price = None
+        
+        price_validation = validate_and_calculate_price(
+            service=service,
+            channel=channel,
+            sample_table=sample_table_data,
+            service_params=service_params,
+            urgency=urgency,
+            submitted_price=submitted_price,
+        )
+        
+        # Use server-calculated price (authoritative)
+        quote_amount = price_validation['server_price']
+        
+        # Store pricing breakdown for audit trail
+        pricing_breakdown = {
+            'source': price_validation['price_source'],
+            'server_price': quote_amount,
+            'submitted_price': float(submitted_price) if submitted_price else None,
+            'mismatch_detected': price_validation['mismatch_detected'],
+            'cost_breakdown': price_validation.get('cost_result', {}),
+            'modifiers_applied': price_validation.get('modifier_result', {}).get('modifiers_applied', []),
+        }
 
-        # Request was already created inside the atomic transaction above
-        # RequestHistory was already created inside the atomic transaction above
+        # Generate display_id with atomic transaction to prevent race conditions
+        year = datetime.now().year
+        prefix = 'IBT' if channel == 'IBTIKAR' else 'GCL'
+        guest_token = uuid_lib.uuid4()
+        
+        # Atomic transaction with retry loop to handle concurrent requests
+        max_retries = 5
+        req = None
+        for attempt in range(max_retries):
+            try:
+                with transaction.atomic():
+                    # Lock the rows for this channel to prevent race conditions
+                    existing_count = Request.objects.filter(
+                        channel=channel, 
+                        created_at__year=year
+                    ).select_for_update().count()
+                    count = existing_count + 1
+                    display_id = f"{prefix}-{year}-{count:04d}"
+                    
+                    # Check if display_id already exists (edge case)
+                    if Request.objects.filter(display_id=display_id).exists():
+                        continue  # Retry with incremented count
+                    
+                    # Create the request within the transaction
+                    req = Request.objects.create(
+                        display_id=display_id,
+                        title=title or f"Demande {service.name}",
+                        description=description,
+                        channel=channel,
+                        status='REQUEST_CREATED',
+                        urgency=urgency,
+                        service=service,
+                        quote_amount=quote_amount,
+                        submitted_as_guest=True,
+                        guest_token=guest_token,
+                        guest_name=guest_name,
+                        guest_email=guest_email,
+                        guest_phone=guest_phone,
+                        service_params=service_params,
+                        sample_table=sample_table_data,
+                        requester_data=requester_data,
+                        pricing=pricing_breakdown,
+                    )
+                    break
+            except IntegrityError:
+                if attempt < max_retries - 1:
+                    continue
+                raise
+        
+        RequestHistory.objects.create(
+            request=req,
+            from_status='',
+            to_status='REQUEST_CREATED',
+        )
 
         # Send email with tracking code
         try:

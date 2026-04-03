@@ -62,7 +62,7 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         declared_ibtikar_balance=data.get('declared_ibtikar_balance', 0),
         ibtikar_id=ibtikar_id,
         service_params=data.get('service_params', {}),
-        pricing=data.get('pricing', {}),
+        pricing=data.get('pricing_breakdown', data.get('pricing', {})),
         sample_table=data.get('sample_table', []),
         requester_data=data.get('requester_data', {}),
         analysis_framework=data.get('analysis_framework', ''),

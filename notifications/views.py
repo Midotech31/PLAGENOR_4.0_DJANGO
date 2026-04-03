@@ -36,7 +36,7 @@ def notification_click(request, pk):
 
 
 def _get_detail_url(user, req):
-    """Return the correct request detail URL based on user role."""
+    """Return the correct request detail URL based on request channel and user role."""
     from django.urls import reverse
 
     role = user.role
@@ -44,23 +44,20 @@ def _get_detail_url(user, req):
     if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
         return reverse('dashboard:admin_request_detail', args=[req.pk])
     elif role == 'MEMBER':
-        # Only if user is the assigned analyst
-        try:
-            if req.assigned_to and req.assigned_to.user_id == user.pk:
-                return reverse('dashboard:analyst_request_detail', args=[req.pk])
-        except Exception as e:
-            logger.warning(f"Failed to get analyst request detail URL for request {req.pk}: {e}")
-        return None
-    elif role == 'REQUESTER':
-        if req.requester_id == user.pk:
-            return reverse('dashboard:requester_request_detail', args=[req.pk])
-        return None
-    elif role == 'CLIENT':
-        if req.requester_id == user.pk:
-            return reverse('dashboard:client_request_detail', args=[req.pk])
+        if req.assigned_to and req.assigned_to.user_id == user.pk:
+            return reverse('dashboard:analyst_request_detail', args=[req.pk])
         return None
     elif role == 'FINANCE':
         return reverse('dashboard:finance')
+    
+    if req.requester_id != user.pk:
+        return None
+    
+    if req.channel == 'IBTIKAR':
+        return reverse('dashboard:requester_request_detail', args=[req.pk])
+    elif req.channel == 'GENOCLAB':
+        return reverse('dashboard:client_request_detail', args=[req.pk])
+    
     return None
 
 

@@ -57,17 +57,15 @@
         <div class="card">
             <div class="card-body" style="padding:20px;">
                 <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Tarification" %}</h4>
-                {% if service.ibtikar_price %}
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span class="text-muted text-sm">{% trans "IBTIKAR" %}</span>
-                    <strong>{{ service.ibtikar_price|floatformat:0 }} DA</strong>
-                </div>
-                {% endif %}
-                {% if service.genoclab_price %}
-                <div style="display:flex; justify-content:space-between;">
-                    <span class="text-muted text-sm">{% trans "GENOCLAB" %}</span>
-                    <strong>{{ service.genoclab_price|floatformat:0 }} DA</strong>
-                </div>
+                {% if service_pricing %}
+                    {% for price in service_pricing %}
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span class="text-muted text-sm">{{ price.name }}</span>
+                        <strong>{{ price.amount|floatformat:0 }} DA</strong>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-muted text-sm">{% trans "Tarification sur demande" %}</div>
                 {% endif %}
             </div>
         </div>

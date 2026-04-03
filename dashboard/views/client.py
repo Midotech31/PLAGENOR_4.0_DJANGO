@@ -103,7 +103,7 @@ def index(request):
 
 @client_required
 def request_detail(request, pk):
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     from core.registry import get_service_def
     from core.models import PaymentSettings
     yaml_def = get_service_def(req.service.code) if req.service else None
@@ -164,7 +164,7 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    # Collect YAML parameter values
+    # Collect parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
     sample_data = {}
     for key, val in request.POST.items():
@@ -174,6 +174,41 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
+    # Calculate cost from ServicePricing database with server-side validation
+    from core.pricing import validate_and_calculate_price
+    from decimal import Decimal
+    
+    # Extract submitted price for validation (even though we don't trust it)
+    submitted_quote = request.POST.get('submitted_quote_amount')
+    if submitted_quote:
+        try:
+            submitted_quote = Decimal(submitted_quote)
+        except (ValueError, TypeError):
+            submitted_quote = None
+    
+    # Server-side price validation - ALWAYS use server price, never trust client
+    price_validation = validate_and_calculate_price(
+        service=service,
+        channel='GENOCLAB',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+        submitted_price=submitted_quote,
+    )
+    
+    # Use server-calculated price (authoritative)
+    quote_amount = price_validation['server_price']
+    
+    # Store pricing breakdown in request for audit trail
+    pricing_breakdown = {
+        'source': price_validation['price_source'],
+        'server_price': quote_amount,
+        'submitted_price': float(submitted_quote) if submitted_quote else None,
+        'mismatch_detected': price_validation['mismatch_detected'],
+        'cost_breakdown': price_validation.get('cost_result', {}),
+        'modifiers_applied': price_validation.get('modifier_result', {}).get('modifiers_applied', []),
+    }
+
     # Use genoclab service to submit
     req = submit_genoclab_request(
         data={
@@ -181,9 +216,10 @@ def create_request(request):
             'description': request.POST.get('description', ''),
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
-            'quote_amount': float(service.genoclab_price),
+            'quote_amount': quote_amount,
             'service_params': service_params,
             'sample_table': sample_table_data,
+            'pricing_breakdown': pricing_breakdown,
         },
         user=request.user,
     )
@@ -196,7 +232,7 @@ def accept_quote(request, pk):
     """After accepting quote, client must upload purchase order (Bon de commande)."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     try:
         transition(req, 'QUOTE_VALIDATED_BY_CLIENT', request.user, notes='Devis accepté par client')
         messages.success(request, f"Devis accepté pour {req.display_id}. Veuillez maintenant télécharger votre Bon de Commande (obligatoire selon le code de commerce algérien).")
@@ -209,7 +245,7 @@ def accept_quote(request, pk):
 def reject_quote(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     try:
         transition(req, 'QUOTE_REJECTED_BY_CLIENT', request.user, notes='Devis refusé par client')
         messages.success(request, f"Devis refusé pour {req.display_id}.")
@@ -223,7 +259,7 @@ def upload_order(request, pk):
     """Upload purchase order (Bon de commande) - mandatory per Algerian commercial code."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     
     # Check status - client must have accepted quote
     if req.status != 'QUOTE_VALIDATED_BY_CLIENT':
@@ -268,7 +304,7 @@ def upload_payment_receipt(request, pk):
     """Upload payment receipt after analysis is finished."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     
     # Check status - client must have received payment request
     if req.status != 'PAYMENT_PENDING':
@@ -320,7 +356,7 @@ def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     import uuid as _uuid
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
     if not req.report_token:
@@ -338,7 +374,7 @@ def confirm_appointment(request, pk):
 def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -375,7 +411,7 @@ def suggest_alternative_date(request, pk):
     """Client requests appointment rescheduling with workflow transition and Admin Ops notification."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
     if alt_date:
@@ -438,7 +474,7 @@ def suggest_alternative_date(request, pk):
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     rating = int(request.POST.get('rating', 0))
     if 1 <= rating <= 5:
         req.service_rating = rating
@@ -544,6 +580,7 @@ def accept_citation(request, pk):
     req = get_object_or_404(
         Request.objects.filter(
             requester=request.user,
+            channel='GENOCLAB',
             status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
         ),
         pk=pk

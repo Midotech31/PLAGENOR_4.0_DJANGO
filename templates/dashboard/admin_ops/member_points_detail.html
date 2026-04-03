@@ -15,6 +15,66 @@
     animation: confetti-fall 3s ease-out forwards;
     z-index: 9999;
 }
+.badge-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+.badge-bronze { background: linear-gradient(135deg, #cd7f32, #b87333); color: white; }
+.badge-silver { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #333; }
+.badge-gold { background: linear-gradient(135deg, #ffd700, #daa520); color: #333; }
+.badge-platinum { background: linear-gradient(135deg, #e5e4e2, #c0c0c0); color: #333; }
+.badge-diamond { background: linear-gradient(135deg, #b9f2ff, #87ceeb); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.reward-box {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4); }
+    50% { box-shadow: 0 4px 24px rgba(251, 191, 36, 0.7); }
+}
+.collected-box {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #34d399, #10b981);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    opacity: 0.7;
+}
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.celebration-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+    color: white;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    z-index: 10000;
+    animation: slideDown 0.5s ease;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+}
 </style>
 {% endblock %}
 
@@ -51,7 +111,7 @@
             
             <!-- Stats -->
             <div style="flex: 1;">
-                <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 40px; flex-wrap: wrap; align-items: center;">
                     <div>
                         <div style="font-size: 36px; font-weight: 700; color: #8b5cf6;">{{ member.total_points }}</div>
                         <div style="font-size: 12px; color: #6b7280;">{% trans "Total Points" %}</div>
@@ -61,8 +121,21 @@
                         <div style="font-size: 12px; color: #6b7280;">{% trans "Completed Services" %}</div>
                     </div>
                     <div>
-                        <div style="font-size: 36px; font-weight: 700; color: #f59e0b;">{{ reward_boxes }}</div>
-                        <div style="font-size: 12px; color: #6b7280;">{% trans "Reward Boxes" %}</div>
+                        <div style="font-size: 36px; font-weight: 700; color: #f59e0b;">{{ available_boxes }}</div>
+                        <div style="font-size: 12px; color: #6b7280;">{% trans "Available Rewards" %}</div>
+                    </div>
+                    <!-- Badge Display -->
+                    <div>
+                        <div class="badge-display badge-{{ badge_name|lower }}">
+                            {% if badge_name == 'Bronze' %}🥉
+                            {% elif badge_name == 'Silver' %}🥈
+                            {% elif badge_name == 'Gold' %}🥇
+                            {% elif badge_name == 'Platinum' %}💎
+                            {% elif badge_name == 'Diamond' %}👑
+                            {% else %}🎖️{% endif %}
+                            {{ badge_name }}
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280;">{% trans "Badge" %}</div>
                     </div>
                 </div>
             </div>
@@ -97,17 +170,24 @@
             </div>
         </div>
         
-        <!-- Reward Boxes -->
-        {% if reward_boxes > 0 %}
+        <!-- Available Reward Boxes (NOT collected) -->
+        {% if available_boxes > 0 %}
         <div style="margin-top: 20px;">
-            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">{% trans "Earned Reward Boxes" %}</div>
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">{% trans "Available Reward Boxes" %} <span style="color: #f59e0b; font-weight: 600;">(Every 2000 points)</span></div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                {% for i in ''|ljust:reward_boxes %}
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);" title="{% trans 'Reward Box' %}">
+                {% for i in ''|ljust:available_boxes %}
+                <div class="reward-box" title="{% trans 'Reward Box - Ready to collect!' %}">
                     🎁
                 </div>
                 {% endfor %}
             </div>
+        </div>
+        {% endif %}
+        
+        <!-- Collected Reward Boxes History (hidden from main view, just show count) -->
+        {% if collected_boxes > 0 %}
+        <div style="margin-top: 12px; font-size: 11px; color: #10b981;">
+            ✅ {{ collected_boxes }} reward box(es) collected in history
         </div>
         {% endif %}
     </div>
@@ -277,10 +357,21 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // AJAX form handling
+    // AJAX form handling with duplicate submission prevention
     document.querySelectorAll('.ajax-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Prevent double submission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.dataset.submitting === 'true') {
+                return;
+            }
+            if (submitBtn) {
+                submitBtn.dataset.submitting = 'true';
+                submitBtn.disabled = true;
+            }
+            
             const formData = new FormData(form);
             const url = form.action;
             
@@ -294,35 +385,68 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast(data.message || 'Points awarded!', 'success');
-                    
-                    // Check if milestone reached
-                    if (data.gift_unlocked) {
+                    // Build celebration message if there are events
+                    let celebrationMsg = data.message || 'Success!';
+                    if (data.badge_changed) {
+                        celebrationMsg = '🎉 Badge upgraded to ' + data.badge_name + '!';
+                        showBanner(celebrationMsg);
+                        showConfetti();
+                    } else if (data.reward_box_unlocked) {
+                        celebrationMsg = '🎁 New reward box unlocked!';
+                        showBanner(celebrationMsg);
+                        showConfetti();
+                    } else if (data.milestone_changed) {
+                        celebrationMsg = '⭐ Milestone ' + data.milestone_level + ' reached!';
                         showConfetti();
                     }
                     
-                    // Reload page after short delay
-                    setTimeout(() => location.reload(), 1500);
+                    showToast(celebrationMsg, 'success');
+                    
+                    // Reload page after short delay to show updated stats
+                    setTimeout(() => location.reload(), 2000);
                 } else {
                     showToast(data.error || 'Error', 'error');
+                    // Re-enable submit button on error
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.dataset.submitting = 'false';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                form.submit();
+                showToast('Network error. Please try again.', 'error');
+                // Re-enable submit button on error
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.dataset.submitting = 'false';
+                }
             });
         });
     });
 });
 
+function showBanner(message) {
+    const existing = document.querySelector('.celebration-banner');
+    if (existing) existing.remove();
+    
+    const banner = document.createElement('div');
+    banner.className = 'celebration-banner';
+    banner.textContent = message;
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 4000);
+}
+
 function showConfetti() {
-    const colors = ['#8b5cf6', '#a78bfa', '#fbbf24', '#f59e0b', '#10b981', '#34d399'];
-    for (let i = 0; i < 50; i++) {
+    const colors = ['#8b5cf6', '#a78bfa', '#fbbf24', '#f59e0b', '#10b981', '#34d399', '#ec4899', '#f97316'];
+    for (let i = 0; i < 80; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
         confetti.style.left = Math.random() * 100 + 'vw';
         confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
         confetti.style.animationDelay = Math.random() * 2 + 's';
+        confetti.style.width = (Math.random() * 10 + 5) + 'px';
+        confetti.style.height = confetti.style.width;
         document.body.appendChild(confetti);
         setTimeout(() => confetti.remove(), 5000);
     }

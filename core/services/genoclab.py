@@ -36,7 +36,7 @@ def submit_genoclab_request(data: dict, user) -> Request:
         requester=user,
         quote_amount=data.get('quote_amount', 0),
         service_params=data.get('service_params', {}),
-        pricing=data.get('pricing', {}),
+        pricing=data.get('pricing_breakdown', data.get('pricing', {})),
         sample_table=data.get('sample_table', []),
         requester_data=data.get('requester_data', {}),
     )

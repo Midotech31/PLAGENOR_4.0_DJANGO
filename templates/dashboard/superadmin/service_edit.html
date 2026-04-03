@@ -360,7 +360,25 @@
             <input type="text" id="field-condition-note-en" class="form-control" 
                    placeholder="{% trans "Ex: Disposal fees included (+500 DA)" %}">
         </div>
-        
+
+        <!-- CONDITIONAL LOGIC SECTION -->
+        <hr style="margin:16px 0; border-color:#e2e8f0;">
+        <h5 style="margin-bottom:12px; color:#7c3aed;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:middle;"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+            {% trans "Logique conditionnelle" %}
+        </h5>
+        <div class="form-group">
+            <small class="text-muted">{% trans "Afficher/masquer ce champ selon la valeur d'un autre champ" %}</small>
+        </div>
+        <div id="conditional-logic-container" style="background:#f8fafc; padding:16px; border-radius:8px; margin-bottom:16px;">
+            <div id="conditional-rules-list">
+                <!-- Rules will be added here dynamically -->
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="addConditionalRule()" style="margin-top:8px;">
+                + {% trans "Ajouter une condition" %}
+            </button>
+        </div>
+
         <div style="display:flex; gap:8px; margin-top:16px;">
             <button type="button" class="btn btn-primary" onclick="saveField()">{% trans "Enregistrer" %}</button>
             <button type="button" class="btn btn-outline" onclick="closeModal()">{% trans "Annuler" %}</button>
@@ -434,8 +452,8 @@ function renderFields(category, fields) {
                     channelBadge +
                 '</div>' +
                 '<div style="display:flex; gap:6px;">' +
-                    '<button type="button" class="btn btn-sm btn-outline" onclick="editField(\'' + f.id + '\')">✏️</button>' +
-                    '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deleteField(\'' + f.id + '\')">🗑</button>' +
+                    '<button type="button" class="btn btn-sm btn-outline" onclick="editField(' + JSON.stringify(f.id) + ')">✏️</button>' +
+                    '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deleteField(' + JSON.stringify(f.id) + ')">🗑</button>' +
                 '</div>' +
             '</div>' +
             '<div class="field-card-body">' +
@@ -531,29 +549,43 @@ function showAddFieldModal() {
     document.getElementById('field-price-modifier-value').value = '';
     document.getElementById('field-condition-note-fr').value = '';
     document.getElementById('field-condition-note-en').value = '';
+    // Clear conditional rules
+    clearConditionalRules();
     toggleOptions();
     document.getElementById('field-modal').style.display = 'flex';
 }
 
 function editField(fieldId) {
+    console.log('editField called with:', fieldId);
     fetch('/dashboard/api/service/' + SERVICE_ID + '/all-fields/', {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    })
     .then(data => {
+        console.log('API response:', data);
         var allFields = [
             ...(data.parameter_fields || []),
             ...(data.sample_table_columns || []),
             ...(data.additional_info_fields || [])
         ];
+        console.log('Looking for field:', fieldId, 'in', allFields.length, 'fields');
         var f = allFields.find(x => x.id === fieldId);
-        if (!f) return;
+        if (!f) {
+            console.error('Field not found:', fieldId);
+            alert('Champ non trouvé');
+            return;
+        }
+        console.log('Found field:', f);
 
         document.getElementById('modal-title').textContent = '{% trans "Modifier le champ" %}';
         document.getElementById('edit-field-id').value = f.id;
         document.getElementById('field-name').value = f.name;
         document.getElementById('field-name').readOnly = true;
         document.getElementById('field-label-fr').value = f.label || '';
+        document.getElementById('field-label-en').value = f.label_en || '';
         document.getElementById('field-type').value = f.field_type || 'text';
         document.getElementById('field-category').value = f.field_category || 'parameter';
         document.getElementById('field-required').value = String(!!f.is_required);
@@ -565,13 +597,179 @@ function editField(fieldId) {
         document.getElementById('field-price-modifier-value').value = f.price_modifier_value || '';
         document.getElementById('field-condition-note-fr').value = f.condition_note_fr || '';
         document.getElementById('field-condition-note-en').value = f.condition_note_en || '';
+        
+        // Populate conditional logic
+        clearConditionalRules();
+        if (f.conditional_logic && f.conditional_logic.length > 0) {
+            f.conditional_logic.forEach(function(rule) {
+                addConditionalRule(rule);
+            });
+        }
+        
         toggleOptions();
         document.getElementById('field-modal').style.display = 'flex';
+        console.log('Modal opened');
+    })
+    .catch(err => {
+        console.error('Error in editField:', err);
+        alert('Erreur: ' + err.message);
     });
 }
 
 function closeModal() {
     document.getElementById('field-modal').style.display = 'none';
+}
+
+// Store all service fields for conditional logic dropdowns
+var allServiceFields = [];
+
+function loadAllFields() {
+    fetch('/dashboard/api/service/' + SERVICE_ID + '/all-fields/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        allServiceFields = [
+            ...(data.parameter_fields || []),
+            ...(data.sample_table_columns || []),
+            ...(data.additional_info_fields || [])
+        ];
+        renderFields('parameter', data.parameter_fields || []);
+        renderFields('sample_table', data.sample_table_columns || []);
+        renderFields('additional_info', data.additional_info_fields || []);
+        updateCounts(data);
+    })
+    .catch(err => console.error('Failed to load fields:', err));
+}
+
+// Conditional Logic Functions
+var conditionalRules = [];
+
+function addConditionalRule(ruleData) {
+    var container = document.getElementById('conditional-rules-list');
+    var ruleIndex = conditionalRules.length;
+    
+    var ruleDiv = document.createElement('div');
+    ruleDiv.className = 'conditional-rule';
+    ruleDiv.style.cssText = 'background:#fff; padding:12px; border-radius:6px; margin-bottom:8px; border:1px solid #e2e8f0;';
+    ruleDiv.dataset.index = ruleIndex;
+    
+    var triggerOptions = '<option value="">-- {% trans "Sélectionner un champ" %} --</option>';
+    allServiceFields.forEach(function(field) {
+        triggerOptions += '<option value="' + field.name + '">' + escHtml(field.name) + ' (' + escHtml(field.label || field.name) + ')</option>';
+    });
+    
+    var actionOptions = '';
+    var actions = [
+        {value: 'show', label: '{% trans "Afficher ce champ" %}'},
+        {value: 'hide', label: '{% trans "Masquer ce champ" %}'},
+        {value: 'make_required', label: '{% trans "Rendre obligatoire" %}'},
+        {value: 'make_optional', label: '{% trans "Rendre optionnel" %}'},
+        {value: 'activate_price_modifier', label: '{% trans "Activer modificateur de prix" %}'}
+    ];
+    actions.forEach(function(action) {
+        actionOptions += '<option value="' + action.value + '">' + action.label + '</option>';
+    });
+    
+    ruleDiv.innerHTML = 
+        '<div style="display:grid; gap:8px;">' +
+            '<div style="display:flex; gap:8px; align-items:center;">' +
+                '<span>{% trans "Quand" %}</span>' +
+                '<select class="form-control trigger-field" style="flex:1;" onchange="updateTriggerValueOptions(this)">' +
+                    triggerOptions +
+                '</select>' +
+                '<span>{% trans "=" %}</span>' +
+                '<select class="form-control trigger-value" style="flex:1;">' +
+                    '<option value="">-- {% trans "valeur" %} --</option>' +
+                '</select>' +
+            '</div>' +
+            '<div style="display:flex; gap:8px; align-items:center;">' +
+                '<span>{% trans "Alors" %}</span>' +
+                '<select class="form-control action-select" style="flex:1;" multiple size="2">' +
+                    actionOptions +
+                '</select>' +
+                '<button type="button" onclick="removeConditionalRule(' + ruleIndex + ')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">×</button>' +
+            '</div>' +
+        '</div>';
+    
+    container.appendChild(ruleDiv);
+    conditionalRules.push(ruleDiv);
+    
+    // Populate if editing
+    if (ruleData) {
+        ruleDiv.querySelector('.trigger-field').value = ruleData.trigger_field || '';
+        updateTriggerValueOptions(ruleDiv.querySelector('.trigger-field'));
+        ruleDiv.querySelector('.trigger-value').value = ruleData.trigger_value || '';
+        var actionSelect = ruleDiv.querySelector('.action-select');
+        if (ruleData.actions) {
+            ruleData.actions.forEach(function(action) {
+                var opt = actionSelect.querySelector('option[value="' + action + '"');
+                if (opt) opt.selected = true;
+            });
+        }
+    }
+}
+
+function removeConditionalRule(index) {
+    var ruleDiv = conditionalRules[index];
+    if (ruleDiv) {
+        ruleDiv.remove();
+        conditionalRules[index] = null;
+    }
+}
+
+function updateTriggerValueOptions(select) {
+    var fieldName = select.value;
+    var ruleDiv = select.closest('.conditional-rule');
+    var valueSelect = ruleDiv.querySelector('.trigger-value');
+    
+    valueSelect.innerHTML = '<option value="">-- {% trans "valeur" %} --</option>';
+    
+    if (!fieldName) return;
+    
+    var field = allServiceFields.find(function(f) { return f.name === fieldName; });
+    if (field && field.choices && field.choices.length > 0) {
+        field.choices.forEach(function(choice) {
+            var opt = document.createElement('option');
+            opt.value = choice;
+            opt.textContent = choice;
+            valueSelect.appendChild(opt);
+        });
+    } else {
+        // For non-select fields, allow text input
+        var textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.className = 'form-control trigger-value';
+        textInput.placeholder = '{% trans "Entrez la valeur" %}';
+        valueSelect.parentNode.replaceChild(textInput, valueSelect);
+    }
+}
+
+function getConditionalLogic() {
+    var logic = [];
+    conditionalRules.forEach(function(ruleDiv) {
+        if (!ruleDiv) return;
+        
+        var triggerField = ruleDiv.querySelector('.trigger-field').value;
+        var triggerValueEl = ruleDiv.querySelector('.trigger-value');
+        var triggerValue = triggerValueEl ? triggerValueEl.value : '';
+        var actionSelect = ruleDiv.querySelector('.action-select');
+        var actions = Array.from(actionSelect.selectedOptions).map(function(opt) { return opt.value; });
+        
+        if (triggerField && actions.length > 0) {
+            logic.push({
+                trigger_field: triggerField,
+                trigger_value: triggerValue,
+                actions: actions
+            });
+        }
+    });
+    return logic;
+}
+
+function clearConditionalRules() {
+    document.getElementById('conditional-rules-list').innerHTML = '';
+    conditionalRules = [];
 }
 
 function toggleOptions() {
@@ -602,6 +800,7 @@ function saveField() {
         price_modifier_value: parseFloat(document.getElementById('field-price-modifier-value').value) || null,
         condition_note_fr: document.getElementById('field-condition-note-fr').value.trim(),
         condition_note_en: document.getElementById('field-condition-note-en').value.trim(),
+        conditional_logic: getConditionalLogic(),
     };
 
     var url = '/dashboard/api/service/' + SERVICE_ID + '/field/';
@@ -609,7 +808,7 @@ function saveField() {
 
     if (editId) {
         url = '/dashboard/api/service/field/' + editId + '/';
-        method = 'PUT';
+        method = 'POST';
     }
 
     fetch(url, {

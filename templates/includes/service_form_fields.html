@@ -32,7 +32,9 @@
     {% endfor %}
 
     {% for field in db_fields %}
-    <div class="form-group" {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}>
+    <div class="form-group"
+         {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|json_script:""|safe }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
         {% if field.field_type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
@@ -45,9 +47,25 @@
         <select name="param_{{ field.name }}" id="select_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} onchange="handlePricingChange(this)">
             <option value="">{% trans "Choisir" %}{% if field.required %} *{% endif %}</option>
             {% for opt in field.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
+            <option value="{{ opt }}" {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
             {% endfor %}
         </select>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% elif field.field_type == 'multiselect' %}
+        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+            {% for opt in field.options %}
+            <label style="display:flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="param_{{ field.name }}" value="{{ opt }}" style="width:18px; height:18px;" 
+                       onchange="handlePricingChange(this)"
+                       {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>
+                <span>{{ opt }}</span>
+                {% if field.option_pricing and opt in field.option_pricing %}
+                <span style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:2px 6px; border-radius:4px;">+{{ field.option_pricing|get_item:opt }} DA</span>
+                {% endif %}
+            </label>
+            {% endfor %}
+        </div>
         {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% else %}
         <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label }}{% if field.required %} *{% endif %}">
@@ -102,7 +120,13 @@
 {% if pricing %}
 <div class="pricing-info" style="margin-top:12px; padding:12px; background:var(--blue-50, #eff6ff); border-radius:8px; font-size:0.9rem;">
     <strong>{% trans "Tarification" %}:</strong>
-    {% if pricing.model == 'per_sample_table_row_with_multiplier' %}
+    {% if pricing.configs %}
+        {% for cfg in pricing.configs %}
+            {% if cfg.pricing_type == 'BASE' %}
+                {{ cfg.amount|floatformat:0 }} DA {% trans "par échantillon" %}
+            {% endif %}
+        {% endfor %}
+    {% elif pricing.model == 'per_sample_table_row_with_multiplier' %}
         {% if pricing.base_price.non_pathogenic and pricing.base_price.pathogenic and pricing.base_price.non_pathogenic != pricing.base_price.pathogenic %}
             {{ pricing.base_price.non_pathogenic|floatformat:0 }} DA ({% trans "non pathogène" %}) / {{ pricing.base_price.pathogenic|floatformat:0 }} DA ({% trans "pathogène" %}) {% trans "par échantillon" %}
         {% elif pricing.base_price.non_pathogenic %}
@@ -115,7 +139,7 @@
     {% else %}
         {% trans "Standard" %}
     {% endif %}
-</div>
+</div>{% endif %}
 <div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
      data-pricing='{{ pricing_json }}'>
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
@@ -175,55 +199,124 @@
         var costEl = document.getElementById('cost-estimate');
         var summaryEl = document.getElementById('pricing-modifiers-summary');
         var modifiersListEl = document.getElementById('active-modifiers-list');
-        
+
         if (!costEl) return;
-        
+
         var baseCost = 0;
-        var modifiers = [];
-        
-        if (pricingData && pricingData.base_price) {
+        var surcharges = [];
+        var multipliers = [];
+
+        if (pricingData && pricingData.configs) {
+            pricingData.configs.forEach(function(cfg) {
+                if (cfg.pricing_type === 'BASE') {
+                    baseCost = cfg.amount || 0;
+                } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
+                    surcharges.push(cfg.amount || 0);
+                } else if (cfg.pricing_type === 'DISCOUNT') {
+                    surcharges.push(-(cfg.amount || 0));
+                }
+            });
+        } else if (pricingData && pricingData.base_price) {
             var bp = pricingData.base_price;
             baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
         }
-        
+
         document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
+            // Skip hidden fields (conditional logic may hide them)
+            if (group.style.display === 'none' || group.offsetParent === null) return;
+
+            // Handle multi-select checkboxes
+            var checkboxes = group.querySelectorAll('input[type="checkbox"][name^="param_"]');
+            if (checkboxes.length > 1) {
+                // Multi-select checkbox group
+                checkboxes.forEach(function(cb) {
+                    if (cb.checked) {
+                        var optionPrice = parseFloat(cb.getAttribute('data-option-price')) || 0;
+                        var groupPricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
+                        var groupPricingType = group.getAttribute('data-pricing-type');
+
+                        // Option-level price takes precedence
+                        var priceValue = optionPrice || groupPricingValue;
+                        if (priceValue > 0) {
+                            if (groupPricingType === 'multiply') {
+                                multipliers.push(priceValue);
+                            } else {
+                                surcharges.push(priceValue);
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            // Single input (select, single checkbox, text, number)
             var input = group.querySelector('input, select');
             if (!input) return;
-            
-            var isActive = (input.type === 'checkbox' && input.checked) || (input.tagName === 'SELECT' && input.value !== '');
+
+            // Check if this is a select with option-level pricing
+            if (input.tagName === 'SELECT' && input.selectedOptions.length > 0) {
+                var selectedOption = input.selectedOptions[0];
+                var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
+                var groupPricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
+                var groupPricingType = group.getAttribute('data-pricing-type');
+
+                // Option-level price takes precedence
+                var priceValue = optionPrice || groupPricingValue;
+
+                if (priceValue > 0) {
+                    if (groupPricingType === 'multiply') {
+                        multipliers.push(priceValue);
+                    } else if (groupPricingType === 'set') {
+                        baseCost = priceValue;
+                    } else {
+                        surcharges.push(priceValue);
+                    }
+                }
+                return;
+            }
+
+            // Standard field-level pricing
+            var isActive = (input.type === 'checkbox' && input.checked) || (input.tagName === 'SELECT' && input.value !== '') || (input.type !== 'checkbox' && input.value !== '');
             if (!isActive) return;
-            
+
             var pricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
             var pricingType = group.getAttribute('data-pricing-type');
-            var label = group.querySelector('label');
-            var fieldLabel = label ? label.textContent : group.getAttribute('data-pricing-field');
-            
+
             if (pricingType === 'add' && pricingValue > 0) {
-                modifiers.push('+' + pricingValue.toLocaleString() + ' DA');
+                surcharges.push(pricingValue);
             } else if (pricingType === 'set' && pricingValue > 0) {
-                modifiers.push('{% trans "Forfait" %}: ' + pricingValue.toLocaleString() + ' DA');
+                baseCost = pricingValue;
             } else if (pricingType === 'multiply' && pricingValue !== 1) {
-                modifiers.push('×' + pricingValue + ' {% trans "(multiplicateur)" %}');
+                multipliers.push(pricingValue);
             }
         });
         
         var sampleRows = document.querySelectorAll('#sample-table-body tr');
-        var sampleCount = sampleRows.length;
+        var sampleCount = sampleRows.length || 1;
         
         var total = baseCost * sampleCount;
         
-        modifiers.forEach(function(mod) {
-            if (mod.startsWith('+')) {
-                var addVal = parseInt(mod.replace(/[^\d]/g, ''));
-                total += addVal * sampleCount;
-            }
+        surcharges.forEach(function(val) {
+            total += val * sampleCount;
+        });
+        
+        multipliers.forEach(function(mult) {
+            total = total * mult;
         });
         
         costEl.textContent = total.toLocaleString() + ' DA';
         
-        if (modifiers.length > 0) {
+        if (surcharges.length > 0 || multipliers.length > 0) {
             if (summaryEl) summaryEl.style.display = 'block';
-            if (modifiersListEl) modifiersListEl.innerHTML = modifiers.map(function(m) {
+            var summaryItems = [];
+            surcharges.forEach(function(val) {
+                if (val > 0) summaryItems.push('+' + val.toLocaleString() + ' DA');
+                else if (val < 0) summaryItems.push(val.toLocaleString() + ' DA (remise)');
+            });
+            multipliers.forEach(function(mult) {
+                summaryItems.push('×' + mult + ' (multiplicateur)');
+            });
+            if (modifiersListEl) modifiersListEl.innerHTML = summaryItems.map(function(m) {
                 return '<div style="color:#059669;">' + m + '</div>';
             }).join('');
         } else {
@@ -234,5 +327,108 @@
     if (typeof updateCostEstimate === 'function') {
         updateCostEstimate();
     }
+
+    // Conditional Logic Handler with chained condition support
+    window.evaluateConditionalLogic = function() {
+        var maxIterations = 10; // Prevent infinite loops
+        var hasChanges = true;
+        var iteration = 0;
+
+        while (hasChanges && iteration < maxIterations) {
+            hasChanges = false;
+            iteration++;
+
+            // Get all form groups with conditional logic
+            document.querySelectorAll('[data-conditional-logic]').forEach(function(targetGroup) {
+                var conditions = JSON.parse(targetGroup.getAttribute('data-conditional-logic') || '[]');
+                if (!conditions || conditions.length === 0) return;
+
+                var shouldShow = false;
+                var shouldRequire = targetGroup.getAttribute('data-original-required') === 'true';
+                var wasHidden = targetGroup.style.display === 'none';
+
+                conditions.forEach(function(condition) {
+                    var triggerField = document.querySelector('[name="param_' + condition.trigger_field + '"]');
+                    if (!triggerField) {
+                        // Try checkbox group
+                        triggerField = document.querySelector('input[type="checkbox"][name="param_' + condition.trigger_field + '"]');
+                    }
+                    if (!triggerField) return;
+
+                    // Handle multi-select checkboxes
+                    var triggerValue;
+                    if (triggerField.type === 'checkbox') {
+                        var checkboxes = document.querySelectorAll('input[type="checkbox"][name="param_' + condition.trigger_field + '"]:checked');
+                        var values = Array.from(checkboxes).map(function(cb) { return cb.value; });
+                        triggerValue = values.length > 0 ? values : (triggerField.checked ? ['true'] : ['false']);
+                    } else {
+                        triggerValue = [triggerField.value];
+                    }
+
+                    // Check if any trigger value matches
+                    var conditionMet = triggerValue.some(function(val) {
+                        return val === condition.trigger_value;
+                    });
+
+                    if (conditionMet && condition.actions) {
+                        condition.actions.forEach(function(action) {
+                            if (action === 'show') shouldShow = true;
+                            if (action === 'hide') shouldShow = false;
+                            if (action === 'make_required') shouldRequire = true;
+                            if (action === 'make_optional') shouldRequire = false;
+                            if (action === 'activate_price_modifier') {
+                                // Price modifier activation is handled by updateCostEstimate
+                            }
+                        });
+                    }
+                });
+
+                // Apply visibility
+                var isNowHidden = !shouldShow;
+                if (wasHidden !== isNowHidden) {
+                    hasChanges = true;
+                }
+
+                if (shouldShow) {
+                    targetGroup.style.display = '';
+                } else {
+                    targetGroup.style.display = 'none';
+                    // Clear values when hiding
+                    var inputs = targetGroup.querySelectorAll('input, select, textarea');
+                    inputs.forEach(function(input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = false;
+                        } else if (input.tagName === 'SELECT') {
+                            input.selectedIndex = 0;
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                }
+
+                // Apply required status
+                var input = targetGroup.querySelector('input, select, textarea');
+                if (input) {
+                    if (shouldShow && shouldRequire) {
+                        input.required = true;
+                    } else {
+                        input.required = false;
+                        input.removeAttribute('required');
+                    }
+                }
+            });
+        }
+    };
+
+    // Attach conditional logic listeners to trigger fields
+    document.querySelectorAll('[name^="param_"]').forEach(function(field) {
+        field.addEventListener('change', function() {
+            evaluateConditionalLogic();
+            updateCostEstimate();
+        });
+    });
+
+    // Initial evaluation
+    evaluateConditionalLogic();
 })();
 </script>

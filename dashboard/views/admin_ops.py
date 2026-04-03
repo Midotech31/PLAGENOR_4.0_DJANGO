@@ -18,7 +18,6 @@ from core.models import Request, RequestHistory, RequestComment, Invoice, Paymen
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
 from core.registry import get_service_def
-from core.pricing import calculate_price
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from core.audit import log_action
 from notifications.models import Notification
@@ -695,7 +694,13 @@ def transition_request(request, pk):
 @admin_required
 @require_POST
 def bulk_action(request):
-    """Bulk assign or status transition for multiple requests."""
+    """Bulk assign or status transition for multiple requests.
+    
+    Validates:
+    - Member availability for bulk_assign
+    - Status compatibility for bulk_transition
+    - Handles errors gracefully per-request
+    """
     action = request.POST.get('action', '')
     request_ids = request.POST.getlist('request_ids', [])
     
@@ -706,6 +711,7 @@ def bulk_action(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     success_count = 0
     errors = []
+    skipped = []
     
     if action == 'bulk_assign':
         member_id = request.POST.get('member_id')
@@ -716,17 +722,68 @@ def bulk_action(request):
             return redirect_back(request, 'dashboard:admin_ops')
 
         member = get_object_or_404(MemberProfile, pk=member_id)
+        
+        # Check member availability
+        if not member.available:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False, 
+                    'error': gettext('Member %(name)s is not available for assignment') % {'name': member.user.get_full_name()}
+                })
+            messages.error(request, gettext("Member %(name)s is not available for assignment.") % {'name': member.user.get_full_name()})
+            return redirect_back(request, 'dashboard:admin_ops')
+        
+        # Check member capacity
+        if member.current_load >= member.max_load:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False, 
+                    'error': gettext('Member %(name)s has reached maximum capacity (%(max)s/%(max)s)') % {
+                        'name': member.user.get_full_name(),
+                        'max': member.max_load
+                    }
+                })
+            messages.error(request, gettext("Member %(name)s has reached maximum capacity (%(max)s/%(max)s).") % {
+                'name': member.user.get_full_name(),
+                'max': member.max_load
+            })
+            return redirect_back(request, 'dashboard:admin_ops')
 
+        # Valid statuses for bulk assignment
+        valid_statuses = ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED')
+        
         for req_id in request_ids:
             try:
                 req = Request.objects.get(pk=req_id)
-                if req.status in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED'):
-                    req.assigned_to = member
-                    req.save(update_fields=['assigned_to'])
-                    transition(req, 'ASSIGNED', request.user, notes=gettext("Bulk assign to %(member)s") % {'member': member.user.get_full_name()})
-                    success_count += 1
+                
+                # Check if request is already assigned
+                if req.assigned_to and req.assigned_to != member:
+                    skipped.append({
+                        'id': str(req_id),
+                        'display_id': req.display_id,
+                        'reason': gettext('Already assigned to another member')
+                    })
+                    continue
+                
+                if req.status not in valid_statuses:
+                    skipped.append({
+                        'id': str(req_id),
+                        'display_id': req.display_id,
+                        'reason': gettext('Invalid status for assignment (current: %(status)s)') % {'status': req.get_status_display()}
+                    })
+                    continue
+                
+                req.assigned_to = member
+                req.save(update_fields=['assigned_to'])
+                transition(req, 'ASSIGNED', request.user, notes=gettext("Bulk assign to %(member)s") % {'member': member.user.get_full_name()})
+                success_count += 1
+                
             except Exception as e:
-                errors.append(f"{req_id}: {str(e)}")
+                errors.append({
+                    'id': str(req_id),
+                    'display_id': req.display_id if 'req' in dir() else str(req_id),
+                    'error': str(e)
+                })
 
         msg = gettext("Assigned %(count)s requests to %(member)s") % {'count': success_count, 'member': member.user.get_full_name()}
 
@@ -741,10 +798,30 @@ def bulk_action(request):
         for req_id in request_ids:
             try:
                 req = Request.objects.get(pk=req_id)
+                
+                # Check if transition is valid for this request's status
+                from core.workflow import get_allowed_transitions
+                allowed = get_allowed_transitions(req)
+                if to_status not in allowed:
+                    skipped.append({
+                        'id': str(req_id),
+                        'display_id': req.display_id,
+                        'reason': gettext('Cannot transition from %(status)s to %(target)s') % {
+                            'status': req.get_status_display(),
+                            'target': to_status
+                        }
+                    })
+                    continue
+                
                 transition(req, to_status, request.user, notes=gettext('Bulk transition'))
                 success_count += 1
+                
             except Exception as e:
-                errors.append(f"{req_id}: {str(e)}")
+                errors.append({
+                    'id': str(req_id),
+                    'display_id': req.display_id if 'req' in dir() else str(req_id),
+                    'error': str(e)
+                })
 
         msg = gettext("Transitioned %(count)s requests to %(status)s") % {'count': success_count, 'status': to_status}
 
@@ -756,16 +833,22 @@ def bulk_action(request):
     
     if is_ajax:
         return JsonResponse({
-            'success': True,
+            'success': success_count > 0,
             'message': msg,
             'success_count': success_count,
-            'errors': errors
+            'skipped_count': len(skipped),
+            'skipped': skipped,
+            'errors': errors,
+            'error_count': len(errors)
         })
     
     if errors:
-        messages.warning(request, f"{msg}. {len(errors)} errors occurred.")
+        messages.warning(request, f"{msg}. {len(errors)} errors occurred, {len(skipped)} skipped.")
     else:
-        messages.success(request, msg)
+        if skipped:
+            messages.info(request, f"{msg}. {len(skipped)} requests skipped.")
+        else:
+            messages.success(request, msg)
     
     return redirect_back(request, 'dashboard:admin_ops')
 
@@ -830,6 +913,14 @@ from django.http import HttpResponse
 
 @admin_required
 def assign_request(request, pk):
+    """Assign a request to a member with proper validation.
+    
+    Validates:
+    - Member exists and is available
+    - Member has capacity (not at max load)
+    - Request status allows assignment
+    - Handles reassignment properly
+    """
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
@@ -844,8 +935,38 @@ def assign_request(request, pk):
         return redirect_back(request, 'dashboard:admin_ops')
 
     member = get_object_or_404(MemberProfile, pk=member_id)
+    
+    # Validate member availability
+    if not member.available:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'error': gettext("Member %(name)s is not available for assignment") % {'name': member.user.get_full_name()}
+            })
+        messages.error(request, gettext("Member %(name)s is not available for assignment.") % {'name': member.user.get_full_name()})
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Validate member capacity
+    if member.current_load >= member.max_load:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'error': gettext("Member %(name)s has reached maximum capacity (%(current)s/%(max)s)") % {
+                    'name': member.user.get_full_name(),
+                    'current': member.current_load,
+                    'max': member.max_load
+                }
+            })
+        messages.error(request, gettext("Member %(name)s has reached maximum capacity (%(current)s/%(max)s).") % {
+            'name': member.user.get_full_name(),
+            'current': member.current_load,
+            'max': member.max_load
+        })
+        return redirect_back(request, 'dashboard:admin_ops')
 
-    if req.status not in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED'):
+    # Validate request status
+    valid_statuses = ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED')
+    if req.status not in valid_statuses:
         if is_ajax:
             return JsonResponse({
                 'success': False,
@@ -856,11 +977,32 @@ def assign_request(request, pk):
             gettext("Request %(display_id)s is not ready for assignment (current status: %(status)s).") % {'display_id': req.display_id, 'status': req.get_status_display()}
         )
         return redirect_back(request, 'dashboard:admin_ops')
-
+    
+    # Handle reassignment - notify previous assignee
+    previous_assignee = req.assigned_to
+    if previous_assignee and previous_assignee != member:
+        # Decrease previous member's load
+        previous_assignee.current_load = max(0, previous_assignee.current_load - 1)
+        previous_assignee.save(update_fields=['current_load'])
+        
+        # Notify previous member of unassignment
+        Notification.objects.create(
+            user=previous_assignee.user,
+            message=gettext("Request %(display_id)s has been reassigned to another analyst") % {'display_id': req.display_id},
+            request=req,
+            notification_type='ASSIGNMENT'
+        )
+    
+    # Assign to new member
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
+    
     try:
         transition(req, 'PENDING_ACCEPTANCE', request.user, notes=gettext("Assigned to %(member)s") % {'member': member.user.get_full_name()})
+        
+        # Update member's current load
+        member.current_load += 1
+        member.save(update_fields=['current_load'])
         
         # Log to audit
         log_action(
@@ -879,6 +1021,17 @@ def assign_request(request, pk):
             })
         messages.success(request, gettext("Request %(display_id)s assigned to %(member)s.") % {'display_id': req.display_id, 'member': member.user.get_full_name()})
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        # Rollback member load increase on failure
+        if previous_assignee != member:
+            member.current_load = max(0, member.current_load - 1)
+            member.save(update_fields=['current_load'])
+            # Restore previous assignment
+            req.assigned_to = previous_assignee
+            req.save(update_fields=['assigned_to'])
+            if previous_assignee:
+                previous_assignee.current_load += 1
+                previous_assignee.save(update_fields=['current_load'])
+        
         if is_ajax:
             return JsonResponse({'success': False, 'error': str(e)})
         messages.error(request, gettext("Assignment error: %(error)s") % {'error': str(e)})
@@ -907,32 +1060,23 @@ def award_points(request, member_pk):
         messages.error(request, gettext("Points must be positive."))
         return redirect_back(request, 'dashboard:admin_ops')
 
+    # Create points history
     PointsHistory.objects.create(
         member=member, points=points, reason=reason, awarded_by=request.user
     )
-    member.total_points += points
-
-    # Auto-unlock gift box at 100 points threshold
-    if member.total_points >= 100 and not member.gift_unlocked:
-        member.gift_unlocked = True
-        Notification.objects.create(
-            user=member.user,
-            message=gettext("🎁 Congratulations! You unlocked a surprise gift box! Visit your Points space."),
-            notification_type='reward'
-        )
     
-    # Calculate reward milestone
-    reward_milestone = (member.total_points // 1000) * 1000
-    next_milestone = reward_milestone + 1000
+    # Use the model's award_points method which handles all milestone/badge/reward logic
+    member.award_points(points, reason, awarded_by=request.user, save=True)
     
-    member.save(update_fields=['total_points', 'gift_unlocked'])
+    # Check for events (milestone, badge change, reward box)
+    events = getattr(member, '_last_events', [])
+    badge_changed = getattr(member, '_badge_changed', False)
+    reward_box_unlocked = getattr(member, '_reward_box_unlocked', False)
+    milestone_changed = getattr(member, '_milestone_changed', False)
     
-    # Notify member
-    Notification.objects.create(
-        user=member.user,
-        message=gettext("%(points)s points received! %(reason)s") % {'points': points, 'reason': reason} if reason else gettext("%(points)s points received!") % {'points': points},
-        notification_type='reward'
-    )
+    # Calculate next milestone for UI
+    current_milestone = (member.total_points // 1000) * 1000
+    next_milestone = current_milestone + 1000
     
     # Log to audit
     log_action(
@@ -940,7 +1084,15 @@ def award_points(request, member_pk):
         entity_type='MEMBER',
         entity_id=str(member.id),
         actor=request.user,
-        details={'points': points, 'reason': reason, 'total': member.total_points}
+        details={
+            'points': points, 
+            'reason': reason, 
+            'total': member.total_points,
+            'badge': member.badge_tier,
+            'milestone': member.milestone_level,
+            'badge_changed': badge_changed,
+            'reward_box_unlocked': reward_box_unlocked,
+        }
     )
     
     if is_ajax:
@@ -948,12 +1100,30 @@ def award_points(request, member_pk):
             'success': True,
             'message': gettext("%(points)s points awarded to %(member)s") % {'points': points, 'member': member.user.get_full_name()},
             'new_total': member.total_points,
-            'milestone': reward_milestone,
+            'milestone': current_milestone,
             'next_milestone': next_milestone,
-            'gift_unlocked': member.gift_unlocked
+            'badge_level': member.badge_level,
+            'badge_name': member.badge_tier,
+            'milestone_level': member.milestone_level,
+            'events': events,
+            'celebration': badge_changed or reward_box_unlocked,
+            'badge_changed': badge_changed,
+            'reward_box_unlocked': reward_box_unlocked,
+            'milestone_changed': milestone_changed,
+            'unlocked_boxes': member.unlocked_reward_boxes,
+            'available_boxes': member.available_reward_boxes,
         })
 
-    messages.success(request, gettext("%(points)s points awarded to %(member)s.") % {'points': points, 'member': member.user.get_full_name()})
+    # Build success message
+    msg_parts = [gettext("%(points)s points awarded to %(member)s") % {'points': points, 'member': member.user.get_full_name()}]
+    if milestone_changed:
+        msg_parts.append(gettext("Milestone %(level)s reached!") % {'level': member.milestone_level})
+    if badge_changed:
+        msg_parts.append(gettext("Badge upgraded to %(badge)s!") % {'badge': member.badge_tier})
+    if reward_box_unlocked:
+        msg_parts.append(gettext("New reward box unlocked!"))
+    
+    messages.success(request, ". ".join(msg_parts))
     return redirect_back(request, 'dashboard:admin_ops')
 
 
@@ -999,8 +1169,11 @@ def performance_points(request):
         progress_to_next = member.total_points - current_milestone
         progress_percentage = (progress_to_next / 1000) * 100
         
-        # Count reward boxes
-        reward_boxes = member.total_points // 1000
+        # Reward boxes: every 2000 points = 1 box
+        # Show only AVAILABLE boxes (unlocked but not collected)
+        available_boxes = member.available_reward_boxes
+        collected_boxes = member.collected_reward_boxes
+        total_unlocked_boxes = member.unlocked_reward_boxes
         
         members_data.append({
             'member': member,
@@ -1011,7 +1184,11 @@ def performance_points(request):
             'next_milestone': next_milestone,
             'progress_to_next': progress_to_next,
             'progress_percentage': progress_percentage,
-            'reward_boxes': reward_boxes,
+            'badge_level': member.badge_level,
+            'badge_name': member.badge_tier,
+            'available_boxes': available_boxes,
+            'collected_boxes': collected_boxes,
+            'total_unlocked_boxes': total_unlocked_boxes,
         })
     
     # Sorting options
@@ -1055,8 +1232,11 @@ def member_points_detail(request, member_pk):
         member=member
     ).select_related('awarded_by').order_by('-created_at')
     
-    # Calculate milestones reached
-    reward_boxes = member.total_points // 1000
+    # Reward boxes: every 2000 points = 1 box
+    # Available boxes = unlocked but not collected
+    available_boxes = member.available_reward_boxes
+    collected_boxes = member.collected_reward_boxes
+    total_unlocked = member.unlocked_reward_boxes
     
     # Get completed services
     completed_services = Request.objects.filter(
@@ -1075,8 +1255,12 @@ def member_points_detail(request, member_pk):
     context = {
         'member': member,
         'points_history': points_history,
-        'reward_boxes': reward_boxes,
+        'available_boxes': available_boxes,
+        'collected_boxes': collected_boxes,
+        'total_unlocked_boxes': total_unlocked,
         'completed_services': completed_services,
+        'badge_level': member.badge_level,
+        'badge_name': member.badge_tier,
     }
     return render(request, 'dashboard/admin_ops/member_points_detail.html', context)
 
@@ -1092,6 +1276,9 @@ def upload_gift(request, member_pk):
         return HttpResponseForbidden()
     member = get_object_or_404(MemberProfile, pk=member_pk)
     gift_image = request.FILES.get('gift_image')
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if gift_image:
         member.gift_image = gift_image
         member.gift_unlocked = True
@@ -1102,8 +1289,15 @@ def upload_gift(request, member_pk):
             message=gettext("🎁 A reward awaits you! Open your surprise box in your Points space."),
             notification_type='reward'
         )
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': gettext("Reward added for %(member)s.") % {'member': member.user.get_full_name()}
+            })
         messages.success(request, gettext("Reward added for %(member)s.") % {'member': member.user.get_full_name()})
     else:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': gettext("Please select an image.")})
         messages.error(request, gettext("Please select an image."))
     return redirect_back(request, 'dashboard:admin_ops')
 
@@ -1114,12 +1308,28 @@ def send_cheer(request, member_pk):
         return HttpResponseForbidden()
     member = get_object_or_404(MemberProfile, pk=member_pk)
     message_text = request.POST.get('message', '')
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if not message_text:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': gettext("Message is required.")})
+        messages.error(request, gettext("Message is required."))
+        return redirect_back(request, 'dashboard:admin_ops')
+
     Cheer.objects.create(member=member, message=message_text, from_user=request.user)
     Notification.objects.create(
         user=member.user,
         message=gettext("Encouragement received: %(message)s") % {'message': message_text} if message_text else gettext("You received an encouragement!"),
         notification_type='reward'
     )
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'message': gettext("Encouragement sent to %(member)s.") % {'member': member.user.get_full_name()}
+        })
+
     messages.success(request, gettext("Encouragement sent to %(member)s.") % {'member': member.user.get_full_name()})
     return redirect_back(request, 'dashboard:admin_ops')
 

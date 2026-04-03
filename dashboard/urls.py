@@ -23,6 +23,7 @@ urlpatterns = [
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
     path('home/content/<str:pk>/delete/', superadmin.content_delete, name='superadmin_content_delete'),
     path('home/service/<uuid:pk>/edit/', superadmin.service_edit, name='superadmin_service_edit'),
+    path('home/service/<uuid:pk>/fields-reset/', superadmin.service_fields_reset, name='superadmin_service_fields_reset'),
     path('home/template/<str:template_type>/download/', superadmin.download_template, name='superadmin_template_download'),
     path('home/backup/', superadmin.backup_now, name='superadmin_backup'),
     path('home/user/create/', superadmin.create_user, name='superadmin_user_create'),
@@ -92,6 +93,7 @@ urlpatterns = [
     path('analyst/alt-date/<uuid:pk>/decline/', analyst.decline_alt_date, name='analyst_decline_alt_date'),
     path('analyst/request/<uuid:pk>/', analyst.request_detail, name='analyst_request_detail'),
     path('analyst/collect-gift/', analyst.collect_gift, name='analyst_collect_gift'),
+    path('analyst/collect-reward-box/', analyst.collect_reward_box, name='analyst_collect_reward_box'),
 
     # Finance
     path('finance/', finance.index, name='finance'),

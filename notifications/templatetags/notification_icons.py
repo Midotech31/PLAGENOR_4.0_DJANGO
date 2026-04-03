@@ -2,10 +2,8 @@ from django import template
 
 register = template.Library()
 
-# SVG Icons dictionary
+# SVG Icons dictionary - 2D Flat Design
 ICONS = {
-    'analysis': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>',
-    
     'flask': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M10 2v7.31"/><path d="M14 2v7.31"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>',
     
     'payment': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01"/><path d="M2 10h20"/></svg>',
@@ -17,8 +15,6 @@ ICONS = {
     'file': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
     
     'appointment': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-    
-    'calendar': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
     
     'assigned': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     
@@ -44,10 +40,27 @@ ICONS = {
     
     'sample': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M10 2h4"/><path d="M12 2v8"/><path d="M12 10v12"/><path d="M8 22h8"/></svg>',
     
-    'dna': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M12 2v20"/><path d="M8 6c0 4 4 4 4 8s-4 4-4 8"/><path d="M16 6c0 4-4 4-4 8s4 4 4 8"/></svg>',
+    'star': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    
+    'analysis': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>',
 }
 
-# Keyword to icon mapping
+# Notification type to icon mapping (primary mapping)
+NOTIFICATION_TYPE_ICONS = {
+    'INFO': 'info',
+    'WORKFLOW': 'check',
+    'SYSTEM': 'warning',
+    'ASSIGNMENT': 'assigned',
+    'STATUS_CHANGE': 'validated',
+    'APPOINTMENT': 'appointment',
+    'REPORT': 'report',
+    'PAYMENT': 'money',
+    'DOCUMENT_READY': 'file',
+    'REWARD': 'gift',
+    'POINTS': 'star',
+}
+
+# Keyword to icon mapping (fallback when type is generic)
 KEYWORD_MAP = {
     'analyse': 'flask',
     'analysis': 'flask',
@@ -77,7 +90,8 @@ KEYWORD_MAP = {
     'colis': 'sample',
     'cadeau': 'gift',
     'gift': 'gift',
-    'notification': 'notification',
+    'points': 'star',
+    'étoile': 'star',
     'email': 'mail',
     'message': 'mail',
     'facture': 'payment',
@@ -87,17 +101,33 @@ KEYWORD_MAP = {
     'complété': 'check',
     'clôturé': 'check',
     'closed': 'check',
+    'félicitations': 'star',
+    'congratulations': 'star',
 }
 
+
 @register.filter
-def notification_icon(message):
-    """Return appropriate icon SVG based on notification message content."""
-    if not message:
-        return ICONS['info']
+def notification_icon(notif):
+    """Return appropriate icon SVG based on notification object (with type) or message content."""
+    # Support both Notification objects and plain messages
+    message = ''
+    notif_type = ''
+    
+    if hasattr(notif, 'message'):
+        message = notif.message or ''
+        notif_type = getattr(notif, 'notification_type', '') or ''
+    else:
+        message = str(notif) if notif else ''
     
     message_lower = message.lower()
     
-    # Check for keywords in message
+    # First try: use notification type for precise icon
+    if notif_type:
+        icon_name = NOTIFICATION_TYPE_ICONS.get(notif_type, '')
+        if icon_name and icon_name in ICONS:
+            return ICONS[icon_name]
+    
+    # Second try: check for keywords in message
     for keyword, icon_name in KEYWORD_MAP.items():
         if keyword in message_lower:
             return ICONS.get(icon_name, ICONS['info'])
@@ -107,13 +137,41 @@ def notification_icon(message):
 
 
 @register.filter
-def notification_icon_color(message):
-    """Return appropriate color based on notification message content."""
-    if not message:
-        return '#64748b'  # slate-500
+def notification_icon_color(notif):
+    """Return appropriate color based on notification type and message content."""
+    # Support both Notification objects and plain messages
+    message = ''
+    notif_type = ''
+    
+    if hasattr(notif, 'message'):
+        message = notif.message or ''
+        notif_type = getattr(notif, 'notification_type', '') or ''
+    else:
+        message = str(notif) if notif else ''
     
     message_lower = message.lower()
     
+    # First try: use notification type for precise color
+    type_colors = {
+        'REWARD': '#f59e0b',      # amber-500 for gifts/points
+        'POINTS': '#f59e0b',      # amber-500 for points
+        'ASSIGNMENT': '#8b5cf6',  # violet-500 for assignments
+        'REPORT': '#2563eb',      # blue-600 for reports
+        'PAYMENT': '#d97706',     # amber-600 for payments
+        'APPOINTMENT': '#0284c7', # sky-600 for appointments
+        'STATUS_CHANGE': '#16a34a',  # green-600 for status changes
+        'WORKFLOW': '#16a34a',    # green-600 for workflow
+        'DOCUMENT_READY': '#2563eb',  # blue-600 for documents
+        'SYSTEM': '#ea580c',      # orange-600 for system
+        'VALIDATED': '#16a34a',   # green-600 for validated
+        'REJECTED': '#dc2626',   # red-600 for rejected
+        'INFO': '#64748b',        # slate-500 for info
+    }
+    
+    if notif_type and notif_type in type_colors:
+        return type_colors[notif_type]
+    
+    # Second try: check keywords in message
     # Error/Rejected - Red
     if any(word in message_lower for word in ['rejeté', 'rejetée', 'rejected', 'refusé', 'refused', 'erreur', 'error']):
         return '#dc2626'  # red-600
@@ -126,9 +184,21 @@ def notification_icon_color(message):
     if any(word in message_lower for word in ['paiement', 'payment', 'payé', 'devis', 'quote', 'facture', 'invoice']):
         return '#d97706'  # amber-600
     
+    # Gift/Points/Star - Amber/Gold
+    if any(word in message_lower for word in ['points', 'gift', 'cadeau', 'étoile', 'star', 'félicitations', 'congratulations']):
+        return '#f59e0b'  # amber-500
+    
+    # Assignment - Violet
+    if any(word in message_lower for word in ['assigné', 'assigned', 'attribué']):
+        return '#8b5cf6'  # violet-500
+    
     # Analysis/Report - Blue
     if any(word in message_lower for word in ['analyse', 'analysis', 'rapport', 'report', 'échantillon', 'sample']):
         return '#2563eb'  # blue-600
+    
+    # Appointment - Sky
+    if any(word in message_lower for word in ['rdv', 'rendez-vous', 'appointment']):
+        return '#0284c7'  # sky-600
     
     # Warning - Orange
     if any(word in message_lower for word in ['warning', 'attention', 'alerte', 'alert']):

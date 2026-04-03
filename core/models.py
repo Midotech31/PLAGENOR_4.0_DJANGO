@@ -4,7 +4,62 @@ from django.utils.translation import gettext_lazy as _
 import uuid
 
 
-class Service(models.Model):
+class SoftDeleteManager(models.Manager):
+    """Manager that excludes soft-deleted objects by default."""
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+    
+    def all_with_deleted(self):
+        """Return all objects including soft-deleted ones."""
+        return super().get_queryset()
+    
+    def deleted_only(self):
+        """Return only soft-deleted objects."""
+        return super().get_queryset().filter(is_deleted=True)
+
+
+class SoftDeleteModel(models.Model):
+    """Mixin for soft delete functionality."""
+    
+    is_deleted = models.BooleanField(default=False, verbose_name=_('Soft deleted'))
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Deleted at'))
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+        verbose_name=_('Deleted by')
+    )
+    
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+    
+    class Meta:
+        abstract = True
+    
+    def soft_delete(self, deleted_by=None):
+        """Mark this object as deleted."""
+        from django.utils import timezone
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.deleted_by = deleted_by
+        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+    
+    def restore(self):
+        """Restore a soft-deleted object."""
+        self.is_deleted = False
+        self.deleted_at = None
+        self.deleted_by = None
+        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+    
+    def hard_delete(self):
+        """Permanently delete this object."""
+        super().delete()
+
+
+class Service(SoftDeleteModel):
     CHANNEL_CHOICES = [
         ('BOTH', 'IBTIKAR & GENOCLAB'),
         ('IBTIKAR', 'IBTIKAR uniquement'),
@@ -236,6 +291,13 @@ class ServiceFormField(models.Model):
         blank=True,
         help_text='Per-option pricing: {"option_value": 500, "other_option": 1000} - for multi-select fields'
     )
+    
+    # Maximum selections for multi-select fields (security constraint)
+    max_selections = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Maximum number of selections allowed for multi-select fields (security constraint)'
+    )
 
     class Meta:
         db_table = 'service_form_fields'
@@ -355,7 +417,7 @@ class ServicePricing(models.Model):
         return f"{self.service.code} - {self.name}: {self.amount} DZD"
 
 
-class Request(models.Model):
+class Request(SoftDeleteModel):
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
         ('GENOCLAB', 'GENOCLAB'),

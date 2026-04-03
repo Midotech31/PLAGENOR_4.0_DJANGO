@@ -13,9 +13,42 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
 }
 .reward-box.opened {
     background: linear-gradient(135deg, #34d399, #10b981);
+    animation: none;
+}
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
+    50% { box-shadow: 0 4px 24px rgba(251, 191, 36, 0.6); }
+}
+.badge-bronze { color: #cd7f32; }
+.badge-silver { color: #c0c0c0; }
+.badge-gold { color: #ffd700; }
+.badge-platinum { color: #e5e4e2; }
+.badge-diamond { color: #b9f2ff; text-shadow: 0 0 8px rgba(185, 242, 255, 0.8); }
+@keyframes confetti-fall {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.celebration-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+    color: white;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    z-index: 10000;
+    animation: slideDown 0.5s ease;
+}
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
 }
 .milestone-ring {
     position: relative;
@@ -139,7 +172,20 @@
                     <div style="flex: 1; min-width: 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <div style="font-weight: 600;">{{ member_data.member.user.get_full_name }}</div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="font-weight: 600;">{{ member_data.member.user.get_full_name }}</div>
+                                    {% if member_data.badge_name != 'Newcomer' %}
+                                    <span class="badge-{{ member_data.badge_name|lower }}" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: {% if member_data.badge_name == 'Bronze' %}linear-gradient(135deg, #cd7f32, #b87333){% elif member_data.badge_name == 'Silver' %}linear-gradient(135deg, #c0c0c0, #a8a8a8){% elif member_data.badge_name == 'Gold' %}linear-gradient(135deg, #ffd700, #daa520){% elif member_data.badge_name == 'Platinum' %}linear-gradient(135deg, #e5e4e2, #c0c0c0){% elif member_data.badge_name == 'Diamond' %}linear-gradient(135deg, #b9f2ff, #87ceeb){% endif %}; color: white; font-weight: 600;">
+                                        {% if member_data.badge_name == 'Bronze' %}🥉
+                                        {% elif member_data.badge_name == 'Silver' %}🥈
+                                        {% elif member_data.badge_name == 'Gold' %}🥇
+                                        {% elif member_data.badge_name == 'Platinum' %}💎
+                                        {% elif member_data.badge_name == 'Diamond' %}👑
+                                        {% endif %}
+                                        {{ member_data.badge_name }}
+                                    </span>
+                                    {% endif %}
+                                </div>
                                 <div style="font-size: 12px; color: #6b7280;">
                                     {% trans "Services" %}: {{ member_data.completed_services }} &middot;
                                     {% trans "Efficiency" %}: {{ member_data.efficiency_rate }}%
@@ -166,11 +212,12 @@
                             <span>{{ member_data.next_milestone }} pts</span>
                         </div>
                         
-                        <!-- Reward Boxes -->
-                        {% if member_data.reward_boxes > 0 %}
-                        <div style="margin-top: 8px; display: flex; gap: 4px;">
-                            {% for i in ""|ljust:member_data.reward_boxes %}
-                            <div class="reward-box opened" title="{% trans 'Reward Box' %}">
+                        <!-- Available Reward Boxes (not collected) -->
+                        {% if member_data.available_boxes > 0 %}
+                        <div style="margin-top: 8px; display: flex; gap: 4px; align-items: center;">
+                            <span style="font-size: 11px; color: #6b7280;">{% trans "Available Rewards" %}:</span>
+                            {% for i in ""|ljust:member_data.available_boxes %}
+                            <div class="reward-box" title="{% trans 'Reward Box - Ready to collect!' %}">
                                 🎁
                             </div>
                             {% endfor %}

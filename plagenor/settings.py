@@ -167,6 +167,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'plagenor.request_id.RequestIDMiddleware',  # Request ID tracking for production debugging
     'plagenor.rate_limit.RateLimitMiddleware',
     'plagenor.rate_limit.BruteForceProtectionMiddleware',
     'dashboard.middleware.UpdateLastSeenMiddleware',
@@ -364,3 +365,47 @@ EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWO
 DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# =============================================================================
+# REST API Configuration
+# =============================================================================
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# OpenAPI / Swagger Documentation (drf-spectacular)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PLAGENOR 4.0 API',
+    'DESCRIPTION': '''
+PLAGENOR 4.0 — Plateforme de Gestion des Analyses Biologiques
+Biological Analysis Management Platform
+
+Dual-channel bio-analysis platform:
+- **IBTIKAR**: Academic/research channel
+- **GENOCLAB**: Commercial/clinic channel
+
+## Authentication
+Most endpoints require authentication. Use session-based auth or JWT tokens.
+
+## Rate Limiting
+API calls are rate-limited to 100 requests/minute.
+    ''',
+    'VERSION': '4.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'TAGS': [
+        {'name': 'Health', 'description': 'API health checks'},
+        {'name': 'Services', 'description': 'Service catalog and pricing'},
+        {'name': 'Requests', 'description': 'Request management'},
+        {'name': 'Notifications', 'description': 'User notifications'},
+        {'name': 'Tracking', 'description': 'Public request tracking'},
+    ],
+}

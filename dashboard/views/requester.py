@@ -104,7 +104,7 @@ def index(request):
 def request_detail(request, pk):
     from documents.pdf_generators import check_template_status
     
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
 
@@ -164,20 +164,8 @@ def create_request(request):
     if declared < 0 or declared > 200000:
         messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
         return redirect_back(request, 'dashboard:requester')
-    if service.ibtikar_price and float(service.ibtikar_price) > declared:
-        messages.warning(request, f"Attention: le coût estimé ({service.ibtikar_price} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
 
-    # Budget check before submission
-    budget_check = check_ibtikar_budget(amount=service.ibtikar_price, requester=request.user)
-    if budget_check['exceeded']:
-        messages.error(
-            request,
-            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
-            f"Reste: {budget_check['remaining']:,.0f} DZD."
-        )
-        return redirect_back(request, 'dashboard:requester')
-
-    # Collect YAML parameter values
+    # Collect parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
     sample_data = {}
     for key, val in request.POST.items():
@@ -187,18 +175,54 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
-    # Calculate cost from YAML pricing if available
-    from core.pricing import calculate_price
-    from core.registry import get_service_def
-    yaml_def = get_service_def(service.code)
-    if yaml_def and sample_table_data:
+    # Calculate cost from ServicePricing database with server-side validation
+    from core.pricing import validate_and_calculate_price
+    from decimal import Decimal
+    
+    # Extract submitted price for validation (even though we don't trust it)
+    submitted_budget = request.POST.get('submitted_budget_amount')
+    if submitted_budget:
         try:
-            price_result = calculate_price(yaml_def, service_params, sample_table_data)
-            budget_amount = price_result.get('total', float(service.ibtikar_price))
-        except (ValueError, KeyError):
-            budget_amount = float(service.ibtikar_price)
-    else:
-        budget_amount = float(service.ibtikar_price)
+            submitted_budget = Decimal(submitted_budget)
+        except (ValueError, TypeError):
+            submitted_budget = None
+    
+    # Server-side price validation - ALWAYS use server price, never trust client
+    price_validation = validate_and_calculate_price(
+        service=service,
+        channel='IBTIKAR',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+        submitted_price=submitted_budget,
+    )
+    
+    # Use server-calculated price (authoritative)
+    budget_amount = price_validation['server_price']
+    
+    # Store pricing breakdown in request for audit trail
+    pricing_breakdown = {
+        'source': price_validation['price_source'],
+        'server_price': budget_amount,
+        'submitted_price': float(submitted_budget) if submitted_budget else None,
+        'mismatch_detected': price_validation['mismatch_detected'],
+        'cost_breakdown': price_validation.get('cost_result', {}),
+        'modifiers_applied': price_validation.get('modifier_result', {}).get('modifiers_applied', []),
+    }
+
+    # Check budget against declared balance
+    if budget_amount > declared:
+        messages.warning(request, f"Attention: le coût estimé ({budget_amount:,.0f} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
+
+    # Budget check before submission
+    budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
+    if budget_check['exceeded']:
+        messages.error(
+            request,
+            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
+            f"Reste: {budget_check['remaining']:,.0f} DZD."
+        )
+        return redirect_back(request, 'dashboard:requester')
 
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
@@ -215,6 +239,7 @@ def create_request(request):
             'pi_name': request.POST.get('pi_name', ''),
             'pi_email': request.POST.get('pi_email', ''),
             'pi_phone': request.POST.get('pi_phone', ''),
+            'pricing_breakdown': pricing_breakdown,
         },
         user=request.user,
     )
@@ -226,7 +251,7 @@ def create_request(request):
 def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -263,7 +288,7 @@ def confirm_receipt(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     import uuid as _uuid
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
@@ -284,7 +309,7 @@ def confirm_appointment(request, pk):
 def suggest_alternative_date(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
     if alt_date:
@@ -322,7 +347,7 @@ def submit_ibtikar_code(request, pk):
     """Requester submits their IBTIKAR-DGRSDT code."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     code = request.POST.get('ibtikar_code', '').strip()
     if not code:
         messages.error(request, "Veuillez saisir votre code IBTIKAR.")
@@ -344,7 +369,7 @@ def submit_ibtikar_code(request, pk):
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     rating = int(request.POST.get('rating', 0))
     if 1 <= rating <= 5:
         req.service_rating = rating
@@ -358,7 +383,7 @@ def rate_service(request, pk):
 @requester_required
 def post_download(request, pk):
     """Post-download acknowledgment page with rating form."""
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     
     if not req.report_file:
         messages.warning(request, "Aucun rapport disponible pour cette demande.")

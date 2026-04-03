@@ -71,6 +71,8 @@ def _serialize_field_for_template(field):
         'help_text': field.help_text_fr or '',
         'channel': getattr(field, 'channel', 'BOTH') or 'BOTH',
         'pricing_info': pricing_info,
+        'conditional_logic': getattr(field, 'conditional_logic', None) or [],
+        'option_pricing': getattr(field, 'option_pricing', None) or {},
     }
 
 
@@ -101,13 +103,38 @@ def _serialize_sample_column(col):
 
 
 def _get_pricing(service):
-    """Get pricing from YAML (used for cost estimation in the form)."""
-    try:
-        from core.registry import get_service_def
-        definition = get_service_def(service.code)
-        return definition.get('pricing', {}) if definition else {}
-    except Exception:
+    """Get pricing from database ServicePricing model for cost estimation."""
+    from core.models import ServicePricing
+    
+    configs = ServicePricing.objects.filter(
+        service=service,
+        is_active=True
+    ).order_by('priority', 'pk')
+    
+    if not configs.exists():
         return {}
+    
+    pricing = {
+        'configs': [],
+        'base_price': 0,
+        'model': 'per_sample_fixed',
+    }
+    
+    for cfg in configs:
+        cfg_data = {
+            'id': str(cfg.pk),
+            'name': cfg.name,
+            'pricing_type': cfg.pricing_type,
+            'channel': cfg.channel,
+            'amount': float(cfg.amount) if cfg.amount else 0,
+            'unit': cfg.unit,
+        }
+        pricing['configs'].append(cfg_data)
+        
+        if cfg.pricing_type == 'BASE':
+            pricing['base_price'] = float(cfg.amount) if cfg.amount else 0
+    
+    return pricing
 
 
 def service_form_fragment(request, service_code):
@@ -267,6 +294,10 @@ def all_service_form_fields(request, service_id):
                 'price_modifier_value': float(field.price_modifier_value) if field.price_modifier_value else None,
                 'condition_note_fr': getattr(field, 'condition_note_fr', '') or '',
                 'condition_note_en': getattr(field, 'condition_note_en', '') or '',
+                # Conditional logic
+                'conditional_logic': getattr(field, 'conditional_logic', []) or [],
+                # Option-level pricing
+                'option_pricing': getattr(field, 'option_pricing', {}) or {},
             }
             if lang == 'en':
                 field_data['label'] = field.label_en or field.label_fr or field.name
@@ -333,6 +364,8 @@ def service_field_create(request, service_id):
             help_text_en=data.get('help_text_en', ''),
             order=max_order + 1,
             channel=data.get('channel', 'BOTH'),
+            conditional_logic=data.get('conditional_logic', []) or [],
+            option_pricing=data.get('option_pricing', {}) or {},
         )
 
         return JsonResponse({
@@ -412,6 +445,10 @@ def service_field_update(request, field_id):
             field.condition_note_fr = data['condition_note_fr'] or ''
         if 'condition_note_en' in data:
             field.condition_note_en = data['condition_note_en'] or ''
+        if 'conditional_logic' in data:
+            field.conditional_logic = data['conditional_logic'] or []
+        if 'option_pricing' in data:
+            field.option_pricing = data['option_pricing'] or {}
 
         field.save()
 

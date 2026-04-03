@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from django.http import JsonResponse
 
 from dashboard.views import report as report_views
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 # Health check endpoint for uptime monitoring
 def health_check(request):
@@ -27,6 +28,11 @@ urlpatterns = [
     
     # REST API
     path('api/v1/', include('api.urls')),
+    
+    # OpenAPI Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # Public report delivery
     path('report/<uuid:token>/', report_views.report_viewer, name='report_view'),

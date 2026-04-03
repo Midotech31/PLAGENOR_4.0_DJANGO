@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
@@ -395,13 +395,72 @@ def upload_report(request, pk):
 @analyst_required
 def collect_gift(request):
     """Member marks their gift as collected (physically picked up from admin)."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if request.method != 'POST':
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
         return HttpResponseForbidden()
     profile = request.user.member_profile
     if profile.gift_unlocked and not profile.gift_collected:
         profile.gift_collected = True
         profile.save(update_fields=['gift_collected'])
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': "🎁 Cadeau marqué comme récupéré !"
+            })
         messages.success(request, "🎁 Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
     else:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': "Aucun cadeau disponible à récupérer."})
         messages.info(request, "Aucun cadeau disponible à récupérer.")
     return redirect_back(request, 'dashboard:analyst')
+
+
+@analyst_required
+def collect_reward_box(request):
+    """Member collects an available reward box via AJAX."""
+    from django.http import JsonResponse
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if not is_ajax:
+        return HttpResponseForbidden()
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+    
+    profile = request.user.member_profile
+    available_boxes = profile.available_reward_boxes
+    
+    if available_boxes <= 0:
+        return JsonResponse({
+            'success': False,
+            'error': 'Aucun coffret disponible à récupérer.'
+        })
+    
+    from django.utils import timezone
+    
+    box_number = profile.collected_reward_boxes + 1
+    box_value = (profile.total_points // 2000) * 100
+    
+    profile.collected_reward_boxes += 1
+    profile.reward_history = profile.reward_history or []
+    profile.reward_history.append({
+        'type': 'reward_box',
+        'box_number': box_number,
+        'points_at_unlock': profile.total_points,
+        'value': box_value,
+        'collected_at': timezone.now().isoformat(),
+    })
+    profile.reward_history = profile.reward_history[-20:]
+    profile.save(update_fields=['collected_reward_boxes', 'reward_history'])
+    
+    new_available = profile.available_reward_boxes
+    
+    return JsonResponse({
+        'success': True,
+        'message': f"🎁 Coffret récupéré ! Plus que {new_available} coffret(s) disponible(s).",
+        'box_number': box_number,
+        'box_value': box_value,
+        'remaining_boxes': new_available,
+        'total_collected': profile.collected_reward_boxes,
+    })

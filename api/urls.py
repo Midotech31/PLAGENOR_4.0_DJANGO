@@ -10,6 +10,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 
 from core.models import Request, Service, Invoice
 from accounts.models import User
@@ -19,6 +21,12 @@ from notifications.models import Notification
 # API Views
 # =============================================================================
 
+@extend_schema(
+    methods=['GET'],
+    summary='Health check',
+    description='Returns API health status and version information.',
+    tags=['Health'],
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_health(request):
@@ -30,33 +38,65 @@ def api_health(request):
     })
 
 
+@extend_schema(
+    methods=['GET'],
+    summary='List services',
+    description='Returns all active services with their base pricing from ServicePricing.',
+    tags=['Services'],
+)
 class ServiceListView(APIView):
-    """List all active services"""
+    """List all active services with pricing from ServicePricing"""
     permission_classes = [AllowAny]
-    
+
     def get(self, request):
-        services = Service.objects.filter(active=True).values(
-            'id', 'code', 'name', 'description', 
-            'ibtikar_price', 'genoclab_price', 
-            'turnaround_days', 'channel_availability'
-        )
-        return Response(list(services))
+        services = Service.objects.filter(active=True)
+        result = []
+        for svc in services:
+            base_cfg = svc.pricing_configs.filter(is_active=True, pricing_type='BASE').first()
+            base_price = float(base_cfg.amount) if base_cfg and base_cfg.amount else 0
+
+            result.append({
+                'id': str(svc.id),
+                'code': svc.code,
+                'name': svc.name,
+                'description': svc.description,
+                'base_price': base_price,
+                'turnaround_days': svc.turnaround_days,
+                'channel_availability': svc.channel_availability,
+            })
+        return Response(result)
 
 
+@extend_schema(
+    methods=['GET'],
+    summary='Service detail',
+    description='Returns detailed information about a specific service including all pricing configurations.',
+    tags=['Services'],
+)
 class ServiceDetailView(APIView):
-    """Get service details"""
+    """Get service details with pricing from ServicePricing"""
     permission_classes = [AllowAny]
-    
+
     def get(self, request, code):
         try:
             service = Service.objects.get(code=code, active=True)
+
+            pricing_configs = service.pricing_configs.filter(is_active=True).order_by('priority', 'pk')
+            pricing_data = []
+            for cfg in pricing_configs:
+                pricing_data.append({
+                    'type': cfg.pricing_type,
+                    'name': cfg.name,
+                    'amount': float(cfg.amount) if cfg.amount else 0,
+                    'channel': cfg.channel,
+                })
+
             return Response({
                 'id': str(service.id),
                 'code': service.code,
                 'name': service.name,
                 'description': service.description,
-                'ibtikar_price': str(service.ibtikar_price),
-                'genoclab_price': str(service.genoclab_price),
+                'pricing': pricing_data,
                 'turnaround_days': service.turnaround_days,
                 'channel_availability': service.channel_availability,
                 'service_type': service.service_type,
@@ -65,20 +105,32 @@ class ServiceDetailView(APIView):
             return Response({'error': 'Service not found'}, status=404)
 
 
+@extend_schema(
+    methods=['GET'],
+    summary='List user requests',
+    description='Returns all requests for the authenticated user.',
+    tags=['Requests'],
+)
 class RequestListView(APIView):
     """List requests for authenticated user"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        requests = Request.objects.filter(
+        requests_qs = Request.objects.filter(
             requester=request.user
         ).select_related('service').order_by('-created_at')[:50].values(
             'id', 'display_id', 'title', 'status', 'channel',
             'created_at', 'updated_at'
         )
-        return Response(list(requests))
+        return Response(list(requests_qs))
 
 
+@extend_schema(
+    methods=['GET'],
+    summary='Request detail',
+    description='Returns detailed information about a specific request.',
+    tags=['Requests'],
+)
 class RequestDetailView(APIView):
     """Get request details"""
     permission_classes = [IsAuthenticated]
@@ -89,7 +141,6 @@ class RequestDetailView(APIView):
                 'service', 'requester', 'assigned_to__user'
             ).get(pk=pk)
             
-            # Check if user has access
             if req.requester != request.user and not request.user.is_admin:
                 return Response({'error': 'Access denied'}, status=403)
             
@@ -109,6 +160,12 @@ class RequestDetailView(APIView):
             return Response({'error': 'Request not found'}, status=404)
 
 
+@extend_schema(
+    methods=['GET', 'POST'],
+    summary='List/Mark notifications',
+    description='GET: Returns notifications for authenticated user. POST: Mark notification as read.',
+    tags=['Notifications'],
+)
 class NotificationListView(APIView):
     """List notifications for authenticated user"""
     permission_classes = [IsAuthenticated]
@@ -133,6 +190,12 @@ class NotificationListView(APIView):
             return Response({'error': 'Notification not found'}, status=404)
 
 
+@extend_schema(
+    methods=['GET'],
+    summary='Track request',
+    description='Public endpoint to track request status by display_id or guest token.',
+    tags=['Tracking'],
+)
 class TrackRequestView(APIView):
     """Track request by display_id or guest token (public)"""
     permission_classes = [AllowAny]

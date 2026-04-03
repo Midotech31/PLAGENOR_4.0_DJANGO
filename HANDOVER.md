@@ -267,21 +267,109 @@ The following items from earlier sessions have been completed:
 - [x] Current level highlight with "Actuel" label
 - [x] Notification links - role-aware routing implemented
 
-### Potential Future Enhancements
-1. **Reward Box Collection UX**
-   - Currently: AJAX collect button exists
-   - Could add: Confirmation modal, collection history section
+### Reward Box Collection UX (Completed)
+- [x] AJAX collect for gift (milestone gift from admin)
+- [x] AJAX collect for reward boxes (2000pt automated rewards)
+- [x] Confirmation modal before opening
+- [x] 3D animated reward box with floating animation
+- [x] Confetti celebration animation on open
+- [x] Collection history section with box details
+- [x] Real-time toast notifications
 
-2. **Milestone Celebration Animation**
+### Test Coverage (Completed)
+- [x] `tests/test_pricing.py` - Full coverage for pricing engine
+  - Base price, per-sample, surcharges, discounts
+  - validate_and_calculate_price() match vs mismatch
+  - Field price modifiers (add/set/multiply)
+  - Price propagation with multiple samples
+  - Channel-specific pricing (IBTIKAR vs GENOCLAB)
+  - Multiple discounts stacking
+- [x] `tests/test_points.py` - Full coverage for points system
+  - award_points() increments, milestones, badges, reward boxes
+  - All 10 badge levels verified
+  - Double award prevention
+  - Reward box calculations
+- [x] `tests/test_workflow.py` - Workflow transitions
+  - Valid/invalid transitions for both channels
+  - Auto 50pts on CLOSED/ARCHIVED
+  - Double close prevention
+  - No assigned member graceful skip
+- [x] `tests/test_notifications.py` - Notification system
+  - Notification creation, mark as read
+  - All notification types
+  - Role-aware links
+- [x] `tests/test_conditional_logic.py` - Conditional pricing
+  - Field show/hide logic
+  - Price modifier activation/revert
+  - Multi-select cumulative pricing
+
+### Badge System Harmonisation (Completed)
+- [x] Single source of truth: `BadgeConfig` DB model
+- [x] All 10 badge levels (Bronze → Legend) configured
+- [x] MemberProfile display properties query BadgeConfig
+- [x] Removed deprecated `BADGE_TIERS` constant
+- [x] `_calculate_badge_level()` uses BadgeConfig.get_badge_for_points()
+
+### Pricing Engine Bug Fix (Completed)
+- [x] Fixed OVERRIDE pricing type not working correctly
+- [x] Fixed BASE + DISCOUNT stacking
+- [x] Fixed operator precedence issue in pricing logic
+
+### Critical Fixes & Enhancements (Session 2026-04-03)
+- [x] **core/views.py** - Deleted empty placeholder file
+- [x] **api/views.py** - Not needed (views defined inline in api/urls.py)
+- [x] **PointsHistory duplicate prevention** - Added `UniqueConstraint` on (member, reason, points)
+- [x] **Soft delete on Service/Request/User** - Added `SoftDeleteModel` mixin with `is_deleted`, `deleted_at`, `deleted_by` fields
+- [x] **OpenAPI documentation** - Configured at `/api/docs/` (Swagger) and `/api/redoc/`
+- [x] **Request ID logging** - Already implemented in `plagenor/request_id.py`
+- [x] **drf-spectacular** - Installed and configured for REST API docs
+
+### Test Fixes (Session 2026-04-03 PM)
+- [x] **Badge notification tests** - Fixed event index (milestone=0, badge_change=1, reward_box=2)
+- [x] **reward_level_name test** - Fixed to use total_points instead of badge_level
+- [x] **All 73 tests now pass** (100% pass rate)
+
+### Soft Delete Integration
+- Service/Request/User use `SoftDeleteManager` (excludes deleted by default)
+- Use `model.soft_delete(deleted_by=user)` instead of `model.delete()`
+- Use `model.all_objects` to query including deleted
+- Use `model.hard_delete()` for permanent deletion (Superadmin only)
+- Configuration models (ServiceFormField, ServicePricing, PlatformContent) use hard delete
+
+### Pricing Security Fixes (Session 2026-04-03 Late)
+- [x] **Server-side conditional logic evaluation** - `evaluate_conditional_logic_server_side()` mirrors JS logic
+- [x] **Hidden field manipulation detection** - Rejects data for fields that should be hidden
+- [x] **Hidden field logging** - Logs `HIDDEN_FIELD_MANIPULATION` events with severity HIGH
+- [x] **max_selections field** - Added to `ServiceFormField` for multi-select security cap
+- [x] **max_selections validation** - `validate_max_selections()` truncates excess selections
+- [x] **11 new security tests** - Tests for conditional logic evaluation and max_selections
+
+### Pricing Security Architecture
+```
+User submits form via curl (bypassing JS)
+    ↓
+validate_and_calculate_price()
+    ↓
+evaluate_conditional_logic_server_side()  ← NEW: evaluates visibility
+    ↓
+Only visible field values used for pricing calculation
+    ↓
+Hidden field data rejected + logged as SECURITY [HIDDEN_FIELD_MANIPULATION]
+    ↓
+validate_max_selections()  ← NEW: enforces selection limits
+    ↓
+calculate_cost_from_db() + apply_field_price_modifiers()
+    ↓
+Server price returned (authoritative)
+```
+
+### Potential Future Enhancements
+1. **Milestone Celebration Animation**
    - When reaching 1000, 2000, etc. points
    - Currently: Notification only
    - Could add: Confetti animation on dashboard
 
-3. **Test Coverage**
-   - No automated tests currently
-   - Could add: Unit tests for pricing, workflow transitions
-
-4. **API Documentation**
+2. **API Documentation**
    - REST API exists at `/api/`
    - No Swagger/OpenAPI documentation
 
@@ -298,11 +386,29 @@ The following items from earlier sessions have been completed:
 | `core/services/ibtikar.py` | Service submission | Initial |
 | `core/services/genoclab.py` | Service submission | Initial |
 | `core/state_machine.py` | Workflow states | Initial |
+| `core/pricing.py` | Fixed OVERRIDE pricing logic, discount stacking | Test coverage |
+| `core/models.py` | Added SoftDeleteModel mixin for Service/Request | Soft delete |
+| `core/models.py` | Added `max_selections` field to ServiceFormField | Pricing security |
+| `core/pricing.py` | Added `evaluate_conditional_logic_server_side()`, `validate_max_selections()` | Pricing security |
 
 ### Accounts App
 | File | Changes | Session |
 |------|---------|---------|
-| `accounts/models.py` | MemberProfile fields, `award_points()` | Rewards system |
+| `accounts/models.py` | MemberProfile fields, `award_points()`, BadgeConfig integration | Rewards system |
+| `accounts/models.py` | Removed BADGE_TIERS, display properties use BadgeConfig | Badge harmonisation |
+| `accounts/models.py` | Added SoftDeleteUserManager, soft delete on User | Soft delete |
+| `accounts/models.py` | Added PointsHistory unique constraint | Duplicate prevention |
+
+### Tests App
+| File | Purpose |
+|------|---------|
+| `tests/conftest.py` | pytest fixtures (UserFactory, MemberProfileFactory, etc.) |
+| `tests/test_pricing.py` | Pricing engine tests (30 tests) - Including security tests |
+| `tests/test_points.py` | Points & rewards tests (27 tests) - Fixed badge notification tests |
+| `tests/test_workflow.py` | Workflow transitions tests (7 tests) |
+| `tests/test_notifications.py` | Notification system tests (6 tests) |
+| `tests/test_conditional_logic.py` | Conditional pricing tests (11 tests) |
+| **Total: 84 tests** | All passing (100%) |
 
 ### Notifications App
 | File | Changes | Session |
@@ -314,13 +420,13 @@ The following items from earlier sessions have been completed:
 | File | Changes | Session |
 |------|---------|---------|
 | `dashboard/views/admin_ops.py` | Bulk actions, performance, CSV export | Admin ops |
-| `dashboard/views/analyst.py` | Badge gallery, reward boxes | Rewards UX |
-| `dashboard/urls.py` | New routes | Various |
+| `dashboard/views/analyst.py` | Badge gallery, reward boxes, AJAX collect | Rewards UX |
+| `dashboard/urls.py` | New routes for reward box collection | Various |
 
 ### Templates
 | File | Changes | Session |
 |------|---------|---------|
-| `templates/dashboard/analyst/index.html` | Badge gallery, reward boxes | Badge fix |
+| `templates/dashboard/analyst/index.html` | Badge gallery, reward boxes, AJAX collect, history | Rewards UX |
 | `templates/dashboard/admin_ops/index.html` | Activity log, performance | Admin ops |
 | `templates/includes/notification_list.html` | SVG icons | Notifications |
 
@@ -352,6 +458,7 @@ accounts:
   0011_add_reward_fields_to_memberprofile
   0012_user_address_user_country_user_faculty_and_more
   0013_add_badge_and_reward_tracking
+  0014_add_soft_delete_and_points_constraint  # Soft delete fields, unique constraint
 
 core:
   0001_initial
@@ -383,11 +490,14 @@ core:
   0027_serviceformfield_conditional_logic
   0028_serviceformfield_option_pricing
   0029_add_completion_points_awarded
+  0030_add_soft_delete  # Soft delete on Service and Request
+  0031_add_max_selections_field  # max_selections for multi-select security
 
 notifications:
   0001_initial
   0002_add_notification_deep_linking
   0003_add_document_ready_type
+  0004_alter_notification_notification_type  # Notification type field update
 ```
 
 ---
@@ -439,7 +549,10 @@ SUPPORT_EMAIL=contact@plagenor.essbo.dz
 | `/dashboard/analyst/` | Member dashboard |
 | `/dashboard/requester/` | IBTIKAR requester |
 | `/dashboard/client/` | GENOCLAB client |
-| `/api/requests/` | REST API |
+| `/api/v1/services/` | REST API - Services list |
+| `/api/v1/requests/` | REST API - Requests list |
+| `/api/docs/` | Swagger/OpenAPI documentation |
+| `/api/redoc/` | ReDoc API documentation |
 
 ---
 

@@ -957,8 +957,8 @@
                     <a href="?tab=points" class="btn btn-outline">{% trans "Clear" %}</a>
                 </form>
                 {% for member_data in perf_members %}
-                <div class="data-card mb-3 member-row">
-                    <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="data-card mb-3 member-row" x-data="{ showRewardPanel: false }">
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                         <div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             {% if member_data.member.user.avatar %}
                             <img src="{{ member_data.member.user.avatar.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
@@ -981,10 +981,79 @@
                                 <span class="milestone-label">{{ member_data.member.total_points }}/{{ member_data.next_milestone }}</span>
                             </div>
                         </div>
-                        <div style="width: 150px;">
-                            <div class="performance-bar-container">
-                                <div class="performance-bar-fill" style="width: {% widthratio member_data.member.productivity_score 100 100 %}%;"></div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <!-- Award Points Button -->
+                            <button @click="showRewardPanel = !showRewardPanel" class="btn btn-sm btn-primary" title="{% trans 'Send Points / Cheers / Gift' %}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                {% trans "Reward" %}
+                            </button>
+                            {% url 'dashboard:admin_member_points' member_data.member.pk as admin_member_points_url %}
+                            {% if admin_member_points_url %}<a href="{{ admin_member_points_url }}" class="btn btn-sm btn-outline">{% trans "Details" %}</a>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Reward Panel (Collapsible) -->
+                    <div x-show="showRewardPanel" x-transition style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;" @click.away="showRewardPanel = false">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            
+                            <!-- Send Points Form -->
+                            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                <h4 style="margin: 0 0 12px; font-size: 14px; color: #166534;">{% trans "Award Points" %}</h4>
+                                {% url 'dashboard:admin_award_points' member_data.member.pk as award_points_url %}
+                                <form method="post" action="{{ award_points_url }}" class="ajax-form">
+                                    {% csrf_token %}
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <input type="number" name="points" min="1" placeholder="{% trans 'Points' %}" class="form-control" style="width: 80px;" required>
+                                        <input type="text" name="reason" placeholder="{% trans 'Reason (optional)' %}" class="form-control" style="flex: 1; min-width: 150px;">
+                                        <button type="submit" class="btn btn-sm btn-success">{% trans "Send" %}</button>
+                                    </div>
+                                </form>
                             </div>
+
+                            <!-- Send Cheer/Encouragement Form -->
+                            <div style="background: #eff6ff; padding: 16px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                                <h4 style="margin: 0 0 12px; font-size: 14px; color: #1e40af;">{% trans "Send Encouragement" %}</h4>
+                                {% url 'dashboard:admin_send_cheer' member_data.member.pk as send_cheer_url %}
+                                <form method="post" action="{{ send_cheer_url }}" class="ajax-form">
+                                    {% csrf_token %}
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <select name="message" class="form-control" style="flex: 1; min-width: 150px;" onchange="this.nextElementSibling.value=this.value">
+                                            <option value="">-- {% trans "Quick message" %} --</option>
+                                            <option value="{% trans 'Great work!' %}">{% trans "Great work!" %}</option>
+                                            <option value="{% trans 'Keep it up!' %}">{% trans "Keep it up!" %}</option>
+                                            <option value="{% trans 'Excellent analysis!' %}">{% trans "Excellent analysis!" %}</option>
+                                            <option value="{% trans 'Outstanding service!' %}">{% trans "Outstanding service!" %}</option>
+                                            <option value="{% trans 'Thank you for your dedication!' %}">{% trans "Thank you for your dedication!" %}</option>
+                                        </select>
+                                        <input type="text" name="message" placeholder="{% trans 'Or type custom message...' %}" class="form-control" style="flex: 1; min-width: 150px;">
+                                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Send" %}</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Upload Gift Box Form -->
+                            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border: 1px solid #fde68a;">
+                                <h4 style="margin: 0 0 12px; font-size: 14px; color: #92400e;">{% trans "Upload Reward Gift" %}</h4>
+                                {% url 'dashboard:admin_upload_gift' member_data.member.pk as upload_gift_url %}
+                                <form method="post" action="{{ upload_gift_url }}" enctype="multipart/form-data" class="ajax-form">
+                                    {% csrf_token %}
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                        <input type="file" name="gift_image" accept="image/*" class="form-control" style="flex: 1; min-width: 200px; font-size: 0.85rem;" required>
+                                        <button type="submit" class="btn btn-sm" style="background: #f59e0b; color: white;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="17 8 12 3 7 8"/>
+                                                <line x1="12" y1="3" x2="12" y2="15"/>
+                                            </svg>
+                                            {% trans "Upload" %}
+                                        </button>
+                                    </div>
+                                    <p style="margin: 8px 0 0; font-size: 12px; color: #78350f;">{% trans "Member will receive a 3D gift box notification" %}</p>
+                                </form>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -1014,10 +1083,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load notifications on page load
     loadNotifications();
     
-    // AJAX form handling
+    // AJAX form handling with duplicate submission prevention
     document.querySelectorAll('.ajax-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Prevent double submission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.dataset.submitting === 'true') {
+                return;
+            }
+            if (submitBtn) {
+                submitBtn.dataset.submitting = 'true';
+                submitBtn.disabled = true;
+            }
+            
             const formData = new FormData(form);
             const url = form.action;
             
@@ -1036,12 +1116,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(() => location.reload(), 500);
                 } else {
                     showToast(data.error || 'Error', 'error');
+                    // Re-enable submit button on error
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.dataset.submitting = 'false';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                // Fallback to normal form submission
-                form.submit();
+                showToast('Network error. Please try again.', 'error');
+                // Re-enable submit button on error
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.dataset.submitting = 'false';
+                }
             });
         });
     });

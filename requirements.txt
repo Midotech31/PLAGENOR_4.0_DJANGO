@@ -28,6 +28,7 @@ redis>=5.0.0
 djangorestframework>=3.14.0
 djangorestframework-simplejwt>=5.3.0
 django-cors-headers>=4.3.0
+drf-spectacular>=0.27.0  # OpenAPI/Swagger documentation
 
 # Monitoring
 sentry-sdk>=1.40.0
