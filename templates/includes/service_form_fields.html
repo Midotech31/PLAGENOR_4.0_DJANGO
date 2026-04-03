@@ -78,7 +78,8 @@
 
 {% if sample_table.enabled %}
 <div class="sample-table-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
-    <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse;">
+    <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse; min-width: 600px;">
         <thead>
             <tr>
                 {% for col in sample_table.columns %}
@@ -114,6 +115,7 @@
             </tr>
         </tbody>
     </table>
+    </div>
     <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow()" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
 </div>
 {% endif %}
