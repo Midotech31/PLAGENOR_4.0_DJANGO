@@ -820,7 +820,12 @@ function saveField() {
         },
         body: JSON.stringify(fieldData)
     })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) {
+            return r.text().then(text => { throw new Error('HTTP ' + r.status + ': ' + text.substring(0, 500)); });
+        }
+        return r.json();
+    })
     .then(data => {
         if (data.error) {
             alert('Erreur: ' + data.error);

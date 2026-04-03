@@ -141,8 +141,8 @@ urlpatterns = [
     path('api/service/<uuid:service_id>/all-fields/', service_form_api.all_service_form_fields, name='all_service_form_fields'),
     path('api/service/<uuid:service_id>/field/', service_form_api.service_field_create, name='service_field_create'),
     path('api/service/<uuid:service_id>/field/reorder/', service_form_api.service_field_reorder, name='service_field_reorder'),
-    path('api/service/field/<uuid:field_id>/', service_form_api.service_field_update, name='service_field_update'),
-    path('api/service/field/<uuid:field_id>/delete/', service_form_api.service_field_delete, name='service_field_delete'),
+    path('api/service/field/<int:field_id>/', service_form_api.service_field_update, name='service_field_update'),
+    path('api/service/field/<int:field_id>/delete/', service_form_api.service_field_delete, name='service_field_delete'),
     path('api/service/<uuid:service_id>/field/preview/', service_form_api.service_field_preview, name='service_field_preview'),
     
     # Pricing Config API (Superadmin)
