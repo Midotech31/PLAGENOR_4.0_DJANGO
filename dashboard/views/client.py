@@ -143,8 +143,8 @@ def request_detail(request, pk):
     payment_settings = PaymentSettings.get_settings()
     
     # Get workflow history
-    from core.models import RequestStatusHistory
-    history = RequestStatusHistory.objects.filter(request=req).select_related('actor').order_by('created_at')
+    from core.models import RequestHistory
+    history = RequestHistory.objects.filter(request=req).select_related('actor').order_by('created_at')
 
     context = {
         'req': req,

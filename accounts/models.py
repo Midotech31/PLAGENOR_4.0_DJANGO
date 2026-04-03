@@ -78,8 +78,6 @@ class User(AbstractUser):
         ('autre', 'Autre'),
     ]
 
-    objects = UserManager()
-
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='REQUESTER')
     organization = models.CharField(max_length=200, default='', blank=True)
     phone = models.CharField(max_length=50, default='', blank=True)
