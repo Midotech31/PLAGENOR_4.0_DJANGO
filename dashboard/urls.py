@@ -148,8 +148,8 @@ urlpatterns = [
     # Pricing Config API (Superadmin)
     path('api/service/<uuid:service_pk>/pricing/', service_form_api.pricing_configs_list, name='service_pricing_list'),
     path('api/service/<uuid:service_pk>/pricing/add/', service_form_api.pricing_config_create, name='service_pricing_create'),
-    path('api/pricing/<uuid:config_pk>/', service_form_api.pricing_config_update, name='service_pricing_update'),
-    path('api/pricing/<uuid:config_pk>/delete/', service_form_api.pricing_config_delete, name='service_pricing_delete'),
+    path('api/pricing/<int:config_pk>/', service_form_api.pricing_config_update, name='service_pricing_update'),
+    path('api/pricing/<int:config_pk>/delete/', service_form_api.pricing_config_delete, name='service_pricing_delete'),
 
     # QR Code
     path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),
