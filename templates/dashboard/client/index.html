@@ -250,17 +250,20 @@
                                     {% trans "Confirmer la réception" %}
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        {% if client_confirm_url %}
-                        <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
-                                {% trans "Confirmer la réception du rapport" %}
-                            </button>
-                        </form>
                         {% endif %}
+                        {% if not req.report_file %}
+                            {% url 'dashboard:client_confirm' req.pk as client_confirm_url %}
+                            {% if client_confirm_url %}
+                            <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% trans "Confirmer la réception du rapport" %}
+                                </button>
+                            </form>
+                            {% endif %}
                         {% endif %}
                     </div>
                     {% endif %}

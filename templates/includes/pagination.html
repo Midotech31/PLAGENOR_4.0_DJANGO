@@ -1,0 +1,16 @@
+{% load i18n %}
+{% if paginator.has_other_pages %}
+<div class="pagination" style="display:flex; gap:8px; align-items:center;">
+    {% if paginator.has_previous %}
+    <a href="?page={{ paginator.previous_page_number }}" class="btn btn-sm btn-outline">&larr; {% trans "Précédent" %}</a>
+    {% endif %}
+    
+    <span style="padding:4px 12px; background:#f1f5f9; border-radius:4px; font-size:0.85rem;">
+        {% trans "Page" %} {{ paginator.number }} / {{ paginator.paginator.num_pages }}
+    </span>
+    
+    {% if paginator.has_next %}
+    <a href="?page={{ paginator.next_page_number }}" class="btn btn-sm btn-outline">{% trans "Suivant" %} &rarr;</a>
+    {% endif %}
+</div>
+{% endif %}
