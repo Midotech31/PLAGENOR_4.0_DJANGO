@@ -703,7 +703,7 @@ function addConditionalRule(ruleData) {
         var actionSelect = ruleDiv.querySelector('.action-select');
         if (ruleData.actions) {
             ruleData.actions.forEach(function(action) {
-                var opt = actionSelect.querySelector('option[value="' + action + '"');
+                var opt = actionSelect.querySelector('option[value="' + action + '"]');
                 if (opt) opt.selected = true;
             });
         }
