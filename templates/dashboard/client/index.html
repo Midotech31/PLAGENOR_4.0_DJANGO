@@ -290,7 +290,8 @@
                         </form>
                         {% endif %}
                     </div>
-                    {% elif req.service_rating %}
+                    {% endif %}
+                    {% if req.service_rating %}
                     <div class="data-card-row mt-2 text-sm">
                         <span>{% trans "Note" %}: {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b;">&#9733;</span>{% else %}<span style="color:#d1d5db;">&#9733;</span>{% endif %}{% endfor %}</span>
                     </div>
