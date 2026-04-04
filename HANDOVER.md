@@ -363,6 +363,105 @@ calculate_cost_from_db() + apply_field_price_modifiers()
 Server price returned (authoritative)
 ```
 
+---
+
+## IBTIKAR SMART BUDGET GUARD SYSTEM
+
+### Overview
+The IBTIKAR Smart Budget Guard prevents students from exceeding their declared IBTIKAR budget. It uses a SMART approach: **only count requests made AFTER the student's last balance declaration**.
+
+### Business Rules (5 Rules)
+1. **Balance Declaration**: Student declares their IBTIKAR balance when submitting a request
+2. **SMART Tracking**: Only PLAGENOR consumption SINCE the last declaration counts against available budget
+3. **Auto-Lookup**: If no declaration time provided, system finds the student's last declaration from their requests
+4. **Hard Block**: If estimated cost > available budget → **BLOCK submission** (with error message)
+5. **Soft Warning**: If total consumption > 200K cap → **Warning** (but allow submission)
+
+### How It Works
+```
+Student declares balance on PLAGENOR (e.g., 200,000 DA)
+    ↓
+Student submits IBTIKAR request (e.g., 50,000 DA)
+    ↓
+System calculates:
+  - consumption_since_declaration = PLAGENOR requests created AFTER last declaration
+  - available_budget = declared_balance - consumption_since_declaration
+    ↓
+If estimated_cost > available_budget → BLOCK with suggestion
+If total_consumed > 200K cap → Warning (admin may override)
+```
+
+### Files Modified/Created
+
+#### Core App
+| File | Changes | Session |
+|------|---------|---------|
+| `core/models.py` | Added `declared_balance_at` DateTimeField to Request model | Budget Guard |
+| `core/financial.py` | Added SMART budget functions | Budget Guard |
+| `core/services/ibtikar.py` | Enhanced submit + context with budget checks | Budget Guard |
+| `core/urls.py` | Added Budget Guard URL routes | Budget Guard |
+
+#### Dashboard App
+| File | Changes | Session |
+|------|---------|---------|
+| `dashboard/views/requester.py` | Server-side budget blocking in `create_request()` | Budget Guard |
+| `dashboard/urls.py` | Added budget guard routes | Budget Guard |
+| `templates/dashboard/requester/index.html` | Budget UI with progress bar | Budget Guard |
+
+#### Tests App
+| File | Purpose |
+|------|---------|
+| `tests/test_ibtikar_budget_guard.py` | Budget Guard tests (12 tests) |
+
+#### Migrations
+- `0035` — Added `declared_balance_at` to Request model
+
+### Key Functions
+
+#### `core/financial.py`
+```python
+get_ibtikar_budget_available(requester, declared_balance, declared_balance_at=None)
+# Returns: {declared_balance, consumption_since_declaration, available_budget, exceeded, ...}
+
+get_ibtikar_budget_used_since_declaration(requester, declared_balance_at)
+# Returns: Total cost of requests created after declared_balance_at
+
+check_ibtikar_budget(amount, requester, declared_balance, declared_balance_at)
+# Returns: {smart_mode, exceeded, available, cap_exceeded, suggested_action, ...}
+```
+
+#### `core/services/ibtikar.py`
+```python
+submit_ibtikar_request(data, user)
+# - Stores declared_ibtikar_balance and declared_balance_at
+# - Sets _budget_warning/_cap_warning in data if exceeded
+
+get_ibtikar_request_context(user)
+# Returns: {declared, budget_used, available, budget_cap, ...}
+```
+
+#### `dashboard/views/requester.py`
+```python
+create_request(request)
+# - Validates declared balance (0-200K)
+# - Server-side price calculation
+# - Budget check → BLOCK if exceeded, WARN if cap exceeded
+```
+
+### Auto-Application to Future Services
+The budget guard automatically applies to ALL IBTIKAR services because:
+1. Budget check happens in `create_request()` view for ALL IBTIKAR submissions
+2. `submit_ibtikar_request()` stores the declaration data
+3. `get_ibtikar_request_context()` calculates available budget for any requester
+
+No per-service configuration needed.
+
+### Known Limitation (Resolved)
+- ~~Budget validation happens client-side in forms; server-side validation exists but may need enhancement~~ ← **RESOLVED**
+- Server-side budget blocking fully implemented in `dashboard/views/requester.py`
+
+---
+
 ### Potential Future Enhancements
 1. **Milestone Celebration Animation**
    - When reaching 1000, 2000, etc. points
@@ -408,7 +507,8 @@ Server price returned (authoritative)
 | `tests/test_workflow.py` | Workflow transitions tests (7 tests) |
 | `tests/test_notifications.py` | Notification system tests (6 tests) |
 | `tests/test_conditional_logic.py` | Conditional pricing tests (11 tests) |
-| **Total: 84 tests** | All passing (100%) |
+| `tests/test_ibtikar_budget_guard.py` | IBTIKAR Smart Budget Guard tests (12 tests) |
+| **Total: 96 tests** | All passing (100%) |
 
 ### Notifications App
 | File | Changes | Session |
@@ -492,6 +592,7 @@ core:
   0029_add_completion_points_awarded
   0030_add_soft_delete  # Soft delete on Service and Request
   0031_add_max_selections_field  # max_selections for multi-select security
+  0035_add_declared_balance_at  # SMART budget tracking
 
 notifications:
   0001_initial
@@ -596,6 +697,14 @@ SUPPORT_EMAIL=contact@plagenor.essbo.dz
 - [ ] CSV export works
 - [ ] Activity log shows entries
 
+### IBTIKAR Smart Budget Guard
+- [ ] First-time user with no requests → full 200K available
+- [ ] User with previous requests → available = declared - consumption since declaration
+- [ ] Budget exceeded → BLOCK submission with error message
+- [ ] Cap exceeded → Warning but allow submission
+- [ ] Declared balance declared and stored on request
+- [ ] Budget UI shows progress bar on requester dashboard
+
 ---
 
 ## 10. WARNINGS / GOTCHAS
@@ -606,7 +715,7 @@ SUPPORT_EMAIL=contact@plagenor.essbo.dz
 - `services_registry/*.yaml` — YAML archives kept for reference, not used in code
 
 ### Known Limitations
-1. **IBTIKAR budget**: Budget validation happens client-side in forms; server-side validation exists but may need enhancement
+1. ~~**IBTIKAR budget**: Budget validation happens client-side in forms; server-side validation exists but may need enhancement~~ ← **RESOLVED**
 2. **YAML pricing**: Old YAML-based pricing is NOT used; all pricing comes from ServicePricing model
 3. **Email**: Requires external SMTP server; dev mode uses console backend
 4. **Guest tracking**: Guest token-based tracking exists but limited functionality
@@ -621,6 +730,9 @@ SUPPORT_EMAIL=contact@plagenor.essbo.dz
 | Notification routing | `notifications/models.py` | `get_absolute_url()` |
 | Badge calculation | `accounts/models.py` | `_calculate_badge_level()` |
 | State machine | `core/state_machine.py` | `validate_transition()` |
+| **IBTIKAR Budget Guard** | `core/financial.py` | `check_ibtikar_budget()`, `get_ibtikar_budget_available()` |
+| **IBTIKAR Budget Submit** | `core/services/ibtikar.py` | `submit_ibtikar_request()` |
+| **Budget Block UI** | `dashboard/views/requester.py` | `create_request()` |
 
 ### Database Considerations
 - PostgreSQL recommended for production
@@ -682,5 +794,5 @@ SENT_TO_CLIENT → COMPLETED → ARCHIVED
 
 ---
 
-*Last Updated: 2026-04-03*
-*Maintained by: Kilo AI (final session)*
+*Last Updated: 2026-04-04*
+*Maintained by: Kilo AI - IBTIKAR Smart Budget Guard session*
