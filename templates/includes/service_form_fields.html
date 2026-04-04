@@ -4,7 +4,10 @@
 <div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
     {% for param in parameters %}
     {% if not sample_table.enabled or param.name not in sample_table.column_names %}
-    <div class="form-group" {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}>
+    <div class="form-group"
+         {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if param.option_pricing %}data-option-pricing='{{ param.option_pricing|safe }}'{% endif %}
+         {% if param.conditional_logic %}data-conditional-logic='{{ param.conditional_logic|safe }}'{% endif %}>
         {% if param.type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
@@ -35,7 +38,8 @@
     {% for field in db_fields %}
     <div class="form-group"
          {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}
-         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|json_script:""|safe }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
+         {% if field.option_pricing %}data-option-pricing='{{ field.option_pricing|safe }}'{% endif %}
+         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|safe }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
         {% if field.field_type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
@@ -122,6 +126,12 @@
 </div>
 {% endif %}
 
+<!-- Pricing Configuration Data -->
+<div id="pricing-config"
+     data-pricing-config="{{ pricing_json|safe }}"
+     data-service-code="{{ service_code|default:'' }}"
+     style="display:none;"></div>
+
 {% if pricing %}
 <div class="pricing-info" style="margin-top:12px; padding:12px; background:var(--blue-50, #eff6ff); border-radius:8px; font-size:0.9rem;">
     <strong>{% trans "Tarification" %}:</strong>
@@ -144,15 +154,16 @@
     {% else %}
         {% trans "Standard" %}
     {% endif %}
-</div>{% endif %}
+</div>
+{% endif %}
+
 <div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
-     data-pricing='{{ pricing_json }}'>
+     data-pricing="{{ pricing_json|safe }}">
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
     <div class="text-muted text-xs" style="margin-top:4px;">{% trans "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse." %}</div>
     <div id="pricing-modifiers-summary" style="margin-top:8px; display:none;">
         <div style="font-size:0.8rem; color:#059669; margin-bottom:4px;">{% trans "Suppléments actifs:" %}</div>
         <div id="active-modifiers-list" style="font-size:0.8rem;"></div>
-    </div>
     </div>
 </div>
 
@@ -181,7 +192,7 @@
         
         if (!fieldName || !pricingType) {
             // Still update cost even if no pricing field attributes (for per-option pricing)
-            updateCostEstimate();
+            updateCostEstimateWithFallback();
             return;
         }
         
@@ -204,7 +215,7 @@
             }
         }
         
-        updateCostEstimate();
+        updateCostEstimateWithFallback();
     };
 
     window.updateCostEstimate = function() {
@@ -230,9 +241,12 @@
         if (pricingData.configs && pricingData.configs.length > 0) {
             console.log('Using pricing.configs format');
             pricingData.configs.forEach(function(cfg) {
-                if (cfg.pricing_type === 'BASE') {
-                    baseCost = cfg.amount || 0;
-                    console.log('BASE cost:', baseCost);
+                // BASE or PER_SAMPLE both set the base per-sample cost
+                if (cfg.pricing_type === 'BASE' || cfg.pricing_type === 'PER_SAMPLE') {
+                    if (cfg.pricing_type === 'BASE' || baseCost === 0) {
+                        baseCost = cfg.amount || 0;
+                        console.log('Base cost from', cfg.pricing_type, ':', baseCost);
+                    }
                 } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
                     surcharges.push(cfg.amount || 0);
                 } else if (cfg.pricing_type === 'DISCOUNT') {
@@ -251,7 +265,7 @@
             console.log('No pricing configuration found');
         }
 
-        // Process pricing field modifiers
+        // Process pricing field modifiers from field-level pricing
         document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
             if (group.style.display === 'none' || group.offsetParent === null) return;
 
@@ -270,16 +284,46 @@
             } else if (input.tagName === 'SELECT' && input.selectedOptions.length > 0) {
                 var selectedOption = input.selectedOptions[0];
                 var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
-                if (optionPrice > 0) {
+                
+                // Check if this field has option_pricing data attribute with option-specific multipliers
+                var optionPricingAttr = group.getAttribute('data-option-pricing');
+                var optionPricing = {};
+                if (optionPricingAttr) {
+                    try {
+                        optionPricing = JSON.parse(optionPricingAttr);
+                    } catch(e) {}
+                }
+                
+                // If option_pricing dict exists and selected value has a multiplier, use it
+                var selectedValue = selectedOption.value;
+                if (optionPricing && optionPricing[selectedValue] !== undefined) {
+                    var multValue = parseFloat(optionPricing[selectedValue]);
+                    if (multValue > 0 && multValue !== 1) {
+                        // This is a multiplier (e.g., Duplicata ×2, Triplicata ×3)
+                        // Apply multiplier to base cost
+                        console.log('Option pricing multiplier for', fieldName, ':', selectedValue, '×', multValue);
+                        multipliers.push(multValue);
+                        isActive = true;
+                    } else if (multValue === 1) {
+                        // ×1 multiplier means no change, but field is active
+                        isActive = true;
+                    }
+                } else if (optionPrice > 0) {
+                    // Legacy: option price treated as surcharge/addition
                     effectiveValue = optionPrice;
                     isActive = true;
                     console.log('Per-option pricing for', fieldName, ':', optionPrice);
                 } else if (input.value !== '') {
                     isActive = true;
                 }
+            } else if (input.value !== '') {
+                isActive = true;
             }
             
-            if (isActive && effectiveValue > 0) {
+            // For checkbox fields with price_modifier_type=multiply
+            if (input.type === 'checkbox' && isActive && pricingType === 'multiply' && pricingValue > 0) {
+                multipliers.push(pricingValue);
+            } else if (isActive && effectiveValue > 0) {
                 console.log('Applying modifier:', fieldName, pricingType, effectiveValue);
                 if (pricingType === 'multiply') {
                     multipliers.push(effectiveValue);
@@ -330,6 +374,17 @@
         // Trigger budget recheck
         document.dispatchEvent(new Event('costUpdated'));
     };
+
+    // Delegate to new cost calculator if available
+    function updateCostEstimateWithFallback() {
+        if (window.PlagenorCostCalculator && window.PlagenorCostCalculator.updateCostEstimate) {
+            // Use the new universal cost calculator
+            window.PlagenorCostCalculator.updateCostEstimate();
+        } else {
+            // Fall back to legacy calculation
+            updateCostEstimate();
+        }
+    }
 
     // Conditional Logic Handler
     window.evaluateConditionalLogic = function() {
@@ -417,14 +472,14 @@
     document.querySelectorAll('[name^="param_"]').forEach(function(field) {
         field.addEventListener('change', function() {
             evaluateConditionalLogic();
-            updateCostEstimate();
+            updateCostEstimateWithFallback();
         });
     });
 
     // Listen for row changes from app.js
-    document.addEventListener('sampleRowAdded', updateCostEstimate);
-    document.addEventListener('sampleRowDeleted', updateCostEstimate);
-    document.addEventListener('costUpdateRequested', updateCostEstimate);
+    document.addEventListener('sampleRowAdded', updateCostEstimateWithFallback);
+    document.addEventListener('sampleRowDeleted', updateCostEstimateWithFallback);
+    document.addEventListener('costUpdateRequested', updateCostEstimateWithFallback);
 
     // Reindex rows
     window.reindexSampleRows = function() {
@@ -438,10 +493,17 @@
                 numInput.value = index + 1;
             }
         });
+        // Update cost after reindexing
+        updateCostEstimateWithFallback();
     };
 
     // Initialize
     evaluateConditionalLogic();
-    updateCostEstimate();
+    // Use new cost calculator if available, otherwise fallback
+    if (window.PlagenorCostCalculator) {
+        window.PlagenorCostCalculator.updateCostEstimate();
+    } else {
+        updateCostEstimate();
+    }
 })();
 </script>

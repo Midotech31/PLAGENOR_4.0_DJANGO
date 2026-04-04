@@ -87,7 +87,10 @@ document.addEventListener('DOMContentLoaded', function() {
             var serviceId = this.value;
             var container = document.getElementById('dynamic-service-form');
             if (!container) return;
-            if (!serviceId) { container.innerHTML = ''; return; }
+            if (!serviceId) { 
+                container.innerHTML = ''; 
+                return; 
+            }
             var option = this.options[this.selectedIndex];
             var code = option.getAttribute('data-code') || '';
             if (code) {
@@ -95,9 +98,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
                         container.innerHTML = html;
-                        // The inline script in the loaded HTML will auto-initialize
+                        
+                        // Dispatch event to notify that form is loaded
+                        document.dispatchEvent(new CustomEvent('serviceFormLoaded', {
+                            detail: { serviceCode: code, serviceId: serviceId }
+                        }));
+                        
+                        // Trigger cost calculation after a short delay to ensure scripts run
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            } else {
+                                // Fallback: dispatch cost update request
+                                document.dispatchEvent(new Event('costUpdateRequested'));
+                            }
+                        }, 300);
                     })
-                    .catch(function() { container.innerHTML = ''; });
+                    .catch(function(err) { 
+                        console.error('Failed to load service form:', err);
+                        container.innerHTML = ''; 
+                    });
             }
         });
     });
