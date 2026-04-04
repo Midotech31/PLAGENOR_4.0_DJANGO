@@ -467,6 +467,7 @@ def service_field_update(request, field_id):
             'price_modifier_value': float(field.price_modifier_value) if field.price_modifier_value else None,
             'condition_note_fr': getattr(field, 'condition_note_fr', '') or '',
             'condition_note_en': getattr(field, 'condition_note_en', '') or '',
+            'option_pricing': getattr(field, 'option_pricing', {}) or {},
             'message': 'Field updated successfully',
         })
 

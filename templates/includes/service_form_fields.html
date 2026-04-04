@@ -18,7 +18,7 @@
         <select name="param_{{ param.name }}" id="select_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} onchange="handlePricingChange(this)">
             <option value="">{% trans "Choisir" %}{% if param.required %} *{% endif %}</option>
             {% for opt in param.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
+            <option value="{{ opt }}" {% if param.option_pricing and opt in param.option_pricing %}data-option-price="{{ param.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
             {% endfor %}
         </select>
         {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
@@ -118,7 +118,7 @@
         </tbody>
     </table>
     </div>
-    <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow()" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
+    <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow(); updateCostEstimate();" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
 </div>
 {% endif %}
 
@@ -156,16 +156,19 @@
     </div>
 </div>
 
-<!-- JavaScript for pricing warnings and dynamic calculation -->
 <script>
 (function() {
-    var pricingData = null;
-    try {
+    // Read pricing data from DOM - fresh read every time
+    function getPricingData() {
         var pricingBox = document.getElementById('cost-estimate-box');
-        if (pricingBox) {
-            pricingData = JSON.parse(pricingBox.getAttribute('data-pricing') || '{}');
+        if (!pricingBox) return {};
+        try {
+            return JSON.parse(pricingBox.getAttribute('data-pricing') || '{}');
+        } catch(e) {
+            console.error('Failed to parse pricing data:', e);
+            return {};
         }
-    } catch(e) {}
+    }
 
     window.handlePricingChange = function(element) {
         var formGroup = element.closest('.form-group');
@@ -176,7 +179,11 @@
         var pricingValue = parseFloat(formGroup.getAttribute('data-pricing-value')) || 0;
         var warningDiv = document.querySelector('.pricing-warning-' + fieldName);
         
-        if (!fieldName || !pricingType) return;
+        if (!fieldName || !pricingType) {
+            // Still update cost even if no pricing field attributes (for per-option pricing)
+            updateCostEstimate();
+            return;
+        }
         
         var isChecked = element.type === 'checkbox' ? element.checked : element.value !== '';
         var isSelected = element.tagName === 'SELECT' && element.value !== '';
@@ -201,119 +208,107 @@
     };
 
     window.updateCostEstimate = function() {
+        console.log('updateCostEstimate called');
+        
         var costEl = document.getElementById('cost-estimate');
         var summaryEl = document.getElementById('pricing-modifiers-summary');
         var modifiersListEl = document.getElementById('active-modifiers-list');
 
-        if (!costEl) return;
+        if (!costEl) {
+            console.error('cost-estimate element not found');
+            return;
+        }
+
+        var pricingData = getPricingData();
+        console.log('Pricing data:', pricingData);
 
         var baseCost = 0;
         var surcharges = [];
         var multipliers = [];
 
-        if (pricingData && pricingData.configs) {
+        // Handle pricing.configs format (from ServicePricing DB)
+        if (pricingData.configs && pricingData.configs.length > 0) {
+            console.log('Using pricing.configs format');
             pricingData.configs.forEach(function(cfg) {
                 if (cfg.pricing_type === 'BASE') {
                     baseCost = cfg.amount || 0;
+                    console.log('BASE cost:', baseCost);
                 } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
                     surcharges.push(cfg.amount || 0);
                 } else if (cfg.pricing_type === 'DISCOUNT') {
                     surcharges.push(-(cfg.amount || 0));
                 }
             });
-        } else if (pricingData && pricingData.base_price) {
+        } else if (pricingData.base_price) {
+            console.log('Using base_price format');
             var bp = pricingData.base_price;
             if (typeof bp === 'number') {
                 baseCost = bp;
             } else if (typeof bp === 'object') {
                 baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
             }
+        } else {
+            console.log('No pricing configuration found');
         }
 
+        // Process pricing field modifiers
         document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
-            // Skip hidden fields (conditional logic may hide them)
             if (group.style.display === 'none' || group.offsetParent === null) return;
 
-            // Handle multi-select checkboxes
-            var checkboxes = group.querySelectorAll('input[type="checkbox"][name^="param_"]');
-            if (checkboxes.length > 1) {
-                // Multi-select checkbox group
-                checkboxes.forEach(function(cb) {
-                    if (cb.checked) {
-                        var optionPrice = parseFloat(cb.getAttribute('data-option-price')) || 0;
-                        var groupPricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
-                        var groupPricingType = group.getAttribute('data-pricing-type');
-
-                        // Option-level price takes precedence
-                        var priceValue = optionPrice || groupPricingValue;
-                        if (priceValue > 0) {
-                            if (groupPricingType === 'multiply') {
-                                multipliers.push(priceValue);
-                            } else {
-                                surcharges.push(priceValue);
-                            }
-                        }
-                    }
-                });
-                return;
-            }
-
-            // Single input (select, single checkbox, text, number)
             var input = group.querySelector('input, select');
             if (!input) return;
 
-            // Check if this is a select with option-level pricing
-            if (input.tagName === 'SELECT' && input.selectedOptions.length > 0) {
-                var selectedOption = input.selectedOptions[0];
-                var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
-                var groupPricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
-                var groupPricingType = group.getAttribute('data-pricing-type');
-
-                // Option-level price takes precedence
-                var priceValue = optionPrice || groupPricingValue;
-
-                if (priceValue > 0) {
-                    if (groupPricingType === 'multiply') {
-                        multipliers.push(priceValue);
-                    } else if (groupPricingType === 'set') {
-                        baseCost = priceValue;
-                    } else {
-                        surcharges.push(priceValue);
-                    }
-                }
-                return;
-            }
-
-            // Standard field-level pricing
-            var isActive = (input.type === 'checkbox' && input.checked) || (input.tagName === 'SELECT' && input.value !== '') || (input.type !== 'checkbox' && input.value !== '');
-            if (!isActive) return;
-
+            var fieldName = group.getAttribute('data-pricing-field');
             var pricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
             var pricingType = group.getAttribute('data-pricing-type');
+            
+            var isActive = false;
+            var effectiveValue = pricingValue;
 
-            if (pricingType === 'add' && pricingValue > 0) {
-                surcharges.push(pricingValue);
-            } else if (pricingType === 'set' && pricingValue > 0) {
-                baseCost = pricingValue;
-            } else if (pricingType === 'multiply' && pricingValue !== 1) {
-                multipliers.push(pricingValue);
+            if (input.type === 'checkbox') {
+                isActive = input.checked;
+            } else if (input.tagName === 'SELECT' && input.selectedOptions.length > 0) {
+                var selectedOption = input.selectedOptions[0];
+                var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
+                if (optionPrice > 0) {
+                    effectiveValue = optionPrice;
+                    isActive = true;
+                    console.log('Per-option pricing for', fieldName, ':', optionPrice);
+                } else if (input.value !== '') {
+                    isActive = true;
+                }
+            }
+            
+            if (isActive && effectiveValue > 0) {
+                console.log('Applying modifier:', fieldName, pricingType, effectiveValue);
+                if (pricingType === 'multiply') {
+                    multipliers.push(effectiveValue);
+                } else if (pricingType === 'set') {
+                    baseCost = effectiveValue;
+                } else {
+                    surcharges.push(effectiveValue);
+                }
             }
         });
         
         var sampleRows = document.querySelectorAll('#sample-table-body tr');
         var sampleCount = sampleRows.length || 1;
+        console.log('Sample count:', sampleCount);
         
         var total = baseCost * sampleCount;
+        console.log('Base total:', total);
         
         surcharges.forEach(function(val) {
             total += val * sampleCount;
         });
+        console.log('After surcharges:', total, surcharges);
         
         multipliers.forEach(function(mult) {
             total = total * mult;
         });
+        console.log('After multipliers:', total, multipliers);
         
-        costEl.textContent = total.toLocaleString() + ' DA';
+        costEl.textContent = total.toLocaleString('fr-FR') + ' DA';
         
         if (surcharges.length > 0 || multipliers.length > 0) {
             if (summaryEl) summaryEl.style.display = 'block';
@@ -331,15 +326,14 @@
         } else {
             if (summaryEl) summaryEl.style.display = 'none';
         }
+        
+        // Trigger budget recheck
+        document.dispatchEvent(new Event('costUpdated'));
     };
 
-    if (typeof updateCostEstimate === 'function') {
-        updateCostEstimate();
-    }
-
-    // Conditional Logic Handler with chained condition support
+    // Conditional Logic Handler
     window.evaluateConditionalLogic = function() {
-        var maxIterations = 10; // Prevent infinite loops
+        var maxIterations = 10;
         var hasChanges = true;
         var iteration = 0;
 
@@ -347,7 +341,6 @@
             hasChanges = false;
             iteration++;
 
-            // Get all form groups with conditional logic
             document.querySelectorAll('[data-conditional-logic]').forEach(function(targetGroup) {
                 var conditions = JSON.parse(targetGroup.getAttribute('data-conditional-logic') || '[]');
                 if (!conditions || conditions.length === 0) return;
@@ -359,12 +352,10 @@
                 conditions.forEach(function(condition) {
                     var triggerField = document.querySelector('[name="param_' + condition.trigger_field + '"]');
                     if (!triggerField) {
-                        // Try checkbox group
                         triggerField = document.querySelector('input[type="checkbox"][name="param_' + condition.trigger_field + '"]');
                     }
                     if (!triggerField) return;
 
-                    // Handle multi-select checkboxes
                     var triggerValue;
                     if (triggerField.type === 'checkbox') {
                         var checkboxes = document.querySelectorAll('input[type="checkbox"][name="param_' + condition.trigger_field + '"]:checked');
@@ -374,7 +365,6 @@
                         triggerValue = [triggerField.value];
                     }
 
-                    // Check if any trigger value matches
                     var conditionMet = triggerValue.some(function(val) {
                         return val === condition.trigger_value;
                     });
@@ -385,14 +375,10 @@
                             if (action === 'hide') shouldShow = false;
                             if (action === 'make_required') shouldRequire = true;
                             if (action === 'make_optional') shouldRequire = false;
-                            if (action === 'activate_price_modifier') {
-                                // Price modifier activation is handled by updateCostEstimate
-                            }
                         });
                     }
                 });
 
-                // Apply visibility
                 var isNowHidden = !shouldShow;
                 if (wasHidden !== isNowHidden) {
                     hasChanges = true;
@@ -402,7 +388,6 @@
                     targetGroup.style.display = '';
                 } else {
                     targetGroup.style.display = 'none';
-                    // Clear values when hiding
                     var inputs = targetGroup.querySelectorAll('input, select, textarea');
                     inputs.forEach(function(input) {
                         if (input.type === 'checkbox') {
@@ -415,7 +400,6 @@
                     });
                 }
 
-                // Apply required status
                 var input = targetGroup.querySelector('input, select, textarea');
                 if (input) {
                     if (shouldShow && shouldRequire) {
@@ -429,7 +413,7 @@
         }
     };
 
-    // Attach conditional logic listeners to trigger fields
+    // Attach listeners
     document.querySelectorAll('[name^="param_"]').forEach(function(field) {
         field.addEventListener('change', function() {
             evaluateConditionalLogic();
@@ -437,116 +421,26 @@
         });
     });
 
-    // Sample table row management with auto-numbering
-    window.addSampleRow = function() {
-        var tbody = document.getElementById('sample-table-body');
-        if (!tbody) return;
-        
-        var rowCount = tbody.querySelectorAll('tr').length;
-        var newRow = document.createElement('tr');
-        
-        // Get column definitions from the table header
-        var headers = document.querySelectorAll('#sample-table thead th[data-col]');
-        var cols = [];
-        headers.forEach(function(th) {
-            cols.push({
-                name: th.getAttribute('data-col'),
-                type: th.getAttribute('data-type') || 'text'
-            });
-        });
-        
-        cols.forEach(function(col) {
-            var td = document.createElement('td');
-            td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
-            
-            var input;
-            if (col.name.toLowerCase() === 'n°' || col.name.toLowerCase() === 'n°' || col.name.toLowerCase() === 'no' || col.name.toLowerCase() === 'num') {
-                // Auto-numbered column - readonly
-                input = document.createElement('input');
-                input.type = 'text';
-                input.name = 'sample_' + rowCount + '_' + col.name;
-                input.className = 'form-control';
-                input.style.cssText = 'font-size:0.85rem; background:#f8fafc;';
-                input.value = rowCount + 1;
-                input.readOnly = true;
-            } else if (col.type === 'select' || col.type === 'enum' || col.type === 'dropdown') {
-                input = document.createElement('select');
-                input.name = 'sample_' + rowCount + '_' + col.name;
-                input.className = 'form-control';
-                input.style.cssText = 'font-size:0.85rem;';
-                input.onchange = function() { handlePricingChange(this); };
-                // Options will be copied from first row
-                var firstSelect = tbody.querySelector('select[name*="' + col.name + '"]');
-                if (firstSelect) {
-                    input.innerHTML = firstSelect.innerHTML;
-                }
-            } else if (col.type === 'number' || col.type === 'integer' || col.type === 'float') {
-                input = document.createElement('input');
-                input.type = 'number';
-                input.name = 'sample_' + rowCount + '_' + col.name;
-                input.className = 'form-control';
-                input.style.cssText = 'font-size:0.85rem;';
-                input.step = (col.type === 'float') ? '0.01' : '1';
-                input.onchange = function() { handlePricingChange(this); };
-            } else {
-                input = document.createElement('input');
-                input.type = 'text';
-                input.name = 'sample_' + rowCount + '_' + col.name;
-                input.className = 'form-control';
-                input.style.cssText = 'font-size:0.85rem; min-width: 120px;';
-                if (col.name.toLowerCase() === 'code') {
-                    input.maxLength = 50;
-                }
-            }
-            
-            td.appendChild(input);
-            newRow.appendChild(td);
-        });
-        
-        // Add delete button
-        var deleteTd = document.createElement('td');
-        deleteTd.style.cssText = 'padding:4px; border:1px solid #e2e8f0; text-align:center;';
-        var deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-sm btn-danger';
-        deleteBtn.style.cssText = 'padding:2px 8px;';
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.onclick = function() {
-            newRow.remove();
-            reindexSampleRows();
-            updateCostEstimate();
-        };
-        deleteTd.appendChild(deleteBtn);
-        newRow.appendChild(deleteTd);
-        
-        tbody.appendChild(newRow);
-        reindexSampleRows();
-        updateCostEstimate();
-    };
-    
+    // Listen for row changes from app.js
+    document.addEventListener('sampleRowAdded', updateCostEstimate);
+    document.addEventListener('sampleRowDeleted', updateCostEstimate);
+    document.addEventListener('costUpdateRequested', updateCostEstimate);
+
+    // Reindex rows
     window.reindexSampleRows = function() {
         var tbody = document.getElementById('sample-table-body');
         if (!tbody) return;
         
         var rows = tbody.querySelectorAll('tr');
         rows.forEach(function(row, index) {
-            // Update row number in N° column
-            var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"], input[name*="N°"]');
+            var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"]');
             if (numInput) {
                 numInput.value = index + 1;
             }
-            // Update all input names to reflect new row index
-            var inputs = row.querySelectorAll('input, select');
-            inputs.forEach(function(input) {
-                var match = input.name.match(/^sample_(\d+)_(.+)$/);
-                if (match) {
-                    input.name = 'sample_' + index + '_' + match[2];
-                }
-            });
         });
     };
 
-    // Initial evaluation
+    // Initialize
     evaluateConditionalLogic();
     updateCostEstimate();
 })();

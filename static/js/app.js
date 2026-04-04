@@ -95,21 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
                         container.innerHTML = html;
-                        // Re-initialize cost estimation for dynamically loaded form
-                        var costObserverTbody = document.getElementById('sample-table-body');
-                        if (costObserverTbody) {
-                            var costObserver = new MutationObserver(updateCostEstimate);
-                            costObserver.observe(costObserverTbody, { childList: true });
-                            updateCostEstimate();
-                        }
-                        // Re-wrap addSampleRow if table exists
-                        if (document.getElementById('sample-table-body') && typeof addSampleRow === 'function') {
-                            var _orig = addSampleRow;
-                            window.addSampleRow = function() {
-                                _orig();
-                                updateCostEstimate();
-                            };
-                        }
+                        // The inline script in the loaded HTML will auto-initialize
                     })
                     .catch(function() { container.innerHTML = ''; });
             }
@@ -160,13 +146,12 @@ function addSampleRow() {
     if (columns.length === 0) { console.error('No columns found'); return; }
 
     sampleRowCount++;
-    var rowIndex = tbody.querySelectorAll('tr').length; // 0-based for new row
+    var rowIndex = tbody.querySelectorAll('tr').length;
     var tr = document.createElement('tr');
     columns.forEach(function(col) {
         var td = document.createElement('td');
         td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
 
-        // Auto-number N° column
         var colNameLower = col.name.toLowerCase();
         if (colNameLower === 'n°' || colNameLower === 'no' || colNameLower === 'num' || colNameLower === 'n°') {
             var input = document.createElement('input');
@@ -183,7 +168,6 @@ function addSampleRow() {
             select.name = 'sample_' + sampleRowCount + '_' + col.name;
             select.className = 'form-control';
             select.style.fontSize = '0.85rem';
-            select.setAttribute('onchange', 'updateCostEstimate()');
             select.innerHTML = '<option value="">Choisir</option>';
             if (th) {
                 var firstSelect = tbody.querySelector('tr:first-child select[name*="' + col.name + '"]');
@@ -199,7 +183,6 @@ function addSampleRow() {
             input.className = 'form-control';
             input.style.fontSize = '0.85rem';
             if (col.type === 'float') input.step = '0.01';
-            input.setAttribute('onchange', 'updateCostEstimate()');
             td.appendChild(input);
         } else {
             var input = document.createElement('input');
@@ -220,8 +203,8 @@ function addSampleRow() {
     tr.appendChild(tdBtn);
     tbody.appendChild(tr);
     
-    // Update cost after adding row
-    updateCostEstimate();
+    // Trigger cost update via event (form will handle it)
+    document.dispatchEvent(new Event('sampleRowAdded'));
 }
 
 function deleteSampleRow(btn) {
@@ -229,7 +212,7 @@ function deleteSampleRow(btn) {
     if (tr) {
         tr.remove();
         reindexSampleRows();
-        updateCostEstimate();
+        document.dispatchEvent(new Event('sampleRowDeleted'));
     }
 }
 
@@ -239,7 +222,6 @@ function reindexSampleRows() {
     
     var rows = tbody.querySelectorAll('tr');
     rows.forEach(function(row, index) {
-        // Update row number in N° column
         var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"]');
         if (numInput) {
             numInput.value = index + 1;
@@ -247,142 +229,11 @@ function reindexSampleRows() {
     });
 }
 
-// Cost estimation - update when samples change
-function updateCostEstimate() {
-    var box = document.getElementById('cost-estimate-box');
-    if (!box) return;
-    var pricingStr = box.getAttribute('data-pricing');
-    if (!pricingStr) return;
-
-    try {
-        var pricing = JSON.parse(pricingStr);
-        var rows = document.querySelectorAll('#sample-table-body tr').length || 1;
-        var total = 0;
-        var surcharges = [];
-        var multipliers = [];
-
-        // NEW: Handle pricing.configs format (from ServicePricing DB)
-        if (pricing.configs && pricing.configs.length > 0) {
-            var baseCost = 0;
-            pricing.configs.forEach(function(cfg) {
-                if (cfg.pricing_type === 'BASE') {
-                    baseCost = cfg.amount || 0;
-                } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
-                    surcharges.push(cfg.amount || 0);
-                } else if (cfg.pricing_type === 'DISCOUNT') {
-                    surcharges.push(-(cfg.amount || 0));
-                }
-            });
-            
-            total = baseCost * rows;
-            surcharges.forEach(function(val) {
-                total += val * rows;
-            });
-        }
-        // LEGACY: Handle old pricing formats
-        else if (pricing.model === 'per_sample_table_row_with_multiplier') {
-            var basePrices = pricing.base_price || {};
-            // Check if pathogenic checkbox is checked
-            var pathCheckbox = document.querySelector('[name="param_pathogenic"]');
-            var isPathogenic = false;
-            if (pathCheckbox) {
-                isPathogenic = pathCheckbox.type === 'checkbox' ? pathCheckbox.checked : (pathCheckbox.value === 'true' || pathCheckbox.value === 'True');
-            }
-            var basePrice = isPathogenic ? (basePrices.pathogenic || basePrices.non_pathogenic || 0) : (basePrices.non_pathogenic || basePrices.pathogenic || 0);
-
-            // Get multiplier from analysis_mode or similar selects
-            var multipliers = pricing.multipliers || {};
-            var multiplier = 1;
-            var multFields = ['param_analysis_mode', 'param_qc_level', 'param_sequencing_mode', 'param_drying_level', 'param_primer_type'];
-            for (var i = 0; i < multFields.length; i++) {
-                var el = document.querySelector('[name="' + multFields[i] + '"]');
-                if (el && el.value && multipliers[el.value] !== undefined) {
-                    multiplier = parseFloat(multipliers[el.value]);
-                    break;
-                }
-            }
-
-            total = Math.round(basePrice * multiplier * rows);
-        } else if (pricing.model === 'per_sample_fixed') {
-            var unitPrice = pricing.unit_price || pricing.price || 0;
-            total = unitPrice * rows;
-        }
-
-        // Handle pricing field modifiers (checkboxes, selects with 💰 badge)
-        document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
-            // Skip hidden fields
-            if (group.style.display === 'none' || group.offsetParent === null) return;
-            
-            var input = group.querySelector('input, select');
-            if (!input) return;
-            
-            var pricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
-            var pricingType = group.getAttribute('data-pricing-type');
-            
-            var isActive = false;
-            if (input.type === 'checkbox') {
-                isActive = input.checked;
-            } else if (input.tagName === 'SELECT' && input.value !== '') {
-                // Check for option-level pricing
-                var selectedOption = input.selectedOptions[0];
-                var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
-                if (optionPrice > 0) {
-                    pricingValue = optionPrice;
-                    isActive = true;
-                } else if (pricingValue > 0) {
-                    isActive = true;
-                }
-            }
-            
-            if (isActive && pricingValue > 0) {
-                if (pricingType === 'multiply') {
-                    total = total * pricingValue;
-                } else if (pricingType === 'set') {
-                    total = pricingValue * rows;
-                } else {
-                    // Default 'add' or unspecified
-                    total += pricingValue * rows;
-                }
-            }
-        });
-
-        var display = document.getElementById('cost-estimate');
-        if (display) display.textContent = total.toLocaleString('fr-FR') + ' DA';
-        // Trigger budget recheck
-        document.dispatchEvent(new Event('costUpdated'));
-    } catch(e) { console.log('Cost calc error:', e); }
-}
-
-// Hook cost estimation into sample row management
-var _origAddSampleRow = window.addSampleRow;
-if (typeof _origAddSampleRow === 'function') {
-    window.addSampleRow = function() {
-        _origAddSampleRow();
-        updateCostEstimate();
-    };
-}
-
-// Observe DOM changes in sample table for cost updates
-document.addEventListener('DOMContentLoaded', function() {
-    var costObserverTbody = document.getElementById('sample-table-body');
-    if (costObserverTbody) {
-        var costObserver = new MutationObserver(updateCostEstimate);
-        costObserver.observe(costObserverTbody, { childList: true });
-        updateCostEstimate();
-    }
-});
-
-// Update cost when pricing-related parameters change
+// Event delegation for cost estimation - listens to all changes on the form
 document.addEventListener('change', function(e) {
-    if (e.target.name && (
-        e.target.name === 'param_pathogenic' ||
-        e.target.name === 'param_analysis_mode' ||
-        e.target.name === 'param_qc_level' ||
-        e.target.name === 'param_sequencing_mode' ||
-        e.target.name === 'param_drying_level' ||
-        e.target.name === 'param_primer_type'
-    )) {
-        updateCostEstimate();
+    // Trigger cost update for pricing-related fields
+    if (e.target.name && e.target.name.startsWith('param_')) {
+        document.dispatchEvent(new CustomEvent('costUpdateRequested', { detail: { field: e.target.name } }));
     }
 });
 
@@ -397,7 +248,6 @@ document.addEventListener('change', function(e) {
         if (isPathogenic) {
             targetSelect.value = 'Disposable';
             targetSelect.disabled = true;
-            // Add hidden input to ensure value is submitted (disabled fields don't submit)
             var hidden = document.getElementById('pathogen_target_hidden');
             if (!hidden) {
                 hidden = document.createElement('input');
@@ -407,7 +257,6 @@ document.addEventListener('change', function(e) {
                 hidden.value = 'Disposable';
                 targetSelect.parentElement.appendChild(hidden);
             }
-            // Show safety notice
             var hint = document.getElementById('pathogen-safety-hint');
             if (!hint) {
                 hint = document.createElement('div');
@@ -431,28 +280,23 @@ document.addEventListener('change', function(e) {
 function showFormPreview(formEl) {
     if (!formEl) return;
 
-    // Remove any existing preview
     var existing = document.getElementById('form-preview-overlay');
     if (existing) existing.remove();
 
-    // Collect service name
     var serviceSelect = formEl.querySelector('select[name="service_id"]');
     var serviceName = serviceSelect ? (serviceSelect.options[serviceSelect.selectedIndex].text || '—') : '—';
 
-    // Collect title, description, urgency
     var title = (formEl.querySelector('[name="title"]') || {}).value || '—';
     var description = (formEl.querySelector('[name="description"]') || {}).value || '—';
     var urgencySelect = formEl.querySelector('[name="urgency"]');
     var urgency = urgencySelect ? (urgencySelect.options[urgencySelect.selectedIndex].text || 'Normal') : 'Normal';
 
-    // Collect declared balance (IBTIKAR)
     var balanceInput = formEl.querySelector('[name="declared_balance"]');
     var balanceHtml = '';
     if (balanceInput) {
         balanceHtml = '<div class="preview-row"><span class="preview-label">Solde IBTIKAR déclaré</span><span class="preview-value">' + parseFloat(balanceInput.value || 0).toLocaleString('fr-FR') + ' DA</span></div>';
     }
 
-    // Collect service parameters
     var paramsHtml = '';
     var paramInputs = formEl.querySelectorAll('[name^="param_"]');
     paramInputs.forEach(function(input) {
@@ -460,7 +304,6 @@ function showFormPreview(formEl) {
         var value = '';
         var name = input.name.replace('param_', '');
 
-        // Find label
         var formGroup = input.closest('.form-group');
         if (formGroup) {
             var lbl = formGroup.querySelector('label');
@@ -473,7 +316,7 @@ function showFormPreview(formEl) {
         } else if (input.tagName === 'SELECT') {
             value = input.options[input.selectedIndex] ? input.options[input.selectedIndex].text : input.value;
         } else if (input.type === 'hidden') {
-            return; // Skip hidden inputs (like CSRF, hidden duplicates)
+            return;
         } else {
             value = input.value || '—';
         }
@@ -483,7 +326,6 @@ function showFormPreview(formEl) {
         }
     });
 
-    // Collect sample table
     var sampleHtml = '';
     var sampleTable = document.getElementById('sample-table');
     if (sampleTable) {
@@ -520,30 +362,24 @@ function showFormPreview(formEl) {
         }
     }
 
-    // Cost estimate
     var costEl = document.getElementById('cost-estimate');
     var costText = costEl ? costEl.textContent : '—';
 
-    // Build preview HTML
     var html = '<div id="form-preview-overlay" style="position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); animation:fadeIn 0.2s ease;">';
     html += '<div style="background:#fff; border-radius:16px; max-width:700px; width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.15); animation:slideUp 0.3s ease;">';
 
-    // Header
     html += '<div style="padding:24px 28px 16px; border-bottom:1px solid #e2e8f0;">';
     html += '<h2 style="margin:0; font-size:1.25rem; color:#1e293b;">Vérification de la demande</h2>';
     html += '<p style="margin:6px 0 0; font-size:0.85rem; color:#64748b;">Veuillez vérifier les informations avant de soumettre.</p>';
     html += '</div>';
 
-    // Body
     html += '<div style="padding:20px 28px;">';
 
-    // Service
     html += '<div class="preview-section">';
     html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Service</h4>';
     html += '<div style="padding:10px 14px; background:#f8fafc; border-radius:8px; font-weight:600;">' + serviceName + '</div>';
     html += '</div>';
 
-    // Parameters
     if (paramsHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Paramètres du service</h4>';
@@ -551,7 +387,6 @@ function showFormPreview(formEl) {
         html += '</div>';
     }
 
-    // Sample table
     if (sampleHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Tableau des échantillons</h4>';
@@ -559,14 +394,12 @@ function showFormPreview(formEl) {
         html += '</div>';
     }
 
-    // Cost
     if (costText && costText !== '—') {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<div style="padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-weight:600;">Coût estimé: ' + costText + '</div>';
         html += '</div>';
     }
 
-    // Request details
     html += '<div class="preview-section" style="margin-top:18px;">';
     html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Détails de la demande</h4>';
     html += '<div style="background:#f8fafc; border-radius:8px; padding:8px 14px;">';
@@ -577,9 +410,8 @@ function showFormPreview(formEl) {
     html += '</div>';
     html += '</div>';
 
-    html += '</div>'; // end body
+    html += '</div>';
 
-    // Footer buttons
     html += '<div style="padding:16px 28px 24px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid #e2e8f0;">';
     html += '<button type="button" onclick="closeFormPreview()" style="padding:10px 24px; border:1px solid #d1d5db; background:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; color:#475569; transition:all 0.15s;">Modifier</button>';
     html += '<button type="button" onclick="confirmFormSubmit()" style="padding:10px 24px; border:none; background:#2563eb; color:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.15s;">Confirmer et soumettre</button>';
@@ -587,15 +419,12 @@ function showFormPreview(formEl) {
 
     html += '</div></div>';
 
-    // Add CSS for preview rows and animations
     var style = document.createElement('style');
     style.id = 'preview-modal-styles';
     style.textContent = '.preview-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;}.preview-row:last-child{border-bottom:none;}.preview-label{color:#64748b;font-size:0.85rem;}.preview-value{font-weight:500;color:#1e293b;font-size:0.85rem;max-width:60%;text-align:right;}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}';
     if (!document.getElementById('preview-modal-styles')) document.head.appendChild(style);
 
     document.body.insertAdjacentHTML('beforeend', html);
-
-    // Store form reference for confirm
     window._previewFormEl = formEl;
 }
 

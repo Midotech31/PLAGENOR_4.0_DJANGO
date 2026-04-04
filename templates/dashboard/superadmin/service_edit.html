@@ -361,6 +361,20 @@
                    placeholder="{% trans "Ex: Disposal fees included (+500 DA)" %}">
         </div>
 
+        <!-- PER-OPTION PRICING SECTION (for select fields) -->
+        <div id="per-option-pricing-section" style="display:none; margin-top:16px; padding:16px; background:#fffbeb; border-radius:8px; border:1px solid #fcd34d;">
+            <h6 style="margin-bottom:12px; color:#92400e;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                {% trans "Prix par option (pour les listes déroulantes)" %}
+            </h6>
+            <small class="text-muted" style="display:block; margin-bottom:12px;">
+                {% trans "Attribuez un modificateur de prix à chaque option (ex: Simple=×1, Duplicata=×2)" %}
+            </small>
+            <div id="per-option-pricing-list">
+                <!-- Option pricing inputs will be generated here -->
+            </div>
+        </div>
+
         <!-- CONDITIONAL LOGIC SECTION -->
         <hr style="margin:16px 0; border-color:#e2e8f0;">
         <h5 style="margin-bottom:12px; color:#7c3aed;">
@@ -598,6 +612,12 @@ function editField(fieldId) {
         document.getElementById('field-condition-note-fr').value = f.condition_note_fr || '';
         document.getElementById('field-condition-note-en').value = f.condition_note_en || '';
         
+        // Populate per-option pricing
+        toggleOptions(); // Generate inputs first
+        if (f.option_pricing) {
+            populatePerOptionPricing(f.option_pricing);
+        }
+        
         // Populate conditional logic
         clearConditionalRules();
         if (f.conditional_logic && f.conditional_logic.length > 0) {
@@ -775,7 +795,93 @@ function clearConditionalRules() {
 function toggleOptions() {
     var type = document.getElementById('field-type').value;
     var group = document.getElementById('options-group');
-    group.style.display = (type === 'select' || type === 'multiselect' || type === 'enum' || type === 'dropdown') ? 'block' : 'none';
+    var isSelectType = (type === 'select' || type === 'multiselect' || type === 'enum' || type === 'dropdown');
+    group.style.display = isSelectType ? 'block' : 'none';
+    
+    // Show/hide per-option pricing section for select fields
+    var perOptionSection = document.getElementById('per-option-pricing-section');
+    if (perOptionSection) {
+        perOptionSection.style.display = isSelectType ? 'block' : 'none';
+        if (isSelectType) {
+            generatePerOptionPricingInputs();
+        }
+    }
+}
+
+function generatePerOptionPricingInputs() {
+    var container = document.getElementById('per-option-pricing-list');
+    if (!container) return;
+    
+    var optionsText = document.getElementById('field-options').value;
+    var options = optionsText.split('\n').map(s => s.trim()).filter(Boolean);
+    
+    container.innerHTML = '';
+    
+    options.forEach(function(opt, index) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;';
+        
+        row.innerHTML = 
+            '<div style="font-weight:500; padding:8px; background:#fff; border-radius:4px; border:1px solid #e5e7eb;">' + escHtml(opt) + '</div>' +
+            '<select class="form-control per-option-type" data-option="' + escHtml(opt) + '" style="font-size:0.85rem;">' +
+                '<option value="">— {% trans "Aucun" %} —</option>' +
+                '<option value="add">+ {% trans "Supplément" %}</option>' +
+                '<option value="multiply">× {% trans "Multiplicateur" %}</option>' +
+            '</select>' +
+            '<input type="number" class="form-control per-option-value" data-option="' + escHtml(opt) + '" placeholder="{% trans "Valeur" %}" step="0.01" style="font-size:0.85rem;">';
+        
+        container.appendChild(row);
+    });
+}
+
+function getPerOptionPricing() {
+    var result = {};
+    var container = document.getElementById('per-option-pricing-list');
+    if (!container) return result;
+    
+    var types = container.querySelectorAll('.per-option-type');
+    var values = container.querySelectorAll('.per-option-value');
+    
+    types.forEach(function(select, index) {
+        var optionName = select.getAttribute('data-option');
+        var type = select.value;
+        var valueInput = values[index];
+        var value = parseFloat(valueInput.value) || 0;
+        
+        if (type && value > 0) {
+            result[optionName] = value;
+        }
+    });
+    
+    return result;
+}
+
+function populatePerOptionPricing(optionPricing) {
+    if (!optionPricing) return;
+    
+    var container = document.getElementById('per-option-pricing-list');
+    if (!container) return;
+    
+    Object.keys(optionPricing).forEach(function(optionName) {
+        var typeSelect = container.querySelector('.per-option-type[data-option="' + optionName + '"]');
+        var valueInput = container.querySelector('.per-option-value[data-option="' + optionName + '"]');
+        
+        if (typeSelect && valueInput) {
+            var val = optionPricing[optionName];
+            if (val < 10) {
+                typeSelect.value = 'multiply';
+            } else {
+                typeSelect.value = 'add';
+            }
+            valueInput.value = val;
+        }
+    });
+}
+
+function escHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function saveField() {
@@ -801,6 +907,7 @@ function saveField() {
         condition_note_fr: document.getElementById('field-condition-note-fr').value.trim(),
         condition_note_en: document.getElementById('field-condition-note-en').value.trim(),
         conditional_logic: getConditionalLogic(),
+        option_pricing: getPerOptionPricing(),
     };
 
     var url = '/dashboard/api/service/' + SERVICE_ID + '/field/';
