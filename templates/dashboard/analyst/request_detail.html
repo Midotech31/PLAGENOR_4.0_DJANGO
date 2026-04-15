@@ -231,16 +231,33 @@
         {% endif %}
 
         <!-- Service Parameters -->
-        {% if req.service_params %}
+        {% if service_params_labeled %}
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Paramètres du service" %}</h3></div>
-            <div class="card-body">
-                {% for key, value in req.service_params.items %}
-                <div class="data-card-row">
-                    <span class="text-muted">{{ key|cut:"param_"|title }}</span>
-                    <strong>{{ value }}</strong>
-                </div>
-                {% endfor %}
+            <div class="card-body" style="padding:0;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.875rem;">
+                    <tbody>
+                    {% for item in service_params_labeled %}
+                    <tr style="border-bottom:1px solid var(--border-color, #e5e7eb);">
+                        <td style="padding:8px 16px; color:var(--text-muted,#6b7280); font-weight:500; width:45%; vertical-align:top;">
+                            {{ item.label }}
+                        </td>
+                        <td style="padding:8px 16px; font-weight:600; color:var(--text-primary,#111827); vertical-align:top;">
+                            {% if item.value == 'Oui' %}
+                                <span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Oui
+                                </span>
+                            {% elif item.value == 'Non' %}
+                                <span style="color:#6b7280;">Non</span>
+                            {% else %}
+                                {{ item.value }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
         {% endif %}

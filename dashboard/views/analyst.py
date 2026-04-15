@@ -267,10 +267,58 @@ def request_detail(request, pk):
     comments = req.comments.select_related('author').order_by('created_at')
     messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
     payment_completed = req.status == 'PAYMENT_CONFIRMED'
+
+    # Build labeled service params for clean display
+    service_params_labeled = []
+    raw_params = req.service_params or {}
+    if raw_params and req.service:
+        # Build a label map from form fields
+        field_label_map = {}
+        for field in req.service.form_fields.all():
+            field_label_map[field.name] = field.label_fr or field.name
+            field_label_map[f'param_{field.name}'] = field.label_fr or field.name
+
+        BOOL_TRUE  = {'true', '1', 'yes', 'oui', 'on'}
+        BOOL_FALSE = {'false', '0', 'no', 'non', 'off'}
+
+        for key, value in raw_params.items():
+            if value is None or value == '' or value == []:
+                continue
+            label = field_label_map.get(key) or key.replace('param_', '').replace('_', ' ').title()
+
+            # Format value
+            if isinstance(value, bool):
+                display = 'Oui' if value else 'Non'
+            elif isinstance(value, list):
+                display = ', '.join(str(v) for v in value if v not in (None, '', False))
+                if not display:
+                    continue
+            else:
+                v_str = str(value).strip()
+                if not v_str:
+                    continue
+                v_lower = v_str.lower()
+                if v_lower in BOOL_TRUE:
+                    display = 'Oui'
+                elif v_lower in BOOL_FALSE:
+                    display = 'Non'
+                else:
+                    display = v_str
+
+            service_params_labeled.append({'label': label, 'value': display})
+    elif raw_params:
+        # No form fields available — basic cleanup
+        for key, value in raw_params.items():
+            if value is None or value == '':
+                continue
+            label = key.replace('param_', '').replace('_', ' ').title()
+            service_params_labeled.append({'label': label, 'value': str(value)})
+
     return render(request, 'dashboard/analyst/request_detail.html', {
         'req': req, 'history': history, 'comments': comments,
         'messages_list': messages_list, 'now': timezone.now(),
         'payment_completed': payment_completed,
+        'service_params_labeled': service_params_labeled,
     })
 
 
