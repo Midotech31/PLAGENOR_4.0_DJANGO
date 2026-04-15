@@ -257,7 +257,32 @@ def get_styles():
         textColor=COLOR_TEXT,
         alignment=TA_CENTER,
     ))
-    
+
+    styles.add(ParagraphStyle(
+        name='TableCellRight',
+        fontName=FONT_HELVETICA,
+        fontSize=9,
+        textColor=COLOR_TEXT,
+        alignment=TA_RIGHT,
+        leading=11,
+    ))
+
+    styles.add(ParagraphStyle(
+        name='TotalLabel',
+        fontName=FONT_HELVETICA_BOLD,
+        fontSize=11,
+        textColor=white,
+        alignment=TA_LEFT,
+    ))
+
+    styles.add(ParagraphStyle(
+        name='TotalValue',
+        fontName=FONT_HELVETICA_BOLD,
+        fontSize=11,
+        textColor=white,
+        alignment=TA_RIGHT,
+    ))
+
     # -------------------------------------------------------------------------
     # Label/Value styles
     # -------------------------------------------------------------------------

@@ -456,17 +456,25 @@ def build_processing_notes_section(service, labels, page_width, styles):
 
 
 def build_pricing_section(request_obj, service, labels, page_width, styles):
-    """Build Section 5: Pricing."""
+    """
+    Build Section 5: Pricing — structured devis with sample table,
+    itemised breakdown, supplements, and highlighted total.
+    """
+    from decimal import Decimal
+
     story = []
-    
-    # Section title
+
+    # ── Section title ────────────────────────────────────────────────────────
     story.append(Paragraph(labels['platform_note_section5'], styles['SectionTitle']))
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 8))
 
-    # Recalculate price server-side so PDF always reflects current pricing logic
-    calculated_server_price = None
-    pricing_error = None
+    # ── Server-side recalculation ────────────────────────────────────────────
+    cost_result     = {}
+    modifier_result = {}
+    server_price    = None
+    pricing_error   = None
+
     try:
         from core.pricing import validate_and_calculate_price
         price_validation = validate_and_calculate_price(
@@ -476,153 +484,349 @@ def build_pricing_section(request_obj, service, labels, page_width, styles):
             service_params=request_obj.service_params or {},
             urgency=getattr(request_obj, 'urgency', 'Normal') or 'Normal',
         )
-        calculated_server_price = price_validation.get('server_price')
+        server_price    = price_validation.get('server_price')
+        cost_result     = price_validation.get('cost_result') or {}
+        modifier_result = price_validation.get('modifier_result') or {}
     except Exception as exc:
         pricing_error = str(exc)
-    
-    # Get pricing information
-    validated_cost = getattr(request_obj, 'admin_validated_price', None)
-    if validated_cost is None and calculated_server_price is not None:
-        validated_cost = calculated_server_price
-    discount_percentage = getattr(request_obj, 'discount_percentage', 0) or 0
-    discount_amount = getattr(request_obj, 'discount_amount', 0) or 0
-    final_cost = getattr(request_obj, 'final_cost', None)
-    
-    # Build pricing table
-    data = []
-    
-    if validated_cost is not None:
-        cost_label = labels['calculated_cost']
-        if calculated_server_price is not None:
-            cost_label = labels.get('calculated_cost', 'Coût calculé') + ' (serveur)'
-        data.append([
-            Paragraph(cost_label, styles['Label']),
-            Paragraph(format_currency(validated_cost), styles['Value'])
-        ])
-        
-        if discount_percentage or discount_amount:
-            discount_text = f"{discount_percentage}%" if discount_percentage else format_currency(discount_amount)
-            data.append([
-                Paragraph(labels['discount_applied'], styles['Label']),
-                Paragraph(discount_text, styles['Value'])
-            ])
-        
-        if final_cost is not None:
-            data.append([
-                Paragraph(labels['final_cost'], styles['Label']),
-                Paragraph(format_currency(final_cost), styles['Value'])
-            ])
-        else:
-            data.append([
-                Paragraph(labels['final_cost'], styles['Label']),
-                Paragraph(format_currency(validated_cost), styles['Value'])
-            ])
-    else:
-        # No validated cost yet
-        pending_color = '#999999'
-        pending_text = labels.get('pending_validation', 'En attente de validation financiere')
-        data.append([
-            Paragraph(labels['final_cost'], styles['Label']),
-            Paragraph(
-                f"<font color='{pending_color}'>{pending_text}</font>",
-                styles['Value']
-            )
-        ])
-    
-    # Add IBTIKAR budget info
+        logger.warning(f"Platform Note pricing error for {request_obj.display_id}: {exc}")
+
+    # ── Effective totals ─────────────────────────────────────────────────────
+    # admin_validated_price wins over recalculated price (admin may have adjusted).
+    admin_price   = getattr(request_obj, 'admin_validated_price', None)
+    final_cost    = getattr(request_obj, 'final_cost', None)
     budget_amount = getattr(request_obj, 'budget_amount', None)
-    if budget_amount:
-        data.append([
-            Paragraph(labels.get('budget_amount', 'Budget déclaré'), styles['Label']),
-            Paragraph(format_currency(budget_amount), styles['Value'])
+    discount_pct  = getattr(request_obj, 'discount_percentage', 0) or 0
+    discount_amt  = getattr(request_obj, 'discount_amount', 0) or 0
+
+    # Display price = admin override > server recalc > final_cost stored
+    display_total = admin_price if admin_price is not None else (
+        server_price if server_price is not None else final_cost
+    )
+
+    # ── SUB-SECTION A: Tableau des échantillons ──────────────────────────────
+    sample_table_data = request_obj.sample_table if request_obj.sample_table else []
+    if not isinstance(sample_table_data, list):
+        sample_table_data = []
+
+    if sample_table_data:
+        story.append(Paragraph(
+            labels.get('sample_table_title', 'Tableau des échantillons'),
+            styles['Label']
+        ))
+        story.append(Spacer(1, 4))
+
+        # Detect columns present in samples
+        has_origin = any(s.get('origin') or s.get('param_origin') for s in sample_table_data if isinstance(s, dict))
+        has_type   = any(s.get('type')   or s.get('param_type')   for s in sample_table_data if isinstance(s, dict))
+        has_notes  = any(s.get('notes')  or s.get('remarques')    for s in sample_table_data if isinstance(s, dict))
+
+        # Header row
+        headers = [Paragraph('<b>N°</b>', styles['TableHeader'])]
+        if has_type:
+            headers.append(Paragraph(f'<b>{labels.get("sample_type", "Type")}</b>', styles['TableHeader']))
+        if has_origin:
+            headers.append(Paragraph(f'<b>{labels.get("sample_origin", "Origine")}</b>', styles['TableHeader']))
+        if has_notes:
+            headers.append(Paragraph(f'<b>{labels.get("sample_notes", "Remarques")}</b>', styles['TableHeader']))
+
+        sample_rows = [headers]
+        for idx, sample in enumerate(sample_table_data, 1):
+            if not isinstance(sample, dict):
+                continue
+            row = [Paragraph(str(idx), styles['TableCell'])]
+            if has_type:
+                row.append(Paragraph(
+                    str(sample.get('type') or sample.get('param_type') or '—'),
+                    styles['TableCell']
+                ))
+            if has_origin:
+                row.append(Paragraph(
+                    str(sample.get('origin') or sample.get('param_origin') or '—'),
+                    styles['TableCell']
+                ))
+            if has_notes:
+                row.append(Paragraph(
+                    str(sample.get('notes') or sample.get('remarques') or '—'),
+                    styles['TableCell']
+                ))
+            sample_rows.append(row)
+
+        n_cols = len(headers)
+        num_col_w   = 0.8 * cm
+        remaining   = page_width - num_col_w
+        other_col_w = remaining / max(n_cols - 1, 1)
+        col_widths  = [num_col_w] + [other_col_w] * (n_cols - 1)
+
+        tbl = Table(sample_rows, colWidths=col_widths, repeatRows=1)
+        tbl.setStyle(TableStyle([
+            ('BACKGROUND',   (0, 0), (-1, 0),  COLOR_HEADER_BG),
+            ('TEXTCOLOR',    (0, 0), (-1, 0),  white),
+            ('FONTNAME',     (0, 0), (-1, 0),  FONT_HELVETICA_BOLD),
+            ('FONTSIZE',     (0, 0), (-1, -1), 8),
+            ('ALIGN',        (0, 0), (0, -1),  'CENTER'),
+            ('ALIGN',        (1, 0), (-1, -1), 'LEFT'),
+            ('VALIGN',       (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID',         (0, 0), (-1, -1), 0.4, COLOR_BORDER),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#F9F9F9')]),
+            ('TOPPADDING',   (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING',(0, 0), (-1, -1), 3),
+        ]))
+        story.append(tbl)
+        story.append(Spacer(1, 14))
+
+    # ── SUB-SECTION B: Détail du devis (lignes tarifaires) ───────────────────
+    breakdown_items = cost_result.get('breakdown') or []
+
+    # Fallback: quote_detail for older requests
+    if not breakdown_items:
+        quote_detail = getattr(request_obj, 'quote_detail', {}) or {}
+        if isinstance(quote_detail, dict):
+            for item_label, item_amount in quote_detail.items():
+                if isinstance(item_amount, (int, float)):
+                    breakdown_items.append({
+                        'name': item_label,
+                        'type': 'ITEM',
+                        'amount': item_amount,
+                        'quantity': 1,
+                        'subtotal': item_amount,
+                    })
+
+    if breakdown_items:
+        story.append(Paragraph(
+            labels.get('cost_breakdown', 'Détail du devis'),
+            styles['Label']
+        ))
+        story.append(Spacer(1, 4))
+
+        # Header
+        tbl_header = [
+            Paragraph(f'<b>{labels.get("designation", "Désignation")}</b>', styles['TableHeader']),
+            Paragraph(f'<b>{labels.get("quantity_short", "Qté")}</b>',     styles['TableHeader']),
+            Paragraph(f'<b>{labels.get("unit_price", "P.U. (DZD)")}</b>',  styles['TableHeader']),
+            Paragraph(f'<b>{labels.get("subtotal", "Sous-total")}</b>',    styles['TableHeader']),
+        ]
+        devis_rows = [tbl_header]
+
+        supplement_detail_lines = []  # collect per-sample supplement details
+
+        for entry in breakdown_items:
+            name    = str(entry.get('name') or entry.get('type') or 'Désignation')
+            amount  = entry.get('amount', 0)
+            qty     = entry.get('quantity', 1)
+            subtotal = entry.get('subtotal', 0)
+
+            # Format quantity: if 1, show '—' for cleanliness
+            qty_text = str(qty) if qty and qty != 1 else '1'
+
+            devis_rows.append([
+                Paragraph(name, styles['TableCell']),
+                Paragraph(qty_text, styles['TableCellRight']),
+                Paragraph(format_currency(amount), styles['TableCellRight']),
+                Paragraph(format_currency(subtotal), styles['TableCellRight']),
+            ])
+
+            # Collect supplement details for footnote
+            for det in (entry.get('details') or []):
+                det_label  = det.get('label') or det.get('field') or 'Supplément'
+                det_amount = det.get('amount')
+                if isinstance(det_amount, (int, float)):
+                    supplement_detail_lines.append(
+                        f"• {det_label} : {format_currency(det_amount)} / échantillon"
+                    )
+
+        col_w = [page_width * 0.46, page_width * 0.12, page_width * 0.20, page_width * 0.22]
+        d_tbl = Table(devis_rows, colWidths=col_w, repeatRows=1)
+        d_tbl.setStyle(TableStyle([
+            ('BACKGROUND',    (0, 0), (-1, 0),  COLOR_HEADER_BG),
+            ('TEXTCOLOR',     (0, 0), (-1, 0),  white),
+            ('FONTNAME',      (0, 0), (-1, 0),  FONT_HELVETICA_BOLD),
+            ('FONTSIZE',      (0, 0), (-1, -1), 9),
+            ('ALIGN',         (1, 1), (-1, -1), 'RIGHT'),
+            ('ALIGN',         (0, 0), (0, -1),  'LEFT'),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID',          (0, 0), (-1, -1), 0.4, COLOR_BORDER),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#F9F9F9')]),
+            ('TOPPADDING',    (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(d_tbl)
+
+        if supplement_detail_lines:
+            story.append(Spacer(1, 4))
+            story.append(Paragraph(
+                labels.get('supplement_reason', 'Détail des suppléments par échantillon :'),
+                styles['BodySmall']
+            ))
+            for line in supplement_detail_lines:
+                story.append(Paragraph(line, styles['BodySmall']))
+
+        story.append(Spacer(1, 10))
+
+    # ── SUB-SECTION C: Modificateurs (mode analyse, urgence, etc.) ───────────
+    modifiers_applied = (modifier_result.get('modifiers_applied') or []) if isinstance(modifier_result, dict) else []
+    if modifiers_applied:
+        story.append(Paragraph(
+            labels.get('modifiers_applied', 'Suppléments / modificateurs appliqués'),
+            styles['Label']
+        ))
+        story.append(Spacer(1, 4))
+
+        mod_rows = []
+        for mod in modifiers_applied:
+            mod_label = mod.get('label') or mod.get('field') or 'Modificateur'
+            mod_type  = mod.get('type') or mod.get('operation') or ''
+            mod_val   = mod.get('value') or ''
+            mod_option = mod.get('option') or ''
+
+            if mod_type in ('option_multiply', 'multiply'):
+                detail = f"× {mod_val}"
+                if mod_option:
+                    detail = f"{mod_option} → × {mod_val}"
+            elif mod_type == 'add':
+                detail = f"+ {format_currency(mod_val)}"
+            elif mod_type == 'set':
+                detail = f"= {format_currency(mod_val)}"
+            else:
+                detail = str(mod_val)
+
+            mod_rows.append([
+                Paragraph(str(mod_label), styles['TableCell']),
+                Paragraph(detail, styles['TableCellRight']),
+            ])
+
+        if mod_rows:
+            m_tbl = Table(mod_rows, colWidths=[page_width * 0.65, page_width * 0.35])
+            m_tbl.setStyle(TableStyle([
+                ('FONTSIZE',      (0, 0), (-1, -1), 9),
+                ('ALIGN',         (1, 0), (1, -1),  'RIGHT'),
+                ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID',          (0, 0), (-1, -1), 0.4, COLOR_BORDER),
+                ('ROWBACKGROUNDS',(0, 0), (-1, -1), [HexColor('#FFF8E7'), white]),
+                ('TOPPADDING',    (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ]))
+            story.append(m_tbl)
+            story.append(Spacer(1, 10))
+
+    # ── SUB-SECTION D: Récapitulatif financier ───────────────────────────────
+    story.append(Paragraph(
+        labels.get('financial_summary', 'Récapitulatif financier'),
+        styles['Label']
+    ))
+    story.append(Spacer(1, 4))
+
+    recap_rows = []
+
+    sample_count = len([s for s in sample_table_data if s]) if sample_table_data else 0
+
+    base_per_sample   = cost_result.get('base_per_sample', 0)
+    per_sample_suppl  = cost_result.get('per_sample_supplements', 0)
+    per_sample_total  = cost_result.get('per_sample_total', 0)
+    calc_formula      = cost_result.get('calculation_formula', '')
+
+    if base_per_sample:
+        recap_rows.append([
+            Paragraph(labels.get('base_price_per_sample', 'Prix de base / échantillon'), styles['TableCell']),
+            Paragraph(format_currency(base_per_sample), styles['TableCellRight']),
         ])
-    
-    table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])
-    style_label_value_table(table)
-    story.append(table)
+    if per_sample_suppl and per_sample_suppl > 0:
+        recap_rows.append([
+            Paragraph(labels.get('per_sample_supplements', 'Suppléments / échantillon'), styles['TableCell']),
+            Paragraph(format_currency(per_sample_suppl), styles['TableCellRight']),
+        ])
+    if sample_count:
+        recap_rows.append([
+            Paragraph(labels.get('number_of_samples', "Nombre d'échantillons"), styles['TableCell']),
+            Paragraph(str(sample_count), styles['TableCellRight']),
+        ])
+
+    # urgency
+    urgency_val = getattr(request_obj, 'urgency', '') or ''
+    if urgency_val and urgency_val != 'Normal':
+        recap_rows.append([
+            Paragraph(labels.get('urgency_label', 'Urgence'), styles['TableCell']),
+            Paragraph(str(urgency_val), styles['TableCellRight']),
+        ])
+
+    # budget declared
+    if budget_amount:
+        recap_rows.append([
+            Paragraph(labels.get('budget_amount', 'Budget déclaré (demandeur)'), styles['TableCell']),
+            Paragraph(format_currency(budget_amount), styles['TableCellRight']),
+        ])
+
+    # discount
+    if discount_pct or discount_amt:
+        discount_text = f"−{discount_pct}%" if discount_pct else f"−{format_currency(discount_amt)}"
+        recap_rows.append([
+            Paragraph(labels['discount_applied'], styles['TableCell']),
+            Paragraph(discount_text, styles['TableCellRight']),
+        ])
+
+    if recap_rows:
+        r_tbl = Table(recap_rows, colWidths=[page_width * 0.65, page_width * 0.35])
+        r_tbl.setStyle(TableStyle([
+            ('FONTSIZE',      (0, 0), (-1, -1), 9),
+            ('ALIGN',         (1, 0), (1, -1),  'RIGHT'),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID',          (0, 0), (-1, -1), 0.4, COLOR_BORDER),
+            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [white, HexColor('#F9F9F9')]),
+            ('TOPPADDING',    (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(r_tbl)
+        story.append(Spacer(1, 6))
+
+    # ── TOTAL highlighted row ────────────────────────────────────────────────
+    if display_total is not None:
+        total_label_text = labels.get('final_cost', 'MONTANT TOTAL')
+        total_value_text = format_currency(display_total)
+
+        total_row = Table(
+            [[
+                Paragraph(f'<b>{total_label_text}</b>', styles['TotalLabel']),
+                Paragraph(f'<b>{total_value_text}</b>', styles['TotalValue']),
+            ]],
+            colWidths=[page_width * 0.65, page_width * 0.35]
+        )
+        total_row.setStyle(TableStyle([
+            ('BACKGROUND',    (0, 0), (-1, -1), COLOR_PRIMARY),
+            ('TEXTCOLOR',     (0, 0), (-1, -1), white),
+            ('ALIGN',         (0, 0), (0, 0),   'LEFT'),
+            ('ALIGN',         (1, 0), (1, 0),   'RIGHT'),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING',    (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING',   (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING',  (0, 0), (-1, -1), 8),
+            ('FONTNAME',      (0, 0), (-1, -1), FONT_HELVETICA_BOLD),
+            ('FONTSIZE',      (0, 0), (-1, -1), 11),
+        ]))
+        story.append(total_row)
+
+        # Formula note below total (informational)
+        if calc_formula:
+            story.append(Spacer(1, 4))
+            story.append(Paragraph(
+                f"<i>{labels.get('formula_label', 'Formule')} : {calc_formula}</i>",
+                styles['BodySmall']
+            ))
+    else:
+        # No price yet
+        story.append(Paragraph(
+            f"<font color='#999999'>{labels.get('pending_validation', 'En attente de validation financière')}</font>",
+            styles['Value']
+        ))
 
     if pricing_error:
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 4))
         story.append(Paragraph(
-            labels.get('pending_validation', 'En attente de validation financiere'),
+            f"<font color='#CC0000'>Erreur calcul : {pricing_error}</font>",
             styles['BodySmall']
         ))
-    
-    # Full cost breakdown (primary source: request.pricing, fallback: quote_detail)
-    pricing_payload = getattr(request_obj, 'pricing', {}) or {}
-    cost_result = pricing_payload.get('cost_breakdown', {}) if isinstance(pricing_payload, dict) else {}
-    modifier_result = pricing_payload.get('modifiers_applied', []) if isinstance(pricing_payload, dict) else []
 
-    breakdown_rows = []
-    supplement_reasons = []
-
-    if isinstance(cost_result, dict):
-        formula = cost_result.get('calculation_formula')
-        if formula:
-            story.append(Spacer(1, 8))
-            story.append(Paragraph(labels.get('cost_breakdown', 'Détail du coût'), styles['Label']))
-            story.append(Spacer(1, 2))
-            story.append(Paragraph(str(formula), styles['BodySmall']))
-            story.append(Spacer(1, 4))
-
-        for entry in cost_result.get('breakdown', []) or []:
-            name = entry.get('name') or entry.get('type') or 'Ligne'
-            subtotal = entry.get('subtotal')
-            if isinstance(subtotal, (int, float)):
-                breakdown_rows.append([
-                    Paragraph(str(name), styles['TableCell']),
-                    Paragraph(format_currency(subtotal), styles['TableCell'])
-                ])
-
-            details = entry.get('details') or []
-            if isinstance(details, list):
-                for det in details:
-                    label = det.get('label') or det.get('field') or 'Supplément'
-                    amount = det.get('amount')
-                    if isinstance(amount, (int, float)):
-                        supplement_reasons.append(f"{label}: {format_currency(amount)} / échantillon")
-
-    # Include total-level modifiers as explicit reasons when available
-    if isinstance(modifier_result, list):
-        for mod in modifier_result:
-            field_name = mod.get('field_name') or mod.get('field') or 'Modificateur'
-            op = mod.get('operation') or mod.get('type') or ''
-            val = mod.get('value') or mod.get('amount') or ''
-            if op or val:
-                supplement_reasons.append(f"{field_name} ({op} {val})")
-
-    # Fallback to quote_detail for backward compatibility
-    if not breakdown_rows:
-        quote_detail = getattr(request_obj, 'quote_detail', {}) or {}
-        if quote_detail and isinstance(quote_detail, dict):
-            for item_name, item_amount in quote_detail.items():
-                if isinstance(item_amount, (int, float)):
-                    breakdown_rows.append([
-                        Paragraph(str(item_name), styles['TableCell']),
-                        Paragraph(format_currency(item_amount), styles['TableCell'])
-                    ])
-
-    if breakdown_rows:
-        story.append(Spacer(1, 8))
-        story.append(Paragraph(labels.get('cost_breakdown', 'Détail du coût'), styles['Label']))
-        story.append(Spacer(1, 4))
-        breakdown_table = Table(breakdown_rows, colWidths=[page_width * 0.6, page_width * 0.4])
-        breakdown_table.setStyle(TableStyle([
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ]))
-        story.append(breakdown_table)
-
-    if supplement_reasons:
-        story.append(Spacer(1, 6))
-        story.append(Paragraph(labels.get('supplement_reason', 'Motifs des suppléments'), styles['Label']))
-        for reason in supplement_reasons[:12]:
-            story.append(Paragraph(f"• {reason}", styles['BodySmall']))
-    
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 14))
     return story
 
 
