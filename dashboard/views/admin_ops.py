@@ -764,6 +764,18 @@ def bulk_action(request):
                 req.assigned_to = member
                 req.save(update_fields=['assigned_to'])
                 transition(req, 'ASSIGNED', request.user, notes=gettext("Bulk assign to %(member)s") % {'member': member.user.get_full_name()})
+
+                # Notify the assigned member
+                from notifications.services import notify_user
+                notify_user(
+                    user=member.user,
+                    message=gettext("You have been assigned request %(display_id)s — %(service)s") % {
+                        'display_id': req.display_id,
+                        'service': req.service.name if req.service else '',
+                    },
+                    notification_type='ASSIGNMENT',
+                    request_obj=req,
+                )
                 success_count += 1
                 
             except Exception as e:
@@ -1002,7 +1014,19 @@ def assign_request(request, pk):
             actor=request.user,
             details={'member': member.user.get_full_name()}
         )
-        
+
+        # Notify newly assigned member
+        from notifications.services import notify_user
+        notify_user(
+            user=member.user,
+            message=gettext("You have been assigned request %(display_id)s — %(service)s") % {
+                'display_id': req.display_id,
+                'service': req.service.name if req.service else '',
+            },
+            notification_type='ASSIGNMENT',
+            request_obj=req,
+        )
+
         if is_ajax:
             return JsonResponse({
                 'success': True,
