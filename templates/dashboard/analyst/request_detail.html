@@ -439,61 +439,121 @@
         {% include 'messaging/message_panel.html' %}
 
         <!-- Workflow Actions -->
+        {% url 'dashboard:analyst_action' req.pk as analyst_action_url1 %}
+        {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Actions" %}</h3></div>
             <div class="card-body">
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+                {# ── Progress indicator ─────────────────────────────────── #}
+                {% if req.status|in_list:'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED' %}
+                <div style="margin-bottom:16px; padding:12px 14px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; font-size:0.85rem;">
+                    <div style="font-weight:600; color:#0369a1; margin-bottom:6px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        {% trans "Étapes requises avant dépôt du rapport" %}
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <span style="padding:3px 10px; border-radius:12px; {% if req.status != 'APPOINTMENT_CONFIRMED' %}background:#dcfce7; color:#15803d;{% else %}background:#e0f2fe; color:#0369a1; font-weight:600;{% endif %}">
+                            {% if req.status != 'APPOINTMENT_CONFIRMED' %}✓ {% endif %}{% trans "Échantillon reçu" %}
+                        </span>
+                        <span style="color:#9ca3af;">→</span>
+                        <span style="padding:3px 10px; border-radius:12px; {% if req.status|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED' %}background:#dcfce7; color:#15803d;{% elif req.status == 'SAMPLE_RECEIVED' %}background:#e0f2fe; color:#0369a1; font-weight:600;{% else %}background:#f3f4f6; color:#9ca3af;{% endif %}">
+                            {% if req.status|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED' %}✓ {% endif %}{% trans "Analyse démarrée" %}
+                        </span>
+                        <span style="color:#9ca3af;">→</span>
+                        <span style="padding:3px 10px; border-radius:12px; {% if req.status == 'ANALYSIS_FINISHED' %}background:#dcfce7; color:#15803d; font-weight:600;{% elif req.status == 'ANALYSIS_STARTED' %}background:#e0f2fe; color:#0369a1; font-weight:600;{% else %}background:#f3f4f6; color:#9ca3af;{% endif %}">
+                            {% if req.status == 'ANALYSIS_FINISHED' %}✓ {% endif %}{% trans "Analyse terminée" %}
+                        </span>
+                        <span style="color:#9ca3af;">→</span>
+                        <span style="padding:3px 10px; border-radius:12px; background:#f3f4f6; color:#9ca3af;">
+                            {% trans "Dépôt rapport" %}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ── Action buttons ─────────────────────────────────────── #}
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+
+                    {# Step 1: Échantillon reçu #}
                     {% if req.status == 'APPOINTMENT_CONFIRMED' %}
-                    {% url 'dashboard:analyst_action' req.pk as analyst_action_url1 %}
-                    {% if analyst_action_url1 %}
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
-                        <button type="submit" class="btn btn-primary">{% trans "Échantillon reçu" %}</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                            {% trans "Échantillon reçu" %}
+                        </button>
                     </form>
                     {% endif %}
-                    {% endif %}
+
+                    {# Step 2: Démarrer analyse #}
                     {% if req.status == 'SAMPLE_RECEIVED' %}
-                    {% if analyst_action_url1 %}
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
-                        <button type="submit" class="btn btn-primary">{% trans "Démarrer analyse" %}</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            {% trans "Démarrer l'analyse" %}
+                        </button>
                     </form>
                     {% endif %}
-                    {% endif %}
+
+                    {# Step 3: Terminer analyse #}
                     {% if req.status == 'ANALYSIS_STARTED' %}
-                    {% if analyst_action_url1 %}
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
-                        <button type="submit" class="btn btn-primary">{% trans "Terminer analyse" %}</button>
+                        <button type="submit" class="btn btn-primary" style="background:#16a34a; border-color:#16a34a;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                            {% trans "Terminer l'analyse" %}
+                        </button>
                     </form>
                     {% endif %}
-                    {% endif %}
+
+                    {# Step 4a: Upload rapport — IBTIKAR (requires ANALYSIS_FINISHED) #}
                     {% if req.channel == 'IBTIKAR' and req.status == 'ANALYSIS_FINISHED' %}
-                    {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
-                    {% if analyst_upload_url2 %}
-                    <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline;">
+                    <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline-flex; gap:8px; align-items:center; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px 12px;">
                         {% csrf_token %}
-                        <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
-                        <button type="submit" class="btn btn-primary">{% trans "Uploader rapport" %}</button>
+                        <label style="font-size:0.82rem; font-weight:600; color:#15803d; white-space:nowrap;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            {% trans "Déposer le rapport" %}
+                        </label>
+                        <input type="file" name="report_file" class="form-control" style="font-size:0.82rem; max-width:240px;" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip" required>
+                        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">{% trans "Envoyer" %}</button>
                     </form>
                     {% endif %}
+
+                    {# Step 4b: Upload rapport — GENOCLAB (requires PAYMENT_CONFIRMED) #}
+                    {# GENOCLAB: analyst must also go through ANALYSIS_STARTED/FINISHED before payment step #}
+                    {% if req.channel == 'GENOCLAB' %}
+                        {% if req.status|in_list:'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED' %}
+                        {# GENOCLAB analysis steps shown above — no upload yet, waiting for invoice/payment #}
+                        <span style="font-size:0.82rem; color:#6b7280; padding:6px 10px; border:1px dashed #d1d5db; border-radius:6px;">
+                            {% trans "Upload disponible après confirmation du paiement" %}
+                        </span>
+                        {% endif %}
+                        {% if req.status == 'PAYMENT_CONFIRMED' %}
+                        <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline-flex; gap:8px; align-items:center; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px 12px;">
+                            {% csrf_token %}
+                            <label style="font-size:0.82rem; font-weight:600; color:#15803d; white-space:nowrap;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                {% trans "Déposer le rapport" %}
+                            </label>
+                            <input type="file" name="report_file" class="form-control" style="font-size:0.82rem; max-width:240px;" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip" required>
+                            <button type="submit" class="btn btn-primary" style="white-space:nowrap;">{% trans "Envoyer" %}</button>
+                        </form>
+                        {% endif %}
                     {% endif %}
-                    {% if req.channel == 'GENOCLAB' and req.status == 'PAYMENT_CONFIRMED' %}
-                    {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
-                    {% if analyst_upload_url2 %}
-                    <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
-                        <button type="submit" class="btn btn-primary">{% trans "Uploader rapport" %}</button>
-                    </form>
-                    {% endif %}
-                    {% endif %}
+
+                    {# View current report #}
                     {% if req.report_file %}
-                    <a href="#" class="btn btn-secondary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">{% trans "Voir rapport" %}</a>
+                    <a href="#" class="btn btn-secondary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {% trans "Voir rapport" %}
+                    </a>
                     {% endif %}
+
                 </div>
             </div>
         </div>

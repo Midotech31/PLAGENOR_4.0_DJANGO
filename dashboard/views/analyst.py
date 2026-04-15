@@ -423,6 +423,16 @@ def upload_report(request, pk):
     if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     
+    # For IBTIKAR: analysis must be completed before uploading report
+    IBTIKAR_UPLOAD_ALLOWED = {'ANALYSIS_FINISHED', 'REPORT_UPLOADED'}
+    if req.channel == 'IBTIKAR' and req.status not in IBTIKAR_UPLOAD_ALLOWED:
+        messages.error(request, (
+            "Vous devez d'abord valider les étapes : "
+            "Échantillon reçu → Analyse démarrée → Analyse terminée "
+            "avant de pouvoir déposer le rapport."
+        ))
+        return redirect_back(request, 'dashboard:analyst')
+
     # For GENOCLAB: Payment must be confirmed before report upload
     if req.channel == 'GENOCLAB' and req.status != 'PAYMENT_CONFIRMED':
         messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
