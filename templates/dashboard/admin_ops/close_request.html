@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Close Request" %} — {{ req.display_id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Administratively Close Request" %}</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="width: 32px; height: 32px;">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <div>
+                    <h3 style="margin: 0 0 4px; color: #991b1b;">{% trans "Warning: This action cannot be undone" %}</h3>
+                    <p style="margin: 0; color: #b91c1c; font-size: 0.9rem;">
+                        {% trans "This will immediately close the request and remove it from active workload." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-card mb-4" style="background: #f9fafb;">
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Request ID" %}</span>
+                <strong>{{ req.display_id }}</strong>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Title" %}</span>
+                <strong>{{ req.title|truncatechars:60 }}</strong>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Channel" %}</span>
+                <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Current Status" %}</span>
+                <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
+            </div>
+            {% if req.assigned_to %}
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Assigned To" %}</span>
+                <strong>{{ req.assigned_to.user.get_full_name }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label for="close_reason" style="display: block; font-weight: 600; margin-bottom: 8px;">
+                    {% trans "Reason for closing" %} <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea 
+                    id="close_reason" 
+                    name="close_reason" 
+                    class="form-control" 
+                    rows="4" 
+                    placeholder="{% trans 'Please provide a detailed reason for administrative closure (minimum 10 characters)...' %}"
+                    required
+                    minlength="10"
+                    style="font-size: 0.95rem;"
+                ></textarea>
+                <p class="text-sm text-muted" style="margin-top: 4px;">
+                    {% trans "This reason will be recorded in the audit log and visible to the requester." %}
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-secondary">
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    {% trans "Close Request" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

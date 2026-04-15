@@ -1,9 +1,19 @@
+"""
+Analyst workspace views.
+
+Workflow map (high-level):
+- Manage assigned request execution from acceptance to report upload.
+- Coordinate appointment proposal and alternative-date decisions.
+- Expose read-only observer access and productivity/reward interactions.
+"""
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from django.db import transaction
 from dashboard.decorators import analyst_required
 
 from accounts.models import MemberProfile
@@ -13,6 +23,7 @@ from core.state_machine import get_decline_return_state, is_acceptance_state
 from core.productivity import compute_member_productivity
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from notifications.models import Notification
+from messaging.models import Reminder
 
 
 @analyst_required
@@ -41,7 +52,7 @@ def index(request):
     in_progress = Request.objects.filter(
         assigned_to=profile,
         status__in=[
-            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
+            'ACCEPTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
             'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
         ]
     ).select_related('service', 'requester').prefetch_related('comments').order_by('-updated_at')
@@ -52,6 +63,14 @@ def index(request):
         status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
     ).select_related('service', 'requester').order_by('-updated_at')
     history_paginator, history, _ = paginate_queryset(history_qs, request, per_page=25, page_param='history_page')
+
+    # BATCH 1 - FEATURE 3: Observed Requests (read-only access)
+    observed_qs = Request.objects.filter(
+        informed_members=profile
+    ).exclude(
+        assigned_to=profile
+    ).select_related('service', 'requester', 'assigned_to__user').order_by('-updated_at')
+    observed_paginator, observed_requests, _ = paginate_queryset(observed_qs, request, per_page=10, page_param='observed_page')
 
     # Points and cheers - paginated
     points_paginator, points_history, _ = paginate_queryset(profile.points_history.order_by('-created_at'), request, per_page=10, page_param='points_page')
@@ -65,6 +84,13 @@ def index(request):
         Notification.objects.filter(user=request.user, read=False).order_by('-created_at'),
         request, per_page=10, page_param='notif_page'
     )
+
+    # Reminders for the member
+    my_reminders_qs = Reminder.objects.filter(
+        target_user=request.user,
+        is_active=True
+    ).select_related('request', 'request__service').order_by('-created_at')
+    my_reminders_paginator, my_reminders, _ = paginate_queryset(my_reminders_qs, request, per_page=10, page_param='reminder_page')
 
     # Ranking position among all members (sorted by productivity_score desc, total_points desc)
     all_members = list(MemberProfile.objects.order_by('-productivity_score', '-total_points').values_list('pk', flat=True))
@@ -98,12 +124,16 @@ def index(request):
         'in_progress': in_progress,
         'history': history,
         'history_paginator': history_paginator,
+        'observed_requests': observed_requests,
+        'observed_paginator': observed_paginator,
         'points_history': points_history,
         'points_paginator': points_paginator,
         'cheers': cheers,
         'cheers_paginator': cheers_paginator,
         'notifications': notifications,
         'notifications_paginator': notifications_paginator,
+        'my_reminders': my_reminders,
+        'my_reminders_paginator': my_reminders_paginator,
         'now': timezone.now(),
         'rank_position': rank_position,
         'total_members_count': total_members_count,
@@ -118,7 +148,7 @@ def accept_task(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     req.assignment_accepted = True
     req.assignment_accepted_at = timezone.now()
@@ -143,18 +173,13 @@ def decline_task(request, pk):
     req.assignment_decline_reason = request.POST.get('reason', '')
     req.save(update_fields=['assignment_declined', 'assignment_decline_reason'])
     try:
-        # First transition to DECLINED state
-        transition(req, 'DECLINED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-
-        # Get return state for reassignment by admin
-        return_state = get_decline_return_state(req.channel)
-
-        # Clear assignment before returning to admin
+        # Clear assignment before transition
         req.assigned_to = None
         req.save(update_fields=['assigned_to'])
-
-        # Transition to return state for reassignment
-        transition(req, return_state, request.user, notes='Retour pour réassignation après refus')
+        
+        # Transition to DECLINED state
+        # State machine now allows DECLINED → ASSIGNED for admin reassignment
+        transition(req, 'DECLINED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
 
         # Notify admin that task was declined
         from notifications.services import notify_admin_task_declined
@@ -172,18 +197,17 @@ def workflow_action(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     to_status = request.POST.get('to_status', '')
     notes = request.POST.get('notes', '')
     try:
         transition(req, to_status, request.user, notes=notes)
         
-        # For GENOCLAB: when analysis is finished, notify client to pay before report delivery
+        # For GENOCLAB: when analysis is finished, the workflow now goes to INVOICE_GENERATED
+        # Finance will handle invoice generation and client notification
         if to_status == 'ANALYSIS_FINISHED' and req.channel == 'GENOCLAB':
-            from notifications.services import notify_payment_request
-            notify_payment_request(req)
-            messages.success(request, f"Demande {req.display_id} mise à jour. Le client a été notifié pour le paiement.")
+            messages.success(request, f"Demande {req.display_id} terminée. La finance va maintenant générer la facture.")
         else:
             messages.success(request, f"Demande {req.display_id} mise à jour.")
             
@@ -198,7 +222,7 @@ def suggest_appointment(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     date_str = request.POST.get('appointment_date', '')
     time_str = request.POST.get('appointment_time', '')
@@ -217,7 +241,7 @@ def suggest_appointment(request, pk):
                 notes_parts.append(f'Note: {appointment_note}')
             transition_notes = ' — '.join(notes_parts)
             # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED or APPOINTMENT_RESCHEDULING_REQUESTED
-            if req.status in ['ASSIGNED', 'APPOINTMENT_RESCHEDULING_REQUESTED']:
+            if req.status in ['ACCEPTED', 'ASSIGNED', 'APPOINTMENT_RESCHEDULING_REQUESTED']:
                 try:
                     transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=transition_notes)
                 except (InvalidTransitionError, AuthorizationError, ValueError) as e:
@@ -233,17 +257,20 @@ def request_detail(request, pk):
     from core.models import RequestComment, Message
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    # Allow access to currently assigned requests AND historical ones (once completed/sent)
+    # Allow access to currently assigned requests, historical ones, AND observers
     from core.models import RequestHistory
     was_assigned = req.assigned_to == profile or req.history.filter(actor=request.user).exists()
-    if not was_assigned:
+    is_observer = req.informed_members.filter(pk=profile.pk).exists()
+    if not was_assigned and not is_observer:
         return HttpResponseForbidden()
     history = req.history.select_related('actor').order_by('created_at')
     comments = req.comments.select_related('author').order_by('created_at')
     messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
+    payment_completed = req.status == 'PAYMENT_CONFIRMED'
     return render(request, 'dashboard/analyst/request_detail.html', {
         'req': req, 'history': history, 'comments': comments,
         'messages_list': messages_list, 'now': timezone.now(),
+        'payment_completed': payment_completed,
     })
 
 
@@ -254,13 +281,12 @@ def accept_alt_date(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     if not req.alt_date_proposed:
         messages.error(request, "Aucune date alternative à accepter.")
         return redirect_back(request, 'dashboard:analyst')
 
-    # Update appointment date to the proposed alternative
     import uuid as _uuid
     old_date = req.appointment_date
     req.appointment_date = req.alt_date_proposed
@@ -270,29 +296,30 @@ def accept_alt_date(request, pk):
     req.alt_date_note = ''
     if not req.report_token:
         req.report_token = _uuid.uuid4()
-    req.save(update_fields=[
-        'appointment_date', 'appointment_confirmed', 'appointment_confirmed_at',
-        'alt_date_proposed', 'alt_date_note', 'report_token',
-    ])
 
-    # Transition to APPOINTMENT_CONFIRMED if currently APPOINTMENT_PROPOSED
-    if req.status == 'APPOINTMENT_PROPOSED':
-        try:
-            transition(
-                req, 'APPOINTMENT_CONFIRMED', request.user,
-                notes=f"Date alternative acceptée: {req.appointment_date.strftime('%d/%m/%Y')} (ancienne: {old_date})"
+    with transaction.atomic():
+        req.save(update_fields=[
+            'appointment_date', 'appointment_confirmed', 'appointment_confirmed_at',
+            'alt_date_proposed', 'alt_date_note', 'report_token',
+        ])
+
+        if req.status == 'APPOINTMENT_PROPOSED':
+            try:
+                transition(
+                    req, 'APPOINTMENT_CONFIRMED', request.user,
+                    notes=f"Date alternative acceptée: {req.appointment_date.strftime('%d/%m/%Y')} (ancienne: {old_date})"
+                )
+            except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+                messages.error(request, f"Erreur: {str(e)}")
+                return redirect_back(request, 'dashboard:analyst')
+
+        if req.requester:
+            Notification.objects.create(
+                user=req.requester,
+                message=f"{req.display_id}: Date alternative acceptée — RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}",
+                request=req,
+                notification_type='WORKFLOW',
             )
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, f"Erreur: {str(e)}")
-
-    # Notify the requester/client
-    if req.requester:
-        Notification.objects.create(
-            user=req.requester,
-            message=f"{req.display_id}: Date alternative acceptée — RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}",
-            request=req,
-            notification_type='WORKFLOW',
-        )
 
     messages.success(request, f"Date alternative acceptée. RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}.")
     return redirect_back(request, 'dashboard:analyst')
@@ -305,7 +332,7 @@ def decline_alt_date(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
 
     decline_reason = request.POST.get('decline_reason', '')
@@ -345,7 +372,7 @@ def upload_report(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to is None or req.assigned_to != profile:
         return HttpResponseForbidden()
     
     # For GENOCLAB: Payment must be confirmed before report upload

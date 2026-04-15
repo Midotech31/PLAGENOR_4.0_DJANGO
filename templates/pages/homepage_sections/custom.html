@@ -1,0 +1,17 @@
+<section class="section">
+    <h2 class="section-title">{{ section.title }}</h2>
+    {% if section.subtitle %}<p class="section-subtitle">{{ section.subtitle }}</p>{% endif %}
+    {% if section.description %}<div class="card"><div class="card-body">{{ section.description|linebreaks }}</div></div>{% endif %}
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:12px;">
+        {% for block in section.blocks.all %}
+            <div class="card card-flat">
+                <div class="card-body">
+                    {% if block.image %}<img src="{{ block.image.url }}" alt="{{ block.image_alt|default:block.title }}" style="max-width:100%; max-height:180px; object-fit:contain; margin-bottom:8px;">{% endif %}
+                    <h4>{{ block.title|default:'Bloc' }}</h4>
+                    <p>{{ block.payload.content|default:block.text }}</p>
+                    {% if block.link_url %}<a href="{{ block.link_url }}" class="btn btn-secondary btn-sm">{% trans "Ouvrir" %}</a>{% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>

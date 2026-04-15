@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load dashboard_extras %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -19,7 +20,7 @@
             {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
         </p>
     </div>
-    <a href="{% url 'dashboard:client' %}" class="btn btn-outline">
+    <a href="{% url 'dashboard:client' %}" class="btn btn-secondary">
         &larr; {% trans "Retour au tableau de bord" %}
     </a>
 </div>
@@ -199,8 +200,8 @@
                     {% if client_accept_quote_url %}
                     <form method="post" action="{{ client_accept_quote_url }}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary" style="background:#059669;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
                             {% trans "Accepter le devis" %}
                         </button>
                     </form>
@@ -210,7 +211,7 @@
                     <form method="post" action="{{ client_reject_quote_url }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             {% trans "Refuser le devis" %}
                         </button>
                     </form>
@@ -238,7 +239,7 @@
                 <div style="padding:12px; background:#dcfce7; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span style="color:#16a34a; font-weight:600;">{% trans "Bon de Commande déjà téléchargé" %}</span>
-                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
+                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-secondary" style="margin-left:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
                 {% url 'dashboard:client_upload_order' req.pk as client_upload_order_url %}
@@ -249,8 +250,8 @@
                         <input type="file" name="order_file" accept=".pdf,.jpg,.jpeg,.png" required style="width:100%; padding:8px; border:2px dashed #f59e0b; border-radius:8px; background:#fff;">
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             {% trans "Télécharger le Bon de Commande" %}
                         </button>
                     </div>
@@ -284,7 +285,7 @@
                 <div style="padding:12px; background:#dcfce7; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span style="color:#16a34a; font-weight:600;">{% trans "Reçu de paiement déjà téléchargé" %}</span>
-                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
+                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-secondary" style="margin-left:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
                 {% url 'dashboard:client_upload_payment' req.pk as client_upload_payment_url %}
@@ -296,8 +297,8 @@
                         <input type="file" name="payment_receipt_file" accept=".pdf,.jpg,.jpeg,.png" required style="width:100%; padding:8px; border:2px dashed #dc2626; border-radius:8px; background:#fff;">
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             {% trans "Confirmer le Paiement" %}
                         </button>
                     </div>
@@ -324,8 +325,8 @@
                     <br><strong>{% trans "Date de rendez-vous" %}:</strong> {{ req.appointment_date|date:"d/m/Y" }}
                     {% endif %}
                 </p>
-                <a href="{{ req.generated_reception_form.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; font-size:1rem; background:#7c3aed;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <a href="{{ req.generated_reception_form.url }}" target="_blank" class="btn btn-purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le Formulaire de Réception" %}
                 </a>
             </div>
@@ -350,8 +351,8 @@
                 <div style="margin-bottom:16px;">
                     {% url 'dashboard:client_invoice_download' req.pk as client_invoice_url %}
                     {% if client_invoice_url %}
-                    <a href="{{ client_invoice_url }}" class="btn btn-success" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; font-size:1rem; background:#059669;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <a href="{{ client_invoice_url }}" class="btn btn-success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         {% trans "Télécharger la Facture" %}
                     </a>
                     {% if req.invoice_downloaded_at %}
@@ -366,24 +367,6 @@
         </div>
         {% endif %}
 
-        {# IBTIKAR Form Download - for IBTIKAR channel requests #}
-        {% if req.channel == 'IBTIKAR' %}
-        <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Formulaire IBTIKAR" %}</h3></div>
-            <div class="card-body">
-                <p style="margin-bottom:12px;">{% trans "Téléchargez votre formulaire IBTIKAR pour compléter votre demande." %}</p>
-                {% url 'documents:ibtikar_form_pdf' req.pk as ibtikar_form_url %}
-                {% if ibtikar_form_url %}
-                <a href="{{ ibtikar_form_url }}" class="btn btn-primary" target="_blank" style="display:inline-flex; align-items:center; gap:8px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    {% trans "Télécharger le Formulaire IBTIKAR" %}
-                </a>
-                {% else %}
-                <p class="text-muted">{% trans "Formulaire non disponible." %}</p>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
 
         <!-- Status Info (no analyst identity — anonymity) -->
         <div class="card mb-4">
@@ -414,32 +397,37 @@
                         <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s|in_list:'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ORDER_UPLOADED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ORDER_UPLOADED' %}active{% elif s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "BC" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'APPOINTMENT_PROPOSED' or s == 'APPOINTMENT_CONFIRMED' %}active{% elif s in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'APPOINTMENT_PROPOSED' or s == 'APPOINTMENT_CONFIRMED' %}active{% elif s|in_list:'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'INVOICE_GENERATED,INVOICE_SENT,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_FINISHED' or s == 'PAYMENT_PENDING' %}active{% elif s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'INVOICE_SENT' %}active{% elif s|in_list:'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-label text-xs">{% trans "Facture" %}</div>
+                    </div>
+                    <div class="pipeline-line{% if s|in_list:'INVOICE_SENT,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_SENT' %}active{% elif s|in_list:'PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'PAYMENT_CONFIRMED' or s == 'REPORT_UPLOADED' %}active{% elif s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'PAYMENT_CONFIRMED' or s == 'REPORT_UPLOADED' %}active{% elif s|in_list:'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Rapport" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -495,21 +483,22 @@
         {% if req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
             {# Download button - separate from form to avoid redirect #}
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem; text-decoration:none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="text-decoration:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
             {# Confirm receipt button - separate form #}
-        {% url 'dashboard:client_confirm' req.pk as client_confirm_url %}
-        {% if client_confirm_url %}
-        <form method="post" action="{{ client_confirm_url }}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
-                {% trans "Confirmer la réception" %}
-            </button>
-        </form>
-        {% endif %}
+            {% url 'dashboard:client_confirm' req.pk as client_confirm_url %}
+            {% if client_confirm_url %}
+            <form method="post" action="{{ client_confirm_url }}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    {% trans "Confirmer la réception" %}
+                </button>
+            </form>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
 </div>
@@ -529,8 +518,8 @@
         </div>
         {% if req.report_file %}
         <div style="margin-bottom:16px;">
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-secondary btn-xs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
         </div>
@@ -549,13 +538,13 @@
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px;">
-                <button type="submit" class="btn btn-primary" style="padding:10px 24px;">{% trans "Envoyer mon évaluation" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Envoyer mon évaluation" %}</button>
             </div>
         </form>
         {% endif %}
     </div>
 </div>
-{% else %}
+{% elif req.service_rating and req.status == 'COMPLETED' %}
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
@@ -566,7 +555,7 @@
 {% endif %}
 
 {# END OF WORKFLOW README SECTION #}
-{% if req.status in 'COMPLETED,CLOSED,ARCHIVED' %}
+{% if req.status|in_list:'COMPLETED,CLOSED,ARCHIVED' %}
 <div class="card mb-4" style="margin-top:24px; border:3px solid #4F46E5; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
     <div class="card-body" style="padding:32px; text-align:center;">
         <!-- Celebration Icon -->
@@ -583,11 +572,11 @@
         <div style="background:white; border-radius:16px; padding:24px; margin:24px 0; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:left; max-width:500px; margin-left:auto; margin-right:auto;">
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "Service" %}</span>
-                <strong>{{ req.service.name }}</strong>
+                <strong>{% firstof req.service.name "—" %}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "N° suivi / Tracking" %}</span>
-                <strong style="font-family:monospace;">{{ req.tracking_number|default:req.display_id }}</strong>
+                <strong style="font-family:monospace;">{% firstof req.tracking_number req.display_id %}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "Créée le" %}</span>
@@ -608,7 +597,7 @@
             <p style="margin:0 0 16px; color:#92400e;">
                 {% trans "Donnez-nous 5 étoiles et laissez un commentaire positif ! / Give us 5 stars and leave a positive review!" %}
             </p>
-            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
+            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-warning">
                 {% trans "Évaluer maintenant / Rate now" %}
             </a>
         </div>
@@ -637,4 +626,7 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Ephemeral Messages Panel (Feature 4) -->
+{% include 'messaging/message_panel.html' %}
 {% endblock %}

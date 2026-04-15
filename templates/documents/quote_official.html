@@ -1,0 +1,499 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Devis" %} — {{ settings.company_name }} — {{ req.display_id }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .quote-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .quote-container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #059669;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+        
+        .company-info h1 {
+            font-size: 24px;
+            color: #059669;
+            margin-bottom: 5px;
+        }
+        
+        .company-info p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .quote-title {
+            text-align: right;
+        }
+        
+        .quote-title h2 {
+            font-size: 28px;
+            color: #059669;
+            margin-bottom: 5px;
+        }
+        
+        .quote-title p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .quote-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .client-section, .quote-details {
+            font-size: 13px;
+        }
+        
+        .client-section h3, .quote-details h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #059669;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .quote-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .quote-table th {
+            background: #059669;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .quote-table th:last-child,
+        .quote-table td:last-child {
+            text-align: right;
+        }
+        
+        .quote-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        
+        .quote-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .quote-summary {
+            width: 350px;
+            margin-left: auto;
+            margin-bottom: 30px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .summary-row.total {
+            font-size: 16px;
+            font-weight: 700;
+            color: #059669;
+            border-top: 2px solid #059669;
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 15px;
+        }
+        
+        .terms-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .terms-section h3 {
+            font-size: 14px;
+            color: #059669;
+            margin-bottom: 10px;
+        }
+        
+        .terms-section p {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .payment-info {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .payment-info h4 {
+            font-size: 13px;
+            color: #059669;
+            margin-bottom: 10px;
+        }
+        
+        .payment-info p {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .footer p {
+            margin-bottom: 5px;
+        }
+        
+        /* Action buttons for client */
+        .quote-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #047857;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-outline:hover {
+            background: #f9fafb;
+        }
+        
+        .expired-notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #92400e;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-draft {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-accepted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    {% if is_expired and quote.status == 'sent' %}
+    <div class="expired-notice">
+        {% trans "Ce devis a expiré. Veuillez contacter l'administrateur pour un nouveau devis." %}
+    </div>
+    {% endif %}
+    
+    <div class="quote-container">
+        <!-- Header with Logo and Company Info -->
+        <div class="header">
+            <div class="logo-section">
+                {% if settings.logo %}
+                <img src="{{ settings.logo.url }}" alt="{{ settings.company_name }}" class="logo">
+                {% endif %}
+                <div class="company-info">
+                    <h1>{{ settings.company_name }}</h1>
+                    <p>{{ settings.company_subtitle }}</p>
+                    <p>{{ settings.address_line1 }}</p>
+                    {% if settings.address_line2 %}
+                    <p>{{ settings.address_line2 }}</p>
+                    {% endif %}
+                    <p>{% if settings.phone %}Tél: {{ settings.phone }}{% endif %}{% if settings.email %} | Email: {{ settings.email }}{% endif %}</p>
+                    {% if settings.website %}
+                    <p>{{ settings.website }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quote-title">
+                <h2>{% trans "DEVIS" %}</h2>
+                <p>N° {{ req.display_id }}</p>
+                {% if quote.status %}
+                <span class="status-badge status-{{ quote.status }}">{{ quote.get_status_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quote Meta Information -->
+        <div class="quote-meta">
+            <div class="client-section">
+                <h3>{% trans "Client" %}</h3>
+                <p><strong>{{ req.requester.get_full_name|default:req.requester.username }}</strong></p>
+                <p>{{ req.requester.email }}</p>
+                {% if req.requester.phone %}
+                <p>{{ req.requester.phone }}</p>
+                {% endif %}
+                {% if req.requester.organization %}
+                <p>{{ req.requester.organization }}</p>
+                {% endif %}
+            </div>
+            <div class="quote-details">
+                <h3>{% trans "Détails du devis" %}</h3>
+                <p><strong>{% trans "Date d'émission" %}:</strong> {{ quote.created_at|date:"d/m/Y" }}</p>
+                <p><strong>{% trans "Date d'expiration" %}:</strong> {{ quote.expires_at|date:"d/m/Y" }}</p>
+                <p><strong>{% trans "Service" %}:</strong> {{ req.service.name|default:req.service.code }}</p>
+                <p><strong>{% trans "Validité" %}:</strong> {{ settings.quote_validity_days }} {% trans "jours" %}</p>
+            </div>
+        </div>
+        
+        <!-- Quote Items Table -->
+        <table class="quote-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Description" %}</th>
+                    <th style="text-align: center;">{% trans "Qté" %}</th>
+                    <th>{% trans "Prix unitaire" %}</th>
+                    <th>{% trans "Total" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in quote.items %}
+                <tr>
+                    <td>{{ item.label }}</td>
+                    <td style="text-align: center;">{{ item.quantity }}</td>
+                    <td>{{ item.unit_price|floatformat:2 }} DA</td>
+                    <td>{{ item.total|floatformat:2 }} DA</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Quote Summary -->
+        <div class="quote-summary">
+            <div class="summary-row">
+                <span>{% trans "Sous-total HT" %}</span>
+                <span>{{ quote.subtotal_ht|floatformat:2 }} DA</span>
+            </div>
+            {% if quote.admin_fees %}
+            <div class="summary-row">
+                <span>{% trans "Frais administratifs" %}</span>
+                <span>{{ quote.admin_fees|floatformat:2 }} DA</span>
+            </div>
+            {% endif %}
+            {% if quote.report_fees %}
+            <div class="summary-row">
+                <span>{% trans "Frais de rapport" %}</span>
+                <span>{{ quote.report_fees|floatformat:2 }} DA</span>
+            </div>
+            {% endif %}
+            <div class="summary-row">
+                <span>{% trans "Total HT" %}</span>
+                <span>{{ quote.subtotal_before_tax|floatformat:2 }} DA</span>
+            </div>
+            <div class="summary-row">
+                <span>{% trans "TVA" %} ({{ settings.vat_rate }}%)</span>
+                <span>{{ quote.vat_amount|floatformat:2 }} DA</span>
+            </div>
+            <div class="summary-row total">
+                <span>{% trans "TOTAL TTC" %}</span>
+                <span>{{ quote.total_ttc|floatformat:2 }} DA</span>
+            </div>
+        </div>
+        
+        <!-- Terms and Notes -->
+        <div class="terms-section">
+            {% if quote.notes %}
+            <h3>{% trans "Notes" %}</h3>
+            <p>{{ quote.notes }}</p>
+            {% endif %}
+            
+            <h3>{% trans "Conditions de paiement" %}</h3>
+            <p>{{ settings.quote_footer_text }}</p>
+            
+            <!-- Payment Information -->
+            <div class="payment-info">
+                <h4>{% trans "Informations de paiement" %}</h4>
+                {% if settings.bank_name %}
+                <p><strong>{% trans "Banque" %}:</strong> {{ settings.bank_name }}</p>
+                {% endif %}
+                {% if settings.account_number %}
+                <p><strong>{% trans "Compte" %}:</strong> {{ settings.account_number }}</p>
+                {% endif %}
+                {% if settings.rib %}
+                <p><strong>{% trans "RIB" %}:</strong> {{ settings.rib }}</p>
+                {% endif %}
+                {% if settings.swift_code %}
+                <p><strong>{% trans "SWIFT" %}:</strong> {{ settings.swift_code }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Legal Footer -->
+        <div class="footer">
+            {% if settings.rc_number or settings.nif or settings.ai %}
+            <p>
+                {% if settings.rc_number %}RC: {{ settings.rc_number }}{% endif %}
+                {% if settings.nif %} | NIF: {{ settings.nif }}{% endif %}
+                {% if settings.ai %} | AI: {{ settings.ai }}{% endif %}
+            </p>
+            {% endif %}
+            <p>{% trans "Ce devis est établi sous réserve de disponibilité et constitue une offre sans engagement jusqu'à la date d'expiration mentionnée." %}</p>
+        </div>
+        
+        <!-- Client Action Buttons (only for client view) -->
+        {% if show_actions and quote.status == 'sent' and not is_expired %}
+        <div class="quote-actions no-print">
+            <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    {% trans "Accepter le devis" %}
+                </button>
+            </form>
+            <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    {% trans "Refuser le devis" %}
+                </button>
+            </form>
+            <button class="btn btn-outline" onclick="window.print()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                {% trans "Imprimer" %}
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -112,7 +112,7 @@
     </div>
 
     <!-- Overview Tab -->
-    <div x-show="tab === 'overview'">
+    <div x-show="tab === 'overview'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Répartition par statut" %}</h3></div>
             <div class="card-body">
@@ -139,7 +139,7 @@
     </div>
 
     <!-- Profile Tab -->
-    <div x-show="tab === 'profile'">
+    <div x-show="tab === 'profile'" x-cloak>
         <div class="profile-grid">
             <!-- Profile Header -->
             <div class="card profile-header-card">
@@ -192,11 +192,11 @@
                 <div class="card-body">
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             {% trans "Modifier mon profil" %}
                         </a>
-                        <a href="{% url 'accounts:change_password' %}" class="btn btn-outline">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <a href="{% url 'accounts:change_password' %}" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             {% trans "Changer le mot de passe" %}
                         </a>
                     </div>
@@ -235,12 +235,12 @@
     </div>
 
     <!-- Users Tab -->
-    <div x-show="tab === 'users'">
+    <div x-show="tab === 'users'" x-cloak>
         <!-- Create User Form -->
         <div class="card" style="margin-bottom: 24px;" x-data="{ showCreate: false }">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>{% trans "Créer un utilisateur" %}</h3>
-                <button class="btn btn-sm btn-outline" @click="showCreate = !showCreate" x-text="showCreate ? '{% trans "Masquer" %}' : '{% trans "Afficher" %}'"></button>
+                <button             class="btn btn-secondary" @click="showCreate = !showCreate" x-text="showCreate ? '{% trans "Masquer" %}' : '{% trans "Afficher" %}'"></button>
             </div>
             <div class="card-body" x-show="showCreate" x-cloak>
                 <form method="post" action="{% url 'dashboard:superadmin_user_create' %}">
@@ -315,9 +315,9 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="height:34px; font-size:0.85rem; padding:0 16px;">{% trans "Filtrer" %}</button>
+                    <button type="submit" class="btn btn-primary btn-sm" style="height:34px;">{% trans "Filtrer" %}</button>
                     {% if user_search or user_role_filter %}
-                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;">✕</a>
+                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-secondary btn-sm" style="height:34px; display:inline-flex; align-items:center;">✕</a>
                     {% endif %}
                 </form>
             </div>
@@ -357,14 +357,14 @@
                             <td style="white-space:nowrap;">
                                 {% url 'dashboard:superadmin_user_edit' u.pk as superadmin_user_edit_url %}
                                 {% if superadmin_user_edit_url %}
-                                <a href="{{ superadmin_user_edit_url }}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                                <a href="{{ superadmin_user_edit_url }}" class="btn btn-secondary btn-sm">{% trans "Modifier" %}</a>
                                 {% endif %}
                                 {% url 'dashboard:superadmin_user_toggle' u.pk as superadmin_user_toggle_url %}
                                 {% if superadmin_user_toggle_url %}
                                 <form method="post" action="{{ superadmin_user_toggle_url }}" style="display:inline;"
                                       onsubmit="return confirm('{% if u.is_active %}{% trans "Désactiver cet utilisateur ?" %}{% else %}{% trans "Activer cet utilisateur ?" %}{% endif %}')">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                                    <button type="submit" class="btn {% if u.is_active %}btn-danger-soft{% else %}btn-success{% endif %} btn-sm">
                                         {% if u.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
                                     </button>
                                 </form>
@@ -373,8 +373,7 @@
                                 {% url 'dashboard:superadmin_reset_account' u.pk as superadmin_reset_account_url %}
                                 {% if superadmin_reset_account_url %}
                                 <a href="{{ superadmin_reset_account_url }}"
-                                   class="btn btn-sm btn-outline"
-                                   style="color:#dc2626;border-color:#dc2626;"
+                                   class="btn btn-danger"
                                    title="{% trans 'Réinitialiser / Reset Account' %}">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -393,11 +392,11 @@
                 {% if users_page.has_other_pages %}
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
                     {% if users_page.has_previous %}
-                    <a href="?tab=users&users_page={{ users_page.previous_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-sm btn-outline">‹</a>
+                    <a href="?tab=users&users_page={{ users_page.previous_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-secondary btn-sm">‹</a>
                     {% endif %}
                     <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ users_page.number }} / {{ users_page.paginator.num_pages }}</span>
                     {% if users_page.has_next %}
-                    <a href="?tab=users&users_page={{ users_page.next_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-sm btn-outline">›</a>
+                    <a href="?tab=users&users_page={{ users_page.next_page_number }}&user_q={{ user_search }}&user_role={{ user_role_filter }}" class="btn btn-secondary btn-sm">›</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -406,7 +405,7 @@
     </div>
 
     <!-- Members Tab -->
-    <div x-show="tab === 'members'">
+    <div x-show="tab === 'members'" x-cloak>
         <div class="card">
             <div class="card-header">
                 <h3>{% trans "Analystes / Opérateurs" %} ({{ total_members }})</h3>
@@ -433,7 +432,7 @@
                             <td>{{ m.productivity_score }}%</td>
                             <td><span class="font-mono">{{ m.total_points }}</span></td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-outline" @click="showTech = !showTech" style="font-size:0.78rem;">
+                                <button type="button" class="btn btn-secondary btn-sm" @click="showTech = !showTech">
                                     {{ m.techniques.count }} {% trans "tech." %}
                                 </button>
                                 <div x-show="showTech" style="margin-top:6px;">
@@ -449,7 +448,7 @@
                                             </label>
                                             {% endfor %}
                                         </div>
-                                        <button type="submit" class="btn btn-sm btn-primary" style="margin-top:6px; font-size:0.78rem;">{% trans "Sauvegarder" %}</button>
+                                        <button type="submit" class="btn btn-primary btn-sm" style="margin-top:6px;">{% trans "Sauvegarder" %}</button>
                                     </form>
                                     {% endif %}
                                 </div>
@@ -466,7 +465,7 @@
                                 {% if superadmin_member_toggle_url %}
                                 <form method="post" action="{{ superadmin_member_toggle_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline">
+                                    <button type="submit" class="btn btn-secondary btn-sm">
                                         {% if m.available %}{% trans "Rendre indisponible" %}{% else %}{% trans "Rendre disponible" %}{% endif %}
                                     </button>
                                 </form>
@@ -475,11 +474,11 @@
                                 {% if admin_award_points_url %}
                                 <form method="post" action="{{ admin_award_points_url }}" style="display:inline;" x-data="{show: false}">
                                     {% csrf_token %}
-                                    <button type="button" class="btn btn-sm btn-outline" @click="show = !show">{% trans "Points" %}</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" @click="show = !show">{% trans "Points" %}</button>
                                     <div x-show="show" style="display:inline;">
                                         <input type="number" name="points" value="10" min="1" max="100" class="form-control" style="width:60px; display:inline-block; font-size:0.85rem;">
                                         <input type="text" name="reason" placeholder="{% trans 'Raison' %}" class="form-control" style="width:120px; display:inline-block; font-size:0.85rem;">
-                                        <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">OK</button>
                                     </div>
                                 </form>
                                 {% endif %}
@@ -495,11 +494,11 @@
                 {% if members_page.has_other_pages %}
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
                     {% if members_page.has_previous %}
-                    <a href="?tab=members&members_page={{ members_page.previous_page_number }}" class="btn btn-sm btn-outline">‹</a>
+                    <a href="?tab=members&members_page={{ members_page.previous_page_number }}" class="btn btn-secondary btn-sm">‹</a>
                     {% endif %}
                     <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ members_page.number }} / {{ members_page.paginator.num_pages }}</span>
                     {% if members_page.has_next %}
-                    <a href="?tab=members&members_page={{ members_page.next_page_number }}" class="btn btn-sm btn-outline">›</a>
+                    <a href="?tab=members&members_page={{ members_page.next_page_number }}" class="btn btn-secondary btn-sm">›</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -508,7 +507,7 @@
     </div>
 
     <!-- Services Tab -->
-    <div x-show="tab === 'services'">
+    <div x-show="tab === 'services'" x-cloak>
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-header"><h3>{% trans "Ajouter un service" %}</h3></div>
             <div class="card-body">
@@ -586,7 +585,7 @@
                             <td style="white-space:nowrap;">
                                 {% url 'dashboard:superadmin_service_edit' s.pk as superadmin_service_edit_url %}
                                 {% if superadmin_service_edit_url %}
-                                <a href="{{ superadmin_service_edit_url }}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                                <a href="{{ superadmin_service_edit_url }}" class="btn btn-secondary btn-sm">{% trans "Modifier" %}</a>
                                 {% endif %}
                                 {% if s.active %}
                                 {% url 'dashboard:superadmin_service_delete' s.pk as superadmin_service_delete_url %}
@@ -594,12 +593,12 @@
                                 {% if superadmin_service_delete_url %}
                                 <form method="post" action="{{ superadmin_service_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
+                                    <button type="submit"                                     class="btn btn-danger">{% trans "Désactiver" %}</button>
                                 </form>
                                 {% elif superadmin_service_reactivate_url %}
                                 <form method="post" action="{{ superadmin_service_reactivate_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
+                                    <button type="submit" class="btn btn-success btn-sm">{% trans "Réactiver" %}</button>
                                 </form>
                                 {% endif %}
                                 {% endif %}
@@ -616,7 +615,7 @@
     </div>
 
     <!-- Techniques Tab -->
-    <div x-show="tab === 'techniques'">
+    <div x-show="tab === 'techniques'" x-cloak>
         <div class="card" style="margin-bottom: 24px;">
             <div class="card-header"><h3>{% trans "Ajouter une technique" %}</h3></div>
             <div class="card-body">
@@ -632,7 +631,7 @@
                             <input type="text" name="category" class="form-control">
                         </div>
                         <div class="form-group" style="display: flex; align-items: flex-end;">
-                            <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+<button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
                         </div>
                     </div>
                 </form>
@@ -655,7 +654,7 @@
                                     {% csrf_token %}
                                     <input type="text" name="name" value="{{ t.name }}" class="form-control" style="width:120px; font-size:0.85rem; height:30px;">
                                     <input type="text" name="category" value="{{ t.category }}" class="form-control" style="width:100px; font-size:0.85rem; height:30px;" placeholder="{% trans 'Catégorie' %}">
-                                    <button type="submit" class="btn btn-sm btn-primary" style="height:30px;">{% trans "OK" %}</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{% trans "OK" %}</button>
                                 </form>
                                 {% endif %}
                             </td>
@@ -668,20 +667,20 @@
                                 {% endif %}
                             </td>
                             <td style="white-space:nowrap;">
-                                <button type="button" class="btn btn-sm btn-outline" @click="editTech = !editTech">{% trans "Modifier" %}</button>
+                                <button type="button" class="btn btn-secondary btn-sm" @click="editTech = !editTech">{% trans "Modifier" %}</button>
                                 {% if t.active %}
                                 {% url 'dashboard:superadmin_technique_delete' t.pk as superadmin_technique_delete_url %}
                                 {% if superadmin_technique_delete_url %}
                                 <form method="post" action="{{ superadmin_technique_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">{% trans "Désactiver" %}</button>
+                                    <button type="submit"                                     class="btn btn-danger">{% trans "Désactiver" %}</button>
                                 </form>
                                 {% else %}
                                 {% url 'dashboard:superadmin_technique_reactivate' t.pk as superadmin_technique_reactivate_url %}
                                 {% if superadmin_technique_reactivate_url %}
                                 <form method="post" action="{{ superadmin_technique_reactivate_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success">{% trans "Réactiver" %}</button>
+                                    <button type="submit" class="btn btn-success btn-sm">{% trans "Réactiver" %}</button>
                                 </form>
                                 {% endif %}
                                 {% endif %}
@@ -699,7 +698,7 @@
     </div>
 
     <!-- Content Tab -->
-    <div x-show="tab === 'content'">
+    <div x-show="tab === 'content'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Gestion du contenu" %}</h3></div>
             <div class="card-body">
@@ -730,7 +729,7 @@
                             <td>
                                 {% if superadmin_content_delete_url %}<form method="post" action="{{ superadmin_content_delete_url }}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
+                                    <button type="submit" class="btn btn-danger-soft btn-sm" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
                                 </form>{% endif %}
                             </td>
                         </tr>
@@ -744,7 +743,7 @@
     </div>
 
     <!-- Requests Tab -->
-    <div x-show="tab === 'requests'">
+    <div x-show="tab === 'requests'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Toutes les demandes" %}</h3></div>
             <div class="card-body">
@@ -775,7 +774,7 @@
                         </div>
                         <div class="form-group" style="display:flex; align-items:flex-end; gap:6px;">
                             <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
-                            <a href="?tab=requests&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}&export=requests_csv" class="btn btn-outline" style="font-size:0.85rem;">
+                            <a href="?tab=requests&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}&export=requests_csv" class="btn btn-secondary btn-xs">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "CSV" %}
                             </a>
@@ -817,7 +816,7 @@
                             <td>{% if r.assigned_to %}{{ r.assigned_to.user.get_full_name }}{% else %}—{% endif %}</td>
                             <td class="text-muted">{{ r.created_at|date:"d/m/Y" }}</td>
                             <td style="white-space:nowrap;">
-                                <button class="btn btn-sm btn-outline" @click="expanded = !expanded">{% trans "Actions" %}</button>
+                                <button class="btn btn-secondary btn-xs" @click="expanded = !expanded">{% trans "Actions" %}</button>
                             </td>
                         </tr>
                         <tr x-show="expanded">
@@ -838,7 +837,7 @@
                                             <div class="form-group">
                                                 <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification (min. 10 caractères)' %}"></textarea>
                                             </div>
-                                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Forcer la transition" %}</button>
+                                            <button type="submit" class="btn btn-danger-soft">{% trans "Forcer la transition" %}</button>
                                         </form>{% endif %}
                                     </div>
                                     {% if r.channel == 'IBTIKAR' %}
@@ -852,7 +851,7 @@
                                             <div class="form-group">
                                                 <textarea name="justification" class="form-control" rows="2" required placeholder="{% trans 'Justification pour l override...' %}"></textarea>
                                             </div>
-                                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver override" %}</button>
+                                            <button type="submit" class="btn btn-primary">{% trans "Approuver override" %}</button>
                                         </form>{% endif %}
                                     </div>
                                     {% endif %}
@@ -872,11 +871,11 @@
                 {% if requests_page.has_other_pages %}
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
                     {% if requests_page.has_previous %}
-                    <a href="?tab=requests&requests_page={{ requests_page.previous_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-sm btn-outline">‹</a>
+                    <a href="?tab=requests&requests_page={{ requests_page.previous_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-secondary btn-xs">‹</a>
                     {% endif %}
                     <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ requests_page.number }} / {{ requests_page.paginator.num_pages }}</span>
                     {% if requests_page.has_next %}
-                    <a href="?tab=requests&requests_page={{ requests_page.next_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-sm btn-outline">›</a>
+                    <a href="?tab=requests&requests_page={{ requests_page.next_page_number }}&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}" class="btn btn-secondary btn-xs">›</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -885,7 +884,7 @@
     </div>
 
     <!-- Payments Tab -->
-    <div x-show="tab === 'payments'">
+    <div x-show="tab === 'payments'" x-cloak>
         <!-- Budget Summary -->
         <div class="kpi-grid" style="margin-bottom:24px;">
             {% with ibt=budget_dashboard.ibtikar %}
@@ -944,11 +943,11 @@
                 {% if invoices_page.has_other_pages %}
                 <div style="display:flex; justify-content:center; align-items:center; gap:8px; padding:16px;">
                     {% if invoices_page.has_previous %}
-                    <a href="?tab=payments&invoices_page={{ invoices_page.previous_page_number }}" class="btn btn-sm btn-outline">‹</a>
+                    <a href="?tab=payments&invoices_page={{ invoices_page.previous_page_number }}" class="btn btn-secondary btn-xs">‹</a>
                     {% endif %}
                     <span style="font-size:0.85rem; color:#64748b;">{% trans "Page" %} {{ invoices_page.number }} / {{ invoices_page.paginator.num_pages }}</span>
                     {% if invoices_page.has_next %}
-                    <a href="?tab=payments&invoices_page={{ invoices_page.next_page_number }}" class="btn btn-sm btn-outline">›</a>
+                    <a href="?tab=payments&invoices_page={{ invoices_page.next_page_number }}" class="btn btn-secondary btn-xs">›</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -974,7 +973,7 @@
                                 <input type="text" name="name" class="form-control" required placeholder="{% trans 'Nom de la méthode' %}">
                             </div>
                             <div class="form-group" style="display:flex; align-items:flex-end;">
-                                <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+<button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
                             </div>
                         </div>
                     </form>
@@ -994,7 +993,7 @@
     </div>
 
     <!-- Productivity Tab -->
-    <div x-show="tab === 'productivity'">
+    <div x-show="tab === 'productivity'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Productivité des analystes" %}</h3></div>
             <div class="card-body" style="padding:24px;">
@@ -1040,7 +1039,7 @@
     </div>
 
     <!-- Documents Tab -->
-    <div x-show="tab === 'documents'">
+    <div x-show="tab === 'documents'" x-cloak>
         <!-- Requests with reports -->
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Rapports générés" %}</h3></div>
@@ -1062,7 +1061,7 @@
                             <td><span class="font-mono">{{ r.display_id }}</span></td>
                             <td>{{ r.title|truncatechars:50 }}</td>
                             <td><span class="badge-role {{ r.channel|lower }}">{{ r.channel }}</span></td>
-                            <td><a href="{{ r.report_file.url }}" target="_blank" class="btn btn-sm btn-outline">{% trans "Télécharger" %}</a></td>
+                            <td><a href="{{ r.report_file.url }}" target="_blank" class="btn btn-secondary btn-xs">{% trans "Télécharger" %}</a></td>
                             <td class="text-muted">{{ r.updated_at|date:"d/m/Y" }}</td>
                         </tr>
                         {% empty %}
@@ -1084,7 +1083,7 @@
                     <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <strong>{{ tpl_label }}</strong>
-                            <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-sm btn-outline" style="font-size:0.78rem;">
+                            <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-secondary btn-xs" style="font-size:0.78rem;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger" %}
                             </a>
@@ -1093,7 +1092,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="template_type" value="{{ tpl_type }}">
                             <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Mettre à jour" %}</button>
                         </form>
                     </div>
                     {% endfor %}
@@ -1103,7 +1102,7 @@
     </div>
 
     <!-- Forms Tab -->
-    <div x-show="tab === 'forms'">
+    <div x-show="tab === 'forms'" x-cloak>
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Configuration des formulaires par service" %}</h3></div>
             <div class="card-body">
@@ -1118,7 +1117,7 @@
                             {% if yaml_registry and svc.code in yaml_registry %}
                             <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
                             {% endif %}
-                            {% if superadmin_service_edit_url %}<a href="{{ superadmin_service_edit_url }}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>{% endif %}
+                            {% if superadmin_service_edit_url %}<a href="{{ superadmin_service_edit_url }}" class="btn btn-secondary btn-xs" style="margin-left:8px;">{% trans "Modifier" %}</a>{% endif %}
                         </div>
                     </div>
                 </div>
@@ -1160,7 +1159,7 @@
     </div>
 
     <!-- System Tab -->
-    <div x-show="tab === 'system'">
+    <div x-show="tab === 'system'" x-cloak>
         <!-- Quick Links to separate pages -->
         <div class="grid-2" style="margin-bottom:24px;">
             <div class="card">
@@ -1168,7 +1167,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez l'historique complet de toutes les transitions, actions et modifications effectuées sur la plateforme." %}</p>
                     <a href="{% url 'dashboard:audit_log' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         {% trans "Voir le journal d'audit" %}
                     </a>
                 </div>
@@ -1178,7 +1177,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR." %}</p>
                     <a href="{% url 'dashboard:revenue_archives' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         {% trans "Voir les archives" %}
                     </a>
                 </div>

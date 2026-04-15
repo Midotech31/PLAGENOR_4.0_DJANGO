@@ -1,0 +1,23 @@
+<section class="section" style="background:#f8fafc;">
+    <h2 class="section-title">{{ section.title }}</h2>
+    {% if section.subtitle %}<p class="section-subtitle">{{ section.subtitle }}</p>{% endif %}
+    {% if section.description %}<p class="section-subtitle">{{ section.description }}</p>{% endif %}
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(240px,1fr)); gap:16px; align-items:stretch;">
+        {% for block in section.blocks.all %}
+            <div class="card" style="border:1px solid #dbe3ea; background:#ffffff; box-shadow:0 10px 26px rgba(15,23,42,0.08);">
+                <div class="card-body" style="padding:18px 16px;">
+                    <h4 style="margin:0 0 8px 0; font-size:1rem; font-weight:700; color:#0f172a;">{{ block.title|default:block.block_type }}</h4>
+                    <p style="margin:0; color:#475569; line-height:1.6; font-size:0.92rem;">{{ block.payload.content|default:block.text|default:block.link_url }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <style>
+        @media (max-width: 1100px) {
+            section.section div[style*="grid-template-columns:repeat(3,minmax(240px,1fr))"] { grid-template-columns: repeat(2, minmax(220px, 1fr)) !important; }
+        }
+        @media (max-width: 680px) {
+            section.section div[style*="grid-template-columns:repeat(3,minmax(240px,1fr))"] { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</section>

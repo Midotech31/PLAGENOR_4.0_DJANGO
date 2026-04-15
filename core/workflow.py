@@ -1,3 +1,12 @@
+"""
+Workflow orchestration for PLAGENOR requests.
+
+Workflow map (high-level):
+- Validates channel-specific transitions (IBTIKAR / GENOCLAB) with role-based authorization.
+- Persists state history, emits notifications/emails, and triggers document generation.
+- Applies side effects safely (productivity points, messaging archival) without blocking transitions.
+"""
+
 # core/workflow.py — PLAGENOR 4.0 Workflow Engine (Django)
 # Integrates state_machine.py transitions with role-based permission checks.
 
@@ -34,7 +43,14 @@ ROLE_PERMISSIONS = {
     ('PLATFORM_NOTE_GENERATED', 'IBTIKAR_SUBMISSION_PENDING'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
     ('IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER'],
     ('IBTIKAR_CODE_SUBMITTED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('IBTIKAR_CODE_SUBMITTED', 'PENDING_ACCEPTANCE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('ORDER_UPLOADED', 'PENDING_ACCEPTANCE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('PAYMENT_CONFIRMED', 'PENDING_ACCEPTANCE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
     # Analyst workflow — appointment states
+    ('ASSIGNED', 'PENDING_ACCEPTANCE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    ('PENDING_ACCEPTANCE', 'ACCEPTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
+    ('PENDING_ACCEPTANCE', 'DECLINED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
+    ('ACCEPTED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'MEMBER'],
     ('ASSIGNED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'MEMBER'],
     ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER', 'CLIENT'],
     ('APPOINTMENT_PROPOSED', 'APPOINTMENT_RESCHEDULING_REQUESTED'): ['CLIENT'],
@@ -57,8 +73,13 @@ ROLE_PERMISSIONS = {
     ('QUOTE_DRAFT', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
     ('QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
     ('QUOTE_SENT', 'QUOTE_REJECTED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
+    ('QUOTE_REJECTED_BY_CLIENT', 'QUOTE_DRAFT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],  # Admin revises quote
     ('QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED'): ['CLIENT'],
     ('ORDER_UPLOADED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    # Invoice workflow
+    ('ANALYSIS_FINISHED', 'INVOICE_GENERATED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
+    ('INVOICE_GENERATED', 'INVOICE_SENT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
+    ('INVOICE_SENT', 'PAYMENT_PENDING'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],  # Auto or manual trigger
     ('PAYMENT_PENDING', 'PAYMENT_UPLOADED'): ['CLIENT'],
     ('PAYMENT_UPLOADED', 'PAYMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
     ('REPORT_VALIDATED', 'SENT_TO_CLIENT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
@@ -144,13 +165,24 @@ def _award_completion_points(request_obj, to_status, actor):
 
 def check_role_permission(request_obj, to_status, actor) -> bool:
     """Check if actor's role allows this transition. SUPER_ADMIN always allowed."""
+    # System/public fallback for trusted automation paths with no authenticated actor.
+    if actor is None:
+        return (request_obj.status, to_status) in {
+            ('IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED'),
+        }
+
     if getattr(actor, 'role', '') == 'SUPER_ADMIN':
         return True
     key = (request_obj.status, to_status)
     allowed_roles = ROLE_PERMISSIONS.get(key)
     if allowed_roles is None:
-        # No explicit rule — allow by default (permissive for unlisted transitions)
-        return True
+        logger.warning(
+            "Unknown transition blocked: %s -> %s (channel=%s). "
+            "Role %s is not in ROLE_PERMISSIONS. Add explicit rule to allow.",
+            request_obj.status, to_status, request_obj.channel,
+            getattr(actor, 'role', '?')
+        )
+        return False
     return getattr(actor, 'role', '') in allowed_roles
 
 
@@ -159,11 +191,21 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     Transition a request to a new status, recording history.
     Validates the transition against the state machine and role permissions.
     Raises InvalidTransitionError or AuthorizationError on failure.
+    
+    Note: force=True bypasses state machine validation ONLY.
+    Role permissions are ALWAYS enforced, even with force=True.
     """
     old_status = request_obj.status
 
+    # ALWAYS validate role permissions - even with force=True
+    if not check_role_permission(request_obj, to_status, actor):
+        raise AuthorizationError(
+            f"Le rôle {getattr(actor, 'role', '?')} n'est pas autorisé pour la transition "
+            f"{old_status} -> {to_status}"
+        )
+
     if not force:
-        # Validate state machine
+        # Validate state machine (only skipped with force=True)
         allowed = get_allowed_next_states(request_obj.channel, old_status)
         if to_status not in allowed:
             raise InvalidTransitionError(
@@ -171,18 +213,19 @@ def transition(request_obj, to_status, actor, notes='', force=False):
                 f"États autorisés: {sorted(allowed) if allowed else 'AUCUN (état terminal)'}"
             )
 
-        # Validate role permissions
-        if not check_role_permission(request_obj, to_status, actor):
-            raise AuthorizationError(
-                f"Le rôle {getattr(actor, 'role', '?')} n'est pas autorisé pour la transition "
-                f"{old_status} -> {to_status}"
-            )
-
     request_obj.status = to_status
     request_obj.save(update_fields=['status', 'updated_at'])
 
     # Award completion points to assigned member
     _award_completion_points(request_obj, to_status, actor)
+
+    # BATCH 2: Archive ephemeral messages and deactivate reminders on transition
+    try:
+        from messaging.services import archive_phase_messages, deactivate_reminders
+        archive_phase_messages(request_obj, old_status)
+        deactivate_reminders(request_obj, reason=f"Transitioned to {to_status}")
+    except ImportError:
+        pass  # Messaging app not yet available
 
     RequestHistory.objects.create(
         request=request_obj,
@@ -226,6 +269,9 @@ def _create_notifications(request_obj, to_status):
             'PAYMENT_CONFIRMED',  # Member can now upload report
             'REPORT_VALIDATED',  # Admin validated the report
             'SENT_TO_CLIENT',    # Report sent to client
+            'CLOSED', 'ARCHIVED',  # Request closed/archived
+            'APPOINTMENT_RESCHEDULING_REQUESTED',  # Client requested rescheduling
+            'ORDER_UPLOADED',  # Purchase order uploaded, ready for assignment
         ):
             Notification.objects.create(
                 user=request_obj.assigned_to.user,
@@ -240,9 +286,10 @@ def _create_notifications(request_obj, to_status):
             'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
             'IBTIKAR_SUBMISSION_PENDING', 'ASSIGNED', 'APPOINTMENT_PROPOSED',
             'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'REJECTED',
+            'DECLINED',  # Notify requester when analyst declines their request
             # GENOCLAB states - Full pipeline notifications
             'QUOTE_SENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
-            'SENT_TO_CLIENT',
+            'SENT_TO_CLIENT', 'INVOICE_SENT',  # Invoice workflow notifications
             'ORDER_UPLOADED',  # Client uploads purchase order
             'PAYMENT_PENDING',  # Client needs to pay
             'REPORT_UPLOADED',  # Report uploaded, awaiting validation
@@ -255,13 +302,36 @@ def _create_notifications(request_obj, to_status):
                 notification_type='WORKFLOW',
             )
 
+        # BATCH 1 - FEATURE 3: Notify observer members on key status changes
+        # Observers get read-only notifications for important workflow milestones
+        observer_statuses = {
+            'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+            'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+            'REPORT_UPLOADED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT',
+            'COMPLETED', 'CLOSED', 'ARCHIVED', 'REJECTED', 'DECLINED',
+            'PAYMENT_CONFIRMED',  # Important for GENOCLAB observers
+            'QUOTE_SENT', 'INVOICE_GENERATED', 'PAYMENT_PENDING',
+        }
+        if to_status in observer_statuses:
+            for observer in request_obj.informed_members.all():
+                Notification.objects.create(
+                    user=observer.user,
+                    message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
+                    request=request_obj,
+                    notification_type='OBSERVER',
+                )
+
         # Always notify admins for important transitions
         if to_status in (
             'SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
+            # Member declined the task - admin must reassign
+            'DECLINED',
             # GENOCLAB admin-relevant states
             'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'PAYMENT_CONFIRMED',
             'APPOINTMENT_RESCHEDULING_REQUESTED',  # Client requested rescheduling
             'PAYMENT_UPLOADED',  # Client uploaded payment receipt
+            # Invoice workflow
+            'INVOICE_GENERATED', 'INVOICE_SENT',
         ):
             admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
             for admin in admins:

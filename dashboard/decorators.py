@@ -119,12 +119,12 @@ def client_required(view_func):
 
 
 def finance_required(view_func):
-    """Require FINANCE or SUPER_ADMIN role."""
+    """Require FINANCE, PLATFORM_ADMIN, or SUPER_ADMIN role."""
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
-        if request.user.role not in ('FINANCE', 'SUPER_ADMIN'):
+        if request.user.role not in ('FINANCE', 'PLATFORM_ADMIN', 'SUPER_ADMIN'):
             return render(request, 'dashboard/error.html', {
                 'error_title': 'Access Denied',
                 'error_message': 'You need Finance privileges to access this page.',

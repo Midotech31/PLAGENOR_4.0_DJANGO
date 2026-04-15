@@ -33,7 +33,7 @@ def ibtikar_form_button(request_obj, user, show_status=False):
     approved_states = [
         'IBTIKAR_SUBMISSION_PENDING', 'ASSIGNED', 'SAMPLE_RECEIVED',
         'ANALYSIS_STARTED', 'ANALYSIS_FINISHED', 'REPORT_UPLOADED',
-        'ADMIN_REVIEW', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED'
+        'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED'
     ]
     
     if is_requester and not is_admin:

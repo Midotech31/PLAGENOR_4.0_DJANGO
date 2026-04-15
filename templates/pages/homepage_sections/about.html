@@ -1,0 +1,14 @@
+<section class="section" style="text-align:center;">
+    <h2 class="section-title">{{ section.title }}</h2>
+    {% if section.subtitle %}<p class="section-subtitle">{{ section.subtitle }}</p>{% endif %}
+    {% if section.description %}<p class="section-subtitle" style="max-width:760px; margin:0 auto 20px;">{{ section.description }}</p>{% endif %}
+    <div style="display:grid; grid-template-columns:1fr; gap:14px; max-width:760px; margin:0 auto;">
+        {% for block in section.blocks.all %}
+            {% if block.block_type == 'text' %}
+            <div class="card"><div class="card-body">{{ block.payload.content|default:block.text }}</div></div>
+            {% elif block.block_type == 'image' and block.image %}
+            <div class="card"><div class="card-body"><img src="{{ block.image.url }}" alt="{{ block.image_alt|default:block.payload.alt }}" style="max-width:100%; max-height:260px; object-fit:contain;"></div></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>

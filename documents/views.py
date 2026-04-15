@@ -50,12 +50,21 @@ def ibtikar_form_pdf(request, pk):
         logger.error(f"PDF generation failed for {req.display_id}: {e}")
         messages.error(request, _("Erreur lors de la génération du formulaire : service manquant."))
         return redirect('dashboard:requester_request_detail', pk=pk)
+    except AttributeError as e:
+        logger.error(f"PDF generation failed for {req.display_id}: Missing attribute - {e}", exc_info=True)
+        messages.error(request, _("Erreur lors de la génération du formulaire : données incomplètes. Veuillez contacter l'administrateur."))
+        return redirect('dashboard:requester_request_detail', pk=pk)
+    except IndexError as e:
+        logger.error(f"PDF generation failed for {req.display_id}: List index error - {e}", exc_info=True)
+        messages.error(request, _("Erreur lors de la génération du formulaire: erreur d'index de liste. Veuillez contacter l'administrateur."))
+        return redirect('dashboard:requester_request_detail', pk=pk)
     except Exception as e:
         logger.error(f"PDF generation failed for {req.display_id}: {e}", exc_info=True)
-        messages.error(request, _("Erreur lors de la génération du formulaire."))
+        messages.error(request, _(f"Erreur lors de la génération du formulaire: {str(e)[:100]}"))
         return redirect('dashboard:requester_request_detail', pk=pk)
 
-    filename = f"PLAGENOR_IBTIKAR_{req.service.code}_{req.display_id}.pdf"
+    service_code = getattr(req.service, 'code', 'UNKNOWN') if req.service else 'UNKNOWN'
+    filename = f"PLAGENOR_IBTIKAR_{service_code}_{req.display_id}.pdf"
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
@@ -119,14 +128,9 @@ def download_platform_note(request, pk):
         messages.error(request, _("La Note de Plateforme n'est disponible que pour les demandes IBTIKAR."))
         return redirect('dashboard:request_detail', request_id=req.pk)
     
-    # Requester can only download after validation
+    # Platform note is internal/admin document and is not downloadable by requester/student
     if not is_admin and is_requester:
-        validated_states = ['PLATFORM_NOTE_GENERATED', 'ASSIGNED', 'PENDING_ACCEPTANCE',
-                          'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
-                          'ANALYSIS_STARTED', 'ANALYSIS_FINISHED', 'REPORT_UPLOADED',
-                          'ADMIN_REVIEW', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED']
-        if req.status not in validated_states and not req.generated_platform_note:
-            return HttpResponseForbidden(_("Ce document n'est pas encore disponible."))
+        return HttpResponseForbidden(_("Ce document est réservé à l'administration."))
     
     # Check if note exists
     if not req.generated_platform_note or not req.generated_platform_note.name:

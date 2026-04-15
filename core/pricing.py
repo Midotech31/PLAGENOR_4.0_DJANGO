@@ -1,3 +1,12 @@
+"""
+Pricing engine for PLAGENOR 4.0.
+
+Workflow map (high-level):
+- Recalculate every request price server-side from ServicePricing + dynamic field modifiers.
+- Sanitize conditional form fields and enforce max selections before pricing.
+- Keep audit-friendly mismatch details when submitted client price differs.
+"""
+
 # core/pricing.py — PLAGENOR 4.0 Pricing Engine
 # Generic pricing dispatcher driven by ServicePricing database model.
 
@@ -61,8 +70,16 @@ def calculate_price(service_def: dict, service_params: dict, sample_table: list)
 
 def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, currency: str) -> dict:
     """
-    Price = base_price × multiplier × number_of_samples
-    base_price depends on pathogenic status, multiplier on analysis_mode/qc_level.
+    Price calculation with proper order of operations:
+    
+    CORRECT ORDER:
+    1. Per-sample supplements (e.g., pathogen supplement) added to base
+    2. Multiply by number of samples
+    3. Apply analysis mode multiplier (e.g., Triplicata ×2.6)
+    
+    Formula: (Base + Supplements) × Sample_Count × Multiplier = Total
+    
+    Example: (2500 + 1500) × 5 × 2.8 = 56,000 DA
     """
     n = len(samples)
     if n <= 0:
@@ -73,12 +90,51 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     base_prices = pricing.get('base_price', {})
     multipliers = pricing.get('multipliers', {})
 
-    # Determine base price
+    # Step 1: Determine base price per sample
     pathogenic = bool(params.get('pathogenic', False))
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
     base_price = int(base_prices.get(base_key, base_prices.get('default', 0)))
 
-    # Determine multiplier key
+    # Step 2: Calculate per-sample supplements (BEFORE sample count and multiplier)
+    per_sample_supplements = 0
+    supplements_breakdown = []
+    
+    # Check for supplement fields in params (these add to per-sample price)
+    # Common supplement field names: 'pathogen_supplement', 'isolate_supplement', etc.
+    supplement_fields = [
+        'pathogen_supplement', 'isolate_supplement', 'supplement',
+        'pathogenic_supplement', 'urgent_supplement'
+    ]
+    
+    for field_name in supplement_fields:
+        if field_name in params and params[field_name]:
+            try:
+                supplement_value = float(params[field_name])
+                if supplement_value > 0:
+                    per_sample_supplements += supplement_value
+                    supplements_breakdown.append({
+                        'field': field_name,
+                        'amount': supplement_value,
+                    })
+            except (ValueError, TypeError):
+                pass
+    
+    # Also check for boolean fields that indicate supplements
+    # e.g., 'is_pathogen' = True might add a fixed supplement
+    if params.get('is_pathogen') or params.get('pathogenic_isolate'):
+        # Look up supplement amount from pricing config
+        pathogen_supplement = pricing.get('pathogen_supplement', 0)
+        if pathogen_supplement > 0:
+            per_sample_supplements += float(pathogen_supplement)
+            supplements_breakdown.append({
+                'field': 'pathogenic_isolate',
+                'amount': float(pathogen_supplement),
+            })
+
+    # Step 3: Calculate per-sample total (base + supplements)
+    per_sample_total = base_price + per_sample_supplements
+
+    # Step 4: Determine analysis mode multiplier
     mult_key = (
         params.get('analysis_mode') or params.get('qc_level')
         or params.get('sequencing_mode') or params.get('drying_level')
@@ -89,21 +145,33 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
         mult_key = list(multipliers.keys())[0]
 
     multiplier = float(multipliers.get(mult_key, 1)) if mult_key else 1.0
-    unit_price = int(base_price * multiplier)
-    total = unit_price * n
+
+    # Step 5: Calculate final total
+    # Order: (Base + Supplements) × Sample_Count × Multiplier
+    subtotal_before_multiplier = per_sample_total * n
+    total = int(subtotal_before_multiplier * multiplier)
 
     return {
         'pricing_model': 'per_sample_table_row_with_multiplier',
         'number_of_units': n,
-        'unit_price': unit_price,
+        'base_price': base_price,
+        'per_sample_supplements': per_sample_supplements,
+        'per_sample_total': per_sample_total,
+        'unit_price': int(per_sample_total * multiplier),  # Display price per sample after all calcs
         'total': total,
         'currency': currency,
         'breakdown': {
             'base_price': base_price,
+            'per_sample_supplements': per_sample_supplements,
+            'supplements_breakdown': supplements_breakdown,
+            'per_sample_total': per_sample_total,
+            'sample_count': n,
+            'subtotal_before_multiplier': subtotal_before_multiplier,
             'multiplier_key': mult_key,
             'multiplier': multiplier,
             'pathogenic': pathogenic,
             'rows_billed': n,
+            'calculation_formula': f'({base_price} + {per_sample_supplements}) × {n} × {multiplier} = {total}',
         },
     }
 
@@ -136,6 +204,19 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     """
     Calculate cost based on ServicePricing configurations from database.
     
+    CORRECT PRICING ORDER:
+    1. Extract per-sample supplements from form fields (additions to base price per sample)
+    2. Calculate: (Base Price + Per-Sample Supplements) × Sample Count
+    3. Apply analysis mode multipliers (e.g., Triplicata ×2.6)
+    4. Apply total-level modifiers (surcharges, discounts to final total)
+    
+    Example: (2500 + 1500) × 5 × 2.8 = 56,000 DA
+             │     │      │   │
+             │     │      │   └── Analysis multiplier (from option_pricing)
+             │     │      └────── Sample count
+             │     └───────────── Per-sample supplement (pathogen)
+             └─────────────────── Base price per sample
+    
     Args:
         service: Service model instance
         channel: 'IBTIKAR' or 'GENOCLAB'
@@ -151,6 +232,49 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     if not service:
         return {'error': 'Service is required', 'total': 0}
     
+    sample_count = len([s for s in sample_table if s]) if sample_table else 0
+    
+    # Step 1: Extract per-sample supplements from form fields
+    # These are added to the base price BEFORE sample count and multiplier
+    per_sample_supplements = Decimal('0')
+    supplements_breakdown = []
+    
+    if service_params:
+        # Look for fields with per-sample price modifiers
+        from core.models import ServiceFormField
+        per_sample_fields = service.form_fields.filter(
+            affects_pricing=True,
+            price_modifier_type='add',
+            price_modifier_scope='per_sample',
+        ).filter(
+            models.Q(channel='BOTH') | models.Q(channel=channel)
+        )
+        
+        for field in per_sample_fields:
+            field_value = service_params.get(field.name) or service_params.get(f'param_{field.name}')
+            if field_value:
+                # Check if this field should apply (boolean fields)
+                should_apply = False
+                if field.field_type in ['boolean', 'checkbox']:
+                    should_apply = bool(field_value)
+                elif field.field_type in ['select', 'multiselect', 'dropdown']:
+                    choices = field.get_choices() or []
+                    if isinstance(field_value, list):
+                        should_apply = any(str(v) in choices for v in field_value)
+                    else:
+                        should_apply = str(field_value) in choices
+                else:
+                    should_apply = bool(field_value)
+                
+                if should_apply and field.price_modifier_value:
+                    supplement = Decimal(str(field.price_modifier_value))
+                    per_sample_supplements += supplement
+                    supplements_breakdown.append({
+                        'field': field.name,
+                        'label': field.get_label(),
+                        'amount': float(supplement),
+                    })
+    
     # Get active pricing configs for this service
     pricing_configs = service.pricing_configs.filter(
         is_active=True
@@ -159,54 +283,49 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     ).order_by('priority', 'pk')
     
     if not pricing_configs.exists():
-        # Fall back to service's base price
+        # Fall back to service's base price with per-sample supplements
         base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
-        sample_count = len([s for s in sample_table if s]) if sample_table else 1
-        total = float(base_price) * sample_count
+        per_sample_total = Decimal(str(base_price)) + per_sample_supplements
+        total = per_sample_total * sample_count
+        
+        breakdown = [{
+            'name': 'Prix de base',
+            'type': 'BASE',
+            'amount': float(base_price),
+            'quantity': sample_count,
+            'subtotal': float(base_price) * sample_count,
+        }]
+        
+        if per_sample_supplements > 0:
+            breakdown.append({
+                'name': 'Suppléments par échantillon',
+                'type': 'PER_SAMPLE_SUPPLEMENT',
+                'amount': float(per_sample_supplements),
+                'quantity': sample_count,
+                'subtotal': float(per_sample_supplements) * sample_count,
+                'details': supplements_breakdown,
+            })
+        
         return {
             'source': 'service_base_price',
             'base_price': float(base_price),
+            'per_sample_supplements': float(per_sample_supplements),
+            'per_sample_total': float(per_sample_total),
             'sample_count': sample_count,
-            'total': total,
-            'breakdown': [{
-                'name': 'Prix de base',
-                'type': 'BASE',
-                'amount': float(base_price),
-                'quantity': sample_count,
-                'subtotal': total,
-            }],
+            'total': float(total),
+            'breakdown': breakdown,
         }
     
     breakdown = []
     total = Decimal('0')
-    sample_count = len([s for s in sample_table if s]) if sample_table else 0
-    
-    # First pass: calculate base costs from pricing configs
+    base_per_sample = Decimal('0')
     override_applied = False
+    has_per_sample_config = pricing_configs.filter(pricing_type='PER_SAMPLE').exists()
+
     for config in pricing_configs:
-        config_total = Decimal('0')
         quantity = 1
-        
-        if config.pricing_type == 'BASE':
-            quantity = sample_count if sample_count > 0 else 1
-            config_total = config.amount * quantity
-        elif config.pricing_type == 'PER_SAMPLE':
-            quantity = sample_count
-            config_total = config.amount * quantity
-        elif config.pricing_type == 'PER_PARAMETER':
-            if service_params:
-                quantity = len([v for v in service_params.values() if v])
-            config_total = config.amount * quantity
-        elif config.pricing_type == 'URGENCY_SURCHARGE':
-            if urgency in ['Urgent', 'Très urgent']:
-                quantity = 1
-                config_total = config.amount
-        elif config.pricing_type == 'DISCOUNT':
-            quantity = 1
-            config_total = -config.amount
-        
-        # Check for override type (set)
-        # OVERRIDE type always replaces total and prevents other configs
+        config_total = Decimal('0')
+
         if config.pricing_type == 'OVERRIDE':
             if not override_applied:
                 total = Decimal(str(config.amount))
@@ -219,25 +338,33 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                     'subtotal': float(config.amount),
                     'is_override': True,
                 })
-            continue  # Always skip OVERRIDE after processing
-        
-        # After OVERRIDE is applied, skip all other configs
+            continue
+
         if override_applied:
             continue
-        
-        # BASE with positive amount sets the base total (allows modifiers to apply)
-        if config.pricing_type == 'BASE' and config.amount > 0:
-            total = Decimal(str(config.amount))
-            breakdown.append({
-                'name': config.name,
-                'type': config.pricing_type,
-                'amount': float(config.amount),
-                'quantity': quantity,
-                'subtotal': float(config_total),
-            })
-            continue
-        
-        total += config_total
+
+        if config.pricing_type == 'BASE':
+            base_per_sample = Decimal(str(config.amount))
+            quantity = sample_count if sample_count > 0 else 1
+            config_total = base_per_sample * quantity
+            total += config_total
+        elif config.pricing_type == 'PER_SAMPLE':
+            quantity = sample_count
+            config_total = Decimal(str(config.amount)) * quantity
+            total += config_total
+        elif config.pricing_type == 'PER_PARAMETER':
+            if service_params:
+                quantity = len([v for v in service_params.values() if v])
+            config_total = Decimal(str(config.amount)) * quantity
+            total += config_total
+        elif config.pricing_type == 'URGENCY_SURCHARGE':
+            if urgency in ['Urgent', 'Très urgent']:
+                config_total = Decimal(str(config.amount))
+                total += config_total
+        elif config.pricing_type == 'DISCOUNT':
+            config_total = -Decimal(str(config.amount))
+            total += config_total
+
         breakdown.append({
             'name': config.name,
             'type': config.pricing_type,
@@ -245,30 +372,78 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             'quantity': quantity,
             'subtotal': float(config_total),
         })
+
+    if not override_applied and per_sample_supplements > 0:
+        if sample_count > 0:
+            supplements_total = per_sample_supplements * sample_count
+            total += supplements_total
+            breakdown.append({
+                'name': 'Suppléments par échantillon',
+                'type': 'PER_SAMPLE_SUPPLEMENT',
+                'amount': float(per_sample_supplements),
+                'quantity': sample_count,
+                'subtotal': float(supplements_total),
+                'details': supplements_breakdown,
+            })
+
+    if not override_applied and not pricing_configs.exists():
+        pass
+
+    if not override_applied and total == Decimal('0') and has_per_sample_config and sample_count == 0:
+        total = Decimal('0')
     
     return {
         'source': 'service_pricing_db',
         'pricing_configs_used': pricing_configs.count(),
+        'base_per_sample': float(base_per_sample),
+        'per_sample_supplements': float(per_sample_supplements),
+        'per_sample_total': float(base_per_sample + per_sample_supplements),
         'sample_count': sample_count,
         'total': float(total),
         'breakdown': breakdown,
+        'calculation_formula': f'({base_per_sample} + {per_sample_supplements}) × {sample_count} = {total}',
     }
 
 
-def get_field_price_modifiers(service, channel='BOTH'):
+def get_field_price_modifiers(service, channel='BOTH', scope='total'):
     """
-    Get all form fields that affect pricing for a service.
+    Get form fields that affect pricing for a service.
     
-    Returns list of fields with pricing modifier info.
+    Args:
+        service: Service model instance
+        channel: 'IBTIKAR', 'GENOCLAB', or 'BOTH'
+        scope: 'per_sample' or 'total' - which scope of modifiers to return
+    
+    Returns list of fields with pricing modifier info. Includes fields that have:
+    1. Field-level modifiers: affects_pricing=True with price_modifier_type in ['add', 'set', 'multiply']
+    2. Option-level pricing: non-empty option_pricing JSON dict (for per-option multipliers)
+    
+    Both types are needed because apply_field_price_modifiers() handles both:
+    - option_pricing dict → per-option multipliers (e.g. Duplicata=×2, Triplicata=×3)
+    - price_modifier_value → field-level modifiers (surcharges, overrides, multipliers)
     """
     from core.models import ServiceFormField
+    from django.db.models import Q
     
     fields = service.form_fields.filter(
-        affects_pricing=True,
-        price_modifier_type__in=['add', 'set', 'multiply']
+        Q(affects_pricing=True, price_modifier_type__in=['add', 'set', 'multiply'])
+        | Q(option_pricing__len__gt=0)
     ).filter(
-        models.Q(channel='BOTH') | models.Q(channel=channel)
+        Q(channel='BOTH') | Q(channel=channel)
     )
+    
+    # Filter by scope if specified
+    if scope == 'per_sample':
+        fields = fields.filter(price_modifier_scope='per_sample')
+    elif scope == 'total':
+        # Total scope includes: fields with total scope OR fields without scope set (default)
+        # Also include option_pricing fields (multipliers are always total scope)
+        fields = fields.filter(
+            Q(price_modifier_scope='total') 
+            | Q(price_modifier_scope='') 
+            | Q(price_modifier_scope__isnull=True)
+            | Q(option_pricing__len__gt=0)  # option_pricing multipliers are always total scope
+        )
     
     return list(fields)
 
@@ -277,9 +452,23 @@ def apply_field_price_modifiers(base_cost, service_params, modifier_fields):
     """
     Apply field-level price modifiers to a base cost.
     
+    Supports two pricing modes:
+    1. Field-level modifier: If field.affects_pricing=True and price_modifier_type is set,
+       apply the modifier when the field is filled/selected.
+    2. Option-level pricing: If field.option_pricing dict is set, look up the selected
+       option's value in the dict and apply it (typically as multiply modifier).
+       Example: {"Duplicata": 2, "Triplicata": 3} means Duplicata ×2, Triplicata ×3
+    
+    PRICING ORDER (mathematical precedence):
+    1. First: Apply all ADD operations (surcharges, supplements)
+    2. Second: Apply all MULTIPLY operations (multipliers)
+    3. SET operations override the total completely
+    
+    This ensures: (Base + Additions) × Multipliers = Final Price
+    
     Args:
         base_cost: Decimal or float base cost
-        service_params: Dict of selected field values
+        service_params: Dict of selected field values (keys are field.name prefixed with 'param_')
         modifier_fields: QuerySet of ServiceFormField with pricing modifiers
     
     Returns:
@@ -294,15 +483,62 @@ def apply_field_price_modifiers(base_cost, service_params, modifier_fields):
     warnings = []
     modifiers_applied = []
     
+    # Collect all modifiers first to apply in correct order
+    add_modifiers = []      # Will be applied first
+    multiply_modifiers = [] # Will be applied second
+    set_modifiers = []      # Override completely
+    
     for field in modifier_fields:
+        # Get field value from service_params (key format: field.name)
+        # service_params may have keys like 'param_fieldname' or just 'fieldname'
         field_value = service_params.get(field.name)
+        if not field_value:
+            # Try with param_ prefix
+            field_value = service_params.get(f'param_{field.name}')
         
         # Check if this field's value triggers a price modifier
         if not field_value:
             continue
         
-        # For boolean fields, any truthy value triggers
-        # For select/multiselect, check if value is in options
+        # Handle option_pricing: Look up selected option's value from option_pricing dict
+        # This allows per-option multipliers like Duplicata=×2, Triplicata=×3
+        option_pricing = getattr(field, 'option_pricing', None) or {}
+        if option_pricing and isinstance(option_pricing, dict) and option_pricing:
+            # Normalize field_value for lookup
+            selected_options = []
+            if isinstance(field_value, list):
+                selected_options = [str(v) for v in field_value]
+            else:
+                selected_options = [str(field_value)]
+            
+            # Check each selected option against option_pricing dict
+            for opt_value in selected_options:
+                if opt_value in option_pricing:
+                    opt_price = option_pricing[opt_value]
+                    try:
+                        opt_multiplier = Decimal(str(opt_price))
+                        if opt_multiplier > 0:
+                            # Store as multiply modifier (to be applied after additions)
+                            multiply_modifiers.append({
+                                'field': field.name,
+                                'label': field.get_label(),
+                                'type': 'option_multiply',
+                                'option': opt_value,
+                                'value': float(opt_multiplier),
+                                'decimal_value': opt_multiplier,
+                            })
+                            # Add warning if available
+                            if field.condition_note_fr or field.condition_note_en:
+                                warnings.append({
+                                    'field': field.name,
+                                    'note_fr': field.condition_note_fr,
+                                    'note_en': field.condition_note_en,
+                                })
+                    except (ValueError, TypeError):
+                        pass
+        
+        # Handle field-level price_modifier (legacy behavior)
+        # This applies when field.affects_pricing=True and price_modifier_type is set
         should_apply = False
         
         if field.field_type in ['boolean', 'checkbox']:
@@ -324,29 +560,30 @@ def apply_field_price_modifiers(base_cost, service_params, modifier_fields):
         modifier_value = Decimal(str(field.price_modifier_value))
         modifier_type = field.price_modifier_type
         
+        # Store modifiers for later application in correct order
         if modifier_type == 'add':
-            total += modifier_value
-            modifiers_applied.append({
+            add_modifiers.append({
                 'field': field.name,
                 'label': field.get_label(),
                 'type': 'add',
                 'value': float(modifier_value),
+                'decimal_value': modifier_value,
             })
         elif modifier_type == 'set':
-            total = modifier_value
-            modifiers_applied.append({
+            set_modifiers.append({
                 'field': field.name,
                 'label': field.get_label(),
                 'type': 'set',
                 'value': float(modifier_value),
+                'decimal_value': modifier_value,
             })
         elif modifier_type == 'multiply':
-            total *= modifier_value
-            modifiers_applied.append({
+            multiply_modifiers.append({
                 'field': field.name,
                 'label': field.get_label(),
                 'type': 'multiply',
                 'value': float(modifier_value),
+                'decimal_value': modifier_value,
             })
         
         # Add warning message
@@ -356,6 +593,23 @@ def apply_field_price_modifiers(base_cost, service_params, modifier_fields):
                 'note_fr': field.condition_note_fr,
                 'note_en': field.condition_note_en,
             })
+    
+    # Apply modifiers in correct mathematical order:
+    # 1. SET (override completely)
+    # 2. ADD (surcharges/supplements)
+    # 3. MULTIPLY (multipliers)
+    
+    for mod in set_modifiers:
+        total = mod['decimal_value']
+        modifiers_applied.append(mod)
+    
+    for mod in add_modifiers:
+        total += mod['decimal_value']
+        modifiers_applied.append(mod)
+    
+    for mod in multiply_modifiers:
+        total *= mod['decimal_value']
+        modifiers_applied.append(mod)
     
     return {
         'total': float(total),
@@ -442,8 +696,9 @@ def validate_and_calculate_price(service, channel, sample_table, service_params,
     result['price_source'] = cost_result.get('source', 'unknown')
     server_price = Decimal(str(cost_result.get('total', 0)))
     
-    # Step 2: Apply field-level price modifiers
-    modifier_fields = get_field_price_modifiers(service, channel)
+    # Step 2: Apply field-level price modifiers (only TOTAL scope modifiers)
+    # Per-sample modifiers are already applied in calculate_cost_from_db
+    modifier_fields = get_field_price_modifiers(service, channel, scope='total')
     if modifier_fields and service_params:
         modifier_result = apply_field_price_modifiers(server_price, service_params, modifier_fields)
         result['modifier_result'] = modifier_result
@@ -577,14 +832,22 @@ def evaluate_conditional_logic_server_side(service, service_params, channel='BOT
                 continue  # Already visible
             
             # Evaluate each condition rule
-            should_show = False
+            # Fields with ONLY 'activate_price_modifier' actions are always visible
+            # (the modifier activates when conditions are met, but field is still visible)
+            should_show = None  # None = not determined by show/hide actions
+            has_show_hide_action = False
             
             for rule in field.conditional_logic:
                 trigger_field_name = rule.get('trigger_field')
                 trigger_value = rule.get('trigger_value')
                 actions = rule.get('actions', [])
                 
-                # Check if this rule's trigger condition is met
+                # Check if this is a visibility action
+                action_types = set(actions)
+                if 'show' in action_types or 'hide' in action_types:
+                    has_show_hide_action = True
+                
+                # Skip if trigger field doesn't exist
                 if trigger_field_name not in field_map:
                     continue
                 
@@ -623,9 +886,14 @@ def evaluate_conditional_logic_server_side(service, service_params, channel='BOT
                             break  # Hide takes precedence for this rule
                         elif action == 'activate_price_modifier':
                             # This field affects pricing when trigger condition is met
+                            # Field remains visible - this is handled in pricing logic
                             pass
             
             # Update visibility
+            # If field has no show/hide actions (only activate_price_modifier), it's visible
+            if not has_show_hide_action:
+                should_show = True
+            
             if should_show and field.name not in visible_fields:
                 visible_fields.add(field.name)
                 changed = True

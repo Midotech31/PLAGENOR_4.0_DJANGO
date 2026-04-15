@@ -61,7 +61,7 @@
 
         <div class="auth-links">
             <p>{% trans "Pas encore de compte ?" %} <a href="{% url 'accounts:register' %}">{% trans "Créer un compte" %}</a></p>
-            <p style="margin-top:10px;">{% trans "Demande sans compte ?" %} <a href="{% url 'track' %}">{% trans "Soumettre en tant qu'invité" %}</a></p>
+            <p style="margin-top:10px;">{% trans "Demande sans compte ?" %} <a href="{% url 'guest_submit' %}">{% trans "Soumettre en tant qu'invité" %}</a></p>
             <p style="margin-top:10px;"><a href="{% url 'track' %}">{% trans "Suivre une demande" %}</a></p>
         </div>
 

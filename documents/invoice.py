@@ -36,9 +36,42 @@ def generate_invoice_pdf(invoice):
 
     story = []
 
-    # Header
-    story.append(Paragraph("FACTURE / INVOICE", styles['Title2']))
-    story.append(Paragraph("PLAGENOR 4.0 — Plateforme Génomique", styles['SubTitle']))
+    qr_img = None
+    try:
+        from core.qrcode_utils import generate_request_tracking_qr
+        from django.contrib.sites.models import Site
+        from io import BytesIO
+        from reportlab.lib.utils import ImageReader
+        if invoice.request:
+            current_site = Site.objects.get_current()
+            base_url = f"https://{current_site.domain}" if current_site else None
+            qr_data_url = generate_request_tracking_qr(invoice.request, base_url=base_url)
+            if qr_data_url:
+                import base64
+                qr_parts = qr_data_url.split(',')
+                if len(qr_parts) >= 2:
+                    qr_data = qr_parts[1]
+                    qr_bytes = base64.b64decode(qr_data)
+                    qr_img = ImageReader(BytesIO(qr_bytes))
+    except Exception:
+        pass
+
+    header_paragraphs = [
+        Paragraph("FACTURE / INVOICE", styles['Title2']),
+        Paragraph("PLAGENOR 4.0 — Plateforme Génomique", styles['SubTitle']),
+    ]
+    if qr_img:
+        header_table_data = [[header_paragraphs, Image(qr_img, width=2*cm, height=2*cm)]]
+        header_table = Table(header_table_data, colWidths=[14*cm, 2*cm])
+        header_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        story.append(header_table)
+    else:
+        for p in header_paragraphs:
+            story.append(p)
     story.append(Spacer(1, 8))
 
     # Invoice meta

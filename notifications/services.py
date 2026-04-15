@@ -1,3 +1,12 @@
+"""
+Notification service layer.
+
+Workflow map (high-level):
+- Build role-aware deep links for each request channel and dashboard context.
+- Emit in-app notifications for workflow, assignment, report, and payment events.
+- Keep helper utilities for unread counts and bulk read updates.
+"""
+
 from .models import Notification
 
 
@@ -47,6 +56,29 @@ def notify_user(user, message, notification_type='INFO', request_obj=None,
     )
 
 
+def create_notification(user, notification_type='INFO', title='', message='', request=None):
+    """Create notification with simpler interface (for messaging app compatibility).
+    
+    Args:
+        user: User to notify
+        notification_type: Type of notification (MESSAGE, REMINDER, REMINDER_ESCALATION, etc.)
+        title: Optional title for the notification
+        message: Message content
+        request: Optional Request object for deep linking
+    """
+    link_url = ''
+    if request:
+        link_url = _get_request_link_url(request, user)
+    
+    Notification.objects.create(
+        user=user,
+        message=message or title,
+        notification_type=notification_type,
+        request=request,
+        link_url=link_url,
+    )
+
+
 def notify_workflow_transition(request_obj, to_status, actor):
     """Send notifications based on workflow events with deep linking."""
     notifications = {
@@ -67,7 +99,7 @@ def notify_workflow_transition(request_obj, to_status, actor):
             'type': 'ASSIGNMENT',
             'targets': [request_obj.assigned_to.user if request_obj.assigned_to else None],
             'action_text': 'Accepter la tâche',
-            'action_url': f'/dashboard/ops/request/{request_obj.pk}/accept/',
+            'action_url': f'/dashboard/analyst/accept/{request_obj.pk}/',
         },
         'REPORT_VALIDATED': {
             'message': 'Le rapport a été validé',
@@ -130,7 +162,7 @@ def notify_assignment(request_obj, analyst, assigned_by=None):
     """Send assignment notification with deep linking."""
     link_url = _get_request_link_url(request_obj, analyst)
     link_text = f"Voir la demande {request_obj.display_id}"
-    action_url = f"/dashboard/ops/request/{request_obj.pk}/accept/"
+    action_url = f"/dashboard/analyst/accept/{request_obj.pk}/"
     
     notify_user(
         analyst,

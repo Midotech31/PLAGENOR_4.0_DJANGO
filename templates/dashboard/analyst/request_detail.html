@@ -21,7 +21,7 @@
             {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
         </p>
     </div>
-    <a href="{% url 'dashboard:analyst' %}" class="btn btn-outline">
+    <a href="{% url 'dashboard:analyst' %}" class="btn btn-secondary">
         &larr; {% trans "Retour au tableau de bord" %}
     </a>
 </div>
@@ -38,46 +38,46 @@
                 <div class="pipeline-node"><div class="pipeline-dot{% if s != 'SUBMITTED' %} done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'VALIDATION_PEDAGOGIQUE,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'VALIDATION_PEDAGOGIQUE,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 2: Validation #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 3: Assigned #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ASSIGNED,PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'ASSIGNED,PENDING_ACCEPTANCE' %}active{% elif s|in_list:'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 4: Appointment #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'APPOINTMENT_PROPOSED' %}active{% elif s in 'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'APPOINTMENT_PROPOSED' %}active{% elif s|in_list:'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "RDV" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 5: Sample Received #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'SAMPLE_RECEIVED' %}active{% elif s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'SAMPLE_RECEIVED' %}active{% elif s|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Échantillon" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 6: Analysis #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ANALYSIS_STARTED' %}active{% elif s in 'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'ANALYSIS_STARTED' %}active{% elif s|in_list:'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 7: Report Ready #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'REPORT_UPLOADED,ADMIN_REVIEW' %}active{% elif s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'REPORT_UPLOADED,ADMIN_REVIEW' %}active{% elif s|in_list:'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Rapport" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
             {# Step 8: Sent #}
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'SENT_TO_REQUESTER' %}active{% elif s in 'COMPLETED' %}done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'SENT_TO_REQUESTER' %}active{% elif s|in_list:'COMPLETED' %}done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Envoyé" %}</div>
             </div>
             <div class="pipeline-line{% if s == 'COMPLETED' %} done{% endif %}"></div>
@@ -101,32 +101,32 @@
                 <div class="pipeline-node"><div class="pipeline-dot{% if s != 'REQUEST_CREATED' and s != 'QUOTE_DRAFT' %} done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'QUOTE_DRAFT' %}active{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'QUOTE_DRAFT' %}active{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "BC" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ASSIGNED' %}active{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ASSIGNED' %}active{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ANALYSIS_FINISHED' %}active{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ANALYSIS_FINISHED' %}active{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
-                <div class="pipeline-node"><div class="pipeline-dot{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'PAYMENT_CONFIRMED' %}active{% endif %}"></div></div>
+                <div class="pipeline-node"><div class="pipeline-dot{% if s|in_list:'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'PAYMENT_CONFIRMED' %}active{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Rapport" %}</div>
             </div>
-            <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+            <div class="pipeline-line{% if s|in_list:'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
             <div class="pipeline-step">
                 <div class="pipeline-node"><div class="pipeline-dot{% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %} done{% endif %}"></div></div>
                 <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -153,8 +153,8 @@
                     <div class="text-sm text-muted">{{ req.report_file.name|filename }}</div>
                 </div>
             </div>
-            <a href="#" class="btn btn-sm btn-primary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <a href="#" class="btn btn-primary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger" %}
             </a>
         </div>
@@ -169,7 +169,7 @@
                 <span class="badge-status" style="background:#e2e8f0; color:#475569;">v{{ rv.version_number }}</span>
                 <span class="text-sm" style="flex:1;">{{ rv.file.name|filename }}</span>
                 <span class="text-xs text-muted">{{ rv.uploaded_at|date:"d/m/Y H:i" }}</span>
-                <a href="{{ rv.file.url }}" class="btn btn-xs btn-outline" target="_blank">{% trans "Voir" %}</a>
+                <a href="{{ rv.file.url }}" class="btn btn-secondary btn-xs" target="_blank">{% trans "Voir" %}</a>
             </div>
             {% endfor %}
         </div>
@@ -190,8 +190,8 @@
                     <div style="flex:1; min-width:200px;">
                         <input type="file" name="report_file" class="form-control" style="font-size:0.85rem;" required>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <button type="submit" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         {% trans "Uploader" %}
                     </button>
                 </div>
@@ -317,16 +317,16 @@
                         {% if analyst_accept_alt_url %}
                         <form method="post" action="{{ analyst_accept_alt_url }}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                            <button type="submit" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
                                 {% trans "Accepter cette date" %}
                             </button>
                         </form>
                         {% endif %}
                         <!-- Decline -->
                         <div x-data="{ showDecline: false }">
-                            <button type="button" class="btn btn-sm btn-outline" @click="showDecline = !showDecline" style="color:#dc2626; border-color:#fecaca;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <button type="button" class="btn btn-danger-soft" @click="showDecline = !showDecline">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 {% trans "Refuser" %}
                             </button>
                             {% url 'dashboard:analyst_decline_alt_date' req.pk as analyst_decline_alt_url %}
@@ -337,7 +337,7 @@
                                     <label class="text-sm">{% trans "Raison du refus" %}</label>
                                     <input type="text" name="decline_reason" class="form-control" placeholder="{% trans 'Ex: Je ne suis pas disponible ce jour-là...' %}" style="font-size:0.85rem;">
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer le refus" %}</button>
+                                <button type="submit" class="btn btn-danger">{% trans "Confirmer le refus" %}</button>
                             </form>
                             {% endif %}
                         </div>
@@ -372,7 +372,7 @@
                             <label class="text-sm">{% trans "Note" %}</label>
                             <input type="text" name="appointment_note" class="form-control" placeholder="{% trans 'Message...' %}" style="font-size:0.85rem; width:200px;">
                         </div>
-                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer" %}</button>
+                        <button type="submit" class="btn btn-primary">{% trans "Proposer" %}</button>
                     </div>
                 </form>
                 {% endif %}
@@ -412,24 +412,27 @@
                 <form method="post" action="{{ analyst_send_msg_url }}" style="margin-top:12px; display:flex; gap:8px;">
                     {% csrf_token %}
                     <input type="text" name="message_text" placeholder="{% trans 'Répondre...' %}" class="form-control" style="font-size:0.85rem;" required>
-                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans "Envoyer" %}</button>
                 </form>
                 {% endif %}
             </div>
         </div>
+
+        <!-- Ephemeral Messages Panel (Feature 4) -->
+        {% include 'messaging/message_panel.html' %}
 
         <!-- Workflow Actions -->
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Actions" %}</h3></div>
             <div class="card-body">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    {% if req.status == 'APPOINTMENT_CONFIRMED' or req.status == 'APPOINTMENT_PROPOSED' %}
+                    {% if req.status == 'APPOINTMENT_CONFIRMED' %}
                     {% url 'dashboard:analyst_action' req.pk as analyst_action_url1 %}
                     {% if analyst_action_url1 %}
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
-                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
+                        <button type="submit" class="btn btn-primary">{% trans "Échantillon reçu" %}</button>
                     </form>
                     {% endif %}
                     {% endif %}
@@ -438,7 +441,7 @@
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
-                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Démarrer analyse" %}</button>
+                        <button type="submit" class="btn btn-primary">{% trans "Démarrer analyse" %}</button>
                     </form>
                     {% endif %}
                     {% endif %}
@@ -447,24 +450,32 @@
                     <form method="post" action="{{ analyst_action_url1 }}" style="display:inline;">
                         {% csrf_token %}
                         <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
-                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
+                        <button type="submit" class="btn btn-primary">{% trans "Terminer analyse" %}</button>
                     </form>
                     {% endif %}
                     {% endif %}
-                    {% if req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
+                    {% if req.channel == 'IBTIKAR' and req.status == 'ANALYSIS_FINISHED' %}
                     {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
                     {% if analyst_upload_url2 %}
                     <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline;">
                         {% csrf_token %}
                         <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
-                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
+                        <button type="submit" class="btn btn-primary">{% trans "Uploader rapport" %}</button>
                     </form>
                     {% endif %}
                     {% endif %}
+                    {% if req.channel == 'GENOCLAB' and req.status == 'PAYMENT_CONFIRMED' %}
+                    {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url2 %}
+                    {% if analyst_upload_url2 %}
+                    <form method="post" action="{{ analyst_upload_url2 }}" enctype="multipart/form-data" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                        <button type="submit" class="btn btn-primary">{% trans "Uploader rapport" %}</button>
+                    </form>
                     {% endif %}
                     {% endif %}
                     {% if req.report_file %}
-                    <a href="#" class="btn btn-sm btn-outline" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">{% trans "Voir rapport" %}</a>
+                    <a href="#" class="btn btn-secondary" onclick="showAnalystCitationModal(event, '{{ req.report_file.url }}')">{% trans "Voir rapport" %}</a>
                     {% endif %}
                 </div>
             </div>
@@ -562,11 +573,13 @@ function closeAnalystCitationModal(doDownload) {
         // Mark citation as accepted on the server
         var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
             document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+        {% if req.report_token %}
         fetch('{% url "report_acknowledge" token=req.report_token %}', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
             body: JSON.stringify({})
         }).catch(function(){});
+        {% endif %}
         analystCitationAccepted = true;
         // Trigger download
         window.location.href = currentDownloadUrl;

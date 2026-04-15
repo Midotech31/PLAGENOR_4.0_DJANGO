@@ -102,13 +102,21 @@ def _serialize_sample_column(col):
     }
 
 
-def _get_pricing(service):
-    """Get pricing from database ServicePricing model for cost estimation."""
+def _get_pricing(service, channel='IBTIKAR'):
+    """Get pricing from database ServicePricing model for cost estimation.
+    
+    Args:
+        service: Service model instance
+        channel: 'IBTIKAR' or 'GENOCLAB' (default: IBTIKAR)
+    """
     from core.models import ServicePricing
+    from django.db.models import Q
     
     configs = ServicePricing.objects.filter(
         service=service,
         is_active=True
+    ).filter(
+        Q(channel=channel) | Q(channel='BOTH')
     ).order_by('priority', 'pk')
     
     if not configs.exists():
@@ -131,7 +139,7 @@ def _get_pricing(service):
         }
         pricing['configs'].append(cfg_data)
         
-        if cfg.pricing_type == 'BASE':
+        if cfg.pricing_type == 'BASE' or cfg.pricing_type == 'PER_SAMPLE':
             pricing['base_price'] = float(cfg.amount) if cfg.amount else 0
     
     return pricing
@@ -169,7 +177,7 @@ def service_form_fragment(request, service_code):
     additional_fields = _get_additional_info(svc, channel)
     db_fields = [_serialize_field_for_template(f) for f in additional_fields]
 
-    pricing = _get_pricing(svc)
+    pricing = _get_pricing(svc, channel)
     pricing_json = json.dumps(pricing) if pricing else '{}'
 
     html = render_to_string('includes/service_form_fields.html', {
@@ -556,7 +564,7 @@ def service_field_preview(request, service_id):
         additional_fields = _get_additional_info(service)
         db_fields = [_serialize_field_for_template(f) for f in additional_fields]
 
-        pricing = _get_pricing(service)
+        pricing = _get_pricing(service, 'IBTIKAR')
         pricing_json = json.dumps(pricing) if pricing else '{}'
 
         html = render_to_string('includes/service_form_fields.html', {

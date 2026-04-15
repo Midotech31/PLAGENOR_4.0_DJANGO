@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Champs PDF" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Champs PDF" %}</h1>
+    <p class="greeting-date">{% trans "Configuration des champs dynamiques pour les PDF" %}</p>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>{% trans "Ajouter un champ PDF" %}</h3></div>
+    <div class="card-body" x-data="{scopeType: 'global'}">
+        <form method="post" action="{% url 'dashboard:superadmin_pdf_field_create' %}">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "PDF cible" %}</label>
+                    <select name="pdf_target" class="form-control" required>
+                        {% for value, label in pdf_targets %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Scope" %}</label>
+                    <select name="scope_type" class="form-control" x-model="scopeType" required>
+                        {% for value, label in scope_types %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" x-show="scopeType === 'service'" x-cloak>
+                    <label>{% trans "Service" %}</label>
+                    <select name="service" class="form-control">
+                        <option value="">—</option>
+                        {% for s in services %}
+                        <option value="{{ s.pk }}">{{ s.code }} — {{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Nom interne" %}</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Label FR" %}</label>
+                    <input type="text" name="label_fr" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Label EN" %}</label>
+                    <input type="text" name="label_en" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Type" %}</label>
+                    <select name="field_kind" class="form-control" required>
+                        {% for value, label in field_kinds %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Ordre" %}</label>
+                    <input type="number" name="order" class="form-control" value="0">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Actif" %}</label>
+                    <div><input type="checkbox" name="is_active" checked></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Valeur par défaut" %}</label>
+                <textarea name="default_value" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Options JSON" %}</label>
+                <textarea name="options" class="form-control" rows="3" placeholder='{"height": 40}'></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+        </form>
+    </div>
+</div>
+
+{% for target, target_label in pdf_targets %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>{{ target_label }}</h3></div>
+    <div class="card-body" style="display:grid; gap:12px;">
+        {% for field in pdf_fields %}
+            {% if field.pdf_target == target %}
+            <div class="field-card" x-data="{edit:false,scopeType:'{{ field.scope_type }}'}" style="padding:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <strong>{{ field.label_fr }}</strong>
+                        <span class="field-type-badge">{{ field.field_kind }}</span>
+                        {% if field.scope_type == 'global' %}
+                        <span style="background:#ccfbf1; color:#0f766e; padding:2px 8px; border-radius:999px; font-size:0.75rem;">global</span>
+                        {% else %}
+                        <span style="background:#f3e8ff; color:#7c3aed; padding:2px 8px; border-radius:999px; font-size:0.75rem;">service</span>
+                        <span class="field-meta">{{ field.service.code }} — {{ field.service.name }}</span>
+                        {% endif %}
+                        <span class="field-meta">order: {{ field.order }}</span>
+                        <span class="field-meta">{{ field.name }}</span>
+                        {% if field.is_active %}<span class="badge-status completed">actif</span>{% else %}<span class="badge-status draft">inactif</span>{% endif %}
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <form method="post" action="{% url 'dashboard:superadmin_pdf_field_move' field.pk 'up' %}">{% csrf_token %}<button type="submit" class="btn btn-icon">↑</button></form>
+                        <form method="post" action="{% url 'dashboard:superadmin_pdf_field_move' field.pk 'down' %}">{% csrf_token %}<button type="submit" class="btn btn-icon">↓</button></form>
+                        <button type="button" class="btn btn-secondary btn-sm" @click="edit=!edit">{% trans "Modifier" %}</button>
+                        <form method="post" action="{% url 'dashboard:superadmin_pdf_field_toggle' field.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">{% trans "Activer/Désactiver" %}</button></form>
+                        <form method="post" action="{% url 'dashboard:superadmin_pdf_field_delete' field.pk %}" onsubmit="return confirm('Supprimer ce champ PDF ?');">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button></form>
+                    </div>
+                </div>
+
+                <div x-show="edit" x-cloak style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px;">
+                    <form method="post" action="{% url 'dashboard:superadmin_pdf_field_update' field.pk %}">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>{% trans "PDF cible" %}</label>
+                                <select name="pdf_target" class="form-control">
+                                    {% for value, label in pdf_targets %}
+                                    <option value="{{ value }}" {% if field.pdf_target == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>{% trans "Scope" %}</label>
+                                <select name="scope_type" class="form-control" x-model="scopeType">
+                                    {% for value, label in scope_types %}
+                                    <option value="{{ value }}" {% if field.scope_type == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group" x-show="scopeType === 'service'" x-cloak>
+                                <label>{% trans "Service" %}</label>
+                                <select name="service" class="form-control">
+                                    <option value="">—</option>
+                                    {% for s in services %}
+                                    <option value="{{ s.pk }}" {% if field.service_id == s.pk %}selected{% endif %}>{{ s.code }} — {{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>{% trans "Nom interne" %}</label><input type="text" name="name" class="form-control" value="{{ field.name }}"></div>
+                            <div class="form-group"><label>{% trans "Label FR" %}</label><input type="text" name="label_fr" class="form-control" value="{{ field.label_fr }}"></div>
+                            <div class="form-group"><label>{% trans "Label EN" %}</label><input type="text" name="label_en" class="form-control" value="{{ field.label_en }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>{% trans "Type" %}</label>
+                                <select name="field_kind" class="form-control">
+                                    {% for value, label in field_kinds %}
+                                    <option value="{{ value }}" {% if field.field_kind == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label>{% trans "Ordre" %}</label><input type="number" name="order" class="form-control" value="{{ field.order }}"></div>
+                            <div class="form-group"><label>{% trans "Actif" %}</label><div><input type="checkbox" name="is_active" {% if field.is_active %}checked{% endif %}></div></div>
+                        </div>
+                        <div class="form-group"><label>{% trans "Valeur par défaut" %}</label><textarea name="default_value" class="form-control" rows="2">{{ field.default_value }}</textarea></div>
+                        <div class="form-group"><label>{% trans "Options JSON" %}</label><textarea name="options" class="form-control" rows="2">{{ field.options }}</textarea></div>
+                        <button type="submit" class="btn btn-primary btn-sm">{% trans "Enregistrer" %}</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -10,79 +10,87 @@
 </div>
 
 <!-- Filters -->
-<div class="card" style="margin-bottom: 24px;">
-    <div class="card-body">
-        <form method="get" action="" class="flex gap-2" style="flex-wrap: wrap; align-items: flex-end;">
-            <div class="form-group" style="margin-bottom:0;">
-                <label>{% trans "Date début" %}</label>
-                <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="width:auto;">
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-                <label>{% trans "Date fin" %}</label>
-                <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="width:auto;">
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-                <label>{% trans "Action/Statut" %}</label>
-                <input type="text" name="action" value="{{ action_filter }}" placeholder="{% trans 'Ex: ASSIGNED...' %}" class="form-control" style="width:150px;">
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-                <label>{% trans "Utilisateur" %}</label>
-                <input type="text" name="user" value="{{ user_filter }}" placeholder="{% trans 'Nom...' %}" class="form-control" style="width:150px;">
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm" style="height:38px;">{% trans "Filtrer" %}</button>
-            <a href="{% url 'dashboard:audit_log' %}" class="btn btn-outline btn-sm" style="height:38px;">{% trans "Réinitialiser" %}</a>
-        </form>
-    </div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+    <form method="get" action="" class="flex gap-2" style="flex-wrap: wrap; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom:0;">
+            <label class="text-xs text-gray-500 mb-1 block">{% trans "Date début" %}</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" style="width:auto;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label class="text-xs text-gray-500 mb-1 block">{% trans "Date fin" %}</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" style="width:auto;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label class="text-xs text-gray-500 mb-1 block">{% trans "Action/Statut" %}</label>
+            <input type="text" name="action" value="{{ action_filter }}" placeholder="{% trans 'Ex: ASSIGNED...' %}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" style="width:150px;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label class="text-xs text-gray-500 mb-1 block">{% trans "Utilisateur" %}</label>
+            <input type="text" name="user" value="{{ user_filter }}" placeholder="{% trans 'Nom...' %}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" style="width:150px;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="height:38px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            {% trans "Filtrer" %}
+        </button>
+        <a href="{% url 'dashboard:audit_log' %}" class="btn btn-secondary" style="height:38px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            {% trans "Réinitialiser" %}
+        </a>
+    </form>
 </div>
 
 <!-- Audit Entries -->
-<div class="card">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
     <div class="card-header">
         <h3>{% trans "Entrées d'audit" %} ({{ page_obj.paginator.count }})</h3>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-wrapper" style="border: none;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>{% trans "Date" %}</th>
-                        <th>{% trans "Demande" %}</th>
-                        <th>{% trans "De" %}</th>
-                        <th>{% trans "Vers" %}</th>
-                        <th>{% trans "Acteur" %}</th>
-                        <th>{% trans "Notes" %}</th>
-                        <th>{% trans "Forcé" %}</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50 text-left">
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Date" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Demande" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "De" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Vers" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Acteur" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Notes" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Forcé" %}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
                 {% for entry in page_obj %}
-                <tr>
-                    <td class="text-sm">{{ entry.created_at|date:"d/m/Y H:i" }}</td>
-                    <td><strong>{{ entry.request.display_id|default:"—" }}</strong></td>
-                    <td><span class="badge-status {{ entry.from_status|lower }}">{{ entry.from_status|default:"—" }}</span></td>
-                    <td><span class="badge-status {{ entry.to_status|lower }}">{{ entry.to_status }}</span></td>
-                    <td>{{ entry.actor.get_full_name|default:"Système" }}</td>
-                    <td class="text-sm">{{ entry.notes|truncatechars:50 }}</td>
-                    <td>{% if entry.forced %}<span class="badge-status rejected">{% trans "Oui" %}</span>{% else %}—{% endif %}</td>
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-4 py-3 text-sm">{{ entry.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="px-4 py-3"><strong>{{ entry.request.display_id|default:"—" }}</strong></td>
+                    <td class="px-4 py-3"><span class="badge-status {{ entry.from_status|lower }}">{{ entry.from_status|default:"—" }}</span></td>
+                    <td class="px-4 py-3"><span class="badge-status {{ entry.to_status|lower }}">{{ entry.to_status }}</span></td>
+                    <td class="px-4 py-3">{{ entry.actor.get_full_name|default:"Système" }}</td>
+                    <td class="px-4 py-3 text-sm">{{ entry.notes|truncatechars:50 }}</td>
+                    <td class="px-4 py-3">{% if entry.forced %}<span class="badge-status rejected">{% trans "Oui" %}</span>{% else %}—{% endif %}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">{% trans "Aucune entrée d'audit." %}</td></tr>
+                <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500">{% trans "Aucune entrée d'audit." %}</td></tr>
                 {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
     </div>
 </div>
 
 <!-- Pagination -->
 {% if page_obj.has_other_pages %}
-<div style="display:flex; justify-content:center; gap:8px; margin-top:24px;">
+<div class="flex justify-center gap-2 mt-6">
     {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-outline btn-sm">{% trans "Précédent" %}</a>
+    <a href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M15 18l-6-6 6-6"/></svg>
+        {% trans "Précédent" %}
+    </a>
     {% endif %}
-    <span class="btn btn-sm" style="cursor:default;">{% trans "Page" %} {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg" style="cursor:default;">{% trans "Page" %} {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-outline btn-sm">{% trans "Suivant" %}</a>
+    <a href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}&action={{ action_filter }}&user={{ user_filter }}" class="btn btn-secondary">
+        {% trans "Suivant" %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 18l6-6-6-6"/></svg>
+    </a>
     {% endif %}
 </div>
 {% endif %}

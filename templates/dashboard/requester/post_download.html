@@ -4,24 +4,43 @@
 {% block title %}{% trans "Rapport téléchargé" %} — PLAGENOR 4.0{% endblock %}
 
 {% block content %}
+<script>
+function toggleCitationDownloadButton() {
+    var checkbox = document.getElementById('citation-checkbox');
+    var button = document.getElementById('citation-download-btn');
+    if (checkbox && button) {
+        button.disabled = !checkbox.checked;
+    }
+}
+
+function acceptCitationAndDownload() {
+    var button = document.getElementById('citation-download-btn');
+    if (button) {
+        button.disabled = true;
+        button.style.opacity = '0.7';
+    }
+
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+        document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+    var acceptUrl = '{% url "dashboard:requester_accept_citation" req.pk %}';
+
+    fetch(acceptUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    }).finally(function() {
+        window.location.href = '{{ req.report_file.url }}';
+    });
+}
+</script>
+
 <div class="page-header">
     <h1 class="greeting">{% trans "Merci de faire confiance à PLAGENOR" %}</h1>
     <p class="greeting-date">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</p>
 </div>
-
-<!-- Download Report Card -->
-{% if req.report_file %}
-<div class="card mb-4" style="border:2px solid #3b82f6; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
-    <div class="card-body" style="padding:24px; text-align:center;">
-        <div style="font-size:3rem; margin-bottom:12px;">📥</div>
-        <h3 style="color:#1d4ed8; margin-bottom:12px;">{% trans "Télécharger votre rapport" %}</h3>
-        <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px; font-size:1rem;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            {% trans "Télécharger le rapport" %}
-        </a>
-    </div>
-</div>
-{% endif %}
 
 <!-- Acknowledgment Card -->
 <div class="card mb-4" style="border:2px solid #bbf7d0; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
@@ -35,16 +54,34 @@
 </div>
 
 <!-- Citation Clause -->
-<div class="card mb-4">
+<div class="card mb-4" style="border:2px solid #3b82f6; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
     <div class="card-header"><h3>{% trans "Clause de citation" %}</h3></div>
     <div class="card-body">
-        <div class="alert alert-info" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px;">
+        <div class="alert alert-info" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px; margin-bottom:16px;">
             <div class="text-sm" style="color:#1e40af; line-height:1.6;">
                 <strong>{% trans "Citation recommandée" %}</strong><br><br>
                 {% trans "Si vous utilisez les résultats de ce laboratoire dans vos publications, veuillez citer PLAGENOR comme suit :" %}<br><br>
-                <em>"Ce travail a été réalisé grâce aux services de séquençage et d'analyse du laboratoire PLAGENOR,还在 DGRSDT, Algérie."</em>
+                <em>"Ce travail a été réalisé grâce aux services de séquençage et d'analyse du laboratoire PLAGENOR, DGRSDT, Algérie."</em>
             </div>
         </div>
+
+        {% if req.report_file %}
+        <div style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:16px;">
+            <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; margin:0;">
+                <input type="checkbox" id="citation-checkbox" onchange="toggleCitationDownloadButton()" style="width:18px; height:18px; margin-top:2px; cursor:pointer;">
+                <span style="color:#1e293b; line-height:1.5;">
+                    {% trans "J'ai lu et j'accepte la clause de citation ci-dessus." %}
+                </span>
+            </label>
+        </div>
+
+        <div style="text-align:center;">
+            <button id="citation-download-btn" type="button" class="btn btn-primary" onclick="acceptCitationAndDownload()" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {% trans "Accepter et télécharger le rapport" %}
+            </button>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -90,7 +127,7 @@
             
             <!-- Submit -->
             <div style="text-align:center;">
-                <button type="submit" class="btn btn-primary" style="padding:14px 32px; font-size:1rem;">
+                <button type="submit"             class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;vertical-align:middle;margin-right:8px;"><polyline points="20 6 9 17 4 12"/></svg>
                     {% trans "Envoyer mon évaluation" %}
                 </button>
@@ -114,7 +151,7 @@
 
 <!-- Back to Dashboard -->
 <div style="text-align:center; margin-top:24px;">
-    <a href="{% url 'dashboard:requester' %}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+    <a href="{% url 'dashboard:requester' %}"             class="btn btn-secondary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         {% trans "Retour au tableau de bord" %}
     </a>
@@ -127,11 +164,13 @@
     {% if requester_confirm_url %}
     <form method="post" action="{{ requester_confirm_url }}" style="display:inline;">
         {% csrf_token %}
-        <button type="submit" class="btn btn-success" style="padding:12px 24px;">
+        <button type="submit"             class="btn btn-success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>
             {% trans "Confirmer la réception du rapport" %}
         </button>
     </form>
     {% endif %}
+</div>
 {% endif %}
 {% endblock %}
+

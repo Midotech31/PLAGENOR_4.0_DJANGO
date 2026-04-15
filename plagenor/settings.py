@@ -6,8 +6,8 @@ import dj_database_url
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-key-change-in-production')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+SECRET_KEY = os.getenv('SECRET_KEY', 'plagenor-prod-fallback-key-2026-change-this-immediately-very-long')
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,plagenor.up.railway.app').split(',')
 
 # =============================================================================
@@ -22,13 +22,7 @@ SECURE_XSS_DEBUG = False
 
 # HTTPS & SSL Settings (enable when behind HTTPS proxy)
 if not DEBUG:
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 
 # Session Security
 SESSION_COOKIE_HTTPONLY = True
@@ -39,11 +33,12 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 # CSRF Security
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read language cookie
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = [
+_csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()] or [
     'https://plagenor.essbo.dz',
     'https://www.plagenor.essbo.dz',
     'https://plagenor.up.railway.app',
-] + [f'https://{host}' for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')]
+] + [f'https://{host}' for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
 
 # Content Security Policy
 CSP_DEFAULT_SRC = ("'self'",)
@@ -155,11 +150,12 @@ INSTALLED_APPS = [
     'dashboard',
     'documents',
     'notifications',
+    'messaging',
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Must be first for static file serving
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -212,7 +208,7 @@ DATA_DIR.mkdir(exist_ok=True)
 if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.parse(
-            os.getenv('DATABASE_URL'),
+            os.getenv('DATABASE_URL') or '',
             conn_max_age=600,
             ssl_require=True,
         )
@@ -409,3 +405,12 @@ API calls are rate-limited to 100 requests/minute.
         {'name': 'Tracking', 'description': 'Public request tracking'},
     ],
 }
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')

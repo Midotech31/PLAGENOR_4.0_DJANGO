@@ -33,15 +33,15 @@
         </div>
 
     <!-- New Request -->
-    <div x-show="tab === 'new'">
+    <div x-show="tab === 'new'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande GENOCLAB" %}</h3></div>
             <div class="card-body">
-                <form method="post" action="{% url 'dashboard:client_create' %}">
+                <form method="post" action="{% url 'dashboard:client_create' %}" data-channel="GENOCLAB">
                     {% csrf_token %}
                     <div class="form-group">
                         <label>{% trans "Service" %}</label>
-                        <select name="service_id" class="form-control" required>
+                        <select name="service_id" class="form-control" required data-channel="GENOCLAB">
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
                             <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
@@ -72,7 +72,7 @@
     </div>
 
     <!-- My Requests -->
-    <div x-show="tab === 'requests'">
+    <div x-show="tab === 'requests'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Mes demandes actives" %}</h3></div>
             <div class="card-body">
@@ -89,7 +89,7 @@
                     <div class="data-card-row mt-1">
                         {% url 'dashboard:client_request_detail' req.pk as client_detail_url %}
                         {% if client_detail_url %}
-                        <a href="{{ client_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        <a href="{{ client_detail_url }}" class="btn btn-secondary btn-sm">{% trans "Voir détails" %}</a>
                         {% endif %}
                     </div>
 
@@ -100,22 +100,22 @@
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s|in_list:'QUOTE_VALIDATED_BY_CLIENT,INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'INVOICE_GENERATED,PAYMENT_CONFIRMED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'INVOICE_GENERATED' or s == 'PAYMENT_CONFIRMED' %}active{% elif s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s|in_list:'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -135,7 +135,7 @@
                             {% if client_confirm_appt_url %}
                             <form method="post" action="{{ client_confirm_appt_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
+                                <button type="submit" class="btn btn-primary btn-sm">{% trans "Confirmer ce RDV" %}</button>
                             </form>
                             {% endif %}
                             <!-- Suggest alternative -->
@@ -143,7 +143,7 @@
                             {% if client_alt_date_url %}
                             <form method="post" action="{{ client_alt_date_url }}" style="display:inline;" x-data="{ showAlt: false }">
                                 {% csrf_token %}
-                                <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
+                                <button type="button" class="btn btn-secondary btn-sm" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
                                 <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                                     <div>
                                         <label class="text-sm">{% trans "Date souhaitée" %}</label>
@@ -153,7 +153,7 @@
                                         <label class="text-sm">{% trans "Message" %}</label>
                                         <input type="text" name="alt_note" class="form-control" placeholder="{% trans 'Raison du changement...' %}" style="font-size:0.85rem; width:200px;">
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Envoyer" %}</button>
                                 </div>
                             </form>
                             {% endif %}
@@ -165,7 +165,7 @@
                         {% if client_confirm_appt_url %}
                         <form method="post" action="{{ client_confirm_appt_url }}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
+                            <button type="submit" class="btn btn-primary btn-sm">{% trans "Confirmer RDV" %}</button>
                         </form>
                         {% endif %}
                     </div>
@@ -209,18 +209,18 @@
                             {% if client_accept_quote_url %}
                             <form method="post" action="{{ client_accept_quote_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-primary" style="background:#059669;">{% trans "Accepter le devis" %}</button>
+                                <button type="submit" class="btn btn-success btn-sm">{% trans "Accepter le devis" %}</button>
                             </form>
                             {% endif %}
                             {% url 'dashboard:client_reject_quote' req.pk as client_reject_quote_url %}
                             {% if client_reject_quote_url %}
                             <form method="post" action="{{ client_reject_quote_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Refuser le devis" %}</button>
+                                <button type="submit" class="btn btn-danger-soft btn-sm">{% trans "Refuser le devis" %}</button>
                             </form>
                             {% endif %}
                             {% if client_detail_url %}
-                            <a href="{{ client_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détail" %}</a>
+                            <a href="{{ client_detail_url }}" class="btn btn-secondary btn-sm">{% trans "Voir détail" %}</a>
                             {% endif %}
                         </div>
                     </div>
@@ -236,7 +236,7 @@
                         {% if req.report_file %}
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             {# Download button - separate from form #}
-                            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; text-decoration:none;">
+                            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-success">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger le rapport" %}
                             </a>
@@ -245,7 +245,7 @@
                             {% if client_confirm_url %}
                             <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-success" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
+                                <button type="submit" class="btn btn-success">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>
                                     {% trans "Confirmer la réception" %}
                                 </button>
@@ -258,7 +258,7 @@
                             {% if client_confirm_url %}
                             <form method="post" action="{{ client_confirm_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                                <button type="submit" class="btn btn-primary">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
                                     {% trans "Confirmer la réception du rapport" %}
                                 </button>
@@ -288,7 +288,7 @@
                             </div>
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                 <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px; font-size:0.85rem;">
-                                <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
+                                <button type="submit" class="btn btn-primary">{% trans "Envoyer" %}</button>
                             </div>
                         </form>
                         {% endif %}
@@ -308,7 +308,7 @@
     </div>
 
     <!-- Invoices -->
-    <div x-show="tab === 'invoices'">
+    <div x-show="tab === 'invoices'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Mes factures" %}</h3></div>
             <div class="card-body">
@@ -345,37 +345,57 @@
     </div>
 
     <!-- Archives (Feature 2) -->
-    <div x-show="tab === 'archives'">
+    <div x-show="tab === 'archives'" x-cloak>
         <div class="card">
             <div class="card-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <h3 style="margin: 0;">{% trans "Archives" %}</h3>
                     {% if archived %}
-                    <div style="display: flex; gap: 8px; align-items: center;" x-data="{ selectedCount: 0 }">
+                    <div style="display: flex; gap: 8px; align-items: center;" x-data="{ selectedCount: 0, csrfToken: '{{ csrf_token }}' }">
                         <span class="text-sm text-muted">{% trans "Sélectionné(s)" %}: <span x-text="selectedCount">0</span></span>
-                        <button type="button" class="btn btn-sm btn-outline" @click="
-                            document.querySelectorAll('.archive-checkbox:checked').forEach(cb => cb.checked = false);
-                            selectedCount = 0;
-                            document.querySelectorAll('.archive-checkbox').forEach(cb => cb.checked ? selectedCount++ : null);
-                        ">{% trans "Tout désélectionner" %}</button>
-                        <button type="button" class="btn btn-sm btn-danger" @click="
-                            const checked = document.querySelectorAll('.archive-checkbox:checked');
-                            if(checked.length === 0) { alert('{% trans "Veuillez sélectionner au moins une demande" %}'); return; }
-                            if(!confirm('{% trans "Retirer les demandes sélectionnées de vos archives ?" %}')) return;
-                            const form = document.createElement('form');
+                        <button type="button" class="btn btn-secondary btn-sm" @click="document.querySelectorAll('.archive-checkbox:checked').forEach(cb => cb.checked = false); selectedCount = 0;">{% trans "Tout désélectionner" %}</button>
+                        <button type="button" class="btn btn-danger-soft btn-sm" @click="
+                            let checked = document.querySelectorAll('.archive-checkbox:checked');
+                            if (checked.length === 0) { alert('{% trans "Veuillez sélectionner au moins une demande" %}'); return; }
+                            if (!confirm('{% trans "Retirer les demandes sélectionnées de vos archives ?" %}')) return;
+                            let form = document.createElement('form');
                             form.method = 'POST';
                             form.action = '{% url 'dashboard:client_archive_remove_selected' %}';
-                            form.innerHTML = '{% csrf_token %}<input type=\"hidden\" name=\"action\" value=\"remove_selected\">';
-                            checked.forEach(cb => { form.innerHTML += '<input type=\"hidden\" name=\"selected_requests\" value=\"' + cb.value + '\">'; });
+                            let csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'csrfmiddlewaretoken';
+                            csrfInput.value = csrfToken;
+                            form.appendChild(csrfInput);
+                            let actionInput = document.createElement('input');
+                            actionInput.type = 'hidden';
+                            actionInput.name = 'action';
+                            actionInput.value = 'remove_selected';
+                            form.appendChild(actionInput);
+                            checked.forEach(cb => {
+                                let reqInput = document.createElement('input');
+                                reqInput.type = 'hidden';
+                                reqInput.name = 'selected_requests';
+                                reqInput.value = cb.value;
+                                form.appendChild(reqInput);
+                            });
                             document.body.appendChild(form);
                             form.submit();
                         ">{% trans "Retirer la sélection" %}</button>
-                        <button type="button" class="btn btn-sm btn-danger" @click="
-                            if(!confirm('{% trans "Retirer TOUTES les demandes de vos archives ?" %}\n{% trans "Cette action masquera toutes vos demandes terminées." %}')) return;
-                            const form = document.createElement('form');
+                        <button type="button" class="btn btn-danger-soft btn-sm" @click="
+                            if (!confirm('{% trans "Retirer TOUTES les demandes de vos archives ?" %}\n{% trans "Cette action masquera toutes vos demandes terminées." %}')) return;
+                            let form = document.createElement('form');
                             form.method = 'POST';
                             form.action = '{% url 'dashboard:client_archive_remove_selected' %}';
-                            form.innerHTML = '{% csrf_token %}<input type=\"hidden\" name=\"action\" value=\"clear_all\">';
+                            let csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'csrfmiddlewaretoken';
+                            csrfInput.value = csrfToken;
+                            form.appendChild(csrfInput);
+                            let actionInput = document.createElement('input');
+                            actionInput.type = 'hidden';
+                            actionInput.name = 'action';
+                            actionInput.value = 'clear_all';
+                            form.appendChild(actionInput);
                             document.body.appendChild(form);
                             form.submit();
                         ">{% trans "Tout retirer" %}</button>
@@ -436,7 +456,7 @@
     </div>
 
     <!-- Profile -->
-    <div x-show="tab === 'profile'">
+    <div x-show="tab === 'profile'" x-cloak>
         <div class="card" style="max-width: 900px; margin: 0 auto;">
             <div class="card-header">
                 <h3>{% trans "Mon Profil" %}</h3>
@@ -499,14 +519,14 @@
 
                 <!-- Quick Links -->
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
                         {% trans "Modifier mon profil" %}
                     </a>
-                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -519,7 +539,7 @@
     </div>
 
     <!-- Notifications -->
-    <div x-show="tab === 'notifs'">
+    <div x-show="tab === 'notifs'" x-cloak>
         {% include 'includes/notification_list.html' %}
         {% if not notifications %}
         <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>

@@ -4,6 +4,7 @@
 from io import BytesIO
 from datetime import datetime
 import logging
+from pathlib import Path
 
 from django.conf import settings
 from django.core.files import File
@@ -30,6 +31,7 @@ from .pdf_styles import (
     make_page_template
 )
 from .pdf_labels import get_labels, get_label
+from .pdf_dynamic_fields import get_pdf_fields, render_pdf_fields
 
 logger = logging.getLogger('plagenor.documents')
 
@@ -122,7 +124,7 @@ def generate_platform_note_pdf(request_obj, lang=None, force_regenerate=False):
     # Check if note already exists (unless force_regenerate)
     if not force_regenerate and request_obj.generated_platform_note:
         existing_path = request_obj.generated_platform_note.path
-        if existing_path and hasattr(existing_path, 'exists') and existing_path.exists():
+        if existing_path and Path(existing_path).exists():
             logger.info(f"Platform note already exists for {request_obj.display_id}")
             return str(existing_path), None
     
@@ -190,7 +192,12 @@ def generate_platform_note_pdf(request_obj, lang=None, force_regenerate=False):
         story.extend(build_deliverables_section(service, labels, page_width, styles))
         
         # -------------------------------------------------------------------------
-        # SECTION 7: ESTIMATED TURNAROUND
+        # SECTION 7: LAB CONTACT
+        # -------------------------------------------------------------------------
+        story.extend(build_lab_contact_section(labels, page_width, styles))
+        
+        # -------------------------------------------------------------------------
+        # SECTION 8: ESTIMATED TURNAROUND
         # -------------------------------------------------------------------------
         story.extend(build_turnaround_section(service, labels, page_width, styles))
         
@@ -199,6 +206,13 @@ def generate_platform_note_pdf(request_obj, lang=None, force_regenerate=False):
         # -------------------------------------------------------------------------
         story.extend(build_compliance_statement(labels, page_width, styles))
         
+        # -------------------------------------------------------------------------
+        # DYNAMIC PDF FIELDS (SUPERADMIN)
+        # -------------------------------------------------------------------------
+        dynamic_fields = get_pdf_fields('platform_note', service=service)
+        if dynamic_fields:
+            render_pdf_fields(story, dynamic_fields, styles, page_width, request_obj.additional_data or {})
+
         # -------------------------------------------------------------------------
         # SIGNATURE BLOCK
         # -------------------------------------------------------------------------
@@ -238,34 +252,50 @@ def build_platform_note_header(request_obj, service, labels, page_width, styles)
     """Build the document header."""
     story = []
     
-    # Date (right-aligned)
+    # Generate QR code for tracking
+    qr_img = None
+    try:
+        from core.qrcode_utils import generate_request_tracking_qr
+        from django.contrib.sites.models import Site
+        current_site = Site.objects.get_current()
+        base_url = f"https://{current_site.domain}" if current_site else None
+        qr_data_url = generate_request_tracking_qr(request_obj, base_url=base_url)
+        if qr_data_url:
+            import base64
+            from io import BytesIO
+            from reportlab.lib.utils import ImageReader
+            qr_parts = qr_data_url.split(',')
+            if len(qr_parts) >= 2:
+                qr_data = qr_parts[1]
+                qr_bytes = base64.b64decode(qr_data)
+                qr_img = ImageReader(BytesIO(qr_bytes))
+    except Exception as e:
+        logger.debug(f"Could not generate QR code for Platform Note: {e}")
+    
+    # Date (left-aligned)
     today = format_date(datetime.now())
-    story.append(Paragraph(
-        f"<b>{labels.get('date_format', 'Date:').format(date=today)}</b>",
-        styles['Reference']
-    ))
-    story.append(Spacer(1, 4))
+    date_text = f"<b>{labels.get('date_format', 'Date:').format(date=today)}</b>"
     
-    # Logo row
-    essbo_logo = get_essbo_logo(width=3*cm)
-    plagenor_logo = get_plagenor_logo(width=3*cm)
+    # Logo row with QR code
+    essbo_logo = get_essbo_logo(width=2.5*cm)
+    plagenor_logo = get_plagenor_logo(width=2.5*cm)
     
-    if essbo_logo and plagenor_logo:
-        logo_table = Table(
-            [[essbo_logo, plagenor_logo]],
-            colWidths=[page_width / 2, page_width / 2]
-        )
-        logo_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        story.append(logo_table)
-    elif essbo_logo:
-        story.append(essbo_logo)
-    elif plagenor_logo:
-        story.append(plagenor_logo)
+    if qr_img:
+        # Table with logos, date, and QR code
+        header_content = [[essbo_logo, Paragraph(date_text, styles['Reference']), Image(qr_img, width=2*cm, height=2*cm)]]
+        col_widths = [2.5*cm, page_width - 4.5*cm - 2*cm, 2*cm]
+    else:
+        header_content = [[essbo_logo, Paragraph(date_text, styles['Reference']), plagenor_logo]]
+        col_widths = [2.5*cm, page_width - 5*cm, 2.5*cm]
     
+    header_table = Table(header_content, colWidths=col_widths)
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(header_table)
     story.append(Spacer(1, 8))
     
     # Title
@@ -433,9 +463,27 @@ def build_pricing_section(request_obj, service, labels, page_width, styles):
     story.append(Paragraph(labels['platform_note_section5'], styles['SectionTitle']))
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
     story.append(Spacer(1, 6))
+
+    # Recalculate price server-side so PDF always reflects current pricing logic
+    calculated_server_price = None
+    pricing_error = None
+    try:
+        from core.pricing import validate_and_calculate_price
+        price_validation = validate_and_calculate_price(
+            service=service,
+            channel=getattr(request_obj, 'channel', 'IBTIKAR') or 'IBTIKAR',
+            sample_table=request_obj.sample_table or [],
+            service_params=request_obj.service_params or {},
+            urgency=getattr(request_obj, 'urgency', 'Normal') or 'Normal',
+        )
+        calculated_server_price = price_validation.get('server_price')
+    except Exception as exc:
+        pricing_error = str(exc)
     
     # Get pricing information
     validated_cost = getattr(request_obj, 'admin_validated_price', None)
+    if validated_cost is None and calculated_server_price is not None:
+        validated_cost = calculated_server_price
     discount_percentage = getattr(request_obj, 'discount_percentage', 0) or 0
     discount_amount = getattr(request_obj, 'discount_amount', 0) or 0
     final_cost = getattr(request_obj, 'final_cost', None)
@@ -444,8 +492,11 @@ def build_pricing_section(request_obj, service, labels, page_width, styles):
     data = []
     
     if validated_cost is not None:
+        cost_label = labels['calculated_cost']
+        if calculated_server_price is not None:
+            cost_label = labels.get('calculated_cost', 'Coût calculé') + ' (serveur)'
         data.append([
-            Paragraph(labels['calculated_cost'], styles['Label']),
+            Paragraph(cost_label, styles['Label']),
             Paragraph(format_currency(validated_cost), styles['Value'])
         ])
         
@@ -489,32 +540,87 @@ def build_pricing_section(request_obj, service, labels, page_width, styles):
     table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])
     style_label_value_table(table)
     story.append(table)
+
+    if pricing_error:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(
+            labels.get('pending_validation', 'En attente de validation financiere'),
+            styles['BodySmall']
+        ))
     
-    # Cost breakdown if available
-    quote_detail = getattr(request_obj, 'quote_detail', {}) or {}
-    if quote_detail and isinstance(quote_detail, dict):
+    # Full cost breakdown (primary source: request.pricing, fallback: quote_detail)
+    pricing_payload = getattr(request_obj, 'pricing', {}) or {}
+    cost_result = pricing_payload.get('cost_breakdown', {}) if isinstance(pricing_payload, dict) else {}
+    modifier_result = pricing_payload.get('modifiers_applied', []) if isinstance(pricing_payload, dict) else []
+
+    breakdown_rows = []
+    supplement_reasons = []
+
+    if isinstance(cost_result, dict):
+        formula = cost_result.get('calculation_formula')
+        if formula:
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(labels.get('cost_breakdown', 'Détail du coût'), styles['Label']))
+            story.append(Spacer(1, 2))
+            story.append(Paragraph(str(formula), styles['BodySmall']))
+            story.append(Spacer(1, 4))
+
+        for entry in cost_result.get('breakdown', []) or []:
+            name = entry.get('name') or entry.get('type') or 'Ligne'
+            subtotal = entry.get('subtotal')
+            if isinstance(subtotal, (int, float)):
+                breakdown_rows.append([
+                    Paragraph(str(name), styles['TableCell']),
+                    Paragraph(format_currency(subtotal), styles['TableCell'])
+                ])
+
+            details = entry.get('details') or []
+            if isinstance(details, list):
+                for det in details:
+                    label = det.get('label') or det.get('field') or 'Supplément'
+                    amount = det.get('amount')
+                    if isinstance(amount, (int, float)):
+                        supplement_reasons.append(f"{label}: {format_currency(amount)} / échantillon")
+
+    # Include total-level modifiers as explicit reasons when available
+    if isinstance(modifier_result, list):
+        for mod in modifier_result:
+            field_name = mod.get('field_name') or mod.get('field') or 'Modificateur'
+            op = mod.get('operation') or mod.get('type') or ''
+            val = mod.get('value') or mod.get('amount') or ''
+            if op or val:
+                supplement_reasons.append(f"{field_name} ({op} {val})")
+
+    # Fallback to quote_detail for backward compatibility
+    if not breakdown_rows:
+        quote_detail = getattr(request_obj, 'quote_detail', {}) or {}
+        if quote_detail and isinstance(quote_detail, dict):
+            for item_name, item_amount in quote_detail.items():
+                if isinstance(item_amount, (int, float)):
+                    breakdown_rows.append([
+                        Paragraph(str(item_name), styles['TableCell']),
+                        Paragraph(format_currency(item_amount), styles['TableCell'])
+                    ])
+
+    if breakdown_rows:
         story.append(Spacer(1, 8))
         story.append(Paragraph(labels.get('cost_breakdown', 'Détail du coût'), styles['Label']))
         story.append(Spacer(1, 4))
-        
-        breakdown_data = []
-        for item_name, item_amount in quote_detail.items():
-            if isinstance(item_amount, (int, float)):
-                breakdown_data.append([
-                    Paragraph(str(item_name), styles['TableCell']),
-                    Paragraph(format_currency(item_amount), styles['TableCell'])
-                ])
-        
-        if breakdown_data:
-            breakdown_table = Table(breakdown_data, colWidths=[page_width * 0.6, page_width * 0.4])
-            breakdown_table.setStyle(TableStyle([
-                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ]))
-            story.append(breakdown_table)
+        breakdown_table = Table(breakdown_rows, colWidths=[page_width * 0.6, page_width * 0.4])
+        breakdown_table.setStyle(TableStyle([
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        story.append(breakdown_table)
+
+    if supplement_reasons:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(labels.get('supplement_reason', 'Motifs des suppléments'), styles['Label']))
+        for reason in supplement_reasons[:12]:
+            story.append(Paragraph(f"• {reason}", styles['BodySmall']))
     
     story.append(Spacer(1, 12))
     return story
@@ -545,6 +651,68 @@ def build_deliverables_section(service, labels, page_width, styles):
     return story
 
 
+def build_lab_contact_section(labels, page_width, styles):
+    """Build Lab Contact section using PlatformContent model."""
+    from core.models import PlatformContent
+    
+    story = []
+    
+    # Get lab contact info from PlatformContent
+    contact_keys = ['lab_phone', 'lab_email', 'lab_address', 'lab_name']
+    contact_data = {}
+    
+    try:
+        platform_contents = PlatformContent.objects.filter(key__in=contact_keys)
+        for pc in platform_contents:
+            contact_data[pc.key] = pc.value
+    except Exception as e:
+        logger.debug(f"Could not fetch PlatformContent for lab contact: {e}")
+    
+    # Only add section if we have contact data
+    if not contact_data:
+        return story
+    
+    # Section title
+    story.append(Paragraph(labels.get('lab_contact_section', 'Contact Laboratory'), styles['SectionTitle']))
+    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
+    story.append(Spacer(1, 6))
+    
+    # Build contact info table
+    contact_rows = []
+    
+    if contact_data.get('lab_name'):
+        contact_rows.append([
+            Paragraph(labels.get('lab_name', 'Laboratory'), styles['Label']),
+            Paragraph(str(contact_data['lab_name']), styles['Value'])
+        ])
+    
+    if contact_data.get('lab_address'):
+        contact_rows.append([
+            Paragraph(labels.get('lab_address', 'Address'), styles['Label']),
+            Paragraph(str(contact_data['lab_address']), styles['Value'])
+        ])
+    
+    if contact_data.get('lab_phone'):
+        contact_rows.append([
+            Paragraph(labels.get('lab_phone', 'Phone'), styles['Label']),
+            Paragraph(str(contact_data['lab_phone']), styles['Value'])
+        ])
+    
+    if contact_data.get('lab_email'):
+        contact_rows.append([
+            Paragraph(labels.get('lab_email', 'Email'), styles['Label']),
+            Paragraph(str(contact_data['lab_email']), styles['Value'])
+        ])
+    
+    if contact_rows:
+        contact_table = Table(contact_rows, colWidths=[page_width * 0.35, page_width * 0.65])
+        style_label_value_table(contact_table)
+        story.append(contact_table)
+    
+    story.append(Spacer(1, 12))
+    return story
+
+
 def build_turnaround_section(service, labels, page_width, styles):
     """Build Section 7: Estimated Turnaround."""
     story = []
@@ -554,11 +722,18 @@ def build_turnaround_section(service, labels, page_width, styles):
     story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
     story.append(Spacer(1, 6))
     
-    # Get turnaround time
-    turnaround_days = getattr(service, 'turnaround_days', None)
-    
+    # Get turnaround time aligned with channel-specific service settings
+    turnaround_days = getattr(service, 'turnaround_ibtikar', None) or getattr(service, 'turnaround_days', None)
+    turnaround_unit = getattr(service, 'turnaround_unit', 'business_days')
+
     if turnaround_days:
-        turnaround_text = f"{turnaround_days} {labels.get('business_days', 'jours ouvrables')}"
+        if turnaround_unit == 'calendar_days':
+            unit_label = labels.get('calendar_days', 'jours calendaires')
+        elif turnaround_unit == 'weeks':
+            unit_label = labels.get('weeks', 'semaines')
+        else:
+            unit_label = labels.get('business_days', 'jours ouvrables')
+        turnaround_text = f"{turnaround_days} {unit_label}"
         story.append(Paragraph(turnaround_text, styles['BodySerif']))
     else:
         story.append(Paragraph(

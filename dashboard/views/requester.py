@@ -1,3 +1,12 @@
+"""
+Requester dashboard views (IBTIKAR channel).
+
+Workflow map (high-level):
+- Create IBTIKAR requests with server-side pricing/budget validation.
+- Let requester confirm appointment/receipt and submit IBTIKAR external code.
+- Present lifecycle details, generated documents, and feedback actions.
+"""
+
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -5,6 +14,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from django.db import transaction
 from dashboard.decorators import requester_required
 
 from core.models import Service, Request
@@ -142,12 +152,26 @@ def request_detail(request, pk):
     # Check IBTIKAR form status
     ibtikar_form_status = check_template_status(req) if req.channel == 'IBTIKAR' else None
 
+    # Recalculate cost to show correct total with multipliers
+    calculated_cost = None
+    if req.service:
+        from core.pricing import validate_and_calculate_price
+        price_result = validate_and_calculate_price(
+            service=req.service,
+            channel='IBTIKAR',
+            sample_table=req.sample_table or [],
+            service_params=req.service_params or {},
+            urgency=req.urgency or 'Normal',
+        )
+        calculated_cost = price_result.get('server_price')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
         'ibtikar_form_status': ibtikar_form_status,
+        'calculated_cost': calculated_cost,
     }
     return render(request, 'dashboard/requester/request_detail.html', context)
 
@@ -165,19 +189,55 @@ def create_request(request):
         messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
         return redirect_back(request, 'dashboard:requester')
 
-    # Collect parameter values
-    service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+    # Collect parameter values (supports single and multi-value fields)
+    service_params = {}
+    for key in request.POST.keys():
+        if not key.startswith('param_'):
+            continue
+        clean_key = key.replace('param_', '', 1)
+        values = request.POST.getlist(key)
+        if len(values) > 1:
+            service_params[clean_key] = values
+        else:
+            service_params[clean_key] = request.POST.get(key)
+
+    # Keep a copy of raw online submission fields for complete PDF rendering
+    online_submission_data = {}
+    for key in request.POST.keys():
+        if key.startswith('sample_'):
+            continue
+        values = request.POST.getlist(key)
+        online_submission_data[key] = values if len(values) > 1 else request.POST.get(key)
+
     sample_data = {}
     for key, val in request.POST.items():
         if key.startswith('sample_'):
             parts = key.split('_', 2)
             if len(parts) == 3:
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
-    sample_table_data = list(sample_data.values()) if sample_data else []
+
+    # Keep only meaningful sample rows (at least one non-empty value excluding row index columns)
+    sample_table_data = []
+    for row in sample_data.values():
+        meaningful_values = []
+        for col_name, col_val in row.items():
+            col_name_norm = str(col_name).strip().lower()
+            is_number_col = (
+                col_name_norm in ('n°', 'nº', 'n', 'no', 'num', 'numero', 'number')
+                or ('n' in col_name_norm and ('°' in col_name_norm or 'º' in col_name_norm))
+                or 'number' in col_name_norm
+            )
+            if is_number_col:
+                continue
+            if str(col_val).strip():
+                meaningful_values.append(col_val)
+        if meaningful_values:
+            sample_table_data.append(row)
 
     # Calculate cost from ServicePricing database with server-side validation
     from core.pricing import validate_and_calculate_price
     from decimal import Decimal
+    from django.utils import timezone
     
     # Extract submitted price for validation (even though we don't trust it)
     submitted_budget = request.POST.get('submitted_budget_amount')
@@ -210,19 +270,33 @@ def create_request(request):
         'modifiers_applied': price_validation.get('modifier_result', {}).get('modifiers_applied', []),
     }
 
-    # Check budget against declared balance
-    if budget_amount > declared:
-        messages.warning(request, f"Attention: le coût estimé ({budget_amount:,.0f} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
-
-    # Budget check before submission
-    budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
+    # SMART budget check using declared balance
+    # This is the CRITICAL server-side guard
+    budget_check = check_ibtikar_budget(
+        amount=budget_amount,
+        requester=request.user,
+        declared_balance=declared,
+        declared_balance_at=timezone.now()
+    )
+    
     if budget_check['exceeded']:
+        # BLOCK submission - cost exceeds available budget
+        available = budget_check.get('available', 0)
         messages.error(
             request,
-            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
-            f"Reste: {budget_check['remaining']:,.0f} DZD."
+            f"Budget insuffisant! Coût estimé: {budget_amount:,.0f} DA, "
+            f"Budget disponible: {available:,.0f} DA. "
+            f"{budget_check.get('suggested_action', 'Réduisez le nombre d\'échantillons ou changez le type d\'analyse.')}"
         )
         return redirect_back(request, 'dashboard:requester')
+    
+    if budget_check.get('cap_exceeded'):
+        # Warning but allow submission (admin may override)
+        messages.warning(
+            request,
+            f"Attention: votre consommation totale dépasse le plafond IBTIKAR de {budget_check['cap']:,.0f} DA. "
+            f"{budget_check.get('cap_warning', '')}"
+        )
 
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
@@ -232,7 +306,7 @@ def create_request(request):
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
             'budget_amount': budget_amount,
-            'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
+            'declared_ibtikar_balance': declared,
             'service_params': service_params,
             'sample_table': sample_table_data,
             'analysis_framework': request.POST.get('analysis_framework', ''),
@@ -240,6 +314,7 @@ def create_request(request):
             'pi_email': request.POST.get('pi_email', ''),
             'pi_phone': request.POST.get('pi_phone', ''),
             'pricing_breakdown': pricing_breakdown,
+            'additional_data': online_submission_data,
         },
         user=request.user,
     )
@@ -252,6 +327,8 @@ def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
+    if req.requester != request.user:
+        return HttpResponseForbidden()
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -312,6 +389,24 @@ def suggest_alternative_date(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
+    
+    # Check reschedule limit
+    if hasattr(req, 'MAX_RESCHEDULE_LIMIT'):
+        max_reschedules = req.MAX_RESCHEDULE_LIMIT
+    else:
+        max_reschedules = 3  # Default limit
+    
+    if req.status != 'APPOINTMENT_PROPOSED':
+        messages.error(request, "La reprogrammation est disponible uniquement après proposition de rendez-vous.")
+        return redirect_back(request, 'dashboard:requester')
+
+    if req.reschedule_count >= max_reschedules:
+        messages.error(
+            request,
+            f"Limite de reprogrammation atteinte ({max_reschedules} maximum). Veuillez confirmer le rendez-vous proposé."
+        )
+        return redirect_back(request, 'dashboard:requester')
+    
     if alt_date:
         from datetime import datetime as dt
         from core.models import RequestComment
@@ -320,24 +415,33 @@ def suggest_alternative_date(request, pk):
         except ValueError:
             messages.error(request, "Date invalide.")
             return redirect_back(request, 'dashboard:requester')
-        # Store the alternative date on the request
-        req.alt_date_proposed = parsed_date
-        req.alt_date_note = alt_note
-        req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
-        # Also log as comment for audit trail
-        RequestComment.objects.create(
-            request=req, author=request.user,
-            text=f"Date alternative proposée: {alt_date}. {alt_note}".strip(),
-            step=req.status
-        )
-        # Notify the assigned analyst
-        if req.assigned_to:
-            Notification.objects.create(
-                user=req.assigned_to.user,
-                message=f"{req.display_id}: Date alternative proposée — {parsed_date.strftime('%d/%m/%Y')}",
-                request=req,
-                notification_type='WORKFLOW',
+
+        if parsed_date < timezone.localdate():
+            messages.error(request, "La date alternative ne peut pas être dans le passé.")
+            return redirect_back(request, 'dashboard:requester')
+        
+        with transaction.atomic():
+            # TODO: Clarifier avec le PO : pour IBTIKAR, faut-il introduire un état explicite
+            # APPOINTMENT_RESCHEDULING_REQUESTED (comme GENOCLAB) ou garder le flux actuel
+            # sans transition dédiée ? Comportement conservé tel quel pour éviter une régression.
+            req.reschedule_count += 1
+            req.save(update_fields=['reschedule_count'])
+            
+            req.alt_date_proposed = parsed_date
+            req.alt_date_note = alt_note
+            req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
+            RequestComment.objects.create(
+                request=req, author=request.user,
+                text=f"Date alternative proposée: {alt_date}. {alt_note} (attempt {req.reschedule_count}/{max_reschedules})".strip(),
+                step=req.status
             )
+            if req.assigned_to:
+                Notification.objects.create(
+                    user=req.assigned_to.user,
+                    message=f"{req.display_id}: Date alternative proposée — {parsed_date.strftime('%d/%m/%Y')}",
+                    request=req,
+                    notification_type='WORKFLOW',
+                )
         messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
     return redirect_back(request, 'dashboard:requester')
 

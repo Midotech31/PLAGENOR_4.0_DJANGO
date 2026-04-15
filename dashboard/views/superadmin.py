@@ -5,16 +5,18 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
-from django.db.models import Count, Q, Avg
+from django.db import transaction
+from django.db.models import Count, Q, Avg, Max
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.conf import settings
 from dashboard.decorators import superadmin_required
+from dashboard.forms import HomepageSectionForm, HomepageBlockForm
 
 logger = logging.getLogger('plagenor')
 
 from accounts.models import User, MemberProfile, Technique
-from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField, PaymentSettings
+from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField, PDFFormField, PaymentSettings, Homepage, HomepageSection, HomepageBlock
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
 from core.registry import get_service_def
@@ -486,215 +488,168 @@ def service_edit(request, pk):
 
 
 @superadmin_required
-def service_fields_reset(request, pk):
-    """Reset/restore form fields for a service to default values."""
-    from core.models import ServiceFormField
+def service_field_move(request, pk, field_id, direction):
+    """Move a ServiceFormField up/down within its category by swapping positions."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+
+    service = get_object_or_404(Service, pk=pk)
+    field = get_object_or_404(ServiceFormField, pk=field_id, service=service)
+
+    ordered_fields = list(
+        ServiceFormField.objects.filter(
+            service=service,
+            field_category=field.field_category,
+        ).order_by('order', 'sort_order', 'pk')
+    )
+
+    if len(ordered_fields) <= 1:
+        return redirect('dashboard:superadmin_service_edit', pk=pk)
+
+    field_ids = [f.pk for f in ordered_fields]
+    try:
+        current_index = field_ids.index(field.pk)
+    except ValueError:
+        return redirect('dashboard:superadmin_service_edit', pk=pk)
+
+    if direction == 'up':
+        target_index = current_index - 1
+    elif direction == 'down':
+        target_index = current_index + 1
+    else:
+        messages.error(request, _('Direction de déplacement invalide.'))
+        return redirect('dashboard:superadmin_service_edit', pk=pk)
+
+    if target_index < 0 or target_index >= len(ordered_fields):
+        return redirect('dashboard:superadmin_service_edit', pk=pk)
+
+    ordered_fields[current_index], ordered_fields[target_index] = ordered_fields[target_index], ordered_fields[current_index]
+
+    with transaction.atomic():
+        for idx, form_field in enumerate(ordered_fields):
+            if form_field.order != idx:
+                form_field.order = idx
+                form_field.save(update_fields=['order'])
+
+    messages.success(request, _('Ordre des champs mis à jour.'))
+    return redirect('dashboard:superadmin_service_edit', pk=pk)
+
+
+@superadmin_required
+def reset_service_fields(request, pk):
+    """Reset/restore form fields for a service using a template."""
+    from core.models import ServiceFieldTemplate
     service = get_object_or_404(Service, pk=pk)
     
+    templates = ServiceFieldTemplate.objects.filter(is_active=True).order_by('-is_default_for_new', 'name')
+    
     if request.method == 'POST':
-        # Delete existing form fields
-        service.form_fields.all().delete()
-        
-        # Restore based on service code
-        field_defs = get_default_service_fields(service.code)
-        
-        for field_data in field_defs:
-            ServiceFormField.objects.create(
-                service=service,
-                field_category=field_data.get('field_category', 'sample_table'),
-                name=field_data['name'],
-                label=field_data.get('label', field_data['name']),
-                label_fr=field_data.get('label_fr', field_data.get('label', field_data['name'])),
-                label_en=field_data.get('label_en', field_data.get('label', field_data['name'])),
-                field_type=field_data.get('field_type', 'text'),
-                options=field_data.get('options', []),
-                choices_json=field_data.get('options', []),
-                order=field_data.get('order', 0),
-                sort_order=field_data.get('order', 0),
-                required=field_data.get('required', False),
-                help_text=field_data.get('help_text', ''),
-                help_text_fr=field_data.get('help_text_fr', ''),
-                help_text_en=field_data.get('help_text_en', ''),
-            )
-        
-        messages.success(request, f"Champs du service {service.name} restaurés.")
+        template_id = request.POST.get('template_id')
+        if template_id:
+            template = get_object_or_404(ServiceFieldTemplate, pk=template_id, is_active=True)
+            template.apply_to_service(service)
+            messages.success(request, f"Champs restaurés depuis le modèle '{template.name}' pour {service.name}.")
+        else:
+            messages.error(request, "Veuillez sélectionner un modèle.")
+            return redirect('dashboard:superadmin_service_fields_reset', pk=pk)
         return redirect('dashboard:superadmin_service_edit', pk=pk)
     
     return render(request, 'dashboard/superadmin/service_fields_reset.html', {
         'service': service,
+        'templates': templates,
     })
 
 
-def get_default_service_fields(service_code):
-    """Return default form field definitions for each service."""
-    fields_map = {
-        'EGTP-IMT': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'organism', 'label': 'Type microorganisme', 'label_fr': 'Type de microorganisme (Bactérie, levure, moisissure)', 'label_en': 'Microorganism Type', 'order': 2},
-                {'name': 'isolation', 'label': 'Source isolement', 'label_fr': "Source d'isolement (environnementale, alimentaire, clinique, etc.)", 'label_en': 'Isolation Source', 'order': 3},
-                {'name': 'isolation_date', 'label': 'Date isolement', 'label_fr': "Date d'isolement", 'label_en': 'Isolation Date', 'order': 4},
-                {'name': 'culture_medium', 'label': 'Milieu culture', 'label_fr': 'Milieu de culture approprié', 'label_en': 'Culture Medium', 'order': 5},
-                {'name': 'culture_conditions', 'label': 'Conditions culture', 'label_fr': 'Conditions de culture (Température, type respiratoire, durée incubation)', 'label_en': 'Culture Conditions', 'order': 6},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 7},
-            ],
-            'additional_info': [
-                {'name': 'fresh_cultures', 'label': 'Cultures fraîches', 'label_fr': 'Fourniture de cultures fraîches', 'label_en': 'Fresh Cultures Supplied', 'field_type': 'dropdown', 'options': ['Oui', 'Non'], 'order': 0},
-                {'name': 'maldi_target', 'label': 'Cible MALDI', 'label_fr': 'Type de cible MALDI-TOF', 'label_en': 'MALDI-TOF Target Type', 'field_type': 'dropdown', 'options': ['Usage unique obligatoire pour pathogènes'], 'order': 1},
-                {'name': 'analysis_mode', 'label': 'Mode analyse', 'label_fr': "Mode d'analyse", 'label_en': 'Analysis Mode', 'field_type': 'dropdown', 'options': ['Simple', 'Duplicata', 'Triplicata'], 'order': 2},
-            ],
-        },
-        'EGTP-CAN': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'origin', 'label': 'Origine', 'label_fr': 'Origine des acides nucleiques', 'label_en': 'Nucleic Acid Origin', 'order': 2},
-                {'name': 'nucleic_type', 'label': 'Type', 'label_fr': "Type d'acides nucleiques (plasmidique, chromosomique)", 'label_en': 'Nucleic Acid Type', 'order': 3},
-                {'name': 'extraction', 'label': 'Méthode extraction', 'label_fr': "Méthode d'extraction utilisée", 'label_en': 'Extraction Method Used', 'order': 4},
-                {'name': 'extraction_date', 'label': 'Date extraction', 'label_fr': "Date de l'extraction", 'label_en': 'Extraction Date', 'order': 5},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 6},
-            ],
-            'additional_info': [
-                {'name': 'qc_techniques', 'label': 'Techniques QC', 'label_fr': 'Techniques de contrôle qualité souhaitées', 'label_en': 'Requested QC Techniques', 'field_type': 'dropdown', 'options': [], 'order': 0},
-                {'name': 'gel_percentage', 'label': '% agarose', 'label_fr': "Pourcentage de gel d'agarose souhaité (si demandé)", 'label_en': 'Desired Agarose Gel Percentage', 'field_type': 'text', 'order': 1},
-                {'name': 'size_marker', 'label': 'Marqueur', 'label_fr': "Marqueur de taille pour l'électrophorèse", 'label_en': 'Size Marker for Electrophoresis', 'field_type': 'dropdown', 'options': [], 'order': 2},
-            ],
-        },
-        'EGTP-Seq02': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'type', 'label': "Type d'échantillon", 'label_fr': "Type d'échantillon (Sang, bactérie, tissu animal…)", 'label_en': 'Sample Type (Blood, bacteria, animal tissue...)', 'order': 2},
-                {'name': 'date', 'label': 'Date de prélèvement', 'label_fr': 'Date de prélèvement', 'label_en': 'Sampling Date', 'order': 3},
-                {'name': 'volume', 'label': 'Volume/Quantité', 'label_fr': 'Volume (µl) / Quantité (g)', 'label_en': 'Volume (µl) / Quantity (g)', 'order': 4},
-                {'name': 'storage', 'label': 'Conditions de stockage', 'label_fr': 'Condition de stockage', 'label_en': 'Storage Conditions', 'order': 5},
-                {'name': 'state', 'label': "État de l'échantillon", 'label_fr': "État de l'échantillon", 'label_en': 'Sample State', 'order': 6},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 7},
-            ],
-            'additional_info': [
-                {'name': 'extraction_method', 'label': 'Méthode extraction', 'label_fr': "Méthode d'extraction souhaitée", 'label_en': 'Requested Extraction Method', 'field_type': 'dropdown', 'options': ['Méthode classique', 'Kit commercial'], 'order': 0},
-                {'name': 'pcr_kit', 'label': 'Kit PCR', 'label_fr': 'Type de kit de PCR', 'label_en': 'PCR Kit Type', 'field_type': 'dropdown', 'options': [], 'order': 1},
-                {'name': 'qc_techniques', 'label': 'Techniques QC', 'label_fr': 'Techniques de contrôle qualité souhaitées', 'label_en': 'Requested QC Techniques', 'field_type': 'dropdown', 'options': [], 'order': 2},
-                {'name': 'size_marker', 'label': 'Marqueur taille', 'label_fr': 'Marqueur de taille pour électrophorèse', 'label_en': 'Size Marker for Electrophoresis', 'field_type': 'dropdown', 'options': [], 'order': 3},
-                {'name': 'reading_direction', 'label': 'Sens lecture', 'label_fr': 'Sens de lecture souhaité', 'label_en': 'Requested Reading Direction', 'field_type': 'checkbox', 'options': ['Forward', 'Reverse', 'Les deux sens'], 'order': 4},
-            ],
-        },
-        'EGTP-SeqS': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'gene', 'label': 'Nom du gène', 'label_fr': 'Nom du gène', 'label_en': 'Gene Name', 'order': 2},
-                {'name': 'gene_size', 'label': 'Taille gène (pb)', 'label_fr': 'Taille du gène (pb)', 'label_en': 'Gene Size (bp)', 'order': 3},
-                {'name': 'origin', 'label': 'Source', 'label_fr': "Source/origine de l'échantillon", 'label_en': 'Sample Origin', 'order': 4},
-                {'name': 'primers', 'label': 'Séquences amorces', 'label_fr': "Séquences des amorces utilisées (5'→3')", 'label_en': "Primer Sequences (5'→3')", 'order': 5},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 6},
-            ],
-            'additional_info': [
-                {'name': 'sample_type', 'label': 'Type échantillon', 'label_fr': "Type d'échantillon soumis", 'label_en': 'Submitted Sample Type', 'field_type': 'checkbox', 'options': ["Produit de réaction BigDye", "Produit de PCR purifié", "Produit de PCR non purifié", 'Autre'], 'order': 0},
-                {'name': 'supplies', 'label': 'Consommables', 'label_fr': 'Consommables fournis par le demandeur', 'label_en': 'Supplies Provided by Requester', 'field_type': 'text', 'order': 1},
-                {'name': 'reading_direction', 'label': 'Sens lecture', 'label_fr': 'Sens de lecture souhaité', 'label_en': 'Requested Reading Direction', 'field_type': 'checkbox', 'options': ['Forward', 'Reverse', 'Les deux sens'], 'order': 2},
-                {'name': 'amplification_kit', 'label': 'Kit amplification', 'label_fr': "Kit d'amplification utilisé", 'label_en': 'Amplification Kit Used', 'field_type': 'text', 'order': 3},
-                {'name': 'qc_results', 'label': 'Résultats QC', 'label_fr': 'Résultats du contrôle de qualité des PCR', 'label_en': 'PCR QC Results', 'field_type': 'textarea', 'order': 4},
-            ],
-        },
-        'EGTP-GDE': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'type', 'label': 'Type échantillon', 'label_fr': "Type d'échantillon (Sang, bactérie, tissu animal…)", 'label_en': 'Sample Type', 'order': 2},
-                {'name': 'date', 'label': 'Date de prélèvement', 'label_fr': 'Date de prélèvement', 'label_en': 'Sampling Date', 'order': 3},
-                {'name': 'volume', 'label': 'Volume/Quantité', 'label_fr': 'Volume (µl) / Quantité (g)', 'label_en': 'Volume/Quantity', 'order': 4},
-                {'name': 'storage', 'label': 'Conditions stockage', 'label_fr': 'Condition de stockage', 'label_en': 'Storage Conditions', 'order': 5},
-                {'name': 'state', 'label': "État échantillon", 'label_fr': "État de l'échantillon", 'label_en': 'Sample State', 'order': 6},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 7},
-            ],
-            'additional_info': [
-                {'name': 'extraction_method', 'label': 'Méthode extraction', 'label_fr': "Méthode d'extraction souhaitée", 'label_en': 'Requested Extraction Method', 'field_type': 'dropdown', 'options': ['Méthode classique', 'Kit commercial'], 'order': 0},
-                {'name': 'qc_techniques', 'label': 'Techniques QC', 'label_fr': 'Techniques de contrôle qualité souhaitées', 'label_en': 'Requested QC Techniques', 'field_type': 'dropdown', 'options': [], 'order': 1},
-                {'name': 'desired_volume', 'label': 'Volume souhaité', 'label_fr': "Volume d'ADN souhaité récupérer après extraction", 'label_en': 'Desired DNA Volume After Extraction', 'field_type': 'text', 'order': 2},
-            ],
-        },
-        'EGTP-PCR': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'dna_origin', 'label': 'Origine ADN', 'label_fr': "Origine de l'ADN", 'label_en': 'DNA Origin', 'order': 2},
-                {'name': 'dna_type', 'label': 'Type ADN', 'label_fr': "Type de l'ADN (plasmidique, chromosomique…)", 'label_en': 'DNA Type', 'order': 3},
-                {'name': 'extraction', 'label': 'Méthode extraction', 'label_fr': "Méthode de l'extraction d'ADN", 'label_en': 'DNA Extraction Method', 'order': 4},
-                {'name': 'target_gene', 'label': 'Gène cible', 'label_fr': 'Gène cible', 'label_en': 'Target Gene', 'order': 5},
-                {'name': 'amplicon_size', 'label': 'Taille amplicon', 'label_fr': "Taille de l'amplicon", 'label_en': 'Amplicon Size', 'order': 6},
-                {'name': 'primers', 'label': 'Séquences amorces', 'label_fr': "Séquences des amorces utilisées (5'→3')", 'label_en': 'Primer Sequences', 'order': 7},
-                {'name': 'tm', 'label': 'Tm (°C)', 'label_fr': 'Tm (°C)', 'label_en': 'Tm (°C)', 'order': 8},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 9},
-            ],
-            'additional_info': [
-                {'name': 'pcr_kit', 'label': 'Kit PCR', 'label_fr': 'Type de kit PCR', 'label_en': 'PCR Kit Type', 'field_type': 'dropdown', 'options': [], 'order': 0},
-                {'name': 'qc_techniques', 'label': 'Techniques QC', 'label_fr': 'Techniques de contrôle qualité souhaitées', 'label_en': 'Requested QC Techniques', 'field_type': 'dropdown', 'options': [], 'order': 1},
-                {'name': 'size_marker', 'label': 'Marqueur', 'label_fr': "Marqueur de taille pour l'électrophorèse", 'label_en': 'Size Marker for Electrophoresis', 'field_type': 'dropdown', 'options': [], 'order': 2},
-                {'name': 'pcr_volume', 'label': 'Volume PCR', 'label_fr': 'Volume du produit de PCR à récupérer après amplification', 'label_en': 'PCR Product Volume to Recover', 'field_type': 'text', 'order': 3},
-            ],
-        },
-        'EGTP-PS': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'fr', 'label': 'F/R', 'label_fr': 'F/R', 'label_en': 'F/R', 'order': 1},
-                {'name': 'name', 'label': 'Nom amorce', 'label_fr': "Nom de l'amorce", 'label_en': 'Primer Name', 'order': 2},
-                {'name': 'size', 'label': 'Taille (pb)', 'label_fr': 'Taille (pb)', 'label_en': 'Size (bp)', 'order': 3},
-                {'name': 'sequence', 'label': 'Séquence', 'label_fr': "Séquence nucléotidique (5'→3')", 'label_en': "Nucleotide Sequence (5'→3')", 'order': 4},
-                {'name': 'gene', 'label': 'Gène cible', 'label_fr': 'Nom du Gène ciblé', 'label_en': 'Target Gene Name', 'order': 5},
-                {'name': 'accession', 'label': 'N° accession', 'label_fr': "N° d'accession du Gène", 'label_en': 'Gene Accession No.', 'order': 6},
-                {'name': 'gc', 'label': '% GC', 'label_fr': '% GC', 'label_en': '% GC', 'order': 7},
-                {'name': 'tm', 'label': 'Tm (°C)', 'label_fr': 'Tm (°C)', 'label_en': 'Tm (°C)', 'order': 8},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 9},
-            ],
-            'additional_info': [
-                {'name': 'physical_state', 'label': 'État physique', 'label_fr': 'État physique souhaité pour recevoir les amorces', 'label_en': 'Desired Physical State for Primers', 'field_type': 'dropdown', 'options': ["Lyophilisé", "Dissous dans l'eau", "Dissous dans TE"], 'order': 0},
-                {'name': 'final_volume', 'label': 'Volume final', 'label_fr': 'Volume final à récupérer pour chaque amorce (µL)', 'label_en': 'Final Volume per Primer (µL)', 'field_type': 'text', 'order': 1},
-                {'name': 'concentration', 'label': 'Concentration', 'label_fr': 'concentration souhaitée', 'label_en': 'Desired Concentration', 'field_type': 'text', 'order': 2},
-            ],
-        },
-        'EGTP-Illumina-Microbial-WGS': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'organism', 'label': 'Type microorganisme', 'label_fr': 'Type de microorganisme (Bactérie, levure, moisissure)', 'label_en': 'Microorganism Type', 'order': 2},
-                {'name': 'isolation', 'label': 'Source isolement', 'label_fr': "Source d'isolement (environnementale, alimentaire, clinique, etc.)", 'label_en': 'Isolation Source', 'order': 3},
-                {'name': 'culture_medium', 'label': 'Milieu culture', 'label_fr': 'Milieu de culture approprié', 'label_en': 'Appropriate Culture Medium', 'order': 4},
-                {'name': 'culture_conditions', 'label': 'Conditions culture', 'label_fr': 'Conditions de culture (Température, type respiratoire, durée incubation)', 'label_en': 'Culture Conditions', 'order': 5},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 6},
-            ],
-            'additional_info': [
-                {'name': 'file_format', 'label': 'Format fichiers', 'label_fr': 'Format fichiers livrés', 'label_en': 'Delivered File Format', 'field_type': 'text', 'options': ['FASTQ'], 'order': 0},
-                {'name': 'delivery_method', 'label': 'Livraison', 'label_fr': 'Support de livraison', 'label_en': 'Delivery Method', 'field_type': 'text', 'options': ['Téléchargement via plateforme sécurisée'], 'order': 1},
-            ],
-        },
-        'EGTP-Lyoph': {
-            'sample_table': [
-                {'name': 'id', 'label': 'N°', 'label_fr': 'N°', 'label_en': 'No.', 'order': 0},
-                {'name': 'code', 'label': 'Code', 'label_fr': 'Code', 'label_en': 'Code', 'order': 1},
-                {'name': 'type', 'label': 'Type échantillon', 'label_fr': "Type de l'échantillon (Bactérie, plantes…)", 'label_en': 'Sample Type', 'order': 2},
-                {'name': 'volume', 'label': 'Volume/Poids', 'label_fr': 'Volume/poids initial (ml/g)', 'label_en': 'Initial Volume/Weight', 'order': 3},
-                {'name': 'dessiccation', 'label': 'Niveau dessiccation', 'label_fr': 'Niveau de dessiccation (primaire/secondaire)', 'label_en': 'Dessiccation Level', 'order': 4},
-                {'name': 'storage', 'label': 'Stockage initial', 'label_fr': 'Conditions de stockage initiales', 'label_en': 'Initial Storage Conditions', 'order': 5},
-                {'name': 'notes', 'label': 'Remarques', 'label_fr': 'Remarques particulières', 'label_en': 'Special Notes', 'order': 6},
-            ],
-            'additional_info': [],
-        },
-    }
-    
-    result = []
-    service_fields = fields_map.get(service_code, {})
-    for cat, fields in service_fields.items():
-        for f in fields:
-            f_copy = f.copy()
-            f_copy['field_category'] = cat
-            result.append(f_copy)
-    return result
+@superadmin_required
+def field_templates_list(request):
+    """List all field templates."""
+    from core.models import ServiceFieldTemplate
+    templates = ServiceFieldTemplate.objects.all().order_by('-is_default_for_new', 'name')
+    return render(request, 'dashboard/superadmin/field_templates_list.html', {
+        'templates': templates,
+    })
 
-    return render(request, 'dashboard/superadmin/service_edit.html', {
+
+@superadmin_required
+def field_template_create(request):
+    """Create a new field template from an existing service."""
+    from core.models import ServiceFieldTemplate
+    
+    services = Service.objects.filter(is_active=True).order_by('name')
+    
+    if request.method == 'POST':
+        template_name = request.POST.get('name', '').strip()
+        template_description = request.POST.get('description', '').strip()
+        source_service_id = request.POST.get('source_service')
+        is_default = request.POST.get('is_default_for_new') == 'on'
+        
+        if not template_name:
+            messages.error(request, "Le nom du modèle est requis.")
+            return redirect('dashboard:superadmin_field_template_create')
+        
+        if source_service_id:
+            source_service = get_object_or_404(Service, pk=source_service_id)
+            template = ServiceFieldTemplate.create_from_service(
+                service=source_service,
+                name=template_name,
+                description=template_description,
+            )
+            template.created_by = request.user.member
+            template.is_default_for_new = is_default
+            template.save()
+            messages.success(request, f"Modèle '{template_name}' créé depuis {source_service.name}.")
+        else:
+            template = ServiceFieldTemplate.objects.create(
+                name=template_name,
+                description=template_description,
+                fields=[],
+                applicable_services=[],
+                is_default_for_new=is_default,
+                created_by=request.user.member if hasattr(request.user, 'member') else None,
+            )
+            messages.success(request, f"Modèle '{template_name}' créé (vide).")
+        
+        return redirect('dashboard:superadmin_field_templates')
+    
+    return render(request, 'dashboard/superadmin/field_template_create.html', {
+        'services': services,
+    })
+
+
+@superadmin_required
+def field_template_apply(request, pk, service_pk):
+    """Apply a field template to a service."""
+    from core.models import ServiceFieldTemplate
+    
+    template = get_object_or_404(ServiceFieldTemplate, pk=pk, is_active=True)
+    service = get_object_or_404(Service, pk=service_pk)
+    
+    if request.method == 'POST':
+        template.apply_to_service(service)
+        messages.success(request, f"Modèle '{template.name}' appliqué à {service.name}.")
+        return redirect('dashboard:superadmin_service_edit', pk=service_pk)
+    
+    return render(request, 'dashboard/superadmin/field_template_apply.html', {
+        'template': template,
         'service': service,
-        'form_fields': form_fields,
+    })
+
+
+@superadmin_required
+def field_template_delete(request, pk):
+    """Delete a field template."""
+    from core.models import ServiceFieldTemplate
+    
+    template = get_object_or_404(ServiceFieldTemplate, pk=pk)
+    
+    if request.method == 'POST':
+        template_name = template.name
+        template.delete()
+        messages.success(request, f"Modèle '{template_name}' supprimé.")
+        return redirect('dashboard:superadmin_field_templates')
+    
+    return render(request, 'dashboard/superadmin/field_template_delete.html', {
+        'template': template,
     })
 
 
@@ -1142,11 +1097,411 @@ def assign_request_direct(request, pk):
 
 
 # =============================================================================
+# HOMEPAGE CMS MANAGER
+# =============================================================================
+
+@login_required
+@superadmin_required
+def homepage_manager(request):
+    homepage = Homepage.get_active()
+    sections = homepage.sections.prefetch_related('blocks').order_by('position', 'pk')
+    return render(request, 'dashboard/superadmin/homepage_manager.html', {
+        'homepage': homepage,
+        'sections': sections,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_section_add(request):
+    homepage = Homepage.get_active()
+    if request.method == 'POST':
+        form = HomepageSectionForm(request.POST, request.FILES)
+        if form.is_valid():
+            section = form.save(commit=False)
+            section.homepage = homepage
+            section.updated_by = request.user
+            section.save()
+            messages.success(request, _('Section ajoutée avec succès.'))
+            return redirect('dashboard:superadmin_homepage_manager')
+        messages.error(request, _('Veuillez corriger les erreurs du formulaire.'))
+    else:
+        next_position = (homepage.sections.aggregate(max_pos=Max('position')).get('max_pos') or 0) + 10
+        form = HomepageSectionForm(initial={'position': next_position, 'is_active': True})
+
+    return render(request, 'dashboard/superadmin/homepage_section_form.html', {
+        'form': form,
+        'section': None,
+        'is_edit': False,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_section_edit(request, pk):
+    section = get_object_or_404(HomepageSection, pk=pk)
+    if request.method == 'POST':
+        form = HomepageSectionForm(request.POST, request.FILES, instance=section)
+        if form.is_valid():
+            section_obj = form.save(commit=False)
+            section_obj.updated_by = request.user
+            section_obj.save()
+            messages.success(request, _('Section mise à jour avec succès.'))
+            return redirect('dashboard:superadmin_homepage_manager')
+        messages.error(request, _('Veuillez corriger les erreurs du formulaire.'))
+    else:
+        form = HomepageSectionForm(instance=section)
+
+    return render(request, 'dashboard/superadmin/homepage_section_form.html', {
+        'form': form,
+        'section': section,
+        'is_edit': True,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_section_delete(request, pk):
+    section = get_object_or_404(HomepageSection, pk=pk)
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    section.delete()
+    messages.success(request, _('Section supprimée avec succès.'))
+    return redirect('dashboard:superadmin_homepage_manager')
+
+
+@login_required
+@superadmin_required
+def homepage_section_toggle(request, pk):
+    section = get_object_or_404(HomepageSection, pk=pk)
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    section.is_active = not section.is_active
+    section.updated_by = request.user
+    section.save(update_fields=['is_active', 'updated_by', 'updated_at'])
+    messages.success(request, _('Section mise à jour.'))
+    return redirect('dashboard:superadmin_homepage_manager')
+
+
+@login_required
+@superadmin_required
+def homepage_blocks_manager(request, pk):
+    section = get_object_or_404(HomepageSection, pk=pk)
+    blocks = section.blocks.order_by('position', 'pk')
+    return render(request, 'dashboard/superadmin/homepage_blocks_manager.html', {
+        'section': section,
+        'blocks': blocks,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_block_add(request, section_id):
+    section = get_object_or_404(HomepageSection, pk=section_id)
+    if request.method == 'POST':
+        form = HomepageBlockForm(request.POST, request.FILES)
+        if form.is_valid():
+            block = form.save(commit=False)
+            block.section = section
+            block.updated_by = request.user
+            block.save()
+            messages.success(request, _('Bloc ajouté avec succès.'))
+            return redirect('dashboard:superadmin_homepage_blocks_manager', pk=section.pk)
+        messages.error(request, _('Veuillez corriger les erreurs du formulaire.'))
+    else:
+        next_position = (section.blocks.aggregate(max_pos=Max('position')).get('max_pos') or 0) + 10
+        form = HomepageBlockForm(initial={'position': next_position, 'is_active': True, 'cta_style': 'primary'})
+
+    return render(request, 'dashboard/superadmin/homepage_block_form.html', {
+        'form': form,
+        'section': section,
+        'block': None,
+        'is_edit': False,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_block_edit(request, pk):
+    block = get_object_or_404(HomepageBlock, pk=pk)
+    if request.method == 'POST':
+        form = HomepageBlockForm(request.POST, request.FILES, instance=block)
+        if form.is_valid():
+            block_obj = form.save(commit=False)
+            block_obj.updated_by = request.user
+            block_obj.save()
+            messages.success(request, _('Bloc mis à jour avec succès.'))
+            return redirect('dashboard:superadmin_homepage_blocks_manager', pk=block.section.pk)
+        messages.error(request, _('Veuillez corriger les erreurs du formulaire.'))
+    else:
+        form = HomepageBlockForm(instance=block)
+
+    return render(request, 'dashboard/superadmin/homepage_block_form.html', {
+        'form': form,
+        'section': block.section,
+        'block': block,
+        'is_edit': True,
+    })
+
+
+@login_required
+@superadmin_required
+def homepage_block_delete(request, pk):
+    block = get_object_or_404(HomepageBlock, pk=pk)
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    section_pk = block.section.pk
+    block.delete()
+    messages.success(request, _('Bloc supprimé avec succès.'))
+    return redirect('dashboard:superadmin_homepage_blocks_manager', pk=section_pk)
+
+
+@login_required
+@superadmin_required
+def homepage_block_toggle(request, pk):
+    block = get_object_or_404(HomepageBlock, pk=pk)
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    block.is_active = not block.is_active
+    block.updated_by = request.user
+    block.save(update_fields=['is_active', 'updated_by', 'updated_at'])
+    messages.success(request, _('Bloc mis à jour.'))
+    return redirect('dashboard:superadmin_homepage_blocks_manager', pk=block.section.pk)
+
+
+@login_required
+@superadmin_required
+def homepage_reorder_sections(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    for key, value in request.POST.items():
+        if key.startswith('position_'):
+            section_id = key.replace('position_', '')
+            try:
+                section = HomepageSection.objects.get(pk=section_id)
+                section.position = int(value)
+                section.updated_by = request.user
+                section.save(update_fields=['position', 'updated_by', 'updated_at'])
+            except (HomepageSection.DoesNotExist, ValueError, TypeError):
+                continue
+    messages.success(request, _('Ordre des sections mis à jour.'))
+    return redirect('dashboard:superadmin_homepage_manager')
+
+
+@login_required
+@superadmin_required
+def homepage_reorder_blocks(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    section = get_object_or_404(HomepageSection, pk=pk)
+    for key, value in request.POST.items():
+        if key.startswith('position_'):
+            block_id = key.replace('position_', '')
+            try:
+                block = HomepageBlock.objects.get(pk=block_id, section=section)
+                block.position = int(value)
+                block.updated_by = request.user
+                block.save(update_fields=['position', 'updated_by', 'updated_at'])
+            except (HomepageBlock.DoesNotExist, ValueError, TypeError):
+                continue
+    messages.success(request, _('Ordre des blocs mis à jour.'))
+    return redirect('dashboard:superadmin_homepage_blocks_manager', pk=section.pk)
+
+
+# =============================================================================
 # PAYMENT SETTINGS (Finance/Invoice Configuration)
 # =============================================================================
 
+@login_required
+@superadmin_required
+def pdf_fields_manager(request):
+    fields = PDFFormField.objects.select_related('service').order_by('pdf_target', 'order', 'pk')
+    services = Service.objects.filter(active=True).order_by('code')
+    return render(request, 'dashboard/superadmin/pdf_fields_manager.html', {
+        'pdf_fields': fields,
+        'services': services,
+        'pdf_targets': PDFFormField.PDF_TARGETS,
+        'scope_types': PDFFormField.SCOPE_TYPES,
+        'field_kinds': PDFFormField.FIELD_KINDS,
+    })
+
+
+@login_required
+@superadmin_required
+def pdf_field_create(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+
+    pdf_target = request.POST.get('pdf_target', 'ibtikar_form')
+    scope_type = request.POST.get('scope_type', 'global')
+    service_id = request.POST.get('service') or None
+    service = Service.objects.filter(pk=service_id).first() if service_id else None
+
+    if scope_type == 'service' and not service:
+        messages.error(request, _('Veuillez sélectionner un service pour un champ spécifique.'))
+        return redirect('dashboard:superadmin_pdf_fields')
+
+    if scope_type == 'global':
+        service = None
+
+    order_value = request.POST.get('order', '').strip()
+    if order_value:
+        try:
+            order = int(order_value)
+        except ValueError:
+            order = 0
+    else:
+        qs = PDFFormField.objects.filter(pdf_target=pdf_target, scope_type=scope_type, service=service)
+        order = (qs.aggregate(Max('order')).get('order__max') or 0) + 1
+
+    field = PDFFormField(
+        pdf_target=pdf_target,
+        scope_type=scope_type,
+        service=service,
+        name=request.POST.get('name', '').strip(),
+        label_fr=request.POST.get('label_fr', '').strip(),
+        label_en=request.POST.get('label_en', '').strip(),
+        field_kind=request.POST.get('field_kind', 'text_line'),
+        default_value=request.POST.get('default_value', ''),
+        order=order,
+        is_active=request.POST.get('is_active') == 'on',
+    )
+
+    options_raw = request.POST.get('options', '').strip()
+    if options_raw:
+        try:
+            import json
+            field.options = json.loads(options_raw)
+        except Exception:
+            messages.error(request, _('Le JSON options est invalide.'))
+            return redirect('dashboard:superadmin_pdf_fields')
+
+    try:
+        field.full_clean()
+        field.save()
+        messages.success(request, _('Champ PDF ajouté.'))
+    except Exception as exc:
+        messages.error(request, str(exc))
+
+    return redirect('dashboard:superadmin_pdf_fields')
+
+
+@login_required
+@superadmin_required
+def pdf_field_update(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+
+    field = get_object_or_404(PDFFormField, pk=pk)
+    field.pdf_target = request.POST.get('pdf_target', field.pdf_target)
+    field.scope_type = request.POST.get('scope_type', field.scope_type)
+
+    service_id = request.POST.get('service') or None
+    service = Service.objects.filter(pk=service_id).first() if service_id else None
+    field.service = service if field.scope_type == 'service' else None
+
+    field.name = request.POST.get('name', field.name).strip()
+    field.label_fr = request.POST.get('label_fr', field.label_fr).strip()
+    field.label_en = request.POST.get('label_en', field.label_en).strip()
+    field.field_kind = request.POST.get('field_kind', field.field_kind)
+    field.default_value = request.POST.get('default_value', field.default_value)
+    field.is_active = request.POST.get('is_active') == 'on'
+
+    order_value = request.POST.get('order', '').strip()
+    if order_value:
+        try:
+            field.order = int(order_value)
+        except ValueError:
+            pass
+
+    options_raw = request.POST.get('options', '').strip()
+    if options_raw:
+        try:
+            import json
+            field.options = json.loads(options_raw)
+        except Exception:
+            try:
+                import ast
+                parsed = ast.literal_eval(options_raw)
+                field.options = parsed if isinstance(parsed, dict) else {}
+            except Exception:
+                messages.error(request, _('Le JSON options est invalide.'))
+                return redirect('dashboard:superadmin_pdf_fields')
+    else:
+        field.options = {}
+
+    try:
+        field.full_clean()
+        field.save()
+        messages.success(request, _('Champ PDF mis à jour.'))
+    except Exception as exc:
+        messages.error(request, str(exc))
+
+    return redirect('dashboard:superadmin_pdf_fields')
+
+
+@login_required
+@superadmin_required
+def pdf_field_toggle(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    field = get_object_or_404(PDFFormField, pk=pk)
+    field.is_active = not field.is_active
+    field.save(update_fields=['is_active', 'updated_at'])
+    messages.success(request, _('État du champ PDF mis à jour.'))
+    return redirect('dashboard:superadmin_pdf_fields')
+
+
+@login_required
+@superadmin_required
+def pdf_field_delete(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    field = get_object_or_404(PDFFormField, pk=pk)
+    field.delete()
+    messages.success(request, _('Champ PDF supprimé.'))
+    return redirect('dashboard:superadmin_pdf_fields')
+
+
+@login_required
+@superadmin_required
+def pdf_field_move(request, pk, direction):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+
+    field = get_object_or_404(PDFFormField, pk=pk)
+    siblings = list(
+        PDFFormField.objects.filter(
+            pdf_target=field.pdf_target,
+            scope_type=field.scope_type,
+            service=field.service,
+        ).order_by('order', 'pk')
+    )
+    ids = [f.pk for f in siblings]
+    idx = ids.index(field.pk)
+
+    if direction == 'up':
+        tgt = idx - 1
+    elif direction == 'down':
+        tgt = idx + 1
+    else:
+        tgt = idx
+
+    if 0 <= tgt < len(siblings):
+        siblings[idx], siblings[tgt] = siblings[tgt], siblings[idx]
+        for pos, obj in enumerate(siblings):
+            if obj.order != pos:
+                obj.order = pos
+                obj.save(update_fields=['order', 'updated_at'])
+
+    messages.success(request, _('Ordre des champs PDF mis à jour.'))
+    return redirect('dashboard:superadmin_pdf_fields')
+
+
+@login_required
 @superadmin_required
 def payment_settings(request):
+
     """
     Configure payment settings for GENOCLAB invoices.
     These settings are used to auto-fill invoices and payment instructions.

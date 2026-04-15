@@ -517,7 +517,6 @@ def populate_service_form_fields(apps, schema_editor):
     # Create ServiceFormField records
     for service_code, data in service_data.items():
         if service_code not in services:
-            print(f"WARNING: Service '{service_code}' not found in database. Skipping ServiceFormField population.")
             continue
         
         service = services[service_code]

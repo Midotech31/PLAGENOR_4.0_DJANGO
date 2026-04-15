@@ -1,0 +1,89 @@
+{% load static %}
+<section class="section" style="background:#f8fafc; padding:48px 0;">
+    <div style="max-width:1100px; margin:0 auto; text-align:center; padding:0 32px;">
+        <style>
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-6px); }
+            }
+            .cms-partners-row {
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:40px;
+                flex-wrap:nowrap;
+                overflow-x:auto;
+                padding:8px 4px 14px;
+                scrollbar-width:thin;
+            }
+            .cms-partner-logo {
+                flex:0 0 auto;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                min-width:150px;
+                opacity:0.92;
+                animation: float 3s ease-in-out infinite;
+                transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+            }
+            .cms-partner-logo:nth-child(2) { animation-delay: 0.5s; }
+            .cms-partner-logo:nth-child(3) { animation-delay: 1s; }
+            .cms-partner-logo:nth-child(4) { animation-delay: 1.5s; }
+            .cms-partner-logo:nth-child(5) { animation-delay: 2s; }
+            .cms-partner-logo:hover {
+                opacity:1;
+                transform: translateY(-4px);
+                box-shadow: 0 10px 18px rgba(15, 23, 42, 0.16);
+            }
+            .cms-partner-caption {
+                margin-top:8px;
+                font-size:0.75rem;
+                letter-spacing:0.05em;
+                color:#64748b;
+                white-space:nowrap;
+            }
+            .cms-partner-placeholder {
+                width:150px;
+                height:70px;
+                border:1px dashed #94a3b8;
+                border-radius:10px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:0.75rem;
+                color:#475569;
+                background:#ffffff;
+            }
+            @media (max-width: 768px) {
+                .cms-partners-row { justify-content:flex-start; gap:24px; }
+            }
+        </style>
+        <h3 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:3px; color:#94a3b8; margin-bottom:28px; font-weight:500;">{{ section.title }}</h3>
+        {% if section.description %}<p class="section-subtitle">{{ section.description }}</p>{% endif %}
+        <div class="cms-partners-row">
+            {% for block in section.blocks.all %}
+                {% if block.block_type == 'logo' %}
+                    {% if block.link_url %}<a href="{{ block.link_url }}" target="_blank" rel="noopener" class="cms-partner-logo">{% else %}<div class="cms-partner-logo">{% endif %}
+                        {% if block.title == 'ESSBO' %}
+                        <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="height:70px; width:auto; object-fit:contain;">
+                        {% elif block.title == 'IBTIKAR-DGRSDT' or block.title == 'IBTIKAR' %}
+                        <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR-DGRSDT" style="height:62px; width:auto; object-fit:contain;">
+                        {% elif block.title == 'GENOCLAB' %}
+                        <img src="{% static 'images/genoclab_logo.png' %}" alt="GENOCLAB" style="height:68px; width:auto; object-fit:contain;">
+                        {% elif block.title == 'PLAGENOR' %}
+                        <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="height:84px; width:auto; object-fit:contain;">
+                        {% elif block.title == 'DGRSDT' %}
+                        <img src="{% static 'images/dgrsdt_logo.png' %}" alt="DGRSDT" style="height:64px; width:auto; object-fit:contain;">
+                        {% elif block.image %}
+                        <img src="{{ block.image.url }}" alt="{{ block.image_alt|default:block.payload.image_alt|default:block.title }}" style="height:70px; width:auto; object-fit:contain;">
+                        {% else %}
+                        <div class="cms-partner-placeholder">{{ block.title|default:block.payload.name }}</div>
+                        {% endif %}
+                        <span class="cms-partner-caption">{{ block.title|default:block.payload.name }}</span>
+                    {% if block.link_url %}</a>{% else %}</div>{% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

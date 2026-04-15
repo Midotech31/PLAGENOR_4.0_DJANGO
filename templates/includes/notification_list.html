@@ -1,36 +1,35 @@
 {% load i18n %}
 {% load notification_icons %}
 {% if notifications %}
-<div class="card">
-    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>{% trans "Notifications" %}</h3>
-        <div style="display:flex; align-items:center; gap:12px;">
-            <span class="badge-status info">{{ notifications|length }}</span>
-            <form method="post" action="{% url 'notifications:mark_all_read' %}" style="display:inline;">
+<div class="card card-sm">
+    <div class="card-header">
+        <h3 class="text-sm font-semibold">{% trans "Notifications" %}</h3>
+        <div class="flex items-center gap-3">
+            <span class="badge badge-info">{{ notifications|length }}</span>
+            <form method="post" action="{% url 'notifications:mark_all_read' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline" style="font-size:0.8rem;">{% trans "Tout marquer comme lu" %}</button>
+                <button type="submit" class="btn btn-secondary btn-sm">
+                    {% trans "Tout marquer comme lu" %}
+                </button>
             </form>
         </div>
     </div>
-    <div class="card-body" style="padding:0;">
+    <div class="card-body" style="padding: 0;">
         {% for notif in notifications %}
-        <a href="{% url 'notifications:click' notif.pk %}" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-bottom:1px solid var(--slate-100, #f1f5f9); text-decoration:none; color:inherit; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
-            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-                <!-- Type-specific notification icon -->
-                <div style="flex-shrink:0; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:{{ notif|notification_icon_color }}15; color:{{ notif|notification_icon_color }};">
-                    {{ notif|notification_icon|safe }}
-                </div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:0.9rem; color:#1e293b; {% if not notif.read %}font-weight:600;{% endif %}">{{ notif.message }}</div>
-                    {% if notif.request %}
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">{{ notif.request.service.name|default:"" }}</div>
-                    {% endif %}
-                </div>
+        <a href="{% url 'notifications:click' notif.pk %}" class="flex items-center gap-4 px-4 py-3 text-decoration-none transition hover:bg-gray-50 {% if not notif.read %}bg-teal-50 border-l-2 border-primary{% endif %}">
+            <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style="background:{{ notif|notification_icon_color }}15; color:{{ notif|notification_icon_color }};">
+                {{ notif|notification_icon|safe }}
             </div>
-            <div style="flex-shrink:0; text-align:right;">
-                <span class="text-xs text-muted">{{ notif.created_at|timesince }} {% trans "ago" %}</span>
-                <div style="margin-top:2px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px;"><polyline points="9 18 15 12 9 6"/></svg>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-900 {% if not notif.read %}font-semibold{% endif %}">{{ notif.message }}</p>
+                {% if notif.request %}<p class="text-xs text-gray-400 mt-0.5">{{ notif.request.service.name|default:"" }}</p>{% endif %}
+            </div>
+            <div class="flex-shrink-0 text-right">
+                <p class="text-xs text-gray-400">{{ notif.created_at|timesince }}</p>
+                <div class="mt-1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-3.5 h-3.5 text-gray-300 ml-auto">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
                 </div>
             </div>
         </a>

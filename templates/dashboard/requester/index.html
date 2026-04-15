@@ -24,13 +24,26 @@
 <!-- IBTIKAR Budget Card -->
 {% if budget_context %}
 <div class="kpi-grid" style="margin-top: 16px;">
-    {% trans "Budget déclaré" as lbl_declared %}
-    {% trans "Engagé" as lbl_committed %}
+    {% trans "Solde IBTIKAR déclaré" as lbl_declared %}
+    {% trans "Consommé sur PLAGENOR" as lbl_consumed %}
     {% trans "Disponible" as lbl_available %}
+    {% trans "Plafond" as lbl_cap %}
     {% include 'includes/kpi_card.html' with icon='wallet' value=budget_context.declared|default:0 label=lbl_declared color='purple' %}
-    {% include 'includes/kpi_card.html' with icon='credit-card' value=budget_context.budget_used label=lbl_committed color='orange' %}
-    {% include 'includes/kpi_card.html' with icon='piggy-bank' value=budget_context.budget_remaining label=lbl_available color='green' %}
+    {% include 'includes/kpi_card.html' with icon='trending-up' value=budget_context.budget_used label=lbl_consumed color='orange' %}
+    {% include 'includes/kpi_card.html' with icon='piggy-bank' value=budget_context.available|default:budget_context.budget_remaining label=lbl_available color='green' %}
+    {% include 'includes/kpi_card.html' with icon='shield' value=budget_context.budget_cap label=lbl_cap color='blue' %}
 </div>
+{% if budget_context.consumption_since_declaration > 0 %}
+<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px; margin-top:8px; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span style="color:#92400e;">
+        <strong>Consommation PLAGENOR:</strong> {{ budget_context.consumption_since_declaration|floatformat:0 }} DA depuis votre dernière déclaration. 
+        <strong>Budget disponible:</strong> {{ budget_context.available|floatformat:0 }} DA.
+    </span>
+</div>
+{% endif %}
 {% endif %}
 
     <!-- Tab Navigation -->
@@ -44,14 +57,14 @@
         </div>
 
     <!-- New Request -->
-    <div x-show="tab === 'new'">
+    <div x-show="tab === 'new'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande IBTIKAR" %}</h3></div>
             <div class="card-body">
-                <form method="post" action="{% url 'dashboard:requester_create' %}">
+                <form method="post" action="{% url 'dashboard:requester_create' %}" data-channel="IBTIKAR">
                     {% csrf_token %}
                     <div class="form-group">
-                        <select name="service_id" class="form-control" required>
+                        <select name="service_id" class="form-control" required data-channel="IBTIKAR">
                             <option value="">{% trans "Service" %} *</option>
                             {% for s in services %}
                             <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
@@ -95,12 +108,33 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="declared_balance" style="font-weight: 500;">{% trans "Budget IBTIKAR restant (DA)" %} *</label>
-                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000" required placeholder="{% trans 'Entrez votre budget restant' %}">
-                            <small class="text-muted" style="display: block; margin-top: 4px;">{% trans "Entrez votre budget restant tel qu'affiché sur votre compte IBTIKAR-DGRSDT" %}</small>
+                            <label for="declared_balance" style="font-weight: 500;">
+                                {% trans "Solde IBTIKAR restant (DA)" %} *
+                                <span style="font-weight: normal; color:#6b7280; font-size:0.8rem;"> — {% trans "Champ obligatoire pour le canal IBTIKAR" %}</span>
+                            </label>
+                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="{{ budget_context.declared|default:'200000'|floatformat:0 }}" min="0" max="200000" required placeholder="{% trans 'Entrez votre budget restant sur IBTIKAR-DGRSDT' %}">
+                            <small class="text-muted" style="display: block; margin-top: 4px;">{% trans "Entrez le solde exact affiché sur votre espace IBTIKAR-DGRSDT" %}</small>
                         </div>
                     </div>
+                    
+                    <!-- Budget Status Display -->
+                    <div id="budget-status-display" style="display:none; padding:12px; border-radius:8px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span id="budget-status-label" style="font-weight:600;"></span>
+                            <span id="budget-available-display" style="font-weight:700;"></span>
+                        </div>
+                        <div style="height:6px; border-radius:3px; overflow:hidden; margin-bottom:6px;">
+                            <div id="budget-usage-bar" style="height:100%; border-radius:3px; transition:width 0.3s;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#6b7280;">
+                            <span>Coût estimé: <strong id="cost-display-inline">—</strong> DA</span>
+                            <span>Disponible: <strong id="available-display-inline">—</strong> DA</span>
+                        </div>
+                    </div>
+                    
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
+                    </div>
+                    <div id="budget-success" style="display:none; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; color:#065f46; margin-bottom:12px; font-size:0.9rem;">
                     </div>
                     <button type="button" id="btn-submit-request" class="btn btn-primary" onclick="showFormPreview(this.closest('form'))">{% trans "Vérifier et soumettre" %}</button>
                 </form>
@@ -109,31 +143,115 @@
                     var serviceSelect = document.querySelector('select[name="service_id"]');
                     var balanceInput = document.getElementById('declared_balance');
                     var warning = document.getElementById('budget-warning');
+                    var success = document.getElementById('budget-success');
                     var submitBtn = document.getElementById('btn-submit-request');
-
+                    var budgetDisplay = document.getElementById('budget-status-display');
+                    var budgetStatusLabel = document.getElementById('budget-status-label');
+                    var budgetAvailableDisplay = document.getElementById('budget-available-display');
+                    var budgetUsageBar = document.getElementById('budget-usage-bar');
+                    var costDisplayInline = document.getElementById('cost-display-inline');
+                    var availableDisplayInline = document.getElementById('available-display-inline');
+                    
+                    // Pre-fill declared balance from context if available
+                    var initialDeclared = {{ budget_context.declared|default:'200000'|floatformat:0 }};
+                    var initialConsumption = {{ budget_context.consumption_since_declaration|default:0|floatformat:0 }};
+                    var calculatedAvailable = Math.max(0, initialDeclared - initialConsumption);
+                    
+                    if (balanceInput && !balanceInput.value) {
+                        balanceInput.value = initialDeclared;
+                    }
+                    
+                    function updateBudgetDisplay(estimated, balance, available) {
+                        if (!budgetDisplay) return;
+                        
+                        budgetDisplay.style.display = 'block';
+                        
+                        // Update inline displays
+                        if (costDisplayInline) costDisplayInline.textContent = estimated > 0 ? estimated.toLocaleString('fr-FR') : '—';
+                        if (availableDisplayInline) availableDisplayInline.textContent = available.toLocaleString('fr-FR');
+                        if (budgetAvailableDisplay) budgetAvailableDisplay.textContent = available.toLocaleString('fr-FR') + ' DA';
+                        
+                        // Calculate percentage
+                        var pct = balance > 0 ? Math.min(100, (estimated / available) * 100) : 0;
+                        
+                        if (estimated > available && estimated > 0) {
+                            // EXCEEDED
+                            budgetDisplay.style.background = '#fef2f2';
+                            budgetDisplay.style.borderColor = '#fecaca';
+                            budgetStatusLabel.textContent = '⚠️ Budget dépassé';
+                            budgetStatusLabel.style.color = '#dc2626';
+                            budgetAvailableDisplay.style.color = '#dc2626';
+                            budgetUsageBar.style.background = '#dc2626';
+                            budgetUsageBar.style.width = '100%';
+                            
+                            if (warning) {
+                                warning.innerHTML = '<strong>Budget insuffisant!</strong> Coût estimé: ' + estimated.toLocaleString('fr-FR') + ' DA, Budget disponible: ' + available.toLocaleString('fr-FR') + ' DA.<br><em>Réduisez le nombre d\'échantillons ou changez le type d\'analyse pour respecter votre budget.</em>';
+                                warning.style.display = 'block';
+                            }
+                            if (success) success.style.display = 'none';
+                            if (submitBtn) submitBtn.disabled = true;
+                        } else if (estimated > 0) {
+                            // OK
+                            var remainingPct = Math.max(0, 100 - pct);
+                            budgetDisplay.style.background = '#f0fdf4';
+                            budgetDisplay.style.borderColor = '#bbf7d0';
+                            budgetStatusLabel.textContent = '✓ Budget suffisant';
+                            budgetStatusLabel.style.color = '#065f46';
+                            budgetAvailableDisplay.style.color = '#059669';
+                            budgetUsageBar.style.background = remainingPct > 30 ? '#059669' : (remainingPct > 10 ? '#f59e0b' : '#dc2626');
+                            budgetUsageBar.style.width = Math.min(100, pct) + '%';
+                            
+                            if (warning) warning.style.display = 'none';
+                            if (success) {
+                                success.innerHTML = '<strong>Budget OK!</strong> Coût estimé: ' + estimated.toLocaleString('fr-FR') + ' DA, Budget disponible: ' + available.toLocaleString('fr-FR') + ' DA.';
+                                success.style.display = 'block';
+                            }
+                            if (submitBtn) submitBtn.disabled = false;
+                        } else {
+                            // No estimate yet
+                            budgetDisplay.style.background = '#f8fafc';
+                            budgetDisplay.style.borderColor = '#e2e8f0';
+                            budgetStatusLabel.textContent = 'Budget IBTIKAR';
+                            budgetStatusLabel.style.color = '#475569';
+                            budgetAvailableDisplay.style.color = '#475569';
+                            budgetUsageBar.style.background = '#e2e8f0';
+                            budgetUsageBar.style.width = '0%';
+                            if (warning) warning.style.display = 'none';
+                            if (success) success.style.display = 'none';
+                        }
+                    }
+                    
                     function checkBudget() {
-                        if (!serviceSelect || !balanceInput || !warning) return;
+                        if (!serviceSelect || !balanceInput) return;
                         var opt = serviceSelect.options[serviceSelect.selectedIndex];
-                        if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
+                        if (!opt || !opt.value) { 
+                            if (warning) warning.style.display = 'none';
+                            if (budgetDisplay) budgetDisplay.style.display = 'none';
+                            if (submitBtn) submitBtn.disabled = false; 
+                            return; 
+                        }
                         var balance = parseFloat(balanceInput.value) || 0;
+                        
                         // Read the actual computed cost from the cost-estimate element
                         var costEl = document.getElementById('cost-estimate');
                         var estimated = 0;
                         if (costEl && costEl.textContent && costEl.textContent !== '—') {
                             estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
                         }
+                        
+                        // Calculate available: declared - consumption_since_declaration
+                        // We use the initial values for client-side approximation
+                        var available = Math.max(0, balance - initialConsumption);
 
                         if (balance < 0 || balance > 200000) {
-                            warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
-                            warning.style.display = 'block';
-                            submitBtn.disabled = true;
-                        } else if (estimated > 0 && estimated > balance) {
-                            warning.innerHTML = '{% trans "Attention: le coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "dépasse votre solde déclaré" %} (' + balance.toLocaleString('fr-FR') + ' DA).';
-                            warning.style.display = 'block';
-                            submitBtn.disabled = true;
+                            if (warning) {
+                                warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
+                                warning.style.display = 'block';
+                            }
+                            if (submitBtn) submitBtn.disabled = true;
+                            if (budgetDisplay) budgetDisplay.style.display = 'none';
                         } else {
-                            warning.style.display = 'none';
-                            submitBtn.disabled = false;
+                            updateBudgetDisplay(estimated, balance, available);
                         }
                     }
 
@@ -141,6 +259,9 @@
                     if (balanceInput) balanceInput.addEventListener('input', checkBudget);
                     // Re-check when cost estimate updates
                     document.addEventListener('costUpdated', checkBudget);
+                    
+                    // Initial check
+                    checkBudget();
                 })();
                 </script>
             </div>
@@ -148,7 +269,7 @@
     </div>
 
     <!-- My Requests -->
-    <div x-show="tab === 'requests'">
+    <div x-show="tab === 'requests'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Mes demandes actives" %}</h3></div>
             <div class="card-body">
@@ -165,7 +286,7 @@
                     <div class="data-card-row mt-1">
                         {% url 'dashboard:requester_request_detail' req.pk as request_detail_url %}
                         {% if request_detail_url %}
-                        <a href="{{ request_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        <a href="{{ request_detail_url }}" class="btn btn-secondary btn-sm">{% trans "Voir détails" %}</a>
                         {% endif %}
                     </div>
                     {% if req.assigned_to %}
@@ -178,14 +299,14 @@
                     <!-- IBTIKAR post-validation workflow -->
                     {% if req.channel == 'IBTIKAR' %}
                     {% if req.status == 'IBTIKAR_SUBMISSION_PENDING' or req.status == 'IBTIKAR_CODE_SUBMITTED' %}
-                    {% url 'documents:ibtikar_form' req.pk as ibkformurl %}
+                    {% url 'documents:ibtikar_form_pdf' req.pk as ibkformurl %}
                     {% url 'dashboard:requester_ibtikar_code' req.pk as ibkcodeurl %}
                     {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=req ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
                     {% else %}
-                    {% url 'documents:ibtikar_form' req.pk as ibk_dl_url %}
+                    {% url 'documents:ibtikar_form_pdf' req.pk as ibk_dl_url %}
                     {% if ibk_dl_url %}
                     <div class="data-card-row mt-1" style="gap: 0.5rem;">
-                        <a href="{{ ibk_dl_url }}" class="btn btn-sm btn-outline">{% trans "Formulaire IBTIKAR" %}</a>
+                        <a href="{{ ibk_dl_url }}" target="_blank" class="btn btn-secondary btn-sm">{% trans "Formulaire IBTIKAR" %}</a>
                     </div>
                     {% endif %}
                     {% endif %}
@@ -202,14 +323,14 @@
                             {% if confirm_appt_url %}
                             <form method="post" action="{{ confirm_appt_url }}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer ce RDV" %}</button>
+                                <button type="submit" class="btn btn-primary btn-sm">{% trans "Confirmer ce RDV" %}</button>
                             </form>
                             {% endif %}
                             {% url 'dashboard:requester_alt_date' req.pk as alt_date_url %}
                             {% if alt_date_url %}
                             <form method="post" action="{{ alt_date_url }}" style="display:inline;" x-data="{ showAlt: false }">
                                 {% csrf_token %}
-                                <button type="button" class="btn btn-sm btn-outline" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
+                                <button type="button" class="btn btn-secondary btn-sm" @click="showAlt = !showAlt">{% trans "Proposer une autre date" %}</button>
                                 <div x-show="showAlt" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                                     <div>
                                         <label class="text-sm">{% trans "Date souhaitée" %}</label>
@@ -219,7 +340,7 @@
                                         <label class="text-sm">{% trans "Message" %}</label>
                                         <input type="text" name="alt_note" class="form-control" placeholder="{% trans 'Raison du changement...' %}" style="font-size:0.85rem; width:200px;">
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Envoyer" %}</button>
                                 </div>
                             </form>
                             {% endif %}
@@ -231,7 +352,7 @@
                         {% if confirm_appt_url2 %}
                         <form method="post" action="{{ confirm_appt_url2 }}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer RDV" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Confirmer RDV" %}</button>
                         </form>
                         {% endif %}
                     </div>
@@ -249,17 +370,17 @@
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s|in_list:'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                            <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s|in_list:'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                         </div>
-                        <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                        <div class="pipeline-line{% if s|in_list:'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                             <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -275,17 +396,27 @@
                             <strong style="color:#065f46;">{% trans "Votre rapport est prêt" %}</strong>
                         </div>
                         {% if req.report_file %}
-                        {% url 'dashboard:requester_confirm' req.pk as requester_confirm_url %}
-                        {% if requester_confirm_url %}
-                        <form method="post" action="{{ requester_confirm_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                {% trans "Télécharger le rapport et confirmer la réception" %}
-                            </button>
-                        </form>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            {% url 'dashboard:requester_post_download' req.pk as requester_post_download_url %}
+                            {% if requester_post_download_url %}
+                            <a href="{{ requester_post_download_url }}" class="btn btn-success">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                {% trans "Télécharger le rapport" %}
+                            </a>
+                            {% endif %}
+                            {% url 'dashboard:requester_confirm' req.pk as requester_confirm_url %}
+                            {% if requester_confirm_url %}
+                            <form method="post" action="{{ requester_confirm_url }}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% trans "Confirmer la réception" %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                         {% endif %}
-                        {% endif %}
+
                     </div>
                     {% endif %}
 
@@ -309,7 +440,7 @@
                             </div>
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                 <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px; font-size:0.85rem;">
-                                <button type="submit" class="btn btn-primary" style="padding:8px 20px;">{% trans "Envoyer" %}</button>
+                                <button type="submit" class="btn btn-primary">{% trans "Envoyer" %}</button>
                             </div>
                         </form>
                         {% endif %}
@@ -328,7 +459,7 @@
     </div>
 
     <!-- Archives -->
-    <div x-show="tab === 'archives'">
+    <div x-show="tab === 'archives'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Archives" %}</h3></div>
             <div class="card-body">
@@ -365,7 +496,7 @@
     </div>
 
     <!-- Profile -->
-    <div x-show="tab === 'profile'">
+    <div x-show="tab === 'profile'" x-cloak>
         <div class="card" style="max-width: 900px; margin: 0 auto;">
             <div class="card-header">
                 <h3>{% trans "Mon Profil" %}</h3>
@@ -446,14 +577,14 @@
 
                 <!-- Quick Links -->
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
                         {% trans "Modifier mon profil" %}
                     </a>
-                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -466,7 +597,7 @@
     </div>
 
     <!-- Notifications -->
-    <div x-show="tab === 'notifs'">
+    <div x-show="tab === 'notifs'" x-cloak>
         {% include 'includes/notification_list.html' %}
         {% if not notifications %}
         <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>

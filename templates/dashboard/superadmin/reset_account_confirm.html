@@ -9,7 +9,7 @@
         <h1 class="page-title">{% trans "Réinitialiser le compte" %}</h1>
         <p class="page-subtitle">{{ target_user.get_full_name|default:target_user.username }}</p>
     </div>
-    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-secondary">{% trans "Annuler" %}</a>
 </div>
 
 <div class="card" style="max-width: 520px; margin: 0 auto;">
@@ -64,7 +64,7 @@
                     </svg>
                     {% trans "Réinitialiser le compte" %}
                 </button>
-                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline" style="flex:1;text-align:center;">{% trans "Annuler" %}</a>
+                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-secondary" style="flex:1;text-align:center;">{% trans "Annuler" %}</a>
             </div>
         </form>
     </div>

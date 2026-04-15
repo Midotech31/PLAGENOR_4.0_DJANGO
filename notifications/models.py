@@ -15,6 +15,13 @@ class Notification(models.Model):
         ('DOCUMENT_READY', 'Document Ready'),
         ('REWARD', 'Reward/Gift'),
         ('POINTS', 'Points'),
+        ('MESSAGE', 'Message'),
+        ('REMINDER', 'Reminder'),
+        ('REMINDER_ESCALATION', 'Reminder Escalation'),
+        ('OBSERVER', 'Observer Notification'),
+        ('POKE', 'Admin Poke'),
+        ('INVOICE_READY', 'Invoice Ready'),
+        ('INVOICE_DOWNLOADED', 'Invoice Downloaded'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')

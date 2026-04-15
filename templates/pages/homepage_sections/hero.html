@@ -1,0 +1,16 @@
+<section class="hero">
+    <div style="text-align:center; position:relative;">
+        <h1 style="font-size:3.5rem; font-weight:800; letter-spacing:-0.04em; margin-bottom:8px; line-height:1.05; font-family:var(--font-display); color:#fff;">{{ section.title }}</h1>
+        {% if section.subtitle %}<p style="font-size:1.15rem; opacity:0.88; font-weight:500; letter-spacing:0.01em; color:#fff;">{{ section.subtitle }}</p>{% endif %}
+    </div>
+    {% if section.description %}<p style="position:relative;">{{ section.description }}</p>{% endif %}
+    <div class="btn-group" style="position:relative;">
+        {% for block in section.blocks.all %}
+            {% if block.block_type == 'button' %}
+                <a href="{{ block.link_url|default:block.payload.link|default:'#' }}" class="btn {% if block.payload.style == 'primary' %}btn-primary{% else %}btn-secondary{% endif %} btn-lg">
+                    {{ block.title|default:block.payload.text|default:'Action' }}
+                </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>

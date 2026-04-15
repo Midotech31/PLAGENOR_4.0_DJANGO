@@ -1,3 +1,12 @@
+"""
+Canonical state graphs for PLAGENOR channels.
+
+Workflow map (high-level):
+- IBTIKAR and GENOCLAB each define strict, explicit next states.
+- Helpers expose allowed transitions, terminal checks, and compatibility utilities.
+- Any undefined edge is rejected to prevent incoherent workflow jumps.
+"""
+
 # core/state_machine.py — PLAGENOR 4.0 State Machine
 # STRICT transition matrices. No state jumps allowed.
 
@@ -20,11 +29,11 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
     "VALIDATION_FINANCE":       {"PLATFORM_NOTE_GENERATED", "REJECTED"},
     "PLATFORM_NOTE_GENERATED":  {"IBTIKAR_SUBMISSION_PENDING"},
     "IBTIKAR_SUBMISSION_PENDING": {"IBTIKAR_CODE_SUBMITTED"},
-    "IBTIKAR_CODE_SUBMITTED":   {"ASSIGNED"},
+    "IBTIKAR_CODE_SUBMITTED":   {"ASSIGNED", "PENDING_ACCEPTANCE"},
     "ASSIGNED":                 {"PENDING_ACCEPTANCE"},
     "PENDING_ACCEPTANCE":       {"ACCEPTED", "DECLINED"},
     "ACCEPTED":                 {"APPOINTMENT_PROPOSED"},
-    "DECLINED":                 {"IBTIKAR_CODE_SUBMITTED"},  # Returns for reassignment
+    "DECLINED":                 {"ASSIGNED"},
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
@@ -34,8 +43,9 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
     "REPORT_VALIDATED":         {"SENT_TO_REQUESTER"},
     "SENT_TO_REQUESTER":        {"COMPLETED"},
     "COMPLETED":                {"CLOSED"},
-    "CLOSED":                   set(),     # terminal
-    "REJECTED":                 set(),     # terminal
+    "CLOSED":                   set(),
+    "REJECTED":                 set(),
+    "ADMINISTRATIVELY_CLOSED":  set(),     # terminal - admin close from any status
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -53,28 +63,31 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "REQUEST_CREATED":          {"QUOTE_DRAFT", "REJECTED"},
     "QUOTE_DRAFT":              {"QUOTE_SENT", "REJECTED"},
     "QUOTE_SENT":               {"QUOTE_VALIDATED_BY_CLIENT", "QUOTE_REJECTED_BY_CLIENT"},
-    "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
-    "ORDER_UPLOADED":           {"ASSIGNED"},  # Admin assigns after order verified
-    "QUOTE_REJECTED_BY_CLIENT": set(),     # terminal
+    "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},
+    "ORDER_UPLOADED":           {"ASSIGNED", "PENDING_ACCEPTANCE"},
+    "QUOTE_REJECTED_BY_CLIENT": {"QUOTE_DRAFT"},
     "ASSIGNED":                 {"PENDING_ACCEPTANCE"},
     "PENDING_ACCEPTANCE":       {"ACCEPTED", "DECLINED"},
     "ACCEPTED":                 {"APPOINTMENT_PROPOSED"},
-    "DECLINED":                 {"ORDER_UPLOADED"},  # Returns for reassignment
+    "DECLINED":                 {"ASSIGNED"},
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED", "APPOINTMENT_RESCHEDULING_REQUESTED"},
     "APPOINTMENT_RESCHEDULING_REQUESTED": {"APPOINTMENT_PROPOSED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},
     "SAMPLE_RECEIVED":          {"ANALYSIS_STARTED"},
     "ANALYSIS_STARTED":         {"ANALYSIS_FINISHED"},
-    "ANALYSIS_FINISHED":        {"PAYMENT_PENDING"},  # Notify client to pay
-    "PAYMENT_PENDING":          {"PAYMENT_UPLOADED"},  # Client uploads receipt
-    "PAYMENT_UPLOADED":         {"PAYMENT_CONFIRMED"},  # Admin confirms payment
-    "PAYMENT_CONFIRMED":        {"REPORT_UPLOADED"},  # Member can upload report after payment
-    "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},  # Admin validates or requests revision
+    "ANALYSIS_FINISHED":        {"INVOICE_GENERATED"},
+    "INVOICE_GENERATED":        {"INVOICE_SENT"},
+    "INVOICE_SENT":             {"PAYMENT_PENDING"},
+    "PAYMENT_PENDING":          {"PAYMENT_UPLOADED"},
+    "PAYMENT_UPLOADED":         {"PAYMENT_CONFIRMED"},
+    "PAYMENT_CONFIRMED":        {"REPORT_UPLOADED", "PENDING_ACCEPTANCE"},
+    "REPORT_UPLOADED":          {"REPORT_VALIDATED", "ANALYSIS_STARTED"},
     "REPORT_VALIDATED":         {"SENT_TO_CLIENT"},
     "SENT_TO_CLIENT":           {"COMPLETED"},
     "COMPLETED":                {"ARCHIVED"},
-    "ARCHIVED":                 set(),     # terminal
-    "REJECTED":                 set(),     # terminal
+    "ARCHIVED":                 set(),
+    "REJECTED":                 set(),
+    "ADMINISTRATIVELY_CLOSED":  set(),     # terminal - admin close from any status
 }
 
 
@@ -120,6 +133,19 @@ def get_all_states(channel: str) -> list[str]:
     return list(graph.keys())
 
 
+TERMINAL_STATES: set[str] = {"CLOSED", "REJECTED", "ARCHIVED", "ADMINISTRATIVELY_CLOSED"}
+
+
+def is_terminal_state(state: str) -> bool:
+    """Check if a state is terminal (no further transitions possible)."""
+    return state in TERMINAL_STATES
+
+
+def get_terminal_states(channel: str) -> set[str]:
+    """Get all terminal states for a channel."""
+    return TERMINAL_STATES
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Acceptance Workflow Helpers
 # ═══════════════════════════════════════════════════════════════════════════
@@ -136,9 +162,9 @@ def get_decline_return_state(channel: str) -> str:
     """
     Returns the state to transition back to after a decline.
     This allows admin to reassign to another member.
+    
+    Note: With the new state machine where DECLINED → ASSIGNED,
+    the second transition is handled by the state machine.
+    This function is kept for backward compatibility.
     """
-    if channel == "IBTIKAR":
-        return "IBTIKAR_CODE_SUBMITTED"
-    elif channel == "GENOCLAB":
-        return "ORDER_UPLOADED"
-    raise InvalidTransitionError(f"Canal inconnu: {channel}")
+    return "ASSIGNED"

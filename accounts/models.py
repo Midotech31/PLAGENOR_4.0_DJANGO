@@ -426,7 +426,7 @@ class MemberProfile(models.Model):
             Notification.objects.create(
                 user=self.user,
                 message=f"🎁 Félicitations! Vous avez débloqué une nouvelle boîte de récompense! ({self.total_points} points)",
-                notification_type='reward',
+                notification_type='REWARD',
             )
         
         if save:

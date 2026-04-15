@@ -190,10 +190,10 @@
                 <span x-show="unreadCount > 0" class="notification-badge" x-text="unreadCount"></span>
             </div>
             
-            <div class="notification-dropdown" x-show="showNotifications" @click.away="showNotifications = false" x-transition>
+            <div class="notification-dropdown" x-show="showNotifications" @click.away="showNotifications = false" x-cloak x-transition>
                 <div style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                     <strong>{% trans "Notifications" %}</strong>
-                    <button @click="fetch('/dashboard/ops/notifications/', {method: 'POST', body: 'action=mark_all_read', headers: {'X-Requested-With': 'XMLHttpRequest'}}).then(() => { unreadCount = 0; notifications.forEach(n => n.read = true); });" class="btn btn-sm btn-outline">{% trans "Mark all as read" %}</button>
+                    <button @click="fetch('/dashboard/ops/notifications/', {method: 'POST', body: 'action=mark_all_read', headers: {'X-Requested-With': 'XMLHttpRequest'}}).then(() => { unreadCount = 0; notifications.forEach(n => n.read = true); });" class="btn btn-secondary">{% trans "Mark all as read" %}</button>
                 </div>
                 <div id="notification-list">
                     <!-- Loaded via JS -->
@@ -259,7 +259,7 @@
                 <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-primary">{% trans "Bulk Assign" %}</button>
+            <button type="submit" class="btn btn-primary">{% trans "Bulk Assign" %}</button>
         </form>
         <form method="post" action="{% url 'dashboard:admin_bulk_action' %}" style="display: inline-flex; gap: 8px; align-items: center;">
             {% csrf_token %}
@@ -270,13 +270,13 @@
                 <option value="{{ value }}">{{ label }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-outline">{% trans "Bulk Transition" %}</button>
+            <button type="submit" class="btn btn-secondary">{% trans "Bulk Transition" %}</button>
         </form>
-        <button onclick="clearBulkSelection()" class="btn btn-sm btn-danger">{% trans "Clear Selection" %}</button>
+        <button onclick="clearBulkSelection()" class="btn btn-danger-soft">{% trans "Clear Selection" %}</button>
     </div>
 
     <!-- Pending Requests -->
-    <div x-show="tab === 'pending'">
+    <div x-show="tab === 'pending'" x-cloak>
         <!-- Overdue Alerts Section (Task 6) -->
         {% if overdue_requests %}
         <div class="card mb-4" style="border: 2px solid #f59e0b; background: #fffbeb;">
@@ -297,7 +297,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -325,7 +325,7 @@
                         </div>
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -343,25 +343,25 @@
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="VALIDATION_PEDAGOGIQUE">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Pedagogical Validation" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Pedagogical Validation" %}</button>
                         </form>{% endif %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
                             <input type="hidden" name="notes" value="Rejected by admin">
-                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
+                            <button type="submit" class="btn btn-danger-soft">{% trans "Reject" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'VALIDATION_PEDAGOGIQUE' %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="VALIDATION_FINANCE">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Financial Validation" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Financial Validation" %}</button>
                         </form>{% endif %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
-                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
+                            <button type="submit" class="btn btn-danger-soft">{% trans "Reject" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'VALIDATION_FINANCE' %}
@@ -389,37 +389,37 @@
                                     <label class="text-sm" style="font-size:0.75rem;">{% trans "Justification" %}</label>
                                     <input type="text" name="cost_justification" placeholder="{% trans 'Reason for change...' %}" class="form-control" style="width:200px; font-size:0.85rem;">
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-outline">{% trans "Adjust" %}</button>
+                                <button type="submit" class="btn btn-secondary">{% trans "Adjust" %}</button>
                             </form>{% endif %}
                         </div>
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="PLATFORM_NOTE_GENERATED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Validate & Generate Note" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Validate & Generate Note" %}</button>
                         </form>{% endif %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
-                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
+                            <button type="submit" class="btn btn-danger-soft">{% trans "Reject" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'REQUEST_CREATED' %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="QUOTE_DRAFT">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Prepare Quote" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Prepare Quote" %}</button>
                         </form>{% endif %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="REJECTED">
-                            <button type="submit" class="btn btn-sm btn-danger">{% trans "Reject" %}</button>
+                            <button type="submit" class="btn btn-danger-soft">{% trans "Reject" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'QUOTE_DRAFT' %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="QUOTE_SENT">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Send Quote" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Send Quote" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'QUOTE_SENT' %}
@@ -429,18 +429,18 @@
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="INVOICE_GENERATED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Generate Invoice" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Generate Invoice" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'INVOICE_GENERATED' %}
                         {% if admin_gen_invoice_url %}<form method="post" action="{{ admin_gen_invoice_url }}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Download Invoice" %}</button>
+                            <button type="submit" class="btn btn-secondary">{% trans "Download Invoice" %}</button>
                         </form>{% endif %}
                         {% if admin_confirm_payment_url %}<form method="post" action="{{ admin_confirm_payment_url }}" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="file" name="payment_receipt" accept=".pdf,.jpg,.jpeg,.png" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirm Payment" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Confirm Payment" %}</button>
                         </form>{% endif %}
                         {% endif %}
                     </div>
@@ -462,7 +462,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
                     </div>
@@ -471,9 +471,9 @@
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        {% if admin_report_review_url %}<a href="{{ admin_report_review_url }}" class="btn btn-sm btn-primary">{% trans "Review Report" %}</a>{% endif %}
+                        {% if admin_report_review_url %}<a href="{{ admin_report_review_url }}" class="btn btn-primary inline-flex items-center gap-1">{% trans "Review Report" %}</a>{% endif %}
                         {% if req.report_file %}
-                        <a href="{{ req.report_file.url }}" class="btn btn-sm btn-outline" target="_blank">{% trans "Download" %}</a>
+                        <a href="{{ req.report_file.url }}" class="btn btn-secondary inline-flex items-center gap-1" target="_blank">{% trans "Download" %}</a>
                         {% endif %}
                     </div>
                 </div>
@@ -494,7 +494,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -508,7 +508,7 @@
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SENT_TO_REQUESTER">
-                            <button type="submit" class="btn btn-sm btn-primary">
+                            <button type="submit" class="btn btn-primary inline-flex items-center gap-1">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                                 {% trans "Send to Requester" %}
                             </button>
@@ -518,7 +518,7 @@
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="SENT_TO_CLIENT">
-                            <button type="submit" class="btn btn-sm btn-primary">
+                            <button type="submit" class="btn btn-primary inline-flex items-center gap-1">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                                 {% trans "Send to Client" %}
                             </button>
@@ -528,14 +528,14 @@
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="CLOSED">
-                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Close" %}</button>
+                            <button type="submit" class="btn btn-secondary">{% trans "Close" %}</button>
                         </form>{% endif %}
 
                         {% elif req.status == 'COMPLETED' and req.channel == 'GENOCLAB' %}
                         {% if admin_transition_url %}<form method="post" action="{{ admin_transition_url }}" class="ajax-form">
                             {% csrf_token %}
                             <input type="hidden" name="to_status" value="ARCHIVED">
-                            <button type="submit" class="btn btn-sm btn-outline">{% trans "Archive" %}</button>
+                            <button type="submit" class="btn btn-secondary">{% trans "Archive" %}</button>
                         </form>{% endif %}
                         {% endif %}
                     </div>
@@ -549,12 +549,12 @@
     </div>
 
     <!-- All Requests Tab with CSV Export and Bulk Validation -->
-    <div x-show="tab === 'all'">
+    <div x-show="tab === 'all'" x-cloak>
         <div class="card mb-4">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>{% trans "All Requests" %}</h3>
                 <div style="display: flex; gap: 8px;">
-                    <a href="{% url 'dashboard:admin_export_csv' %}?channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-sm btn-outline">
+                    <a href="{% url 'dashboard:admin_export_csv' %}?channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-secondary inline-flex items-center gap-1">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="7 10 12 15 17 10"/>
@@ -579,8 +579,8 @@
                         {% endfor %}
                     </select>
                     <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Search by ID or title...' %}" class="form-control" style="width: 250px;">
-                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
-                    <a href="{% url 'dashboard:admin_ops' %}?tab=all" class="btn btn-outline">{% trans "Clear" %}</a>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filter" %}</button>
+                    <a href="{% url 'dashboard:admin_ops' %}?tab=all" class="btn btn-secondary btn-sm">{% trans "Clear" %}</a>
                 </form>
 
                 {% for req in all_requests %}
@@ -592,7 +592,7 @@
                         </div>
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -609,11 +609,11 @@
                 {% if all_requests_paginator %}
                 <div class="pagination" style="margin-top: 20px;">
                     {% if all_requests.has_previous %}
-                    <a href="?tab=all&page={{ all_requests.previous_page_number }}&channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    <a href="?tab=all&page={{ all_requests.previous_page_number }}&channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-secondary">{% trans "Previous" %}</a>
                     {% endif %}
                     <span class="current">{% trans "Page" %} {{ all_requests.number }} {% trans "of" %} {{ all_requests.paginator.num_pages }}</span>
                     {% if all_requests.has_next %}
-                    <a href="?tab=all&page={{ all_requests.next_page_number }}&channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    <a href="?tab=all&page={{ all_requests.next_page_number }}&channel={{ channel_filter }}&status={{ status_filter }}&q={{ search_q }}" class="btn btn-secondary">{% trans "Next" %}</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -622,7 +622,7 @@
     </div>
 
     <!-- Assignment Tab -->
-    <div x-show="tab === 'assign'">
+    <div x-show="tab === 'assign'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Ready for Assignment" %}</h3></div>
             <div class="card-body">
@@ -634,7 +634,7 @@
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
                         <div>
-                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                            {% if admin_req_detail_url %}<a href="{{ admin_req_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                             <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
                             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
                         </div>
@@ -644,8 +644,8 @@
                         <span>{{ req.created_at|date:"d/m/Y H:i" }}</span>
                     </div>
                     <div style="margin:8px 0;">
-                        {% if documents_platform_note_url %}<a href="{{ documents_platform_note_url }}" class="btn btn-sm btn-outline" style="margin-bottom:8px;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        {% if documents_platform_note_url %}<a href="{{ documents_platform_note_url }}" class="btn btn-secondary btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             {% trans "Download Platform Note" %}
                         </a>{% endif %}
                     </div>
@@ -658,7 +658,7 @@
                                 <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
                                 {% endfor %}
                             </select>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Assign" %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Assign" %}</button>
                         </form>{% endif %}
                     </div>
                 </div>
@@ -670,7 +670,7 @@
     </div>
 
     <!-- Budget Tab -->
-    <div x-show="tab === 'budget'">
+    <div x-show="tab === 'budget'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Budget Overview" %}</h3></div>
             <div class="card-body">
@@ -689,7 +689,7 @@
     </div>
 
     <!-- Performance Tab -->
-    <div x-show="tab === 'performance'">
+    <div x-show="tab === 'performance'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Member Performance Ranking" %}</h3></div>
             <div class="card-body">
@@ -729,7 +729,7 @@
     </div>
 
     <!-- Reviews Tab -->
-    <div x-show="tab === 'ratings'">
+    <div x-show="tab === 'ratings'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Reviews & Ratings" %}</h3></div>
             <div class="card-body">
@@ -772,13 +772,13 @@
     </div>
 
     <!-- Reports Tab -->
-    <div x-show="tab === 'reports'">
+    <div x-show="tab === 'reports'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Reports" %}</h3></div>
             <div class="card-body">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                    <a href="{% url 'dashboard:admin_export_csv' %}" class="btn btn-outline" style="padding: 20px; text-align: center;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; margin: 0 auto 8px;">
+                    <a href="{% url 'dashboard:admin_export_csv' %}" class="btn btn-secondary flex flex-col items-center gap-2" style="padding: 20px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/>
@@ -787,8 +787,8 @@
                         </svg>
                         {% trans "Export Requests CSV" %}
                     </a>
-                    <a href="{% url 'dashboard:admin_activity_log' %}" class="btn btn-outline" style="padding: 20px; text-align: center;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; margin: 0 auto 8px;">
+                    <a href="{% url 'dashboard:admin_activity_log' %}" class="btn btn-secondary flex flex-col items-center gap-2" style="padding: 20px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
@@ -800,7 +800,7 @@
     </div>
 
     <!-- Activity Log Tab -->
-    <div x-show="tab === 'activity'">
+    <div x-show="tab === 'activity'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Activity Log" %}</h3></div>
             <div class="card-body">
@@ -818,8 +818,8 @@
                         <label style="font-size: 12px; color: #6b7280;">{% trans "To Date" %}</label>
                         <input type="date" name="activity_date_to" value="{{ activity_date_to }}" class="form-control">
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
-                    <a href="?tab=activity" class="btn btn-outline">{% trans "Clear" %}</a>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filter" %}</button>
+                    <a href="?tab=activity" class="btn btn-secondary btn-sm">{% trans "Clear" %}</a>
                 </form>
                 {% for entry in activity_logs %}
                 <div class="data-card mb-2" style="padding: 12px;">
@@ -841,11 +841,11 @@
                 {% if activity_paginator %}
                 <div class="pagination" style="margin-top: 16px;">
                     {% if activity_logs.has_previous %}
-                    <a href="?tab=activity&activity_page={{ activity_logs.previous_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    <a href="?tab=activity&activity_page={{ activity_logs.previous_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-secondary">{% trans "Previous" %}</a>
                     {% endif %}
                     <span class="current">{% trans "Page" %} {{ activity_logs.number }} {% trans "of" %} {{ activity_logs.paginator.num_pages }}</span>
                     {% if activity_logs.has_next %}
-                    <a href="?tab=activity&activity_page={{ activity_logs.next_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    <a href="?tab=activity&activity_page={{ activity_logs.next_page_number }}&activity_q={{ activity_search }}&activity_date_from={{ activity_date_from }}&activity_date_to={{ activity_date_to }}" class="btn btn-secondary">{% trans "Next" %}</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -854,7 +854,7 @@
     </div>
 
     <!-- Users Tab -->
-    <div x-show="tab === 'users'">
+    <div x-show="tab === 'users'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "User Oversight" %}</h3></div>
             <div class="card-body">
@@ -881,8 +881,8 @@
                             <option value="inactive" {% if user_status_filter == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
-                    <a href="?tab=users" class="btn btn-outline">{% trans "Clear" %}</a>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filter" %}</button>
+                    <a href="?tab=users" class="btn btn-secondary btn-sm">{% trans "Clear" %}</a>
                 </form>
                 <div style="overflow-x: auto;">
                     <table class="table" style="width: 100%;">
@@ -906,7 +906,7 @@
                                 <td>{{ user.date_joined|date:"d/m/Y" }}</td>
                                 <td>
                                     {% url 'dashboard:admin_user_detail' user.pk as admin_user_detail_url %}
-                                    {% if admin_user_detail_url %}<a href="{{ admin_user_detail_url }}" class="btn btn-sm btn-outline">{% trans "View" %}</a>{% endif %}
+                                    {% if admin_user_detail_url %}<a href="{{ admin_user_detail_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "View" %}</a>{% endif %}
                                 </td>
                             </tr>
                             {% empty %}
@@ -918,11 +918,11 @@
                 {% if users_paginator %}
                 <div class="pagination" style="margin-top: 16px;">
                     {% if users.has_previous %}
-                    <a href="?tab=users&users_page={{ users.previous_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    <a href="?tab=users&users_page={{ users.previous_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-secondary">{% trans "Previous" %}</a>
                     {% endif %}
                     <span class="current">{% trans "Page" %} {{ users.number }} {% trans "of" %} {{ users.paginator.num_pages }}</span>
                     {% if users.has_next %}
-                    <a href="?tab=users&users_page={{ users.next_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    <a href="?tab=users&users_page={{ users.next_page_number }}&user_q={{ user_search_q }}&user_role={{ user_role_filter }}&user_status={{ user_status_filter }}" class="btn btn-secondary">{% trans "Next" %}</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -931,7 +931,7 @@
     </div>
 
     <!-- Points System Tab -->
-    <div x-show="tab === 'points'">
+    <div x-show="tab === 'points'" x-cloak>
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Performance & Points Reward System" %}</h3></div>
             <div class="card-body">
@@ -953,8 +953,8 @@
                         <label style="font-size: 12px; color: #6b7280;">{% trans "Max Points" %}</label>
                         <input type="number" name="perf_max" value="{{ perf_max }}" class="form-control">
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
-                    <a href="?tab=points" class="btn btn-outline">{% trans "Clear" %}</a>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filter" %}</button>
+                    <a href="?tab=points" class="btn btn-secondary btn-sm">{% trans "Clear" %}</a>
                 </form>
                 {% for member_data in perf_members %}
                 <div class="data-card mb-3 member-row" x-data="{ showRewardPanel: false }">
@@ -983,14 +983,14 @@
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <!-- Award Points Button -->
-                            <button @click="showRewardPanel = !showRewardPanel" class="btn btn-sm btn-primary" title="{% trans 'Send Points / Cheers / Gift' %}">
+                            <button @click="showRewardPanel = !showRewardPanel" class="btn btn-primary inline-flex items-center gap-1" title="{% trans 'Send Points / Cheers / Gift' %}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
                                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                                 </svg>
                                 {% trans "Reward" %}
                             </button>
                             {% url 'dashboard:admin_member_points' member_data.member.pk as admin_member_points_url %}
-                            {% if admin_member_points_url %}<a href="{{ admin_member_points_url }}" class="btn btn-sm btn-outline">{% trans "Details" %}</a>{% endif %}
+                            {% if admin_member_points_url %}<a href="{{ admin_member_points_url }}" class="btn btn-secondary inline-flex items-center gap-1">{% trans "Details" %}</a>{% endif %}
                         </div>
                     </div>
 
@@ -1007,7 +1007,7 @@
                                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                         <input type="number" name="points" min="1" placeholder="{% trans 'Points' %}" class="form-control" style="width: 80px;" required>
                                         <input type="text" name="reason" placeholder="{% trans 'Reason (optional)' %}" class="form-control" style="flex: 1; min-width: 150px;">
-                                        <button type="submit" class="btn btn-sm btn-success">{% trans "Send" %}</button>
+                                        <button type="submit" class="btn btn-primary">{% trans "Send" %}</button>
                                     </div>
                                 </form>
                             </div>
@@ -1028,7 +1028,7 @@
                                             <option value="{% trans 'Thank you for your dedication!' %}">{% trans "Thank you for your dedication!" %}</option>
                                         </select>
                                         <input type="text" name="message" placeholder="{% trans 'Or type custom message...' %}" class="form-control" style="flex: 1; min-width: 150px;">
-                                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Send" %}</button>
+                                        <button type="submit" class="btn btn-primary">{% trans "Send" %}</button>
                                     </div>
                                 </form>
                             </div>
@@ -1041,7 +1041,7 @@
                                     {% csrf_token %}
                                     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                                         <input type="file" name="gift_image" accept="image/*" class="form-control" style="flex: 1; min-width: 200px; font-size: 0.85rem;" required>
-                                        <button type="submit" class="btn btn-sm" style="background: #f59e0b; color: white;">
+                                        <button type="submit" class="btn btn-warning inline-flex items-center gap-1">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                                 <polyline points="17 8 12 3 7 8"/>
@@ -1063,11 +1063,11 @@
                 {% if perf_paginator %}
                 <div class="pagination" style="margin-top: 16px;">
                     {% if perf_members.has_previous %}
-                    <a href="?tab=points&perf_page={{ perf_members.previous_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+                    <a href="?tab=points&perf_page={{ perf_members.previous_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-secondary">{% trans "Previous" %}</a>
                     {% endif %}
                     <span class="current">{% trans "Page" %} {{ perf_members.number }} {% trans "of" %} {{ perf_members.paginator.num_pages }}</span>
                     {% if perf_members.has_next %}
-                    <a href="?tab=points&perf_page={{ perf_members.next_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+                    <a href="?tab=points&perf_page={{ perf_members.next_page_number }}&perf_sort={{ perf_sort }}&perf_min={{ perf_min }}&perf_max={{ perf_max }}" class="btn btn-secondary">{% trans "Next" %}</a>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -1080,6 +1080,11 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Generate unique idempotency key
+    function generateIdempotencyKey() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+    
     // Load notifications on page load
     loadNotifications();
     
@@ -1101,6 +1106,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(form);
             const url = form.action;
             
+            // Add idempotency key to prevent duplicates
+            const idempotencyKey = generateIdempotencyKey();
+            formData.append('idempotency_key', idempotencyKey);
+            
             fetch(url, {
                 method: 'POST',
                 body: formData,
@@ -1110,17 +1119,24 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                // Re-enable submit button on any response
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.dataset.submitting = 'false';
+                }
+                
                 if (data.success) {
+                    // Check if this was a duplicate request
+                    if (data.duplicate) {
+                        showToast(data.message || 'Request already processed', 'info');
+                        return;
+                    }
+                    
                     showToast(data.message || 'Success', 'success');
                     // Reload page after short delay
                     setTimeout(() => location.reload(), 500);
                 } else {
                     showToast(data.error || 'Error', 'error');
-                    // Re-enable submit button on error
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.dataset.submitting = 'false';
-                    }
                 }
             })
             .catch(error => {

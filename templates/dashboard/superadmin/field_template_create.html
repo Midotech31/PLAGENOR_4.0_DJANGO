@@ -1,0 +1,74 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin' %}">{% trans "Superadmin" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin_field_templates' %}">{% trans "Modèles de champs" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Créer un modèle" %}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> {% trans "Créer un nouveau modèle de champs" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">{% trans "Nom du modèle" %} *</label>
+                            <input type="text" name="name" id="name" class="form-control" required
+                                   placeholder="{% trans 'Ex: Champs échantillons standard' %}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">{% trans "Description" %}</label>
+                            <textarea name="description" id="description" class="form-control" rows="2"
+                                      placeholder="{% trans 'Description optionnelle...' %}"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="source_service" class="form-label">{% trans "Service source" %}</label>
+                            <select name="source_service" id="source_service" class="form-select">
+                                <option value="">— {% trans "Aucun (modèle vide)" %} —</option>
+                                {% for service in services %}
+                                <option value="{{ service.pk }}">
+                                    {{ service.name }} ({{ service.code }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                {% trans "Sélectionnez un service pour cloner ses champs. Laissez vide pour créer un modèle vide." %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_default_for_new" id="is_default_for_new" class="form-check-input">
+                                <label for="is_default_for_new" class="form-check-label">
+                                    {% trans "Utiliser comme modèle par défaut pour les nouveaux services" %}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard:superadmin_field_templates' %}" class="btn btn-secondary">
+                                {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check"></i> {% trans "Créer le modèle" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

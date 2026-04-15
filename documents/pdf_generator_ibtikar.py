@@ -1,21 +1,22 @@
 # documents/pdf_generator_ibtikar.py — PLAGENOR 4.0 IBTIKAR Form PDF Generator
 # Generates the official IBTIKAR analysis request form as PDF
+# Based on official PLAGENOR Word templates
 
 from io import BytesIO
 from datetime import datetime
 import logging
 
 from django.conf import settings
-from django.core.files import File
-from django.utils.translation import gettext_lazy as _
+from django.core.files.base import ContentFile
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm, mm
 from reportlab.lib.colors import HexColor, black, white
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    Image, PageBreak, HRFlowable
+    Image, PageBreak, HRFlowable, KeepTogether
 )
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus.flowables import Flowable
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 
@@ -25,26 +26,22 @@ from .pdf_styles import (
     COLOR_TEXT, COLOR_GRAY, COLOR_LIGHT_GRAY, COLOR_WARNING,
     FONT_HELVETICA, FONT_HELVETICA_BOLD, FONT_TIMES, FONT_TIMES_BOLD,
     get_styles, get_base_table_style, style_label_value_table,
-    get_essbo_logo, get_plagenor_logo,
+    get_essbo_logo, get_plagenor_logo, get_ibtikar_logo,
     format_date, format_datetime, format_currency,
-    HorizontalLine, SectionDivider, WarningBox, SignatureBlock,
-    make_page_template
+    HorizontalLine, make_page_template
 )
-from .pdf_labels import get_labels, get_label, format_reference
+from .pdf_ibtikar_templates import (
+    TRANSLATIONS, SERVICE_TITLES, SERVICE_SAMPLE_COLUMNS,
+    SERVICE_INSTRUCTIONS, SERVICE_ADDITIONAL_FIELDS, SERVICE_CHECKLIST,
+    get_translations, get_service_title, get_sample_columns,
+    get_service_instructions, get_additional_fields, get_checklist
+)
+from .pdf_dynamic_fields import get_pdf_fields, render_pdf_fields
 
 logger = logging.getLogger('plagenor.documents')
 
+MIN_SAMPLE_ROWS = 5
 
-# =============================================================================
-# CONSTANTS
-# =============================================================================
-
-MIN_SAMPLE_ROWS = 10
-
-
-# =============================================================================
-# HELPER FLOWABLES
-# =============================================================================
 
 class Checkbox(Flowable):
     """A checkbox flowable for checklist items."""
@@ -56,18 +53,17 @@ class Checkbox(Flowable):
         self.width = size + 4
         self.height = size + 2
     
-    def wrap(self, availableWidth, availableHeight):
+    def wrap(self, aW, aH):
         return self.width, self.height
     
     def draw(self):
         self.canv.setStrokeColor(COLOR_TEXT)
         self.canv.setLineWidth(1)
         self.canv.rect(0, 1, self.box_size, self.box_size, fill=0, stroke=1)
-        
         if self.checked:
             self.canv.setFillColor(COLOR_PRIMARY)
             self.canv.setFont(FONT_HELVETICA_BOLD, self.box_size - 1)
-            self.canv.drawString(1, 2, '✓')
+            self.canv.drawString(1, 2, 'X')
 
 
 class SignatureLine(Flowable):
@@ -82,24 +78,19 @@ class SignatureLine(Flowable):
         self.signature_line_length = line_length or (width - date_width - 10)
         self.height = 50
     
-    def wrap(self, availableWidth, availableHeight):
-        self.width = min(self.line_width, availableWidth)
+    def wrap(self, aW, aH):
+        self.width = min(self.line_width, aW)
         return self.width, self.height
     
     def draw(self):
-        # Label
         if self.label:
             self.canv.setFont(FONT_HELVETICA, 9)
             self.canv.setFillColor(COLOR_GRAY)
             self.canv.drawString(0, 35, self.label)
-        
-        # Signature line
         self.canv.setStrokeColor(COLOR_TEXT)
         self.canv.setLineWidth(0.5)
         line_start = 0
         self.canv.line(line_start, 20, line_start + self.signature_line_length, 20)
-        
-        # Date label and line
         date_start = line_start + self.signature_line_length + 8
         self.canv.setFont(FONT_HELVETICA, 8)
         self.canv.setFillColor(COLOR_GRAY)
@@ -110,7 +101,7 @@ class SignatureLine(Flowable):
 class ImportantBox(Flowable):
     """An important/warning box with styled border."""
     
-    def __init__(self, width, title, content, title_color=COLOR_PRIMARY, 
+    def __init__(self, width, title, content, title_color=COLOR_PRIMARY,
                  bg_color=HexColor('#fff8e1'), border_color=HexColor('#ffc107')):
         Flowable.__init__(self)
         self.box_width = width
@@ -119,14 +110,10 @@ class ImportantBox(Flowable):
         self.title_color = title_color
         self.bg_color = bg_color
         self.border_color = border_color
-        self.height = 60  # Will be calculated in wrap
+        self.height = 60
     
-    def wrap(self, availableWidth, availableHeight):
-        from reportlab.pdfbase.pdfmetrics import stringWidth
-        
-        self.width = min(self.box_width, availableWidth)
-        
-        # Calculate height based on content - handle newlines
+    def wrap(self, aW, aH):
+        self.width = min(self.box_width, aW)
         content_lines = self.content.split('\n')
         chars_per_line = int((self.width - 20) / 5.5)
         total_lines = 0
@@ -135,47 +122,33 @@ class ImportantBox(Flowable):
                 total_lines += max(1, (len(line) // chars_per_line) + 1)
             else:
                 total_lines += 1
-        
         self.height = total_lines * 12 + 30
         return self.width, self.height
     
     def draw(self):
-        # Background
         self.canv.setFillColor(self.bg_color)
         self.canv.roundRect(0, 0, self.width, self.height, 4, fill=1, stroke=0)
-        
-        # Border
         self.canv.setStrokeColor(self.border_color)
         self.canv.setLineWidth(2)
         self.canv.roundRect(0, 0, self.width, self.height, 4, fill=0, stroke=1)
-        
-        # Title with icon
         self.canv.setFillColor(self.title_color)
         self.canv.setFont(FONT_HELVETICA_BOLD, 11)
-        self.canv.drawString(10, self.height - 18, '⚠ ' + self.title)
-        
-        # Content - handle newlines properly
+        self.canv.drawString(10, self.height - 18, '! ' + self.title)
         self.canv.setFillColor(COLOR_TEXT)
         self.canv.setFont(FONT_HELVETICA, 9)
-        
         chars_per_line = int((self.width - 20) / 5.5)
         y = self.height - 32
-        max_lines = 20  # Max lines to prevent overflow
-        
+        max_lines = 20
         for raw_line in self.content.split('\n'):
             if y < 10 or max_lines <= 0:
                 break
             max_lines -= 1
-            
             line = raw_line.strip()
             if not line:
                 y -= 8
                 continue
-            
-            # Word wrap long lines
             words = line.split()
             current_line = ''
-            
             for word in words:
                 test_line = current_line + ' ' + word if current_line else word
                 if len(test_line) <= chars_per_line:
@@ -188,235 +161,177 @@ class ImportantBox(Flowable):
                         if y < 10 or max_lines <= 0:
                             break
                     current_line = word
-            
             if current_line and y >= 10 and max_lines > 0:
                 self.canv.drawString(10, y, current_line)
                 y -= 12
 
-
-# =============================================================================
-# MAIN GENERATOR FUNCTION
-# =============================================================================
 
 def generate_ibtikar_form_pdf(request_obj, lang=None, force_regenerate=False):
     """
     Generate an IBTIKAR form PDF for a request.
     
     This function creates a complete IBTIKAR analysis request form with:
-    - Header with reference, logos, service info
+    - Header with 3 logos (ESSBO, IBTIKAR, PLAGENOR) and institutional text
+    - Request number with format: IBK-2026-XXXX/2026/IBTIKAR/GTP-ESSBO
+    - Service-specific title
     - Section 1: Requester information
-    - Section 2: Analysis information
-    - Section 3: Sample table (dynamic columns from ServiceFormField)
-    - "Très important" block (from service.ibtikar_instructions)
-    - Section 4: Additional information (dynamic fields)
+    - Section 2: Analysis request information
+    - Section 3: Sample table (service-specific columns)
+    - Service-specific instructions
+    - Section 4: Additional information (service-specific)
     - Ethical declaration
-    - Section 5: Validation (PLAGENOR use)
-    - Signature blocks
+    - Requester signature
+    - Section 5: PLAGENOR validation block
     
     Args:
         request_obj: Request model instance
-        lang: Language code ('fr' or 'en'), defaults to request.language or 'fr'
+        lang: Language code ('fr' or 'en'), defaults to form_data.language or 'fr'
         force_regenerate: If True, regenerate even if form already exists
         
     Returns:
-        Tuple of (file_path, error_message) - file_path is None on error
+        bytes: PDF file content
     """
-    # Determine language
-    lang = lang or getattr(request_obj, 'language', None) or 'fr'
-    labels = get_labels(lang)
+    form_data = request_obj.additional_data or {}
+    lang = lang or form_data.get('language', 'fr')
+    t = get_translations(lang)
     
-    # Check if form already exists (unless force_regenerate)
     if not force_regenerate and request_obj.generated_ibtikar_form:
-        existing_path = request_obj.generated_ibtikar_form.path
-        if existing_path and hasattr(existing_path, 'exists') and existing_path.exists():
-            logger.info(f"IBTIKAR form already exists for {request_obj.display_id}")
-            return str(existing_path), None
+        try:
+            path = request_obj.generated_ibtikar_form.path
+            if path and hasattr(path, 'exists') and path.exists():
+                with open(path, 'rb') as f:
+                    return f.read()
+        except Exception:
+            pass
     
-    # Get service
+    if not request_obj.service:
+        raise ValueError(f"Request {request_obj.display_id}: no service linked")
+    
     service = request_obj.service
-    if not service:
-        logger.warning(f"Request {request_obj.pk}: no service linked, skipping IBTIKAR PDF generation.")
-        return None, "NO_SERVICE"
+    service_code = service.code
+    samples = request_obj.sample_table or []
     
     try:
-        # Create PDF buffer
         buffer = BytesIO()
-        
-        # Create document
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            leftMargin=MARGIN,
-            rightMargin=MARGIN,
-            topMargin=MARGIN,
-            bottomMargin=MARGIN + 1*cm,
-            title=labels['ibtikar_form_title'],
+            leftMargin=60,
+            rightMargin=60,
+            topMargin=70,
+            bottomMargin=60,
+            title="Formulaire IBTIKAR" if lang == 'fr' else "IBTIKAR Form",
             author='PLAGENOR 4.0',
             subject=f"IBTIKAR Form - {request_obj.display_id}",
         )
         
-        # Build content
         story = []
         styles = get_styles()
-        page_width = PAGE_WIDTH - 2 * MARGIN
+        page_width = PAGE_WIDTH - 120
         
-        # -------------------------------------------------------------------------
-        # HEADER
-        # -------------------------------------------------------------------------
-        story.extend(build_header(request_obj, service, labels, page_width, styles))
+        # ================================================================
+        # HEADER WITH 3 LOGOS AND INSTITUTIONAL TEXT
+        # ================================================================
+        story.extend(build_official_header(service_code, lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
+        # ================================================================
+        # REQUEST NUMBER AND SERVICE TITLE
+        # ================================================================
+        story.extend(build_request_header(request_obj, service, lang, t, page_width, styles))
+        
+        # ================================================================
         # SECTION 1: REQUESTER INFORMATION
-        # -------------------------------------------------------------------------
-        story.extend(build_requester_section(request_obj, labels, page_width, styles))
+        # ================================================================
+        story.extend(build_requester_section(request_obj, lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # SECTION 2: ANALYSIS INFORMATION
-        # -------------------------------------------------------------------------
-        story.extend(build_analysis_section(request_obj, labels, page_width, styles))
+        # ================================================================
+        # SECTION 2: ANALYSIS REQUEST INFORMATION
+        # ================================================================
+        story.extend(build_analysis_section(request_obj, lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # SECTION 3: SAMPLE TABLE
-        # -------------------------------------------------------------------------
-        story.extend(build_sample_table(request_obj, service, labels, page_width, styles, lang=lang))
+        # ================================================================
+        # SECTION 3: SAMPLE INFORMATION TABLE
+        # ================================================================
+        story.extend(build_sample_section(request_obj, service, lang, t, page_width, styles, samples))
         
-        # -------------------------------------------------------------------------
-        # "TRÈS IMPORTANT" BLOCK
-        # -------------------------------------------------------------------------
-        story.extend(build_important_block(service, labels, page_width, styles))
+        # ================================================================
+        # SERVICE-SPECIFIC INSTRUCTIONS
+        # ================================================================
+        story.extend(build_service_instructions(service_code, lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # SECTION 4: SERVICE PARAMETERS (from DB ServiceFormField)
-        # -------------------------------------------------------------------------
-        story.extend(build_service_parameters_section(request_obj, service, labels, page_width, styles, lang=lang))
+        # ================================================================
+        # SECTION 4: ADDITIONAL INFORMATION
+        # ================================================================
+        story.extend(build_additional_section(request_obj, service_code, lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # SECTION 5: ADDITIONAL INFORMATION (DB additional_info fields)
-        # -------------------------------------------------------------------------
-        story.extend(build_additional_info_section(request_obj, service, labels, page_width, styles, lang=lang))
-        
-        # -------------------------------------------------------------------------
+        # ================================================================
         # ETHICAL DECLARATION
-        # -------------------------------------------------------------------------
-        story.extend(build_ethical_declaration(labels, page_width, styles))
+        # ================================================================
+        story.extend(build_ethical_section(lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # SUBMITTER SIGNATURE
-        # -------------------------------------------------------------------------
-        story.extend(build_submitter_signature(labels, page_width, styles))
+        # ================================================================
+        # DYNAMIC PDF FIELDS (SUPERADMIN)
+        # ================================================================
+        dynamic_fields = get_pdf_fields('ibtikar_form', service=service)
+        if dynamic_fields:
+            render_pdf_fields(story, dynamic_fields, styles, page_width, request_obj.additional_data or {})
+
+        # ================================================================
+        # REQUESTER SIGNATURE
+        # ================================================================
+        story.extend(build_requester_signature(request_obj, lang, t, page_width, styles))
         
-        # Page break before validation
+        # Page break
         story.append(PageBreak())
         
-        # -------------------------------------------------------------------------
-        # SECTION 5: VALIDATION (PLAGENOR USE)
-        # -------------------------------------------------------------------------
-        story.extend(build_validation_section(request_obj, service, labels, page_width, styles))
+        # ================================================================
+        # SECTION 5: VALIDATION BLOCK (PLAGENOR)
+        # ================================================================
+        story.extend(build_validation_section(lang, t, page_width, styles))
         
-        # -------------------------------------------------------------------------
-        # BUILD PDF
-        # -------------------------------------------------------------------------
-        doc.build(story, onFirstPage=lambda c, d: make_page_template(c, d, with_page_numbers=True),
-                  onLaterPages=lambda c, d: make_page_template(c, d, with_page_numbers=True))
+        # Build PDF
+        doc.build(
+            story,
+            onFirstPage=lambda c, d: make_page_template(c, d, with_page_numbers=True),
+            onLaterPages=lambda c, d: make_page_template(c, d, with_page_numbers=True)
+        )
         
-        # Save to model
         buffer.seek(0)
-        filename = f"PLAGENOR_IBTIKAR_{service.code}_{request_obj.display_id}.pdf"
+        pdf_bytes = buffer.read()
         
-        from django.core.files.base import ContentFile
-        pdf_content = ContentFile(buffer.read())
-        
-        request_obj.generated_ibtikar_form.save(filename, pdf_content, save=True)
-        
+        filename = f"PLAGENOR_IBTIKAR_{service_code}_{request_obj.display_id}.pdf"
+        request_obj.generated_ibtikar_form.save(filename, ContentFile(pdf_bytes), save=True)
         logger.info(f"Generated IBTIKAR form PDF for {request_obj.display_id}: {filename}")
-        return str(request_obj.generated_ibtikar_form.path), None
+        
+        return pdf_bytes
         
     except Exception as e:
-        logger.error(
-            f"Failed to generate IBTIKAR form PDF for {request_obj.display_id}: {str(e)}",
-            exc_info=True
-        )
-        return None, f"ERROR: {str(e)}"
+        import traceback
+        logger.error(f"Failed to generate IBTIKAR form PDF for {request_obj.display_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
 
 
-# =============================================================================
-# SECTION BUILDERS
-# =============================================================================
-
-def build_header(request_obj, service, labels, page_width, styles):
-    """Build the document header with reference, logos, and service info."""
+def build_official_header(service_code, lang, t, page_width, styles):
+    """Build the official header with 3 logos and institutional text."""
     story = []
     
-    # Get service display name based on code (official form titles)
-    service_display_names = {
-        'EGTP-Seq02': 'DEMANDE D\'IDENTIFICATION MICROBIENNE VIA LE SÉQUENÇAGE',
-        'EGTP-SeqS': 'DEMANDE DE SÉQUENÇAGE D\'ADN (SANGER)',
-        'EGTP-SeqI': 'DEMANDE DE SÉQUENÇAGE ILLUMINA',
-        'EGTP-PCR': 'DEMANDE D\'AMPLIFICATION PAR PCR',
-        'EGTP-IMT': 'DEMANDE D\'IDENTIFICATION PAR MALDI-TOF',
-        'EGTP-PFGE': 'DEMANDE D\'ÉLECTROPHORÈSE EN CHAMP PULSÉ (PFGE)',
-        'EGTP-CGH': 'DEMANDE D\'HYBRIDATION GÉNOMIQUE COMPARATIVE (CGH)',
-        'EGTP-WGS': 'DEMANDE DE SÉQUENÇAGE GÉNOMIQUE COMPLET (WGS)',
-        'EGTP-SeqM': 'DEMANDE DE SÉQUENÇAGE MÉTAGÉNOMIQUE',
-    }
+    logo_width = 1.8 * cm
+    logo_height = 1.4 * cm
     
-    # Full service title (use mapping or fallback to name)
-    full_service_title = service_display_names.get(service.code, service.name.upper() if service.name else service.code)
+    essbo_img = get_essbo_logo(logo_width)
+    ibtikar_img = get_ibtikar_logo(logo_width)
+    plagenor_img = get_plagenor_logo(logo_width)
     
-    # Logo row with reference line centered
-    essbo_logo = get_essbo_logo(width=2.5*cm)
-    plagenor_logo = get_plagenor_logo(width=2.5*cm)
+    left_cell = essbo_img if essbo_img else Paragraph('', styles['Normal'])
+    center_cell = ibtikar_img if ibtikar_img else Paragraph('', styles['Normal'])
+    right_cell = plagenor_img if plagenor_img else Paragraph('', styles['Normal'])
     
-    # Reference line text
-    reference = format_reference(service.code, lang=labels.get('platform_note_title', 'fr')[:2] or 'fr')
-    reference_text = f"<b>{labels.get('request_reference', 'N° de la demande')}</b><br/>{reference}"
-    reference_para = Paragraph(reference_text, styles['Reference'])
-
-    # Generate QR code for tracking
-    qr_img = None
-    try:
-        from core.qrcode_utils import generate_request_tracking_qr
-        from django.contrib.sites.models import Site
-        current_site = Site.objects.get_current()
-        base_url = f"https://{current_site.domain}" if current_site else None
-        qr_data_url = generate_request_tracking_qr(request_obj, base_url=base_url)
-        if qr_data_url:
-            # Convert data URL to ReportLab Image
-            import base64
-            from io import BytesIO
-            from reportlab.lib.utils import ImageReader
-            qr_data = qr_data_url.split(',')[1]  # Remove data:image/png;base64, prefix
-            qr_bytes = base64.b64decode(qr_data)
-            qr_img = ImageReader(BytesIO(qr_bytes))
-    except Exception as e:
-        logger.debug(f"Could not generate QR code for IBTIKAR form: {e}")
-
-    # Create header table with logos on sides and reference centered
-    logo_cell_left = essbo_logo if essbo_logo else Paragraph('', styles['Normal'])
-    logo_cell_right = plagenor_logo if plagenor_logo else Paragraph('', styles['Normal'])
-
-    # If QR code generated, add it to the header
-    if qr_img:
-        # Table with QR code on the right side
-        ref_and_qr = Table(
-            [[reference_para, Image(qr_img, width=2*cm, height=2*cm)]],
-            colWidths=[page_width - 5*cm - 2.5*cm, 2.5*cm]
-        )
-        ref_and_qr.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        header_table = Table(
-            [[logo_cell_left, ref_and_qr, logo_cell_right]],
-            colWidths=[2.5*cm, page_width - 5*cm, 2.5*cm]
-        )
-    else:
-        header_table = Table(
-            [[logo_cell_left, reference_para, logo_cell_right]],
-            colWidths=[2.5*cm, page_width - 5*cm, 2.5*cm]
-        )
-    header_table.setStyle(TableStyle([
+    logo_table = Table(
+        [[left_cell, center_cell, right_cell]],
+        colWidths=[2.5 * cm, page_width - 5 * cm, 2.5 * cm]
+    )
+    logo_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (0, 0), 'LEFT'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),
         ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
@@ -424,80 +339,182 @@ def build_header(request_obj, service, labels, page_width, styles):
         ('TOPPADDING', (0, 0), (-1, -1), 4),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
-    story.append(header_table)
+    story.append(logo_table)
     
-    story.append(Spacer(1, 8))
-    
-    # Title - service specific bold centered
-    story.append(Paragraph(f"<b>{full_service_title}</b>", styles['CenterBold']))
     story.append(Spacer(1, 6))
     
-    # Service code and version info
-    form_version = getattr(service, 'form_version', 'V 01')
-    version_info = Table(
-        [
-            [Paragraph(f"<b>{service.code}</b>", styles['Center']),
-             Paragraph(f"{labels.get('version', 'Version')} {form_version}", styles['SmallItalic']),
-             Paragraph(format_date(datetime.now()), styles['SmallItalic'])],
-        ],
-        colWidths=[page_width * 0.3, page_width * 0.4, page_width * 0.3]
+    def inst_line(text, font_size=9):
+        return Paragraph(
+            text,
+            ParagraphStyle('InstLine', fontName=FONT_TIMES, fontSize=font_size,
+                          textColor=COLOR_PRIMARY, alignment=TA_CENTER, spaceAfter=1)
+        )
+    
+    story.append(inst_line(t['republic'], 9))
+    story.append(inst_line(t['ministry'], 8))
+    story.append(inst_line(t['school'], 9))
+    story.append(inst_line(t['platform'], 8))
+    
+    story.append(Spacer(1, 6))
+    story.append(HRFlowable(width=page_width, thickness=1, color=COLOR_PRIMARY, spaceAfter=8))
+    
+    return story
+
+
+def build_request_header(request_obj, service, lang, t, page_width, styles):
+    """Build request number and service title."""
+    story = []
+    
+    year = datetime.now().year
+    request_num = request_obj.display_id or f"IBK-{year}-XXXX"
+    service_code = service.code
+    
+    ref_line = f"<b>{t['request_number']}:</b> {request_num}/{year}/IBTIKAR/GTP-ESSBO"
+    
+    version_table = Table(
+        [[
+            Paragraph(ref_line, ParagraphStyle('Ref', fontName=FONT_TIMES, fontSize=9,
+                                              textColor=COLOR_GRAY, alignment=TA_LEFT)),
+            Paragraph(f"<b>{t['version']}</b> 02 / 02.11.2025",
+                      ParagraphStyle('Ver', fontName=FONT_TIMES, fontSize=8,
+                                    textColor=COLOR_GRAY, alignment=TA_RIGHT)),
+        ]],
+        colWidths=[page_width * 0.65, page_width * 0.35]
     )
-    version_info.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, 0), 'CENTER'),
-        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+    version_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), 2),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
     ]))
-    story.append(version_info)
+    story.append(version_table)
     
-    story.append(Spacer(1, 6))
-    story.append(HorizontalLine(page_width, thickness=1, color=COLOR_PRIMARY))
     story.append(Spacer(1, 10))
+    
+    service_title = get_service_title(service_code, lang)
+    title_lines = service_title.split('\n')
+    
+    story.append(Paragraph(
+        f"<b>{title_lines[0]}</b>",
+        ParagraphStyle('Title', fontName=FONT_TIMES_BOLD, fontSize=12,
+                      textColor=COLOR_PRIMARY, alignment=TA_CENTER, spaceAfter=4)
+    ))
+    if len(title_lines) > 1:
+        story.append(Paragraph(
+            f"<b>{title_lines[1]}</b>",
+            ParagraphStyle('Code', fontName=FONT_TIMES_BOLD, fontSize=11,
+                          textColor=COLOR_PRIMARY, alignment=TA_CENTER, spaceAfter=6)
+        ))
+    
+    story.append(Paragraph(
+        t['form_intro'],
+        ParagraphStyle('Intro', fontName=FONT_TIMES, fontSize=8,
+                      textColor=COLOR_GRAY, alignment=TA_JUSTIFY, spaceAfter=8)
+    ))
+    
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=10))
     
     return story
 
 
-def build_requester_section(request_obj, labels, page_width, styles):
-    """Build Section 1: Requester information table."""
+def build_requester_section(request_obj, lang, t, page_width, styles):
+    """Build Section 1: Requester information."""
     story = []
     
-    # Section title
-    story.append(Paragraph(labels['section_requester'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph(t['section1_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
-    # Get requester info
     requester = request_obj.requester
+    form_data = request_obj.additional_data or {}
+    requester_data = request_obj.requester_data or {}
+
+    def _pick_first(*values):
+        for v in values:
+            if v is None:
+                continue
+            vv = str(v).strip()
+            if vv and vv != '—':
+                return vv
+        return '—'
+
     if requester:
-        full_name = requester.get_full_name() or requester.username or labels.get('not_specified', 'N/A')
-        email = getattr(requester, 'email', '') or ''
-        phone = getattr(requester, 'phone', '') or ''
-        institution = getattr(requester, 'organization', '') or ''
-        laboratory = getattr(requester, 'laboratory', '') or ''
-        position = getattr(requester, 'position', '') or ''
-        if position:
-            position = get_label(f'position_{position}', labels.get('platform_note_title', 'fr')[:2] or 'fr', position)
+        full_name = _pick_first(
+            requester.get_full_name(),
+            getattr(requester, 'first_name', ''),
+            requester_data.get('full_name'),
+            form_data.get('full_name'),
+            requester.username,
+        )
+        email = _pick_first(
+            getattr(requester, 'email', ''),
+            requester_data.get('email'),
+            form_data.get('email'),
+            request_obj.guest_email,
+        )
+        phone = _pick_first(
+            getattr(requester, 'phone', ''),
+            requester_data.get('phone'),
+            form_data.get('phone'),
+            request_obj.guest_phone,
+        )
+        organization = _pick_first(
+            getattr(requester, 'organization', ''),
+            getattr(requester, 'department', ''),
+            getattr(requester, 'faculty', ''),
+            requester_data.get('organization'),
+            requester_data.get('university'),
+            form_data.get('organization'),
+            form_data.get('university'),
+            form_data.get('etablissement'),
+            getattr(requester, 'institution', ''),
+        )
+        laboratory = _pick_first(
+            getattr(requester, 'laboratory', ''),
+            getattr(requester, 'research_team', ''),
+            requester_data.get('laboratory'),
+            form_data.get('laboratory'),
+            form_data.get('research_team'),
+            form_data.get('team'),
+        )
+        position = _pick_first(
+            getattr(requester, 'position', ''),
+            getattr(requester, 'student_level', ''),
+            requester_data.get('position'),
+            form_data.get('position'),
+            form_data.get('function'),
+            form_data.get('role'),
+        )
     else:
-        full_name = request_obj.guest_name or labels.get('not_specified', 'N/A')
-        email = request_obj.guest_email or ''
-        phone = request_obj.guest_phone or ''
-        institution = ''
-        laboratory = ''
-        position = ''
+        full_name = _pick_first(request_obj.guest_name, requester_data.get('full_name'), form_data.get('full_name'))
+        email = _pick_first(request_obj.guest_email, requester_data.get('email'), form_data.get('email'))
+        phone = _pick_first(request_obj.guest_phone, requester_data.get('phone'), form_data.get('phone'))
+        organization = _pick_first(
+            requester_data.get('organization'), requester_data.get('university'),
+            form_data.get('organization'), form_data.get('university'), form_data.get('etablissement')
+        )
+        laboratory = _pick_first(
+            requester_data.get('laboratory'), form_data.get('laboratory'), form_data.get('research_team'), form_data.get('team')
+        )
+        position = _pick_first(
+            requester_data.get('position'), form_data.get('position'), form_data.get('function'), form_data.get('role')
+        )
     
-    # Build label/value table
+    def lv(label_key, value):
+        return [
+            Paragraph(t.get(label_key, label_key), styles['Label']),
+            Paragraph(str(value), styles['Value']),
+        ]
+    
     data = [
-        [Paragraph(labels['full_name'], styles['Label']), Paragraph(str(full_name), styles['Value'])],
-        [Paragraph(labels['institution'], styles['Label']), Paragraph(str(institution), styles['Value'])],
-        [Paragraph(labels['laboratory'], styles['Label']), Paragraph(str(laboratory), styles['Value'])],
-        [Paragraph(labels['position'], styles['Label']), Paragraph(str(position), styles['Value'])],
-        [Paragraph(labels['email'], styles['Label']), Paragraph(str(email), styles['Value'])],
-        [Paragraph(labels['phone'], styles['Label']), Paragraph(str(phone), styles['Value'])],
+        lv('full_name', full_name),
+        lv('university', organization),
+        lv('laboratory', laboratory),
+        lv('position', position),
+        lv('email', email),
+        lv('phone', phone),
     ]
     
-    table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])
+    table = Table(data, colWidths=[page_width * 0.30, page_width * 0.70])
     style_label_value_table(table)
     story.append(table)
     story.append(Spacer(1, 12))
@@ -505,38 +522,41 @@ def build_requester_section(request_obj, labels, page_width, styles):
     return story
 
 
-def build_analysis_section(request_obj, labels, page_width, styles):
+def build_analysis_section(request_obj, lang, t, page_width, styles):
     """Build Section 2: Analysis request information."""
     story = []
     
-    # Section title
-    story.append(Paragraph(labels['section_analysis'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph(t['section2_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
-    # Get analysis framework display
-    analysis_framework = getattr(request_obj, 'analysis_framework', '') or ''
-    if analysis_framework:
-        framework_display = get_label(f'{analysis_framework}', labels.get('platform_note_title', 'fr')[:2] or 'fr', analysis_framework)
-    else:
-        framework_display = ''
+    form_data = request_obj.additional_data or {}
     
-    # Get PI name - check model field first, then fall back to service_params
-    pi_name = getattr(request_obj, 'pi_name', '') or ''
-    if not pi_name:
-        pi_name = request_obj.service_params.get('supervisor', '')
+    analysis_frame_map = {
+        'memoire_fin_cycle': 'Mémoire de fin de cycle' if lang == 'fr' else 'End-of-cycle Thesis',
+        'these_doctorat': 'Thèse de doctorat' if lang == 'fr' else 'Doctoral Thesis',
+        'projet_recherche': 'Projet de recherche' if lang == 'fr' else 'Research Project',
+        'habilitation': 'Habilitation universitaire' if lang == 'fr' else 'University Habilitation',
+        'autre': 'Autre' if lang == 'fr' else 'Other',
+    }
     
-    # Build table
+    analysis_frame = analysis_frame_map.get(request_obj.analysis_framework, request_obj.analysis_framework or '—')
+    project_title = request_obj.title or '—'
+    research_director = request_obj.pi_name or form_data.get('project_director', '—')
+    
+    def lv(label_key, value):
+        return [
+            Paragraph(t.get(label_key, label_key), styles['Label']),
+            Paragraph(str(value), styles['Value']),
+        ]
+    
     data = [
-        [Paragraph(labels['analysis_framework'], styles['Label']), 
-         Paragraph(str(framework_display), styles['Value'])],
-        [Paragraph(labels['project_title'], styles['Label']), 
-         Paragraph(str(request_obj.title or ''), styles['Value'])],
-        [Paragraph(labels['pi_name'], styles['Label']), 
-         Paragraph(str(pi_name), styles['Value'])],
+        lv('analysis_frame', analysis_frame),
+        lv('project_title', project_title),
+        lv('research_director', research_director),
     ]
     
-    table = Table(data, colWidths=[page_width * 0.35, page_width * 0.65])
+    table = Table(data, colWidths=[page_width * 0.30, page_width * 0.70])
     style_label_value_table(table)
     story.append(table)
     story.append(Spacer(1, 12))
@@ -544,340 +564,360 @@ def build_analysis_section(request_obj, labels, page_width, styles):
     return story
 
 
-def build_sample_table(request_obj, service, labels, page_width, styles, lang='fr'):
-    """Build Section 3: Sample table with dynamic columns from DB (ServiceFormField)."""
+def build_sample_section(request_obj, service, lang, t, page_width, styles, samples):
+    """Build Section 3: Sample information table with service-specific columns."""
     story = []
     
-    # Section title
-    story.append(Paragraph(labels['section_samples'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph(t['section3_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
-    # Get sample table columns from ServiceFormField (DB primary)
-    sample_fields = []
-    if hasattr(service, 'form_fields'):
-        sample_fields = list(service.form_fields.filter(
-            field_category='sample_table'
-        ).order_by('order', 'sort_order', 'pk'))
-    
-    # Fallback to YAML if no DB fields
-    if not sample_fields:
-        yaml_def = None
-        try:
-            from core.registry import get_service_def
-            yaml_def = get_service_def(service.code)
-        except Exception:
-            pass
-        if yaml_def:
-            for i, col in enumerate(yaml_def.get('sample_table', {}).get('columns', [])):
-                sample_fields.append(type('YAMLField', (), {
-                    'name': col.get('name', f'col_{i}'),
-                    'label': col.get('label', col.get('name', '')),
-                    'label_fr': col.get('label', col.get('name', '')),
-                    'label_en': '',
-                    'field_type': col.get('type', 'text'),
-                    'pk': None,
-                    'get_label': lambda self, l='fr': self.label_en if l == 'en' and self.label_en else self.label_fr,
-                })())
-    
-    # Build header row
-    header_row = [Paragraph(labels['sample_id'], styles['TableHeader'])]
-    column_keys = ['id']  # Row number key
-    
-    for field in sample_fields:
-        field_label = _get_field_label(field, lang)
-        header_row.append(Paragraph(str(field_label), styles['TableHeader']))
-        # Use field NAME as key (not pk) — sample data is stored by field name
-        column_keys.append(getattr(field, 'name', str(field.pk) if hasattr(field, 'pk') else 'field'))
-    
-    # Also add standard columns if no custom fields
-    if not sample_fields:
-        standard_columns = [
-            ('code', labels['sample_code']),
-            ('type', labels['sample_type']),
-            ('date', labels['sampling_date']),
-            ('volume', labels['volume_quantity']),
-            ('storage', labels['storage_conditions']),
-            ('state', labels['sample_state']),
-            ('notes', labels['special_notes']),
+    service_code = service.code
+
+    def _is_number_column(col_name):
+        key_norm = str(col_name).strip().lower()
+        return (
+            key_norm in ('n°', 'nº', 'n', 'no', 'num', 'numero', 'number', '#')
+            or ('n' in key_norm and ('°' in key_norm or 'º' in key_norm))
+            or 'number' in key_norm
+        )
+
+    # Keep official IBTIKAR template columns (exact form layout)
+    columns = get_sample_columns(service_code, lang)
+    if not columns:
+        columns = [
+            t.get('sample_id', 'N°'),
+            t.get('sample_code', 'Code'),
+            t.get('special_notes', 'Remarques'),
         ]
-        header_row = [Paragraph(labels['sample_id'], styles['TableHeader'])]
-        column_keys = ['id']
-        for key, label in standard_columns:
-            header_row.append(Paragraph(label, styles['TableHeader']))
-            column_keys.append(key)
-    
-    # Build data rows
-    samples = request_obj.sample_table if request_obj.sample_table else []
-    if not isinstance(samples, list):
-        samples = []
-    
-    data_rows = [header_row]
-    
-    # Add sample rows
-    for i, sample in enumerate(samples, 1):
-        row = [Paragraph(str(i), styles['TableCellCenter'])]
+
+    # Generic mapping for all current/future services:
+    # derive candidate payload keys from first non-empty sample row
+    payload_keys = []
+    for sample in samples:
         if isinstance(sample, dict):
-            for key in column_keys[1:]:  # Skip 'id'
-                value = sample.get(key, '') or sample.get(f'param_{key}', '') or ''
-                row.append(Paragraph(str(value), styles['TableCell']))
+            for raw_key in sample.keys():
+                key_norm = str(raw_key).strip().lower()
+                if _is_number_column(raw_key):
+                    continue
+                if key_norm in ('id', 'sample_id'):
+                    continue
+                payload_keys.append(str(raw_key))
+            if payload_keys:
+                break
+
+    def _norm(txt):
+        return str(txt or '').strip().lower().replace('-', ' ').replace('_', ' ')
+
+    def _match_key_for_column(column_label, available_keys):
+        c = _norm(column_label)
+        key_candidates = []
+
+        if 'code' in c:
+            key_candidates = ['code', 'sample_code']
+        elif 'microorgan' in c or 'microorganisme' in c or 'organism' in c:
+            key_candidates = ['organism', 'microorganism', 'microorganisme', 'type_microorganisme']
+        elif 'source' in c and ('isolation' in c or 'isolement' in c):
+            key_candidates = ['isolation', 'source', 'isolation_source']
+        elif 'date' in c and ('isolation' in c or 'isolement' in c):
+            key_candidates = ['isolation_date', 'date_isolement', 'date']
+        elif 'medium' in c or 'milieu' in c:
+            key_candidates = ['culture_medium', 'milieu', 'medium']
+        elif 'condition' in c or 'respir' in c or 'incubation' in c:
+            key_candidates = ['culture_conditions', 'conditions', 'condition']
+        elif 'note' in c or 'remarque' in c:
+            key_candidates = ['notes', 'note', 'remarques', 'remark']
+
+        available_norm = {k: _norm(k) for k in available_keys}
+        for cand in key_candidates:
+            cand_norm = _norm(cand)
+            for k, kn in available_norm.items():
+                if kn == cand_norm or cand_norm in kn:
+                    return k
+        return None
+    num_cols = len(columns)
+    col_widths = []
+    if num_cols > 0:
+        num_col_width = 0.8 * cm
+        remaining_width = page_width - num_col_width
+        other_col_width = remaining_width / (num_cols - 1)
+        col_widths = [num_col_width] + [other_col_width] * (num_cols - 1)
+
+    header_row = [Paragraph(col, styles['TableHeader']) for col in columns]
+    data_rows = [header_row]
+
+    for i, sample in enumerate(samples, 1):
+        if isinstance(sample, dict):
+            row = [Paragraph(str(i), styles['TableCellCenter'])]
+
+            normalized_sample = {str(k).strip().lower(): v for k, v in sample.items()}
+
+            # Generic mapping: match each official column to the right payload key
+            if payload_keys:
+                used_keys = set()
+                for j in range(1, num_cols):
+                    val = ''
+                    col_label = columns[j] if j < len(columns) else ''
+
+                    matched_key = _match_key_for_column(col_label, payload_keys)
+                    if matched_key and matched_key not in used_keys:
+                        mk_norm = _norm(matched_key)
+                        val = sample.get(matched_key, normalized_sample.get(mk_norm, ''))
+                        used_keys.add(matched_key)
+
+                    # Secondary fallback: remaining payload keys by order
+                    if not val:
+                        remaining = [k for k in payload_keys if k not in used_keys]
+                        if remaining:
+                            fallback_key = remaining[0]
+                            fk_norm = _norm(fallback_key)
+                            val = sample.get(fallback_key, normalized_sample.get(fk_norm, ''))
+                            used_keys.add(fallback_key)
+
+                    # Legacy fallback
+                    if not val:
+                        key = f'col_{j}'
+                        val = sample.get(key, sample.get(f'param_{key}', '')) or ''
+
+                    row.append(Paragraph(str(val or ''), styles['TableCell']))
+            else:
+                # Generic fallback for legacy payloads without discoverable keys
+                sample_values = []
+                for sample_key, sample_val in sample.items():
+                    if _is_number_column(sample_key):
+                        continue
+                    key_norm = str(sample_key).strip().lower()
+                    if key_norm in ('id', 'sample_id'):
+                        continue
+                    sample_values.append(sample_val)
+
+                for j in range(1, num_cols):
+                    key = f'col_{j}'
+                    val = sample.get(key, sample.get(f'param_{key}', '')) or ''
+                    if not val and (j - 1) < len(sample_values):
+                        val = sample_values[j - 1] or ''
+                    row.append(Paragraph(str(val), styles['TableCell']))
+
+            data_rows.append(row)
         else:
-            # Empty/non-dict sample
-            for _ in column_keys[1:]:
+            row = [Paragraph(str(i), styles['TableCellCenter'])]
+            for _ in range(1, num_cols):
                 row.append(Paragraph('', styles['TableCell']))
-        data_rows.append(row)
+            data_rows.append(row)
     
-    # Pad to minimum rows
-    while len(data_rows) < MIN_SAMPLE_ROWS + 1:
-        row = [Paragraph(str(len(data_rows)), styles['TableCellCenter'])]
-        for _ in column_keys[1:]:
-            row.append(Paragraph('', styles['TableCell']))
-        data_rows.append(row)
-    
-    # Create table
-    num_cols = len(column_keys)
-    col_width = page_width / num_cols
-    
-    table = Table(data_rows, colWidths=[col_width] * num_cols)
-    table.setStyle(get_base_table_style(header_count=1))
+    table = Table(data_rows, colWidths=col_widths if col_widths else None)
+    table.setStyle(get_base_table_style(header_count=1, alternating=False))
     story.append(table)
     
-    # Minimum rows note
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(
-        labels.get('minimum_rows_note', 'Minimum 10 rows required'),
-        styles['SmallItalic']
-    ))
+    if not samples:
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(
+            t.get('to_be_filled', 'À remplir') if lang == 'fr' else 'To be filled',
+            ParagraphStyle('Note', fontName=FONT_HELVETICA + '-Oblique', fontSize=8,
+                          textColor=COLOR_LIGHT_GRAY, alignment=TA_LEFT)
+        ))
+    
     story.append(Spacer(1, 12))
     
     return story
 
 
-def build_important_block(service, labels, page_width, styles):
-    """Build the 'Très important' warning block."""
+def build_service_instructions(service_code, lang, t, page_width, styles):
+    """Build service-specific instructions (Très important block)."""
     story = []
     
-    # Get instructions from service
-    instructions_field = 'ibtikar_instructions'
-    if labels.get('platform_note_title', 'fr')[:2] == 'en':
-        instructions_field = 'ibtikar_instructions_en'
+    instructions = get_service_instructions(service_code, lang)
     
-    instructions = getattr(service, instructions_field, '') or ''
-    
-    if instructions:
+    if instructions.get('important'):
+        story.append(Paragraph(
+            f"<b>{t['very_important']}</b>",
+            ParagraphStyle('ImpTitle', fontName=FONT_HELVETICA_BOLD, fontSize=10,
+                          textColor=COLOR_WARNING, alignment=TA_LEFT, spaceAfter=4)
+        ))
         story.append(ImportantBox(
             width=page_width,
-            title=labels.get('very_important', 'Très important'),
-            content=instructions
+            title=t['very_important'],
+            content=instructions['important'],
+            title_color=COLOR_WARNING
         ))
-        story.append(Spacer(1, 12))
-    elif hasattr(service, 'ibtikar_instructions') and service.ibtikar_instructions:
-        story.append(ImportantBox(
-            width=page_width,
-            title=labels.get('very_important', 'Très important'),
-            content=service.ibtikar_instructions
+        story.append(Spacer(1, 8))
+    
+    if instructions.get('transport'):
+        story.append(Paragraph(
+            instructions['transport'],
+            ParagraphStyle('Transport', fontName=FONT_TIMES, fontSize=8,
+                          textColor=COLOR_GRAY, alignment=TA_JUSTIFY, spaceAfter=12)
         ))
-        story.append(Spacer(1, 12))
     
     return story
 
 
-def _get_field_label(field, lang='fr'):
-    """Get the appropriate label for a field based on language."""
-    if hasattr(field, 'get_label'):
-        return field.get_label(lang)
-    if lang == 'en' and hasattr(field, 'label_en') and field.label_en:
-        return field.label_en
-    if hasattr(field, 'label_fr') and field.label_fr:
-        return field.label_fr
-    return getattr(field, 'label', getattr(field, 'name', 'Field'))
-
-
-def _get_field_choices(field):
-    """Get choices/options for a field."""
-    if hasattr(field, 'get_choices'):
-        return field.get_choices() or []
-    if hasattr(field, 'options') and field.options:
-        return field.options
-    if hasattr(field, 'choices_json') and field.choices_json:
-        return field.choices_json
-    return []
-
-
-def build_service_parameters_section(request_obj, service, labels, page_width, styles, lang='fr'):
-    """Build Section 4: Service parameters from DB (ServiceFormField) + service_params values."""
+def build_additional_section(request_obj, service_code, lang, t, page_width, styles):
+    """Build Section 4: Additional information with service-specific fields."""
     story = []
     
-    # Get parameter fields from DB (field_category='parameter')
-    param_fields = []
-    if hasattr(service, 'form_fields'):
-        param_fields = list(service.form_fields.filter(
-            field_category='parameter'
-        ).order_by('order', 'sort_order', 'pk'))
-    
-    # Get sample table column names (to exclude from parameter section)
-    sample_col_names = set()
-    if hasattr(service, 'form_fields'):
-        sample_col_names = set(
-            service.form_fields.filter(field_category='sample_table')
-            .values_list('name', flat=True)
-        )
-    
-    # Filter out fields that are sample table columns
-    param_fields = [f for f in param_fields if f.name not in sample_col_names]
-    
-    if not param_fields:
-        return story
-    
-    # Section title
-    story.append(Paragraph(labels.get('section_parameters', 'Section 4 - Service Parameters'), styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
-    
-    # Get service_params (all form field values stored here on submission)
-    service_params = getattr(request_obj, 'service_params', {}) or {}
-    
-    # Build rows for each parameter field
-    data = []
-    for field in param_fields:
-        field_label = _get_field_label(field, lang)
-        field_name = getattr(field, 'name', str(field.pk))
-        field_type = getattr(field, 'field_type', 'text')
-        
-        # Get value from service_params (stored as field.name key)
-        value = service_params.get(field_name, '') or ''
-        
-        # If value is from checkbox (boolean), show Yes/No
-        if field_type == 'boolean':
-            value = labels.get('yes', 'Oui') if value and str(value).lower() not in ('false', '0', 'no', 'non') else labels.get('no', 'Non')
-        elif not value:
-            value = labels.get('to_be_filled', 'A remplir')
-        
-        data.append([
-            Paragraph(str(field_label), styles['Label']),
-            Paragraph(str(value), styles['Value'])
-        ])
-    
-    if data:
-        table = Table(data, colWidths=[page_width * 0.4, page_width * 0.6])
-        style_label_value_table(table)
-        story.append(table)
-    
-    story.append(Spacer(1, 12))
-    return story
-
-
-def build_additional_info_section(request_obj, service, labels, page_width, styles, lang='fr'):
-    """Build Section 5: Additional information from ServiceFormField (additional_info category).
-    
-    Data is read from service_params (where all param_* fields are stored on submission),
-    NOT from additional_data (which is never written to).
-    """
-    story = []
-    
-    additional_fields = []
-    if hasattr(service, 'form_fields'):
-        additional_fields = list(service.form_fields.filter(
-            field_category='additional_info'
-        ).order_by('order', 'sort_order', 'pk'))
-    
+    additional_fields = get_additional_fields(service_code, lang)
     if not additional_fields:
         return story
     
-    story.append(Paragraph(labels.get('section_additional', 'Section 5 - Additional Info'), styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    form_data = request_obj.additional_data or {}
+    service_params = request_obj.service_params or {}
     
-    # Read from service_params — this is where ALL form field values are stored on submission
-    service_params = getattr(request_obj, 'service_params', {}) or {}
+    story.append(Paragraph(t['section4_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
+    alias_keys = {
+        'fresh_culture': ['fresh_culture', 'fresh_cultures', 'fresh_culture_available', 'cultures_fraiches'],
+        'maldi_target_type': ['maldi_target_type', 'target_type', 'maldi_target'],
+        'analysis_mode': ['analysis_mode', 'mode_analyse', 'analysis_type'],
+    }
+
+    def _value_from_sources(primary_key):
+        candidates = alias_keys.get(primary_key, [primary_key])
+        for k in candidates:
+            if k in form_data and form_data.get(k) not in (None, '', []):
+                return form_data.get(k)
+            if k in service_params and service_params.get(k) not in (None, '', []):
+                return service_params.get(k)
+        return t.get('to_be_filled', '—')
+
     data = []
     for field in additional_fields:
-        field_name = getattr(field, 'name', str(field.pk))
-        field_label = _get_field_label(field, lang)
-        field_type = getattr(field, 'field_type', 'text')
-        
-        value = service_params.get(field_name, '') or ''
-        
-        if field_type == 'boolean':
-            value = labels.get('yes', 'Oui') if value and str(value).lower() not in ('false', '0', 'no', 'non') else labels.get('no', 'Non')
-        elif not value:
-            value = labels.get('to_be_filled', 'A remplir')
+        key = field['key']
+        label = field['label']
+        value = _value_from_sources(key)
+
+        if isinstance(value, bool):
+            value = t['yes'] if value else t['no']
+        elif isinstance(value, str):
+            lowered = value.strip().lower()
+            if lowered in ('true', 'yes', 'oui', '1'):
+                value = t['yes']
+            elif lowered in ('false', 'no', 'non', '0'):
+                value = t['no']
+            elif key == 'maldi_target_type' and lowered == 'disposable':
+                value = 'Disposable target'
+            elif key == 'analysis_mode' and lowered == 'duplicate':
+                value = 'Duplicata' if lang == 'fr' else 'Duplicate'
+            elif key == 'analysis_mode' and lowered == 'triplicate':
+                value = 'Triplicata' if lang == 'fr' else 'Triplicate'
+        elif isinstance(value, list):
+            value = ', '.join(str(v) for v in value if str(v).strip())
+
+        if not value:
+            value = t.get('to_be_filled', '—')
         
         data.append([
-            Paragraph(str(field_label), styles['Label']),
-            Paragraph(str(value), styles['Value'])
+            Paragraph(label, styles['Label']),
+            Paragraph(str(value), styles['Value']),
         ])
     
     if data:
-        table = Table(data, colWidths=[page_width * 0.4, page_width * 0.6])
+        table = Table(data, colWidths=[page_width * 0.40, page_width * 0.60])
         style_label_value_table(table)
         story.append(table)
     
     story.append(Spacer(1, 12))
+    
     return story
 
 
-def build_ethical_declaration(labels, page_width, styles):
-    """Build the ethical responsibility declaration."""
+def build_ethical_section(lang, t, page_width, styles):
+    """Build ethical declaration section."""
     story = []
     
-    story.append(Paragraph(labels['section_ethical'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
+    story.append(Paragraph(t['ethical_declaration_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
     story.append(Paragraph(
-        labels.get('ethical_declaration_text', ''),
-        styles['BodySerif']
+        t['ethical_declaration_text'],
+        ParagraphStyle('Ethical', fontName=FONT_TIMES, fontSize=9, leading=13,
+                      textColor=COLOR_TEXT, alignment=TA_JUSTIFY, spaceAfter=12)
     ))
-    story.append(Spacer(1, 12))
     
     return story
 
 
-def build_submitter_signature(labels, page_width, styles):
-    """Build submitter signature block."""
+def build_requester_signature(request_obj, lang, t, page_width, styles):
+    """Build requester and supervisor signature blocks on the same line."""
     story = []
-    
-    story.append(Paragraph(labels['section_signature'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 6))
-    
-    # Signature block with 4cm blank space
-    signature_data = [
-        [Paragraph(labels['submitter_signature'], styles['Label']), ''],
-        [Paragraph('_' * 60, styles['Normal']), ''],  # ~4cm signature space
-        [Paragraph('', styles['Normal']), Paragraph(f"{labels.get('signature_date', 'Date')}: ___________________", styles['SmallItalic'])],
+
+    supervisor_label = 'Supervisor Signature' if lang == 'en' else 'Signature du superviseur'
+
+    requester = request_obj.requester
+    form_data = request_obj.additional_data or {}
+    requester_data = request_obj.requester_data or {}
+
+    supervisor_name = (
+        request_obj.pi_name
+        or form_data.get('project_director')
+        or form_data.get('research_supervisor')
+        or (getattr(requester, 'supervisor', '') if requester else '')
+        or requester_data.get('supervisor')
+        or '—'
+    )
+
+    sig_width = (page_width - 12) / 2
+
+    header_style = ParagraphStyle(
+        'SigL',
+        fontName=FONT_TIMES_BOLD,
+        fontSize=10,
+        textColor=COLOR_PRIMARY,
+        alignment=TA_CENTER,
+    )
+    date_style = ParagraphStyle(
+        'SigD',
+        fontName=FONT_HELVETICA,
+        fontSize=8,
+        textColor=COLOR_GRAY,
+        alignment=TA_LEFT,
+    )
+
+    requester_col = [
+        Paragraph(t['requester_signature'], header_style),
+        Spacer(1, 20),
+        Paragraph('_' * 36, styles['Normal']),
+        Paragraph(f"{t['date']}: _______________", date_style),
     ]
-    
-    signature_table = Table(signature_data, colWidths=[page_width * 0.6, page_width * 0.4])
-    signature_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+
+    supervisor_col = [
+        Paragraph(supervisor_label, header_style),
+        Paragraph(str(supervisor_name), ParagraphStyle('SigName', fontName=FONT_HELVETICA, fontSize=8, textColor=COLOR_GRAY, alignment=TA_CENTER)),
+        Spacer(1, 14),
+        Paragraph('_' * 36, styles['Normal']),
+        Paragraph(f"{t['date']}: _______________", date_style),
+    ]
+
+    sig_table = Table([[requester_col, supervisor_col]], colWidths=[sig_width, sig_width])
+    sig_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ('TOPPADDING', (0, 0), (-1, -1), 2),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
     ]))
-    story.append(signature_table)
-    
-    story.append(Spacer(1, 16))
-    story.append(Spacer(1, 20))
-    
+
+    story.append(Spacer(1, 10))
+    story.append(sig_table)
+    story.append(Spacer(1, 15))
+
     return story
 
 
-def build_validation_section(request_obj, service, labels, page_width, styles):
-    """Build Section 5: PLAGENOR validation section."""
+def build_validation_section(lang, t, page_width, styles):
+    """Build Section 5: PLAGENOR validation block."""
     story = []
     
-    # Section title
-    story.append(Paragraph(labels['section_validation'], styles['SectionTitle']))
-    story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-    story.append(Spacer(1, 8))
+    story.append(Paragraph(t['section5_title'], styles['SectionTitle']))
+    story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=4))
+    story.append(Spacer(1, 4))
     
-    # Reserved for PLAGENOR label in bordered box
     reserved_box = Table(
         [[Paragraph(
-            f"<b>{labels.get('reserved_plagenor', 'Cadre réservé à PLAGENOR')}</b>",
+            f"<b>{'Cadre réservé à PLAGENOR' if lang == 'fr' else 'Reserved for PLAGENOR'}</b>",
             styles['ImportantNote']
         )]],
         colWidths=[page_width]
@@ -893,105 +933,100 @@ def build_validation_section(request_obj, service, labels, page_width, styles):
     story.append(reserved_box)
     story.append(Spacer(1, 10))
     
-    # Operator field
-    story.append(Paragraph(labels['operator'], styles['Label']))
-    story.append(Spacer(1, 2))
-    story.append(SignatureLine(width=page_width * 0.6, date_label=f"{labels.get('reception_date', 'Date')}:"))
-    story.append(Spacer(1, 12))
+    service_code = 'EGTP-IMT'
+    checklist_items = get_checklist(service_code, lang)
     
-    # Checklist
-    story.append(Paragraph(labels.get('checklist_title', 'Checklist'), styles['Label']))
+    checklist_data = []
+    for item in checklist_items:
+        checklist_data.append([
+            Checkbox(size=10),
+            Paragraph(str(item), styles['ChecklistItem'])
+        ])
+    
+    checklist_table = Table(checklist_data, colWidths=[16, page_width - 16])
+    checklist_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ]))
+    
+    operator_data = [
+        [Paragraph(t['operator'], styles['Label']), Paragraph('', styles['Value'])],
+        [Paragraph(t['operator_name'] + ':', styles['Label']),
+         Paragraph('_' * 40, styles['Value'])],
+        [Paragraph(t['reception_date'] + ':', styles['Label']),
+         Paragraph('_' * 25 + '  ' + t['date'] + ': ________', styles['Value'])],
+        [Paragraph(t['signature'] + ':', styles['Label']),
+         Paragraph('', styles['Value'])],
+    ]
+    
+    operator_table = Table(operator_data, colWidths=[3 * cm, page_width - 3 * cm])
+    operator_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    
+    validation_left_table = Table(
+        [[operator_table], [Spacer(1, 10)], [checklist_table]],
+        colWidths=[page_width * 0.45]
+    )
+    validation_left_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    story.append(Paragraph(t['checklist_title'], styles['Label']))
     story.append(Spacer(1, 4))
+    story.append(checklist_table)
+    story.append(Spacer(1, 8))
     
-    # Get checklist items from service
-    checklist_items = getattr(service, 'checklist_items', []) or []
-    
-    if checklist_items:
-        for item in checklist_items:
-            # Create checkbox row
-            checkbox_row = Table(
-                [[Checkbox(size=10), Paragraph(str(item), styles['ChecklistItem'])]],
-                colWidths=[16, page_width - 16]
-            )
-            checkbox_row.setStyle(TableStyle([
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-            ]))
-            story.append(checkbox_row)
-    else:
-        # Default empty checklist rows
-        for i in range(5):
-            checkbox_row = Table(
-                [[Checkbox(size=10), Paragraph(f"_______________________________________", styles['ChecklistItem'])]],
-                colWidths=[16, page_width - 16]
-            )
-            checkbox_row.setStyle(TableStyle([
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ]))
-            story.append(checkbox_row)
-    
-    story.append(Spacer(1, 12))
-    
-    # Optional comment
-    story.append(Paragraph(labels.get('optional_comment', 'Commentaire optionnel'), styles['Label']))
+    story.append(Paragraph(t.get('comment', 'Commentaire') + ':', styles['Label']))
     story.append(Spacer(1, 4))
     for _ in range(3):
-        story.append(HorizontalLine(page_width, thickness=0.5, color=COLOR_BORDER))
-        story.append(Spacer(1, 12))
+        story.append(HRFlowable(width=page_width, thickness=0.5, color=COLOR_BORDER, spaceAfter=12))
     
     story.append(Spacer(1, 12))
     
-    # Reception date and signature
-    story.append(Paragraph(f"{labels.get('reception_date', 'Date de la réception')}: ________________________", styles['Label']))
-    story.append(Spacer(1, 8))
-    story.append(Paragraph(labels.get('signature', 'Signature'), styles['Label']))
-    story.append(Spacer(1, 4))
-    story.append(SignatureLine(width=page_width, date_label=f"{labels.get('signature_date', 'Date')}:"))
-    story.append(Spacer(1, 20))
-    
-    # Visa blocks (side by side) with proper signature spaces
     visa_col_width = (page_width - 20) / 2
     
-    # Left visa block
     left_visa = Table([
-        [Paragraph(labels.get('visa_chef', 'Visa du Chef du Service Commun'), styles['CenterBold'])],
-        [Paragraph('', styles['Normal'])],  # Blank space
-        [Paragraph('', styles['Normal'])],  # Blank space  
-        [Paragraph('', styles['Normal'])],  # Blank space
-        [Paragraph('_' * 40, styles['Normal'])],  # Signature line
-        [Paragraph(f"{labels.get('signature_date', 'Date')}: _______________", styles['SmallItalic'])],
+        [Paragraph(t['visa_chef_service'], ParagraphStyle('VisaTitle', fontName=FONT_TIMES_BOLD,
+                                                           fontSize=10, textColor=COLOR_PRIMARY,
+                                                           alignment=TA_CENTER))],
+        [Spacer(1, 30)],
+        [Paragraph('_' * 40, styles['Normal'])],
+        [Paragraph(f"{t['date']}: _______________", ParagraphStyle('Date', fontName=FONT_HELVETICA,
+                                                                   fontSize=8, textColor=COLOR_GRAY))],
     ], colWidths=[visa_col_width])
     left_visa.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ('TOPPADDING', (0, 0), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     
-    # Right visa block
     right_visa = Table([
-        [Paragraph(labels.get('visa_directeur', 'Visa du Directeur de l\'ESSBO'), styles['CenterBold'])],
-        [Paragraph('', styles['Normal'])],  # Blank space
-        [Paragraph('', styles['Normal'])],  # Blank space
-        [Paragraph('', styles['Normal'])],  # Blank space
-        [Paragraph('_' * 40, styles['Normal'])],  # Signature line
-        [Paragraph(f"{labels.get('signature_date', 'Date')}: _______________", styles['SmallItalic'])],
+        [Paragraph(t['visa_directeur'], ParagraphStyle('VisaTitle2', fontName=FONT_TIMES_BOLD,
+                                                        fontSize=10, textColor=COLOR_PRIMARY,
+                                                        alignment=TA_CENTER))],
+        [Spacer(1, 30)],
+        [Paragraph('_' * 40, styles['Normal'])],
+        [Paragraph(f"{t['date']}: _______________", ParagraphStyle('Date2', fontName=FONT_HELVETICA,
+                                                                   fontSize=8, textColor=COLOR_GRAY))],
     ], colWidths=[visa_col_width])
     right_visa.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-        ('TOPPADDING', (0, 0), (-1, -1), 2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     
-    # Combined visa table
     visa_table = Table([[left_visa, right_visa]], colWidths=[visa_col_width + 10, visa_col_width + 10])
     visa_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -1003,22 +1038,16 @@ def build_validation_section(request_obj, service, labels, page_width, styles):
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
     ]))
+    
+    story.append(Paragraph(t.get('visa_responsables', 'Visa des responsables'), styles['Label']))
+    story.append(Spacer(1, 6))
     story.append(visa_table)
     
     return story
 
 
-# =============================================================================
-# UTILITY FUNCTIONS
-# =============================================================================
-
 def check_ibtikar_form_status(request_obj) -> dict:
-    """
-    Check the status of IBTIKAR form for a request.
-    
-    Returns:
-        Dictionary with status information
-    """
+    """Check the status of IBTIKAR form for a request."""
     result = {
         'has_generated_form': False,
         'generated_form_url': None,
@@ -1028,14 +1057,6 @@ def check_ibtikar_form_status(request_obj) -> dict:
     
     if not request_obj.service:
         result['error'] = "No service linked to request"
-        return result
-    
-    result['can_generate'] = True
-    
-    if request_obj.generated_ibtikar_form:
-        result['has_generated_form'] = True
-        result['generated_form_url'] = request_obj.generated_ibtikar_form.url
-    
     return result
 
 
@@ -1055,3 +1076,11 @@ def delete_ibtikar_form(request_obj) -> bool:
         logger.error(f"Failed to delete IBTIKAR form for {request_obj.display_id}: {e}")
     
     return False
+    
+    result['can_generate'] = True
+    
+    if request_obj.generated_ibtikar_form:
+        result['has_generated_form'] = True
+        result['generated_form_url'] = request_obj.generated_ibtikar_form.url
+    
+    return result

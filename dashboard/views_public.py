@@ -5,14 +5,37 @@ from django.urls import reverse
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction, IntegrityError
+from django.db.models import Prefetch
 from datetime import datetime
 
-from core.models import Service, Request, RequestHistory
+from core.models import Service, Request, RequestHistory, Homepage, HomepageBlock
 
 
 def home(request):
     services = Service.objects.filter(active=True)[:8]
-    return render(request, 'pages/home.html', {'services': services})
+    homepage = Homepage.get_active()
+    sections = []
+
+    if homepage:
+        sections = list(
+            homepage.sections.filter(is_active=True)
+            .prefetch_related(
+                Prefetch(
+                    'blocks',
+                    queryset=HomepageBlock.objects.filter(is_active=True).order_by('position', 'pk')
+                )
+            )
+            .order_by('position', 'pk')
+        )
+
+    if not sections:
+        homepage = None
+
+    return render(request, 'pages/home.html', {
+        'services': services,
+        'homepage': homepage,
+        'sections': sections,
+    })
 
 
 def about(request):
@@ -301,8 +324,10 @@ def guest_ibtikar_code(request, pk):
     if req.status == 'IBTIKAR_SUBMISSION_PENDING':
         try:
             from core.workflow import transition
-            transition(req, 'IBTIKAR_CODE_SUBMITTED', None, notes=f'Code IBTIKAR (guest): {code}', force=True)
-        except (DatabaseError, ValidationError):
+            from core.exceptions import AuthorizationError
+            actor = request.user if getattr(request.user, 'is_authenticated', False) else None
+            transition(req, 'IBTIKAR_CODE_SUBMITTED', actor, notes=f'Code IBTIKAR (guest): {code}', force=True)
+        except (DatabaseError, ValidationError, AuthorizationError):
             # Transition failed - code is saved but status unchanged
             pass
     msg.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")

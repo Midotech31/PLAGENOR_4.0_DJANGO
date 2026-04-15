@@ -4,6 +4,7 @@
 from io import BytesIO
 from datetime import datetime
 import logging
+from pathlib import Path
 
 from django.conf import settings
 from django.core.files import File
@@ -32,6 +33,7 @@ from .pdf_styles import (
     make_page_template
 )
 from .pdf_labels import get_labels, get_label
+from .pdf_dynamic_fields import get_pdf_fields, render_pdf_fields
 
 logger = logging.getLogger('plagenor.documents')
 
@@ -41,6 +43,7 @@ logger = logging.getLogger('plagenor.documents')
 # =============================================================================
 
 MIN_RECEPTION_ROWS = 15
+MAX_RECEPTION_ROWS = 25
 
 
 # =============================================================================
@@ -107,7 +110,7 @@ def generate_reception_form_pdf(request_obj, lang=None, force_regenerate=False):
     # Check if form already exists (unless force_regenerate)
     if not force_regenerate and request_obj.generated_reception_form:
         existing_path = request_obj.generated_reception_form.path
-        if existing_path and hasattr(existing_path, 'exists') and existing_path.exists():
+        if existing_path and Path(existing_path).exists():
             logger.info(f"Reception form already exists for {request_obj.display_id}")
             return str(existing_path), None
     
@@ -153,20 +156,22 @@ def generate_reception_form_pdf(request_obj, lang=None, force_regenerate=False):
             base_url = f"https://{current_site.domain}" if current_site else None
             qr_data_url = generate_request_tracking_qr(request_obj, base_url=base_url)
             if qr_data_url:
-                qr_data = qr_data_url.split(',')[1]
-                qr_bytes = base64.b64decode(qr_data)
-                qr_buffer = BytesIO(qr_bytes)
-                qr_img = ImageReader(qr_buffer)
-                # Add QR code aligned right
-                qr_table = Table([[Paragraph(f"<small>{request_obj.display_id}</small>", styles['SmallCenter']), Image(qr_img, width=2*cm, height=2*cm)]],
-                                 colWidths=[page_width - 3*cm, 2*cm])
-                qr_table.setStyle(TableStyle([
-                    ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
-                    ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]))
-                story.append(qr_table)
-                story.append(Spacer(1, 4))
+                qr_parts = qr_data_url.split(',')
+                if len(qr_parts) >= 2:
+                    qr_data = qr_parts[1]
+                    qr_bytes = base64.b64decode(qr_data)
+                    qr_buffer = BytesIO(qr_bytes)
+                    qr_img = ImageReader(qr_buffer)
+                    # Add QR code aligned right
+                    qr_table = Table([[Paragraph(f"<small>{request_obj.display_id}</small>", styles['SmallCenter']), Image(qr_img, width=2*cm, height=2*cm)]],
+                                     colWidths=[page_width - 3*cm, 2*cm])
+                    qr_table.setStyle(TableStyle([
+                        ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+                        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ]))
+                    story.append(qr_table)
+                    story.append(Spacer(1, 4))
         except Exception as e:
             logger.debug(f"Could not generate QR code for Reception form: {e}")
 
@@ -213,6 +218,13 @@ def generate_reception_form_pdf(request_obj, lang=None, force_regenerate=False):
         # -------------------------------------------------------------------------
         story.extend(build_ethical_section(labels, page_width, styles))
         
+        # -------------------------------------------------------------------------
+        # DYNAMIC PDF FIELDS (SUPERADMIN)
+        # -------------------------------------------------------------------------
+        dynamic_fields = get_pdf_fields('reception_form', service=service)
+        if dynamic_fields:
+            render_pdf_fields(story, dynamic_fields, styles, page_width, request_obj.additional_data or {})
+
         # -------------------------------------------------------------------------
         # SECTION 8: SIGNATURE BLOCK
         # -------------------------------------------------------------------------
@@ -439,8 +451,13 @@ def build_sample_section(request_obj, labels, page_width, styles, lang='fr'):
     
     # Build data rows
     data_rows = [header_row]
-    
-    for i, sample in enumerate(samples, 1):
+
+    # Keep a relevant amount of lines based on submitted sample count
+    sample_count = len(samples)
+    target_rows = max(MIN_RECEPTION_ROWS, sample_count)
+    target_rows = min(target_rows, MAX_RECEPTION_ROWS)
+
+    for i, sample in enumerate(samples[:target_rows], 1):
         row = [Paragraph(str(i), styles['TableCellCenter'])]
         if isinstance(sample, dict):
             for col_key, _ in columns[1:]:  # Skip 'id'
@@ -451,8 +468,8 @@ def build_sample_section(request_obj, labels, page_width, styles, lang='fr'):
                 row.append(Paragraph('', styles['TableCell']))
         data_rows.append(row)
     
-    # Pad to minimum rows
-    while len(data_rows) < MIN_RECEPTION_ROWS + 1:
+    # Pad to target rows (min 15, dynamic up to max)
+    while len(data_rows) < target_rows + 1:
         row = [Paragraph(str(len(data_rows)), styles['TableCellCenter'])]
         for _ in columns[1:]:
             row.append(Paragraph('', styles['TableCell']))
@@ -463,15 +480,17 @@ def build_sample_section(request_obj, labels, page_width, styles, lang='fr'):
     col_width = page_width / num_cols
     
     table = Table(data_rows, colWidths=[col_width] * num_cols)
-    table.setStyle(get_base_table_style(header_count=1))
+    table.setStyle(get_base_table_style(header_count=1, alternating=False))
     story.append(table)
     
     # Minimum rows note
     story.append(Spacer(1, 4))
-    story.append(Paragraph(
-        f"{labels.get('minimum_rows_note', 'Minimum')} {MIN_RECEPTION_ROWS} rows" if labels.get('platform_note_title', '') == 'PLATFORM NOTE' else labels.get('minimum_rows_note', f'Minimum {MIN_RECEPTION_ROWS} rows required'),
-        styles['SmallItalic']
-    ))
+    rows_note = labels.get('minimum_rows_note')
+    if rows_note:
+        note_text = rows_note
+    else:
+        note_text = f"Minimum {MIN_RECEPTION_ROWS} rows required"
+    story.append(Paragraph(note_text, styles['SmallItalic']))
     
     return story
 

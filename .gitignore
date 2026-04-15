@@ -93,3 +93,18 @@ logs/
 
 # Uptime monitoring
 uptime_checks/
+
+# Artefacts de travail AI/Kilo
+BATCH1_SUMMARY.md
+CLAIREMISSIONOUTPUT.md
+CLAIRE_CODE_OUTPUT.md
+CLAUDE_CODE_OUTPUT.md
+tmp/
+nul
+g-synth-app/
+g_synth_django/
+test_multipliers.py
+*AUDIT_REPORT*.md
+*REVIEW_REPORT*.md
+*ISSUES_REVIEW*.md
+handover_detailed.md

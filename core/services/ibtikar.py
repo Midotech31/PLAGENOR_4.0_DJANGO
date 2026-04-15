@@ -4,13 +4,24 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-
+from decimal import Decimal
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, IntegrityError, transaction
 from django.utils import timezone
 
 from core.models import Request, RequestHistory
 from core.financial import check_ibtikar_budget, get_ibtikar_budget_available
+
+
+def _convert_decimals_to_floats(obj):
+    """Recursively convert Decimal objects to float for JSON serialization."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: _convert_decimals_to_floats(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_decimals_to_floats(item) for item in obj]
+    return obj
 
 logger = logging.getLogger('plagenor.services')
 
@@ -77,10 +88,11 @@ def submit_ibtikar_request(data: dict, user) -> Request:
             declared_ibtikar_balance=declared_balance,
             declared_balance_at=storage_balance_at,
             ibtikar_id=ibtikar_id,
-            service_params=data.get('service_params', {}),
-            pricing=data.get('pricing_breakdown', data.get('pricing', {})),
-            sample_table=data.get('sample_table', []),
-            requester_data=data.get('requester_data', {}),
+            service_params=_convert_decimals_to_floats(data.get('service_params', {})),
+            pricing=_convert_decimals_to_floats(data.get('pricing_breakdown', data.get('pricing', {}))),
+            sample_table=_convert_decimals_to_floats(data.get('sample_table', [])),
+            requester_data=_convert_decimals_to_floats(data.get('requester_data', {})),
+            additional_data=_convert_decimals_to_floats(data.get('additional_data', data.get('requester_data', {}))),
             analysis_framework=data.get('analysis_framework', ''),
             pi_name=data.get('pi_name', ''),
             pi_email=data.get('pi_email', ''),

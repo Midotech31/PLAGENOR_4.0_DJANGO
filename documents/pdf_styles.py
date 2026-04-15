@@ -9,6 +9,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from reportlab.platypus import Image, Table, TableStyle, Paragraph, Spacer, HRFlowable
 from reportlab.platypus.flowables import Flowable
 from django.conf import settings
+from PIL import Image as PILImage
 import os
 import logging
 
@@ -47,45 +48,43 @@ FONT_COURIER_BOLD = 'Courier-Bold'
 # LOGO HELPERS
 # =============================================================================
 
+def get_logo_dimensions(logo_path, target_width):
+    """Return (width, height) while preserving original image ratio."""
+    with PILImage.open(logo_path) as img:
+        original_width, original_height = img.size
+    if not original_width:
+        return target_width, target_width
+    ratio = original_height / float(original_width)
+    return target_width, target_width * ratio
+
+
 def get_logo(name, width=3*cm):
-    """
-    Load logo from static/images/ directory.
-    
-    Args:
-        name: Filename of the logo (e.g., 'essbo_logo.png', 'plagenor_logo.png')
-        width: Desired width of the logo (height auto-calculated)
-        
-    Returns:
-        reportlab.platypus.Image or None if file not found
-    """
+    """Load logo from static/images/ directory with preserved ratio."""
     try:
-        # Try multiple possible static directory locations
         static_dirs = getattr(settings, 'STATICFILES_DIRS', [])
         static_root = getattr(settings, 'STATIC_ROOT', None)
-        
+
         possible_paths = []
-        
+
         if static_root:
             possible_paths.append(os.path.join(static_root, 'images', name))
-        
+
         for static_dir in static_dirs:
             possible_paths.append(os.path.join(static_dir, 'images', name))
-        
-        # Also try MEDIA_ROOT for uploaded logos
+
         media_root = getattr(settings, 'MEDIA_ROOT', None)
         if media_root:
             possible_paths.append(os.path.join(media_root, 'images', name))
             possible_paths.append(os.path.join(media_root, 'logos', name))
-        
+
         for path in possible_paths:
             if os.path.exists(path):
-                # Calculate height maintaining aspect ratio (assuming ~0.6 aspect ratio)
-                height = width * 0.6
-                return Image(path, width=width, height=height)
-        
+                logo_width, logo_height = get_logo_dimensions(path, width)
+                return Image(path, width=logo_width, height=logo_height)
+
         logger.debug(f"Logo not found: {name}")
         return None
-        
+
     except Exception as e:
         logger.warning(f"Error loading logo {name}: {e}")
         return None
@@ -99,6 +98,27 @@ def get_essbo_logo(width=3*cm):
 def get_plagenor_logo(width=3*cm):
     """Get PLAGENOR logo. Alias for get_logo with common filename."""
     return get_logo('plagenor_logo.png', width) or get_logo('logo_plagenor.png', width)
+
+
+def get_ibtikar_logo(width=3*cm):
+    """Get IBTIKAR logo. Alias for get_logo with common filename."""
+    return get_logo('ibtikar_logo.png', width)
+
+
+def get_logos_row(width=2.5*cm):
+    """
+    Get all 3 logos (ESSBO, IBTIKAR, PLAGENOR) for header.
+    
+    Args:
+        width: Width for each logo (height auto-calculated based on aspect ratio)
+        
+    Returns:
+        Tuple of (essbo_img, ibtikar_img, plagenor_img) - may contain None values
+    """
+    essbo = get_essbo_logo(width)
+    ibtikar = get_ibtikar_logo(width)
+    plagenor = get_plagenor_logo(width)
+    return essbo, ibtikar, plagenor
 
 
 # =============================================================================
@@ -348,13 +368,14 @@ def get_styles():
 # TABLE STYLE HELPERS
 # =============================================================================
 
-def get_base_table_style(header_count=0, alternating=True):
+def get_base_table_style(header_count=0, alternating=False, data_rows=None):
     """
     Get a base TableStyle for PLAGENOR tables.
     
     Args:
         header_count: Number of header rows (will be styled differently)
-        alternating: Whether to use alternating row colors
+        alternating: Whether to use alternating row colors (default False to avoid IndexError)
+        data_rows: Number of data rows (if known) to limit alternating colors safely
         
     Returns:
         TableStyle with base styling applied
@@ -382,10 +403,12 @@ def get_base_table_style(header_count=0, alternating=True):
             ('VALIGN', (0, 0), (-1, header_count - 1), 'MIDDLE'),
         ])
     
-    # Alternating row colors
-    if alternating:
+    # Alternating row colors - only apply if explicitly requested AND we know row count
+    # This avoids IndexError when tables have fewer rows than expected
+    if alternating and data_rows is not None:
         start_row = header_count if header_count > 0 else 0
-        for i in range(start_row, 100):  # Max 100 rows
+        # Only style rows that actually exist
+        for i in range(start_row, min(start_row + data_rows, start_row + 50)):
             if i % 2 == 0:
                 bg_color = COLOR_ROW_ALT
             else:

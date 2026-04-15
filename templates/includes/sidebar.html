@@ -55,6 +55,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/></svg>
             {% trans "Archives revenus" %}
         </a>
+        <a href="{% url 'dashboard:superadmin_homepage_manager' %}" class="nav-item {% if request.resolver_match.url_name == 'superadmin_homepage_manager' or request.resolver_match.url_name == 'superadmin_homepage_section_add' or request.resolver_match.url_name == 'superadmin_homepage_section_edit' or request.resolver_match.url_name == 'superadmin_homepage_blocks_manager' or request.resolver_match.url_name == 'superadmin_homepage_block_add' or request.resolver_match.url_name == 'superadmin_homepage_block_edit' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            {% trans "Gérer la Homepage" %}
+        </a>
+        <a href="{% url 'dashboard:superadmin_pdf_fields' %}" class="nav-item {% if request.resolver_match.url_name == 'superadmin_pdf_fields' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8"/><path d="M9 2v4"/><path d="M15 2v4"/><rect x="3" y="6" width="18" height="16" rx="2"/><path d="M7 11h10"/><path d="M7 15h6"/></svg>
+            {% trans "Champs PDF" %}
+        </a>
         <a href="{% url 'dashboard:superadmin' %}?tab=system" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             {% trans "Système" %}
@@ -115,6 +123,11 @@
         <a href="{% url 'dashboard:admin_activity_log' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_activity_log' %}active{% endif %}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             {% trans "Journal d'activité" %}
+        </a>
+        <a href="{% url 'dashboard:admin_activity_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_activity_dashboard' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            {% trans "Activity Dashboard" %}
+            {% if critical_reminder_count > 0 %}<span class="nav-badge" style="background:#ef4444;">{{ critical_reminder_count }}</span>{% endif %}
         </a>
 
         {% elif user.role == 'MEMBER' %}

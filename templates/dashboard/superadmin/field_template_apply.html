@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin' %}">{% trans "Superadmin" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin_field_templates' %}">{% trans "Modèles de champs" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Appliquer le modèle" %}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> {% trans "Confirmer l'application du modèle" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        {% trans "Vous êtes sur le point d'appliquer le modèle" %}
+                        <strong>"{{ template.name }}"</strong>
+                        {% trans "au service" %}
+                        <strong>{{ service.name }}</strong>.
+                    </p>
+
+                    {% if template.fields %}
+                    <div class="alert alert-info">
+                        <strong>{% trans "Ce modèle contient" %} {{ template.fields|length }} {% trans "champs" %}:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for field in template.fields|slice:":10" %}
+                            <li>{{ field.label|default:field.name }} ({{ field.field_type }})</li>
+                            {% endfor %}
+                            {% if template.fields|length > 10 %}
+                            <li>... {% trans "et" %} {{ template.fields|length|add:"-10" }} {% trans "autres" %}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        {% trans "Ce modèle est vide (aucun champ défini)." %}
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-danger">
+                        <strong>{% trans "Attention:" %}</strong>
+                        {% trans "Cette action supprimera tous les champs actuels du service et les remplacera par les champs du modèle." %}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard:superadmin_service_edit' pk=service.pk %}" class="btn btn-secondary">
+                                {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-file-earmark-arrow-down"></i> {% trans "Appliquer le modèle" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <style>
+[x-cloak] { display: none !important; }
 .reward-box {
     position: relative;
     width: 80px;
@@ -82,7 +83,7 @@
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
     <div class="card-header">
         <h3>{% trans "Filter & Sort" %}</h3>
     </div>
@@ -90,7 +91,7 @@
         <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "Sort By" %}</label>
-                <select name="sort" class="form-control">
+                <select name="sort" class="form-control border-gray-200 rounded-lg focus:ring-teal-500">
                     <option value="total_points" {% if sort_by == 'total_points' %}selected{% endif %}>{% trans "Total Points" %}</option>
                     <option value="efficiency" {% if sort_by == 'efficiency' %}selected{% endif %}>{% trans "Efficiency Rate" %}</option>
                     <option value="services" {% if sort_by == 'services' %}selected{% endif %}>{% trans "Completed Services" %}</option>
@@ -99,57 +100,63 @@
             </div>
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "Min Points" %}</label>
-                <input type="number" name="min_points" value="{{ min_points }}" class="form-control" placeholder="0">
+                <input type="number" name="min_points" value="{{ min_points }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" placeholder="0">
             </div>
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "Max Points" %}</label>
-                <input type="number" name="max_points" value="{{ max_points }}" class="form-control" placeholder="999999">
+                <input type="number" name="max_points" value="{{ max_points }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500" placeholder="999999">
             </div>
             <button type="submit" class="btn btn-primary">{% trans "Apply" %}</button>
-            <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline">{% trans "Clear" %}</a>
+            <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-secondary">{% trans "Clear" %}</a>
         </form>
     </div>
 </div>
 
 <!-- Points Rules Card -->
-<div class="card mb-4" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
-    <div class="card-body">
-        <h3 style="margin-top: 0; color: #7c3aed;">{% trans "Points Calculation Rules" %}</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-            <div style="background: white; padding: 16px; border-radius: 8px;">
-                <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
-                <div style="font-weight: 600; color: #1f2937;">{% trans "Service Completion" %}</div>
-                <div style="color: #6b7280; font-size: 14px;">{% trans "Each finalized service earns" %} <strong>10 {% trans "points" %}</strong></div>
+<div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl shadow-sm border border-purple-100 p-6 mb-6">
+    <h3 style="margin-top: 0; color: #7c3aed;">{% trans "Points Calculation Rules" %}</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div style="background: white; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#7c3aed;"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
             </div>
-            <div style="background: white; padding: 16px; border-radius: 8px;">
-                <div style="font-size: 24px; margin-bottom: 8px;">⚡</div>
-                <div style="font-weight: 600; color: #1f2937;">{% trans "Efficiency Bonus" %}</div>
-                <div style="color: #6b7280; font-size: 14px;">{% trans "Early completion earns" %} <strong>+5 {% trans "bonus points" %}</strong></div>
+            <div style="font-weight: 600; color: #1f2937;">{% trans "Service Completion" %}</div>
+            <div style="color: #6b7280; font-size: 14px;">{% trans "Each finalized service earns" %} <strong>10 {% trans "points" %}</strong></div>
+        </div>
+        <div style="background: white; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#7c3aed;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
-            <div style="background: white; padding: 16px; border-radius: 8px;">
-                <div style="font-size: 24px; margin-bottom: 8px;">🎁</div>
-                <div style="font-weight: 600; color: #1f2937;">{% trans "Reward Milestone" %}</div>
-                <div style="color: #6b7280; font-size: 14px;">{% trans "Every" %} <strong>1,000 {% trans "points" %}</strong> = {% trans "1 reward box" %}</div>
+            <div style="font-weight: 600; color: #1f2937;">{% trans "Efficiency Bonus" %}</div>
+            <div style="color: #6b7280; font-size: 14px;">{% trans "Early completion earns" %} <strong>+5 {% trans "bonus points" %}</strong></div>
+        </div>
+        <div style="background: white; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#7c3aed;"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M16 2l4 4-4 4"/><path d="M12 6H8"/><rect x="8" y="14" width="10" height="8" rx="1"/></svg>
             </div>
-            <div style="background: white; padding: 16px; border-radius: 8px;">
-                <div style="font-size: 24px; margin-bottom: 8px;">👑</div>
-                <div style="font-weight: 600; color: #1f2937;">{% trans "Admin Bonus" %}</div>
-                <div style="color: #6b7280; font-size: 14px;">{% trans "Manual bonus with reason" %}</div>
+            <div style="font-weight: 600; color: #1f2937;">{% trans "Reward Milestone" %}</div>
+            <div style="color: #6b7280; font-size: 14px;">{% trans "Every" %} <strong>1,000 {% trans "points" %}</strong> = {% trans "1 reward box" %}</div>
+        </div>
+        <div style="background: white; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#7c3aed;"><path d="M12 15l-2 5 9-11h-5l2-5-9 11h5z"/></svg>
             </div>
+            <div style="font-weight: 600; color: #1f2937;">{% trans "Admin Bonus" %}</div>
+            <div style="color: #6b7280; font-size: 14px;">{% trans "Manual bonus with reason" %}</div>
         </div>
     </div>
 </div>
 
 <!-- Members Ranking -->
-<div class="card">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
     <div class="card-header">
         <h3>{% trans "Members by Performance" %}</h3>
-        <span class="text-muted">{% trans "Ranked by total points" %}</span>
+        <span class="text-sm text-gray-500">{% trans "Ranked by total points" %}</span>
     </div>
     <div class="card-body" style="padding: 0;">
         <div style="max-height: 600px; overflow-y: auto;">
             {% for member_data in members_data %}
-            <div class="data-card mb-2 member-row" style="margin: 0; padding: 16px; border-bottom: 1px solid #e5e7eb;">
+            <div style="margin: 0; padding: 16px; border-bottom: 1px solid #e5e7eb;">
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <!-- Rank -->
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: {% if forloop.counter <= 3 %}#fbbf24{% else %}#e5e7eb{% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: {% if forloop.counter <= 3 %}white{% else %}#6b7280{% endif %};">
@@ -175,7 +182,7 @@
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="font-weight: 600;">{{ member_data.member.user.get_full_name }}</div>
                                     {% if member_data.badge_name != 'Newcomer' %}
-                                    <span class="badge-{{ member_data.badge_name|lower }}" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: {% if member_data.badge_name == 'Bronze' %}linear-gradient(135deg, #cd7f32, #b87333){% elif member_data.badge_name == 'Silver' %}linear-gradient(135deg, #c0c0c0, #a8a8a8){% elif member_data.badge_name == 'Gold' %}linear-gradient(135deg, #ffd700, #daa520){% elif member_data.badge_name == 'Platinum' %}linear-gradient(135deg, #e5e4e2, #c0c0c0){% elif member_data.badge_name == 'Diamond' %}linear-gradient(135deg, #b9f2ff, #87ceeb){% endif %}; color: white; font-weight: 600;">
+                                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: {% if member_data.badge_name == 'Bronze' %}linear-gradient(135deg, #cd7f32, #b87333){% elif member_data.badge_name == 'Silver' %}linear-gradient(135deg, #c0c0c0, #a8a8a8){% elif member_data.badge_name == 'Gold' %}linear-gradient(135deg, #ffd700, #daa520){% elif member_data.badge_name == 'Platinum' %}linear-gradient(135deg, #e5e4e2, #c0c0c0){% elif member_data.badge_name == 'Diamond' %}linear-gradient(135deg, #b9f2ff, #87ceeb){% endif %}; color: white; font-weight: 600;">
                                         {% if member_data.badge_name == 'Bronze' %}🥉
                                         {% elif member_data.badge_name == 'Silver' %}🥈
                                         {% elif member_data.badge_name == 'Gold' %}🥇
@@ -227,7 +234,7 @@
                     
                     <!-- Actions -->
                     <div style="display: flex; gap: 8px; flex-shrink: 0;">
-                        <a href="{% url 'dashboard:admin_member_points' member_data.member.pk %}" class="btn btn-sm btn-outline">
+                        <a href="{% url 'dashboard:admin_member_points' member_data.member.pk %}" class="btn btn-secondary">
                             {% trans "Details" %}
                         </a>
                     </div>
@@ -241,13 +248,13 @@
         </div>
 
         {% if paginator %}
-        <div class="pagination" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; padding: 16px; border-top: 1px solid #e5e7eb;">
+        <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; padding: 16px; border-top: 1px solid #e5e7eb;">
             {% if members_page.has_previous %}
-            <a href="?page={{ members_page.previous_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
+            <a href="?page={{ members_page.previous_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-secondary">{% trans "Previous" %}</a>
             {% endif %}
-            <span class="btn btn-sm" style="background: #e5e7eb; cursor: default;">{% trans "Page" %} {{ members_page.number }} {% trans "of" %} {{ members_page.paginator.num_pages }}</span>
+            <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg" style="cursor: default;">{% trans "Page" %} {{ members_page.number }} {% trans "of" %} {{ members_page.paginator.num_pages }}</span>
             {% if members_page.has_next %}
-            <a href="?page={{ members_page.next_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
+            <a href="?page={{ members_page.next_page_number }}&sort={{ sort_by }}&min_points={{ min_points }}&max_points={{ max_points }}" class="btn btn-secondary">{% trans "Next" %}</a>
             {% endif %}
         </div>
         {% endif %}
@@ -255,8 +262,9 @@
 </div>
 
 <div style="margin-top: 20px;">
-    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
-        ← {% trans "Back to Dashboard" %}
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        {% trans "Back to Dashboard" %}
     </a>
 </div>
 {% endblock %}

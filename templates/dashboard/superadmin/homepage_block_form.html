@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if is_edit %}{% trans "Modifier un bloc" %}{% else %}{% trans "Ajouter un bloc" %}{% endif %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">
+        {% if is_edit %}
+            {% trans "Modifier le bloc" %}
+        {% else %}
+            {% trans "Ajouter un bloc" %}
+        {% endif %}
+    </h1>
+    <p class="greeting-date">{% trans "Section" %}: {{ section.title|default:section.slug }}</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+                {% if field.name == 'payload' %}
+                <small id="payload-help" class="text-muted">{% trans "Exemple JSON" %}: {"icon": "flask", "color": "teal"}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if is_edit and block.image %}
+            <div class="form-group">
+                <label class="form-label">{% trans "Image actuelle" %}</label>
+                <div>
+                    <img src="{{ block.image.url }}" alt="{{ block.image_alt|default:block.title }}" style="max-width:200px; max-height:180px; width:auto; height:auto; object-fit:contain; border:1px solid #e5e7eb; border-radius:8px; padding:6px;">
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;">
+                <button type="submit" class="btn btn-primary">{% trans "Sauvegarder" %}</button>
+                <a href="{% url 'dashboard:superadmin_homepage_blocks_manager' section.pk %}" class="btn btn-ghost">{% trans "Annuler" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    var typeField = document.getElementById('id_block_type');
+    var helpNode = document.getElementById('payload-help');
+    if (!typeField || !helpNode) return;
+
+    var map = {
+        card: '{"icon": "flask", "color": "teal"}',
+        button: '{"style": "primary"} - primary|secondary|ghost',
+        stat: '{"prefix": "", "suffix": "+", "animated": true}',
+        logo: '{"width": 120}',
+        image: '{"alt": "Image description", "caption": ""}',
+        text: '{"content": "Texte riche"}'
+    };
+
+    function updateHelp() {
+        var v = typeField.value || 'card';
+        helpNode.textContent = 'Exemple JSON: ' + (map[v] || map.card);
+    }
+
+    typeField.addEventListener('change', updateHelp);
+    updateHelp();
+})();
+</script>
+{% endblock %}

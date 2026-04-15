@@ -9,7 +9,7 @@
     <p class="greeting-date">{% trans "Audit trail of all request-related actions" %}</p>
 </div>
 
-<div class="card">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
     <div class="card-header">
         <h3>{% trans "Filter Activity" %}</h3>
     </div>
@@ -17,11 +17,11 @@
         <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "Search" %}</label>
-                <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Request ID, title, user...' %}" class="form-control">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="{% trans 'Request ID, title, user...' %}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500">
             </div>
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "Action Type" %}</label>
-                <select name="action" class="form-control">
+                <select name="action" class="form-control border-gray-200 rounded-lg focus:ring-teal-500">
                     <option value="">{% trans "All Actions" %}</option>
                     {% for value, label in status_choices %}
                     <option value="{{ value }}" {% if action_filter == value %}selected{% endif %}>{{ label }}</option>
@@ -30,65 +30,65 @@
             </div>
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "From Date" %}</label>
-                <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500">
             </div>
             <div>
                 <label style="font-size: 12px; color: #6b7280;">{% trans "To Date" %}</label>
-                <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control border-gray-200 rounded-lg focus:ring-teal-500">
             </div>
             <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
-            <a href="{% url 'dashboard:admin_activity_log' %}" class="btn btn-outline">{% trans "Clear" %}</a>
+            <a href="{% url 'dashboard:admin_activity_log' %}" class="btn btn-secondary">{% trans "Clear" %}</a>
         </form>
     </div>
 </div>
 
-<div class="card mt-4">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
     <div class="card-header">
         <h3>{% trans "Activity Entries" %}</h3>
-        <span class="text-muted">{{ paginator.count }} {% trans "entries" %}</span>
+        <span class="text-sm text-gray-500">{{ paginator.count }} {% trans "entries" %}</span>
     </div>
-    <div class="card-body">
-        <table class="table" style="width: 100%;">
+    <div class="overflow-x-auto">
+        <table class="w-full">
             <thead>
-                <tr>
-                    <th style="width: 150px;">{% trans "Timestamp" %}</th>
-                    <th style="width: 150px;">{% trans "Action" %}</th>
-                    <th>{% trans "Request" %}</th>
-                    <th>{% trans "User" %}</th>
-                    <th>{% trans "Details" %}</th>
+                <tr class="bg-gray-50 text-left">
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style="width: 150px;">{% trans "Timestamp" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider" style="width: 150px;">{% trans "Action" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Request" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "User" %}</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Details" %}</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-100">
                 {% for entry in activity_logs %}
-                <tr>
-                    <td>
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-4 py-3">
                         <div style="font-size: 12px;">{{ entry.created_at|date:"d/m/Y" }}</div>
                         <div style="font-size: 11px; color: #6b7280;">{{ entry.created_at|time:"H:i" }}</div>
                     </td>
-                    <td>
+                    <td class="px-4 py-3">
                         {% if entry.to_status %}
                         <span class="badge-status {{ entry.to_status|lower }}">{{ entry.get_to_status_display|default:entry.to_status }}</span>
                         {% else %}
                         <span class="badge-status">—</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="px-4 py-3">
                         {% if entry.request %}
-                        <a href="{% url 'dashboard:admin_request_detail' entry.request.pk %}">{{ entry.request.display_id }}</a>
+                        <a href="{% url 'dashboard:admin_request_detail' entry.request.pk %}" class="text-teal-600 hover:text-teal-700 font-medium">{{ entry.request.display_id }}</a>
                         <div style="font-size: 12px; color: #6b7280;">{{ entry.request.title|truncatechars:40 }}</div>
                         {% else %}
                         —
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="px-4 py-3">
                         {% if entry.actor %}
-                        {{ entry.actor.get_full_name }}
+                        <div>{{ entry.actor.get_full_name }}</div>
                         <div style="font-size: 11px; color: #6b7280;">{{ entry.actor.role }}</div>
                         {% else %}
                         System
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="px-4 py-3">
                         {% if entry.from_status %}
                         <span class="text-sm">{{ entry.from_status }} → {{ entry.to_status }}</span>
                         {% endif %}
@@ -106,24 +106,25 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
 
-        {% if paginator %}
-        <div class="pagination" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
-            {% if activity_logs.has_previous %}
-            <a href="?page={{ activity_logs.previous_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Previous" %}</a>
-            {% endif %}
-            <span class="btn btn-sm" style="background: #e5e7eb; cursor: default;">{% trans "Page" %} {{ activity_logs.number }} {% trans "of" %} {{ activity_logs.paginator.num_pages }}</span>
-            {% if activity_logs.has_next %}
-            <a href="?page={{ activity_logs.next_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-outline">{% trans "Next" %}</a>
-            {% endif %}
-        </div>
+    {% if paginator %}
+    <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
+        {% if activity_logs.has_previous %}
+        <a href="?page={{ activity_logs.previous_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-secondary btn-xs">{% trans "Previous" %}</a>
+        {% endif %}
+        <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg" style="cursor: default;">{% trans "Page" %} {{ activity_logs.number }} {% trans "of" %} {{ activity_logs.paginator.num_pages }}</span>
+        {% if activity_logs.has_next %}
+        <a href="?page={{ activity_logs.next_page_number }}&q={{ search_q }}&action={{ action_filter }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-secondary btn-xs">{% trans "Next" %}</a>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <div style="margin-top: 20px;">
-    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-outline">
-        ← {% trans "Back to Dashboard" %}
+    <a href="{% url 'dashboard:admin_ops' %}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        {% trans "Back to Dashboard" %}
     </a>
 </div>
 {% endblock %}

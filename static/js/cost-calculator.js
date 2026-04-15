@@ -21,10 +21,13 @@
 
     // Configuration
     const CONFIG = {
-        debug: true,  // Set to false in production
+        debug: true,  // Always on for troubleshooting
         currency: 'DA',
         locale: 'fr-FR',
     };
+    
+    // Immediate log to verify script is loaded
+    console.log('[CostCalculator] Script loaded, version 3');
 
     // Debug logging
     function log(...args) {
@@ -49,32 +52,64 @@
             '[data-pricing]',
         ];
 
+        log('Searching for pricing config in sources:', sources);
+
         for (const selector of sources) {
             const el = document.querySelector(selector);
-            if (!el) continue;
+            if (!el) {
+                log('Element not found:', selector);
+                continue;
+            }
+            log('Found element:', selector, el.outerHTML.substring(0, 200));
 
             // Try data-pricing-config attribute first (new format)
             const configAttr = el.getAttribute('data-pricing-config');
-            if (configAttr) {
+            log('data-pricing-config raw value:', configAttr);
+            if (configAttr && configAttr !== '' && configAttr !== '{}') {
+                log('Found data-pricing-config:', configAttr.substring(0, 200) + '...');
                 try {
-                    return JSON.parse(configAttr);
+                    const parsed = JSON.parse(configAttr);
+                    log('Successfully parsed config:', parsed);
+                    return parsed;
                 } catch (e) {
-                    error('Failed to parse data-pricing-config:', e);
+                    error('Failed to parse data-pricing-config:', e, 'Value was:', configAttr.substring(0, 200));
                 }
             }
 
             // Try data-pricing attribute (legacy format)
             const pricingAttr = el.getAttribute('data-pricing');
-            if (pricingAttr && pricingAttr !== '{}') {
+            log('data-pricing raw value:', pricingAttr);
+            if (pricingAttr && pricingAttr !== '' && pricingAttr !== '{}') {
+                log('Found data-pricing:', pricingAttr.substring(0, 200) + '...');
                 try {
-                    return JSON.parse(pricingAttr);
+                    const parsed = JSON.parse(pricingAttr);
+                    log('Successfully parsed pricing:', parsed);
+                    return parsed;
                 } catch (e) {
-                    error('Failed to parse data-pricing:', e);
+                    error('Failed to parse data-pricing:', e, 'Value was:', pricingAttr.substring(0, 200));
                 }
             }
         }
 
         log('No pricing configuration found');
+        
+        // FINAL FALLBACK: Extract price from visible pricing text
+        const pricingInfo = document.querySelector('.pricing-info');
+        if (pricingInfo) {
+            const text = pricingInfo.textContent;
+            log('Trying to extract price from pricing-info text:', text);
+            // Match numbers like 2500, 2 500, 2,500, etc.
+            const match = text.match(/(\d[\d\s,\.]*)/);
+            if (match) {
+                const priceStr = match[1].replace(/\s/g, '').replace(/,/g, '');
+                const price = parseFloat(priceStr);
+                log('Extracted price from text:', price);
+                if (price > 0) {
+                    return { base_price: price, configs: [{ pricing_type: 'BASE', amount: price }] };
+                }
+            }
+        }
+        
         return null;
     }
 
@@ -93,23 +128,10 @@
         const tableBody = document.getElementById('sample-table-body');
         if (tableBody) {
             const rows = tableBody.querySelectorAll('tr');
-            // Filter out empty rows (rows with no filled inputs)
-            const nonEmptyRows = Array.from(rows).filter(row => {
-                const inputs = row.querySelectorAll('input, select');
-                return Array.from(inputs).some(input => {
-                    if (input.type === 'hidden') return false;
-                    if (input.type === 'checkbox') return input.checked;
-                    return input.value && input.value.trim() !== '';
-                });
-            });
-            
-            if (nonEmptyRows.length > 0) {
-                count = nonEmptyRows.length;
-                detectionMethod = 'table_rows_nonempty';
-            } else if (rows.length > 0) {
-                // Fall back to total rows if none have data yet
+            // ALWAYS count all rows by default (rows are samples regardless of content)
+            if (rows.length > 0) {
                 count = rows.length;
-                detectionMethod = 'table_rows_total';
+                detectionMethod = 'table_rows_count';
             }
         }
 
@@ -330,48 +352,81 @@
      */
     function calculateCost() {
         const pricing = getPricingConfig();
+        log('Pricing config:', pricing);
+        
         if (!pricing) {
             log('No pricing config available');
             return null;
         }
 
         const basePrice = getBasePrice(pricing);
+        log('Base price:', basePrice);
+        
         if (basePrice === 0) {
-            log('Base price is 0, skipping calculation');
+            log('Base price is 0, attempting fallback...');
+            // Try to get price from visible pricing text
+            const pricingInfo = document.querySelector('.pricing-info');
+            if (pricingInfo) {
+                const text = pricingInfo.textContent;
+                const match = text.match(/(\d[\d\s,]*)/);
+                if (match) {
+                    const fallbackPrice = parseFloat(match[1].replace(/\s/g, '').replace(',', '.'));
+                    log('Found fallback price in DOM:', fallbackPrice);
+                    if (fallbackPrice > 0) {
+                        // Continue with fallback price
+                        return calculateWithPrice(fallbackPrice, pricing);
+                    }
+                }
+            }
+            log('Base price is 0, no fallback available');
             return null;
         }
+        
+        return calculateWithPrice(basePrice, pricing);
+    }
+    
+    /**
+     * Calculate cost with a given base price
+     * 
+     * CORRECT FORMULA: (Base + Supplements) × Sample_Count × Multiplier
+     * 
+     * Example: (2500 + 1500) × 5 × 2.6 = 52,000 DA
+     *          │     │        │    │
+     *          │     │        │    └── Analysis multiplier
+     *          │     │        └─────── Sample count
+     *          │     └──────────────── Per-sample supplement
+     *          └────────────────────── Base price per sample
+     */
+    function calculateWithPrice(basePrice, pricing) {
+        log('Calculating with base price:', basePrice);
 
         const { count: sampleCount } = detectSampleCount();
         const multipliers = getOptionMultipliers();
         const surcharges = getSurcharges();
 
-        // Start with base price per sample
-        let total = basePrice * sampleCount;
+        // Step 1: Calculate per-sample total (base + supplements)
+        let perSampleTotal = basePrice;
+        surcharges.forEach(surcharge => {
+            perSampleTotal += surcharge.amount;
+        });
+        
+        // Step 2: Multiply by sample count
+        let total = perSampleTotal * sampleCount;
+        
         const breakdown = {
             basePrice,
+            perSampleTotal,
             sampleCount,
-            baseTotal: total,
+            subtotal: total,
             multipliers: [],
             surcharges: [],
             finalTotal: total
         };
 
-        // Apply multipliers (e.g., Duplicata ×2)
+        // Step 3: Apply multipliers (e.g., Duplicata ×2, Triplicata ×2.6)
         multipliers.forEach(mult => {
             total *= mult;
             breakdown.multipliers.push(mult);
-        });
-
-        breakdown.afterMultipliers = total;
-
-        // Apply surcharges (per sample)
-        surcharges.forEach(surcharge => {
-            const amount = surcharge.amount * sampleCount;
-            total += amount;
-            breakdown.surcharges.push({
-                ...surcharge,
-                totalAmount: amount
-            });
         });
 
         breakdown.finalTotal = total;
@@ -508,10 +563,12 @@
         });
 
         // Listen for form loaded event (from AJAX)
-        document.addEventListener('serviceFormLoaded', function() {
-            log('Service form loaded');
-            // Small delay to ensure DOM is ready
+        document.addEventListener('serviceFormLoaded', function(e) {
+            log('Service form loaded, detail:', e.detail);
+            // Multiple delays to ensure DOM is ready and pricing data is parsed
             setTimeout(updateCostEstimate, 100);
+            setTimeout(updateCostEstimate, 300);
+            setTimeout(updateCostEstimate, 600);
         });
     }
 
@@ -524,7 +581,11 @@
         
         // Initial calculation if form is already present
         if (document.getElementById('cost-estimate-box')) {
-            setTimeout(updateCostEstimate, 200);
+            log('Found cost-estimate-box, running initial calculation');
+            setTimeout(updateCostEstimate, 100);
+            setTimeout(updateCostEstimate, 500);
+        } else {
+            log('No cost-estimate-box found on init');
         }
     }
 
@@ -545,6 +606,15 @@
         formatCurrency,
         CONFIG
     };
+    
+    // Manual test function for debugging
+    window.testCostCalculation = function() {
+        console.log('[CostCalculator] Manual test triggered');
+        console.log('Pricing config:', getPricingConfig());
+        console.log('Sample count:', detectSampleCount());
+        console.log('Calculated cost:', calculateCost());
+        updateCostEstimate();
+    };
 
-    log('Module loaded');
+    log('Module loaded - Call testCostCalculation() in console to debug');
 })();

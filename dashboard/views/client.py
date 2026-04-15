@@ -1,10 +1,22 @@
+"""
+Client dashboard views (GENOCLAB channel).
+
+Workflow map (high-level):
+- Create requests with authoritative server-side pricing.
+- Handle commercial steps: quote decision, purchase order, invoice, payment receipt.
+- Allow appointment/receipt confirmations and archive visibility controls.
+"""
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, paginate_queryset
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.translation import gettext
 from django.db.models import Count
+from django.db import transaction
+from datetime import timedelta
 from dashboard.decorators import client_required
 
 from core.models import Service, Request, Invoice
@@ -164,15 +176,39 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    # Collect parameter values
-    service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
+    # Collect parameter values (supports multi-select fields)
+    service_params = {}
+    for key in request.POST.keys():
+        if not key.startswith('param_'):
+            continue
+        clean_key = key.replace('param_', '', 1)
+        values = request.POST.getlist(key)
+        service_params[clean_key] = values if len(values) > 1 else request.POST.get(key)
+
     sample_data = {}
     for key, val in request.POST.items():
         if key.startswith('sample_'):
             parts = key.split('_', 2)
             if len(parts) == 3:
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
-    sample_table_data = list(sample_data.values()) if sample_data else []
+
+    # Keep only meaningful sample rows (ignore empty rows and index columns)
+    sample_table_data = []
+    for row in sample_data.values():
+        meaningful_values = []
+        for col_name, col_val in row.items():
+            col_name_norm = str(col_name).strip().lower()
+            is_number_col = (
+                col_name_norm in ('n°', 'nº', 'n', 'no', 'num', 'numero', 'number')
+                or ('n' in col_name_norm and ('°' in col_name_norm or 'º' in col_name_norm))
+                or 'number' in col_name_norm
+            )
+            if is_number_col:
+                continue
+            if str(col_val).strip():
+                meaningful_values.append(col_val)
+        if meaningful_values:
+            sample_table_data.append(row)
 
     # Calculate cost from ServicePricing database with server-side validation
     from core.pricing import validate_and_calculate_price
@@ -279,6 +315,12 @@ def upload_order(request, pk):
         messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
         return redirect('dashboard:client_request_detail', pk=pk)
     
+    # Validate file size (10MB max)
+    max_size = 10 * 1024 * 1024
+    if order_file.size > max_size:
+        messages.error(request, f"Le fichier dépasse la taille maximale autorisée de 10 Mo. Taille du fichier: {order_file.size / (1024 * 1024):.1f} Mo.")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
     # Save the order file
     req.order_file = order_file
     req.order_uploaded_at = timezone.now()
@@ -322,6 +364,12 @@ def upload_payment_receipt(request, pk):
     ext = os.path.splitext(payment_receipt.name)[1].lower()
     if ext not in allowed_extensions:
         messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
+        return redirect('dashboard:client_request_detail', pk=pk)
+    
+    # Validate file size (10MB max)
+    max_size = 10 * 1024 * 1024
+    if payment_receipt.size > max_size:
+        messages.error(request, f"Le fichier dépasse la taille maximale autorisée de 10 Mo. Taille du fichier: {payment_receipt.size / (1024 * 1024):.1f} Mo.")
         return redirect('dashboard:client_request_detail', pk=pk)
     
     # Save the payment receipt
@@ -375,6 +423,8 @@ def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
+    if req.requester != request.user:
+        return HttpResponseForbidden()
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -414,39 +464,67 @@ def suggest_alternative_date(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
-    if alt_date:
-        from datetime import datetime as dt
-        from core.models import RequestComment
-        from core.workflow import transition
-        from core.exceptions import InvalidTransitionError, AuthorizationError
-        try:
-            parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
-        except ValueError:
-            messages.error(request, "Date invalide.")
-            return redirect_back(request, 'dashboard:client')
+    
+    if hasattr(req, 'MAX_RESCHEDULE_LIMIT'):
+        max_reschedules = req.MAX_RESCHEDULE_LIMIT
+    else:
+        max_reschedules = 3
+    
+    if req.status != 'APPOINTMENT_PROPOSED':
+        messages.error(request, "La reprogrammation est disponible uniquement après proposition de rendez-vous.")
+        return redirect_back(request, 'dashboard:client')
+
+    if req.reschedule_count >= max_reschedules:
+        messages.error(
+            request,
+            f"Limite de reprogrammation atteinte ({max_reschedules} maximum). Veuillez confirmer le rendez-vous proposé."
+        )
+        return redirect_back(request, 'dashboard:client')
+    
+    if not alt_date:
+        messages.error(request, "Veuillez renseigner une date alternative.")
+        return redirect_back(request, 'dashboard:client')
+    
+    from datetime import datetime as dt
+    from core.models import RequestComment
+    from core.workflow import transition
+    from core.exceptions import InvalidTransitionError, AuthorizationError
+    try:
+        parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, "Date invalide.")
+        return redirect_back(request, 'dashboard:client')
+
+    if parsed_date < timezone.localdate():
+        messages.error(request, "La date alternative ne peut pas être dans le passé.")
+        return redirect_back(request, 'dashboard:client')
+    
+    with transaction.atomic():
+        req.reschedule_count += 1
+        req.save(update_fields=['reschedule_count'])
         
-        # Perform workflow transition to APPOINTMENT_RESCHEDULING_REQUESTED
         if req.status == 'APPOINTMENT_PROPOSED':
             try:
                 transition(req, 'APPOINTMENT_RESCHEDULING_REQUESTED', request.user, 
-                          notes=f"Client requested alternative date: {alt_date}. {alt_note}".strip())
+                          notes=f"Client requested alternative date: {alt_date}. {alt_note} (attempt {req.reschedule_count}/{max_reschedules})".strip())
             except (InvalidTransitionError, AuthorizationError, ValueError) as e:
                 messages.error(request, f"Erreur de transition: {str(e)}")
                 return redirect_back(request, 'dashboard:client')
         
-        # Store the alternative date on the request
         req.alt_date_proposed = parsed_date
         req.alt_date_note = alt_note
         req.save(update_fields=['alt_date_proposed', 'alt_date_note'])
         
-        # Log as comment for audit trail
         RequestComment.objects.create(
-            request=req, author=request.user,
-            text=f"Date alternative proposée: {alt_date}. {alt_note}".strip(),
+            request=req,
+            author=request.user,
+            text=(
+                f"Date alternative proposée: {alt_date}. {alt_note} "
+                f"(attempt {req.reschedule_count}/{max_reschedules})"
+            ).strip(),
             step=req.status
         )
         
-        # Notify Admin Ops (primary notification)
         from accounts.models import User
         admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
         for admin in admins:
@@ -457,7 +535,6 @@ def suggest_alternative_date(request, pk):
                 notification_type='WORKFLOW',
             )
         
-        # Also notify the assigned analyst
         if req.assigned_to:
             Notification.objects.create(
                 user=req.assigned_to.user,
@@ -465,8 +542,8 @@ def suggest_alternative_date(request, pk):
                 request=req,
                 notification_type='WORKFLOW',
             )
-        
-        messages.success(request, f"Demande de reprogrammation envoyée: {parsed_date.strftime('%d/%m/%Y')}. L'administrateur va vous contacter.")
+    
+    messages.success(request, f"Demande de reprogrammation envoyée: {parsed_date.strftime('%d/%m/%Y')}. L'administrateur va vous contacter.")
     return redirect_back(request, 'dashboard:client')
 
 
@@ -628,7 +705,7 @@ def download_invoice(request, pk):
         
         # Notify Admin Ops about the invoice download
         # Get all admin users
-        admin_users = User.objects.filter(role__in=['ADMIN', 'PLATFORM_ADMIN', 'SUPER_ADMIN'])
+        admin_users = User.objects.filter(role__in=['PLATFORM_ADMIN', 'SUPER_ADMIN'])
         for admin in admin_users:
             Notification.objects.create(
                 user=admin,
@@ -662,3 +739,43 @@ def download_invoice(request, pk):
         from django.contrib import messages
         messages.error(request, _("Error downloading invoice: %(error)s") % {'error': str(e)})
         return redirect('dashboard:client_request_detail', pk=pk)
+
+
+@client_required
+def view_quote(request, pk):
+    """Display official quote for client with accept/reject actions."""
+    from core.models import GenoclabSettings, Quote
+    
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
+    
+    # Get the current quote
+    quote = req.quotes.filter(is_current=True).first()
+    
+    if not quote:
+        # Fall back to quote_detail on request (legacy)
+        if req.quote_detail:
+            quote_data = req.quote_detail
+            quote_data['status'] = 'sent' if req.status in ['QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT'] else 'draft'
+            quote_data['created_at'] = req.created_at
+            quote_data['expires_at'] = req.created_at + timedelta(days=30)
+        else:
+            messages.error(request, gettext("No quote found for this request."))
+            return redirect('dashboard:client_request_detail', pk=pk)
+    else:
+        quote_data = quote.to_dict()
+    
+    settings = GenoclabSettings.get_settings()
+    
+    # Check if quote is expired
+    is_expired = quote.is_expired if quote else timezone.now() > quote_data.get('expires_at', timezone.now())
+    
+    context = {
+        'req': req,
+        'quote': quote_data,
+        'settings': settings,
+        'show_actions': quote.status == 'sent' if quote else req.status == 'QUOTE_SENT',
+        'is_preview': False,
+        'is_expired': is_expired,
+    }
+    
+    return render(request, 'documents/quote_official.html', context)

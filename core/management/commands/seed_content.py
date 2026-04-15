@@ -32,6 +32,12 @@ DEFAULTS = {
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
     'org_description': "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes.",
 
+    # Lab contact (used in Platform Note PDF)
+    'lab_name': 'PLAGENOR — Plateforme Génomique ESSBO',
+    'lab_address': 'Université d\'Oran, Cité Emir Abdelkader, 31000 Oran, Algérie',
+    'lab_phone': '+213 (0) 41 XX XX XX',
+    'lab_email': 'contact@plagenor.essbo.dz',
+
     # Footer
     'footer_brand': 'PLAGENOR 4.0',
     'footer_description': "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB.",

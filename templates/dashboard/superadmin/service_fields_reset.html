@@ -1,0 +1,75 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin' %}">{% trans "Superadmin" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin_services' %}">{% trans "Services" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:superadmin_service_edit' pk=service.pk %}">{{ service.name }}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Réinitialiser les champs" %}</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> {% trans "Réinitialiser les champs du service" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        {% trans "Sélectionnez un modèle pour réinitialiser les champs de" %} <strong>{{ service.name }}</strong>.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="template_id" class="form-label">{% trans "Modèle à appliquer" %}</label>
+                            <select name="template_id" id="template_id" class="form-select" required>
+                                <option value="">— {% trans "Sélectionner un modèle" %} —</option>
+                                {% for template in templates %}
+                                <option value="{{ template.pk }}">
+                                    {{ template.name }}
+                                    {% if template.source_service %} ({% trans "Source" %}: {{ template.source_service.name }}){% endif %}
+                                    {% if template.is_default_for_new %} ⭐{% endif %}
+                                </option>
+                                {% empty %}
+                                <option disabled>{% trans "Aucun modèle disponible" %}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                {% trans "Les modèles sont créés à partir de champs de services existants." %}
+                                <a href="{% url 'dashboard:superadmin_field_templates' %}">{% trans "Gérer les modèles" %}</a>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard:superadmin_service_edit' pk=service.pk %}" class="btn btn-secondary">
+                                {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('{% trans "Cela supprimera tous les champs actuels. Continuer?" %}');">
+                                <i class="bi bi-arrow-repeat"></i> {% trans "Réinitialiser avec le modèle" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">{% trans "Créer un nouveau modèle" %}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{% trans "Pour créer un modèle, vous pouvez cloner les champs d'un service existant." %}</p>
+                    <a href="{% url 'dashboard:superadmin_field_template_create' %}" class="btn btn-primary btn-xs">
+                        <i class="bi bi-plus-circle"></i> {% trans "Créer un nouveau modèle" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

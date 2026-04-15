@@ -319,6 +319,12 @@ document.head.appendChild(styleSheet);
     <div class="tab-list" style="margin-bottom: 24px;">
         <button class="tab-item" :class="tab === 'pending' && 'active'" @click="tab = 'pending'">{% trans "En attente" %} ({{ pending_tasks.count }})</button>
         <button class="tab-item" :class="tab === 'progress' && 'active'" @click="tab = 'progress'">{% trans "En cours" %} ({{ in_progress.count }})</button>
+        {% if observed_requests %}
+        <button class="tab-item" :class="tab === 'observed' && 'active'" @click="tab = 'observed'">{% trans "Observations" %} ({{ observed_requests.count }})</button>
+        {% endif %}
+        {% if my_reminders %}
+        <button class="tab-item" :class="tab === 'reminders' && 'active'" @click="tab = 'reminders'">{% trans "Rappels" %} ({{ my_reminders.count }})</button>
+        {% endif %}
         <button class="tab-item" :class="tab === 'history' && 'active'" @click="tab = 'history'">{% trans "Historique" %}</button>
         <button class="tab-item" :class="tab === 'profile' && 'active'" @click="tab = 'profile'">{% trans "Profil" %}</button>
         <button class="tab-item" :class="tab === 'points' && 'active'" @click="tab = 'points'">{% trans "Points" %}</button>
@@ -326,7 +332,7 @@ document.head.appendChild(styleSheet);
     </div>
 
     <!-- Pending Tasks -->
-    <div x-show="tab === 'pending'">
+    <div x-show="tab === 'pending'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Tâches en attente" %}</h3></div>
             <div class="card-body">
@@ -342,28 +348,37 @@ document.head.appendChild(styleSheet);
                     </div>
                     <div class="data-card-row mt-2" style="gap: 0.5rem;">
                         {% url 'dashboard:analyst_accept' req.pk as analyst_accept_url %}
-                        {% if analyst_accept_url %}
+                        {% if analyst_accept_url and req.status == 'PENDING_ACCEPTANCE' %}
                         <form method="post" action="{{ analyst_accept_url }}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter" %}</button>
+                            <button type="submit" class="btn btn-primary btn-sm">{% trans "Accepter" %}</button>
                         </form>
                         {% endif %}
                         {% url 'dashboard:analyst_decline' req.pk as analyst_decline_url %}
-                        {% if analyst_decline_url %}
+                        {% if analyst_decline_url and req.status == 'PENDING_ACCEPTANCE' %}
                         <form method="post" action="{{ analyst_decline_url }}" style="display:inline;" x-data="{show: false}">
                             {% csrf_token %}
-                            <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Décliner" %}</button>
+                            <button type="button" class="btn btn-danger-soft btn-sm" @click="show = !show">{% trans "Décliner" %}</button>
                             <div x-show="show" style="display:inline;">
                                 <input type="text" name="reason" placeholder="{% trans 'Raison...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;">
-                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
+                                <button type="submit" class="btn btn-danger-soft btn-sm">{% trans "Confirmer" %}</button>
                             </div>
                         </form>
                         {% endif %}
                     </div>
                 </div>
                 {% empty %}
-                <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>
+                <div class="empty-state"><p>{% trans "Aucune tâche en attente." %}</p></div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- In Progress Tasks -->
+    <div x-show="tab === 'progress'" x-cloak>
+        <div class="card">
+            <div class="card-header"><h3>{% trans "Tâches en cours" %}</h3></div>
+            <div class="card-body">
                 {% for req in in_progress %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
@@ -379,198 +394,120 @@ document.head.appendChild(styleSheet);
                         <span>{% trans "Notes de révision" %}: {{ req.admin_revision_notes }}</span>
                     </div>
                     {% endif %}
-                    <!-- Counter-proposals from requester -->
-                    {% if req.status == 'APPOINTMENT_PROPOSED' %}
-                    {% for comment in req.comments.all %}
-                    {% if 'Date alternative' in comment.text %}
-                    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:6px; padding:8px; margin-top:6px; font-size:0.85rem;">
-                        {{ comment.text }} <span class="text-muted">({{ comment.created_at|date:"d/m/Y H:i" }})</span>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         {% url 'dashboard:analyst_request_detail' req.pk as analyst_detail_url %}
                         {% if analyst_detail_url %}
-                        <a href="{{ analyst_detail_url }}" class="btn btn-sm btn-outline">{% trans "Voir détails" %}</a>
+                        <a href="{{ analyst_detail_url }}" class="btn btn-secondary btn-sm">{% trans "Voir détails" %}</a>
                         {% endif %}
                     </div>
-                    {# Compact Pipeline for GENOCLAB requests #}
-                    {% if req.channel == 'GENOCLAB' %}
-                    <div class="pipeline mt-2">
-                        {% with s=req.status %}
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s != 'REQUEST_CREATED' and s != 'QUOTE_DRAFT' %} done{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'QUOTE_DRAFT' %}active{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ORDER_UPLOADED,ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ASSIGNED' %}active{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'ANALYSIS_FINISHED' %}active{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% elif s == 'PAYMENT_CONFIRMED' %}active{% endif %}"></div></div>
-                        </div>
-                        <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                        <div class="pipeline-step">
-                            <div class="pipeline-node"><div class="pipeline-dot{% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %} done{% endif %}"></div></div>
-                        </div>
-                        {% endwith %}
-                    </div>
-                    {% endif %}
-                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
-                        <!-- Workflow action buttons based on status -->
-                        {% if req.status == 'APPOINTMENT_CONFIRMED' %}
-                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
-                        {% if analyst_action_url %}
-                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="to_status" value="SAMPLE_RECEIVED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Échantillon reçu" %}</button>
-                        </form>
-                        {% endif %}
-                        {% if req.status == 'SAMPLE_RECEIVED' %}
-                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
-                        {% if analyst_action_url %}
-                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="to_status" value="ANALYSIS_STARTED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Démarrer analyse" %}</button>
-                        </form>
-                        {% endif %}
-                        {% if req.status == 'ANALYSIS_STARTED' %}
-                        {% url 'dashboard:analyst_action' req.pk as analyst_action_url %}
-                        {% if analyst_action_url %}
-                        <form method="post" action="{{ analyst_action_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="to_status" value="ANALYSIS_FINISHED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Terminer analyse" %}</button>
-                        </form>
-                        {% endif %}
-                        {% if req.status in 'ANALYSIS_FINISHED,PAYMENT_CONFIRMED' %}
-                        {% url 'dashboard:analyst_upload_report' req.pk as analyst_upload_url %}
-                        {% if analyst_upload_url %}
-                        <form method="post" action="{{ analyst_upload_url }}" enctype="multipart/form-data" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="file" name="report_file" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Uploader rapport" %}</button>
-                        </form>
-                        {% endif %}
-                        {% endif %}
-                        {% endif %}
-                        {% endif %}
-                        {% endif %}
-
-                        <!-- Suggest appointment date -->
-                        {% if req.status == 'ASSIGNED' or req.status == 'PENDING_ACCEPTANCE' or req.status == 'APPOINTMENT_SCHEDULED' %}
-                        {% url 'dashboard:analyst_suggest_appointment' req.pk as analyst_suggest_url %}
-                        {% if analyst_suggest_url %}
-                        <form method="post" action="{{ analyst_suggest_url }}" style="margin-top:12px; width:100%;">
-                            {% csrf_token %}
-                            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
-                                <div style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                    {% trans "Proposer un rendez-vous" %}
-                                </div>
-                                <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-                                    <div>
-                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Date proposée" %}</label>
-                                        <input type="date" name="appointment_date" class="form-control"
-                                               min="{{ now|date:'Y-m-d' }}"
-                                               required
-                                               style="font-size:0.85rem;">
-                                    </div>
-                                    <div>
-                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Heure" %}</label>
-                                        <select name="appointment_time" class="form-control" style="font-size:0.85rem;">
-                                            <option value="08:00">08:00</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="14:00" selected>14:00</option>
-                                            <option value="15:00">15:00</option>
-                                            <option value="16:00">16:00</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm" style="font-size:0.75rem;">{% trans "Message au demandeur" %}</label>
-                                        <input type="text" name="appointment_note" class="form-control" placeholder="{% trans 'Ex: Apportez vos échantillons frais' %}" style="font-size:0.85rem; width:250px;">
-                                    </div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Proposer ce RDV" %}</button>
-                        </div>
-                        </form>
-                        {% endif %}
-                        {% endif %}
-
-                        <!-- Alternative date proposal from requester/client -->
-                        {% if req.alt_date_proposed %}
-                        <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:12px; margin-top:12px; width:100%;">
-                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                <strong style="color:#92400e; font-size:0.85rem;">{% trans "Date alternative proposée" %}: {{ req.alt_date_proposed|date:"d/m/Y" }}</strong>
-                            </div>
-                            {% if req.alt_date_note %}
-                            <div style="font-size:0.8rem; color:#78350f; margin-bottom:8px;">{{ req.alt_date_note }}</div>
-                            {% endif %}
-                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                {% url 'dashboard:analyst_accept_alt_date' req.pk as accept_alt_url %}
-                                {% if accept_alt_url %}
-                                <form method="post" action="{{ accept_alt_url }}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Accepter" %}</button>
-                                </form>
-                                {% endif %}
-                                {% url 'dashboard:analyst_decline_alt_date' req.pk as decline_alt_url %}
-                                {% if decline_alt_url %}
-                                <form method="post" action="{{ decline_alt_url }}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline" style="color:#dc2626; border-color:#fecaca;">{% trans "Refuser" %}</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <!-- Message / Reply form -->
-                    <div class="data-card-row mt-2" x-data="{showMsg: false}">
-                        <button type="button" class="btn btn-sm btn-outline" @click="showMsg = !showMsg">{% trans "Répondre" %}</button>
-                        {% url 'dashboard:send_message' req.pk as send_msg_url %}
-                        {% if send_msg_url %}
-                        <form x-show="showMsg" method="post" action="{{ send_msg_url }}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="text" name="message_text" placeholder="{% trans 'Message...' %}" class="form-control" style="display:inline-block; width:250px; font-size:0.85rem;">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                    <!-- Messages display -->
-                    {% for msg in req.messages.all|slice:":3" %}
-                    <div class="data-card-row text-sm" style="background: var(--slate-50); padding: 4px 8px; border-radius: 4px; margin-top: 4px;">
-                        <span><strong>{{ msg.from_user.get_full_name }}</strong>: {{ msg.text|truncatechars:60 }}</span>
-                        <span class="text-xs text-muted">{{ msg.created_at|date:"d/m H:i" }}</span>
-                    </div>
-                    {% endfor %}
+                </div>
                 {% empty %}
-                <div class="empty-state"><p>{% trans "Aucun travail en cours." %}</p></div>
+                <div class="empty-state"><p>{% trans "Aucune tâche en cours." %}</p></div>
                 {% endfor %}
             </div>
         </div>
     </div>
 
+    <!-- BATCH 1 - FEATURE 3: Observed Requests (Read-only access) -->
+    {% if observed_requests %}
+    <div x-show="tab === 'observed'" x-cloak>
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#6d28d9" stroke-width="2" style="width: 20px; height: 20px;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    {% trans "Demandes observées" %}
+                </h3>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #6b7280;">
+                    {% trans "Vous êtes observateur de ces demandes. Vous recevrez des notifications lors des changements de statut." %}
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Titre" %}</th>
+                                <th>{% trans "Service" %}</th>
+                                <th>{% trans "Analyste" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Mis à jour" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in observed_requests %}
+                        {% url 'dashboard:analyst_request_detail' req.pk as analyst_observed_url %}
+                        <tr class="clickable-row" {% if analyst_observed_url %}data-href="{{ analyst_observed_url }}"{% endif %}>
+                            <td>{{ req.display_id }}</td>
+                            <td>{{ req.title|truncatechars:40 }}</td>
+                            <td>{{ req.service.name|default:"—" }}</td>
+                            <td>
+                                {% if req.assigned_to %}
+                                <span style="color: #6d28d9;">{{ req.assigned_to.user.get_full_name }}</span>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></td>
+                            <td>{{ req.updated_at|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune demande observée." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if observed_paginator.has_other_pages %}
+                <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
+                    {% if observed_paginator.has_previous %}
+                    <a href="?observed_page={{ observed_paginator.previous_page_number }}" class="btn btn-secondary btn-sm">{% trans "Précédent" %}</a>
+                    {% endif %}
+                    <span style="padding: 8px 12px;">{% trans "Page" %} {{ observed_paginator.number }} {% trans "sur" %} {{ observed_paginator.paginator.num_pages }}</span>
+                    {% if observed_paginator.has_next %}
+                    <a href="?observed_page={{ observed_paginator.next_page_number }}" class="btn btn-secondary btn-sm">{% trans "Suivant" %}</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Feature 5: Reminders (Smart Reminders System) -->
+    {% if my_reminders %}
+    <div x-show="tab === 'reminders'" x-cloak>
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width: 20px; height: 20px;">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    {% trans "Mes Rappels" %}
+                </h3>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #92400e;">
+                    {% trans "Rappels pour les tâches en cours et à venir." %}
+                </p>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 16px;">
+                    {% for reminder in my_reminders %}
+                    {% include 'messaging/reminder_card.html' with reminder=reminder %}
+                    {% empty %}
+                    <div class="empty-state">
+                        <p>{% trans "Aucun rappel pour le moment." %}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- History -->
-    <div x-show="tab === 'history'">
+    <div x-show="tab === 'history'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Historique" %}</h3></div>
             <div class="card-body">
@@ -606,7 +543,7 @@ document.head.appendChild(styleSheet);
     </div>
 
     <!-- Profile -->
-    <div x-show="tab === 'profile'">
+    <div x-show="tab === 'profile'" x-cloak>
         <div class="card" style="max-width: 900px; margin: 0 auto;">
             <div class="card-header">
                 <h3>{% trans "Mon Profil" %}</h3>
@@ -691,14 +628,14 @@ document.head.appendChild(styleSheet);
 
                 <!-- Quick Links -->
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
                         {% trans "Modifier mon profil" %}
                     </a>
-                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="{% url 'accounts:profile' %}#password" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -711,7 +648,7 @@ document.head.appendChild(styleSheet);
     </div>
 
     <!-- Points & Cheers — Modern 2D Flat Design with 3D Badge Gallery -->
-    <div x-show="tab === 'points'">
+    <div x-show="tab === 'points'" x-cloak>
 
         <!-- Hero Section: Level + Points Ring -->
         <div class="card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); border: none;">
@@ -994,7 +931,7 @@ document.head.appendChild(styleSheet);
                     </div>
                     
                     {% if not profile.gift_collected %}
-                    <button type="button" class="btn" style="background: #f59e0b; color: white; font-weight: 600; border: none; display: inline-flex; align-items: center; gap: 8px;"
+                    <button type="button" class="btn btn-warning"
                             @click="
                         fetch('{% url 'dashboard:analyst_collect_gift' %}', {
                             method: 'POST',
@@ -1248,7 +1185,7 @@ document.head.appendChild(styleSheet);
     </div>
 
     <!-- Notifications -->
-    <div x-show="tab === 'notifs'">
+    <div x-show="tab === 'notifs'" x-cloak>
         {% include 'includes/notification_list.html' %}
         {% if not notifications %}
         <div class="card"><div class="card-body"><div class="empty-state"><p>{% trans "Aucune notification." %}</p></div></div></div>

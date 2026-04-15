@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <style>
+    [x-cloak] { display: none !important; }
     .request-detail-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -41,7 +42,7 @@
         margin-bottom: 24px;
     }
     .info-card {
-        background: #f8fafc;
+        background: white;
         border: 1px solid #e2e8f0;
         border-radius: 10px;
         padding: 16px;
@@ -436,7 +437,8 @@
                         <div class="file-name">{% trans "Rapport" %}</div>
                         <div class="file-meta">{{ req.updated_at|date:"d/m/Y H:i" }}</div>
                     </div>
-                    <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                    <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-secondary btn-xs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         {% trans "Télécharger" %}
                     </a>
                 </li>
@@ -452,7 +454,8 @@
                         <div class="file-name">{% trans "Bon de commande" %}</div>
                         <div class="file-meta">{{ req.order_uploaded_at|date:"d/m/Y H:i"|default:"—" }}</div>
                     </div>
-                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-secondary btn-xs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         {% trans "Télécharger" %}
                     </a>
                 </li>
@@ -469,7 +472,8 @@
                         <div class="file-name">{% trans "Reçu de paiement" %}</div>
                         <div class="file-meta">{{ req.payment_uploaded_at|date:"d/m/Y H:i"|default:"—" }}</div>
                     </div>
-                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline">
+                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-secondary btn-xs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         {% trans "Télécharger" %}
                     </a>
                 </li>
@@ -494,13 +498,13 @@
             <h3 class="section-title">{% trans "Formulaire IBTIKAR" %}</h3>
             {% if ibtikar_form_status %}
                 {% if ibtikar_form_status.has_template %}
-                    <span class="badge bg-success">
-                        <i class="fas fa-check"></i>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>
                         {% trans "Modèle disponible" %}
                     </span>
                 {% else %}
-                    <span class="badge bg-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                         {% trans "Aucun modèle configuré" %}
                     </span>
                 {% endif %}
@@ -523,18 +527,22 @@
                         <div class="file-name">{% trans "Formulaire IBTIKAR" %} - {{ req.display_id }}</div>
                         <div class="file-meta">{{ req.generated_ibtikar_form.name }}</div>
                     </div>
-                    <a href="{{ req.generated_ibtikar_form.url }}" target="_blank" class="btn btn-sm btn-success">
-                        <i class="fas fa-download"></i> {% trans "Télécharger" %}
+                    <a href="{{ req.generated_ibtikar_form.url }}" target="_blank" class="btn btn-success btn-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Télécharger" %}
                     </a>
                 </li>
             </ul>
             {% else %}
-            <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle"></i>
-                {% trans "Le formulaire IBTIKAR n'a pas encore été généré." %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-2 text-blue-700">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>{% trans "Le formulaire IBTIKAR n'a pas encore été généré." %}</span>
+                </div>
                 {% if ibtikar_form_status.can_generate %}
-                    <button type="button" class="btn btn-primary btn-sm ms-2" onclick="generateIbtikarForm('{{ req.id }}')" id="generate-ibtikar-btn">
-                        <i class="fas fa-file-export"></i> {% trans "Générer le formulaire" %}
+                    <button type="button" class="btn btn-primary" onclick="generateIbtikarForm('{{ req.id }}')" id="generate-ibtikar-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        {% trans "Générer le formulaire" %}
                     </button>
                 {% endif %}
             </div>
@@ -548,7 +556,7 @@
         const btn = document.getElementById('generate-ibtikar-btn');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {% trans "Génération..." %}';
+            btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M4 12a8 8 0 018-8" stroke-opacity="1"/></svg> {% trans "Génération..." %}';
         }
         
         try {
@@ -567,14 +575,14 @@
                 alert(data.error || '{% trans "Erreur lors de la génération" %}');
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-file-export"></i> {% trans "Générer le formulaire" %}';
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> {% trans "Générer le formulaire" %}';
                 }
             }
         } catch (error) {
             alert('{% trans "Erreur réseau" %}');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-file-export"></i> {% trans "Générer le formulaire" %}';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> {% trans "Générer le formulaire" %}';
             }
         }
     }
@@ -688,8 +696,9 @@
 
     <!-- Back Link -->
     <div style="margin-top:24px;">
-        <a href="{% url 'dashboard:superadmin' %}?tab=requests" class="btn btn-outline">
-            ← {% trans "Retour aux demandes" %}
+        <a href="{% url 'dashboard:superadmin' %}?tab=requests" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            {% trans "Retour aux demandes" %}
         </a>
     </div>
 </div>

@@ -25,14 +25,234 @@
 <div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'validation'}">
     <div class="tab-list" style="margin-bottom: 24px;">
         <button class="tab-item" :class="tab === 'validation' && 'active'" @click="tab = 'validation'">{% trans "Validation IBTIKAR" %} ({{ pending_validation.count }})</button>
+        <button class="tab-item" :class="tab === 'invoice_workflow' && 'active'" @click="tab = 'invoice_workflow'">{% trans "Factures GENOCLAB" %}</button>
         <button class="tab-item" :class="tab === 'budget' && 'active'" @click="tab = 'budget'">{% trans "Budget" %}</button>
-        <button class="tab-item" :class="tab === 'invoices' && 'active'" @click="tab = 'invoices'">{% trans "Factures GENOCLAB" %}</button>
+        <button class="tab-item" :class="tab === 'invoices' && 'active'" @click="tab = 'invoices'">{% trans "Toutes les factures" %}</button>
         <button class="tab-item" :class="tab === 'archives' && 'active'" @click="tab = 'archives'">{% trans "Archives" %}</button>
         <button class="tab-item" :class="tab === 'history' && 'active'" @click="tab = 'history'">{% trans "Historique" %}</button>
     </div>
 
+    <!-- GENOCLAB Invoice Workflow -->
+    <div x-show="tab === 'invoice_workflow'" x-cloak>
+        <div class="card mb-4" style="border-left: 4px solid #7c3aed;">
+            <div class="card-header" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    {% trans "Workflow Facturation GENOCLAB" %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 16px;">
+                    {% trans "Flux: Analyse terminée → Générer facture → Signer & Transmettre →Notifier paiement" %}
+                </p>
+                
+                <!-- Invoice Pipeline -->
+                <div class="pipeline mb-4" style="max-width: 800px;">
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
+                        <div class="pipeline-label">ANALYSIS_FINISHED</div>
+                    </div>
+                    <div class="pipeline-line done"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot{% if invoice_workflow_current == 'INVOICE_GENERATED' %} active{% elif invoice_workflow_current == 'INVOICE_SENT' or invoice_workflow_current == 'PAYMENT_PENDING' %} done{% endif %}"></div></div>
+                        <div class="pipeline-label">INVOICE_GENERATED</div>
+                    </div>
+                    <div class="pipeline-line{% if invoice_workflow_current == 'INVOICE_SENT' or invoice_workflow_current == 'PAYMENT_PENDING' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot{% if invoice_workflow_current == 'INVOICE_SENT' %} active{% elif invoice_workflow_current == 'PAYMENT_PENDING' %} done{% endif %}"></div></div>
+                        <div class="pipeline-label">INVOICE_SENT</div>
+                    </div>
+                    <div class="pipeline-line{% if invoice_workflow_current == 'PAYMENT_PENDING' %} done{% endif %}"></div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node"><div class="pipeline-dot{% if invoice_workflow_current == 'PAYMENT_PENDING' %} active{% endif %}"></div></div>
+                        <div class="pipeline-label">PAYMENT_PENDING</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYSIS_FINISHED - Generate Invoice -->
+        <div class="card mb-4">
+            <div class="card-header" style="border-left: 4px solid #f59e0b;">
+                <h3 style="margin: 0;">{% trans "1. Générer la facture" %}</h3>
+                <span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                    {% trans "Analyse terminée — En attente facture" %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% for req in invoice_gen_pending %}
+                <div class="data-card mb-2" style="border-left: 4px solid #f59e0b;">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status analysis_finished">ANALYSIS_FINISHED</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{% trans "Montant" %}: {{ req.quote_amount|default:req.admin_validated_price|default:0 }} DA</span>
+                    </div>
+                    <div class="data-card-row mt-2">
+                        {% url 'dashboard:finance_invoice_generate' req.pk as invoice_gen_url %}
+                        {% if invoice_gen_url %}
+                        <form method="post" action="{{ invoice_gen_url }}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                                {% trans "Générer la facture" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-secondary">{% trans "Voir détails" %}</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune demande en attente de génération de facture." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- INVOICE_GENERATED - Upload Signed Invoice -->
+        <div class="card mb-4">
+            <div class="card-header" style="border-left: 4px solid #3b82f6;">
+                <h3 style="margin: 0;">{% trans "2. Signer & Transmettre la facture" %}</h3>
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                    {% trans "Facture générée — À signer et transmettre" %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% for req in invoice_generated %}
+                <div class="data-card mb-2" style="border-left: 4px solid #3b82f6;">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status invoice_generated">INVOICE_GENERATED</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{% trans "Facture" %}: 
+                            {% if req.generated_invoice %}
+                                <a href="{{ req.generated_invoice.url }}" target="_blank" style="color: #059669;">{% trans "Télécharger (Excel)" %}</a>
+                            {% else %}
+                                <span style="color: #dc2626;">{% trans "Non générée" %}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-secondary">{% trans "Voir détails" %}</a>
+                        <a href="{% url 'dashboard:admin_request_detail' req.pk %}#invoice" class="btn btn-primary btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            {% trans "Télécharger, signer et uploader" %}
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune facture en attente de signature/transmission." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- INVOICE_SENT - Trigger Payment Pending -->
+        <div class="card mb-4">
+            <div class="card-header" style="border-left: 4px solid #10b981;">
+                <h3 style="margin: 0;">{% trans "3. Notifier le client pour paiement" %}</h3>
+                <span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                    {% trans "Facture transmise — Notifier paiement" %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% for req in invoice_sent %}
+                <div class="data-card mb-2" style="border-left: 4px solid #10b981;">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status invoice_sent">INVOICE_SENT</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{% trans "Envoyée le" %}: {{ req.invoice_sent_at|date:"d/m/Y H:i"|default:"—" }}</span>
+                    </div>
+                    {% if req.signed_invoice %}
+                    <div class="data-card-row text-sm" style="color: #059669;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        {% trans "Facture signée uploadée" %}
+                    </div>
+                    {% endif %}
+                    <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-secondary">{% trans "Voir détails" %}</a>
+                        {% url 'dashboard:finance_trigger_payment' req.pk as trigger_payment_url %}
+                        {% if trigger_payment_url %}
+                        <form method="post" action="{{ trigger_payment_url }}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                {% trans "Notifier client pour paiement" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucune facture en attente de notification de paiement." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- PAYMENT_PENDING - Waiting for Client Payment -->
+        <div class="card">
+            <div class="card-header" style="border-left: 4px solid #6366f1;">
+                <h3 style="margin: 0;">{% trans "4. En attente de paiement client" %}</h3>
+                <span style="background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                    {% trans "Paiement en attente" %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% for req in payment_pending %}
+                <div class="data-card mb-2" style="border-left: 4px solid #6366f1;">
+                    <div class="data-card-row">
+                        <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
+                        <span class="badge-status payment_pending">PAYMENT_PENDING</span>
+                    </div>
+                    <div class="data-card-row text-sm text-muted">
+                        <span>{{ req.requester.get_full_name|default:"—" }} &middot; {{ req.service.name|default:"—" }}</span>
+                        <span>{% trans "Montant" %}: {{ req.quote_amount|default:req.admin_validated_price|default:0 }} DA</span>
+                    </div>
+                    {% if req.payment_receipt_file %}
+                    <div class="data-card-row text-sm" style="color: #f59e0b;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {% trans "Reçu de paiement en attente de confirmation" %}
+                    </div>
+                    {% endif %}
+                    <div class="data-card-row mt-2">
+                        <a href="{% url 'dashboard:admin_request_detail' req.pk %}" class="btn btn-secondary">{% trans "Voir détails" %}</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p>{% trans "Aucun paiement en attente." %}</p></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <!-- IBTIKAR Validation -->
-    <div x-show="tab === 'validation'">
+    <div x-show="tab === 'validation'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Demandes IBTIKAR — Validation financière" %}</h3></div>
             <div class="card-body">
@@ -51,15 +271,15 @@
                         {% if finance_validate_url %}<form method="post" action="{{ finance_validate_url }}" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="approve">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Approuver" %}</button>
+                            <button type="submit" class="btn btn-primary btn-sm">{% trans "Approuver" %}</button>
                         </form>{% endif %}
                         {% if finance_validate_url %}<form method="post" action="{{ finance_validate_url }}" style="display:inline;" x-data="{show: false}">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="reject">
-                            <button type="button" class="btn btn-sm btn-danger" @click="show = !show">{% trans "Rejeter" %}</button>
+                            <button type="button" class="btn btn-danger-soft btn-sm" @click="show = !show">{% trans "Rejeter" %}</button>
                             <div x-show="show" style="display:inline;">
                                 <input type="text" name="reason" placeholder="{% trans 'Raison du rejet...' %}" class="form-control" style="display:inline-block; width:200px; font-size:0.85rem;" required>
-                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Confirmer" %}</button>
+                                <button type="submit" class="btn btn-danger-soft btn-sm">{% trans "Confirmer" %}</button>
                             </div>
                         </form>{% endif %}
                     </div>
@@ -72,7 +292,7 @@
     </div>
 
     <!-- Budget Overview -->
-    <div x-show="tab === 'budget'">
+    <div x-show="tab === 'budget'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Budget IBTIKAR par statut" %}</h3></div>
             <div class="card-body">
@@ -98,7 +318,7 @@
     </div>
 
     <!-- Invoices -->
-    <div x-show="tab === 'invoices'">
+    <div x-show="tab === 'invoices'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Factures GENOCLAB" %}</h3></div>
             <div class="card-body">
@@ -149,7 +369,7 @@
     </div>
 
     <!-- Archives -->
-    <div x-show="tab === 'archives'">
+    <div x-show="tab === 'archives'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Archives des revenus" %}</h3></div>
             <div class="card-body">
@@ -166,7 +386,7 @@
     </div>
 
     <!-- History -->
-    <div x-show="tab === 'history'">
+    <div x-show="tab === 'history'" x-cloak>
         <div class="card">
             <div class="card-header"><h3>{% trans "Historique financier" %}</h3></div>
             <div class="card-body">

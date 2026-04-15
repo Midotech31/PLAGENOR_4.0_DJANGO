@@ -7,7 +7,12 @@ def get_item(dictionary, key):
     """Access a dictionary item by key in templates."""
     if dictionary is None:
         return None
-    return dictionary.get(key)
+    value = dictionary.get(key)
+    # Convert floats to locale-independent string representation
+    if isinstance(value, float):
+        # Use Python's default string representation (always uses .)
+        return str(value)
+    return value
 
 
 @register.filter
@@ -57,3 +62,14 @@ def max_filter(value, arg):
         return max(float(value), float(arg))
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def in_list(value, csv_values):
+    """Check if value exists in a comma-separated list."""
+    if value is None:
+        return False
+    if not csv_values:
+        return False
+    values = [item.strip() for item in str(csv_values).split(',') if item.strip()]
+    return str(value) in values

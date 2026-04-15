@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load dashboard_extras %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -56,15 +57,15 @@
 {% endblock %}
 
 {% block content %}
-
-{% block extra_js %}
 <script>
 var citationAccepted = {{ req.citation_accepted|yesno:"true,false" }};
 
 function showCitationModal(event) {
     event.preventDefault();
     if (citationAccepted) {
+        {% if req.report_file %}
         window.location.href = '{{ req.report_file.url }}';
+        {% endif %}
         return;
     }
     var checkbox = document.getElementById('citation-checkbox');
@@ -94,9 +95,13 @@ function closeCitationModal(doDownload) {
             body: JSON.stringify({})
         }).then(function() {
             citationAccepted = true;
+            {% if req.report_file %}
             window.location.href = '{{ req.report_file.url }}';
+            {% endif %}
         }).catch(function() {
+            {% if req.report_file %}
             window.location.href = '{{ req.report_file.url }}';
+            {% endif %}
         });
     }
 }
@@ -121,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %}
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -137,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {% if req.updated_at %}— {% trans "Mise à jour" %} {{ req.updated_at|date:"d/m/Y H:i" }}{% endif %}
         </p>
     </div>
-    <a href="{% url 'dashboard:requester' %}" class="btn btn-outline">
+    <a href="{% url 'dashboard:requester' %}" class="btn btn-secondary">
         &larr; {% trans "Retour au tableau de bord" %}
     </a>
 </div>
@@ -229,8 +233,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
             <div class="card-body">
-                {% if req.budget_amount %}
-                <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
+                {% if calculated_cost %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Coût estimé" %}</span><strong>{{ calculated_cost|floatformat:2 }} DA</strong></div>
+                {% elif req.budget_amount %}
+                <div class="data-card-row"><span class="text-muted">{% trans "Coût estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
                 {% endif %}
                 {% if req.declared_ibtikar_balance %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Solde IBTIKAR déclaré" %}</span><strong>{{ req.declared_ibtikar_balance }} DA</strong></div>
@@ -287,17 +293,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s|in_list:'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
+                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s|in_list:'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
                     </div>
-                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
+                    <div class="pipeline-line{% if s|in_list:'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
                     <div class="pipeline-step">
                         <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
                         <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
@@ -315,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {# Primary: Download Report #}
                 {% if req.report_file %}
                 {% if req.citation_accepted %}
-                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px; font-size:0.95rem;">
+                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le Rapport" %}
                 </a>
@@ -324,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% trans "Clause acceptée le" %} {{ req.citation_accepted_at|date:"d/m/Y" }}
                 </div>
                 {% else %}
-                <button onclick="showCitationModal(event)" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px; font-size:0.95rem;">
+                <button onclick="showCitationModal(event)" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le Rapport" %}
                 </button>
@@ -333,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 {# Secondary: IBTIKAR Form #}
                 {% if req.generated_ibtikar_form %}
-                <a href="{{ req.generated_ibtikar_form.url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                <a href="{{ req.generated_ibtikar_form.url }}" target="_blank" class="btn btn-secondary flex items-center gap-2">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     {% trans "Formulaire IBTIKAR" %}
                 </a>
@@ -344,34 +350,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 {% endif %}
                 
-                {# Platform Note PDF (IBTIKAR only, available after validation) #}
-                {% if req.channel == 'IBTIKAR' and req.generated_platform_note %}
-                {% url 'documents:platform_note_pdf' req.pk as platform_note_pdf_url %}
-                {% if platform_note_pdf_url %}
-                <a href="{{ platform_note_pdf_url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    {% trans "Note de Plateforme" %} (PDF)
-                </a>
-                {% endif %}
-                {% endif %}
-                
-                {# Sample Reception Form PDF (available after appointment confirmed) #}
-                {% if req.generated_reception_form %}
-                {% url 'documents:reception_form' req.pk as sample_reception_pdf_url %}
-                {% if sample_reception_pdf_url %}
-                <a href="{{ sample_reception_pdf_url }}" target="_blank" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    {% trans "Formulaire de Réception" %} (PDF)
-                </a>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
         {% elif req.report_file %}
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Rapport" %}</h3></div>
             <div class="card-body">
-                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 20px;">
+                <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le Rapport" %}
                 </a>
@@ -474,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Step 1: View report with citation clause (redirects to post-download page) -->
             {% url 'dashboard:requester_post_download' req.pk as post_download_url %}
             {% if post_download_url %}
-            <a href="{{ post_download_url }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px; font-size:0.95rem;">
+            <a href="{{ post_download_url }}" class="btn btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -483,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% elif req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
             {% if post_download_url %}
-            <a href="{{ post_download_url }}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+            <a href="{{ post_download_url }}" class="btn btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -494,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if requester_confirm_url %}
         <form method="post" action="{{ requester_confirm_url }}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem;">
+            <button type="submit" class="btn btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
                 {% trans "Confirmer la réception du rapport" %}
             </button>
@@ -519,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         {% if req.report_file %}
         <div style="margin-bottom:16px;">
-            <a href="{% if req.report_token %}{% url 'report_view' req.report_token %}{% else %}{{ req.report_file.url }}{% endif %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+            <a href="{% if req.report_token %}{% url 'report_view' req.report_token %}{% else %}{{ req.report_file.url }}{% endif %}" target="_blank" class="btn btn-secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -539,13 +524,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input type="text" name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}" class="form-control" style="flex:1; min-width:200px;">
-                <button type="submit" class="btn btn-primary" style="padding:10px 24px;">{% trans "Envoyer mon évaluation" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Envoyer mon évaluation" %}</button>
             </div>
         </form>
         {% endif %}
     </div>
 </div>
-{% elif req.service_rating %}
+{% elif req.service_rating and req.status == 'COMPLETED' %}
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
@@ -556,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endif %}
 
 {# END OF WORKFLOW README SECTION #}
-{% if req.status in 'COMPLETED,CLOSED' %}
+{% if req.status|in_list:'COMPLETED,CLOSED' %}
 <div class="card mb-4" style="margin-top:24px; border:3px solid #4F46E5; background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
     <div class="card-body" style="padding:32px; text-align:center;">
         
@@ -575,11 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="background:white; border-radius:16px; padding:24px; margin:24px 0; box-shadow:0 4px 6px rgba(0,0,0,0.05); text-align:left; max-width:500px; margin-left:auto; margin-right:auto;">
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "Service" %}</span>
-                <strong>{{ req.service.name }}</strong>
+                <strong>{% firstof req.service.name "—" %}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "N° IBTIKAR" %}</span>
-                <strong style="font-family:monospace;">{{ req.ibtikar_id|default:req.display_id }}</strong>
+                <strong style="font-family:monospace;">{% firstof req.ibtikar_id req.display_id %}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e5e7eb;">
                 <span class="text-muted">{% trans "Créée le" %}</span>
@@ -600,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <p style="margin:0 0 16px; color:#92400e;">
                 {% trans "Donnez-nous 5 étoiles et laissez un commentaire positif ! / Give us 5 stars and leave a positive review!" %}
             </p>
-            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
+            <a href="#" onclick="document.querySelector('[x-data=\"{rating: 5, hover: 0}\"]').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-warning">
                 {% trans "Évaluer maintenant / Rate now" %}
             </a>
         </div>
@@ -640,4 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 {% endif %}
+
+<!-- Ephemeral Messages Panel (Feature 4) -->
+{% include 'messaging/message_panel.html' %}
 {% endblock %}

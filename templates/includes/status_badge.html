@@ -1,0 +1,18 @@
+{% load i18n %}
+{% with status_display|default:status as status_display %}
+{% if status == 'COMPLETED' or status == 'CLOSED' or status == 'ARCHIVED' or status == 'PAYMENT_CONFIRMED' or status == 'REPORT_VALIDATED' or status == 'SENT_TO_REQUESTER' or status == 'SENT_TO_CLIENT' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-50 text-green-700">{{ status_display }}</span>
+{% elif status == 'ASSIGNED' or status == 'ACCEPTED' or status == 'ANALYSIS_STARTED' or status == 'ANALYSIS_FINISHED' or status == 'SAMPLE_RECEIVED' or status == 'PAYMENT_PENDING' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-700">{{ status_display }}</span>
+{% elif status == 'VALIDATION_PEDAGOGIQUE' or status == 'VALIDATION_FINANCE' or status == 'PLATFORM_NOTE_GENERATED' or status == 'IBTIKAR_SUBMISSION_PENDING' or status == 'IBTIKAR_CODE_SUBMITTED' or status == 'QUOTE_VALIDATED_BY_CLIENT' or status == 'APPOINTMENT_CONFIRMED' or status == 'QUOTE_SENT' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 text-purple-700">{{ status_display }}</span>
+{% elif status == 'DRAFT' or status == 'ADMINISTRATIVELY_CLOSED' or status == 'REQUEST_CREATED' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">{{ status_display }}</span>
+{% elif status == 'REJECTED' or status == 'EXPIRED' or status == 'CANCELLED' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-50 text-red-700">{{ status_display }}</span>
+{% elif status == 'SUBMITTED' or status == 'PENDING_ACCEPTANCE' or status == 'APPOINTMENT_PROPOSED' %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-50 text-amber-700">{{ status_display }}</span>
+{% else %}
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">{{ status_display }}</span>
+{% endif %}
+{% endwith %}

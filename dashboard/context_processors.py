@@ -26,7 +26,7 @@ def notifications(request):
         if request.user.role == 'PLATFORM_ADMIN':
             # Pending requests count
             context['pending_count'] = Request.objects.filter(
-                status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED', 'ADMIN_REVIEW']
+                status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED']
             ).count()
             
             # Validation requests count
@@ -41,7 +41,7 @@ def notifications(request):
             
             # Report review count
             context['review_count'] = Request.objects.filter(
-                status__in=['REPORT_UPLOADED', 'ADMIN_REVIEW']
+                status__in=['REPORT_UPLOADED']
             ).count()
         
         return context

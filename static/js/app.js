@@ -93,8 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             var option = this.options[this.selectedIndex];
             var code = option.getAttribute('data-code') || '';
+            var channel = this.getAttribute('data-channel') || 'IBTIKAR';
             if (code) {
-                fetch('/dashboard/api/service-form/' + code + '/')
+                fetch('/dashboard/api/service-form/' + code + '/?channel=' + channel)
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
                         container.innerHTML = html;
@@ -104,15 +105,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             detail: { serviceCode: code, serviceId: serviceId }
                         }));
                         
-                        // Trigger cost calculation after a short delay to ensure scripts run
+                        // Trigger cost calculation after multiple delays to ensure DOM is ready
                         setTimeout(function() {
                             if (window.PlagenorCostCalculator) {
+                                console.log('Initial cost calculation (100ms)');
                                 window.PlagenorCostCalculator.updateCostEstimate();
-                            } else {
-                                // Fallback: dispatch cost update request
-                                document.dispatchEvent(new Event('costUpdateRequested'));
                             }
-                        }, 300);
+                        }, 100);
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                console.log('Delayed cost calculation (500ms)');
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            }
+                        }, 500);
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                console.log('Final cost calculation (1000ms)');
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            }
+                        }, 1000);
                     })
                     .catch(function(err) { 
                         console.error('Failed to load service form:', err);
@@ -266,17 +277,22 @@ document.addEventListener('change', function(e) {
         var isPathogenic = e.target.type === 'checkbox' ? e.target.checked : (e.target.value === 'true' || e.target.value === 'True');
 
         if (isPathogenic) {
+            // Store the original value before changing
+            if (!targetSelect.dataset.originalValue) {
+                targetSelect.dataset.originalValue = targetSelect.value;
+            }
             targetSelect.value = 'Disposable';
             targetSelect.disabled = true;
-            var hidden = document.getElementById('pathogen_target_hidden');
-            if (!hidden) {
-                hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.id = 'pathogen_target_hidden';
-                hidden.name = 'param_maldi_target_type';
-                hidden.value = 'Disposable';
-                targetSelect.parentElement.appendChild(hidden);
-            }
+            // Remove any existing hidden input first to avoid duplicates
+            var existingHidden = document.getElementById('pathogen_target_hidden');
+            if (existingHidden) existingHidden.remove();
+            // Create hidden input to ensure Disposable is submitted
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.id = 'pathogen_target_hidden';
+            hidden.name = 'param_maldi_target_type';
+            hidden.value = 'Disposable';
+            targetSelect.parentElement.appendChild(hidden);
             var hint = document.getElementById('pathogen-safety-hint');
             if (!hint) {
                 hint = document.createElement('div');
@@ -290,9 +306,23 @@ document.addEventListener('change', function(e) {
             targetSelect.disabled = false;
             var hidden = document.getElementById('pathogen_target_hidden');
             if (hidden) hidden.remove();
+            // Restore original value if available
+            if (targetSelect.dataset.originalValue) {
+                targetSelect.value = targetSelect.dataset.originalValue;
+            }
             var hint = document.getElementById('pathogen-safety-hint');
             if (hint) hint.style.display = 'none';
         }
+    }
+});
+
+// Initialize pathogenic checkbox state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var pathogenCheckbox = document.querySelector('input[name="param_pathogenic"]');
+    var targetSelect = document.querySelector('select[name="param_maldi_target_type"]');
+    if (pathogenCheckbox && targetSelect) {
+        // Trigger the logic to set initial state
+        pathogenCheckbox.dispatchEvent(new Event('change'));
     }
 });
 

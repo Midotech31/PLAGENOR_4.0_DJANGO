@@ -1,0 +1,604 @@
+{% extends "base.html" %}
+{% load i18n dashboard_extras %}
+
+{% block title %}{% trans "Activity Dashboard" %} — PLAGENOR 4.0{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    .kpi-label {
+        font-size: 14px;
+        color: #6b7280;
+    }
+    .kpi-change {
+        font-size: 12px;
+        margin-top: 4px;
+    }
+    .pipeline-bar {
+        height: 24px;
+        border-radius: 6px;
+        background: #e5e7eb;
+        position: relative;
+        overflow: hidden;
+    }
+    .pipeline-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.3s ease;
+    }
+    .pipeline-fill.green { background: #10b981; }
+    .pipeline-fill.yellow { background: #f59e0b; }
+    .pipeline-fill.red { background: #ef4444; }
+    .member-row:hover { background-color: #f9fafb; }
+    .member-row.critical { background-color: #fef2f2; }
+    .member-row.overloaded .queue-count { color: #f59e0b; font-weight: 600; }
+    .escalated-card {
+        border-left: 4px solid;
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+    .escalated-card.critical { border-color: #ef4444; }
+    .escalated-card.normal { border-color: #f59e0b; }
+    .period-tab {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .period-tab:hover { background: #f3f4f6; }
+    .period-tab.active {
+        background: #3b82f6;
+        color: white;
+    }
+    .poke-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .poke-modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="activityDashboard()" x-init="init()">
+    <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h1 class="greeting">{% trans "Activity Dashboard" %}</h1>
+                <p class="greeting-date">{% trans "Real-time overview of team performance and workload" %}</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <template x-for="p in ['today', 'week', 'month', 'year']" :key="p">
+                    <button 
+                        @click="setPeriod(p)"
+                        class="period-tab"
+                        :class="period === p && 'active'"
+                        x-text="p === 'today' ? '{% trans "Today" %}' : p === 'week' ? '{% trans "This Week" %}' : p === 'month' ? '{% trans "This Month" %}' : '{% trans "This Year" %}'"
+                    ></button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #eff6ff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                    <rect x="9" y="3" width="6" height="4" rx="1"/>
+                </svg>
+            </div>
+            <div class="kpi-value" x-text="kpis.active_requests">{{ active_requests }}</div>
+            <div class="kpi-label">{% trans "Active Requests" %}</div>
+            <div class="kpi-change" style="color: #10b981;" x-show="kpis.new_in_period > 0">
+                +<span x-text="kpis.new_in_period">{{ new_in_period }}</span> {% trans "new" %}
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #f3e8ff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+            </div>
+            <div class="kpi-value">
+                <span x-text="kpis.members_on_duty">{{ members_on_duty }}</span>
+                <span style="font-size: 18px; color: #9ca3af;">/</span>
+                <span style="font-size: 18px; color: #9ca3af;" x-text="kpis.total_members">{{ total_members }}</span>
+            </div>
+            <div class="kpi-label">{% trans "Members On Duty" %}</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #fef2f2;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="width: 24px; height: 24px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="kpi-value" x-text="kpis.overdue_count">{{ overdue_count }}</div>
+            <div class="kpi-label">{% trans "Overdue Reminders" %}</div>
+            <div class="kpi-change" style="color: #ef4444;" x-show="kpis.critical_count > 0">
+                <span x-text="kpis.critical_count">{{ critical_count }}</span> {% trans "critical" %}
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: #ecfdf5;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="kpi-value" x-text="kpis.completed_in_period">{{ completed_in_period }}</div>
+            <div class="kpi-label">{% trans "Completed This Period" %}</div>
+            <div class="kpi-change" :style="kpis.completion_change_pct >= 0 ? 'color: #10b981;' : 'color: #ef4444;'">
+                <span x-text="kpis.completion_change_pct >= 0 ? '↑' : '↓'"></span>
+                <span x-text="Math.abs(kpis.completion_change_pct)"></span>% 
+                {% trans "vs last" %} <span x-text="period === 'today' ? '{% trans "day" %}' : period === 'week' ? '{% trans "week" %}' : period === 'month' ? '{% trans "month" %}' : '{% trans "year" %}'"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Pipeline + Escalated -->
+    <div style="display: grid; grid-template-columns: 1fr 400px; gap: 24px; margin-bottom: 24px;">
+        <!-- Request Pipeline -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">{% trans "Request Pipeline" %}</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button @click="pipelineChannel = 'ALL'" class="period-tab" :class="pipelineChannel === 'ALL' && 'active'" style="padding: 4px 12px; font-size: 12px;">{% trans "ALL" %}</button>
+                    <button @click="pipelineChannel = 'IBTIKAR'" class="period-tab" :class="pipelineChannel === 'IBTIKAR' && 'active'" style="padding: 4px 12px; font-size: 12px;">IBTIKAR</button>
+                    <button @click="pipelineChannel = 'GENOCLAB'" class="period-tab" :class="pipelineChannel === 'GENOCLAB' && 'active'" style="padding: 4px 12px; font-size: 12px;">GENOCLAB</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <template x-for="phase in pipelineData" :key="phase.status">
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 13px; color: #4b5563;" x-text="phase.status_display || phase.status"></span>
+                            <span style="font-size: 13px; font-weight: 600;">
+                                <span x-text="phase.count"></span>
+                                <template x-if="phase.overdue > 0">
+                                    <span style="color: #ef4444; margin-left: 4px;" x-text="'⚠ ' + phase.overdue + ' overdue'"></span>
+                                </template>
+                            </span>
+                        </div>
+                        <div class="pipeline-bar">
+                            <div class="pipeline-fill" 
+                                :class="phase.overdue > 2 ? 'red' : phase.overdue > 0 ? 'yellow' : 'green'"
+                                :style="'width: ' + Math.max(5, (phase.count / maxPipelineCount * 100)) + '%'"
+                            ></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Escalated Reminders -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0;">
+                    {% trans "Escalated" %}
+                    <span style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 8px; font-size: 12px; margin-left: 8px;">
+                        <span x-text="escalatedReminders.length">{{ escalated_reminders|length }}</span>
+                    </span>
+                </h3>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <template x-for="reminder in escalatedReminders" :key="reminder.id">
+                    <div class="escalated-card" :class="reminder.urgency === 'CRITICAL' ? 'critical' : 'normal'">
+                        <div style="font-weight: 600; margin-bottom: 4px;">
+                            <span x-text="reminder.request_id"></span>
+                            <span x-show="reminder.member_name" style="font-weight: normal; color: #6b7280;"> — <span x-text="reminder.member_name"></span></span>
+                        </div>
+                        <div style="font-size: 13px; color: #4b5563; margin-bottom: 8px;" x-text="reminder.action"></div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a :href="'/dashboard/ops/request/' + reminder.request_id + '/'"             class="btn btn-secondary">{% trans "View" %}</a>
+                            <button @click="openPokeModal(reminder.request_id)"             class="btn btn-primary">📌 {% trans "Poke" %}</button>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="escalatedReminders.length === 0">
+                    <div style="text-align: center; padding: 40px; color: #9ca3af;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <p>{% trans "No escalated reminders" %}</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Workload Table -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">{% trans "Team Workload" %}</h3>
+            <div style="display: flex; gap: 8px;">
+                <button @click="sortMembers('total_active')" class="period-tab" :class="sortBy === 'total_active' && 'active'" style="padding: 4px 12px; font-size: 12px;">{% trans "By Active" %}</button>
+                <button @click="sortMembers('queue')" class="period-tab" :class="sortBy === 'queue' && 'active'" style="padding: 4px 12px; font-size: 12px;">{% trans "By Queue" %}</button>
+                <button @click="sortMembers('completed')" class="period-tab" :class="sortBy === 'completed' && 'active'" style="padding: 4px 12px; font-size: 12px;">{% trans "By Completed" %}</button>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; color: #6b7280; font-weight: 600;">#</th>
+                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Member" %}</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Queue" %}</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Active" %}</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Completed" %}</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Overdue" %}</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; font-weight: 600;">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(m, index) in membersData" :key="m.id">
+                        <tr class="member-row" :class="m.critical > 0 && 'critical'">
+                            <td style="padding: 12px 16px; font-size: 14px; color: #9ca3af;" x-text="index + 1"></td>
+                            <td style="padding: 12px 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
+                                        <span x-text="m.name.charAt(0)"></span>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 14px;" x-text="m.name"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                <span class="queue-count" :style="m.queue > 5 && 'color: #f59e0b; font-weight: 600;'" x-text="m.queue"></span>
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;" x-text="m.in_progress"></td>
+                            <td style="padding: 12px 16px; text-align: center;" x-text="m.completed"></td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                <span x-show="m.overdue > 0" style="color: #ef4444; font-weight: 600;">
+                                    ⚠ <span x-text="m.overdue"></span>
+                                </span>
+                                <span x-show="m.overdue === 0" style="color: #10b981;">✓</span>
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                <div style="display: flex; gap: 4px; justify-content: center;">
+                                    <button @click="viewMember(m.id)" class="btn btn-secondary" title="{% trans "View" %}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
+                                    <button @click="openPokeAllModal(m.id, m.name)"             class="btn btn-primary" title="{% trans "Poke" %}">
+                                        📌
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Poke Modal -->
+    <div x-show="showPokeModal" x-cloak class="poke-modal" @keydown.escape.window="showPokeModal = false">
+        <div class="poke-modal-content" @click.away="showPokeModal = false">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">📌 {% trans "Send Poke" %}</h3>
+                <button @click="showPokeModal = false" style="background: none; border: none; cursor: pointer; font-size: 20px;">&times;</button>
+            </div>
+            
+            <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <div style="font-weight: 600;" x-text="pokeData.request_ref"></div>
+                <div style="font-size: 13px; color: #6b7280;" x-show="pokeData.member_name">
+                    {% trans "To" %}: <span x-text="pokeData.member_name"></span>
+                </div>
+                <div style="font-size: 13px; color: #6b7280;">
+                    <span x-text="pokeData.status"></span> — <span x-text="pokeData.days_in_status"></span> {% trans "days" %}
+                </div>
+            </div>
+            
+            <form @submit.prevent="sendPoke()">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">{% trans "Message (optional)" %}</label>
+                    <textarea 
+                        x-model="pokeData.message"
+                        rows="3"
+                        class="form-control"
+                        placeholder="{% trans "Add a message to encourage the member..." %}"
+                        style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; resize: vertical;"
+                    ></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" @click="showPokeModal = false" class="btn btn-secondary">{% trans "Cancel" %}</button>
+                    <button type="submit" class="btn btn-primary flex items-center gap-2">📌 {% trans "Send Poke" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function activityDashboard() {
+    return {
+        period: '{{ current_period|default:"month" }}',
+        pipelineChannel: 'ALL',
+        sortBy: 'total_active',
+        showPokeModal: false,
+        pokeData: {
+            requestId: null,
+            requestRef: '',
+            memberName: '',
+            status: '',
+            daysInStatus: 0,
+            message: '',
+        },
+        kpis: {
+            active_requests: {{ active_requests|default:0 }},
+            new_in_period: {{ new_in_period|default:0 }},
+            members_on_duty: {{ members_on_duty|default:0 }},
+            total_members: {{ total_members|default:0 }},
+            overdue_count: {{ overdue_count|default:0 }},
+            critical_count: {{ critical_count|default:0 }},
+            completed_in_period: {{ completed_in_period|default:0 }},
+            completion_change_pct: {{ completion_change_pct|default:0 }},
+        },
+        membersData: [
+            {% for m in members_data %}
+            {
+                id: {{ m.member.pk }},
+                name: '{{ m.member.user.get_full_name }}',
+                queue: {{ m.queue }},
+                in_progress: {{ m.in_progress }},
+                completed: {{ m.completed }},
+                overdue: {{ m.overdue }},
+                critical: {{ m.critical }},
+                avg_days: {{ m.avg_days }},
+                total_active: {{ m.total_active }},
+            },
+            {% endfor %}
+        ],
+        pipelineData: [],
+        escalatedReminders: [
+            {% for r in escalated_reminders %}
+            {
+                id: '{{ r.id }}',
+                request_id: '{{ r.request.display_id }}',
+                action: '{{ r.action_expected }}',
+                member_name: '{% if r.request.assigned_to %}{{ r.request.assigned_to.user.get_full_name }}{% endif %}',
+                urgency: '{{ r.urgency }}',
+            },
+            {% endfor %}
+        ],
+        maxPipelineCount: 1,
+
+        init() {
+            this.updatePipeline();
+        },
+
+        setPeriod(p) {
+            this.period = p;
+            this.fetchData();
+        },
+
+        async fetchData() {
+            try {
+                const response = await fetch(`/dashboard/ops/activity/data/?period=${this.period}`);
+                const data = await response.json();
+                
+                this.kpis = data.kpis;
+                this.membersData = data.members.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    queue: m.queue,
+                    in_progress: m.in_progress,
+                    completed: m.completed,
+                    overdue: m.overdue,
+                    critical: 0,
+                    avg_days: 0,
+                    total_active: m.total_active,
+                }));
+                
+                this.pipelineData = this.getPipelineData(data.pipeline);
+                this.escalatedReminders = data.reminders.map(r => ({
+                    id: r.id,
+                    request_id: r.request__display_id,
+                    action: r.action_expected,
+                    member_name: r.request__assigned_to__user__first_name ? 
+                        r.request__assigned_to__user__first_name + ' ' + (r.request__assigned_to__user__last_name || '') : '',
+                    urgency: 'CRITICAL',
+                }));
+                
+                this.sortMembers(this.sortBy);
+            } catch (error) {
+                console.error('Failed to fetch activity data:', error);
+            }
+        },
+
+        getPipelineData(pipeline) {
+            const statusMap = {
+                'SUBMITTED': '{% trans "Submitted" %}',
+                'ASSIGNED': '{% trans "Assigned" %}',
+                'PENDING_ACCEPTANCE': '{% trans "Pending Acceptance" %}',
+                'ACCEPTED': '{% trans "Accepted" %}',
+                'APPOINTMENT_PROPOSED': '{% trans "Appointment" %}',
+                'APPOINTMENT_CONFIRMED': '{% trans "Confirmed" %}',
+                'SAMPLE_RECEIVED': '{% trans "Sample" %}',
+                'ANALYSIS_STARTED': '{% trans "Analysis" %}',
+                'ANALYSIS_FINISHED': '{% trans "Finished" %}',
+                'REPORT_UPLOADED': '{% trans "Report" %}',
+                'REPORT_VALIDATED': '{% trans "Validated" %}',
+                'COMPLETED': '{% trans "Completed" %}',
+            };
+            
+            let data = pipeline[this.pipelineChannel.toLowerCase()] || [];
+            if (this.pipelineChannel === 'ALL') {
+                const merged = {};
+                [...pipeline.ibtikar, ...pipeline.genoclab].forEach(item => {
+                    if (merged[item.status]) {
+                        merged[item.status].count += item.count;
+                    } else {
+                        merged[item.status] = { ...item };
+                    }
+                });
+                data = Object.values(merged);
+            }
+            
+            this.maxPipelineCount = Math.max(1, ...data.map(d => d.count));
+            
+            return data.map(d => ({
+                status: d.status,
+                status_display: statusMap[d.status] || d.status,
+                count: d.count,
+                overdue: 0,
+            }));
+        },
+
+        updatePipeline() {
+            const rawData = {
+                ibtikar: {{ pipeline_ibtikar_json|default:"[]"|safe }},
+                genoclab: {{ pipeline_genoclab_json|default:"[]"|safe }},
+            };
+            try {
+                rawData.ibtikar = JSON.parse('{{ pipeline_ibtikar|json_encode|escapejs }}' || '[]');
+                rawData.genoclab = JSON.parse('{{ pipeline_genoclab|json_encode|escapejs }}' || '[]');
+            } catch(e) {}
+            this.pipelineData = this.getPipelineData(rawData);
+        },
+
+        sortMembers(by) {
+            this.sortBy = by;
+            if (by === 'total_active') {
+                this.membersData.sort((a, b) => b.total_active - a.total_active);
+            } else if (by === 'queue') {
+                this.membersData.sort((a, b) => b.queue - a.queue);
+            } else if (by === 'completed') {
+                this.membersData.sort((a, b) => b.completed - a.completed);
+            }
+        },
+
+        async openPokeModal(requestId) {
+            this.pokeData.requestId = requestId;
+            this.pokeData.message = '';
+            
+            try {
+                const response = await fetch(`/dashboard/ops/request/${requestId}/poke/`);
+                const data = await response.json();
+                this.pokeData.requestRef = data.request_ref;
+                this.pokeData.memberName = data.member_name;
+                this.pokeData.status = data.status;
+                this.pokeData.daysInStatus = data.days_in_status;
+            } catch (error) {
+                console.error('Failed to fetch request data:', error);
+            }
+            
+            this.showPokeModal = true;
+        },
+
+        async openPokeAllModal(memberId, memberName) {
+            this.pokeData.requestId = 'member-' + memberId;
+            this.pokeData.memberName = memberName;
+            this.pokeData.message = '';
+            this.pokeData.requestRef = '{% trans "All active requests" %}';
+            this.pokeData.status = '{% trans "Multiple statuses" %}';
+            this.pokeData.daysInStatus = 0;
+            this.showPokeModal = true;
+        },
+
+        async sendPoke() {
+            const isBulk = this.pokeData.requestId.startsWith('member-');
+            const memberId = isBulk ? this.pokeData.requestId.replace('member-', '') : null;
+            const requestId = isBulk ? null : this.pokeData.requestId;
+            
+            const url = isBulk 
+                ? `/dashboard/ops/member/${memberId}/poke-all/`
+                : `/dashboard/ops/request/${requestId}/poke/`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                    },
+                    body: 'message=' + encodeURIComponent(this.pokeData.message)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'poked') {
+                    this.showPokeModal = false;
+                    alert('{% trans "Poke sent successfully to" %} ' + data.member + '!');
+                    this.fetchData();
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            } catch (error) {
+                console.error('Failed to send poke:', error);
+                alert('{% trans "Failed to send poke" %}');
+            }
+        },
+
+        viewMember(memberId) {
+            window.location.href = `/dashboard/ops/member/${memberId}/points/`;
+        },
+
+        getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    }
+}
+</script>
+{% endblock %}

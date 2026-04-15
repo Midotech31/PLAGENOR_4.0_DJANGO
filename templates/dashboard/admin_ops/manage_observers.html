@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Manage Observers" %} — {{ req.display_id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% trans "Manage Observers" %}</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width: 32px; height: 32px;">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <div>
+                    <h3 style="margin: 0 0 4px; color: #166534;">{% trans "Observer Members" %}</h3>
+                    <p style="margin: 0; color: #14532d; font-size: 0.9rem;">
+                        {% trans "Observers can view the request progress but cannot perform workflow actions." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-card mb-4" style="background: #f9fafb;">
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Request ID" %}</span>
+                <strong>{{ req.display_id }}</strong>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Title" %}</span>
+                <strong>{{ req.title|truncatechars:60 }}</strong>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Channel" %}</span>
+                <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+            </div>
+            <div class="data-card-row">
+                <span class="text-muted">{% trans "Primary Assignee" %}</span>
+                <strong>{{ req.assigned_to.user.get_full_name|default:"—" }}</strong>
+            </div>
+        </div>
+
+        <div class="grid-2" style="gap: 24px;">
+            <!-- Current Observers -->
+            <div class="card">
+                <div class="card-header" style="background: #fef3c7;">
+                    <h4 style="margin: 0;">{% trans "Current Observers" %}</h4>
+                </div>
+                <div class="card-body">
+                    {% if current_observers %}
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {% for observer in current_observers %}
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
+                                    {% if observer.user.avatar %}
+                                    <img src="{{ observer.user.avatar.url }}" alt="" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                    {% else %}
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: #9ca3af;">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong style="font-size: 0.9rem;">{{ observer.user.get_full_name }}</strong>
+                                    <div class="text-xs text-muted">{{ observer.user.email }}</div>
+                                </div>
+                            </div>
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="remove">
+                                <input type="hidden" name="member_id" value="{{ observer.pk }}">
+                                <button type="submit"             class="btn btn-danger" title="{% trans 'Remove observer' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; padding: 20px; color: #6b7280;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <p style="margin: 0;">{% trans "No observers assigned yet." %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Add Observer -->
+            <div class="card">
+                <div class="card-header" style="background: #eff6ff;">
+                    <h4 style="margin: 0;">{% trans "Add Observer" %}</h4>
+                </div>
+                <div class="card-body">
+                    {% if available_members %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label for="member_id" style="display: block; font-weight: 600; margin-bottom: 8px;">
+                                {% trans "Select Member" %}
+                            </label>
+                            <select id="member_id" name="member_id" class="form-control" required>
+                                <option value="">— {% trans "Select member" %} —</option>
+                                {% for member in available_members %}
+                                <option value="{{ member.pk }}">
+                                    {{ member.user.get_full_name }} ({{ member.current_load }}/{{ member.max_load }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit"             class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="8.5" cy="7" r="4"/>
+                                <line x1="20" y1="8" x2="20" y2="14"/>
+                                <line x1="23" y1="11" x2="17" y2="11"/>
+                            </svg>
+                            {% trans "Add Observer" %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <div style="text-align: center; padding: 20px; color: #6b7280;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <p style="margin: 0;">{% trans "No other members available." %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: center;">
+            <a href="{% url 'dashboard:admin_request_detail' req.pk %}"             class="btn btn-secondary">
+                &larr; {% trans "Back to Request" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

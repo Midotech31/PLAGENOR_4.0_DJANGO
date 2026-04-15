@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Blocs de section" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
+        <h1 class="greeting">{% trans "Blocs de la section" %}: {{ section.title|default:section.slug }}</h1>
+        {% if section.section_type == 'hero' %}<span class="badge badge-teal">hero</span>
+        {% elif section.section_type == 'partners' %}<span class="badge badge-purple">partners</span>
+        {% elif section.section_type == 'services' %}<span class="badge badge-info">services</span>
+        {% elif section.section_type == 'stats' %}<span class="badge badge-success">stats</span>
+        {% elif section.section_type == 'about' %}<span class="badge badge-warning">about</span>
+        {% elif section.section_type == 'contact' %}<span class="badge badge-cyan">contact</span>
+        {% else %}<span class="badge badge-neutral">custom</span>{% endif %}
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="{% url 'dashboard:superadmin_homepage_manager' %}" class="btn btn-ghost">{% trans "Retour aux sections" %}</a>
+        <a href="{% url 'dashboard:superadmin_homepage_block_add' section.pk %}" class="btn btn-primary">{% trans "Ajouter un bloc" %}</a>
+    </div>
+</div>
+
+{% if blocks %}
+<div style="display:grid; gap:12px;">
+    {% for block in blocks %}
+    <div class="card card-flat">
+        <div class="card-body" style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <span class="badge badge-info">{{ block.block_type }}</span>
+                <strong>{{ block.title|default:'[Sans titre]' }}</strong>
+                <span class="badge badge-neutral">{% trans "Position" %}: {{ block.position }}</span>
+                {% if block.is_active %}<span class="badge badge-success">{% trans "Actif" %}</span>{% else %}<span class="badge badge-danger">{% trans "Inactif" %}</span>{% endif %}
+                {% if block.image %}
+                <img src="{{ block.image.url }}" alt="{{ block.image_alt|default:block.title }}" style="max-height:80px; width:auto; object-fit:contain; border:1px solid #e5e7eb; border-radius:6px; padding:3px;">
+                {% endif %}
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="{% url 'dashboard:superadmin_homepage_block_edit' block.pk %}" class="btn btn-secondary btn-sm">{% trans "Éditer" %}</a>
+                <form method="post" action="{% url 'dashboard:superadmin_homepage_block_toggle' block.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-sm">{% if block.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}</button>
+                </form>
+                <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModal('block-{{ block.pk }}')">{% trans "Supprimer" %}</button>
+            </div>
+        </div>
+        <div class="card-footer" style="padding:10px 16px;">
+            <form method="post" action="{% url 'dashboard:superadmin_homepage_reorder_blocks' section.pk %}" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+                {% csrf_token %}
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">{% trans "Position" %}</label>
+                    <input type="number" name="position_{{ block.pk }}" value="{{ block.position }}" class="input" style="width:110px;">
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm">{% trans "Sauvegarder l'ordre" %}</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-block-{{ block.pk }}" class="modal-overlay" style="display:none;">
+        <div class="modal modal-sm">
+            <div class="modal-header"><h3>{% trans "Confirmer la suppression" %}</h3></div>
+            <div class="modal-body">
+                <p>{% trans "Êtes-vous sûr de vouloir supprimer" %} <strong>{{ block.title|default:'[Sans titre]' }}</strong> ?</p>
+                <p>{% trans "Cette action est irréversible." %}</p>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" class="btn btn-ghost" onclick="closeDeleteModal('block-{{ block.pk }}')">{% trans "Annuler" %}</button>
+                <form method="post" action="{% url 'dashboard:superadmin_homepage_block_delete' block.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{% trans "Confirmer" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state">
+    <p>{% trans "Aucun bloc configuré pour cette section." %}</p>
+</div>
+{% endif %}
+
+<script>
+function openDeleteModal(id) {
+    var modal = document.getElementById('modal-' + id);
+    if (modal) modal.style.display = 'flex';
+}
+function closeDeleteModal(id) {
+    var modal = document.getElementById('modal-' + id);
+    if (modal) modal.style.display = 'none';
+}
+</script>
+{% endblock %}

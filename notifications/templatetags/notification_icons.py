@@ -58,6 +58,13 @@ NOTIFICATION_TYPE_ICONS = {
     'DOCUMENT_READY': 'file',
     'REWARD': 'gift',
     'POINTS': 'star',
+    'INVOICE_READY': 'payment',
+    'INVOICE_DOWNLOADED': 'payment',
+    'REMINDER': 'warning',
+    'REMINDER_ESCALATION': 'warning',
+    'MESSAGE': 'mail',
+    'OBSERVER': 'notification',
+    'POKE': 'warning',
 }
 
 # Keyword to icon mapping (fallback when type is generic)

@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Service, Request, RequestHistory, RequestComment, Invoice,
     PlatformContent, PaymentMethod, Message, RevenueArchive, ServiceFormField,
-    ServicePricing,
+    ServicePricing, GenoclabSettings, Quote,
 )
 
 
@@ -317,7 +317,7 @@ class ServicePricingAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     raw_id_fields = ('service', 'updated_by')
     ordering = ['service', 'priority', 'pk']
-    
+
     fieldsets = (
         (None, {
             'fields': ('service', 'pricing_type', 'channel', 'name', 'description')
@@ -330,6 +330,79 @@ class ServicePricingAdmin(admin.ModelAdmin):
         }),
         ('Métadonnées', {
             'fields': ('updated_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(GenoclabSettings)
+class GenoclabSettingsAdmin(admin.ModelAdmin):
+    """Admin for GENOCLAB channel settings - superadmin can configure company info, logo, payment details."""
+
+    def has_add_permission(self, request):
+        """Prevent creating multiple settings - use singleton pattern."""
+        if GenoclabSettings.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deleting the settings."""
+        return False
+
+    fieldsets = (
+        ('Société', {
+            'fields': ('company_name', 'company_subtitle', 'logo')
+        }),
+        ('Adresse & Contact', {
+            'fields': ('address_line1', 'address_line2', 'phone', 'email', 'website')
+        }),
+        ('Informations bancaires', {
+            'fields': ('bank_name', 'account_number', 'rib', 'swift_code')
+        }),
+        ('Informations légales', {
+            'fields': ('rc_number', 'nif', 'ai')
+        }),
+        ('Paramètres des devis', {
+            'fields': ('quote_validity_days', 'vat_rate', 'quote_footer_text')
+        }),
+        ('Métadonnées', {
+            'fields': ('is_active', 'updated_at', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    readonly_fields = ('updated_at',)
+
+    def save_model(self, request, obj, form, change):
+        """Automatically set the updated_by field."""
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(Quote)
+class QuoteAdmin(admin.ModelAdmin):
+    """Admin for Quotes - allows viewing quote history."""
+    list_display = ('request', 'version', 'total_ttc', 'status', 'created_at', 'is_current')
+    list_filter = ('status', 'created_at')
+    search_fields = ('request__display_id', 'request__title')
+    readonly_fields = ('created_at', 'updated_at', 'expires_at')
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('request', 'status', 'version', 'is_current')
+        }),
+        ('Détail du devis', {
+            'fields': ('items', 'subtotal_ht', 'admin_fees', 'report_fees', 'discount_amount', 'discount_reason')
+        }),
+        ('Totaux', {
+            'fields': ('subtotal_before_tax', 'vat_rate', 'vat_amount', 'total_ttc')
+        }),
+        ('Notes', {
+            'fields': ('notes', 'terms')
+        }),
+        ('Dates', {
+            'fields': ('created_at', 'updated_at', 'expires_at', 'sent_at', 'responded_at'),
             'classes': ('collapse',)
         }),
     )

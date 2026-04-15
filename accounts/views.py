@@ -42,6 +42,13 @@ class RegisterView(CreateView):
             return GenoclabRegistrationForm
         return None
 
+    def get_form_kwargs(self):
+        """Override to remove 'instance' kwarg since we use regular forms (not ModelForms)."""
+        kwargs = super().get_form_kwargs()
+        # Remove 'instance' if present - our forms are regular Forms, not ModelForms
+        kwargs.pop('instance', None)
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         channel = self.request.GET.get('channel') or self.request.POST.get('channel')

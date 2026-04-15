@@ -1,0 +1,282 @@
+{% load i18n %}
+<style>
+.message-panel svg { display: inline-block; flex-shrink: 0; }
+.message-panel .mp-attach-icon { width: 16px; height: 16px; max-width: 16px; max-height: 16px; display: block; }
+.message-panel .mp-empty-state { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.message-panel .mp-empty-state .block { display: inline !important; }
+.message-panel .mp-empty-icon { width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; margin: 0 !important; display: block; }
+</style>
+<div class="message-panel" x-data="messagePanel('{{ request_obj.pk }}')" x-init="loadMessages()">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
+            <div class="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 text-gray-500 flex-shrink-0">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <h3 class="text-sm font-semibold text-gray-900">{% trans "Messages" %}</h3>
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-teal-50 text-teal-700">
+                    {{ request_obj.get_status_display }}
+                </span>
+                <span x-show="unreadCount > 0" x-text="unreadCount" class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"></span>
+            </div>
+            <svg :class="expanded ? 'rotate-180' : ''" width="20" height="20" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+        
+        <div x-show="expanded" x-cloak class="divide-y divide-gray-50">
+            <!-- Phase History Accordion -->
+            <div x-show="historyPhases && Object.keys(historyPhases).length > 0" class="bg-gray-50 px-4 py-3">
+                <button @click="showHistory = !showHistory" class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                    <svg :class="showHistory ? 'rotate-90' : ''" width="16" height="16" class="w-4 h-4 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    {% trans "Historique des phases" %}
+                </button>
+                <div x-show="showHistory" class="mt-2 space-y-2">
+                    <template x-for="(phaseData, phase) in historyPhases" :key="phase">
+                        <div class="bg-white rounded-lg p-2 border border-gray-100">
+                            <div class="text-xs font-medium text-gray-600" x-text="phase + ' (' + phaseData.messages.length + ')'"></div>
+                            <template x-for="msg in phaseData.messages.slice(-2)" :key="msg">
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <span x-text="msg.sender_name"></span>: <span x-text="msg.content.substring(0, 50)"></span>...
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Messages Area -->
+            <div id="messages-container" class="bg-gray-50 rounded-xl p-4 max-h-96 overflow-y-auto space-y-3">
+                <template x-if="loading">
+                    <div class="text-center py-8 text-sm text-gray-400">{% trans "Chargement des messages..." %}</div>
+                </template>
+                <template x-if="!loading && messages.length === 0">
+                    <div class="py-8 text-sm text-gray-400">
+                        <div class="mp-empty-state">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" class="mp-empty-icon text-gray-300" aria-hidden="true">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <span x-show="canSend">{% trans "Pas encore de messages. Commencez la conversation!" %}</span>
+                            <span x-show="!canSend">{% trans "Pas encore de messages." %}</span>
+                        </div>
+                    </div>
+                </template>
+                <template x-for="msg in messages" :key="msg.id">
+                    <!-- System message -->
+                    <div x-show="msg.is_system" class="text-center">
+                        <span class="text-xs text-gray-400 italic" x-text="msg.content"></span>
+                    </div>
+                    
+                    <!-- My message (right) -->
+                    <div x-show="!msg.is_system && msg.is_mine" class="ml-auto max-w-[80%]">
+                        <div class="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="getRoleBadgeClass(msg.sender_role)" x-text="msg.sender_role"></span>
+                                <span class="text-xs text-gray-400" x-text="formatTime(msg.created_at)"></span>
+                            </div>
+                            <p class="text-sm text-gray-700" x-text="msg.content"></p>
+                            <template x-if="msg.attachment_url">
+                                <div class="mt-2">
+                                    <a :href="msg.attachment_url" target="_blank" class="text-xs text-teal-600 hover:text-teal-800 underline" x-text="msg.attachment_name || 'Attachment'"></a>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Other message (left) -->
+                    <div x-show="!msg.is_system && !msg.is_mine" class="mr-auto max-w-[80%]">
+                        <div class="bg-white border border-gray-100 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-medium text-gray-700" x-text="msg.sender_name"></span>
+                                <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="getRoleBadgeClass(msg.sender_role)" x-text="msg.sender_role"></span>
+                                <span class="text-xs text-gray-400" x-text="formatTime(msg.created_at)"></span>
+                            </div>
+                            <p class="text-sm text-gray-700" x-text="msg.content"></p>
+                            <template x-if="msg.attachment_url">
+                                <div class="mt-2">
+                                    <a :href="msg.attachment_url" target="_blank" class="text-xs text-teal-600 hover:text-teal-800 underline" x-text="msg.attachment_name || 'Attachment'"></a>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- Observer Banner -->
+            <div x-show="!canSend && !isClosed" x-cloak class="bg-amber-50 border-t border-amber-200 px-4 py-3 text-sm text-amber-700 flex items-start gap-2">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" class="flex-shrink-0" style="width:16px;height:16px;max-width:16px;max-height:16px;display:block;">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                {% trans "Mode observateur : vous pouvez lire, mais pas envoyer de messages" %}
+            </div>
+            
+            <!-- Closed Banner -->
+            <div x-show="isClosed" x-cloak class="bg-gray-100 border-t border-gray-200 px-4 py-3 text-sm text-gray-500">
+                {% trans "Request closed: messaging is disabled" %}
+            </div>
+            
+            <!-- Input Area -->
+            <div x-show="canSend && !isClosed" x-cloak class="border-t border-gray-200 pt-4 px-4 pb-4">
+                <form @submit.prevent="sendMessage">
+                    <div class="flex gap-3">
+                        <input type="text" x-model="newMessage" 
+                               :maxlength="1000"
+                               class="input"
+                               placeholder="{% trans 'Tapez un message...' %}"
+                               :disabled="sending">
+                        <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" class="mp-attach-icon">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                            <input type="file" @change="handleAttachment" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        </label>
+                        <button type="submit" class="btn btn-primary" :disabled="sending">
+                            <span x-show="!sending">{% trans "Envoyer" %}</span>
+                            <span x-show="sending">...</span>
+                        </button>
+                    </div>
+                    <div x-show="attachment" class="mt-2 text-xs text-gray-500 flex items-center gap-2">
+                        <span x-text="attachment.name"></span>
+                        <button type="button" @click="attachment = null" class="text-red-500 hover:text-red-700 font-bold">&times;</button>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1 text-right" x-text="newMessage.length + '/1000'"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function messagePanel(requestId) {
+    return {
+        messages: [],
+        historyPhases: {},
+        expanded: true,
+        showHistory: false,
+        newMessage: '',
+        canSend: false,
+        isClosed: false,
+        loading: true,
+        sending: false,
+        attachment: null,
+        pollInterval: null,
+        
+        async loadMessages() {
+            try {
+                const response = await fetch(`/dashboard/messaging/request/${requestId}/messages/`);
+                const data = await response.json();
+                this.messages = data.messages || [];
+                this.canSend = data.can_send;
+                this.currentPhase = data.current_phase;
+                this.isClosed = ['CLOSED', 'ARCHIVED', 'ADMINISTRATIVELY_CLOSED'].includes(data.current_phase);
+                this.loading = false;
+                
+                // Load history
+                const historyRes = await fetch(`/dashboard/messaging/request/${requestId}/messages/history/`);
+                const historyData = await historyRes.json();
+                this.historyPhases = historyData.phases || {};
+                
+                this.scrollToBottom();
+                this.startPolling();
+            } catch (err) {
+                console.error('Failed to load messages:', err);
+                this.loading = false;
+            }
+        },
+        
+        async loadHistory() {
+            try {
+                const response = await fetch(`/dashboard/messaging/request/${requestId}/messages/history/`);
+                const data = await response.json();
+                this.historyPhases = data.phases || {};
+            } catch (err) {
+                console.error('Failed to load history:', err);
+            }
+        },
+        
+        async sendMessage() {
+            if (!this.newMessage.trim() && !this.attachment) return;
+            
+            this.sending = true;
+            const formData = new FormData();
+            formData.append('content', this.newMessage);
+            if (this.attachment) {
+                formData.append('attachment', this.attachment);
+            }
+            
+            try {
+                const response = await fetch(`/dashboard/messaging/request/${requestId}/messages/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    }
+                });
+                
+                if (response.ok) {
+                    this.newMessage = '';
+                    this.attachment = null;
+                    await this.loadMessages();
+                }
+            } catch (err) {
+                console.error('Failed to send message:', err);
+            }
+            this.sending = false;
+        },
+        
+        handleAttachment(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File too large. Maximum size is 5MB.');
+                    return;
+                }
+                this.attachment = file;
+            }
+        },
+        
+        startPolling() {
+            if (this.pollInterval) clearInterval(this.pollInterval);
+            this.pollInterval = setInterval(() => this.loadMessages(), 10000);
+        },
+        
+        scrollToBottom() {
+            this.$nextTick(() => {
+                const container = document.getElementById('messages-container');
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            });
+        },
+        
+        formatTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + ' min ago';
+            if (diff < 86400000) return 'today at ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+            return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+        },
+        
+        getRoleBadgeClass(role) {
+            const classes = {
+                'Admin': 'bg-red-50 text-red-700',
+                'Platform Admin': 'bg-red-50 text-red-700',
+                'Analyst': 'bg-blue-50 text-blue-700',
+                'Member': 'bg-blue-50 text-blue-700',
+                'Requester': 'bg-green-50 text-green-700',
+                'Student': 'bg-green-50 text-green-700',
+                'Client': 'bg-purple-50 text-purple-700',
+                'Observer': 'bg-amber-50 text-amber-700',
+                'Finance': 'bg-gray-100 text-gray-600',
+                'User': 'bg-gray-100 text-gray-600'
+            };
+            return classes[role] || 'bg-gray-100 text-gray-600';
+        }
+    }
+}
+</script>

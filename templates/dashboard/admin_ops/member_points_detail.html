@@ -83,7 +83,7 @@
 {% block content %}
 <div class="page-header">
     <div style="display: flex; align-items: center; gap: 16px;">
-        <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline" style="padding: 8px;">
+        <a href="{% url 'dashboard:admin_performance' %}"             class="btn btn-secondary">
             ←
         </a>
         <div>
@@ -218,8 +218,8 @@
                             <label style="font-size: 12px; color: #6b7280;">{% trans "Reason" %} ({% trans "Required" %})</label>
                             <input type="text" name="reason" class="form-control" placeholder="{% trans 'e.g., Exceptional performance on urgent analysis' %}" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                        <button type="submit"             class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
                             {% trans "Award Points" %}
@@ -232,9 +232,9 @@
             <div style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #e5e7eb;">
                 <h4 style="font-size:1rem; margin:0 0 12px; color:#059669;">👏 {% trans "Send Cheer" %}</h4>
                 <div style="display:flex; gap:8px; margin-bottom:12px;">
-                    <button type="button" onclick="fillCheer('Great work! 🎉')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">🎉 {% trans "Great work!" %}</button>
-                    <button type="button" onclick="fillCheer('Thank you for your dedication! 🙏')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">🙏 {% trans "Thank you!" %}</button>
-                    <button type="button" onclick="fillCheer('Excellent results! ⭐')" class="btn btn-sm btn-outline" style="font-size:0.8rem;">⭐ {% trans "Excellent!" %}</button>
+                    <button type="button" onclick="fillCheer('Great work! 🎉')"             class="btn btn-secondary">🎉 {% trans "Great work!" %}</button>
+                    <button type="button" onclick="fillCheer('Thank you for your dedication! 🙏')"             class="btn btn-secondary">🙏 {% trans "Thank you!" %}</button>
+                    <button type="button" onclick="fillCheer('Excellent results! ⭐')"             class="btn btn-secondary">⭐ {% trans "Excellent!" %}</button>
                 </div>
                 {% if admin_send_cheer_url %}<form method="post" action="{{ admin_send_cheer_url }}" class="ajax-form">
                     {% csrf_token %}
@@ -242,7 +242,7 @@
                         <div style="flex: 1; min-width: 200px;">
                             <input type="text" name="message" id="cheer-message" class="form-control" placeholder="{% trans 'Quick positive message...' %}">
                         </div>
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit"             class="btn btn-success">
                             👏 {% trans "Send Cheer" %}
                         </button>
                     </div>
@@ -258,7 +258,7 @@
                         <div style="flex: 1; min-width: 200px;">
                             <textarea name="message" class="form-control" rows="2" placeholder="{% trans 'Personalized encouragement message...' %}"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-outline" style="border-color:#d97706; color:#d97706;">
+                        <button type="submit"             class="btn btn-warning">
                             💪 {% trans "Send" %}
                         </button>
                     </div>
@@ -288,9 +288,9 @@
                 {% csrf_token %}
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                     <input type="file" name="gift_image" accept="image/*" class="form-control" style="flex:1; min-width:200px;" required>
-                    <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
-                        🎁 {% trans "Upload Gift Photo" %}
-                    </button>
+<button type="submit"             class="btn btn-primary">
+                            🎁 {% trans "Upload Gift Photo" %}
+                        </button>
                 </div>
                 <small style="color:#6b7280; margin-top:8px; display:block;">{% trans "Upload a photo of the reward (e.g., certificate, gift card, trophy)" %}</small>
             </form>{% endif %}
@@ -348,7 +348,7 @@
 </div>
 
 <div style="margin-top: 20px;">
-    <a href="{% url 'dashboard:admin_performance' %}" class="btn btn-outline">
+    <a href="{% url 'dashboard:admin_performance' %}"             class="btn btn-secondary">
         ← {% trans "Back to Performance" %}
     </a>
 </div>
@@ -357,6 +357,40 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Generate unique idempotency key
+    function generateIdempotencyKey() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+    
+    // Update stats display from AJAX response
+    function updateStatsDisplay(data) {
+        // Update points display if present
+        const pointsDisplay = document.getElementById('total-points-display');
+        if (pointsDisplay && data.new_total !== undefined) {
+            pointsDisplay.textContent = data.new_total.toLocaleString();
+        }
+        
+        // Update progress bar if present
+        const progressBar = document.getElementById('points-progress-bar');
+        if (progressBar && data.new_total !== undefined) {
+            const progress = (data.new_total % 1000) / 10;
+            progressBar.style.width = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+        }
+        
+        // Update badge display if present
+        const badgeDisplay = document.getElementById('badge-display');
+        if (badgeDisplay && data.badge_name) {
+            badgeDisplay.textContent = data.badge_name;
+        }
+        
+        // Update milestone display
+        const milestoneDisplay = document.getElementById('milestone-display');
+        if (milestoneDisplay && data.milestone_level !== undefined) {
+            milestoneDisplay.textContent = data.milestone_level;
+        }
+    }
+    
     // AJAX form handling with duplicate submission prevention
     document.querySelectorAll('.ajax-form').forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -375,6 +409,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(form);
             const url = form.action;
             
+            // Add idempotency key to prevent duplicates
+            const idempotencyKey = generateIdempotencyKey();
+            formData.append('idempotency_key', idempotencyKey);
+            
             fetch(url, {
                 method: 'POST',
                 body: formData,
@@ -384,7 +422,22 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                // Re-enable submit button on any response
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.dataset.submitting = 'false';
+                }
+                
                 if (data.success) {
+                    // Check if this was a duplicate request
+                    if (data.duplicate) {
+                        showToast(data.message || 'Request already processed', 'info');
+                        return;
+                    }
+                    
+                    // Update stats display from response data
+                    updateStatsDisplay(data);
+                    
                     // Build celebration message if there are events
                     let celebrationMsg = data.message || 'Success!';
                     if (data.badge_changed) {
@@ -403,14 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(celebrationMsg, 'success');
                     
                     // Reload page after short delay to show updated stats
-                    setTimeout(() => location.reload(), 2000);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
                     showToast(data.error || 'Error', 'error');
-                    // Re-enable submit button on error
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.dataset.submitting = 'false';
-                    }
                 }
             })
             .catch(error => {

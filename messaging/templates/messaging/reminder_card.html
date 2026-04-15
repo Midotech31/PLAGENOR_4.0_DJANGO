@@ -1,0 +1,81 @@
+{% load i18n %}
+<div x-data="reminderCard('{{ reminder.id }}')" class="bg-white rounded-xl shadow-sm border p-4"
+     :class="{
+         'border-gray-100': reminder.urgency === 'NORMAL',
+         'border-amber-200': reminder.urgency === 'URGENT',
+         'border-red-200': reminder.urgency === 'CRITICAL'
+     }">
+    <div class="flex items-start justify-between gap-3">
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+                <span x-show="reminder.urgency === 'NORMAL'" class="p-2 bg-blue-50 rounded-lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" class="w-4 h-4">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </span>
+                <span x-show="reminder.urgency === 'URGENT'" class="p-2 bg-amber-50 rounded-lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.5" class="w-4 h-4">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </span>
+                <span x-show="reminder.urgency === 'CRITICAL'" class="p-2 bg-red-50 rounded-lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5" class="w-4 h-4">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </span>
+                <div>
+                    <span class="font-semibold text-sm text-gray-900" x-text="reminder.request_display_id"></span>
+                    <span x-show="reminder.service_name" class="text-xs text-gray-500 ml-2" x-text="reminder.service_name"></span>
+                </div>
+                <span x-show="reminder.escalated" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 text-purple-700 ml-2">
+                    {% trans "Escalated" %}
+                </span>
+            </div>
+            <p class="text-sm text-gray-700 mb-2" x-text="reminder.action_expected"></p>
+            <p class="text-xs text-gray-400">
+                <span x-show="reminder.urgency === 'NORMAL'">{% trans "Pending" %}: </span>
+                <span x-show="reminder.urgency === 'URGENT'">{% trans "Pending" %}: </span>
+                <span x-show="reminder.urgency === 'CRITICAL'">{% trans "Overdue" %}: </span>
+                <span x-text="reminder.pending_hours + 'h'"></span>
+            </p>
+        </div>
+        <div class="flex flex-col gap-2">
+            <a :href="'/dashboard/analyst/request/' + reminder.request_id + '/'" class="btn btn-secondary btn-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-3.5 h-3.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                {% trans "View" %}
+            </a>
+            <button @click="acknowledge()" class="btn btn-primary btn-sm" :disabled="acknowledging">
+                <span x-show="!acknowledging">{% trans "Acknowledge" %}</span>
+                <span x-show="acknowledging">...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function reminderCard(reminderId) {
+    return {
+        acknowledging: false,
+        async acknowledge() {
+            this.acknowledging = true;
+            try {
+                const response = await fetch(`/dashboard/messaging/reminder/${reminderId}/acknowledge/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    this.$el.remove();
+                }
+            } catch (err) {
+                console.error('Failed to acknowledge reminder:', err);
+            }
+            this.acknowledging = false;
+        }
+    }
+}
+</script>

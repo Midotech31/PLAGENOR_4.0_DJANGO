@@ -184,20 +184,8 @@ def users_list(request):
             Q(username__icontains=search_q)
         )
     
-    # Annotate with request counts
-    users_qs = users_qs.annotate(
-        total_requests=Count('request'),
-    ).annotate(
-        last_submission=Count(
-            'request',
-            filter=Q(request__created_at__isnull=False),
-            output_field=Case(
-                When(Q(request__created_at__isnull=False), then='request__created_at'),
-                default=Value(None),
-                output_field=timezone.datetime,
-            )
-        )
-    )
+    # Annotate with request counts (stable ORM aggregation)
+    users_qs = users_qs.annotate(total_requests=Count('requests_made'))
     
     paginator, users, _ = paginate_queryset(users_qs, request, per_page=25, page_param='users_page')
     
@@ -230,7 +218,7 @@ def user_detail(request, pk):
     # Request statistics
     stats = requests_qs.aggregate(
         total=Count('id'),
-        pending=Count('id', filter=Q(status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'REPORT_UPLOADED', 'ADMIN_REVIEW'])),
+        pending=Count('id', filter=Q(status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'REPORT_UPLOADED'])),
         completed=Count('id', filter=Q(status='COMPLETED')),
     )
     
@@ -262,7 +250,7 @@ def index(request):
         'ASSIGNED', 'PENDING_ACCEPTANCE', 'ACCEPTED',
         'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
-        'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
+        'REPORT_UPLOADED', 'REPORT_VALIDATED',
         'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT',
         'ORDER_UPLOADED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED',
         'SENT_TO_REQUESTER',
@@ -276,7 +264,7 @@ def index(request):
                 'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
                 'PLATFORM_NOTE_GENERATED', 'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
                 'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_UPLOADED', 'REPORT_UPLOADED',
-                'ADMIN_REVIEW', 'REPORT_VALIDATED', 'COMPLETED',
+                'REPORT_VALIDATED', 'COMPLETED',
             ])
         ),
         ibtikar_count=Count('id', filter=Q(channel='IBTIKAR')),
@@ -294,18 +282,18 @@ def index(request):
     pending_by_channel = {
         'ibtikar': Request.objects.filter(
             channel='IBTIKAR',
-            status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED', 'ADMIN_REVIEW']
+            status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED']
         ).count(),
         'genoclab': Request.objects.filter(
             channel='GENOCLAB',
-            status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED', 'ADMIN_REVIEW']
+            status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED']
         ).count(),
     }
     
     # Overdue requests (stuck in same status for > 7 days)
     overdue_requests = Request.objects.filter(
         status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 
-                    'PLATFORM_NOTE_GENERATED', 'REPORT_UPLOADED', 'ADMIN_REVIEW',
+                    'PLATFORM_NOTE_GENERATED', 'REPORT_UPLOADED',
                     'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
                     'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED'],
         updated_at__lt=seven_days_ago
@@ -318,7 +306,7 @@ def index(request):
         status__in=[
             'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
             'PLATFORM_NOTE_GENERATED',
-            'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
+            'REPORT_UPLOADED', 'REPORT_VALIDATED',
             'COMPLETED',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
             'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_UPLOADED', 'PAYMENT_CONFIRMED',
@@ -348,7 +336,7 @@ def index(request):
 
     # Requests needing report review - paginated
     review_qs = Request.objects.filter(
-        status__in=['REPORT_UPLOADED', 'ADMIN_REVIEW']
+        status__in=['REPORT_UPLOADED']
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')
     review_paginator, review_requests, _ = paginate_queryset(review_qs, request, per_page=25, page_param='review_page')
 
@@ -750,7 +738,7 @@ def bulk_action(request):
             return redirect_back(request, 'dashboard:admin_ops')
 
         # Valid statuses for bulk assignment
-        valid_statuses = ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED')
+        valid_statuses = ASSIGNMENT_READY_STATUSES
         
         for req_id in request_ids:
             try:
@@ -911,6 +899,9 @@ from django.http import HttpResponse
 # ASSIGN REQUEST (Enhanced with AJAX)
 # =============================================================================
 
+ASSIGNMENT_READY_STATUSES = ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED')
+
+
 @admin_required
 def assign_request(request, pk):
     """Assign a request to a member with proper validation.
@@ -965,8 +956,7 @@ def assign_request(request, pk):
         return redirect_back(request, 'dashboard:admin_ops')
 
     # Validate request status
-    valid_statuses = ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED')
-    if req.status not in valid_statuses:
+    if req.status not in ASSIGNMENT_READY_STATUSES:
         if is_ajax:
             return JsonResponse({
                 'success': False,
@@ -1051,6 +1041,7 @@ def award_points(request, member_pk):
     member = get_object_or_404(MemberProfile, pk=member_pk)
     points = int(request.POST.get('points', 0))
     reason = request.POST.get('reason', '')
+    idempotency_key = request.POST.get('idempotency_key', '')
     
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
@@ -1059,11 +1050,44 @@ def award_points(request, member_pk):
             return JsonResponse({'success': False, 'error': gettext('Points must be positive')})
         messages.error(request, gettext("Points must be positive."))
         return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Idempotency check - prevent duplicate submissions
+    if idempotency_key:
+        recent_award = PointsHistory.objects.filter(
+            member=member,
+            reason__icontains=idempotency_key,
+            awarded_by=request.user,
+            created_at__gte=timezone.now() - timezone.timedelta(seconds=30)
+        ).order_by('-created_at').first()
+        
+        if recent_award:
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': gettext("Points already awarded (duplicate request prevented)"),
+                    'duplicate': True,
+                    'new_total': member.total_points,
+                    'idempotency_key': idempotency_key,
+                })
+            messages.info(request, gettext("Points already awarded (duplicate request prevented)."))
+            return redirect_back(request, 'dashboard:admin_ops')
 
     # Create points history
-    PointsHistory.objects.create(
-        member=member, points=points, reason=reason, awarded_by=request.user
-    )
+    try:
+        PointsHistory.objects.create(
+            member=member, points=points, reason=reason, awarded_by=request.user
+        )
+    except Exception:
+        # Unique constraint violation - already processed
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': gettext("Points already awarded"),
+                'duplicate': True,
+                'new_total': member.total_points,
+            })
+        messages.info(request, gettext("Points already awarded."))
+        return redirect_back(request, 'dashboard:admin_ops')
     
     # Use the model's award_points method which handles all milestone/badge/reward logic
     member.award_points(points, reason, awarded_by=request.user, save=True)
@@ -1154,14 +1178,10 @@ def performance_points(request):
             status__in=['ASSIGNED', 'COMPLETED', 'CLOSED']
         ).count()
         
-        # Calculate efficiency (completed before deadline)
-        early_completions = Request.objects.filter(
-            assigned_to=member,
-            status='COMPLETED',
-            updated_at__lt=F('declared_deadline')
-        ).count() if member.user else 0
+        # Calculate efficiency based on completed services (no deadline field exists)
+        early_completions = completed_services
         
-        efficiency_rate = round((early_completions / completed_services * 100), 1) if completed_services > 0 else 0
+        efficiency_rate = round((early_completions / total_services * 100), 1) if total_services > 0 else 0
         
         # Calculate milestone progress
         current_milestone = (member.total_points // 1000) * 1000
@@ -1244,12 +1264,10 @@ def member_points_detail(request, member_pk):
         status='COMPLETED'
     ).count()
     
-    # Early completions for efficiency bonus
+    # Early completions for efficiency bonus (count all completed services)
     early_completions = Request.objects.filter(
         assigned_to=member,
         status='COMPLETED'
-    ).exclude(
-        declared_deadline__isnull=True
     ).count()
     
     context = {
@@ -1287,7 +1305,7 @@ def upload_gift(request, member_pk):
         Notification.objects.create(
             user=member.user,
             message=gettext("🎁 A reward awaits you! Open your surprise box in your Points space."),
-            notification_type='reward'
+            notification_type='REWARD'
         )
         if is_ajax:
             return JsonResponse({
@@ -1308,6 +1326,7 @@ def send_cheer(request, member_pk):
         return HttpResponseForbidden()
     member = get_object_or_404(MemberProfile, pk=member_pk)
     message_text = request.POST.get('message', '')
+    idempotency_key = request.POST.get('idempotency_key', '')
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
@@ -1316,12 +1335,31 @@ def send_cheer(request, member_pk):
             return JsonResponse({'success': False, 'error': gettext("Message is required.")})
         messages.error(request, gettext("Message is required."))
         return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Idempotency check - prevent duplicate messages within 30 seconds
+    if idempotency_key:
+        recent_cheer = Cheer.objects.filter(
+            member=member,
+            message=message_text,
+            from_user=request.user,
+            created_at__gte=timezone.now() - timezone.timedelta(seconds=30)
+        ).order_by('-created_at').first()
+        
+        if recent_cheer:
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': gettext("Message already sent (duplicate request prevented)"),
+                    'duplicate': True,
+                })
+            messages.info(request, gettext("Message already sent (duplicate request prevented)."))
+            return redirect_back(request, 'dashboard:admin_ops')
 
     Cheer.objects.create(member=member, message=message_text, from_user=request.user)
     Notification.objects.create(
         user=member.user,
         message=gettext("Encouragement received: %(message)s") % {'message': message_text} if message_text else gettext("You received an encouragement!"),
-        notification_type='reward'
+        notification_type='REWARD'
     )
 
     if is_ajax:
@@ -1418,6 +1456,26 @@ def adjust_cost(request, pk):
         messages.error(request, gettext("Invalid amount."))
         return redirect_back(request, 'dashboard:admin_ops')
     
+    # For IBTIKAR: check budget after price adjustment
+    if req.channel == 'IBTIKAR' and req.requester:
+        from core.financial import check_ibtikar_budget
+        budget_check = check_ibtikar_budget(
+            amount=price,
+            requester=req.requester,
+            exclude_request=req.pk
+        )
+        if budget_check['exceeded']:
+            messages.warning(
+                request,
+                gettext("Warning: new price %(price)s DA exceeds remaining IBTIKAR budget. "
+                        "Budget: %(cap)s DA, Used: %(used)s DA, Remaining: %(remaining)s DA") % {
+                    'price': f"{price:,.0f}",
+                    'cap': f"{budget_check['cap']:,.0f}",
+                    'used': f"{budget_check['projected']:,.0f}",
+                    'remaining': f"{budget_check['remaining']:,.0f}",
+                }
+            )
+    
     old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
     req.admin_validated_price = price
     req.save(update_fields=['admin_validated_price'])
@@ -1442,9 +1500,20 @@ def adjust_cost(request, pk):
 @admin_required
 def prepare_quote(request, pk):
     """Admin prepares/edits a detailed quote for a GENOCLAB request."""
-    req = get_object_or_404(Request, pk=pk)
+    from core.models import Quote, GenoclabSettings
+    
+    req = get_object_or_404(Request, pk=pk, channel='GENOCLAB')
+    
+    # Get settings for default values
+    settings = GenoclabSettings.get_settings()
 
     if request.method == 'POST':
+        action = request.POST.get('action', 'save')
+        
+        # Handle preview
+        if action == 'preview':
+            return preview_quote(request, pk)
+        
         items = []
         idx = 0
         while f'item_label_{idx}' in request.POST:
@@ -1463,33 +1532,36 @@ def prepare_quote(request, pk):
 
         admin_fees = float(request.POST.get('admin_fees', 0))
         report_fees = float(request.POST.get('report_fees', 0))
-        vat_rate = float(request.POST.get('vat_rate', 19)) / 100
+        vat_rate = float(request.POST.get('vat_rate', settings.vat_rate))
         notes = request.POST.get('quote_notes', '')
+        discount_amount = float(request.POST.get('discount_amount', 0))
+        discount_reason = request.POST.get('discount_reason', '')
 
-        subtotal_ht = sum(item['total'] for item in items)
-        subtotal_before_tax = subtotal_ht + admin_fees + report_fees
-        vat_amount = round(subtotal_before_tax * vat_rate, 2)
-        total_ttc = round(subtotal_before_tax + vat_amount, 2)
+        # Create new quote using the Quote model
+        quote = Quote.create_from_request(
+            request_obj=req,
+            items_data=items,
+            created_by=request.user,
+            admin_fees=admin_fees,
+            report_fees=report_fees,
+            vat_rate=vat_rate,
+            discount_amount=discount_amount,
+            discount_reason=discount_reason,
+            notes=notes,
+        )
 
-        quote_detail = {
-            'items': items,
-            'subtotal_ht': subtotal_ht,
-            'admin_fees': admin_fees,
-            'report_fees': report_fees,
-            'subtotal_before_tax': subtotal_before_tax,
-            'vat_rate': vat_rate,
-            'vat_amount': vat_amount,
-            'total_ttc': total_ttc,
-            'notes': notes,
-        }
-
-        req.quote_detail = quote_detail
-        req.quote_amount = total_ttc
+        # Also update legacy fields on request for backward compatibility
+        req.quote_detail = quote.to_dict()
+        req.quote_amount = quote.total_ttc
         req.save(update_fields=['quote_detail', 'quote_amount'])
 
-        action = request.POST.get('action', 'save')
         if action == 'send':
             try:
+                # Update quote status
+                quote.status = 'sent'
+                quote.sent_at = timezone.now()
+                quote.save(update_fields=['status', 'sent_at'])
+                
                 if req.status == 'REQUEST_CREATED':
                     transition(req, 'QUOTE_DRAFT', request.user, notes=gettext('Quote prepared'))
                 if req.status == 'QUOTE_DRAFT':
@@ -1510,8 +1582,83 @@ def prepare_quote(request, pk):
     context = {
         'req': req,
         'yaml_def': yaml_def,
+        'settings': settings,
+        'current_quote': req.quotes.filter(is_current=True).first(),
     }
     return render(request, 'dashboard/admin_ops/prepare_quote.html', context)
+
+
+@admin_required
+def preview_quote(request, pk):
+    """Preview quote before sending to client."""
+    from core.models import GenoclabSettings, Quote
+    from datetime import timedelta
+    
+    req = get_object_or_404(Request, pk=pk, channel='GENOCLAB')
+    
+    if request.method == 'POST':
+        # Parse items from POST data
+        items = []
+        idx = 0
+        while f'item_label_{idx}' in request.POST:
+            label = request.POST.get(f'item_label_{idx}', '')
+            unit_price = float(request.POST.get(f'item_unit_price_{idx}', 0))
+            quantity = int(request.POST.get(f'item_quantity_{idx}', 0))
+            total = unit_price * quantity
+            if label:
+                items.append({
+                    'label': label,
+                    'unit_price': unit_price,
+                    'quantity': quantity,
+                    'total': total,
+                })
+            idx += 1
+        
+        admin_fees = float(request.POST.get('admin_fees', 0))
+        report_fees = float(request.POST.get('report_fees', 0))
+        vat_rate = float(request.POST.get('vat_rate', 19))
+        notes = request.POST.get('quote_notes', '')
+        discount_amount = float(request.POST.get('discount_amount', 0))
+        discount_reason = request.POST.get('discount_reason', '')
+        
+        subtotal_ht = sum(item['total'] for item in items)
+        subtotal_before_tax = subtotal_ht + admin_fees + report_fees - discount_amount
+        vat_amount = round(subtotal_before_tax * (vat_rate / 100), 2)
+        total_ttc = round(subtotal_before_tax + vat_amount, 2)
+        
+        # Build quote data for preview
+        quote_data = {
+            'items': items,
+            'subtotal_ht': subtotal_ht,
+            'admin_fees': admin_fees,
+            'report_fees': report_fees,
+            'subtotal_before_tax': subtotal_before_tax,
+            'vat_rate': vat_rate,
+            'vat_amount': vat_amount,
+            'total_ttc': total_ttc,
+            'discount_amount': discount_amount,
+            'discount_reason': discount_reason,
+            'notes': notes,
+            'status': 'draft',
+            'created_at': timezone.now(),
+            'expires_at': timezone.now() + timedelta(days=GenoclabSettings.get_settings().quote_validity_days),
+            'version': 1,
+        }
+        
+        settings = GenoclabSettings.get_settings()
+        
+        context = {
+            'req': req,
+            'quote': quote_data,
+            'settings': settings,
+            'show_actions': False,
+            'is_preview': True,
+            'is_expired': False,
+        }
+        return render(request, 'documents/quote_official.html', context)
+    
+    # GET - redirect to prepare quote
+    return redirect('dashboard:prepare_quote', pk=pk)
 
 
 @admin_required
@@ -1596,9 +1743,13 @@ def confirm_payment(request, pk):
 @admin_required
 def generate_genoclab_invoice(request, pk):
     """
-    Generate an Excel invoice for a GENOCLAB request.
-    The invoice is auto-generated with client info, service details, and payment info.
-    Only Admin Ops can access this view.
+    Generate an Excel invoice for a GENOCLAB request and transition to INVOICE_GENERATED.
+    
+    Invoice workflow:
+    1. ANALYSIS_FINISHED → Member marks analysis as done
+    2. INVOICE_GENERATED → Finance generates and downloads invoice
+    3. INVOICE_SENT → Finance uploads signed invoice + transmits to client
+    4. PAYMENT_PENDING → Client notified to pay
     """
     from documents.invoice import generate_invoice_excel
     from django.core.files.base import ContentFile
@@ -1610,12 +1761,11 @@ def generate_genoclab_invoice(request, pk):
         messages.error(request, gettext("Invoice generation is only available for GENOCLAB requests."))
         return redirect_back(request, 'dashboard:admin_ops')
     
-    # Only allow after analysis is finished
-    finished_statuses = ['ANALYSIS_FINISHED', 'REPORT_UPLOADED', 'REPORT_VALIDATED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED']
-    if req.status not in finished_statuses:
+    # Only allow when status is ANALYSIS_FINISHED (new workflow gate)
+    if req.status != 'ANALYSIS_FINISHED':
         messages.error(
             request,
-            gettext("Invoice can only be generated after analysis is finished (status: %(status)s).") % {
+            gettext("Invoice can only be generated when analysis is finished (current status: %(status)s).") % {
                 'status': req.get_status_display()
             }
         )
@@ -1630,16 +1780,19 @@ def generate_genoclab_invoice(request, pk):
         req.generated_invoice.save(invoice_filename, ContentFile(excel_data))
         req.save(update_fields=['generated_invoice'])
         
+        # Transition to INVOICE_GENERATED
+        transition(req, 'INVOICE_GENERATED', request.user, notes=gettext('Facture générée automatiquement'))
+        
         messages.success(
             request,
-            gettext("Invoice generated successfully for %(display_id)s. Please download, sign, and upload the signed version.") % {
+            gettext("Invoice generated successfully for %(display_id)s. Next: download, sign, and upload the signed version.") % {
                 'display_id': req.display_id
             }
         )
         
         return redirect('dashboard:admin_request_detail', pk=pk)
         
-    except Exception as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, gettext("Error generating invoice: %(error)s") % {'error': str(e)})
         return redirect('dashboard:admin_request_detail', pk=pk)
 
@@ -1699,7 +1852,13 @@ def upload_signed_invoice(request, pk):
 def send_invoice_to_client(request, pk):
     """
     Send the signed invoice to the client via email and in-app notification.
-    Only available after a signed invoice has been uploaded.
+    Transitions to INVOICE_SENT status.
+    
+    Invoice workflow:
+    1. ANALYSIS_FINISHED → Member marks analysis as done
+    2. INVOICE_GENERATED → Finance generates and downloads invoice
+    3. INVOICE_SENT → Finance uploads signed invoice + transmits to client (THIS FUNCTION)
+    4. PAYMENT_PENDING → Client notified to pay
     """
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
@@ -1711,6 +1870,16 @@ def send_invoice_to_client(request, pk):
     if req.channel != 'GENOCLAB':
         messages.error(request, gettext("Invoice sending is only available for GENOCLAB requests."))
         return redirect_back(request, 'dashboard:admin_ops')
+    
+    # Only allow when status is INVOICE_GENERATED
+    if req.status != 'INVOICE_GENERATED':
+        messages.error(
+            request,
+            gettext("Invoice must be generated first (current status: %(status)s).") % {
+                'status': req.get_status_display()
+            }
+        )
+        return redirect('dashboard:admin_request_detail', pk=pk)
     
     # Check if signed invoice exists
     if not req.signed_invoice:
@@ -1730,6 +1899,9 @@ def send_invoice_to_client(request, pk):
         # Update request with invoice sent timestamp
         req.invoice_sent_at = timezone.now()
         req.save(update_fields=['invoice_sent_at'])
+        
+        # Transition to INVOICE_SENT
+        transition(req, 'INVOICE_SENT', request.user, notes=gettext('Facture signée transmise au client'))
         
         # Create in-app notification for client
         Notification.objects.create(
@@ -1775,6 +1947,876 @@ def send_invoice_to_client(request, pk):
         
         return redirect('dashboard:admin_request_detail', pk=pk)
         
-    except Exception as e:
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, gettext("Error sending invoice: %(error)s") % {'error': str(e)})
         return redirect('dashboard:admin_request_detail', pk=pk)
+
+
+# =============================================================================
+# ADMINISTRATIVE CLOSE REQUEST (BATCH 1 - FEATURE 1)
+# =============================================================================
+
+@admin_required
+def close_request(request, pk):
+    """Administratively close a request from any status.
+    
+    This is NOT the same as the normal workflow CLOSED/ARCHIVED.
+    It allows admin to close stuck/abandoned requests.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    TERMINAL_STATES = {'CLOSED', 'ARCHIVED', 'ADMINISTRATIVELY_CLOSED', 'REJECTED'}
+    
+    if req.status in TERMINAL_STATES:
+        messages.error(request, gettext("Request %(display_id)s is already in a terminal state (%(status)s).") % {
+            'display_id': req.display_id,
+            'status': req.get_status_display()
+        })
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    if request.method == 'POST':
+        close_reason = request.POST.get('close_reason', '').strip()
+        
+        if len(close_reason) < 10:
+            messages.error(request, gettext("Close reason must be at least 10 characters."))
+            return redirect('dashboard:admin_request_detail', pk=pk)
+        
+        old_status = req.status
+        old_assignee = req.assigned_to
+        
+        req.status = 'ADMINISTRATIVELY_CLOSED'
+        req.save(update_fields=['status', 'updated_at'])
+        
+        RequestHistory.objects.create(
+            request=req,
+            from_status=old_status,
+            to_status='ADMINISTRATIVELY_CLOSED',
+            actor=request.user,
+            notes=gettext("Administrative close: %(reason)s") % {'reason': close_reason},
+            forced=True,
+        )
+        
+        log_action(
+            action='ADMIN_CLOSE',
+            entity_type='REQUEST',
+            entity_id=str(req.id),
+            actor=request.user,
+            details={
+                'from_status': old_status,
+                'reason': close_reason,
+            }
+        )
+        
+        if old_assignee:
+            old_assignee.current_load = max(0, old_assignee.current_load - 1)
+            old_assignee.save(update_fields=['current_load'])
+            
+            Notification.objects.create(
+                user=old_assignee.user,
+                message=gettext("Request %(display_id)s has been administratively closed. Task removed from your workload.") % {'display_id': req.display_id},
+                request=req,
+                notification_type='WORKFLOW',
+            )
+        
+        if req.requester:
+            Notification.objects.create(
+                user=req.requester,
+                message=gettext("Your request %(display_id)s has been closed by the administrator.") % {'display_id': req.display_id},
+                request=req,
+                notification_type='WORKFLOW',
+            )
+        
+        for observer in req.informed_members.all():
+            Notification.objects.create(
+                user=observer.user,
+                message=gettext("Request %(display_id)s has been administratively closed.") % {'display_id': req.display_id},
+                request=req,
+                notification_type='WORKFLOW',
+            )
+        
+        messages.success(request, gettext("Request %(display_id)s has been administratively closed.") % {'display_id': req.display_id})
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    context = {
+        'req': req,
+    }
+    return render(request, 'dashboard/admin_ops/close_request.html', context)
+
+
+# =============================================================================
+# REASSIGN REQUEST TO ANOTHER MEMBER (BATCH 1 - FEATURE 2)
+# =============================================================================
+
+REASSIGNABLE_STATUSES = {
+    'ASSIGNED', 'PENDING_ACCEPTANCE', 'ACCEPTED',
+    'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+    'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED'
+}
+
+
+@admin_required
+def reassign_request(request, pk):
+    """Reassign a request from one member to another.
+    
+    Resets status to ASSIGNED for the new member.
+    Notifies old member, new member, and requester.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    
+    if req.status not in REASSIGNABLE_STATUSES:
+        messages.error(request, gettext("Request %(display_id)s cannot be reassigned from status %(status)s.") % {
+            'display_id': req.display_id,
+            'status': req.get_status_display()
+        })
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    if not req.assigned_to:
+        messages.error(request, gettext("Request %(display_id)s has no assigned member to reassign.") % {
+            'display_id': req.display_id
+        })
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    available_members = MemberProfile.objects.filter(
+        available=True,
+        user__is_active=True
+    ).exclude(pk=req.assigned_to.pk).select_related('user')
+    
+    if request.method == 'POST':
+        new_member_id = request.POST.get('member_id')
+        reason = request.POST.get('reason', '').strip()
+        
+        if not new_member_id:
+            messages.error(request, gettext("Please select a new member."))
+            return redirect('dashboard:admin_request_detail', pk=pk)
+        
+        if not reason:
+            messages.error(request, gettext("Please provide a reason for reassignment."))
+            return redirect('dashboard:admin_request_detail', pk=pk)
+        
+        try:
+            new_member = MemberProfile.objects.get(pk=new_member_id)
+        except MemberProfile.DoesNotExist:
+            messages.error(request, gettext("Selected member not found."))
+            return redirect('dashboard:admin_request_detail', pk=pk)
+        
+        if not new_member.available:
+            messages.error(request, gettext("Selected member %(name)s is not available.") % {
+                'name': new_member.user.get_full_name()
+            })
+            return redirect('dashboard:admin_request_detail', pk=pk)
+        
+        old_member = req.assigned_to
+        
+        old_member.current_load = max(0, old_member.current_load - 1)
+        old_member.save(update_fields=['current_load'])
+        
+        req.assigned_to = new_member
+        req.assignment_accepted = False
+        req.assignment_accepted_at = None
+        req.appointment_date = None
+        req.appointment_confirmed = False
+        req.appointment_confirmed_at = None
+        req.save(update_fields=[
+            'assigned_to', 'assignment_accepted', 'assignment_accepted_at',
+            'appointment_date', 'appointment_confirmed', 'appointment_confirmed_at',
+            'updated_at'
+        ])
+        
+        new_member.current_load += 1
+        new_member.save(update_fields=['current_load'])
+        
+        reassignment_history = req.additional_data.get('reassignment_history', [])
+        reassignment_history.append({
+            'from': old_member.pk,
+            'from_name': old_member.user.get_full_name(),
+            'to': new_member.pk,
+            'to_name': new_member.user.get_full_name(),
+            'date': timezone.now().isoformat(),
+            'reason': reason,
+            'by': request.user.pk,
+            'by_name': request.user.get_full_name(),
+        })
+        req.additional_data = dict(req.additional_data)
+        req.additional_data['reassignment_history'] = reassignment_history
+        req.save(update_fields=['additional_data'])
+        
+        RequestHistory.objects.create(
+            request=req,
+            from_status=req.status,
+            to_status='ASSIGNED',
+            actor=request.user,
+            notes=gettext("Reassigned from %(old)s to %(new)s. Reason: %(reason)s") % {
+                'old': old_member.user.get_full_name(),
+                'new': new_member.user.get_full_name(),
+                'reason': reason
+            },
+            forced=True,
+        )
+        
+        log_action(
+            action='REASSIGN',
+            entity_type='REQUEST',
+            entity_id=str(req.id),
+            actor=request.user,
+            details={
+                'from': old_member.pk,
+                'from_name': old_member.user.get_full_name(),
+                'to': new_member.pk,
+                'to_name': new_member.user.get_full_name(),
+                'reason': reason,
+            }
+        )
+        
+        Notification.objects.create(
+            user=old_member.user,
+            message=gettext("Request %(display_id)s has been reassigned to another analyst.") % {'display_id': req.display_id},
+            request=req,
+            notification_type='ASSIGNMENT',
+        )
+        
+        Notification.objects.create(
+            user=new_member.user,
+            message=gettext("You have been assigned request %(display_id)s.") % {'display_id': req.display_id},
+            request=req,
+            notification_type='ASSIGNMENT',
+        )
+        
+        if req.requester:
+            Notification.objects.create(
+                user=req.requester,
+                message=gettext("Your request %(display_id)s has been reassigned to a new analyst.") % {'display_id': req.display_id},
+                request=req,
+                notification_type='WORKFLOW',
+            )
+        
+        messages.success(request, gettext("Request %(display_id)s reassigned to %(member)s.") % {
+            'display_id': req.display_id,
+            'member': new_member.user.get_full_name()
+        })
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    context = {
+        'req': req,
+        'available_members': available_members,
+    }
+    return render(request, 'dashboard/admin_ops/reassign_request.html', context)
+
+
+# =============================================================================
+# BULK REASSIGN (BATCH 1 - FEATURE 2)
+# =============================================================================
+
+@admin_required
+@require_POST
+def bulk_reassign(request):
+    """Bulk reassign multiple requests to a new member."""
+    request_ids = request.POST.getlist('request_ids', [])
+    member_id = request.POST.get('member_id')
+    reason = request.POST.get('reason', '').strip()
+    
+    if not request_ids:
+        messages.error(request, gettext("No requests selected."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    if not member_id:
+        messages.error(request, gettext("Please select a new member."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    if not reason:
+        messages.error(request, gettext("Please provide a reason for reassignment."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    try:
+        new_member = MemberProfile.objects.get(pk=member_id)
+    except MemberProfile.DoesNotExist:
+        messages.error(request, gettext("Selected member not found."))
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    if not new_member.available:
+        messages.error(request, gettext("Selected member %(name)s is not available.") % {
+            'name': new_member.user.get_full_name()
+        })
+        return redirect_back(request, 'dashboard:admin_ops')
+    
+    success_count = 0
+    skipped = []
+    
+    for req_id in request_ids:
+        try:
+            req = Request.objects.get(pk=req_id)
+            
+            if req.status not in REASSIGNABLE_STATUSES:
+                skipped.append({
+                    'id': str(req_id),
+                    'display_id': req.display_id,
+                    'reason': gettext('Invalid status for reassignment')
+                })
+                continue
+            
+            if not req.assigned_to:
+                skipped.append({
+                    'id': str(req_id),
+                    'display_id': req.display_id,
+                    'reason': gettext('No assigned member')
+                })
+                continue
+            
+            old_member = req.assigned_to
+            
+            old_member.current_load = max(0, old_member.current_load - 1)
+            old_member.save(update_fields=['current_load'])
+            
+            Notification.objects.create(
+                user=old_member.user,
+                message=gettext("Request %(display_id)s has been reassigned to another analyst.") % {'display_id': req.display_id},
+                request=req,
+                notification_type='ASSIGNMENT',
+            )
+            
+            req.assigned_to = new_member
+            req.assignment_accepted = False
+            req.assignment_accepted_at = None
+            req.save(update_fields=['assigned_to', 'assignment_accepted', 'assignment_accepted_at', 'updated_at'])
+            
+            new_member.current_load += 1
+            new_member.save(update_fields=['current_load'])
+            
+            RequestHistory.objects.create(
+                request=req,
+                from_status=req.status,
+                to_status='ASSIGNED',
+                actor=request.user,
+                notes=gettext("Bulk reassign to %(member)s. Reason: %(reason)s") % {
+                    'member': new_member.user.get_full_name(),
+                    'reason': reason
+                },
+                forced=True,
+            )
+            
+            success_count += 1
+            
+        except Exception as e:
+            skipped.append({
+                'id': str(req_id),
+                'display_id': req.display_id if 'req' in dir() else str(req_id),
+                'reason': str(e)
+            })
+    
+    messages.success(request, gettext("Reassigned %(count)s requests to %(member)s.") % {
+        'count': success_count,
+        'member': new_member.user.get_full_name()
+    })
+    
+    if skipped:
+        messages.warning(request, gettext("%(count)s requests were skipped.") % {'count': len(skipped)})
+    
+    return redirect_back(request, 'dashboard:admin_ops')
+
+
+# =============================================================================
+# MANAGE OBSERVERS (BATCH 1 - FEATURE 3)
+# =============================================================================
+
+@admin_required
+def manage_observers(request, pk):
+    """Add or remove observer members for a request."""
+    req = get_object_or_404(Request, pk=pk)
+    
+    available_members = MemberProfile.objects.filter(
+        available=True,
+        user__is_active=True
+    ).exclude(pk=req.assigned_to.pk if req.assigned_to else 0).select_related('user')
+    
+    current_observers = set(req.informed_members.values_list('pk', flat=True))
+    
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        member_id = request.POST.get('member_id')
+        
+        if action == 'add' and member_id:
+            try:
+                member = MemberProfile.objects.get(pk=member_id)
+                
+                if member.pk == (req.assigned_to.pk if req.assigned_to else None):
+                    messages.error(request, gettext("Cannot add the assigned member as observer."))
+                    return redirect('dashboard:admin_request_detail', pk=pk)
+                
+                if member.pk in current_observers:
+                    messages.warning(request, gettext("Member is already an observer."))
+                    return redirect('dashboard:admin_request_detail', pk=pk)
+                
+                req.informed_members.add(member)
+                
+                Notification.objects.create(
+                    user=member.user,
+                    message=gettext("You have been added as observer for request %(display_id)s.") % {'display_id': req.display_id},
+                    request=req,
+                    notification_type='OBSERVER',
+                )
+                
+                log_action(
+                    action='ADD_OBSERVER',
+                    entity_type='REQUEST',
+                    entity_id=str(req.id),
+                    actor=request.user,
+                    details={'member': member.user.get_full_name()}
+                )
+                
+                messages.success(request, gettext("Member %(name)s added as observer.") % {
+                    'name': member.user.get_full_name()
+                })
+                
+            except MemberProfile.DoesNotExist:
+                messages.error(request, gettext("Member not found."))
+        
+        elif action == 'remove' and member_id:
+            try:
+                member = MemberProfile.objects.get(pk=member_id)
+                
+                if member.pk not in current_observers:
+                    messages.warning(request, gettext("Member is not an observer."))
+                    return redirect('dashboard:admin_request_detail', pk=pk)
+                
+                req.informed_members.remove(member)
+                
+                Notification.objects.create(
+                    user=member.user,
+                    message=gettext("You have been removed as observer from request %(display_id)s.") % {'display_id': req.display_id},
+                    request=req,
+                    notification_type='OBSERVER',
+                )
+                
+                log_action(
+                    action='REMOVE_OBSERVER',
+                    entity_type='REQUEST',
+                    entity_id=str(req.id),
+                    actor=request.user,
+                    details={'member': member.user.get_full_name()}
+                )
+                
+                messages.success(request, gettext("Member %(name)s removed from observers.") % {
+                    'name': member.user.get_full_name()
+                })
+                
+            except MemberProfile.DoesNotExist:
+                messages.error(request, gettext("Member not found."))
+        
+        return redirect('dashboard:admin_request_detail', pk=pk)
+    
+    context = {
+        'req': req,
+        'available_members': available_members,
+        'current_observers': req.informed_members.all(),
+    }
+    return render(request, 'dashboard/admin_ops/manage_observers.html', context)
+
+
+# =============================================================================
+# ACTIVITY DASHBOARD (BATCH 3 - FEATURE 6)
+# =============================================================================
+
+def _get_period_start(period):
+    """Get the start datetime for the selected period."""
+    from django.utils import timezone
+    now = timezone.now()
+    if period == 'today':
+        return now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif period == 'week':
+        return now - timedelta(days=now.weekday())
+    elif period == 'month':
+        return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif period == 'year':
+        return now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+
+def _get_previous_period(period, current_start):
+    """Get start/end for the previous equivalent period (for comparison)."""
+    from django.utils import timezone
+    if period == 'today':
+        prev_start = current_start - timedelta(days=1)
+        prev_end = current_start
+    elif period == 'week':
+        prev_start = current_start - timedelta(weeks=1)
+        prev_end = current_start
+    elif period == 'month':
+        if current_start.month == 1:
+            prev_start = current_start.replace(year=current_start.year - 1, month=12)
+        else:
+            prev_start = current_start.replace(month=current_start.month - 1)
+        prev_end = current_start
+    elif period == 'year':
+        prev_start = current_start.replace(year=current_start.year - 1)
+        prev_end = current_start
+    else:
+        prev_start = current_start - timedelta(days=30)
+        prev_end = current_start
+    return prev_start, prev_end
+
+
+@admin_required
+def activity_dashboard(request):
+    """Main activity dashboard with metrics, workload, pipeline, reminders."""
+    from core.state_machine import TERMINAL_STATES
+    from messaging.models import Reminder
+    from accounts.models import MemberProfile
+    
+    period = request.GET.get('period', 'month')
+    period_start = _get_period_start(period)
+
+    terminal_statuses = list(TERMINAL_STATES)
+
+    active_requests = Request.objects.filter(is_deleted=False).exclude(status__in=terminal_statuses).count()
+
+    new_in_period = Request.objects.filter(created_at__gte=period_start, is_deleted=False).count()
+
+    active_members = MemberProfile.objects.filter(
+        user__is_active=True,
+        assigned_requests__isnull=False,
+    ).exclude(
+        assigned_requests__status__in=terminal_statuses
+    ).distinct().count()
+    total_members = MemberProfile.objects.filter(user__is_active=True).count()
+
+    active_reminders = Reminder.objects.filter(is_active=True)
+    overdue_count = active_reminders.count()
+    critical_count = active_reminders.filter(urgency='CRITICAL').count()
+
+    completed_in_period = Request.objects.filter(
+        status__in=['CLOSED', 'ARCHIVED'],
+        updated_at__gte=period_start,
+        is_deleted=False,
+    ).exclude(status='ADMINISTRATIVELY_CLOSED').count()
+
+    prev_start, prev_end = _get_previous_period(period, period_start)
+    completed_prev_period = Request.objects.filter(
+        status__in=['CLOSED', 'ARCHIVED'],
+        updated_at__gte=prev_start,
+        updated_at__lt=prev_end,
+        is_deleted=False,
+    ).exclude(status='ADMINISTRATIVELY_CLOSED').count()
+
+    completion_change_pct = round((completed_in_period - completed_prev_period) / max(completed_prev_period, 1) * 100) if completed_prev_period > 0 else 0
+
+    members_data = []
+    for member in MemberProfile.objects.filter(user__is_active=True).select_related('user'):
+        assigned = member.assigned_requests.filter(is_deleted=False).exclude(status__in=terminal_statuses)
+
+        queue_statuses = ['ASSIGNED', 'PENDING_ACCEPTANCE']
+        progress_statuses = [
+            'ACCEPTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+            'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+            'REPORT_UPLOADED',
+        ]
+
+        queue_count = assigned.filter(status__in=queue_statuses).count()
+        progress_count = assigned.filter(status__in=progress_statuses).count()
+
+        completed_count = Request.objects.filter(
+            assigned_to=member,
+            status__in=['CLOSED', 'ARCHIVED'],
+            updated_at__gte=period_start,
+            is_deleted=False,
+        ).count()
+
+        avg_days_result = Request.objects.filter(
+            assigned_to=member,
+            status__in=['CLOSED', 'ARCHIVED'],
+            updated_at__gte=period_start,
+            is_deleted=False,
+        ).annotate(
+            duration=F('updated_at') - F('created_at')
+        ).aggregate(avg=Avg('duration'))
+        avg_days = avg_days_result['avg']
+        avg_days_value = round(avg_days.days, 1) if avg_days else 0
+
+        member_overdue = Reminder.objects.filter(target_user=member.user, is_active=True).count()
+        member_critical = Reminder.objects.filter(target_user=member.user, is_active=True, urgency='CRITICAL').count()
+
+        members_data.append({
+            'member': member,
+            'queue': queue_count,
+            'in_progress': progress_count,
+            'completed': completed_count,
+            'avg_days': avg_days_value,
+            'overdue': member_overdue,
+            'critical': member_critical,
+            'total_active': queue_count + progress_count,
+        })
+
+    members_data.sort(key=lambda x: x['total_active'], reverse=True)
+
+    from django.db.models import Count
+    pipeline_ibtikar = list(Request.objects.filter(
+        channel='IBTIKAR', is_deleted=False
+    ).exclude(status__in=terminal_statuses).values('status').annotate(count=Count('id')).order_by('status'))
+
+    pipeline_genoclab = list(Request.objects.filter(
+        channel='GENOCLAB', is_deleted=False
+    ).exclude(status__in=terminal_statuses).values('status').annotate(count=Count('id')).order_by('status'))
+
+    escalated_reminders = Reminder.objects.filter(
+        is_active=True, urgency='CRITICAL'
+    ).select_related('request', 'target_user', 'request__assigned_to').order_by('-created_at')[:10]
+
+    normal_reminders = Reminder.objects.filter(
+        is_active=True, urgency='NORMAL'
+    ).select_related('request', 'target_user', 'request__assigned_to').order_by('-created_at')[:10]
+
+    context = {
+        'active_requests': active_requests,
+        'new_in_period': new_in_period,
+        'members_on_duty': active_members,
+        'total_members': total_members,
+        'overdue_count': overdue_count,
+        'critical_count': critical_count,
+        'completed_in_period': completed_in_period,
+        'completion_change_pct': completion_change_pct,
+        'current_period': period,
+        'members_data': members_data,
+        'pipeline_ibtikar': pipeline_ibtikar,
+        'pipeline_genoclab': pipeline_genoclab,
+        'escalated_reminders': escalated_reminders,
+        'normal_reminders': normal_reminders,
+        'critical_reminder_count': critical_count,
+    }
+
+    return render(request, 'dashboard/admin_ops/activity.html', context)
+
+
+@admin_required
+def activity_data(request):
+    """JSON endpoint for AJAX period switching."""
+    from core.state_machine import TERMINAL_STATES
+    from messaging.models import Reminder
+    from django.db.models import Count, F, Avg
+    
+    period = request.GET.get('period', 'month')
+    period_start = _get_period_start(period)
+    terminal_statuses = list(TERMINAL_STATES)
+
+    active_requests = Request.objects.filter(is_deleted=False).exclude(status__in=terminal_statuses).count()
+    new_in_period = Request.objects.filter(created_at__gte=period_start, is_deleted=False).count()
+
+    active_members = MemberProfile.objects.filter(
+        user__is_active=True,
+        assigned_requests__isnull=False,
+    ).exclude(assigned_requests__status__in=terminal_statuses).distinct().count()
+    total_members = MemberProfile.objects.filter(user__is_active=True).count()
+
+    overdue_count = Reminder.objects.filter(is_active=True).count()
+    critical_count = Reminder.objects.filter(is_active=True, urgency='CRITICAL').count()
+
+    completed_in_period = Request.objects.filter(
+        status__in=['CLOSED', 'ARCHIVED'],
+        updated_at__gte=period_start,
+        is_deleted=False,
+    ).exclude(status='ADMINISTRATIVELY_CLOSED').count()
+
+    prev_start, prev_end = _get_previous_period(period, period_start)
+    completed_prev_period = Request.objects.filter(
+        status__in=['CLOSED', 'ARCHIVED'],
+        updated_at__gte=prev_start,
+        updated_at__lt=prev_end,
+        is_deleted=False,
+    ).exclude(status='ADMINISTRATIVELY_CLOSED').count()
+
+    completion_change_pct = round((completed_in_period - completed_prev_period) / max(completed_prev_period, 1) * 100) if completed_prev_period > 0 else 0
+
+    queue_statuses = ['ASSIGNED', 'PENDING_ACCEPTANCE']
+    progress_statuses = [
+        'ACCEPTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED', 'REPORT_UPLOADED',
+    ]
+
+    members_data = []
+    for member in MemberProfile.objects.filter(user__is_active=True).select_related('user'):
+        assigned = member.assigned_requests.filter(is_deleted=False).exclude(status__in=terminal_statuses)
+        queue_count = assigned.filter(status__in=queue_statuses).count()
+        progress_count = assigned.filter(status__in=progress_statuses).count()
+        completed_count = Request.objects.filter(
+            assigned_to=member, status__in=['CLOSED', 'ARCHIVED'],
+            updated_at__gte=period_start, is_deleted=False,
+        ).count()
+        member_overdue = Reminder.objects.filter(target_user=member.user, is_active=True).count()
+        member_critical = Reminder.objects.filter(target_user=member.user, is_active=True, urgency='CRITICAL').count()
+        members_data.append({
+            'id': member.pk,
+            'name': member.user.get_full_name(),
+            'queue': queue_count,
+            'in_progress': progress_count,
+            'completed': completed_count,
+            'overdue': member_overdue,
+            'critical': member_critical,
+            'total_active': queue_count + progress_count,
+        })
+    members_data.sort(key=lambda x: x['total_active'], reverse=True)
+
+    pipeline_ibtikar = list(Request.objects.filter(
+        channel='IBTIKAR', is_deleted=False
+    ).exclude(status__in=terminal_statuses).values('status').annotate(count=Count('id')).order_by('status'))
+    pipeline_genoclab = list(Request.objects.filter(
+        channel='GENOCLAB', is_deleted=False
+    ).exclude(status__in=terminal_statuses).values('status').annotate(count=Count('id')).order_by('status'))
+
+    escalated = list(Reminder.objects.filter(
+        is_active=True, urgency='CRITICAL'
+    ).select_related('request', 'target_user', 'request__assigned_to').order_by('-created_at')[:10].values(
+        'id', 'request__display_id', 'action_expected', 'urgency', 'created_at',
+        'target_user__first_name', 'target_user__last_name',
+        'request__assigned_to__user__first_name', 'request__assigned_to__user__last_name',
+        'request__status'
+    ))
+
+    return JsonResponse({
+        'kpis': {
+            'active_requests': active_requests,
+            'new_in_period': new_in_period,
+            'members_on_duty': active_members,
+            'total_members': total_members,
+            'overdue_count': overdue_count,
+            'critical_count': critical_count,
+            'completed_in_period': completed_in_period,
+            'completion_change_pct': completion_change_pct,
+        },
+        'pipeline': {
+            'ibtikar': pipeline_ibtikar,
+            'genoclab': pipeline_genoclab,
+        },
+        'members': members_data,
+        'reminders': escalated,
+    })
+
+
+# =============================================================================
+# POKE SYSTEM (BATCH 3 - FEATURE 7)
+# =============================================================================
+
+@admin_required
+def poke_member(request, pk):
+    """Poke a member about a specific request."""
+    req = get_object_or_404(Request, pk=pk)
+
+    if request.method == 'POST':
+        message = request.POST.get('message', '').strip()
+        member = req.assigned_to
+
+        if not member:
+            return JsonResponse({'error': gettext('No member assigned to this request')}, status=400)
+
+        from messaging.models import Reminder
+        Reminder.objects.create(
+            request=req,
+            target_user=member.user,
+            action_expected=gettext("Admin poke: %(status)s") % {'status': req.get_status_display()},
+            status_when_created=req.status,
+            urgency='URGENT',
+            source='POKE',
+            sent_at=timezone.now(),
+        )
+
+        if message:
+            from messaging.models import EphemeralMessage
+            EphemeralMessage.objects.create(
+                request=req,
+                phase=req.status,
+                sender=request.user,
+                content=gettext("POKE: %(message)s") % {'message': message},
+            )
+
+        from notifications.services import create_notification
+        create_notification(
+            user=member.user,
+            notification_type='POKE',
+            title=gettext("Poke from Admin — %(id)s") % {'id': req.ibtikar_id or req.tracking_number or req.display_id},
+            message=message or gettext("Please take action on this request (%(status)s)") % {'status': req.get_status_display()},
+            request=req,
+        )
+
+        log_action(
+            action='POKE',
+            entity_type='REQUEST',
+            entity_id=str(req.id),
+            actor=request.user,
+            details={'member': member.user.get_full_name(), 'message': message}
+        )
+
+        return JsonResponse({'status': 'poked', 'member': member.user.get_full_name()})
+
+    days_in_status = (timezone.now() - req.updated_at).days
+    return JsonResponse({
+        'request_id': str(req.pk),
+        'request_ref': req.ibtikar_id or req.tracking_number or req.display_id,
+        'member_name': req.assigned_to.user.get_full_name() if req.assigned_to else None,
+        'status': req.get_status_display(),
+        'days_in_status': days_in_status,
+    })
+
+
+@admin_required
+def poke_member_all(request, member_id):
+    """Poke a member about ALL their overdue requests at once."""
+    member = get_object_or_404(MemberProfile, pk=member_id)
+
+    if request.method == 'POST':
+        message = request.POST.get('message', '').strip()
+
+        from core.state_machine import TERMINAL_STATES
+        from messaging.models import Reminder
+        
+        overdue_requests = Request.objects.filter(
+            assigned_to=member,
+            is_deleted=False,
+        ).exclude(status__in=list(TERMINAL_STATES) + ['DRAFT'])
+
+        poked_count = 0
+        for req in overdue_requests:
+            recent_poke = Reminder.objects.filter(
+                request=req, source='POKE',
+                created_at__gte=timezone.now() - timedelta(hours=24)
+            ).exists()
+
+            if not recent_poke:
+                Reminder.objects.create(
+                    request=req,
+                    target_user=member.user,
+                    action_expected=gettext("Admin poke: %(status)s") % {'status': req.get_status_display()},
+                    status_when_created=req.status,
+                    urgency='URGENT',
+                    source='POKE',
+                    sent_at=timezone.now(),
+                )
+                poked_count += 1
+
+        from notifications.services import create_notification
+        create_notification(
+            user=member.user,
+            notification_type='POKE',
+            title=gettext("Admin poke — %(count)s request(s) need attention") % {'count': poked_count},
+            message=message or gettext("Please review your pending requests"),
+        )
+
+        log_action(
+            action='POKE_ALL',
+            entity_type='MEMBER',
+            entity_id=str(member.id),
+            actor=request.user,
+            details={'requests_poked': poked_count, 'message': message}
+        )
+
+        return JsonResponse({
+            'status': 'poked',
+            'member': member.user.get_full_name(),
+            'requests_poked': poked_count,
+        })
+
+    total_active = Request.objects.filter(
+        assigned_to=member,
+        is_deleted=False,
+    ).exclude(status__in=['CLOSED', 'ARCHIVED', 'ADMINISTRATIVELY_CLOSED', 'DRAFT']).count()
+
+    return JsonResponse({
+        'member_id': member.pk,
+        'member_name': member.user.get_full_name(),
+        'total_active_requests': total_active,
+    })

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view
 from . import views
 
@@ -23,7 +23,14 @@ urlpatterns = [
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
     path('home/content/<str:pk>/delete/', superadmin.content_delete, name='superadmin_content_delete'),
     path('home/service/<uuid:pk>/edit/', superadmin.service_edit, name='superadmin_service_edit'),
-    path('home/service/<uuid:pk>/fields-reset/', superadmin.service_fields_reset, name='superadmin_service_fields_reset'),
+    path('home/service/<uuid:pk>/field/<int:field_id>/move/<str:direction>/', superadmin.service_field_move, name='superadmin_service_field_move'),
+    path('home/service/<uuid:pk>/fields-reset/', superadmin.reset_service_fields, name='superadmin_service_fields_reset'),
+    
+    # Field Templates (Superadmin)
+    path('home/field-templates/', superadmin.field_templates_list, name='superadmin_field_templates'),
+    path('home/field-templates/create/', superadmin.field_template_create, name='superadmin_field_template_create'),
+    path('home/field-templates/<int:pk>/apply/<uuid:service_pk>/', superadmin.field_template_apply, name='superadmin_field_template_apply'),
+    path('home/field-templates/<int:pk>/delete/', superadmin.field_template_delete, name='superadmin_field_template_delete'),
     path('home/template/<str:template_type>/download/', superadmin.download_template, name='superadmin_template_download'),
     path('home/backup/', superadmin.backup_now, name='superadmin_backup'),
     path('home/user/create/', superadmin.create_user, name='superadmin_user_create'),
@@ -41,6 +48,24 @@ urlpatterns = [
     
     # Finance/Payment Settings (Superadmin)
     path('home/payment-settings/', superadmin.payment_settings, name='superadmin_payment_settings'),
+    path('home/pdf-fields/', superadmin.pdf_fields_manager, name='superadmin_pdf_fields'),
+    path('home/pdf-fields/create/', superadmin.pdf_field_create, name='superadmin_pdf_field_create'),
+    path('home/pdf-fields/<int:pk>/update/', superadmin.pdf_field_update, name='superadmin_pdf_field_update'),
+    path('home/pdf-fields/<int:pk>/toggle/', superadmin.pdf_field_toggle, name='superadmin_pdf_field_toggle'),
+    path('home/pdf-fields/<int:pk>/delete/', superadmin.pdf_field_delete, name='superadmin_pdf_field_delete'),
+    path('home/pdf-fields/<int:pk>/move/<str:direction>/', superadmin.pdf_field_move, name='superadmin_pdf_field_move'),
+    path('superadmin/homepage/', superadmin.homepage_manager, name='superadmin_homepage_manager'),
+    path('superadmin/homepage/section/add/', superadmin.homepage_section_add, name='superadmin_homepage_section_add'),
+    path('superadmin/homepage/section/<int:pk>/edit/', superadmin.homepage_section_edit, name='superadmin_homepage_section_edit'),
+    path('superadmin/homepage/section/<int:pk>/delete/', superadmin.homepage_section_delete, name='superadmin_homepage_section_delete'),
+    path('superadmin/homepage/section/<int:pk>/toggle/', superadmin.homepage_section_toggle, name='superadmin_homepage_section_toggle'),
+    path('superadmin/homepage/section/<int:pk>/blocks/', superadmin.homepage_blocks_manager, name='superadmin_homepage_blocks_manager'),
+    path('superadmin/homepage/block/add/<int:section_id>/', superadmin.homepage_block_add, name='superadmin_homepage_block_add'),
+    path('superadmin/homepage/block/<int:pk>/edit/', superadmin.homepage_block_edit, name='superadmin_homepage_block_edit'),
+    path('superadmin/homepage/block/<int:pk>/delete/', superadmin.homepage_block_delete, name='superadmin_homepage_block_delete'),
+    path('superadmin/homepage/block/<int:pk>/toggle/', superadmin.homepage_block_toggle, name='superadmin_homepage_block_toggle'),
+    path('superadmin/homepage/reorder/', superadmin.homepage_reorder_sections, name='superadmin_homepage_reorder_sections'),
+    path('superadmin/homepage/section/<int:pk>/reorder-blocks/', superadmin.homepage_reorder_blocks, name='superadmin_homepage_reorder_blocks'),
 
     # Platform Admin (Operations)
     path('ops/', admin_ops.index, name='admin_ops'),
@@ -78,9 +103,27 @@ urlpatterns = [
     # CSV Export (Task 6)
     path('ops/export-csv/', admin_ops.export_requests_csv, name='admin_export_csv'),
     
+    # Administrative Close Request (Batch 1 - Feature 1)
+    path('ops/close-request/<uuid:pk>/', admin_ops.close_request, name='admin_close_request'),
+    
+    # Reassign Request (Batch 1 - Feature 2)
+    path('ops/reassign/<uuid:pk>/', admin_ops.reassign_request, name='admin_reassign'),
+    path('ops/bulk-reassign/', admin_ops.bulk_reassign, name='admin_bulk_reassign'),
+    
+    # Manage Observers (Batch 1 - Feature 3)
+    path('ops/observers/<uuid:pk>/', admin_ops.manage_observers, name='admin_manage_observers'),
+    
     # Performance & Points (Task 7)
     path('ops/performance/', admin_ops.performance_points, name='admin_performance'),
     path('ops/member/<int:member_pk>/points/', admin_ops.member_points_detail, name='admin_member_points'),
+
+    # Activity Dashboard (Batch 3 - Feature 6)
+    path('ops/activity/', admin_ops.activity_dashboard, name='admin_activity_dashboard'),
+    path('ops/activity/data/', admin_ops.activity_data, name='admin_activity_data'),
+
+    # Poke System (Batch 3 - Feature 7)
+    path('ops/request/<uuid:pk>/poke/', admin_ops.poke_member, name='admin_poke_member'),
+    path('ops/member/<int:member_id>/poke-all/', admin_ops.poke_member_all, name='admin_poke_member_all'),
 
     # Analyst
     path('analyst/', analyst.index, name='analyst'),
@@ -99,6 +142,11 @@ urlpatterns = [
     path('finance/', finance.index, name='finance'),
     path('finance/validate/<uuid:pk>/', finance.validate_budget, name='finance_validate'),
     path('finance/payment/<uuid:pk>/', finance.update_payment_status, name='finance_payment_status'),
+    
+    # Finance Invoice Workflow (GENOCLAB)
+    path('finance/invoice/generate/<uuid:pk>/', finance.generate_invoice, name='finance_invoice_generate'),
+    path('finance/invoice/send/<uuid:pk>/', finance.send_invoice, name='finance_invoice_send'),
+    path('finance/invoice/trigger-payment/<uuid:pk>/', finance.trigger_payment_pending, name='finance_trigger_payment'),
 
     # Requester (IBTIKAR)
     path('requester/', requester.index, name='requester'),
@@ -151,11 +199,18 @@ urlpatterns = [
     path('api/pricing/<int:config_pk>/', service_form_api.pricing_config_update, name='service_pricing_update'),
     path('api/pricing/<int:config_pk>/delete/', service_form_api.pricing_config_delete, name='service_pricing_delete'),
 
+    # Quote Views
+    path('dashboard/request/<uuid:pk>/quote/preview/', admin_ops.preview_quote, name='admin_quote_preview'),
+    path('dashboard/request/<uuid:pk>/quote/view/', client.view_quote, name='client_view_quote'),
+    
     # QR Code
     path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),
 
     # Messaging
     path('message/<uuid:pk>/', messaging.send_message, name='send_message'),
+
+    # Messaging App URLs (Feature 4 - Ephemeral Messages)
+    path('messaging/', include('messaging.urls')),
 
     # Audit Log (SUPER_ADMIN)
     path('audit-log/', superadmin.audit_log, name='audit_log'),

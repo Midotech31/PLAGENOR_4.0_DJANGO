@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <style>
+[x-cloak] { display: none !important; }
 .field-card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px; background: #fff; }
 .field-card-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: #f8fafc; border-radius: 7px 7px 0 0; }
 .field-card-body { padding: 14px; border-top: 1px solid #e2e8f0; }
@@ -29,7 +30,10 @@
 {% block content %}
 <div class="page-header">
     <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
-    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-sm btn-outline">← {% trans "Retour" %}</a>
+    <a href="{% url 'dashboard:superadmin' %}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        {% trans "Retour" %}
+    </a>
 </div>
 
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
@@ -111,7 +115,10 @@
                 </div>
                 <div style="display:flex; gap:8px; margin-top:16px;">
                     <button type="submit" class="btn btn-primary">{% trans "Enregistrer les infos service" %}</button>
-                    <button type="button" class="btn btn-outline" onclick="showPreview()">👁 {% trans "Aperçu formulaire" %}</button>
+                    <button type="button" class="btn btn-secondary" onclick="showPreview()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {% trans "Aperçu formulaire" %}
+                    </button>
                 </div>
             </form>
         </div>
@@ -143,8 +150,11 @@
 <!-- FORM FIELDS MANAGEMENT -->
 <div class="card" style="margin-top:20px;">
     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>{% trans "Champs de formulaire — glissez pour réorganiser" %}</h3>
-        <button type="button" class="btn btn-sm btn-primary" onclick="showAddFieldModal()">+ {% trans "Ajouter un champ" %}</button>
+        <h3>{% trans "Champs de formulaire — glissez ou utilisez ↑↓" %}</h3>
+        <button type="button" class="btn btn-primary btn-xs" onclick="showAddFieldModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 5v14M5 12h14"/></svg>
+            {% trans "Ajouter un champ" %}
+        </button>
     </div>
     <div class="card-body">
 
@@ -186,7 +196,10 @@
 <div class="card" style="margin-top:20px;">
     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
         <h3>{% trans "Configuration des tarifs" %}</h3>
-        <button type="button" class="btn btn-sm btn-primary" onclick="showAddPricingModal()">+ {% trans "Ajouter un tarif" %}</button>
+        <button type="button" class="btn btn-primary btn-xs" onclick="showAddPricingModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 5v14M5 12h14"/></svg>
+            {% trans "Ajouter un tarif" %}
+        </button>
     </div>
     <div class="card-body">
         <p class="text-sm text-muted" style="margin-bottom:16px;">
@@ -244,7 +257,7 @@
         </div>
         <div style="display:flex; gap:8px; margin-top:16px;">
             <button type="button" class="btn btn-primary" onclick="savePricing()">{% trans "Enregistrer" %}</button>
-            <button type="button" class="btn btn-outline" onclick="closePricingModal()">{% trans "Annuler" %}</button>
+            <button type="button" class="btn btn-secondary" onclick="closePricingModal()">{% trans "Annuler" %}</button>
         </div>
     </div>
 </div>
@@ -388,14 +401,15 @@
             <div id="conditional-rules-list">
                 <!-- Rules will be added here dynamically -->
             </div>
-            <button type="button" class="btn btn-sm btn-outline" onclick="addConditionalRule()" style="margin-top:8px;">
-                + {% trans "Ajouter une condition" %}
+            <button type="button" class="btn btn-secondary" onclick="addConditionalRule()" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 5v14M5 12h14"/></svg>
+                {% trans "Ajouter une condition" %}
             </button>
         </div>
 
         <div style="display:flex; gap:8px; margin-top:16px;">
             <button type="button" class="btn btn-primary" onclick="saveField()">{% trans "Enregistrer" %}</button>
-            <button type="button" class="btn btn-outline" onclick="closeModal()">{% trans "Annuler" %}</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">{% trans "Annuler" %}</button>
         </div>
     </div>
 </div>
@@ -405,7 +419,9 @@
     <div class="preview-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <h3>{% trans "Aperçu du formulaire" %}: {{ service.code }}</h3>
-            <button type="button" onclick="closePreview()" style="background:none; border:none; font-size:1.5rem;">&times;</button>
+            <button type="button" onclick="closePreview()" class="btn btn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
         </div>
         <div id="preview-html" style="border:1px solid #e2e8f0; border-radius:8px; padding:16px;"></div>
     </div>
@@ -443,7 +459,7 @@ function renderFields(category, fields) {
     }
     empty.style.display = 'none';
 
-    fields.forEach(function(f) {
+    fields.forEach(function(f, idx) {
         var optionsHtml = f.choices && f.choices.length
             ? '<span class="field-meta">options: ' + f.choices.slice(0, 3).join(', ') + (f.choices.length > 3 ? '…' : '') + '</span>'
             : '';
@@ -456,6 +472,9 @@ function renderFields(category, fields) {
             ? '<span style="background:#ecfeff; color:#0891b2; padding:2px 8px; border-radius:12px; font-size:0.7rem;">GENOCLAB</span>'
             : '<span style="background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:12px; font-size:0.7rem;">BOTH</span>';
         var typeLabel = f.field_type === 'select' ? 'select' : f.field_type;
+        var moveBase = '/dashboard/home/service/' + SERVICE_ID + '/field/' + f.id + '/move/';
+        var upDisabled = idx === 0 ? 'disabled' : '';
+        var downDisabled = idx === fields.length - 1 ? 'disabled' : '';
         var html = '<div class="field-card" draggable="true" data-id="' + f.id + '" data-category="' + category + '" style="cursor:default;">' +
             '<div class="field-card-header">' +
                 '<div style="display:flex; align-items:center; gap:8px;">' +
@@ -464,10 +483,23 @@ function renderFields(category, fields) {
                     '<span class="field-type-badge">' + escHtml(typeLabel) + '</span>' +
                     requiredHtml +
                     channelBadge +
+                    '<span class="field-meta" style="margin-left:6px;">{% trans "Position" %}: ' + (idx + 1) + '</span>' +
                 '</div>' +
-                '<div style="display:flex; gap:6px;">' +
-                    '<button type="button" class="btn btn-sm btn-outline" onclick="editField(' + JSON.stringify(f.id) + ')">✏️</button>' +
-                    '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deleteField(' + JSON.stringify(f.id) + ')">🗑</button>' +
+                '<div style="display:flex; gap:6px; align-items:center;">' +
+                    '<form method="post" action="' + moveBase + 'up/" style="display:inline;">' +
+                        '<input type="hidden" name="csrfmiddlewaretoken" value="' + csrfToken + '">' +
+                        '<button type="submit" class="btn btn-icon" title="{% trans "Monter" %}" ' + upDisabled + '>↑</button>' +
+                    '</form>' +
+                    '<form method="post" action="' + moveBase + 'down/" style="display:inline;">' +
+                        '<input type="hidden" name="csrfmiddlewaretoken" value="' + csrfToken + '">' +
+                        '<button type="submit" class="btn btn-icon" title="{% trans "Descendre" %}" ' + downDisabled + '>↓</button>' +
+                    '</form>' +
+                    '<button type="button" class="btn btn-icon" onclick="editField(' + JSON.stringify(f.id) + ')" title="{% trans "Modifier" %}">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                    '</button>' +
+                    '<button type="button" class="btn btn-icon" onclick="deleteField(' + JSON.stringify(f.id) + ')" title="{% trans "Supprimer" %}">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                    '</button>' +
                 '</div>' +
             '</div>' +
             '<div class="field-card-body">' +
@@ -708,7 +740,7 @@ function addConditionalRule(ruleData) {
                 '<select class="form-control action-select" style="flex:1;" multiple size="2">' +
                     actionOptions +
                 '</select>' +
-                '<button type="button" onclick="removeConditionalRule(' + ruleIndex + ')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">×</button>' +
+                '<button type="button" onclick="removeConditionalRule(' + ruleIndex + ')" class="btn btn-danger">×</button>' +
             '</div>' +
         '</div>';
     
@@ -1045,8 +1077,12 @@ function renderPricingConfigs(configs) {
                 (cfg.unit ? '<span style="margin-left:4px; font-size:0.8rem; color:#64748b;">/ ' + escHtml(cfg.unit) + '</span>' : '') +
             '</div>' +
             '<div style="display:flex; gap:8px;">' +
-                '<button type="button" class="btn btn-sm btn-outline" onclick="editPricing(\'' + cfg.id + '\')">✏️</button>' +
-                '<button type="button" class="btn btn-sm btn-outline" style="color:#dc2626;" onclick="deletePricing(\'' + cfg.id + '\')">🗑</button>' +
+                '<button type="button" class="btn btn-icon" onclick="editPricing(\'' + cfg.id + '\')" title="{% trans "Modifier" %}">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                '</button>' +
+                '<button type="button" class="btn btn-icon" onclick="deletePricing(\'' + cfg.id + '\')" title="{% trans "Supprimer" %}">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                '</button>' +
             '</div>' +
         '</div>';
     }).join('');

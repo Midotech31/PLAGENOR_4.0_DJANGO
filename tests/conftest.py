@@ -13,6 +13,12 @@ def django_db_setup():
     }
 
 
+@pytest.fixture(scope='session')
+def django_db_modify_db_settings():
+    """Force SQLite for tests."""
+    pass
+
+
 @pytest.fixture
 def user_factory(db):
     """Factory for creating test users."""
@@ -80,8 +86,8 @@ def service_factory(db):
         
         name = factory.Sequence(lambda n: f'Test Service {n}')
         code = factory.LazyFunction(lambda: f'TS-{uuid.uuid4().hex[:8].upper()}')
-        channel = 'BOTH'
-        is_active = True
+        channel_availability = 'BOTH'
+        active = True
         ibtikar_price = 1000.00
         genoclab_price = 2000.00
     
@@ -113,6 +119,7 @@ def request_factory(db, service_factory, user_factory, member_profile_factory):
     """Factory for creating test requests."""
     from core.models import Request
     import uuid
+    from decimal import Decimal
     
     class RequestFactory(factory.django.DjangoModelFactory):
         class Meta:
@@ -124,6 +131,8 @@ def request_factory(db, service_factory, user_factory, member_profile_factory):
         status = 'DRAFT'
         requester = factory.SubFactory(user_factory)
         display_id = factory.LazyFunction(lambda: f'REQ-{uuid.uuid4().hex[:6].upper()}')
+        budget_amount = Decimal('1000.00')
+        declared_ibtikar_balance = Decimal('200000.00')
     
     return RequestFactory
 
