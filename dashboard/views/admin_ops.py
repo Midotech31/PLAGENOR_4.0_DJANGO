@@ -259,7 +259,7 @@ def award_points(request, member_pk):
         member.gift_unlocked = True
         Notification.objects.create(
             user=member.user,
-            message="🎁 Félicitations ! Vous avez débloqué une boîte surprise ! Rendez-vous dans votre espace Points.",
+            message="Félicitations ! Vous avez débloqué une boîte surprise ! Rendez-vous dans votre espace Points.",
             notification_type='reward'
         )
     member.save(update_fields=['total_points', 'gift_unlocked'])
@@ -287,7 +287,7 @@ def upload_gift(request, member_pk):
         member.save(update_fields=['gift_image', 'gift_unlocked', 'gift_collected'])
         Notification.objects.create(
             user=member.user,
-            message="🎁 Une récompense vous attend ! Ouvrez votre boîte surprise dans votre espace Points.",
+            message="Une récompense vous attend ! Ouvrez votre boîte surprise dans votre espace Points.",
             notification_type='reward'
         )
         messages.success(request, f"Récompense ajoutée pour {member.user.get_full_name()}.")

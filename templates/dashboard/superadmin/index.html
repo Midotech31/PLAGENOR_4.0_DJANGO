@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load icons %}
 
 {% block title %}{% trans "Super Admin" %} — PLAGENOR 4.0{% endblock %}
 
@@ -220,7 +221,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary" style="height:34px; font-size:0.85rem; padding:0 16px;">{% trans "Filtrer" %}</button>
                     {% if user_search or user_role_filter %}
-                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;">✕</a>
+                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;" title="{% trans 'Effacer les filtres' %}">{% icon 'x' size=15 %}</a>
                     {% endif %}
                 </form>
             </div>
@@ -865,13 +866,13 @@
                             <div>
                                 {% with tier=stat.level.key|default:stat.status|default:"normal" %}
                                 {% if tier == "fire" %}
-                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 {% trans "Fire" %}</span>
+                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;display:inline-flex;align-items:center;gap:4px;">{% icon 'flame' size=13 %} {% trans "Fire" %}</span>
                                 {% elif tier == "very_good" %}
-                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">⭐ {% trans "Very Good" %}</span>
+                                <span class="badge-status" style="background:#fef3c7;color:#d97706;display:inline-flex;align-items:center;gap:4px;">{% icon 'star' size=13 %} {% trans "Very Good" %}</span>
                                 {% elif tier == "good" %}
-                                <span class="badge-status" style="background:#d1fae5;color:#059669;">✅ {% trans "Good" %}</span>
+                                <span class="badge-status" style="background:#d1fae5;color:#059669;display:inline-flex;align-items:center;gap:4px;">{% icon 'check-circle' size=13 %} {% trans "Good" %}</span>
                                 {% else %}
-                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">{{ stat.emoji }} {{ stat.level.label_fr|default:"Pas mal" }}</span>
+                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;display:inline-flex;align-items:center;gap:4px;">{% icon stat.level.icon|default:"smile" size=13 %} {{ stat.level.label_fr|default:"Pas mal" }}</span>
                                 {% endif %}
                                 {% endwith %}
                             </div>
@@ -1055,7 +1056,7 @@
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Restaurer une sauvegarde" %}</h3></div>
             <div class="card-body">
-                <p class="text-muted" style="margin-bottom:12px; color:#dc2626;">⚠ {% trans "Attention : cette opération remplace la base de données actuelle. Un backup automatique sera créé avant la restauration. Le serveur devra être redémarré après la restauration." %}</p>
+                <p class="text-muted" style="margin-bottom:12px; color:#dc2626;">{% icon 'alert-triangle' size=15 %} {% trans "Attention : cette opération remplace la base de données actuelle. Un backup automatique sera créé avant la restauration. Le serveur devra être redémarré après la restauration." %}</p>
                 <form method="post" action="{% url 'dashboard:superadmin_restore' %}" enctype="multipart/form-data" onsubmit="return confirm('{% trans "Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base actuelle sera créé automatiquement." %}');">
                     {% csrf_token %}
                     <div class="form-row">

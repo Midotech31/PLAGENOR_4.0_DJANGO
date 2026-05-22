@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load icons %}
 
 <header class="topbar">
     <div class="topbar-left">
@@ -88,7 +89,7 @@
             <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <button type="submit" class="topbar-btn" title="{% if LANGUAGE_CODE == 'fr' %}English{% else %}Français{% endif %}">
-                🌐 {% if LANGUAGE_CODE == 'fr' %}EN{% else %}FR{% endif %}
+                {% icon 'globe' size=15 %} {% if LANGUAGE_CODE == 'fr' %}EN{% else %}FR{% endif %}
             </button>
         </form>
 

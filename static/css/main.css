@@ -1896,8 +1896,13 @@ a:has(.service-card):hover .service-card,
     gap: 4px;
 }
 .form-error::before {
-    content: '⚠';
-    font-size: 0.75rem;
+    content: '';
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10.29%203.86%201.82%2018a2%202%200%200%200%201.71%203h16.94a2%202%200%200%200%201.71-3L13.71%203.86a2%202%200%200%200-3.42%200z'/%3E%3Cline%20x1='12'%20y1='9'%20x2='12'%20y2='13'/%3E%3Cline%20x1='12'%20y1='17'%20x2='12.01'%20y2='17'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10.29%203.86%201.82%2018a2%202%200%200%200%201.71%203h16.94a2%202%200%200%200%201.71-3L13.71%203.86a2%202%200%200%200-3.42%200z'/%3E%3Cline%20x1='12'%20y1='9'%20x2='12'%20y2='13'/%3E%3Cline%20x1='12'%20y1='17'%20x2='12.01'%20y2='17'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .is-invalid {
     border-color: #dc2626 !important;
@@ -2025,8 +2030,8 @@ tr.clickable-row:hover td {
     gap: 10px;
 }
 .toast-icon {
-    font-size: 1.2rem;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
 }
 .toast-message {
     flex: 1;

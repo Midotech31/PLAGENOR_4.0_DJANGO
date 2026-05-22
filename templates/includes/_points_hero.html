@@ -1,6 +1,7 @@
 {% load i18n %}
+{% load icons %}
 {% comment %}
-  Context vars: pts (total points), lvl (level name), lvl_color (hex), next (next level threshold)
+  Context vars: pts (total points), lvl (level name), lvl_icon (icon name), lvl_color (hex), next (next level threshold)
 {% endcomment %}
 {% with progress_pct=pts|default:0 %}
 <div style="background: linear-gradient(135deg, {{ lvl_color }}15, {{ lvl_color }}30); border: 1px solid {{ lvl_color }}40; border-radius: 16px; padding: 28px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap;">
@@ -15,7 +16,7 @@
 
     <!-- Level info + progress bar -->
     <div style="flex: 1; min-width: 200px;">
-        <div style="font-size: 1.3rem; font-weight: 700; color: {{ lvl_color }}; margin-bottom: 6px;">{{ lvl }}</div>
+        <div style="font-size: 1.3rem; font-weight: 700; color: {{ lvl_color }}; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">{% if lvl_icon %}{% icon lvl_icon size=22 %}{% endif %}{{ lvl }}</div>
         <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;">
             {% trans "Prochain palier" %}: <strong>{{ next }} pts</strong>
         </div>
@@ -33,9 +34,9 @@
     <div style="text-align: center; min-width: 140px;">
         <div style="font-size: 0.9rem; color: #475569; margin-bottom: 4px;">
             {% if pts >= next %}
-                🎉 {% trans "Niveau atteint !" %}
+                <span style="display:inline-flex; align-items:center; gap:5px;">{% icon 'party-popper' size=17 %} {% trans "Niveau atteint !" %}</span>
             {% else %}
-                💪 {% trans "Objectif" %}: <strong>{{ next }} pts</strong>
+                <span style="display:inline-flex; align-items:center; gap:5px;">{% icon 'target' size=16 %} {% trans "Objectif" %}: <strong>{{ next }} pts</strong></span>
             {% endif %}
         </div>
         <div style="font-size: 0.78rem; color: #94a3b8;">{% trans "Continuez comme ça !" %}</div>

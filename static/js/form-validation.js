@@ -54,6 +54,12 @@
     }
 
     // Toast notification system
+    const TOAST_ICONS = {
+        success: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+    };
+
     function showToast(message, type = 'success') {
         const existingToasts = document.querySelectorAll('.plagenor-toast');
         existingToasts.forEach(toast => toast.remove());
@@ -62,7 +68,7 @@
         toast.className = `plagenor-toast plagenor-toast-${type}`;
         toast.innerHTML = `
             <div class="toast-content">
-                <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+                <span class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</span>
                 <span class="toast-message">${message}</span>
             </div>
         `;

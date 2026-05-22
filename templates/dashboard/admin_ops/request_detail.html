@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load icons %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -61,7 +62,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    ✓
+                    {% icon 'check' size=16 %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px; 
                     {% if current == 'SUBMITTED' or current == 'VALIDATION_PEDAGOGIQUE' or current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669; font-weight:600;{% endif %}">
@@ -82,7 +83,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'VALIDATION_PEDAGOGIQUE' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}✓{% endif %}
+                    {% if current == 'VALIDATION_PEDAGOGIQUE' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'VALIDATION_PEDAGOGIQUE' %}color:#7c3aed; font-weight:600;{% elif current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -103,7 +104,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'VALIDATION_FINANCE' %}<span style="animation:pulse 1.5s infinite;">3</span>{% else %}✓{% endif %}
+                    {% if current == 'VALIDATION_FINANCE' %}<span style="animation:pulse 1.5s infinite;">3</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'VALIDATION_FINANCE' %}color:#d97706; font-weight:600;{% elif current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -124,7 +125,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'PLATFORM_NOTE_GENERATED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}✓{% endif %}
+                    {% if current == 'PLATFORM_NOTE_GENERATED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'PLATFORM_NOTE_GENERATED' %}color:#2563eb; font-weight:600;{% elif current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -145,7 +146,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}<span style="animation:pulse 1.5s infinite;">5</span>{% else %}✓{% endif %}
+                    {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}<span style="animation:pulse 1.5s infinite;">5</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}color:#db2777; font-weight:600;{% elif current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -166,7 +167,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'IBTIKAR_CODE_SUBMITTED' %}<span style="animation:pulse 1.5s infinite;">6</span>{% else %}✓{% endif %}
+                    {% if current == 'IBTIKAR_CODE_SUBMITTED' %}<span style="animation:pulse 1.5s infinite;">6</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'IBTIKAR_CODE_SUBMITTED' %}color:#0891b2; font-weight:600;{% elif current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -187,7 +188,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}<span style="animation:pulse 1.5s infinite;">7</span>{% else %}✓{% endif %}
+                    {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}<span style="animation:pulse 1.5s infinite;">7</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}color:#ea580c; font-weight:600;{% elif current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -208,7 +209,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}<span style="animation:pulse 1.5s infinite;">🧪</span>{% else %}✓{% endif %}
+                    {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'beaker' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}color:#7c3aed; font-weight:600;{% elif current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -229,7 +230,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}<span style="animation:pulse 1.5s infinite;">📄</span>{% else %}✓{% endif %}
+                    {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'file-text' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}color:#0284c7; font-weight:600;{% elif current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
@@ -250,7 +251,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'SENT_TO_REQUESTER' %}<span style="animation:pulse 1.5s infinite;">✓</span>{% elif current == 'COMPLETED' or current == 'CLOSED' %}🏁{% else %}10{% endif %}
+                    {% if current == 'SENT_TO_REQUESTER' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'check' size=16 %}</span>{% elif current == 'COMPLETED' or current == 'CLOSED' %}{% icon 'flag' size=16 %}{% else %}10{% endif %}
                 </div>
                 <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
                     {% if current == 'SENT_TO_REQUESTER' %}color:#16a34a; font-weight:600;{% elif current == 'COMPLETED' or current == 'CLOSED' %}color:#059669; font-weight:600;{% endif %}">
@@ -276,7 +277,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'REQUEST_CREATED' %}<span style="animation:pulse 1.5s infinite;">1</span>{% else %}✓{% endif %}
+                    {% if current == 'REQUEST_CREATED' %}<span style="animation:pulse 1.5s infinite;">1</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'REQUEST_CREATED' %}color:#2563eb; font-weight:600;{% elif current in 'QUOTE_DRAFT,QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -297,7 +298,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'QUOTE_DRAFT' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}✓{% endif %}
+                    {% if current == 'QUOTE_DRAFT' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'QUOTE_DRAFT' %}color:#d97706; font-weight:600;{% elif current in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -318,7 +319,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'QUOTE_SENT' %}<span style="animation:pulse 1.5s infinite;">📋</span>{% else %}✓{% endif %}
+                    {% if current == 'QUOTE_SENT' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'clipboard' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'QUOTE_SENT' %}color:#7c3aed; font-weight:600;{% elif current in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -339,7 +340,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'ORDER_UPLOADED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}✓{% endif %}
+                    {% if current == 'ORDER_UPLOADED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'ORDER_UPLOADED' %}color:#0891b2; font-weight:600;{% elif current in 'ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -360,7 +361,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'ASSIGNED' %}<span style="animation:pulse 1.5s infinite;">🧪</span>{% else %}✓{% endif %}
+                    {% if current == 'ASSIGNED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'beaker' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'ASSIGNED' %}color:#ea580c; font-weight:600;{% elif current in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -381,7 +382,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'ANALYSIS_FINISHED' %}<span style="animation:pulse 1.5s infinite;">💰</span>{% else %}✓{% endif %}
+                    {% if current == 'ANALYSIS_FINISHED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'dollar-sign' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'ANALYSIS_FINISHED' %}color:#db2777; font-weight:600;{% elif current in 'PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -402,7 +403,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'PAYMENT_CONFIRMED' %}<span style="animation:pulse 1.5s infinite;">📄</span>{% else %}✓{% endif %}
+                    {% if current == 'PAYMENT_CONFIRMED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'file-text' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'PAYMENT_CONFIRMED' %}color:#0284c7; font-weight:600;{% elif current in 'REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
@@ -423,7 +424,7 @@
                     {% else %}
                         background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
                     {% endif %}">
-                    {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}<span style="animation:pulse 1.5s infinite;">✓</span>{% elif current == 'COMPLETED' or current == 'ARCHIVED' %}🏁{% else %}8{% endif %}
+                    {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'check' size=16 %}</span>{% elif current == 'COMPLETED' or current == 'ARCHIVED' %}{% icon 'flag' size=16 %}{% else %}8{% endif %}
                 </div>
                 <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
                     {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}color:#16a34a; font-weight:600;{% elif current == 'COMPLETED' or current == 'ARCHIVED' %}color:#059669; font-weight:600;{% endif %}">
@@ -779,8 +780,8 @@
             </div>
             <div class="card-body">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <span style="font-size: 2rem; color: #f59e0b;">
-                        {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}★{% else %}☆{% endif %}{% endfor %}
+                    <span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 2px;">
+                        {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}{% icon 'star' size=26 %}{% else %}{% icon 'star-outline' size=26 style='color:#cbd5e1;' %}{% endif %}{% endfor %}
                     </span>
                     <span style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">{{ req.service_rating }}<span style="font-size: 1rem; color: #64748b;">/5</span></span>
                 </div>

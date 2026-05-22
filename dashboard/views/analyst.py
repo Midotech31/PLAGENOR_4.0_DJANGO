@@ -80,15 +80,15 @@ def index(request):
     # Performance status label based on productivity_score
     score = profile.productivity_score
     if score >= 90:
-        perf_status = {'label': '🔥 On Fire', 'color': '#dc2626', 'bg': '#fee2e2'}
+        perf_status = {'label': 'On Fire', 'color': '#dc2626', 'bg': '#fee2e2'}
     elif score >= 75:
-        perf_status = {'label': '⭐ Very Good', 'color': '#d97706', 'bg': '#fef3c7'}
+        perf_status = {'label': 'Very Good', 'color': '#d97706', 'bg': '#fef3c7'}
     elif score >= 55:
-        perf_status = {'label': '✅ Good', 'color': '#059669', 'bg': '#d1fae5'}
+        perf_status = {'label': 'Good', 'color': '#059669', 'bg': '#d1fae5'}
     elif score >= 35:
-        perf_status = {'label': '👍 Not Bad', 'color': '#0284c7', 'bg': '#dbeafe'}
+        perf_status = {'label': 'Not Bad', 'color': '#0284c7', 'bg': '#dbeafe'}
     else:
-        perf_status = {'label': '⏰ Wake Up!', 'color': '#6b7280', 'bg': '#f3f4f6'}
+        perf_status = {'label': 'Wake Up!', 'color': '#6b7280', 'bg': '#f3f4f6'}
 
     context = {
         'profile': profile,
@@ -359,7 +359,7 @@ def collect_gift(request):
     if profile.gift_unlocked and not profile.gift_collected:
         profile.gift_collected = True
         profile.save(update_fields=['gift_collected'])
-        messages.success(request, "🎁 Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
+        messages.success(request, "Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
     else:
         messages.info(request, "Aucun cadeau disponible à récupérer.")
     return redirect_back(request, 'dashboard:analyst')
