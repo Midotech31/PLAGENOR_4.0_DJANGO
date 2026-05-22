@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, safe_int
 from django.contrib import messages
 from django.utils import timezone
 
@@ -359,11 +359,13 @@ def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    rating = int(request.POST.get('rating', 0))
+    rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating
         req.rating_comment = request.POST.get('comment', '')
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
+    else:
+        messages.error(request, "Veuillez sélectionner une note entre 1 et 5.")
     return redirect_back(request, 'dashboard:client')

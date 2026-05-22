@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, safe_int, safe_float
 from django.contrib import messages
 from django.utils import timezone
 
@@ -119,7 +119,7 @@ def create_request(request):
     service = get_object_or_404(Service, pk=service_id, active=True)
 
     # Declared balance validation
-    declared = float(request.POST.get('declared_balance', 0))
+    declared = safe_float(request.POST.get('declared_balance'))
     if declared < 0 or declared > 200000:
         messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
         return redirect_back(request, 'dashboard:requester')
@@ -167,7 +167,7 @@ def create_request(request):
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
             'budget_amount': budget_amount,
-            'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
+            'declared_ibtikar_balance': declared,
             'service_params': service_params,
             'sample_table': sample_table_data,
         },
@@ -300,11 +300,13 @@ def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    rating = int(request.POST.get('rating', 0))
+    rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating
         req.rating_comment = request.POST.get('comment', '')
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
+    else:
+        messages.error(request, "Veuillez sélectionner une note entre 1 et 5.")
     return redirect_back(request, 'dashboard:requester')

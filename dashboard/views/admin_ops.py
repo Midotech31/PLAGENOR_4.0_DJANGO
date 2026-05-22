@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, safe_int, safe_float
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
@@ -29,7 +29,7 @@ def admin_required(view_func):
 def index(request):
     total_requests = Request.objects.count()
     pending_count = Request.objects.filter(
-        status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED', 'ADMIN_REVIEW']
+        status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED']
     ).count()
     ibtikar_count = Request.objects.filter(channel='IBTIKAR').count()
     genoclab_count = Request.objects.filter(channel='GENOCLAB').count()
@@ -40,7 +40,7 @@ def index(request):
         status__in=[
             'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
             'PLATFORM_NOTE_GENERATED',
-            'REPORT_UPLOADED', 'ADMIN_REVIEW', 'REPORT_VALIDATED',
+            'REPORT_UPLOADED', 'REPORT_VALIDATED',
             'COMPLETED',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
             'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
@@ -57,14 +57,16 @@ def index(request):
         ]
     ).select_related('service', 'requester').order_by('-created_at')
 
-    # Requests ready for assignment
+    # Requests ready for assignment — newly-ready requests plus tasks an
+    # analyst declined (back to ASSIGNED with no assignee).
     assignable_requests = Request.objects.filter(
-        status__in=['IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED']
+        Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'ORDER_UPLOADED', 'INVOICE_GENERATED'])
+        | Q(status='ASSIGNED', assigned_to__isnull=True)
     ).select_related('service', 'requester').order_by('-created_at')
 
     # Requests needing report review
     review_requests = Request.objects.filter(
-        status__in=['REPORT_UPLOADED', 'ADMIN_REVIEW']
+        status__in=['REPORT_UPLOADED']
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')
 
     # In-progress requests (assigned, appointment, analysis phases)
@@ -224,8 +226,13 @@ def assign_request(request, pk):
         return redirect_back(request, 'dashboard:admin_ops')
     member = get_object_or_404(MemberProfile, pk=member_id)
 
-    # Check if request is in a state that allows assignment
-    if req.status not in ('IBTIKAR_CODE_SUBMITTED', 'PAYMENT_CONFIRMED', 'ORDER_UPLOADED'):
+    # A task an analyst declined sits at ASSIGNED with no assignee — it is
+    # re-assignable in place (no status transition needed).
+    is_reassignment = (req.status == 'ASSIGNED' and req.assigned_to_id is None)
+
+    if not is_reassignment and req.status not in (
+        'IBTIKAR_CODE_SUBMITTED', 'ORDER_UPLOADED', 'INVOICE_GENERATED'
+    ):
         messages.error(
             request,
             f"La demande {req.display_id} n'est pas prête pour l'assignation "
@@ -235,6 +242,15 @@ def assign_request(request, pk):
 
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
+
+    if is_reassignment:
+        RequestHistory.objects.create(
+            request=req, from_status='ASSIGNED', to_status='ASSIGNED',
+            actor=request.user, notes=f"Réassigné à {member.user.get_full_name()}",
+        )
+        messages.success(request, f"Demande {req.display_id} réassignée à {member.user.get_full_name()}.")
+        return redirect_back(request, 'dashboard:admin_ops')
+
     try:
         transition(req, 'ASSIGNED', request.user, notes=f"Assigné à {member.user.get_full_name()}")
         messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
@@ -248,7 +264,10 @@ def award_points(request, member_pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     member = get_object_or_404(MemberProfile, pk=member_pk)
-    points = int(request.POST.get('points', 0))
+    points = safe_int(request.POST.get('points'))
+    if points <= 0:
+        messages.error(request, "Nombre de points invalide.")
+        return redirect_back(request, 'dashboard:admin_ops')
     reason = request.POST.get('reason', '')
     PointsHistory.objects.create(
         member=member, points=points, reason=reason, awarded_by=request.user
@@ -260,14 +279,14 @@ def award_points(request, member_pk):
         Notification.objects.create(
             user=member.user,
             message="Félicitations ! Vous avez débloqué une boîte surprise ! Rendez-vous dans votre espace Points.",
-            notification_type='reward'
+            notification_type='REWARD'
         )
     member.save(update_fields=['total_points', 'gift_unlocked'])
     # Notify member
     Notification.objects.create(
         user=member.user,
         message=f"{points} points reçus ! {reason}" if reason else f"{points} points reçus !",
-        notification_type='reward'
+        notification_type='REWARD'
     )
     messages.success(request, f"{points} points attribués à {member.user.get_full_name()}.")
     return redirect_back(request, 'dashboard:admin_ops')
@@ -288,7 +307,7 @@ def upload_gift(request, member_pk):
         Notification.objects.create(
             user=member.user,
             message="Une récompense vous attend ! Ouvrez votre boîte surprise dans votre espace Points.",
-            notification_type='reward'
+            notification_type='REWARD'
         )
         messages.success(request, f"Récompense ajoutée pour {member.user.get_full_name()}.")
     else:
@@ -306,7 +325,7 @@ def send_cheer(request, member_pk):
     Notification.objects.create(
         user=member.user,
         message=f"Encouragement reçu : {message_text}" if message_text else "Vous avez reçu un encouragement !",
-        notification_type='reward'
+        notification_type='REWARD'
     )
     messages.success(request, f"Encouragement envoyé à {member.user.get_full_name()}.")
     return redirect_back(request, 'dashboard:admin_ops')
@@ -323,7 +342,11 @@ def modify_appointment(request, pk):
     date_str = request.POST.get('appointment_date', '')
     if date_str:
         from datetime import datetime
-        req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        try:
+            req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Date invalide.")
+            return redirect_back(request, 'dashboard:admin_ops')
         req.save(update_fields=['appointment_date'])
         messages.success(request, f"Date de RDV modifiée: {req.appointment_date}")
     return redirect_back(request, 'dashboard:admin_ops')
@@ -420,8 +443,8 @@ def prepare_quote(request, pk):
         idx = 0
         while f'item_label_{idx}' in request.POST:
             label = request.POST.get(f'item_label_{idx}', '')
-            unit_price = float(request.POST.get(f'item_unit_price_{idx}', 0))
-            quantity = int(request.POST.get(f'item_quantity_{idx}', 0))
+            unit_price = safe_float(request.POST.get(f'item_unit_price_{idx}'))
+            quantity = safe_int(request.POST.get(f'item_quantity_{idx}'))
             total = unit_price * quantity
             if label:
                 items.append({
@@ -432,9 +455,9 @@ def prepare_quote(request, pk):
                 })
             idx += 1
 
-        admin_fees = float(request.POST.get('admin_fees', 0))
-        report_fees = float(request.POST.get('report_fees', 0))
-        vat_rate = float(request.POST.get('vat_rate', 19)) / 100
+        admin_fees = safe_float(request.POST.get('admin_fees'))
+        report_fees = safe_float(request.POST.get('report_fees'))
+        vat_rate = safe_float(request.POST.get('vat_rate'), default=19) / 100
         notes = request.POST.get('quote_notes', '')
 
         subtotal_ht = sum(item['total'] for item in items)
@@ -513,6 +536,17 @@ def generate_invoice(request, pk):
     req = get_object_or_404(Request, pk=pk)
 
     if request.method == 'POST':
+        # The state machine only permits ORDER_UPLOADED → INVOICE_GENERATED, so
+        # block any other source state up-front to avoid creating an orphan
+        # invoice row that fails to advance the workflow.
+        if req.status != 'ORDER_UPLOADED':
+            messages.error(
+                request,
+                f"La facture ne peut être générée que depuis le statut « Bon de Commande Uploadé » "
+                f"(statut actuel: {req.get_status_display()})."
+            )
+            return redirect('dashboard:admin_request_detail', pk=req.pk)
+
         quote = req.quote_detail or {}
         items = quote.get('items', [])
 

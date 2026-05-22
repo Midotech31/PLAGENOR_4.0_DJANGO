@@ -437,31 +437,23 @@ def service_edit(request, pk):
 
 @superadmin_required
 def backup_now(request):
-    """Create a database backup and return as download."""
+    """Create a database backup and stream it back as a download.
+
+    Engine-aware (SQLite or PostgreSQL) — see core.db_backup.
+    """
     if request.method != 'POST':
         return HttpResponseForbidden()
-    import shutil
-    from datetime import datetime as dt
     from django.http import FileResponse
-    from django.conf import settings as s
-
-    db_path = s.BASE_DIR / 'data' / 'plagenor.db'
-    backup_dir = s.BASE_DIR / 'data' / 'backups'
-    backup_dir.mkdir(parents=True, exist_ok=True)
-
-    timestamp = dt.now().strftime('%Y%m%d_%H%M%S')
-    backup_path = backup_dir / f'plagenor_{timestamp}.db'
-    shutil.copy2(str(db_path), str(backup_path))
-
-    # Keep last 30 backups
-    backups = sorted(backup_dir.glob('plagenor_*.db'), reverse=True)
-    for old_backup in backups[30:]:
-        old_backup.unlink()
-
+    from core.db_backup import perform_backup
+    try:
+        backup_path = perform_backup()
+    except Exception as exc:
+        messages.error(request, f"Échec de la sauvegarde: {exc}")
+        return redirect_back(request, 'dashboard:superadmin')
     return FileResponse(
         open(str(backup_path), 'rb'),
         as_attachment=True,
-        filename=f'plagenor_{timestamp}.db',
+        filename=backup_path.name,
     )
 
 
@@ -484,20 +476,46 @@ def revenue_archives(request):
 def create_user(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    from django.contrib.auth.hashers import make_password
-    user = User.objects.create(
-        username=request.POST.get('username', ''),
-        first_name=request.POST.get('first_name', ''),
-        last_name=request.POST.get('last_name', ''),
-        email=request.POST.get('email', ''),
-        role=request.POST.get('role', 'REQUESTER'),
-        organization=request.POST.get('organization', ''),
-        phone=request.POST.get('phone', ''),
-        password=make_password(request.POST.get('password', '')),
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
+    username = (request.POST.get('username') or '').strip()
+    email = (request.POST.get('email') or '').strip()
+    role = request.POST.get('role') or 'REQUESTER'
+    password = request.POST.get('password') or ''
+    valid_roles = {r for r, _ in User.ROLE_CHOICES}
+
+    if not username:
+        messages.error(request, "Le nom d'utilisateur est obligatoire.")
+        return redirect_back(request, 'dashboard:superadmin')
+    if role not in valid_roles:
+        messages.error(request, "Rôle invalide.")
+        return redirect_back(request, 'dashboard:superadmin')
+    if User.objects.filter(username__iexact=username).exists():
+        messages.error(request, f"Le nom d'utilisateur « {username} » existe déjà.")
+        return redirect_back(request, 'dashboard:superadmin')
+    if email and User.objects.filter(email__iexact=email).exists():
+        messages.error(request, f"L'email « {email} » est déjà utilisé.")
+        return redirect_back(request, 'dashboard:superadmin')
+    try:
+        validate_password(password)
+    except DjangoValidationError as e:
+        messages.error(request, " ".join(e.messages))
+        return redirect_back(request, 'dashboard:superadmin')
+
+    user = User(
+        username=username,
+        first_name=(request.POST.get('first_name') or '').strip(),
+        last_name=(request.POST.get('last_name') or '').strip(),
+        email=email,
+        role=role,
+        organization=(request.POST.get('organization') or '').strip(),
+        phone=(request.POST.get('phone') or '').strip(),
     )
-    if user.role == 'MEMBER':
-        MemberProfile.objects.get_or_create(user=user)
-    messages.success(request, f"Utilisateur {user.get_full_name()} créé avec succès.")
+    user.set_password(password)
+    user.save()
+    # MemberProfile is auto-created by the accounts post_save signal for MEMBER.
+    messages.success(request, f"Utilisateur {user.get_full_name() or user.username} créé avec succès.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -506,23 +524,42 @@ def create_user(request):
 def user_edit(request, pk):
     user_obj = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        new_email = (request.POST.get('email') or user_obj.email).strip()
+        new_role = request.POST.get('role') or user_obj.role
+        valid_roles = {r for r, _ in User.ROLE_CHOICES}
+        if new_role not in valid_roles:
+            messages.error(request, "Rôle invalide.")
+            return redirect_back(request, 'dashboard:superadmin')
+        if new_email and new_email.lower() != (user_obj.email or '').lower():
+            if User.objects.filter(email__iexact=new_email).exclude(pk=user_obj.pk).exists():
+                messages.error(request, f"L'email « {new_email} » est déjà utilisé.")
+                return redirect_back(request, 'dashboard:superadmin')
+
+        new_pass = (request.POST.get('new_password') or '').strip()
+        if new_pass:
+            try:
+                validate_password(new_pass, user=user_obj)
+            except DjangoValidationError as e:
+                messages.error(request, " ".join(e.messages))
+                return redirect_back(request, 'dashboard:superadmin')
+
         user_obj.first_name = request.POST.get('first_name', user_obj.first_name)
         user_obj.last_name = request.POST.get('last_name', user_obj.last_name)
-        user_obj.email = request.POST.get('email', user_obj.email)
-        old_role = user_obj.role
-        user_obj.role = request.POST.get('role', user_obj.role)
+        user_obj.email = new_email
+        user_obj.role = new_role
         user_obj.organization = request.POST.get('organization', user_obj.organization or '')
         user_obj.phone = request.POST.get('phone', user_obj.phone or '')
         user_obj.laboratory = request.POST.get('laboratory', user_obj.laboratory or '')
         user_obj.supervisor = request.POST.get('supervisor', user_obj.supervisor or '')
         user_obj.student_level = request.POST.get('student_level', user_obj.student_level or '')
-        new_pass = request.POST.get('new_password', '').strip()
         if new_pass:
             user_obj.set_password(new_pass)
         user_obj.save()
-        if user_obj.role == 'MEMBER' and old_role != 'MEMBER':
-            MemberProfile.objects.get_or_create(user=user_obj)
-        messages.success(request, f"Utilisateur {user_obj.get_full_name()} mis à jour.")
+        # MemberProfile auto-created by signal when role becomes MEMBER.
+        messages.success(request, f"Utilisateur {user_obj.get_full_name() or user_obj.username} mis à jour.")
         return redirect_back(request, 'dashboard:superadmin')
     return render(request, 'dashboard/superadmin/user_edit.html', {
         'user_obj': user_obj,
@@ -672,28 +709,39 @@ def export_emails(request):
 # --- Task 14: Restore from Backup ---
 @superadmin_required
 def restore_db(request):
+    """Restore the live database from an uploaded backup.
+
+    Engine-aware: SQLite expects a `.db` file; PostgreSQL expects a
+    `pg_dump --format=custom` archive. The file is validated before any
+    destructive operation runs.
+    """
     if request.method != 'POST' or 'db_file' not in request.FILES:
         messages.error(request, "Aucun fichier sélectionné.")
         return redirect_back(request, 'dashboard:superadmin')
-    import shutil
-    import sqlite3
+    from pathlib import Path
+    from core.db_backup import perform_restore
+
     upload = request.FILES['db_file']
-    temp_path = settings.BASE_DIR / 'data' / 'restore_temp.db'
+    temp_dir = settings.BASE_DIR / 'data'
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = temp_dir / f'restore_upload_{upload.name}'
     with open(str(temp_path), 'wb') as f:
         for chunk in upload.chunks():
             f.write(chunk)
+
     try:
-        conn = sqlite3.connect(str(temp_path))
-        conn.execute("SELECT count(*) FROM sqlite_master")
-        conn.close()
-    except Exception:
-        temp_path.unlink(missing_ok=True)
-        messages.error(request, "Fichier invalide — ce n'est pas une base de données SQLite valide.")
+        perform_restore(temp_path)
+    except ValueError as e:
+        Path(temp_path).unlink(missing_ok=True)
+        messages.error(request, f"Fichier de sauvegarde invalide : {e}")
         return redirect_back(request, 'dashboard:superadmin')
-    db_path = settings.BASE_DIR / 'data' / 'plagenor.db'
-    if db_path.exists():
-        shutil.copy2(str(db_path), str(db_path.with_suffix('.pre_restore.db')))
-    shutil.move(str(temp_path), str(db_path))
+    except Exception as e:
+        Path(temp_path).unlink(missing_ok=True)
+        messages.error(request, f"Échec de la restauration : {e}")
+        return redirect_back(request, 'dashboard:superadmin')
+
+    # SQLite restore moves the temp into place; Postgres leaves it — clean up.
+    Path(temp_path).unlink(missing_ok=True)
     messages.success(request, "Base de données restaurée. Veuillez redémarrer le serveur.")
     return redirect_back(request, 'dashboard:superadmin')
 

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
@@ -92,8 +93,8 @@ class ServicePricing(models.Model):
         verbose_name='Montant (DZD)'
     )
     unit = models.CharField(
-        max_length=50, 
-        default='固定',
+        max_length=50,
+        default='forfait',
         blank=True,
         verbose_name='Unité (ex: par échantillon)'
     )
@@ -156,14 +157,12 @@ class Request(models.Model):
         ('IBTIKAR_SUBMISSION_PENDING', 'En attente soumission IBTIKAR'),
         ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
         ('ASSIGNED', 'Assigné'),
-        ('PENDING_ACCEPTANCE', 'En Attente Acceptation'),
         ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
         ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
         ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
         ('ANALYSIS_STARTED', 'Analyse Démarrée'),
         ('ANALYSIS_FINISHED', 'Analyse Terminée'),
         ('REPORT_UPLOADED', 'Rapport Uploadé'),
-        ('ADMIN_REVIEW', 'Révision Admin'),
         ('REPORT_VALIDATED', 'Rapport Validé'),
         ('SENT_TO_REQUESTER', 'Transmis Demandeur'),
         ('COMPLETED', 'Complété'),
@@ -176,6 +175,7 @@ class Request(models.Model):
         ('QUOTE_VALIDATED_BY_CLIENT', 'Devis Accepté'),
         ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
         ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
+        ('INVOICE_GENERATED', 'Facture Générée'),
         ('PAYMENT_PENDING', 'En Attente Paiement'),
         ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
         ('SENT_TO_CLIENT', 'Transmis Client'),
@@ -187,7 +187,7 @@ class Request(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(default='', blank=True)
     channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='SUBMITTED')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='DRAFT')
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='Normal')
 
     # Relationships
@@ -232,7 +232,10 @@ class Request(models.Model):
     admin_revision_notes = models.TextField(default='', blank=True)
 
     # Rating
-    service_rating = models.IntegerField(null=True, blank=True)
+    service_rating = models.IntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
     rating_comment = models.TextField(default='', blank=True)
     rated_at = models.DateTimeField(null=True, blank=True)
     receipt_confirmed = models.BooleanField(default=False)
@@ -274,6 +277,12 @@ class Request(models.Model):
             models.Index(fields=['guest_token']),
             models.Index(fields=['report_token']),
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Snapshot of the assignee at load time so the load-balancing signal
+        # can detect re-assignment (old member must also be recalculated).
+        self._original_assigned_to_id = self.assigned_to_id
 
     def __str__(self):
         return f"{self.display_id} — {self.title}"

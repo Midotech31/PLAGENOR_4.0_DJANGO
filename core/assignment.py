@@ -81,6 +81,33 @@ def get_recommended_members(service=None, limit: int = 5) -> list:
     return scored[:limit]
 
 
+# An assigned request stops counting toward a member's load once it reaches
+# one of these terminal/closed states.
+LOAD_EXCLUDED_STATES = ['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']
+
+
+def recalculate_member_load(member_profile) -> int:
+    """Recompute and persist a member's `current_load` from live Request rows.
+
+    Recompute-from-source (instead of increment/decrement) guarantees the
+    counter can never drift. Accepts a MemberProfile instance or a pk.
+    """
+    if member_profile is None:
+        return 0
+    mp = member_profile
+    if not isinstance(mp, MemberProfile):
+        mp = MemberProfile.objects.filter(pk=member_profile).first()
+        if mp is None:
+            return 0
+    count = Request.objects.filter(assigned_to=mp).exclude(
+        status__in=LOAD_EXCLUDED_STATES
+    ).count()
+    if mp.current_load != count:
+        mp.current_load = count
+        mp.save(update_fields=['current_load'])
+    return count
+
+
 def get_member_workload(member_profile: MemberProfile) -> dict:
     """Get workload stats for a member."""
     active = Request.objects.filter(

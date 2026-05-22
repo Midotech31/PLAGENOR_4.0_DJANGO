@@ -107,43 +107,10 @@ def approve_with_budget_override(request_obj, actor, amount: float, justificatio
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GENOCLAB — Real Revenue (invoicing)
+# Invoice rows are created from the admin operations view
+# (dashboard.views.admin_ops.generate_invoice), which composes the line items
+# from the request's accepted quote.
 # ═══════════════════════════════════════════════════════════════════════════
-
-def generate_invoice(request_obj, actor, line_items=None):
-    """Generate a GENOCLAB invoice from a request."""
-    from core.models import Invoice
-
-    year = datetime.now().year
-    last = Invoice.objects.count() + 1
-    inv_number = f"{settings.INVOICE_PREFIX}-{year}-{last:04d}"
-
-    items = line_items or []
-    if not items and request_obj.quote_amount:
-        items = [{
-            'description': request_obj.title,
-            'quantity': 1,
-            'unit_price': float(request_obj.quote_amount),
-        }]
-
-    subtotal = sum(i.get('quantity', 1) * i.get('unit_price', 0) for i in items)
-    vat = round(subtotal * float(settings.VAT_RATE), 2)
-    total = round(subtotal + vat, 2)
-
-    invoice = Invoice.objects.create(
-        invoice_number=inv_number,
-        request=request_obj,
-        client=request_obj.requester,
-        line_items=items,
-        subtotal_ht=subtotal,
-        vat_rate=settings.VAT_RATE,
-        vat_amount=vat,
-        total_ttc=total,
-        created_by=actor,
-    )
-
-    logger.info("Invoice %s generated: total_ttc=%s", inv_number, total)
-    return invoice
-
 
 def get_revenue_summary() -> dict:
     """GENOCLAB real revenue from invoices."""

@@ -38,11 +38,13 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
 # ═══════════════════════════════════════════════════════════════════════════
 # GENOCLAB Official Workflow with Payment Gate (Algerian Commercial Code)
 # REQUEST_CREATED → QUOTE_DRAFT → QUOTE_SENT → QUOTE_VALIDATED_BY_CLIENT →
-# ORDER_UPLOADED → ASSIGNED → SAMPLE_RECEIVED → ANALYSIS_STARTED →
-# ANALYSIS_FINISHED → PAYMENT_PENDING → PAYMENT_CONFIRMED → REPORT_UPLOADED →
-# REPORT_VALIDATED → SENT_TO_CLIENT → COMPLETED → ARCHIVED
+# ORDER_UPLOADED → [INVOICE_GENERATED] → ASSIGNED → SAMPLE_RECEIVED →
+# ANALYSIS_STARTED → ANALYSIS_FINISHED → PAYMENT_PENDING → PAYMENT_CONFIRMED →
+# REPORT_UPLOADED → REPORT_VALIDATED → SENT_TO_CLIENT → COMPLETED → ARCHIVED
 # REJECTED possible at any validation step
 # NOTE: Purchase Order (Bon de commande) is mandatory per Algerian commercial code
+# NOTE: INVOICE_GENERATED is an optional step — admin may issue the invoice after
+#       the purchase order, or assign directly. Payment is confirmed later.
 # NOTE: Payment must be received BEFORE report delivery
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -51,7 +53,8 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "QUOTE_DRAFT":              {"QUOTE_SENT", "REJECTED"},
     "QUOTE_SENT":               {"QUOTE_VALIDATED_BY_CLIENT", "QUOTE_REJECTED_BY_CLIENT"},
     "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
-    "ORDER_UPLOADED":           {"ASSIGNED"},  # Admin assigns after order verified
+    "ORDER_UPLOADED":           {"INVOICE_GENERATED", "ASSIGNED"},  # invoice optional, then assign
+    "INVOICE_GENERATED":        {"ASSIGNED"},  # Admin assigns after invoice issued
     "QUOTE_REJECTED_BY_CLIENT": set(),     # terminal
     "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},

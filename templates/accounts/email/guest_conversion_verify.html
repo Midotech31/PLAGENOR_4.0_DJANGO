@@ -1,0 +1,41 @@
+{% load i18n %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
+<head>
+<meta charset="UTF-8">
+<title>{% trans "Vérification de votre adresse — PLAGENOR 4.0" %}</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; padding: 32px;">
+<div style="max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden;">
+    <div style="background: #4F46E5; padding: 28px 32px; text-align: center;">
+        <h1 style="color: #fff; margin: 0; font-size: 1.5rem;">PLAGENOR 4.0</h1>
+        <p style="color: #c7d2fe; margin: 6px 0 0; font-size: 0.875rem;">{% trans "Plateforme de Gestion des Opérations Scientifiques" %}</p>
+    </div>
+    <div style="padding: 32px;">
+        <h2 style="color: #1e293b; margin: 0 0 16px;">{% trans "Vérification de votre adresse email" %}</h2>
+        <p style="color: #475569;">{% trans "Bonjour," %}</p>
+        <p style="color: #475569;">{% blocktrans %}Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur PLAGENOR&nbsp;4.0 en utilisant l'adresse <strong>{{ email }}</strong>.{% endblocktrans %}</p>
+        <p style="color: #475569;">{% trans "Pour finaliser la création de votre compte et lier vos demandes invité, cliquez sur le bouton ci-dessous :" %}</p>
+
+        <p style="text-align: center; margin: 28px 0;">
+            <a href="{{ verify_url }}" style="display: inline-block; padding: 12px 28px; background: #4F46E5; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">{% trans "Vérifier mon adresse et créer mon compte" %}</a>
+        </p>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <ul style="color: #92400e; margin: 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.7;">
+                <li>{% trans "Ce lien expire après 24 heures." %}</li>
+                <li>{% trans "Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce message — aucun compte ne sera créé." %}</li>
+                <li>{% trans "Ne partagez jamais ce lien." %}</li>
+            </ul>
+        </div>
+
+        <p style="color: #64748b; font-size: 0.82rem; word-break: break-all;">
+            {% trans "Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :" %}<br>
+            <a href="{{ verify_url }}" style="color: #4F46E5;">{{ verify_url }}</a>
+        </p>
+    </div>
+    <div style="background: #f1f5f9; padding: 16px 32px; text-align: center;">
+        <p style="color: #94a3b8; margin: 0; font-size: 0.8rem;">© ESSBO — PLAGENOR 4.0</p>
+    </div>
+</div>
+</body>
+</html>

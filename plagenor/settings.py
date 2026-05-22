@@ -6,8 +6,23 @@ import dj_database_url
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-key-change-in-production')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+
+# Secure by default: DEBUG=False unless the operator opts in.
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+# SECRET_KEY is required in production. We allow a known-insecure fallback
+# only when DEBUG is on, so a misconfigured production deploy fails fast
+# instead of silently running on a public secret.
+SECRET_KEY = os.getenv('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'dev-insecure-key-change-in-production'
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "SECRET_KEY environment variable must be set when DEBUG is False."
+        )
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
@@ -147,5 +162,61 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('SMTP_USER') or os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
+
+# ─── Production security headers ─────────────────────────────────────────
+# Secure-by-default when DEBUG is off; every flag can still be overridden
+# via .env to support proxies that already terminate TLS, etc.
+def _env_bool(name, default):
+    return os.getenv(name, default).lower() == 'true'
+
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = _env_bool('SECURE_SSL_REDIRECT', 'True')
+    SESSION_COOKIE_SECURE = _env_bool('SESSION_COOKIE_SECURE', 'True')
+    CSRF_COOKIE_SECURE = _env_bool('CSRF_COOKIE_SECURE', 'True')
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True')
+    SECURE_HSTS_PRELOAD = _env_bool('SECURE_HSTS_PRELOAD', 'False')
+    # Trust the X-Forwarded-Proto header when terminated by an upstream proxy.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
+# ─── Logging ─────────────────────────────────────────────────────────────
+# Without an explicit LOGGING dict Django emits only WARNING+ via Python's
+# last-resort handler — `plagenor.audit` / `plagenor.workflow` / `plagenor.
+# financial` INFO logs would be discarded. Capture them via the console
+# (Docker/journald/cloud-platform-friendly).
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'plagenor': {
+            'handlers': ['console'],
+            'level': os.getenv('LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

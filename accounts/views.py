@@ -1,12 +1,22 @@
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.generic import CreateView
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from .models import User
 from .forms import RegistrationForm
+
+_GUEST_TOKEN_SALT = 'guest-conversion'
+_GUEST_TOKEN_TTL = 24 * 60 * 60  # 24 hours
 
 
 class CustomLoginView(LoginView):
@@ -68,52 +78,125 @@ def profile(request):
 
 
 def convert_guest(request):
-    """Convert a guest into a registered CLIENT account."""
-    email = request.GET.get('email', '')
+    """Stage 1 of guest conversion: request an email-verification link.
+
+    The user enters their email. If guest requests are pending under that
+    address, a one-time signed link is emailed. No account is created here.
+    The response is identical whether or not the email matches any record so
+    that this endpoint cannot be used to enumerate guests.
+    """
+    email = (request.GET.get('email', '') or '').strip()
+    sent = False
 
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        password = request.POST.get('password', '')
-        phone = request.POST.get('phone', '').strip()
-
-        if not email or not password:
-            messages.error(request, _("Email et mot de passe sont obligatoires."))
-            return render(request, 'accounts/convert_guest.html', {'email': email})
-
-        if User.objects.filter(email=email).exists():
+        email = (request.POST.get('email', '') or '').strip().lower()
+        if not email:
+            messages.error(request, _("Email requis."))
+            return render(request, 'accounts/convert_guest.html', {'email': email, 'sent': False})
+        if User.objects.filter(email__iexact=email).exists():
             messages.error(request, _("Un compte avec cet email existe déjà."))
-            return render(request, 'accounts/convert_guest.html', {'email': email})
+            return render(request, 'accounts/convert_guest.html', {'email': email, 'sent': False})
 
-        username = email.split('@')[0]
-        # Ensure unique username
-        base_username = username
+        from core.models import Request
+        has_guest_requests = Request.objects.filter(
+            guest_email__iexact=email, submitted_as_guest=True, requester__isnull=True,
+        ).exists()
+
+        if has_guest_requests:
+            token = TimestampSigner(salt=_GUEST_TOKEN_SALT).sign(email)
+            verify_url = request.build_absolute_uri(
+                reverse('accounts:convert_guest_verify', args=[token])
+            )
+            try:
+                html_body = render_to_string('accounts/email/guest_conversion_verify.html', {
+                    'email': email,
+                    'verify_url': verify_url,
+                    'platform_name': 'PLAGENOR 4.0',
+                }, request=request)
+                send_mail(
+                    subject=_("Vérification de votre adresse — PLAGENOR 4.0"),
+                    message=_("Pour finaliser la création de votre compte, ouvrez ce lien : %(url)s") % {'url': verify_url},
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html_body,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+        # Always show the same confirmation, even if no matching guest requests
+        # existed — avoid leaking whether a given email is on file.
+        sent = True
+
+    return render(request, 'accounts/convert_guest.html', {'email': email, 'sent': sent})
+
+
+def convert_guest_verify(request, token):
+    """Stage 2 of guest conversion: the user clicks the link from their inbox.
+
+    The token proves they own the email address. They set their password and
+    a CLIENT account is created with every matching guest request linked.
+    """
+    signer = TimestampSigner(salt=_GUEST_TOKEN_SALT)
+    try:
+        email = signer.unsign(token, max_age=_GUEST_TOKEN_TTL).lower()
+    except SignatureExpired:
+        messages.error(request, _("Lien expiré. Veuillez recommencer."))
+        return redirect('accounts:convert_guest')
+    except BadSignature:
+        messages.error(request, _("Lien invalide."))
+        return redirect('accounts:convert_guest')
+
+    # Defence-in-depth: an account may have been created between email and click.
+    if User.objects.filter(email__iexact=email).exists():
+        messages.info(request, _("Un compte avec cet email existe déjà — veuillez vous connecter."))
+        return redirect('accounts:login')
+
+    first_name = (request.POST.get('first_name', '') or '').strip()
+    last_name = (request.POST.get('last_name', '') or '').strip()
+    phone = (request.POST.get('phone', '') or '').strip()
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '') or ''
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            messages.error(request, " ".join(e.messages))
+            return render(request, 'accounts/convert_guest_verify.html', {
+                'email': email, 'first_name': first_name, 'last_name': last_name, 'phone': phone,
+            })
+
+        from core.models import Request
+        base_username = (email.split('@')[0] or 'user').strip()
+        username = base_username
         counter = 1
         while User.objects.filter(username=username).exists():
             username = f"{base_username}{counter}"
             counter += 1
 
         user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            role='CLIENT',
+            username=username, email=email, password=password,
+            first_name=first_name, last_name=last_name, phone=phone, role='CLIENT',
         )
 
-        # Link guest requests to the new account
-        from core.models import Request
-        guest_requests = Request.objects.filter(guest_email__iexact=email, submitted_as_guest=True, requester__isnull=True)
-        guest_requests.update(requester=user)
+        guest_qs = Request.objects.filter(
+            guest_email__iexact=email, submitted_as_guest=True, requester__isnull=True,
+        )
+        # Capture the count BEFORE the update — afterwards the predicate no
+        # longer matches the rows and .count() would always be 0.
+        linked = guest_qs.count()
+        guest_qs.update(requester=user)
 
         login(request, user)
-        messages.success(request, _("Compte créé! %(count)d demande(s) liée(s) à votre compte.") % {'count': guest_requests.count()})
+        messages.success(
+            request,
+            _("Compte créé ! %(count)d demande(s) liée(s) à votre compte.") % {'count': linked},
+        )
         return redirect('dashboard:router')
 
-    return render(request, 'accounts/convert_guest.html', {'email': email})
+    return render(request, 'accounts/convert_guest_verify.html', {
+        'email': email, 'first_name': first_name, 'last_name': last_name, 'phone': phone,
+    })
 
 
 @login_required
@@ -145,14 +228,20 @@ def force_change_password(request):
 
     form = ForcePasswordForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        request.user.set_password(form.cleaned_data['new_password1'])
-        request.user.must_change_password = False
-        request.user.save(update_fields=['password', 'must_change_password'])
-        # Re-authenticate so the session stays valid
-        from django.contrib.auth import update_session_auth_hash
-        update_session_auth_hash(request, request.user)
-        messages.success(request, _('Votre mot de passe a été mis à jour avec succès.'))
-        return redirect('dashboard:router')
+        new_password = form.cleaned_data['new_password1']
+        try:
+            validate_password(new_password, user=request.user)
+        except DjangoValidationError as e:
+            form.add_error('new_password1', e)
+        else:
+            request.user.set_password(new_password)
+            request.user.must_change_password = False
+            request.user.save(update_fields=['password', 'must_change_password'])
+            # Re-authenticate so the session stays valid
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, request.user)
+            messages.success(request, _('Votre mot de passe a été mis à jour avec succès.'))
+            return redirect('dashboard:router')
 
     return render(request, 'accounts/force_change_password.html', {'form': form})
 

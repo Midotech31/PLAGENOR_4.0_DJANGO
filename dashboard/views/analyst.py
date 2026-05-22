@@ -32,7 +32,7 @@ def index(request):
     assigned_count = Request.objects.filter(assigned_to=profile).count()
     in_progress_count = Request.objects.filter(
         assigned_to=profile,
-        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'PENDING_ACCEPTANCE']
+        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED']
     ).count()
     completed_count = Request.objects.filter(
         assigned_to=profile, status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
@@ -41,7 +41,7 @@ def index(request):
     # Pending tasks: waiting for analyst action
     pending_tasks = Request.objects.filter(
         assigned_to=profile,
-        status__in=['PENDING_ACCEPTANCE', 'ASSIGNED']
+        status='ASSIGNED'
     ).select_related('service', 'requester').order_by('-created_at')
 
     # In-progress work
@@ -138,14 +138,30 @@ def decline_task(request, pk):
     profile = request.user.member_profile
     if req.assigned_to != profile:
         return HttpResponseForbidden()
+    reason = request.POST.get('reason', '')
+    # Status stays at ASSIGNED with no assignee — admin re-assigns from there.
+    # We do NOT call transition() here (ASSIGNED→ASSIGNED is not a graph edge);
+    # the decline is recorded explicitly in RequestHistory for the audit trail.
     req.assignment_declined = True
-    req.assignment_decline_reason = request.POST.get('reason', '')
+    req.assignment_decline_reason = reason
     req.assigned_to = None
     req.save(update_fields=['assignment_declined', 'assignment_decline_reason', 'assigned_to'])
-    try:
-        transition(req, 'ASSIGNED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
+    from core.models import RequestHistory
+    RequestHistory.objects.create(
+        request=req, from_status='ASSIGNED', to_status='ASSIGNED',
+        actor=request.user,
+        notes=f"Tâche déclinée par l'analyste. Raison: {reason}" if reason else "Tâche déclinée par l'analyste.",
+    )
+    # Notify admins so the task can be re-assigned.
+    from accounts.models import User
+    admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+    for admin in admins:
+        Notification.objects.create(
+            user=admin,
+            message=f"{req.display_id}: tâche déclinée par {request.user.get_full_name()} — à réassigner.",
+            request=req,
+            notification_type='WORKFLOW',
+        )
     messages.success(request, f"Tâche {req.display_id} déclinée.")
     return redirect_back(request, 'dashboard:analyst')
 

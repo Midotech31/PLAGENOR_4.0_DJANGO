@@ -3,6 +3,8 @@
 
 import logging
 
+from django.db import transaction
+
 from core.models import Request, RequestHistory
 
 logger = logging.getLogger('plagenor.workflow')
@@ -16,44 +18,55 @@ from core.state_machine import (
 from core.exceptions import InvalidTransitionError, AuthorizationError
 from core.audit import log_workflow_transition
 
-# Role-based permissions: which roles can trigger which transitions
+# Role-based permissions: which roles can trigger which transitions.
 # Format: {(from_status, to_status): [allowed_roles]}
+#
+# This map MUST cover every edge declared in core/state_machine.py — any edge
+# missing here is denied by default (see check_role_permission). SUPER_ADMIN
+# always bypasses this map, and forced transitions skip it entirely.
+_ADMINS = ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+
 ROLE_PERMISSIONS = {
-    # IBTIKAR validations
-    ('SUBMITTED', 'VALIDATION_PEDAGOGIQUE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('SUBMITTED', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('VALIDATION_PEDAGOGIQUE', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('VALIDATION_FINANCE', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('PLATFORM_NOTE_GENERATED', 'IBTIKAR_SUBMISSION_PENDING'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER'],
-    ('IBTIKAR_CODE_SUBMITTED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    # Analyst workflow — appointment states
-    ('ASSIGNED', 'APPOINTMENT_PROPOSED'): ['SUPER_ADMIN', 'MEMBER'],
-    ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER', 'CLIENT'],
-    ('APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER'],
-    ('SAMPLE_RECEIVED', 'ANALYSIS_STARTED'): ['SUPER_ADMIN', 'MEMBER'],
-    ('ANALYSIS_STARTED', 'ANALYSIS_FINISHED'): ['SUPER_ADMIN', 'MEMBER'],
-    ('ANALYSIS_FINISHED', 'REPORT_UPLOADED'): ['SUPER_ADMIN', 'MEMBER'],
-    ('REPORT_UPLOADED', 'REPORT_VALIDATED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('REPORT_UPLOADED', 'ANALYSIS_STARTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],  # Revision loop
-    ('REPORT_VALIDATED', 'SENT_TO_REQUESTER'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('SENT_TO_REQUESTER', 'COMPLETED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'REQUESTER'],
-    ('COMPLETED', 'CLOSED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    # GENOCLAB validations
-    ('REQUEST_CREATED', 'QUOTE_DRAFT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('REQUEST_CREATED', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('QUOTE_DRAFT', 'QUOTE_SENT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('QUOTE_DRAFT', 'REJECTED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
-    ('QUOTE_SENT', 'QUOTE_REJECTED_BY_CLIENT'): ['SUPER_ADMIN', 'CLIENT'],
-    ('QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('INVOICE_GENERATED', 'PAYMENT_CONFIRMED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'],
-    ('PAYMENT_CONFIRMED', 'ASSIGNED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('REPORT_VALIDATED', 'SENT_TO_CLIENT'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
-    ('SENT_TO_CLIENT', 'COMPLETED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'CLIENT'],
-    ('COMPLETED', 'ARCHIVED'): ['SUPER_ADMIN', 'PLATFORM_ADMIN'],
+    # ── IBTIKAR ──────────────────────────────────────────────────────────
+    ('DRAFT', 'SUBMITTED'): _ADMINS + ['REQUESTER'],
+    ('SUBMITTED', 'VALIDATION_PEDAGOGIQUE'): _ADMINS,
+    ('SUBMITTED', 'REJECTED'): _ADMINS,
+    ('VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE'): _ADMINS,
+    ('VALIDATION_PEDAGOGIQUE', 'REJECTED'): _ADMINS,
+    ('VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED'): _ADMINS + ['FINANCE'],
+    ('VALIDATION_FINANCE', 'REJECTED'): _ADMINS + ['FINANCE'],
+    ('PLATFORM_NOTE_GENERATED', 'IBTIKAR_SUBMISSION_PENDING'): _ADMINS,
+    ('IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED'): _ADMINS + ['REQUESTER'],
+    ('IBTIKAR_CODE_SUBMITTED', 'ASSIGNED'): _ADMINS,
+    ('ANALYSIS_FINISHED', 'REPORT_UPLOADED'): _ADMINS + ['MEMBER'],
+    ('REPORT_VALIDATED', 'SENT_TO_REQUESTER'): _ADMINS,
+    ('SENT_TO_REQUESTER', 'COMPLETED'): _ADMINS + ['REQUESTER'],
+    ('COMPLETED', 'CLOSED'): _ADMINS,
+    # ── Shared analyst workflow (both channels) ──────────────────────────
+    ('ASSIGNED', 'APPOINTMENT_PROPOSED'): _ADMINS + ['MEMBER'],
+    ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'): _ADMINS + ['MEMBER', 'REQUESTER', 'CLIENT'],
+    ('APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED'): _ADMINS + ['MEMBER'],
+    ('SAMPLE_RECEIVED', 'ANALYSIS_STARTED'): _ADMINS + ['MEMBER'],
+    ('ANALYSIS_STARTED', 'ANALYSIS_FINISHED'): _ADMINS + ['MEMBER'],
+    ('REPORT_UPLOADED', 'REPORT_VALIDATED'): _ADMINS,
+    ('REPORT_UPLOADED', 'ANALYSIS_STARTED'): _ADMINS,  # revision loop
+    # ── GENOCLAB ─────────────────────────────────────────────────────────
+    ('REQUEST_CREATED', 'QUOTE_DRAFT'): _ADMINS,
+    ('REQUEST_CREATED', 'REJECTED'): _ADMINS,
+    ('QUOTE_DRAFT', 'QUOTE_SENT'): _ADMINS,
+    ('QUOTE_DRAFT', 'REJECTED'): _ADMINS,
+    ('QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT'): _ADMINS + ['CLIENT'],
+    ('QUOTE_SENT', 'QUOTE_REJECTED_BY_CLIENT'): _ADMINS + ['CLIENT'],
+    ('QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED'): _ADMINS + ['CLIENT'],
+    ('ORDER_UPLOADED', 'INVOICE_GENERATED'): _ADMINS + ['FINANCE'],
+    ('ORDER_UPLOADED', 'ASSIGNED'): _ADMINS,
+    ('INVOICE_GENERATED', 'ASSIGNED'): _ADMINS,
+    ('ANALYSIS_FINISHED', 'PAYMENT_PENDING'): _ADMINS + ['MEMBER'],
+    ('PAYMENT_PENDING', 'PAYMENT_CONFIRMED'): _ADMINS + ['FINANCE', 'CLIENT'],
+    ('PAYMENT_CONFIRMED', 'REPORT_UPLOADED'): _ADMINS + ['MEMBER'],
+    ('REPORT_VALIDATED', 'SENT_TO_CLIENT'): _ADMINS,
+    ('SENT_TO_CLIENT', 'COMPLETED'): _ADMINS + ['CLIENT'],
+    ('COMPLETED', 'ARCHIVED'): _ADMINS,
 }
 
 
@@ -63,14 +76,22 @@ def get_allowed_transitions(request_obj):
 
 
 def check_role_permission(request_obj, to_status, actor) -> bool:
-    """Check if actor's role allows this transition. SUPER_ADMIN always allowed."""
+    """Check if the actor's role allows this transition.
+
+    SUPER_ADMIN always passes. Transitions with no rule in ROLE_PERMISSIONS are
+    denied (fail-closed); a missing rule is logged so it can be added rather
+    than silently blocking a legitimate flow.
+    """
     if getattr(actor, 'role', '') == 'SUPER_ADMIN':
         return True
     key = (request_obj.status, to_status)
     allowed_roles = ROLE_PERMISSIONS.get(key)
     if allowed_roles is None:
-        # No explicit rule — allow by default (permissive for unlisted transitions)
-        return True
+        logger.warning(
+            "No ROLE_PERMISSIONS rule for transition %s -> %s; denying by default.",
+            request_obj.status, to_status,
+        )
+        return False
     return getattr(actor, 'role', '') in allowed_roles
 
 
@@ -98,17 +119,19 @@ def transition(request_obj, to_status, actor, notes='', force=False):
                 f"{old_status} -> {to_status}"
             )
 
-    request_obj.status = to_status
-    request_obj.save(update_fields=['status', 'updated_at'])
+    # Status change + history must be all-or-nothing.
+    with transaction.atomic():
+        request_obj.status = to_status
+        request_obj.save(update_fields=['status', 'updated_at'])
 
-    RequestHistory.objects.create(
-        request=request_obj,
-        from_status=old_status,
-        to_status=to_status,
-        actor=actor,
-        notes=notes,
-        forced=force,
-    )
+        RequestHistory.objects.create(
+            request=request_obj,
+            from_status=old_status,
+            to_status=to_status,
+            actor=actor,
+            notes=notes,
+            forced=force,
+        )
 
     # Audit log
     log_workflow_transition(request_obj, old_status, to_status, actor, {'notes': notes, 'forced': force})
@@ -123,6 +146,18 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     _auto_generate_documents(request_obj, to_status)
 
     return request_obj
+
+
+def force_transition(request_obj, to_status, actor, notes=''):
+    """Force a request into `to_status`, bypassing the state-machine graph and
+    role checks. Restricted to SUPER_ADMIN at the view layer. The target must
+    still be a declared status; the move is recorded in history with
+    ``forced=True``.
+    """
+    valid_statuses = {s for s, _ in Request.STATUS_CHOICES}
+    if to_status not in valid_statuses:
+        raise InvalidTransitionError(f"Statut inconnu: {to_status}")
+    return transition(request_obj, to_status, actor, notes=notes, force=True)
 
 
 def _create_notifications(request_obj, to_status):
