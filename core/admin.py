@@ -1,4 +1,5 @@
 from django.contrib import admin
+from modeltranslation.admin import TranslationAdmin
 from .models import (
     Service, Request, RequestHistory, RequestComment, Invoice,
     PlatformContent, PaymentMethod, Message, RevenueArchive, ServiceFormField,
@@ -7,7 +8,8 @@ from .models import (
 
 
 @admin.register(Service)
-class ServiceAdmin(admin.ModelAdmin):
+class ServiceAdmin(TranslationAdmin):
+    """name + description are editable per-language (fr/en/ar)."""
     list_display = ('code', 'name', 'channel_availability', 'ibtikar_price', 'genoclab_price', 'active')
     list_filter = ('channel_availability', 'active')
 
@@ -38,7 +40,8 @@ class RevenueArchiveAdmin(admin.ModelAdmin):
 
 
 @admin.register(ServiceFormField)
-class ServiceFormFieldAdmin(admin.ModelAdmin):
+class ServiceFormFieldAdmin(TranslationAdmin):
+    """label is editable per-language (fr/en/ar)."""
     list_display = ('service', 'name', 'label', 'field_type', 'required', 'sort_order')
     list_filter = ('field_type', 'required')
 
@@ -66,7 +69,8 @@ admin.site.register(PaymentMethod)
 
 
 @admin.register(ServicePricing)
-class ServicePricingAdmin(admin.ModelAdmin):
+class ServicePricingAdmin(TranslationAdmin):
+    """name + description are editable per-language (fr/en/ar)."""
     list_display = ('service', 'pricing_type', 'name', 'amount', 'unit', 'is_active', 'priority')
     list_filter = ('pricing_type', 'channel', 'is_active', 'service')
     search_fields = ('name', 'description', 'service__name', 'service__code')

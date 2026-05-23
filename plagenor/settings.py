@@ -26,6 +26,10 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
+    # django-modeltranslation must be loaded BEFORE django.contrib.admin so
+    # the admin sees its registered translation options at class-definition
+    # time. See https://django-modeltranslation.readthedocs.io
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,6 +43,17 @@ INSTALLED_APPS = [
     'documents',
     'notifications',
 ]
+
+# ─── django-modeltranslation ─────────────────────────────────────────────
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'fr'
+MODELTRANSLATION_LANGUAGES = ('fr', 'en', 'ar')
+# Fall back through the language chain: requested → fr → en. Never return
+# None for a translated field — there is always *some* text to show.
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('fr', 'en')
+# When writing a translatable field with `obj.name = 'x'`, also populate the
+# default-language column and any empty per-language columns. Prevents the
+# common "saved a Service, name disappeared in another locale" surprise.
+MODELTRANSLATION_AUTO_POPULATE = 'default'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
