@@ -58,6 +58,16 @@
                 <input type="text" name="supervisor" class="form-control" value="{{ request.user.supervisor }}">
             </div>
 
+            <div class="form-group">
+                <label>{% trans "Langue préférée" %}</label>
+                <select name="preferred_language" class="form-control">
+                    {% for value, label in language_choices %}
+                    <option value="{{ value }}" {% if request.user.preferred_language == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <small class="text-muted">{% trans "Laissez vide pour utiliser la langue détectée par votre navigateur." %}</small>
+            </div>
+
             {% if techniques %}
             <div class="form-group">
                 <label>{% trans "Techniques maîtrisées" %}</label>

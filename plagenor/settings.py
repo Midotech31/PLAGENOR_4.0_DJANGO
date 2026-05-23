@@ -48,6 +48,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Honour User.preferred_language — must run AFTER AuthenticationMiddleware
+    # (needs request.user) and AFTER LocaleMiddleware (which has already
+    # activated a language from the cookie / Accept-Language header).
+    'dashboard.middleware.PreferredLanguageMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dashboard.middleware.UpdateLastSeenMiddleware',

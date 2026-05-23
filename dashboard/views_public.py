@@ -261,6 +261,15 @@ def switch_language(request):
         translation.activate(lang)
         response = HttpResponseRedirect(next_url)
         response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang, max_age=365*24*60*60)
+        # Persist for authenticated users so PreferredLanguageMiddleware keeps
+        # honouring this choice on subsequent requests (the cookie alone is
+        # ignored for logged-in users by design).
+        if request.user.is_authenticated:
+            try:
+                request.user.preferred_language = lang
+                request.user.save(update_fields=['preferred_language'])
+            except Exception:
+                pass
         return response
 
     return HttpResponseRedirect(next_url)

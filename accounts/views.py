@@ -51,6 +51,15 @@ def profile(request):
         user.organization = request.POST.get('organization', user.organization or '')
         user.laboratory = request.POST.get('laboratory', user.laboratory or '')
         user.supervisor = request.POST.get('supervisor', user.supervisor or '')
+
+        # Language preference (Phase 3.1). Empty string means "no preference,
+        # follow cookie / Accept-Language". Reject any value not in
+        # LANGUAGE_PREFERENCE_CHOICES so a tampered POST cannot store garbage.
+        pref = (request.POST.get('preferred_language') or '').strip()
+        valid_prefs = {code for code, _ in User.LANGUAGE_PREFERENCE_CHOICES}
+        if pref in valid_prefs:
+            user.preferred_language = pref
+
         if 'avatar' in request.FILES:
             user.avatar = request.FILES['avatar']
         user.save()
@@ -74,6 +83,7 @@ def profile(request):
 
     return render(request, 'accounts/profile.html', {
         'techniques': techniques,
+        'language_choices': User.LANGUAGE_PREFERENCE_CHOICES,
     })
 
 
