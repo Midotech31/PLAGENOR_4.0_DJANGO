@@ -1,6 +1,16 @@
 from .models import Notification
 
 
+def _safe_assigned_user(request_obj):
+    """Return assigned analyst's user or None — defensive against orphaned FKs."""
+    if not request_obj.assigned_to:
+        return None
+    try:
+        return request_obj.assigned_to.user
+    except Exception:
+        return None
+
+
 def notify_user(user, message, notification_type='INFO', request_obj=None,
                link_url='', link_text='', action_url='', action_text=''):
     """Create an in-app notification for a user with deep linking support."""
@@ -22,84 +32,66 @@ def notify_user(user, message, notification_type='INFO', request_obj=None,
 
 
 def notify_workflow_transition(request_obj, to_status, actor):
-    """Send notifications based on workflow events with deep linking."""
-    notifications = {
-        'VALIDATED': {
-            'message': 'Votre demande a été validée',
-            'type': 'STATUS_CHANGE',
-            'targets': [request_obj.requester],
-            'action_text': 'Voir les détails',
-        },
-        'REJECTED': {
-            'message': 'Votre demande a été rejetée',
-            'type': 'STATUS_CHANGE',
-            'targets': [request_obj.requester],
-            'action_text': 'Voir les détails',
-        },
-        'ASSIGNED': {
-            'message': 'Une analyse vous a été assignée',
-            'type': 'ASSIGNMENT',
-            'targets': [request_obj.assigned_to.user if request_obj.assigned_to else None],
-            'action_text': 'Accepter la tâche',
-            'action_url': f'/dashboard/ops/request/{request_obj.pk}/accept/',
-        },
-        'REPORT_VALIDATED': {
-            'message': 'Le rapport a été validé',
-            'type': 'REPORT',
-            'targets': [request_obj.requester],
-            'action_text': 'Télécharger le rapport',
-        },
-        'COMPLETED': {
-            'message': 'Votre demande est complétée',
-            'type': 'STATUS_CHANGE',
-            'targets': [request_obj.requester],
-            'action_text': 'Voir le rapport',
-        },
-        'APPOINTMENT_PROPOSED': {
-            'message': 'Un rendez-vous a été proposé',
-            'type': 'APPOINTMENT',
-            'targets': [request_obj.requester],
-            'action_text': 'Confirmer le RDV',
-            'action_url': f'/dashboard/ops/request/{request_obj.pk}/confirm-appointment/',
-        },
-        'QUOTE_SENT': {
-            'message': 'Un devis a été préparé pour votre demande',
-            'type': 'PAYMENT',
-            'targets': [request_obj.requester],
-            'action_text': 'Voir le devis',
-        },
-        'PAYMENT_CONFIRMED': {
-            'message': 'Votre paiement a été confirmé',
-            'type': 'PAYMENT',
-            'targets': [request_obj.requester],
-            'action_text': 'Voir les détails',
-        },
-    }
+    """Send notifications based on workflow events with deep linking.
 
-    entry = notifications.get(to_status)
-    if entry:
-        msg = entry['message']
-        notif_type = entry['type']
-        targets = entry['targets']
-        action_text = entry.get('action_text', '')
-        action_url = entry.get('action_url', '')
-        
-        # Generate link URL for request
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
-        link_text = f"Demande {request_obj.display_id}"
-        
-        for target in targets:
-            if target and target != actor:
-                notify_user(
-                    target,
-                    f"{msg} — {request_obj.display_id}",
-                    notif_type,
-                    request_obj,
-                    link_url=link_url,
-                    link_text=link_text,
-                    action_url=action_url,
-                    action_text=action_text,
-                )
+    Entries are built lazily inside the matching branch so an unrelated
+    transition can't crash on a partially-populated ``assigned_to`` row.
+    """
+    pk = request_obj.pk
+    link_url = f"/dashboard/ops/request/{pk}/"
+    link_text = f"Demande {request_obj.display_id}"
+
+    def make(message, type_, targets, action_text='', action_url=''):
+        return {
+            'message': message,
+            'type': type_,
+            'targets': [t for t in targets if t is not None],
+            'action_text': action_text,
+            'action_url': action_url,
+        }
+
+    if to_status == 'VALIDATED':
+        entry = make('Votre demande a été validée', 'STATUS_CHANGE',
+                     [request_obj.requester], action_text='Voir les détails')
+    elif to_status == 'REJECTED':
+        entry = make('Votre demande a été rejetée', 'STATUS_CHANGE',
+                     [request_obj.requester], action_text='Voir les détails')
+    elif to_status == 'ASSIGNED':
+        entry = make('Une analyse vous a été assignée', 'ASSIGNMENT',
+                     [_safe_assigned_user(request_obj)],
+                     action_text='Accepter la tâche',
+                     action_url=f'/dashboard/ops/request/{pk}/accept/')
+    elif to_status == 'REPORT_VALIDATED':
+        entry = make('Le rapport a été validé', 'REPORT',
+                     [request_obj.requester], action_text='Télécharger le rapport')
+    elif to_status == 'COMPLETED':
+        entry = make('Votre demande est complétée', 'STATUS_CHANGE',
+                     [request_obj.requester], action_text='Voir le rapport')
+    elif to_status == 'APPOINTMENT_PROPOSED':
+        entry = make('Un rendez-vous a été proposé', 'APPOINTMENT',
+                     [request_obj.requester], action_text='Confirmer le RDV',
+                     action_url=f'/dashboard/ops/request/{pk}/confirm-appointment/')
+    elif to_status == 'QUOTE_SENT':
+        entry = make('Un devis a été préparé pour votre demande', 'PAYMENT',
+                     [request_obj.requester], action_text='Voir le devis')
+    elif to_status == 'PAYMENT_CONFIRMED':
+        entry = make('Votre paiement a été confirmé', 'PAYMENT',
+                     [request_obj.requester], action_text='Voir les détails')
+    else:
+        return
+
+    for target in entry['targets']:
+        if target and target != actor:
+            notify_user(
+                target,
+                f"{entry['message']} — {request_obj.display_id}",
+                entry['type'],
+                request_obj,
+                link_url=link_url,
+                link_text=link_text,
+                action_url=entry['action_url'],
+                action_text=entry['action_text'],
+            )
 
 
 def notify_assignment(request_obj, analyst, assigned_by=None):

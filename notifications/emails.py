@@ -9,7 +9,12 @@ logger = logging.getLogger('plagenor.email')
 
 
 def send_email_notification(to_email, subject, body_html):
-    """Send an HTML email notification."""
+    """Send an HTML email notification.
+
+    We deliberately use `fail_silently=False` and rely on the surrounding
+    try/except: that way SMTP failures are logged with a useful message
+    instead of being silently swallowed twice.
+    """
     try:
         send_mail(
             subject=subject,
@@ -17,7 +22,7 @@ def send_email_notification(to_email, subject, body_html):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[to_email] if isinstance(to_email, str) else to_email,
             html_message=body_html,
-            fail_silently=True,
+            fail_silently=False,
         )
         logger.info("Email sent to %s: %s", to_email, subject)
     except Exception as e:

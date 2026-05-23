@@ -6,14 +6,19 @@ from core.registry import get_service_def
 
 
 def service_form_fragment(request, service_code):
-    """Return rendered HTML for a service's YAML parameters + sample table."""
+    """Return rendered HTML for a service's YAML parameters + sample table.
+
+    Public endpoint (used by the guest form). The raw ``pricing`` block from
+    the YAML registry is **not** sent in the response — exposing the internal
+    pricing structure to anonymous visitors is unnecessary for the form to
+    render. The client-side preview can call the price-quote endpoint instead.
+    """
     definition = get_service_def(service_code)
     if not definition:
         return HttpResponse('<p class="text-muted">Service non trouvé.</p>')
 
     parameters = definition.get('parameters', [])
     sample_table = definition.get('sample_table', {})
-    pricing = definition.get('pricing', {})
 
     # Also load DB-defined custom fields if ServiceFormField model exists
     db_fields = []
@@ -25,13 +30,12 @@ def service_form_fragment(request, service_code):
     except Exception:
         pass
 
-    pricing_json = json.dumps(pricing) if pricing else '{}'
-
     html = render_to_string('includes/service_form_fields.html', {
         'parameters': parameters,
         'sample_table': sample_table,
-        'pricing': pricing,
-        'pricing_json': pricing_json,
+        # `pricing` / `pricing_json` deliberately omitted from public output.
+        'pricing': {},
+        'pricing_json': '{}',
         'service_code': service_code,
         'db_fields': db_fields,
     })

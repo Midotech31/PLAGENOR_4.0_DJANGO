@@ -5,15 +5,21 @@ from __future__ import annotations
 from datetime import datetime
 
 from core.models import Request, RequestHistory
+from core.sequences import next_display_id
 
 
 def submit_ibtikar_request(data: dict, user) -> Request:
     """Submit a new IBTIKAR request. Budget enforcement happens at the view
     layer (see dashboard.views.requester.create_request)."""
-    # Generate display_id
+    # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
-    count = Request.objects.filter(channel='IBTIKAR', created_at__year=year).count() + 1
-    display_id = f"IBK-{year}-{count:04d}"
+    display_id = next_display_id(
+        'IBK', year,
+        initial_value_fn=lambda: Request.objects.filter(
+            channel='IBTIKAR', created_at__year=year,
+            display_id__startswith=f'IBK-{year}-',
+        ).count(),
+    )
 
     budget_amount = data.get('budget_amount', 0)
     service_id = data.get('service_id')

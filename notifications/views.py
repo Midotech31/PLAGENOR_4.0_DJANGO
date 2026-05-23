@@ -1,6 +1,17 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import Notification
+
+
+def _safe_redirect(request, target):
+    """Redirect only to URLs on this host — defense against open-redirect."""
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(target)
+    return redirect('dashboard:router')
 
 
 @login_required
@@ -15,7 +26,7 @@ def notification_click(request, pk):
 
     # Priority 1: Use explicit link_url if available (deep linking)
     if notif.link_url:
-        return redirect(notif.link_url)
+        return _safe_redirect(request, notif.link_url)
 
     # Priority 2: Redirect to the appropriate detail page based on user role
     if notif.request_id:
@@ -25,7 +36,7 @@ def notification_click(request, pk):
 
     # Priority 3: Use action_url if available
     if notif.action_url:
-        return redirect(notif.action_url)
+        return _safe_redirect(request, notif.action_url)
 
     # Fallback: redirect to dashboard
     return redirect('dashboard:router')

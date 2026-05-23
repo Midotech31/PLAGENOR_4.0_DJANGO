@@ -3,7 +3,37 @@
 
 from __future__ import annotations
 
+import logging
+
 from django.db import models
+
+logger = logging.getLogger('plagenor.pricing')
+
+
+def _coerce_int(value, default=0, key=''):
+    """Coerce a YAML registry value to int; log + fall back on failure."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        if value not in (None, ''):
+            logger.warning(
+                "pricing: cannot coerce %r to int at %s; using %s",
+                value, key or '?', default,
+            )
+        return default
+
+
+def _coerce_float(value, default=0.0, key=''):
+    """Coerce a YAML registry value to float; log + fall back on failure."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        if value not in (None, ''):
+            logger.warning(
+                "pricing: cannot coerce %r to float at %s; using %s",
+                value, key or '?', default,
+            )
+        return default
 
 MULTIPLIER_KEY_MAP = {
     'nombre_echantillons': 'nombre_echantillons',
@@ -69,10 +99,14 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     base_prices = pricing.get('base_price', {})
     multipliers = pricing.get('multipliers', {})
 
-    # Determine base price
+    # Determine base price — defensive coercion in case the registry value
+    # is mistyped (e.g. quoted "1000" with a thousand-separator).
     pathogenic = bool(params.get('pathogenic', False))
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
-    base_price = int(base_prices.get(base_key, base_prices.get('default', 0)))
+    base_price = _coerce_int(
+        base_prices.get(base_key, base_prices.get('default', 0)),
+        default=0, key=f"base_price/{base_key}",
+    )
 
     # Determine multiplier key
     mult_key = (
@@ -84,7 +118,13 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     if not mult_key and multipliers:
         mult_key = list(multipliers.keys())[0]
 
-    multiplier = float(multipliers.get(mult_key, 1)) if mult_key else 1.0
+    # Multiplier defaults to 1.0 (no effect) — never 0 — so a typo never
+    # silently zeroes out a quote.
+    multiplier = (
+        _coerce_float(multipliers.get(mult_key, 1), default=1.0,
+                      key=f"multiplier/{mult_key}")
+        if mult_key else 1.0
+    )
     unit_price = int(base_price * multiplier)
     total = unit_price * n
 
@@ -110,7 +150,7 @@ def _price_per_sample_fixed(pricing: dict, samples: list, currency: str) -> dict
     if n <= 0:
         raise ValueError("At least one sample is required")
 
-    unit_price = int(pricing.get('unit_price', 0))
+    unit_price = _coerce_int(pricing.get('unit_price', 0), default=0, key="unit_price")
     total = unit_price * n
 
     return {

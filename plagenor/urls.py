@@ -14,6 +14,7 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     # Public report delivery
     path('report/<uuid:token>/', report_views.report_viewer, name='report_view'),
+    path('report/<uuid:token>/delivered/', report_views.mark_report_delivered, name='report_mark_delivered'),
     path('report/<uuid:token>/rate/', report_views.rate_report, name='report_rate'),
     path('report/<uuid:token>/acknowledge/', report_views.acknowledge_citation, name='report_acknowledge'),
     path('', include('dashboard.urls_public')),

@@ -5,14 +5,20 @@ from __future__ import annotations
 from datetime import datetime
 
 from core.models import Request, RequestHistory
+from core.sequences import next_display_id
 
 
 def submit_genoclab_request(data: dict, user) -> Request:
     """Submit a new GENOCLAB request."""
-    # Generate display_id
+    # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
-    count = Request.objects.filter(channel='GENOCLAB', created_at__year=year).count() + 1
-    display_id = f"GCL-{year}-{count:04d}"
+    display_id = next_display_id(
+        'GCL', year,
+        initial_value_fn=lambda: Request.objects.filter(
+            channel='GENOCLAB', created_at__year=year,
+            display_id__startswith=f'GCL-{year}-',
+        ).count(),
+    )
 
     service_id = data.get('service_id')
 

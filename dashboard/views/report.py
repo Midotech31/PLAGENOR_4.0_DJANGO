@@ -1,49 +1,95 @@
+from django.db import transaction
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import Http404, JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import Request
+from dashboard.utils import safe_int
 
 
 def report_viewer(request, token):
-    """Public report viewing page — accessed via email link."""
+    """Public report viewing page — accessed via the report_token UUID link.
+
+    Strict read-only. Marking the report as delivered is handled by the
+    POST beacon ``mark_report_delivered`` so that link prefetchers /
+    crawlers cannot flip ``report_delivered`` just by fetching the URL.
+    """
     try:
         req = Request.objects.get(report_token=token)
     except Request.DoesNotExist:
         raise Http404("Report not found")
-
-    # Mark as delivered on first view
-    if not req.report_delivered:
-        req.report_delivered = True
-        req.report_delivered_at = timezone.now()
-        req.save()
-
-        # Notify admins and assigned member
-        try:
-            from notifications.models import Notification
-            from accounts.models import User
-            admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'])
-            for admin in admins:
-                Notification.objects.create(user=admin, message=f"Rapport {req.display_id} consulté", request=req)
-            if req.assigned_to:
-                Notification.objects.create(user=req.assigned_to.user, message=f"Rapport {req.display_id} consulté", request=req)
-        except Exception:
-            pass
-
     return render(request, 'dashboard/report_viewer.html', {'req': req})
 
 
+@require_POST
+@csrf_exempt  # secret is the report_token UUID in the URL; cookies are absent
+def mark_report_delivered(request, token):
+    """POST beacon fired by the report viewer page on first display.
+
+    Idempotent: the row is locked, the boolean is flipped only when it
+    was False, and only the two delivery fields are written. Admin edits
+    to price/status that landed between page render and beacon fire are
+    therefore never clobbered.
+    """
+    with transaction.atomic():
+        req = (
+            Request.objects.select_for_update()
+            .filter(report_token=token)
+            .first()
+        )
+        if req is None:
+            return HttpResponse(status=404)
+        if not req.report_delivered:
+            req.report_delivered = True
+            req.report_delivered_at = timezone.now()
+            req.save(update_fields=['report_delivered', 'report_delivered_at'])
+            _notify_report_consulted(req)
+    return HttpResponse(status=204)
+
+
+def _notify_report_consulted(req):
+    """Notify admins + assigned analyst that the report was opened."""
+    try:
+        from notifications.models import Notification
+        from accounts.models import User
+        msg = f"Rapport {req.display_id} consulté"
+        admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'])
+        for admin in admins:
+            Notification.objects.create(
+                user=admin, message=msg, request=req,
+                notification_type='REPORT',
+            )
+        if req.assigned_to and req.assigned_to.user_id:
+            Notification.objects.create(
+                user=req.assigned_to.user, message=msg, request=req,
+                notification_type='REPORT',
+            )
+    except Exception:
+        pass
+
+
 def rate_report(request, token):
-    """Handle star rating submission."""
-    if request.method == 'POST':
-        req = get_object_or_404(Request, report_token=token)
-        rating = int(request.POST.get('rating', 0))
-        if 1 <= rating <= 5:
-            req.service_rating = rating
-            req.rating_comment = request.POST.get('comment', '')
-            req.rated_at = timezone.now()
-            req.save()
+    """Handle star rating submission from the public report viewer."""
+    if request.method != 'POST':
+        return redirect('report_view', token=token)
+    rating = safe_int(request.POST.get('rating'))
+    if not (1 <= rating <= 5):
+        return redirect('report_view', token=token)
+    comment = request.POST.get('comment', '') or ''
+    with transaction.atomic():
+        req = (
+            Request.objects.select_for_update()
+            .filter(report_token=token)
+            .first()
+        )
+        if req is None:
+            raise Http404("Report not found")
+        req.service_rating = rating
+        req.rating_comment = comment
+        req.rated_at = timezone.now()
+        req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
     return redirect('report_view', token=token)
 
 

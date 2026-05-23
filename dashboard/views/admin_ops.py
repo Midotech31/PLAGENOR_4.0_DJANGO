@@ -564,11 +564,17 @@ def generate_invoice(request, pk):
         if quote.get('report_fees', 0) > 0:
             line_items.append({'description': 'Frais de rapport', 'unit_price': quote['report_fees'], 'quantity': 1, 'total': quote['report_fees']})
 
-        # Generate invoice number
+        # Generate invoice number atomically (no .count()+1 race).
         from datetime import datetime
+        from core.sequences import next_display_id
         year = datetime.now().year
-        count = Invoice.objects.filter(created_at__year=year).count() + 1
-        invoice_number = f"GCL-INV-{year}-{count:04d}"
+        invoice_number = next_display_id(
+            'GCL-INV', year,
+            initial_value_fn=lambda: Invoice.objects.filter(
+                created_at__year=year,
+                invoice_number__startswith=f'GCL-INV-{year}-',
+            ).count(),
+        )
 
         subtotal_ht = quote.get('subtotal_before_tax', float(req.quote_amount))
         vat_rate = quote.get('vat_rate', 0.19)

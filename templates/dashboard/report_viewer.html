@@ -513,3 +513,27 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// Mark the report as delivered via a POST beacon — GET stays a pure read.
+// Idempotent server-side; flips report_delivered only on the first call.
+(function () {
+    var url = "{% url 'report_mark_delivered' token=req.report_token %}";
+    var send = function () {
+        try {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(url, new Blob([], {type: 'text/plain'}));
+            } else {
+                fetch(url, {method: 'POST', keepalive: true, credentials: 'omit'}).catch(function () {});
+            }
+        } catch (_) {}
+    };
+    if (document.readyState === 'complete') {
+        send();
+    } else {
+        window.addEventListener('load', send, {once: true});
+    }
+})();
+</script>
+{% endblock %}

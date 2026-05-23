@@ -21,6 +21,37 @@ IBTIKAR_TEMPLATE_MAP = {
 }
 
 
+def _money(value, currency='DZD', placeholder='N/A'):
+    """Format a money amount with thousand separators; tolerate None/garbage."""
+    if value is None:
+        return placeholder
+    try:
+        return f"{value:,.0f} {currency}"
+    except (TypeError, ValueError):
+        return placeholder
+
+
+def _assigned_name(request_obj, placeholder='Non assigné'):
+    """Safely render the assigned analyst's name even if the FK is broken."""
+    try:
+        if request_obj.assigned_to and request_obj.assigned_to.user:
+            user = request_obj.assigned_to.user
+            return user.get_full_name() or user.username or placeholder
+    except Exception:
+        pass
+    return placeholder
+
+
+def _assigned_email(request_obj, placeholder=''):
+    """Safely render the assigned analyst's email."""
+    try:
+        if request_obj.assigned_to and request_obj.assigned_to.user:
+            return request_obj.assigned_to.user.email or placeholder
+    except Exception:
+        pass
+    return placeholder
+
+
 def _replace_placeholders(doc, replacements):
     """Replace placeholder text in all paragraphs and table cells of a Document."""
     for paragraph in doc.paragraphs:
@@ -148,11 +179,11 @@ def generate_ibtikar_form(request_obj) -> str:
         'URGENCY': request_obj.urgency,
         'CHANNEL': request_obj.channel,
         # Budget
-        'BUDGET_AMOUNT': f"{request_obj.budget_amount:,.0f} DZD" if request_obj.budget_amount else 'N/A',
-        'IBTIKAR_BUDGET': f"{request_obj.budget_amount:,.0f} DZD" if request_obj.budget_amount else 'N/A',
-        'IBTIKAR_BALANCE': f"{request_obj.declared_ibtikar_balance:,.0f} DZD" if request_obj.declared_ibtikar_balance else 'N/A',
+        'BUDGET_AMOUNT': _money(request_obj.budget_amount),
+        'IBTIKAR_BUDGET': _money(request_obj.budget_amount),
+        'IBTIKAR_BALANCE': _money(request_obj.declared_ibtikar_balance),
         # Assignment
-        'ASSIGNED_ANALYST': request_obj.assigned_to.user.get_full_name() if request_obj.assigned_to else 'Non assigné',
+        'ASSIGNED_ANALYST': _assigned_name(request_obj),
         # Sample table as string
         'SAMPLE_TABLE': sample_table_str,
     }
@@ -209,7 +240,7 @@ def generate_ibtikar_form(request_obj) -> str:
             ("Laboratoire", requester_lab),
             ("Titre du projet", request_obj.title),
             ("Service demandé", request_obj.service.name if request_obj.service else 'N/A'),
-            ("Budget estimé", f"{request_obj.budget_amount} DZD"),
+            ("Budget estimé", _money(request_obj.budget_amount)),
             ("Urgence", request_obj.urgency),
             ("Description", request_obj.description[:200] if request_obj.description else ''),
         ]
@@ -338,15 +369,15 @@ def generate_platform_note(request_obj) -> str:
         'URGENCY': request_obj.urgency,
         'CHANNEL': request_obj.channel,
         # Budget
-        'BUDGET_AMOUNT': f"{request_obj.budget_amount:,.0f} DZD" if request_obj.budget_amount else 'N/A',
-        'QUOTE_AMOUNT': f"{request_obj.quote_amount:,.0f} DZD" if request_obj.quote_amount else 'N/A',
-        'FINAL_COST': f"{request_obj.admin_validated_price:,.0f} DZD" if request_obj.admin_validated_price else 'En attente',
+        'BUDGET_AMOUNT': _money(request_obj.budget_amount),
+        'QUOTE_AMOUNT': _money(request_obj.quote_amount),
+        'FINAL_COST': _money(request_obj.admin_validated_price, placeholder='En attente'),
         # IBTIKAR specific
-        'IBTIKAR_BUDGET': f"{request_obj.budget_amount:,.0f} DZD" if request_obj.budget_amount else 'N/A',
-        'IBTIKAR_BALANCE': f"{request_obj.declared_ibtikar_balance:,.0f} DZD" if request_obj.declared_ibtikar_balance else 'N/A',
+        'IBTIKAR_BUDGET': _money(request_obj.budget_amount),
+        'IBTIKAR_BALANCE': _money(request_obj.declared_ibtikar_balance),
         # Assignment
-        'ASSIGNED_ANALYST': request_obj.assigned_to.user.get_full_name() if request_obj.assigned_to else 'Non assigné',
-        'ANALYST_EMAIL': request_obj.assigned_to.user.email if request_obj.assigned_to else '',
+        'ASSIGNED_ANALYST': _assigned_name(request_obj),
+        'ANALYST_EMAIL': _assigned_email(request_obj),
         # Sample table as string (for simple templates)
         'SAMPLE_TABLE': sample_table_str,
         # Service params as string
@@ -445,15 +476,15 @@ def generate_platform_note(request_obj) -> str:
 
         # Budget section (IBTIKAR)
         doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
-        doc.add_paragraph(f"Budget annuel par étudiant: 200 000 DZD")
-        doc.add_paragraph(f"Montant de cette prestation: {request_obj.budget_amount:,.0f} DZD")
+        doc.add_paragraph("Budget annuel par étudiant: 200 000 DZD")
+        doc.add_paragraph(f"Montant de cette prestation: {_money(request_obj.budget_amount)}")
         if request_obj.declared_ibtikar_balance:
-            doc.add_paragraph(f"Solde IBTIKAR déclaré: {request_obj.declared_ibtikar_balance:,.0f} DZD")
+            doc.add_paragraph(f"Solde IBTIKAR déclaré: {_money(request_obj.declared_ibtikar_balance)}")
 
         # Assignment info (if assigned)
         if request_obj.assigned_to:
             doc.add_heading('Assignation', level=2)
-            doc.add_paragraph(f"Analyste assigné: {request_obj.assigned_to.user.get_full_name()}")
+            doc.add_paragraph(f"Analyste assigné: {_assigned_name(request_obj)}")
             if request_obj.appointment_date:
                 doc.add_paragraph(f"Date de rendez-vous: {request_obj.appointment_date.strftime('%d/%m/%Y')}")
 

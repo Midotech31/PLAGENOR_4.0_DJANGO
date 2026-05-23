@@ -384,6 +384,25 @@ class Message(models.Model):
         return f"Message {self.from_user} -> {self.to_user} ({self.request.display_id})"
 
 
+class SequenceCounter(models.Model):
+    """Atomic row-locked sequence for generating display_id / invoice_number.
+
+    Drop-in replacement for the racy ``.count() + 1`` pattern. The scope is a
+    free-form string (e.g. ``'IBK-2026'``, ``'GCL-INV-2026'``); always
+    allocate via :func:`core.sequences.next_value`, never increment .value
+    directly.
+    """
+    scope = models.CharField(max_length=64, primary_key=True)
+    value = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'sequence_counters'
+
+    def __str__(self):
+        return f"{self.scope} = {self.value}"
+
+
 class RevenueArchive(models.Model):
     month = models.IntegerField()
     year = models.IntegerField()
