@@ -1,0 +1,26 @@
+# Crowdin configuration — PLAGENOR 4.0
+#
+# Source: French (.po extracted by `python manage.py makemessages -l fr`).
+# Targets: English (en), Arabic (ar).
+#
+# CI uploads after extraction, deploy step downloads + compiles to .mo.
+# Set CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN in the environment.
+
+project_id_env: CROWDIN_PROJECT_ID
+api_token_env: CROWDIN_PERSONAL_TOKEN
+
+preserve_hierarchy: true
+
+files:
+  - source: /locale/fr/LC_MESSAGES/django.po
+    translation: /locale/%two_letters_code%/LC_MESSAGES/django.po
+    languages_mapping:
+      two_letters_code:
+        en: en
+        ar: ar
+  - source: /locale/fr/LC_MESSAGES/djangojs.po
+    translation: /locale/%two_letters_code%/LC_MESSAGES/djangojs.po
+    languages_mapping:
+      two_letters_code:
+        en: en
+        ar: ar

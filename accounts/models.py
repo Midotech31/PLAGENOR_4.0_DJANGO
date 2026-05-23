@@ -52,6 +52,24 @@ class User(AbstractUser):
     # Password reset (Prompt 11)
     must_change_password = models.BooleanField(default=False, verbose_name='Doit changer le mot de passe')
 
+    # Localization preference (Phase 3.0).
+    # Empty string ('') means: defer to cookie / Accept-Language. When set,
+    # PreferredLanguageMiddleware (Phase 3.3) will override the active language
+    # for this user. Storing the field in 3.0 lets the SuperAdmin / profile
+    # editor populate it ahead of middleware roll-out.
+    LANGUAGE_PREFERENCE_CHOICES = [
+        ('', 'Suivre la configuration du navigateur'),
+        ('fr', 'Français'),
+        ('en', 'English'),
+        ('ar', 'العربية'),
+    ]
+    preferred_language = models.CharField(
+        max_length=5, blank=True, default='',
+        choices=LANGUAGE_PREFERENCE_CHOICES,
+        verbose_name='Langue préférée',
+        help_text='Laisser vide pour utiliser la langue du navigateur.',
+    )
+
     class Meta:
         db_table = 'users'
 

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.i18n import JavaScriptCatalog
 
 from dashboard.views import report as report_views
 
@@ -12,6 +13,8 @@ urlpatterns = [
     path('documents/', include('documents.urls')),
     path('notifications/', include('notifications.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
+    # JavaScript translation catalog — frontend code uses gettext() in JS.
+    path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     # Public report delivery
     path('report/<uuid:token>/', report_views.report_viewer, name='report_view'),
     path('report/<uuid:token>/delivered/', report_views.mark_report_delivered, name='report_mark_delivered'),

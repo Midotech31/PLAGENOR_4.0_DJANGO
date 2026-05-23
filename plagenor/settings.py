@@ -121,6 +121,7 @@ LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'fr')
 LANGUAGES = [
     ('fr', 'Français'),
     ('en', 'English'),
+    ('ar', 'العربية'),
 ]
 LOCALE_PATHS = [BASE_DIR / 'locale']
 USE_I18N = True
