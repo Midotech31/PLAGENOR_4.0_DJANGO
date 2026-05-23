@@ -296,7 +296,7 @@
     <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
         {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
-        {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+        {% if req.rating_comment %}<span class="text-muted" style="margin-inline-start:8px;">"{{ req.rating_comment }}"</span>{% endif %}
     </div>
 </div>
 {% endif %}

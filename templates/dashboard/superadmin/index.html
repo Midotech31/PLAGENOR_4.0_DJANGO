@@ -637,7 +637,7 @@
                         <div class="form-group" style="display:flex; align-items:flex-end; gap:6px;">
                             <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
                             <a href="?tab=requests&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}&export=requests_csv" class="btn btn-outline" style="font-size:0.85rem;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "CSV" %}
                             </a>
                         </div>
@@ -937,7 +937,7 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <strong>{{ tpl_label }}</strong>
                             <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-sm btn-outline" style="font-size:0.78rem;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-inline-end:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger" %}
                             </a>
                         </div>
@@ -969,7 +969,7 @@
                             {% with yaml_def=yaml_registry|default_if_none:"" %}
                             <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
                             {% endwith %}
-                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>
+                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-inline-start:8px;">{% trans "Modifier" %}</a>
                         </div>
                     </div>
                 </div>
@@ -1019,7 +1019,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez l'historique complet de toutes les transitions, actions et modifications effectuées sur la plateforme." %}</p>
                     <a href="{% url 'dashboard:audit_log' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         {% trans "Voir le journal d'audit" %}
                     </a>
                 </div>
@@ -1029,7 +1029,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR." %}</p>
                     <a href="{% url 'dashboard:revenue_archives' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         {% trans "Voir les archives" %}
                     </a>
                 </div>

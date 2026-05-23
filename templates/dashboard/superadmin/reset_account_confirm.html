@@ -45,7 +45,7 @@
             </dl>
         </div>
 
-        <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-left:20px;margin-bottom:24px;">
+        <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-inline-start:20px;margin-bottom:24px;">
             <li>{% trans "Un mot de passe temporaire sécurisé (16 caractères) sera généré." %}</li>
             <li>{% trans "L'utilisateur devra changer son mot de passe dès la prochaine connexion." %}</li>
             {% if target_user.email %}
@@ -60,7 +60,7 @@
             {% csrf_token %}
             <div style="display:flex;gap:12px;">
                 <button type="submit" class="btn btn-danger" style="flex:1;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end:6px;">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                     {% trans "Réinitialiser le compte" %}

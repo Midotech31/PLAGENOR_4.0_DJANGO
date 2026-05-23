@@ -51,11 +51,15 @@ _SOLID = {'star', 'dot'}
 
 
 @register.simple_tag
-def icon(name, size=20, cls='', style='', stroke_width=2):
+def icon(name, size=20, cls='', style='', stroke_width=2, flip_rtl=False):
     """Render an inline SVG icon. Color follows the surrounding `color` (currentColor).
 
     fill/stroke are set via inline style so contextual rules (e.g. `.btn svg`)
     cannot override them.
+
+    `flip_rtl=True` opts the icon into RTL mirroring (CSS rule in main.css
+    flips the SVG horizontally when <html dir="rtl">). Use for direction-aware
+    glyphs like arrows / send / back/forward chevrons.
     """
     body = _ICONS.get(name)
     if body is None:
@@ -64,8 +68,9 @@ def icon(name, size=20, cls='', style='', stroke_width=2):
     fill = 'currentColor' if solid else 'none'
     stroke = 'none' if solid else 'currentColor'
     classes = ('app-icon ' + cls).strip()
+    flip_attr = ' data-flip-rtl="true"' if flip_rtl else ''
     return mark_safe(
-        f'<svg class="{classes}" viewBox="0 0 24 24" aria-hidden="true" '
+        f'<svg class="{classes}" viewBox="0 0 24 24" aria-hidden="true"{flip_attr} '
         f'style="width:{size}px;height:{size}px;fill:{fill};stroke:{stroke};'
         f'stroke-width:{stroke_width};stroke-linecap:round;stroke-linejoin:round;'
         f'flex-shrink:0;vertical-align:middle;{style}">{body}</svg>'

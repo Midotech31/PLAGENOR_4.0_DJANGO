@@ -425,7 +425,7 @@
                 <div class="card-header" style="display:flex; align-items:center; gap:10px;">
                     <span style="display:flex; color:#f59e0b;">{% icon 'zap' size=22 %}</span>
                     <h3 style="margin:0;">{% trans "Activité & Points" %}</h3>
-                    <span style="margin-left:auto; background:#fef3c7; color:#92400e; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ points_history.count }} {% trans "événements" %}</span>
+                    <span style="margin-inline-start:auto; background:#fef3c7; color:#92400e; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ points_history.count }} {% trans "événements" %}</span>
                 </div>
                 <div class="card-body" style="padding:0;">
                     {% for ph in points_history %}
@@ -455,7 +455,7 @@
                 <div class="card-header" style="display:flex; align-items:center; gap:10px;">
                     <span style="display:flex; color:#7c3aed;">{% icon 'party-popper' size=22 %}</span>
                     <h3 style="margin:0;">{% trans "Encouragements" %}</h3>
-                    {% if cheers %}<span style="margin-left:auto; background:#ede9fe; color:#6d28d9; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ cheers.count }}</span>{% endif %}
+                    {% if cheers %}<span style="margin-inline-start:auto; background:#ede9fe; color:#6d28d9; border-radius:20px; padding:2px 10px; font-size:0.8rem; font-weight:600;">{{ cheers.count }}</span>{% endif %}
                 </div>
                 <div class="card-body" style="padding:0;">
                     {% for cheer in cheers %}

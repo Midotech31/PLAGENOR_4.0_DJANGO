@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* --- Reset & Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -98,6 +98,7 @@
 
     /* Typography */
     --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-rtl: 'Cairo', 'Noto Sans Arabic', 'Segoe UI', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* Transition */
@@ -124,14 +125,14 @@ input, select, textarea { font-family: inherit; }
    ============================================================ */
 .sidebar {
     position: fixed;
-    left: 0; top: 0; bottom: 0;
+    inset-inline-start: 0; top: 0; bottom: 0;
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
     z-index: 100;
     overflow-y: auto;
-    border-right: 1px solid rgba(255,255,255,0.06);
+    border-inline-end: 1px solid rgba(255,255,255,0.06);
     transition: transform var(--transition-spring);
 }
 
@@ -195,7 +196,7 @@ input, select, textarea { font-family: inherit; }
     border: none;
     background: transparent;
     width: 100%;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
 }
 .sidebar-nav a svg,
@@ -228,7 +229,7 @@ input, select, textarea { font-family: inherit; }
 
 /* Sidebar nav badge */
 .nav-badge {
-    margin-left: auto;
+    margin-inline-start: auto;
     min-width: 20px; height: 20px;
     background: var(--primary);
     color: #fff;
@@ -316,7 +317,7 @@ input, select, textarea { font-family: inherit; }
    Main Content Area
    ============================================================ */
 .main-content {
-    margin-left: var(--sidebar-width);
+    margin-inline-start: var(--sidebar-width);
     min-height: 100vh;
     background: var(--bg);
 }
@@ -383,7 +384,7 @@ input, select, textarea { font-family: inherit; }
 .topbar-search input::placeholder { color: var(--text-muted); }
 .topbar-search svg {
     position: absolute;
-    left: 12px;
+    inset-inline-start: 12px;
     top: 50%;
     transform: translateY(-50%);
     width: 16px; height: 16px;
@@ -410,7 +411,7 @@ input, select, textarea { font-family: inherit; }
 }
 .topbar-bell .badge {
     position: absolute;
-    top: 4px; right: 4px;
+    top: 4px; inset-inline-end: 4px;
     min-width: 18px; height: 18px;
     background: var(--danger);
     color: #fff;
@@ -433,7 +434,7 @@ input, select, textarea { font-family: inherit; }
 /* Notification dropdown */
 .notif-dropdown {
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: calc(100% + 8px);
     width: 320px;
     background: #fff;
@@ -571,7 +572,7 @@ input, select, textarea { font-family: inherit; }
 .kpi-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0; inset-inline-start: 0; inset-inline-end: 0;
     height: 3px;
     background: var(--primary);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -881,7 +882,7 @@ select.form-control {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
-    padding-right: 40px;
+    padding-inline-end: 40px;
 }
 textarea.form-control {
     resize: vertical;
@@ -1021,7 +1022,7 @@ table {
 }
 thead th {
     padding: 12px 16px;
-    text-align: left;
+    text-align: start;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -1257,7 +1258,7 @@ tbody tr:hover { background: var(--primary-50); }
     transition: color var(--transition);
 }
 .public-nav .nav-links a:hover { color: var(--primary); }
-.public-nav .nav-links .btn { margin-left: 8px; }
+.public-nav .nav-links .btn { margin-inline-start: 8px; }
 
 .public-footer {
     background: var(--slate-900);
@@ -1322,7 +1323,7 @@ tbody tr:hover { background: var(--primary-50); }
 .hero::before {
     content: '';
     position: absolute;
-    top: -50%; left: -50%;
+    top: -50%; inset-inline-start: -50%;
     width: 200%; height: 200%;
     background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.06) 0%, transparent 50%);
 }
@@ -1485,7 +1486,7 @@ a:has(.service-card):hover .service-card,
 .auth-container::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; inset-inline-start: 0; inset-inline-end: 0; bottom: 0;
     background: radial-gradient(ellipse at top left, rgba(79,70,229,0.05) 0%, transparent 50%),
                 radial-gradient(ellipse at bottom right, rgba(79,70,229,0.08) 0%, transparent 50%);
 }
@@ -1732,7 +1733,7 @@ a:has(.service-card):hover .service-card,
         display: block;
     }
     .main-content {
-        margin-left: 0;
+        margin-inline-start: 0;
     }
     .topbar-hamburger {
         display: flex;
@@ -1836,7 +1837,7 @@ a:has(.service-card):hover .service-card,
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 4px;
+    margin-inline-end: 4px;
     vertical-align: middle;
 }
 .online-dot.green {
@@ -1851,7 +1852,7 @@ a:has(.service-card):hover .service-card,
 .toast-container {
     position: fixed;
     top: 20px;
-    right: 20px;
+    inset-inline-end: 20px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -1915,7 +1916,7 @@ a:has(.service-card):hover .service-card,
 .required-asterisk {
     color: #dc2626;
     font-weight: bold;
-    margin-left: 2px;
+    margin-inline-start: 2px;
 }
 button[disabled], input[type="submit"][disabled] {
     opacity: 0.5;
@@ -1945,11 +1946,11 @@ tr.clickable-row:hover td {
 }
 .msg-bubble.msg-from-analyst {
     background: #f0f9ff;
-    border-left: 3px solid #38bdf8;
+    border-inline-start: 3px solid #38bdf8;
 }
 .msg-bubble.msg-from-admin {
     background: #f8fafc;
-    border-left: 3px solid #94a3b8;
+    border-inline-start: 3px solid #94a3b8;
 }
 .msg-bubble .msg-header {
     display: flex;
@@ -1966,7 +1967,7 @@ tr.clickable-row:hover td {
     content: attr(data-tooltip);
     position: absolute;
     bottom: calc(100% + 8px);
-    left: 50%;
+    inset-inline-start: 50%;
     transform: translateX(-50%);
     background: #1e293b;
     color: #fff;
@@ -1981,7 +1982,7 @@ tr.clickable-row:hover td {
     content: '';
     position: absolute;
     bottom: calc(100% + 2px);
-    left: 50%;
+    inset-inline-start: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: #1e293b;
@@ -1992,7 +1993,7 @@ tr.clickable-row:hover td {
 .plagenor-toast {
     position: fixed;
     top: 20px;
-    right: 20px;
+    inset-inline-end: 20px;
     z-index: 10000;
     padding: 16px 24px;
     border-radius: 8px;
@@ -2035,4 +2036,30 @@ tr.clickable-row:hover td {
 }
 .toast-message {
     flex: 1;
+}
+
+/* ============================================================
+   RTL / Arabic support  (Phase 3.3)
+   ------------------------------------------------------------
+   The codebase uses logical properties (margin-inline-start, etc.)
+   so the same stylesheet auto-flips when <html dir="rtl">. This
+   block only adds the bits that DON'T flip automatically:
+     - Arabic font stack
+     - SVG icons explicitly marked direction-aware (data-flip-rtl)
+     - A small set of escape-hatch utility classes
+   ============================================================ */
+html[dir="rtl"] {
+    font-family: var(--font-rtl);
+}
+
+/* Direction-aware icons (arrows etc.) — opt in via {% icon ... flip_rtl=True %},
+   which adds the data-flip-rtl attribute. */
+html[dir="rtl"] .app-icon[data-flip-rtl="true"] {
+    transform: scaleX(-1);
+}
+
+/* Escape hatches for the rare case a rule MUST stay direction-specific. */
+html[dir="ltr"] .rtl-only,
+html[dir="rtl"] .ltr-only {
+    display: none !important;
 }

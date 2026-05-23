@@ -168,7 +168,7 @@
     .modal-overlay {
         position: fixed;
         top: 0;
-        left: 0;
+        inset-inline-start: 0;
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.6);
@@ -192,7 +192,7 @@
     .modal-close {
         position: absolute;
         top: 16px;
-        right: 16px;
+        inset-inline-end: 16px;
         background: none;
         border: none;
         font-size: 1.5rem;
@@ -239,7 +239,7 @@
     }
     .citation-block {
         background: #f8fafc;
-        border-left: 4px solid #4f46e5;
+        border-inline-start: 4px solid #4f46e5;
         padding: 16px;
         border-radius: 8px;
         margin-bottom: 16px;
@@ -249,12 +249,12 @@
         color: #1e293b;
         font-style: italic;
         margin: 0;
-        padding-right: 40px;
+        padding-inline-end: 40px;
     }
     .copy-btn {
         position: absolute;
         top: 8px;
-        right: 8px;
+        inset-inline-end: 8px;
         background: none;
         border: none;
         cursor: pointer;
@@ -303,7 +303,7 @@
     .copy-tooltip {
         position: absolute;
         top: -30px;
-        right: 0;
+        inset-inline-end: 0;
         background: #10b981;
         color: #fff;
         padding: 4px 8px;

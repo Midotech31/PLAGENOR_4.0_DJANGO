@@ -3,7 +3,7 @@
 {% load cms %}
 {% load icons %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
             {% else %}
             <a href="{% url 'accounts:login' %}" class="btn btn-sm" style="background:#4F46E5; color:#fff; font-weight:600; padding:8px 20px; border-radius:8px;">{% trans "Connexion" %}</a>
             {% endif %}
-            <form id="public-lang-form" class="no-validation" action="{% url 'set_language' %}" method="post" style="display:inline; margin-left:8px;">
+            <form id="public-lang-form" class="no-validation" action="{% url 'set_language' %}" method="post" style="display:inline; margin-inline-start:8px;">
                 {% csrf_token %}
                 <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
                 <input type="hidden" name="next" value="{{ request.path }}">

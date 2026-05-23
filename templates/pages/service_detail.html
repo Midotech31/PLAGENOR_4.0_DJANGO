@@ -63,7 +63,7 @@
         <div class="card-body" style="padding:20px;">
             <h4 style="font-size:0.95rem; margin-bottom:12px;">{% trans "Exigences & conformité" %}</h4>
             {% if yaml_def.requirements %}
-            <ul style="padding-left:20px; font-size:0.85rem; color:var(--text-secondary);">
+            <ul style="padding-inline-start:20px; font-size:0.85rem; color:var(--text-secondary);">
                 {% for req in yaml_def.requirements %}
                 <li style="margin-bottom:6px;">{{ req }}</li>
                 {% endfor %}
