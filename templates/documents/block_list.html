@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Blocs de contenu" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Blocs de contenu des documents" %}</h1>
+    <p class="greeting-date">{% trans "Ajoutez ou modifiez des paragraphes injectés dans les documents générés (formulaire IBTIKAR, note de plateforme, devis, fiche de réception)." %}</p>
+</div>
+
+<div class="actions-bar" style="margin-bottom:16px;">
+    <a href="{% url 'documents:block_create' %}" class="btn btn-primary">+ {% trans "Nouveau bloc" %}</a>
+    <a href="{% url 'documents:template_list' %}" class="btn btn-outline">{% trans "Modèles DOCX" %}</a>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body">
+        <form method="get" action="{% url 'documents:block_list' %}" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="form-group" style="margin:0;">
+                <label>{% trans "Type de document" %}</label>
+                <select name="type" class="form-control" style="min-width:180px;">
+                    <option value="">{% trans "Tous" %}</option>
+                    {% for code, label in template_types %}
+                    <option value="{{ code }}" {% if current_type == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>{% trans "Service" %}</label>
+                <select name="service" class="form-control" style="min-width:180px;">
+                    <option value="">{% trans "Tous" %}</option>
+                    <option value="global" {% if current_service == 'global' %}selected{% endif %}>{% trans "Global (tous services)" %}</option>
+                    {% for s in services %}
+                    <option value="{{ s.pk }}" {% if current_service == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.code }} — {{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>{% trans "Langue" %}</label>
+                <select name="lang" class="form-control" style="min-width:120px;">
+                    <option value="">{% trans "Toutes" %}</option>
+                    {% for code, label in languages %}
+                    <option value="{{ code }}" {% if current_lang == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
+            {% if current_type or current_service or current_lang %}
+            <a href="{% url 'documents:block_list' %}" class="btn btn-outline">{% trans "Réinitialiser" %}</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% trans "Document" %}</th>
+                        <th>{% trans "Service" %}</th>
+                        <th>{% trans "Position" %}</th>
+                        <th>{% trans "Langue" %}</th>
+                        <th>{% trans "Titre" %}</th>
+                        <th>{% trans "Aperçu" %}</th>
+                        <th>{% trans "Priorité" %}</th>
+                        <th>{% trans "Actif" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for block in blocks %}
+                    <tr>
+                        <td><strong>{{ block.get_template_type_display }}</strong></td>
+                        <td>
+                            {% if block.service %}
+                                <span class="font-mono">{{ block.service.code }}</span>
+                            {% else %}
+                                <span class="badge-status info">{% trans "Global" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ block.get_position_display }}</td>
+                        <td><span class="badge">{{ block.get_language_display }}</span></td>
+                        <td>{{ block.title|default:"—" }}</td>
+                        <td>{{ block.body|truncatechars:60 }}</td>
+                        <td>{{ block.priority }}</td>
+                        <td>
+                            {% if block.is_active %}
+                                <span class="badge-status completed">{% trans "Oui" %}</span>
+                            {% else %}
+                                <span class="badge-status rejected">{% trans "Non" %}</span>
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <a href="{% url 'documents:block_edit' block.pk %}" class="btn btn-sm btn-outline">{% trans "Modifier" %}</a>
+                            <form method="post" action="{% url 'documents:block_toggle' block.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline">
+                                    {% if block.is_active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'documents:block_delete' block.pk %}" style="display:inline;" onsubmit="return confirm('{% trans "Supprimer ce bloc ?" %}');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">{% trans "Supprimer" %}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="9" class="text-center text-muted" style="padding:32px;">{% trans "Aucun bloc défini. Cliquez sur « Nouveau bloc » pour en créer un." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -169,6 +169,11 @@ PLATFORM_VERSION = '4.0.0'
 PLATFORM_AUTHOR = 'Prof. Mohamed Merzoug'
 PLATFORM_INSTITUTION = 'ESSBO'
 
+# Render generated documents to PDF via LibreOffice headless.
+# Requires `libreoffice-writer` + `default-jre-headless` on the host.
+# Disable (DOCUMENT_PDF_ENABLED=False) to serve raw DOCX during dev/CI.
+DOCUMENT_PDF_ENABLED = os.getenv('DOCUMENT_PDF_ENABLED', 'True').lower() == 'true'
+
 # Email configuration
 # Use SMTP backend automatically when SMTP_HOST is configured in .env
 _smtp_host = os.getenv('SMTP_HOST') or os.getenv('EMAIL_HOST', '')

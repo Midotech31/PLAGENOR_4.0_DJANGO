@@ -17,21 +17,31 @@ from documents.generators import (
     generate_quote,
     generate_reception_form,
 )
-from documents.models import ServiceTemplate
+from documents.models import DocumentBlock, ServiceTemplate
+from documents.pdf_converter import convert_docx_to_pdf
 
 logger = logging.getLogger('plagenor.documents')
 
 
-def _serve_docx(filepath, filename):
-    """Serve a DOCX file as a download response."""
-    if not Path(filepath).exists():
+def _serve_file(filepath, filename):
+    """Serve a document with the correct Content-Type for its extension."""
+    path = Path(filepath)
+    if not path.exists():
         raise Http404("Document non trouvé.")
-    response = FileResponse(
-        open(filepath, 'rb'),
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    )
+    if path.suffix.lower() == '.pdf':
+        content_type = 'application/pdf'
+    else:
+        content_type = (
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    response = FileResponse(open(filepath, 'rb'), content_type=content_type)
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+def _serve_docx(filepath, filename):
+    """Backwards-compatible alias kept for any external imports."""
+    return _serve_file(filepath, filename)
 
 
 def _can_download_request_doc(user, req, admin_only=False):
@@ -52,29 +62,52 @@ def _can_download_request_doc(user, req, admin_only=False):
     return False
 
 
-def _cached_doc_path(req, template_type):
+def _block_signature(req, template_type):
+    """Hash of all admin DocumentBlocks that affect this generation.
+
+    Used so that editing a block immediately invalidates every cached
+    document that block is injected into. Without this, a freshly edited
+    notice would only appear on documents generated after the next Request
+    save — surprising and easy to miss.
+    """
+    blocks = DocumentBlock.objects.filter(
+        template_type=template_type,
+        is_active=True,
+    ).filter(Q(service__isnull=True) | Q(service=req.service))
+    sig_parts = list(
+        blocks.order_by('pk').values_list('pk', 'updated_at')
+    )
+    if not sig_parts:
+        return '0'
+    return str(max(t.timestamp() if t else 0 for _, t in sig_parts))
+
+
+def _cached_doc_path(req, template_type, suffix='.docx'):
     """Versioned on-disk cache path for a generated document.
 
-    The filename embeds ``updated_at`` as a UNIX timestamp so any mutation
-    of the Request auto-invalidates the cache (Django sets ``updated_at``
-    via ``auto_now=True`` on every save).
+    Cache key includes ``Request.updated_at`` so request edits invalidate,
+    plus the DocumentBlock signature so admin notice edits also invalidate.
     """
     cache_dir = Path(settings.MEDIA_ROOT) / 'documents_cache'
     cache_dir.mkdir(parents=True, exist_ok=True)
     ts = int(req.updated_at.timestamp()) if req.updated_at else 0
     safe_id = (req.display_id or str(req.pk)).replace('/', '_')
-    return cache_dir / f"{safe_id}__{template_type}__{ts}.docx"
+    blocks_sig = _block_signature(req, template_type)
+    return cache_dir / f"{safe_id}__{template_type}__{ts}__{blocks_sig}{suffix}"
 
 
-def _cached_serve_doc(req, template_type, generator_fn, download_name):
-    """Serve a generated DOCX via a versioned cache.
+def _cached_serve_doc(req, template_type, generator_fn, download_basename):
+    """Generate DOCX, render to PDF if enabled, serve via versioned cache.
 
-    Generates only when the cache file for this Request's current
-    ``updated_at`` does not exist. Stale per-version files accumulate but
-    are bounded by the number of edits per request and can be pruned by
-    a periodic maintenance task.
+    The cache key encodes both ``Request.updated_at`` and the
+    DocumentBlock signature, so any edit on either side invalidates the
+    cached file and the next GET regenerates.
     """
-    cache_path = _cached_doc_path(req, template_type)
+    pdf_enabled = getattr(settings, 'DOCUMENT_PDF_ENABLED', True)
+    suffix = '.pdf' if pdf_enabled else '.docx'
+    cache_path = _cached_doc_path(req, template_type, suffix=suffix)
+    download_name = f"{download_basename}{suffix}"
+
     if not cache_path.exists():
         try:
             src = Path(generator_fn(req))
@@ -86,9 +119,17 @@ def _cached_serve_doc(req, template_type, generator_fn, download_name):
             raise Http404("Document non disponible.")
         if not src.exists():
             raise Http404("Document non disponible.")
-        # Copy into the versioned cache so the next GET is a pure file read.
-        shutil.copy2(str(src), str(cache_path))
-    return _serve_docx(str(cache_path), download_name)
+        if pdf_enabled:
+            rendered = convert_docx_to_pdf(src, output_dir=src.parent)
+            # convert_docx_to_pdf returns the DOCX path on failure; cache it
+            # with the right extension so we don't loop on conversion.
+            shutil.copy2(str(rendered), str(cache_path.with_suffix(rendered.suffix)))
+            if rendered.suffix.lower() != suffix:
+                cache_path = cache_path.with_suffix(rendered.suffix)
+                download_name = f"{download_basename}{rendered.suffix}"
+        else:
+            shutil.copy2(str(src), str(cache_path))
+    return _serve_file(str(cache_path), download_name)
 
 
 @login_required
@@ -98,7 +139,7 @@ def ibtikar_form_view(request, request_id):
         return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'IBTIKAR_FORM', generate_ibtikar_form,
-        f"IBTIKAR_FORM_{req.display_id}.docx",
+        f"IBTIKAR_FORM_{req.display_id}",
     )
 
 
@@ -109,7 +150,7 @@ def platform_note_view(request, request_id):
         return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'PLATFORM_NOTE', generate_platform_note,
-        f"PLATFORM_NOTE_{req.display_id}.docx",
+        f"PLATFORM_NOTE_{req.display_id}",
     )
 
 
@@ -120,7 +161,7 @@ def quote_view(request, request_id):
         return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'QUOTE', generate_quote,
-        f"QUOTE_{req.display_id}.docx",
+        f"QUOTE_{req.display_id}",
     )
 
 
@@ -131,7 +172,7 @@ def reception_form_view(request, request_id):
         return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'RECEPTION_FORM', generate_reception_form,
-        f"RECEPTION_FORM_{req.display_id}.docx",
+        f"RECEPTION_FORM_{req.display_id}",
     )
 
 
@@ -296,7 +337,148 @@ def template_toggle_active(request, pk):
             ).exclude(pk=template.pk).update(is_active=False)
             template.is_active = True
             messages.success(request, f'Modèle "{template.name}" activé.')
-        
+
         template.save()
-    
+
     return redirect('template_detail', pk=template.pk)
+
+
+# ============================================================
+# Document Block Management Views (Super Admin) — Phase 3.7
+# ============================================================
+
+@admin_required
+def block_list(request):
+    """List all admin-editable document blocks with filtering."""
+    template_type = request.GET.get('type', '').strip()
+    service_id = request.GET.get('service', '').strip()
+    language = request.GET.get('lang', '').strip()
+
+    blocks = DocumentBlock.objects.select_related('service', 'created_by', 'updated_by')
+    if template_type:
+        blocks = blocks.filter(template_type=template_type)
+    if service_id:
+        if service_id == 'global':
+            blocks = blocks.filter(service__isnull=True)
+        else:
+            blocks = blocks.filter(service_id=service_id)
+    if language:
+        blocks = blocks.filter(language=language)
+
+    context = {
+        'blocks': blocks,
+        'services': Service.objects.filter(active=True).order_by('code'),
+        'template_types': DocumentBlock.TEMPLATE_TYPE_CHOICES,
+        'languages': DocumentBlock.LANGUAGE_CHOICES,
+        'current_type': template_type,
+        'current_service': service_id,
+        'current_lang': language,
+    }
+    return render(request, 'documents/block_list.html', context)
+
+
+def _block_form_context(block=None):
+    return {
+        'block': block,
+        'services': Service.objects.filter(active=True).order_by('code'),
+        'template_types': DocumentBlock.TEMPLATE_TYPE_CHOICES,
+        'position_choices': DocumentBlock.POSITION_CHOICES,
+        'language_choices': DocumentBlock.LANGUAGE_CHOICES,
+    }
+
+
+def _save_block(request, block):
+    """Apply form fields onto a DocumentBlock instance; return validation msg or None."""
+    template_type = request.POST.get('template_type', '').strip()
+    service_id = request.POST.get('service', '').strip() or None
+    position = request.POST.get('position', 'BOTTOM').strip()
+    language = request.POST.get('language', 'fr').strip()
+    title = request.POST.get('title', '').strip()
+    body = request.POST.get('body', '').strip()
+    priority = request.POST.get('priority', '0').strip() or '0'
+    is_active = request.POST.get('is_active') == 'on'
+
+    valid_types = {c for c, _ in DocumentBlock.TEMPLATE_TYPE_CHOICES}
+    valid_positions = {c for c, _ in DocumentBlock.POSITION_CHOICES}
+    valid_langs = {c for c, _ in DocumentBlock.LANGUAGE_CHOICES}
+
+    if template_type not in valid_types:
+        return 'Type de document invalide.'
+    if position not in valid_positions:
+        return 'Position invalide.'
+    if language not in valid_langs:
+        return 'Langue invalide.'
+    if not body:
+        return 'Le contenu est obligatoire.'
+
+    try:
+        priority_int = int(priority)
+    except ValueError:
+        priority_int = 0
+
+    block.template_type = template_type
+    block.position = position
+    block.language = language
+    block.title = title
+    block.body = body
+    block.priority = priority_int
+    block.is_active = is_active
+    if service_id:
+        try:
+            block.service = Service.objects.get(pk=service_id)
+        except (Service.DoesNotExist, ValueError):
+            return 'Service introuvable.'
+    else:
+        block.service = None
+    return None
+
+
+@admin_required
+def block_create(request):
+    if request.method == 'POST':
+        block = DocumentBlock(created_by=request.user, updated_by=request.user)
+        error = _save_block(request, block)
+        if error:
+            messages.error(request, error)
+        else:
+            block.save()
+            messages.success(request, 'Bloc de contenu créé.')
+            return redirect('documents:block_list')
+    return render(request, 'documents/block_form.html', _block_form_context())
+
+
+@admin_required
+def block_edit(request, pk):
+    block = get_object_or_404(DocumentBlock, pk=pk)
+    if request.method == 'POST':
+        error = _save_block(request, block)
+        if error:
+            messages.error(request, error)
+        else:
+            block.updated_by = request.user
+            block.save()
+            messages.success(request, 'Bloc de contenu mis à jour.')
+            return redirect('documents:block_list')
+    return render(request, 'documents/block_form.html', _block_form_context(block))
+
+
+@admin_required
+def block_delete(request, pk):
+    block = get_object_or_404(DocumentBlock, pk=pk)
+    if request.method == 'POST':
+        block.delete()
+        messages.success(request, 'Bloc de contenu supprimé.')
+        return redirect('documents:block_list')
+    return render(request, 'documents/block_confirm_delete.html', {'block': block})
+
+
+@admin_required
+def block_toggle_active(request, pk):
+    block = get_object_or_404(DocumentBlock, pk=pk)
+    if request.method == 'POST':
+        block.is_active = not block.is_active
+        block.updated_by = request.user
+        block.save(update_fields=['is_active', 'updated_by', 'updated_at'])
+        state = 'activé' if block.is_active else 'désactivé'
+        messages.success(request, f'Bloc {state}.')
+    return redirect('documents:block_list')

@@ -935,9 +935,23 @@
             </div>
         </div>
 
+        <!-- Document Block Management (Phase 3.7) -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Blocs de contenu personnalisés" %}</h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:12px;">
+                    {% trans "Ajoutez ou modifiez des paragraphes (mentions légales, instructions, remarques) injectés dans les documents générés — globalement ou pour un service précis. Les placeholders {{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} etc. sont résolus à la volée." %}
+                </p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="{% url 'documents:block_list' %}" class="btn btn-primary">{% trans "Gérer les blocs de contenu" %}</a>
+                    <a href="{% url 'documents:template_list' %}" class="btn btn-outline">{% trans "Modèles DOCX personnalisés" %}</a>
+                </div>
+            </div>
+        </div>
+
         <!-- DOCX Template Management -->
         <div class="card">
-            <div class="card-header"><h3>{% trans "Templates DOCX" %}</h3></div>
+            <div class="card-header"><h3>{% trans "Templates DOCX globaux" %}</h3></div>
             <div class="card-body">
                 <p class="text-muted" style="margin-bottom:16px;">{% trans "Mettez à jour les templates DOCX utilisés pour la génération automatique des documents. Un backup est créé automatiquement avant chaque mise à jour." %}</p>
                 <div class="grid-2" style="gap:16px;">
