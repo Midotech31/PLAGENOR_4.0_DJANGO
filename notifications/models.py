@@ -41,11 +41,28 @@ class Notification(models.Model):
         return f"{self.user} — {self.message[:50]}"
     
     def get_absolute_url(self):
-        """Get the URL to navigate to when clicking this notification."""
+        """Resolve the request-detail URL for the recipient's role.
+
+        Each role has its own request-detail view; routing every recipient to
+        the admin URL produces a 403 for analysts/clients/requesters. An
+        explicit ``link_url`` always wins.
+        """
         if self.link_url:
             return self.link_url
         if self.request:
-            return f"/dashboard/ops/request/{self.request.pk}/"
+            role = getattr(self.user, 'role', '')
+            pk = self.request.pk
+            if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
+                return f"/dashboard/ops/request/{pk}/"
+            if role == 'MEMBER':
+                return f"/dashboard/analyst/request/{pk}/"
+            if role == 'CLIENT':
+                return f"/dashboard/client/request/{pk}/"
+            if role == 'REQUESTER':
+                return f"/dashboard/requester/request/{pk}/"
+            # FINANCE has no per-request detail view; land on the finance index.
+            if role == 'FINANCE':
+                return "/dashboard/finance/"
         return "/dashboard/"
     
     def mark_as_read(self):

@@ -353,16 +353,23 @@ def upload_report(request, pk):
         messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
         return redirect_back(request, 'dashboard:analyst')
     
-    if 'report_file' in request.FILES:
-        req.report_file = request.FILES['report_file']
-        req.save(update_fields=['report_file'])
-        try:
-            transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
-            messages.success(request, f"Rapport uploadé pour {req.display_id}.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
-    else:
+    if 'report_file' not in request.FILES:
         messages.error(request, "Veuillez sélectionner un fichier.")
+        return redirect_back(request, 'dashboard:analyst')
+    # Stage the file and run the transition in a single DB transaction so a
+    # transition failure rolls back the report_file column (preventing a
+    # saved file path with an unchanged status). The file on disk may remain
+    # as an unreferenced orphan, which is acceptable; the DB row is consistent.
+    from django.db import transaction
+    req.report_file = request.FILES['report_file']
+    try:
+        with transaction.atomic():
+            req.save(update_fields=['report_file'])
+            transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+        return redirect_back(request, 'dashboard:analyst')
+    messages.success(request, f"Rapport uploadé pour {req.display_id}.")
     return redirect_back(request, 'dashboard:analyst')
 
 
