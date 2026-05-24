@@ -35,6 +35,9 @@ from docx.document import Document as DocumentType
 from docx.shared import Pt
 
 from documents.docx_helpers import (
+    _find_anchor_for_position,
+    add_paragraph_after,
+    add_paragraph_before,
     apply_house_style,
     ensure_institutional_header,
     replace_placeholders,
@@ -309,14 +312,24 @@ def _resolve_block_text(text: str, field_map: dict) -> str:
 
 
 def _inject_document_blocks(doc: DocumentType, template_type: str, request_obj) -> None:
-    """Append admin-editable DocumentBlocks to the document.
+    """Insert admin-editable DocumentBlocks at the configured positions.
 
-    Blocks are appended at the end of the body in (position, priority, pk)
-    order. The block's title (if any) is bolded; the body is split on
-    blank lines into separate paragraphs. Placeholders inside the block
-    text (``{{FULL_NAME}}``, ``{{DISPLAY_ID}}``, ``{{DATE}}``, …) are
+    For each position label (TOP / AFTER_REQUESTER / AFTER_SAMPLES /
+    BEFORE_FOOTER / BOTTOM) the helper resolves an anchor paragraph in
+    the current document and inserts the matching blocks there in
+    ``priority`` order. When no semantic anchor is found (e.g. a Quote
+    has no "Échantillons" heading), the position falls back to BOTTOM
+    so the block still appears.
+
+    Placeholders inside the block's title and body
+    (``{{FULL_NAME}}``, ``{{DISPLAY_ID}}``, ``{{DATE}}``, …) are
     resolved against the same field_map the template substitution uses,
-    so admins can author dynamic notices without escaping anything.
+    so admins author dynamic notices without escaping anything.
+
+    Insertion happens after every other DOCX mutation so anchor lookup
+    sees the final paragraph layout (including any banner-injection
+    side-effects in headers — which don't appear in the body and so
+    don't affect anchor matching).
     """
     from documents.models import DocumentBlock
 
@@ -328,7 +341,7 @@ def _inject_document_blocks(doc: DocumentType, template_type: str, request_obj) 
     ))
     if not blocks and language != settings.LANGUAGE_CODE:
         # Fall back to the default-language blocks if the active language
-        # has nothing to say — same fallback policy the cms template tag uses.
+        # has nothing to say — same policy as the cms template tag.
         blocks = list(DocumentBlock.applicable_blocks(
             template_type=template_type,
             service=request_obj.service,
@@ -339,20 +352,95 @@ def _inject_document_blocks(doc: DocumentType, template_type: str, request_obj) 
 
     field_map = build_field_map(request_obj)
 
+    # Group blocks by position so we can resolve anchors once per group
+    # and insert in deterministic order. Within a position group, blocks
+    # are inserted in ``priority`` (then pk) order — the queryset is
+    # already sorted that way.
+    by_position: dict[str, list] = {}
     for block in blocks:
-        title_text = _resolve_block_text(block.title or '', field_map)
-        body_text = _resolve_block_text(block.body or '', field_map)
-        if title_text:
-            heading = doc.add_paragraph()
-            run = heading.add_run(title_text)
+        by_position.setdefault(block.position, []).append(block)
+
+    # Process positions in a stable presentation order so multiple
+    # positions referenced in the same document land predictably.
+    ordered_positions = ['TOP', 'AFTER_REQUESTER', 'AFTER_SAMPLES', 'BEFORE_FOOTER', 'BOTTOM']
+
+    for position in ordered_positions:
+        position_blocks = by_position.get(position, [])
+        if not position_blocks:
+            continue
+        anchor, where = _find_anchor_for_position(doc, position)
+        if anchor is None:
+            # No semantic anchor → append at end.
+            for block in position_blocks:
+                _append_block_at_end(doc, block, field_map)
+        else:
+            # Insert each block above/below the anchor. For 'after' we keep
+            # advancing the anchor so blocks land in the right order rather
+            # than being reversed by sequential addnext calls.
+            current_anchor = anchor
+            for block in position_blocks:
+                current_anchor = _insert_block_relative(
+                    current_anchor, where, block, field_map,
+                )
+
+
+def _block_paragraphs(block, field_map) -> list[tuple[str, bool, Optional[float]]]:
+    """Render a DocumentBlock as a list of (text, bold, font_size_pt) tuples."""
+    parts: list[tuple[str, bool, Optional[float]]] = []
+    title_text = _resolve_block_text(block.title or '', field_map)
+    if title_text:
+        parts.append((title_text, True, 12.0))
+    body_text = _resolve_block_text(block.body or '', field_map)
+    for chunk in body_text.split('\n\n'):
+        chunk = chunk.strip()
+        if chunk:
+            parts.append((chunk, False, None))
+    return parts
+
+
+def _append_block_at_end(doc: DocumentType, block, field_map) -> None:
+    for text, bold, font_size in _block_paragraphs(block, field_map):
+        paragraph = doc.add_paragraph()
+        run = paragraph.add_run(text)
+        if bold:
             run.bold = True
-            run.font.size = Pt(12)
-        # Split body on blank lines into paragraphs so newlines render.
-        for chunk in body_text.split('\n\n'):
-            chunk = chunk.strip()
-            if not chunk:
-                continue
-            doc.add_paragraph(chunk)
+        if font_size is not None:
+            run.font.size = Pt(font_size)
+
+
+def _insert_block_relative(anchor, where: str, block, field_map):
+    """Insert a block's paragraphs relative to ``anchor``, returning the
+    last inserted paragraph (so subsequent inserts at the same anchor
+    chain forward instead of stacking in reverse).
+    """
+    parts = _block_paragraphs(block, field_map)
+    if not parts:
+        return anchor
+
+    last = anchor
+    if where == 'after':
+        # First paragraph goes right after the anchor; subsequent
+        # paragraphs go right after the previously-inserted one.
+        for text, bold, font_size in parts:
+            last = add_paragraph_after(last, text, bold=bold, font_size_pt=font_size)
+        return last
+    if where == 'before':
+        # First paragraph inserted before the anchor; subsequent ones
+        # are inserted before the SAME anchor so order is preserved
+        # (they stack above the anchor in the order they were emitted).
+        first_inserted = None
+        for text, bold, font_size in parts:
+            new_p = add_paragraph_before(anchor, text, bold=bold, font_size_pt=font_size)
+            if first_inserted is None:
+                first_inserted = new_p
+        # Next block inserted "before" should land BEFORE this block
+        # group, so return the first paragraph we inserted as the new
+        # anchor for further `before` operations. For mixed positions
+        # this doesn't matter — the caller iterates per-position.
+        return first_inserted or anchor
+    # 'end' shouldn't reach here (caller short-circuits) but defend.
+    _append_block_at_end(anchor._parent, block, field_map)
+    return anchor
 
 
 def _get_uploaded_template(service, template_type) -> Optional[Path]:

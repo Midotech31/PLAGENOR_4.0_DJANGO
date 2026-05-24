@@ -20,6 +20,10 @@ from docx.document import Document as DocumentType
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 
+# Re-exports for callers: positional insertion primitives live in this
+# module so the generators only need a single import statement. See
+# ``add_paragraph_after`` / ``_find_anchor_for_position`` further down.
+
 
 _PLACEHOLDER_RE = re.compile(r'\{\{[A-Z0-9_]+\}\}')
 
@@ -193,3 +197,177 @@ def apply_house_style(doc: DocumentType) -> None:
         style.font.size = Pt(11)
     except (KeyError, AttributeError):
         pass
+
+
+# Positional paragraph insertion -------------------------------------------
+
+# Anchor matching: case-insensitive, whitespace-collapsed substring match
+# against the visible text of a heading-shaped paragraph. A paragraph counts
+# as "heading-shaped" when its style is Heading[N], OR its leading text
+# matches "<digit>." (the egtp_*.docx IBTIKAR templates use plain-text
+# numbered titles like "1. Informations du demandeur" instead of Heading
+# styles), OR one of its runs has font size >= 14pt and is bold.
+_NUMBERED_HEADING_RE = re.compile(r'^\s*\d+[.)]\s')
+
+_ANCHOR_KEYWORDS = {
+    'AFTER_REQUESTER': (
+        'demandeur', 'déposant', 'client', 'requester', 'requérant',
+        'المُقدم', 'الطالب', 'العميل',
+    ),
+    'AFTER_SAMPLES': (
+        'échantillon', 'samples', 'sample', 'tableau des échantillons',
+        'العينات', 'عينة',
+    ),
+}
+
+
+def _is_heading_shaped(paragraph) -> bool:
+    style_name = (getattr(getattr(paragraph, 'style', None), 'name', '') or '').strip()
+    if style_name.startswith('Heading') or style_name in ('Title', 'Subtitle'):
+        return True
+    text = (paragraph.text or '').strip()
+    if not text:
+        return False
+    if _NUMBERED_HEADING_RE.match(text):
+        return True
+    for run in paragraph.runs:
+        if not run.bold:
+            continue
+        size = run.font.size
+        if size is not None and size.pt is not None and size.pt >= 14:
+            return True
+    return False
+
+
+def _is_section_heading(paragraph) -> bool:
+    """A section-level heading: Heading 2+ or a numbered list-style title.
+
+    Excludes Heading 1 / Title (the document banner) so an AFTER_SAMPLES
+    anchor doesn't latch onto a title like
+    "Fiche de Réception d'Échantillons".
+    """
+    if not _is_heading_shaped(paragraph):
+        return False
+    style_name = (getattr(getattr(paragraph, 'style', None), 'name', '') or '').strip()
+    if style_name in ('Heading 1', 'Title'):
+        return False
+    return True
+
+
+def _matches_anchor(paragraph, keywords) -> bool:
+    if not _is_section_heading(paragraph):
+        return False
+    text = (paragraph.text or '').lower()
+    return any(kw.lower() in text for kw in keywords)
+
+
+def _find_section_end(doc: DocumentType, anchor_heading) -> Optional[object]:
+    """Return the paragraph that starts the NEXT section, or None at end.
+
+    Used to compute "after the X section" positions: the block is inserted
+    immediately before the next section-level heading that follows
+    ``anchor_heading``. If no such next section exists the section runs to
+    end-of-document and the caller falls back to appending.
+
+    Compares via the underlying ``_element`` (XML node identity) rather
+    than Python ``is`` because ``doc.paragraphs`` constructs fresh
+    ``Paragraph`` wrappers on every access — two wrappers around the
+    same XML element are never the same object.
+    """
+    anchor_elem = anchor_heading._element
+    seen = False
+    for p in doc.paragraphs:
+        if not seen:
+            if p._element is anchor_elem:
+                seen = True
+            continue
+        if _is_section_heading(p):
+            return p
+    return None
+
+
+def _find_anchor_for_position(doc: DocumentType, position: str):
+    """Resolve a position label to an insertion anchor.
+
+    Returns a tuple ``(reference_paragraph, where)`` where ``where`` is
+    ``'before'``, ``'after'``, or ``'end'``. The caller uses ``where`` to
+    decide whether to ``addprevious``, ``addnext`` or append a new paragraph.
+    Falls back to ``(None, 'end')`` when a semantic anchor can't be found.
+    """
+    paragraphs = list(doc.paragraphs)
+    if not paragraphs:
+        return None, 'end'
+
+    if position == 'TOP':
+        # First heading-shaped paragraph (e.g. the H1 title). Insert AFTER
+        # it so the block lands under the title but above the first section.
+        for p in paragraphs:
+            if _is_heading_shaped(p):
+                return p, 'after'
+        # Pathological — no headings at all. Drop the block at the start.
+        return paragraphs[0], 'before'
+
+    if position == 'BOTTOM':
+        return None, 'end'
+
+    if position == 'BEFORE_FOOTER':
+        # The "Document généré automatiquement par PLAGENOR 4.0 …" line is
+        # the very last non-empty paragraph in the body. Insert above it.
+        for p in reversed(paragraphs):
+            if (p.text or '').strip():
+                return p, 'before'
+        return None, 'end'
+
+    if position in _ANCHOR_KEYWORDS:
+        keywords = _ANCHOR_KEYWORDS[position]
+        for p in paragraphs:
+            if _matches_anchor(p, keywords):
+                next_heading = _find_section_end(doc, p)
+                if next_heading is not None:
+                    return next_heading, 'before'
+                return None, 'end'
+        return None, 'end'
+
+    return None, 'end'
+
+
+def add_paragraph_after(reference_paragraph, text: str = '', *, bold: bool = False,
+                        font_size_pt: Optional[float] = None) -> object:
+    """Insert a new paragraph immediately after ``reference_paragraph``.
+
+    python-docx doesn't expose a public API for mid-body insertion, so we
+    manipulate the underlying OOXML element directly. Returns a
+    :class:`docx.text.paragraph.Paragraph` wrapping the new element so the
+    caller can add runs / set style.
+    """
+    from docx.oxml import OxmlElement
+    from docx.text.paragraph import Paragraph
+
+    new_p = OxmlElement('w:p')
+    reference_paragraph._element.addnext(new_p)
+    paragraph = Paragraph(new_p, reference_paragraph._parent)
+    if text:
+        run = paragraph.add_run(text)
+        if bold:
+            run.bold = True
+        if font_size_pt is not None:
+            run.font.size = Pt(font_size_pt)
+    return paragraph
+
+
+def add_paragraph_before(reference_paragraph, text: str = '', *, bold: bool = False,
+                         font_size_pt: Optional[float] = None) -> object:
+    """Insert a new paragraph immediately before ``reference_paragraph``."""
+    from docx.oxml import OxmlElement
+    from docx.text.paragraph import Paragraph
+
+    new_p = OxmlElement('w:p')
+    reference_paragraph._element.addprevious(new_p)
+    paragraph = Paragraph(new_p, reference_paragraph._parent)
+    if text:
+        run = paragraph.add_run(text)
+        if bold:
+            run.bold = True
+        if font_size_pt is not None:
+            run.font.size = Pt(font_size_pt)
+    return paragraph
