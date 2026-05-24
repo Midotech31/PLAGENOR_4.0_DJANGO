@@ -39,6 +39,7 @@ from documents.docx_helpers import (
     add_paragraph_after,
     add_paragraph_before,
     apply_house_style,
+    apply_legacy_label_substitution,
     ensure_institutional_header,
     replace_placeholders,
     strip_unresolved_placeholders,
@@ -173,6 +174,7 @@ def build_field_map(request_obj) -> dict[str, str]:
         supervisor = _safe_attr(requester, 'supervisor')
         student_level = _safe_attr(requester, 'student_level')
         username = _safe_attr(requester, 'username')
+        ibtikar_id = _safe_attr(requester, 'ibtikar_id')
     else:
         full_name = req.guest_name or 'N/A'
         email = req.guest_email or ''
@@ -182,6 +184,7 @@ def build_field_map(request_obj) -> dict[str, str]:
         supervisor = ''
         student_level = ''
         username = ''
+        ibtikar_id = ''
 
     service = req.service
     if service is not None:
@@ -234,6 +237,8 @@ def build_field_map(request_obj) -> dict[str, str]:
         'GUEST_NAME': req.guest_name or '',
         'GUEST_EMAIL': req.guest_email or '',
         'GUEST_PHONE': req.guest_phone or '',
+        'IBTIKAR_ID': ibtikar_id,            # User.ibtikar_id (registration-time DGRSDT ID)
+        'REQUESTER_IBTIKAR_ID': ibtikar_id,  # alias
 
         # ----- Service ------------------------------------------------------
         'SERVICE_CODE': svc_code,
@@ -476,9 +481,19 @@ def generate_ibtikar_form(request_obj) -> str:
     """IBTIKAR form. Priority: uploaded template → service-specific
     branded template (egtp_*.docx with the institutional banner already
     in the header) → generic generic template → programmatic fallback.
+
+    Service-specific egtp_*.docx forms ship as printable French forms
+    with literal labels ("Nom et prénom : * Nom complet du demandeur")
+    instead of ``{{KEY}}`` markers, so they bypass the standard
+    substitution pass. The ``apply_legacy_label_substitution`` step fills
+    the personal-info / request fields by matching the French label
+    patterns and writing the requester's data into the asterisked
+    instructional-text slot. Triggered only when the egtp_*.docx path is
+    taken — the generic/programmatic paths already use ``{{KEY}}``.
     """
     field_map = build_field_map(request_obj)
     doc: Optional[DocumentType] = None
+    using_legacy_form = False
 
     if request_obj.service:
         uploaded = _get_uploaded_template(request_obj.service, 'IBTIKAR_FORM')
@@ -491,6 +506,7 @@ def generate_ibtikar_form(request_obj) -> str:
             path = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar' / template_name
             if path.exists():
                 doc = Document(str(path))
+                using_legacy_form = True
 
     if doc is None:
         generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar_form_template.docx'
@@ -501,6 +517,8 @@ def generate_ibtikar_form(request_obj) -> str:
         doc = _build_ibtikar_form_programmatic(request_obj, field_map)
 
     replace_placeholders(doc, field_map)
+    if using_legacy_form:
+        apply_legacy_label_substitution(doc, field_map)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)

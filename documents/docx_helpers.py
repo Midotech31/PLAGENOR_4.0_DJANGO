@@ -371,3 +371,116 @@ def add_paragraph_before(reference_paragraph, text: str = '', *, bold: bool = Fa
         if font_size_pt is not None:
             run.font.size = Pt(font_size_pt)
     return paragraph
+
+
+# Legacy IBTIKAR forms — label-text substitution ---------------------------
+
+# The egtp_*.docx templates ship as blank printable forms: each profile
+# field is encoded as a French label followed by ``: *`` and (optionally) a
+# Microsoft Word "instructional text" hint such as ``Nom complet du
+# demandeur``. They contain no ``{{KEY}}`` markers, so the standard
+# substitution pass leaves them empty. This map injects the actual values
+# inline while preserving the original label text and asterisk.
+#
+# Pattern semantics:
+# * The regex matches the FULL "Label : *  hint" line including any trailing
+#   instructional text — Word inserts a non-breaking space (``\xa0``) and
+#   sometimes a tab between ``*`` and the hint.
+# * The replacement format keeps the label and asterisk so the form still
+#   reads as an official fillable form (the value sits in the hint slot).
+# * If the field is empty (e.g. a guest submission with no laboratory),
+#   the original hint is preserved so the line still makes sense.
+
+_LEGACY_LABEL_RULES = [
+    # (regex, field_map_key, label_template)
+    # 1. Personal info section
+    (re.compile(r'Nom et prénom\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'FULL_NAME', 'Nom et prénom : * {value}'),
+    (re.compile(r'(?:Université\s*/\s*École|Établissement)\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'ETABLISSEMENT', 'Université / École : * {value}'),
+    (re.compile(r'Laboratoire\s*:\s*\*?[^\n]*', re.IGNORECASE),
+     'LABORATORY', 'Laboratoire : {value}'),
+    (re.compile(r'Fonction\s*/\s*Poste\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'STUDENT_LEVEL', 'Fonction / Poste : * {value}'),
+    (re.compile(r'Adresse\s+e-?mail\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'EMAIL', 'Adresse e-mail : * {value}'),
+    (re.compile(r'Numéro de téléphone(?:\s+du\s+demandeur)?\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'PHONE', 'Numéro de téléphone : * {value}'),
+    # Optional DGRSDT identifier (only inserted if the requester filled it)
+    (re.compile(r'(?:Identifiant\s+IBTIKAR|ID(?:GRSDT)?)\s*:\s*\*?[^\n]*', re.IGNORECASE),
+     'IBTIKAR_ID', 'Identifiant IBTIKAR : {value}'),
+    # 2. Request details
+    (re.compile(r'Titre du projet\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'TITLE', 'Titre du projet : * {value}'),
+    (re.compile(r'Directeur de recherche\s*:\s*\*[^\n]*', re.IGNORECASE),
+     'SUPERVISOR', 'Directeur de recherche : * {value}'),
+]
+
+# Plain string substitutions for the request-number header and date stamps
+# that aren't in label form.
+_LEGACY_TEXT_RULES = [
+    # (find_pattern, replacement using field_map keys)
+    (re.compile(r'……\.+/(\d{4})/IBTIKAR/PLAGENOR/ESSBO'),
+     r'{DISPLAY_ID}/\1/IBTIKAR/PLAGENOR/ESSBO'),
+]
+
+
+def apply_legacy_label_substitution(doc: DocumentType, field_map: Mapping[str, str]) -> None:
+    """Fill the literal-label fields in legacy egtp_*.docx IBTIKAR forms.
+
+    Idempotent. Skips fields whose value is empty/N/A so we never overwrite
+    a meaningful hint with an empty string (the requester or operator can
+    still complete those by hand). Only applied when the active template
+    is one of the egtp_*.docx forms — the generic and programmatic paths
+    use ``{{KEY}}`` substitution instead and don't need this layer.
+    """
+
+    def _substitute(paragraph) -> None:
+        joined = ''.join(r.text or '' for r in paragraph.runs)
+        if not joined:
+            return
+        original = joined
+
+        # Apply label-based rules (replace the whole label line).
+        for pattern, key, template in _LEGACY_LABEL_RULES:
+            value = field_map.get(key, '')
+            if not value or value in ('N/A', 'Non défini', 'Non assigné'):
+                continue
+            joined = pattern.sub(template.format(value=value), joined)
+
+        # Apply free-text rules (request number etc.).
+        for pattern, template in _LEGACY_TEXT_RULES:
+            try:
+                joined = pattern.sub(template.format(**field_map), joined)
+            except (KeyError, IndexError):
+                pass
+
+        if joined == original:
+            return
+        if paragraph.runs:
+            paragraph.runs[0].text = joined
+            for r in paragraph.runs[1:]:
+                r.text = ''
+
+    def _visit(paragraphs):
+        for p in paragraphs:
+            _substitute(p)
+
+    def _visit_tables(tables):
+        for t in tables:
+            for row in t.rows:
+                for cell in row.cells:
+                    _visit(cell.paragraphs)
+                    _visit_tables(cell.tables)
+
+    _visit(doc.paragraphs)
+    _visit_tables(doc.tables)
+    for section in doc.sections:
+        for header in (section.header, section.first_page_header, section.even_page_header):
+            if header is not None:
+                _visit(header.paragraphs)
+                _visit_tables(header.tables)
+        for footer in (section.footer, section.first_page_footer, section.even_page_footer):
+            if footer is not None:
+                _visit(footer.paragraphs)
+                _visit_tables(footer.tables)
