@@ -59,7 +59,7 @@ def index(request):
 
     services = Service.objects.order_by('code')
     techniques = Technique.objects.order_by('name')
-    platform_content = PlatformContent.objects.all()
+    platform_content = PlatformContent.objects.order_by('key', 'lang')
 
     recent_requests = Request.objects.filter(archived=False).order_by('-created_at')[:5]
     recent_users = User.objects.order_by('-date_joined')[:5]
@@ -148,6 +148,7 @@ def index(request):
         'services': services,
         'techniques': techniques,
         'platform_content': platform_content,
+        'platform_content_languages': PlatformContent.LANGUAGE_CHOICES,
         'status_dist': status_dist,
         'recent_requests': recent_requests,
         'recent_users': recent_users,
@@ -329,13 +330,21 @@ def content_delete(request, pk):
 def content_update(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    key = request.POST.get('key', '')
+    key = request.POST.get('key', '').strip()
     value = request.POST.get('value', '')
+    lang = request.POST.get('lang', '').strip() or settings.LANGUAGE_CODE
+    allowed_langs = {code for code, _ in PlatformContent.LANGUAGE_CHOICES}
+    if lang not in allowed_langs:
+        lang = settings.LANGUAGE_CODE
+    if not key:
+        messages.error(request, "Clé manquante.")
+        return redirect_back(request, 'dashboard:superadmin')
     PlatformContent.objects.update_or_create(
         key=key,
+        lang=lang,
         defaults={'value': value, 'updated_by': request.user},
     )
-    messages.success(request, f"Contenu '{key}' mis à jour.")
+    messages.success(request, f"Contenu '{key}' [{lang}] mis à jour.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -670,6 +679,7 @@ def reset_revenue(request):
     archive_monthly_revenue()
     PlatformContent.objects.update_or_create(
         key='revenue_reset_date',
+        lang=settings.LANGUAGE_CODE,
         defaults={'value': timezone.now().isoformat(), 'updated_by': request.user}
     )
     messages.success(request, "Compteurs de revenus réinitialisés. Les données ont été archivées.")

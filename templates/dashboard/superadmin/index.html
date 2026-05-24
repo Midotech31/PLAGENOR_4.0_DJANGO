@@ -572,6 +572,14 @@
                         <input type="text" name="key" class="form-control" required placeholder="hero_title">
                     </div>
                     <div class="form-group">
+                        <label>{% trans "Langue" %}</label>
+                        <select name="lang" class="form-control" required>
+                            {% for code, label in platform_content_languages %}
+                            <option value="{{ code }}" {% if code == LANGUAGE_CODE %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>{% trans "Valeur" %}</label>
                         <textarea name="value" class="form-control" rows="4"></textarea>
                     </div>
@@ -581,11 +589,12 @@
                 {% if platform_content %}
                 <div class="table-wrapper" style="margin-top: 24px;">
                     <table>
-                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Langue" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th>{% trans "Actions" %}</th></tr></thead>
                         <tbody>
                         {% for pc in platform_content %}
                         <tr>
                             <td><strong class="font-mono">{{ pc.key }}</strong></td>
+                            <td><span class="badge">{{ pc.get_lang_display }}</span></td>
                             <td>{{ pc.value|truncatechars:80 }}</td>
                             <td class="text-muted">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
                             <td>

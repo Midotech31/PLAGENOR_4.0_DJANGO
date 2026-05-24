@@ -50,15 +50,15 @@ admin.site.register(RequestHistory)
 admin.site.register(RequestComment)
 @admin.register(PlatformContent)
 class PlatformContentAdmin(admin.ModelAdmin):
-    list_display = ('key', 'short_value', 'updated_at', 'updated_by')
+    list_display = ('key', 'lang', 'short_value', 'updated_at', 'updated_by')
     search_fields = ('key', 'value')
-    list_filter = ('updated_at',)
-    ordering = ('key',)
+    list_filter = ('lang', 'updated_at')
+    ordering = ('key', 'lang')
 
     fieldsets = (
         (None, {
-            'fields': ('key', 'value'),
-            'description': 'Modifiez le texte visible sur le site. La clé identifie l\'élément, la valeur est le texte affiché.'
+            'fields': ('key', 'lang', 'value'),
+            'description': 'Modifiez le texte visible sur le site. La clé identifie l\'élément, la langue cible la traduction, la valeur est le texte affiché.'
         }),
     )
 

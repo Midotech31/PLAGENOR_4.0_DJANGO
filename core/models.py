@@ -344,13 +344,24 @@ class Invoice(models.Model):
 
 
 class PlatformContent(models.Model):
-    key = models.CharField(max_length=100, primary_key=True)
+    LANGUAGE_CHOICES = [
+        ('fr', 'Français'),
+        ('en', 'English'),
+        ('ar', 'العربية'),
+    ]
+
+    key = models.CharField(max_length=100)
+    lang = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='fr')
     value = models.TextField(default='')
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'platform_content'
+        unique_together = [('key', 'lang')]
+
+    def __str__(self):
+        return f'{self.key} [{self.lang}]'
 
 
 class PaymentMethod(models.Model):
