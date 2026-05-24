@@ -25,14 +25,20 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>{% trans "Service" %}</label>
-                    <select name="service" class="form-control">
-                        <option value="">{% trans "— Global (tous les services) —" %}</option>
+                <div class="form-group" style="flex:2; min-width:260px;">
+                    <label>{% trans "Services concernés" %}</label>
+                    <small class="text-muted" style="display:block; margin-bottom:6px;">
+                        {% trans "Aucune case cochée = bloc global (s'applique à tous les services). Cochez un sous-ensemble pour cibler ces services uniquement." %}
+                    </small>
+                    <div style="max-height:200px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:6px; padding:8px; background:#fafafa;">
                         {% for s in services %}
-                        <option value="{{ s.pk }}" {% if block and block.service_id == s.pk %}selected{% endif %}>{{ s.code }} — {{ s.name }}</option>
+                        <label style="display:block; padding:4px 0; font-weight:400;">
+                            <input type="checkbox" name="services" value="{{ s.pk }}"
+                                   {% if s.pk|stringformat:'s' in selected_service_ids %}checked{% endif %}>
+                            <span class="font-mono">{{ s.code }}</span> — {{ s.name }}
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>{% trans "Langue" %} *</label>

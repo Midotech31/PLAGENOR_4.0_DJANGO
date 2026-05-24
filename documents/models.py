@@ -114,14 +114,15 @@ class DocumentBlock(models.Model):
         choices=TEMPLATE_TYPE_CHOICES,
         verbose_name='Type de document',
     )
-    service = models.ForeignKey(
+    services = models.ManyToManyField(
         Service,
-        on_delete=models.CASCADE,
         related_name='document_blocks',
-        null=True,
         blank=True,
-        verbose_name='Service',
-        help_text='Laisser vide pour appliquer à tous les services',
+        verbose_name='Services concernés',
+        help_text=(
+            "Laissez vide pour appliquer à tous les services (bloc global). "
+            "Sélectionnez un ou plusieurs services pour limiter le bloc à ce sous-ensemble."
+        ),
     )
     position = models.CharField(
         max_length=20,
@@ -175,36 +176,58 @@ class DocumentBlock(models.Model):
         verbose_name = 'Bloc de contenu'
         verbose_name_plural = 'Blocs de contenu'
         indexes = [
-            models.Index(fields=['template_type', 'service', 'language', 'is_active']),
+            models.Index(fields=['template_type', 'language', 'is_active']),
         ]
 
     def __str__(self):
-        scope = self.service.code if self.service else 'GLOBAL'
+        codes = list(self.services.values_list('code', flat=True)) if self.pk else []
+        scope = ','.join(codes) if codes else 'GLOBAL'
         return f"[{self.get_template_type_display()}] {scope} · {self.position} · {self.language}"
+
+    @property
+    def is_global(self) -> bool:
+        """A block is global when no services are attached — applies to every
+        request of its template_type regardless of which service was picked."""
+        return not self.services.exists()
+
+    def scope_label(self) -> str:
+        """Render the service scope for list views and admin display.
+
+        Returns 'Global' when the M2M is empty, otherwise a comma-joined
+        list of service codes ('PCR, Seq02, Lyoph'). Truncated at 60 chars
+        with an ellipsis to keep table layouts tidy.
+        """
+        codes = list(self.services.order_by('code').values_list('code', flat=True))
+        if not codes:
+            return 'Global'
+        rendered = ', '.join(codes)
+        return rendered if len(rendered) <= 60 else rendered[:57] + '…'
 
     @classmethod
     def applicable_blocks(cls, template_type, service, language):
         """Return active blocks that should be injected for this request.
 
-        Matches blocks where:
-        - template_type equals ``template_type``
-        - language equals ``language`` (caller is expected to resolve the
-          active language; if no block exists for it, caller falls back to
-          ``settings.LANGUAGE_CODE`` separately)
-        - service is either NULL (global) or equals the request's service
+        Match rules:
+        - ``template_type`` equals ``template_type``
+        - ``language`` equals ``language`` (caller resolves; falls back to
+          ``settings.LANGUAGE_CODE`` separately if nothing matches)
+        - The block is either GLOBAL (no services attached) OR
+          ``service`` appears in its M2M
 
-        Ordered by (position, priority, pk) so callers can iterate
-        positionally.
+        Returns a deduplicated queryset ordered by ``(position, priority,
+        pk)``. ``.distinct()`` is necessary because the M2M filter
+        produces a JOIN that can duplicate rows when a block targets the
+        request's service AND happens to also target others.
         """
-        from django.db.models import Q
-        qs = cls.objects.filter(
-            template_type=template_type,
-            language=language,
-            is_active=True,
+        from django.db.models import Count, Q
+        qs = (
+            cls.objects
+            .filter(template_type=template_type, language=language, is_active=True)
+            .annotate(_n_services=Count('services'))
         )
         if service is not None:
-            qs = qs.filter(Q(service__isnull=True) | Q(service=service))
+            qs = qs.filter(Q(_n_services=0) | Q(services=service))
         else:
-            qs = qs.filter(service__isnull=True)
-        return qs.order_by('position', 'priority', 'pk')
+            qs = qs.filter(_n_services=0)
+        return qs.distinct().order_by('position', 'priority', 'pk')
 

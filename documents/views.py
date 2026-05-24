@@ -70,10 +70,14 @@ def _block_signature(req, template_type):
     notice would only appear on documents generated after the next Request
     save — surprising and easy to miss.
     """
-    blocks = DocumentBlock.objects.filter(
-        template_type=template_type,
-        is_active=True,
-    ).filter(Q(service__isnull=True) | Q(service=req.service))
+    from django.db.models import Count
+    blocks = (
+        DocumentBlock.objects
+        .filter(template_type=template_type, is_active=True)
+        .annotate(_n=Count('services'))
+        .filter(Q(_n=0) | Q(services=req.service))
+        .distinct()
+    )
     sig_parts = list(
         blocks.order_by('pk').values_list('pk', 'updated_at')
     )
@@ -349,24 +353,36 @@ def template_toggle_active(request, pk):
 
 @admin_required
 def block_list(request):
-    """List all admin-editable document blocks with filtering."""
+    """List all admin-editable document blocks with filtering.
+
+    The "service" filter is "any of" against the M2M: picking PCR shows
+    blocks that target PCR (alone or with others) AND every global block
+    (since globals apply to PCR too). "global" filters strictly to blocks
+    with no services attached.
+    """
+    from django.db.models import Count
     template_type = request.GET.get('type', '').strip()
     service_id = request.GET.get('service', '').strip()
     language = request.GET.get('lang', '').strip()
 
-    blocks = DocumentBlock.objects.select_related('service', 'created_by', 'updated_by')
+    blocks = (
+        DocumentBlock.objects
+        .select_related('created_by', 'updated_by')
+        .prefetch_related('services')
+        .annotate(_n_services=Count('services'))
+    )
     if template_type:
         blocks = blocks.filter(template_type=template_type)
     if service_id:
         if service_id == 'global':
-            blocks = blocks.filter(service__isnull=True)
+            blocks = blocks.filter(_n_services=0)
         else:
-            blocks = blocks.filter(service_id=service_id)
+            blocks = blocks.filter(Q(_n_services=0) | Q(services__pk=service_id))
     if language:
         blocks = blocks.filter(language=language)
 
     context = {
-        'blocks': blocks,
+        'blocks': blocks.distinct(),
         'services': Service.objects.filter(active=True).order_by('code'),
         'template_types': DocumentBlock.TEMPLATE_TYPE_CHOICES,
         'languages': DocumentBlock.LANGUAGE_CHOICES,
@@ -378,9 +394,20 @@ def block_list(request):
 
 
 def _block_form_context(block=None):
+    """Build the form context.
+
+    ``selected_service_ids`` is a string-keyed set so the template can
+    do an O(1) lookup without triggering a fresh queryset evaluation
+    per row — and without relying on Django template's ``s in qs`` test
+    which evaluates the manager weirdly inside a loop.
+    """
+    selected_ids: set[str] = set()
+    if block and block.pk:
+        selected_ids = {str(pk) for pk in block.services.values_list('pk', flat=True)}
     return {
         'block': block,
         'services': Service.objects.filter(active=True).order_by('code'),
+        'selected_service_ids': selected_ids,
         'template_types': DocumentBlock.TEMPLATE_TYPE_CHOICES,
         'position_choices': DocumentBlock.POSITION_CHOICES,
         'language_choices': DocumentBlock.LANGUAGE_CHOICES,
@@ -388,9 +415,14 @@ def _block_form_context(block=None):
 
 
 def _save_block(request, block):
-    """Apply form fields onto a DocumentBlock instance; return validation msg or None."""
+    """Apply form fields onto a DocumentBlock instance; return validation msg or None.
+
+    Returns a 2-tuple ``(error_msg, services_to_set)``. The caller is
+    responsible for assigning the M2M after ``block.save()`` because
+    ``services.set()`` only works once the row has a primary key.
+    """
     template_type = request.POST.get('template_type', '').strip()
-    service_id = request.POST.get('service', '').strip() or None
+    service_ids = [v for v in request.POST.getlist('services') if v.strip()]
     position = request.POST.get('position', 'BOTTOM').strip()
     language = request.POST.get('language', 'fr').strip()
     title = request.POST.get('title', '').strip()
@@ -403,18 +435,31 @@ def _save_block(request, block):
     valid_langs = {c for c, _ in DocumentBlock.LANGUAGE_CHOICES}
 
     if template_type not in valid_types:
-        return 'Type de document invalide.'
+        return 'Type de document invalide.', None
     if position not in valid_positions:
-        return 'Position invalide.'
+        return 'Position invalide.', None
     if language not in valid_langs:
-        return 'Langue invalide.'
+        return 'Langue invalide.', None
     if not body:
-        return 'Le contenu est obligatoire.'
+        return 'Le contenu est obligatoire.', None
 
     try:
         priority_int = int(priority)
     except ValueError:
         priority_int = 0
+
+    # Service uses a UUID primary key; an invalid string raises ValidationError
+    # at the SQL boundary, not a clean "not found". Wrap the count probe.
+    from django.core.exceptions import ValidationError as DjangoValidationError
+    services_qs = Service.objects.none()
+    if service_ids:
+        try:
+            services_qs = Service.objects.filter(pk__in=service_ids)
+            found = services_qs.count()
+        except (DjangoValidationError, ValueError):
+            return 'Un ou plusieurs identifiants de service sont invalides.', None
+        if found != len(set(service_ids)):
+            return 'Un ou plusieurs services sélectionnés sont introuvables.', None
 
     block.template_type = template_type
     block.position = position
@@ -423,25 +468,19 @@ def _save_block(request, block):
     block.body = body
     block.priority = priority_int
     block.is_active = is_active
-    if service_id:
-        try:
-            block.service = Service.objects.get(pk=service_id)
-        except (Service.DoesNotExist, ValueError):
-            return 'Service introuvable.'
-    else:
-        block.service = None
-    return None
+    return None, services_qs
 
 
 @admin_required
 def block_create(request):
     if request.method == 'POST':
         block = DocumentBlock(created_by=request.user, updated_by=request.user)
-        error = _save_block(request, block)
+        error, services_qs = _save_block(request, block)
         if error:
             messages.error(request, error)
         else:
             block.save()
+            block.services.set(services_qs)
             messages.success(request, 'Bloc de contenu créé.')
             return redirect('documents:block_list')
     return render(request, 'documents/block_form.html', _block_form_context())
@@ -451,12 +490,13 @@ def block_create(request):
 def block_edit(request, pk):
     block = get_object_or_404(DocumentBlock, pk=pk)
     if request.method == 'POST':
-        error = _save_block(request, block)
+        error, services_qs = _save_block(request, block)
         if error:
             messages.error(request, error)
         else:
             block.updated_by = request.user
             block.save()
+            block.services.set(services_qs)
             messages.success(request, 'Bloc de contenu mis à jour.')
             return redirect('documents:block_list')
     return render(request, 'documents/block_form.html', _block_form_context(block))

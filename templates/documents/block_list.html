@@ -75,8 +75,8 @@
                     <tr>
                         <td><strong>{{ block.get_template_type_display }}</strong></td>
                         <td>
-                            {% if block.service %}
-                                <span class="font-mono">{{ block.service.code }}</span>
+                            {% if block.services.all %}
+                                {% for s in block.services.all %}<span class="font-mono">{{ s.code }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}
                             {% else %}
                                 <span class="badge-status info">{% trans "Global" %}</span>
                             {% endif %}
