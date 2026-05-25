@@ -1,0 +1,30 @@
+{% comment %}
+Reusable language switcher — renders one button per entry in
+``settings.LANGUAGES`` so adding a fourth locale doesn't need a template
+edit, just a settings change. The active language is highlighted; clicking
+any of the others POSTs to ``set_language`` with the chosen code and
+returns the user to the same path.
+
+Variants (set via the `style` parameter when including):
+  - 'compact' (default): a tight pill group, suits navbars
+  - 'inline':            slightly larger, suits topbars / sidebars
+{% endcomment %}
+{% load i18n %}
+<form action="{% url 'set_language' %}" method="post" class="lang-switcher lang-switcher-{{ style|default:'compact' }} no-validation" style="display:inline-flex; align-items:center; gap:2px; margin-inline-start:8px;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    {% for lang_code, lang_name in LANGUAGES %}
+    <button type="submit" name="language" value="{{ lang_code }}"
+            title="{{ lang_name }}"
+            aria-label="{{ lang_name }}"
+            aria-pressed="{% if LANGUAGE_CODE == lang_code %}true{% else %}false{% endif %}"
+            style="background:{% if LANGUAGE_CODE == lang_code %}#4F46E5{% else %}none{% endif %};
+                   color:{% if LANGUAGE_CODE == lang_code %}#fff{% else %}#64748b{% endif %};
+                   border:1px solid {% if LANGUAGE_CODE == lang_code %}#4F46E5{% else %}#e2e8f0{% endif %};
+                   border-radius:6px; padding:4px 10px; cursor:pointer;
+                   font-size:0.8rem; font-weight:600; min-width:36px;
+                   {% if lang_code == 'ar' %}font-family:'Tahoma','Arial Unicode MS',sans-serif;{% endif %}">
+        {% if lang_code == 'ar' %}ع{% else %}{{ lang_code|upper }}{% endif %}
+    </button>
+    {% endfor %}
+</form>

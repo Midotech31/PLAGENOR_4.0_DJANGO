@@ -229,15 +229,7 @@
             </div>
         </div>
         <div class="sidebar-actions">
-            <form id="language-form" class="no-validation" action="{% url 'set_language' %}" method="post" style="display:none">
-                {% csrf_token %}
-                <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            </form>
-            <button type="button" onclick="toggleLanguage()">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                {{ LANGUAGE_CODE|upper }}
-            </button>
+            {% include 'includes/language_switcher.html' with style='inline' %}
             <form method="post" action="{% url 'accounts:logout' %}" style="flex:1;">
                 {% csrf_token %}
                 <button type="submit" class="sidebar-logout-btn">

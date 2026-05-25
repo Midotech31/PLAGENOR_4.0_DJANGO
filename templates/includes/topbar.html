@@ -84,14 +84,7 @@
         </div>
 
         <!-- Language Switch -->
-        <form method="post" class="no-validation" action="{% url 'set_language' %}" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" class="topbar-btn" title="{% if LANGUAGE_CODE == 'fr' %}English{% else %}Français{% endif %}">
-                {% icon 'globe' size=15 %} {% if LANGUAGE_CODE == 'fr' %}EN{% else %}FR{% endif %}
-            </button>
-        </form>
+        {% include 'includes/language_switcher.html' with style='inline' %}
 
         <!-- Logout -->
         <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
