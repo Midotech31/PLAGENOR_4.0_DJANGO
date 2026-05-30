@@ -138,24 +138,36 @@
 <script>
 (function() {
     var roleInputs = document.querySelectorAll('input[name="role"]');
+    var roleOptions = document.querySelectorAll('.role-option');
     var academicFields = document.getElementById('academic-fields');
     var studentLevel = document.getElementById('id_student_level');
     var supervisor = document.getElementById('id_supervisor');
 
     function toggleAcademic() {
         var selected = document.querySelector('input[name="role"]:checked');
-        if (selected && selected.value === 'REQUESTER') {
-            academicFields.style.display = '';
-            studentLevel.required = true;
-            supervisor.required = true;
-        } else {
-            academicFields.style.display = 'none';
-            studentLevel.required = false;
-            supervisor.required = false;
-        }
+        var isRequester = selected && selected.value === 'REQUESTER';
+        academicFields.style.display = isRequester ? '' : 'none';
+        // Required only applies to the academic channel — otherwise a GENOCLAB
+        // client is blocked by a hidden "Niveau" field they can't fill.
+        studentLevel.required = isRequester;
+        supervisor.required = isRequester;
     }
 
+    // The role radios are display:none (the card label is the visible control).
+    // Clicking such a label checks the radio but, in several browsers, does NOT
+    // fire `change` — so we drive the toggle from the label `click` directly and
+    // also force the radio + visual `selected` state. The `change` binding stays
+    // as a belt-and-suspenders for keyboard / programmatic selection.
     roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
+    roleOptions.forEach(function(label) {
+        label.addEventListener('click', function() {
+            var radio = this.querySelector('input[name="role"]');
+            if (radio) { radio.checked = true; }
+            roleOptions.forEach(function(o) { o.classList.remove('selected'); });
+            this.classList.add('selected');
+            toggleAcademic();
+        });
+    });
     toggleAcademic();
 
     // Validate ibtikar_id on form submit
