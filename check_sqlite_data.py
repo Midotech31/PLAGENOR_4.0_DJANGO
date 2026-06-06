@@ -19,7 +19,7 @@ print(f"Requests: {Request.objects.count()}")
 if Request.objects.count() > 0:
     print("\n--- Sample Requests ---")
     for req in Request.objects.all()[:5]:
-        print(f"  - {req.tracking_code}: {req.title}")
+        print(f"  - {req.display_id}: {req.title}")
 
 if User.objects.count() > 0:
     print("\n--- Users ---")

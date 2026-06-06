@@ -202,7 +202,7 @@ def template_list(request):
     elif is_active == '0':
         templates = templates.filter(is_active=False)
     
-    services = Service.objects.filter(is_active=True).order_by('name')
+    services = Service.objects.filter(active=True).order_by('name')
     
     context = {
         'templates': templates,
@@ -218,7 +218,7 @@ def template_list(request):
 @admin_required
 def template_create(request):
     """Create a new document template."""
-    services = Service.objects.filter(is_active=True).order_by('name')
+    services = Service.objects.filter(active=True).order_by('name')
     
     if request.method == 'POST':
         service_id = request.POST.get('service')
@@ -270,7 +270,7 @@ def template_detail(request, pk):
 def template_edit(request, pk):
     """Edit an existing document template."""
     template = get_object_or_404(ServiceTemplate, pk=pk)
-    services = Service.objects.filter(is_active=True).order_by('name')
+    services = Service.objects.filter(active=True).order_by('name')
     
     if request.method == 'POST':
         name = request.POST.get('name')

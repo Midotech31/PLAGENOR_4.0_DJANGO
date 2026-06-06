@@ -22,9 +22,13 @@ for req in Request.objects.all():
         'channel': req.channel,
         'status': req.status,
 
-        'quantity': req.quantity,
-        'sample_count': req.sample_count,
-        'declared_genoclab_balance': str(req.declared_genoclab_balance),
+        # ``quantity`` / ``sample_count`` / ``declared_genoclab_balance`` were
+        # historical Request fields that no longer exist on the model. They're
+        # read via getattr with a default so this Supabase-export utility keeps
+        # working as the schema evolves; missing fields export as null.
+        'quantity': getattr(req, 'quantity', None),
+        'sample_count': getattr(req, 'sample_count', None) or (len(req.sample_table) if isinstance(req.sample_table, list) else None),
+        'declared_genoclab_balance': str(getattr(req, 'declared_genoclab_balance', '') or ''),
         'declared_ibtikar_balance': str(req.declared_ibtikar_balance),
         'quote_amount': str(req.quote_amount),
         'quote_detail': req.quote_detail,
