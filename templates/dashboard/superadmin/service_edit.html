@@ -8,7 +8,7 @@
     <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
 </div>
 
-<div class="card" style="max-width:800px;">
+<div class="card" style="max-width:1100px;">
     <div class="card-header"><h3>{{ service.name }}</h3></div>
     <div class="card-body">
         <form method="post" enctype="multipart/form-data">
@@ -29,11 +29,12 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>{% trans "Prix IBTIKAR (DA)" %}</label>
+                    <label>{% trans "Prix IBTIKAR (DZD)" %}</label>
                     <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                    <small class="text-muted">{% trans "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie ci-dessous)" %}</small>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Prix GENOCLAB (DA)" %}</label>
+                    <label>{% trans "Prix GENOCLAB (DZD)" %}</label>
                     <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
                 </div>
                 <div class="form-group">
@@ -51,21 +52,119 @@
                 {% if service.image %}<p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
             </div>
 
-            <hr style="margin:24px 0;">
-            <h4>{% trans "Champs personnalisés du formulaire" %}</h4>
-            <div id="custom-fields-container">
+            <!-- =================================================== -->
+            <!-- Detailed pricing tiers (ServicePricing model)       -->
+            <!-- =================================================== -->
+            <hr style="margin:32px 0 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h4 style="margin:0;">{% trans "Configurations tarifaires détaillées" %}</h4>
+                <button type="button" class="btn btn-sm btn-primary" onclick="addPricingRow()">+ {% trans "Ajouter une règle" %}</button>
+            </div>
+            <p class="text-muted" style="margin-bottom:14px;">
+                {% trans "Définissez des règles fines: prix de base, prix par échantillon, majoration urgence, remise quantité, etc. Plusieurs règles peuvent coexister (la priorité plus basse est appliquée en premier)." %}
+            </p>
+
+            <div id="pricing-container" style="display:flex; flex-direction:column; gap:12px;">
+                {% for tier in pricing_tiers %}
+                <div class="pricing-row" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fafafa;">
+                    <input type="hidden" name="pricing_pk" value="{{ tier.pk }}">
+                    <div class="form-row" style="margin-bottom:8px;">
+                        <div class="form-group" style="flex:2; min-width:220px;">
+                            <label style="font-size:0.78rem;">{% trans "Nom de la règle" %}</label>
+                            <input type="text" name="pricing_name" class="form-control" value="{{ tier.name }}" placeholder="ex: Prix de base, Majoration urgence" required>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Type" %}</label>
+                            <select name="pricing_type" class="form-control">
+                                {% for code, label in pricing_type_choices %}
+                                <option value="{{ code }}" {% if tier.pricing_type == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Canal" %}</label>
+                            <select name="pricing_channel" class="form-control">
+                                {% for code, label in pricing_channel_choices %}
+                                <option value="{{ code }}" {% if tier.channel == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:8px;">
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Montant (DZD)" %}</label>
+                            <input type="number" name="pricing_amount" class="form-control" step="0.01" value="{{ tier.amount }}">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Unité" %}</label>
+                            <input type="text" name="pricing_unit" class="form-control" value="{{ tier.unit }}" placeholder="forfait, par échantillon, ...">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Qté min" %}</label>
+                            <input type="number" name="pricing_min_quantity" class="form-control" value="{{ tier.min_quantity }}" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Qté max" %}</label>
+                            <input type="number" name="pricing_max_quantity" class="form-control" value="{{ tier.max_quantity|default_if_none:'' }}" placeholder="∞">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:8px;">
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Montant min applicable" %}</label>
+                            <input type="number" name="pricing_min_amount" class="form-control" step="0.01" value="{{ tier.min_amount|default_if_none:'' }}" placeholder="-">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Montant max applicable" %}</label>
+                            <input type="number" name="pricing_max_amount" class="form-control" step="0.01" value="{{ tier.max_amount|default_if_none:'' }}" placeholder="-">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Priorité" %}</label>
+                            <input type="number" name="pricing_priority" class="form-control" value="{{ tier.priority }}">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+                            <label style="font-size:0.78rem;">{% trans "Statut" %}</label>
+                            <label style="display:flex; align-items:center; gap:6px; margin:0; font-weight:400;">
+                                <input type="checkbox" name="pricing_is_active" value="{{ forloop.counter0 }}" {% if tier.is_active %}checked{% endif %}>
+                                {% trans "Active" %}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:6px;">
+                        <label style="font-size:0.78rem;">{% trans "Description (optionnel)" %}</label>
+                        <input type="text" name="pricing_description" class="form-control" value="{{ tier.description }}" placeholder="ex: Tarif appliqué pour les analyses urgentes">
+                    </div>
+                    <div style="text-align:right;">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">— {% trans "Supprimer cette règle" %}</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted" style="padding:24px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center;">
+                    {% trans "Aucune règle tarifaire détaillée. Le prix forfaitaire ci-dessus sera utilisé. Cliquez sur « Ajouter une règle » pour définir des tarifs par échantillon, majorations, ou remises." %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- =================================================== -->
+            <!-- Custom request-form fields (ServiceFormField)        -->
+            <!-- =================================================== -->
+            <hr style="margin:32px 0 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h4 style="margin:0;">{% trans "Champs personnalisés du formulaire" %}</h4>
+                <button type="button" class="btn btn-sm btn-outline" onclick="addFieldRow()">+ {% trans "Ajouter un champ" %}</button>
+            </div>
+            <div id="custom-fields-container" style="display:flex; flex-direction:column; gap:10px;">
                 {% for field in custom_fields %}
-                <div class="form-row custom-field-row" style="align-items:flex-end;">
+                <div class="form-row custom-field-row" style="align-items:flex-end; border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">
                     <div class="form-group">
-                        <label>{% trans "Nom" %}</label>
+                        <label style="font-size:0.78rem;">{% trans "Nom" %}</label>
                         <input type="text" name="field_name" class="form-control" value="{{ field.name }}">
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Label" %}</label>
+                        <label style="font-size:0.78rem;">{% trans "Label" %}</label>
                         <input type="text" name="field_label" class="form-control" value="{{ field.label }}">
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Type" %}</label>
+                        <label style="font-size:0.78rem;">{% trans "Type" %}</label>
                         <select name="field_type" class="form-control">
                             <option value="string" {% if field.field_type == 'string' %}selected{% endif %}>{% trans "Texte" %}</option>
                             <option value="enum" {% if field.field_type == 'enum' %}selected{% endif %}>{% trans "Liste" %}</option>
@@ -74,20 +173,22 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Options (virgules)" %}</label>
+                        <label style="font-size:0.78rem;">{% trans "Options (virgules)" %}</label>
                         <input type="text" name="field_options" class="form-control" value="{{ field.options|join:', ' }}">
                     </div>
                     <div class="form-group">
-                        <label><input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}</label>
+                        <label style="font-size:0.78rem;">
+                            <input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}
+                        </label>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" class="btn btn-sm btn-outline" onclick="addFieldRow()" style="margin-bottom:24px;">+ {% trans "Ajouter un champ" %}</button>
 
-            <div>
-                <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
-                <a href="{% url 'dashboard:superadmin' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+            <hr style="margin:32px 0 16px;">
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn btn-primary">{% trans "Enregistrer toutes les modifications" %}</button>
+                <a href="{% url 'dashboard:superadmin' %}?tab=services" class="btn btn-outline">{% trans "Annuler" %}</a>
             </div>
         </form>
     </div>
@@ -95,17 +196,69 @@
 
 <script>
 var fieldCount = {{ custom_fields.count }};
+var pricingCount = {{ pricing_tiers|length }};
+
 function addFieldRow() {
     var container = document.getElementById('custom-fields-container');
-    var html = '<div class="form-row custom-field-row" style="align-items:flex-end;">' +
-        '<div class="form-group"><label>Nom</label><input type="text" name="field_name" class="form-control"></div>' +
-        '<div class="form-group"><label>Label</label><input type="text" name="field_label" class="form-control"></div>' +
-        '<div class="form-group"><label>Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
-        '<div class="form-group"><label>Options</label><input type="text" name="field_options" class="form-control"></div>' +
-        '<div class="form-group"><label><input type="checkbox" name="field_required" value="' + fieldCount + '"> Requis</label></div>' +
+    var html =
+        '<div class="form-row custom-field-row" style="align-items:flex-end; border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Nom</label><input type="text" name="field_name" class="form-control"></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Label</label><input type="text" name="field_label" class="form-control"></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Options</label><input type="text" name="field_options" class="form-control"></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + fieldCount + '"> Requis</label></div>' +
         '</div>';
     container.insertAdjacentHTML('beforeend', html);
     fieldCount++;
+}
+
+function addPricingRow() {
+    var container = document.getElementById('pricing-container');
+    // Remove the empty-state placeholder if it's the only child
+    var ph = container.querySelector('.text-muted');
+    if (ph) ph.remove();
+    var idx = pricingCount;
+    var html =
+        '<div class="pricing-row" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fafafa;">' +
+        '<input type="hidden" name="pricing_pk" value="">' +
+        '<div class="form-row" style="margin-bottom:8px;">' +
+        '  <div class="form-group" style="flex:2; min-width:220px;"><label style="font-size:0.78rem;">Nom de la règle</label><input type="text" name="pricing_name" class="form-control" placeholder="ex: Prix de base" required></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="pricing_type" class="form-control">' +
+            '<option value="BASE">Prix de base</option><option value="PER_SAMPLE">Par échantillon</option><option value="PER_PARAMETER">Par paramètre</option><option value="URGENCY_SURCHARGE">Majoration urgence</option><option value="DISCOUNT">Remise</option>' +
+        '</select></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Canal</label><select name="pricing_channel" class="form-control">' +
+            '<option value="BOTH">Les deux</option><option value="IBTIKAR">IBTIKAR</option><option value="GENOCLAB">GENOCLAB</option>' +
+        '</select></div>' +
+        '</div>' +
+        '<div class="form-row" style="margin-bottom:8px;">' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Montant (DZD)</label><input type="number" name="pricing_amount" class="form-control" step="0.01" value="0"></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Unité</label><input type="text" name="pricing_unit" class="form-control" value="forfait"></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Qté min</label><input type="number" name="pricing_min_quantity" class="form-control" value="1" min="1"></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Qté max</label><input type="number" name="pricing_max_quantity" class="form-control" placeholder="∞"></div>' +
+        '</div>' +
+        '<div class="form-row" style="margin-bottom:8px;">' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Montant min</label><input type="number" name="pricing_min_amount" class="form-control" step="0.01" placeholder="-"></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Montant max</label><input type="number" name="pricing_max_amount" class="form-control" step="0.01" placeholder="-"></div>' +
+        '  <div class="form-group"><label style="font-size:0.78rem;">Priorité</label><input type="number" name="pricing_priority" class="form-control" value="0"></div>' +
+        '  <div class="form-group" style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">' +
+        '    <label style="font-size:0.78rem;">Statut</label>' +
+        '    <label style="display:flex; align-items:center; gap:6px; margin:0; font-weight:400;">' +
+        '      <input type="checkbox" name="pricing_is_active" value="' + idx + '" checked> Active' +
+        '    </label>' +
+        '  </div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-bottom:6px;"><label style="font-size:0.78rem;">Description (optionnel)</label><input type="text" name="pricing_description" class="form-control"></div>' +
+        '<div style="text-align:right;"><button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">— Supprimer cette règle</button></div>' +
+        '</div>';
+    container.insertAdjacentHTML('beforeend', html);
+    pricingCount++;
+}
+
+function removePricingRow(btn) {
+    var row = btn.closest('.pricing-row');
+    if (row && confirm("Supprimer cette règle tarifaire ?")) {
+        row.remove();
+    }
 }
 </script>
 {% endblock %}

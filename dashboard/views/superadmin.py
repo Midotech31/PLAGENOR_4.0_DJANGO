@@ -392,10 +392,25 @@ def audit_log(request):
 
 @superadmin_required
 def service_edit(request, pk):
-    """Edit a service and its custom form fields."""
-    from core.models import ServiceFormField
+    """Edit a service, its custom form fields, and its detailed pricing tiers.
+
+    Three datasets live on this page and submit as one form:
+      * Service core fields (name, prices, channel, turnaround, image)
+      * ServiceFormField rows (custom request-form questions)
+      * ServicePricing rows (per-tier / per-condition pricing rules:
+        BASE, PER_SAMPLE, PER_PARAMETER, URGENCY_SURCHARGE, DISCOUNT)
+
+    Pricing rules are keyed by ``pricing_pk[]`` (empty for new rows). Existing
+    rules whose pk is missing from the POST are deleted. The rest are
+    update_or_create'd so a tier's PK survives an edit — important because
+    other tables may reference it.
+    """
+    from core.models import ServiceFormField, ServicePricing
+    from decimal import Decimal, InvalidOperation
+
     service = get_object_or_404(Service, pk=pk)
     custom_fields = service.custom_fields.all()
+    pricing_tiers = service.pricing_configs.order_by('priority', 'pk')
 
     if request.method == 'POST':
         service.name = request.POST.get('name', service.name)
@@ -408,7 +423,7 @@ def service_edit(request, pk):
             service.image = request.FILES['image']
         service.save()
 
-        # Handle custom fields: delete existing and recreate from POST
+        # ---- Custom form fields: wipe + recreate (simple, low-volume data)
         service.custom_fields.all().delete()
         field_names = request.POST.getlist('field_name')
         field_labels = request.POST.getlist('field_label')
@@ -435,12 +450,98 @@ def service_edit(request, pk):
                 sort_order=i,
             )
 
+        # ---- Pricing tiers: PK-preserving update_or_create so external
+        #     references (e.g. historical request snapshots) survive an edit.
+        pricing_pks = request.POST.getlist('pricing_pk')
+        pricing_types_in = request.POST.getlist('pricing_type')
+        pricing_channels = request.POST.getlist('pricing_channel')
+        pricing_names = request.POST.getlist('pricing_name')
+        pricing_descs = request.POST.getlist('pricing_description')
+        pricing_amounts = request.POST.getlist('pricing_amount')
+        pricing_units = request.POST.getlist('pricing_unit')
+        pricing_min_qty = request.POST.getlist('pricing_min_quantity')
+        pricing_max_qty = request.POST.getlist('pricing_max_quantity')
+        pricing_min_amt = request.POST.getlist('pricing_min_amount')
+        pricing_max_amt = request.POST.getlist('pricing_max_amount')
+        pricing_priorities = request.POST.getlist('pricing_priority')
+        pricing_active_idx = set(request.POST.getlist('pricing_is_active'))
+
+        valid_types = {c for c, _ in ServicePricing.PRICING_TYPE_CHOICES}
+        valid_chans = {c for c, _ in ServicePricing.CHANNEL_CHOICES}
+
+        def _to_decimal(v, default=None):
+            if v is None or str(v).strip() == '':
+                return default
+            try:
+                return Decimal(str(v))
+            except (InvalidOperation, ValueError):
+                return default
+
+        def _to_int(v, default=None):
+            if v is None or str(v).strip() == '':
+                return default
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return default
+
+        seen_pks = set()
+        for i, name in enumerate(pricing_names):
+            name = (name or '').strip()
+            if not name:
+                continue  # skip blank rows (the "+ Add" template row stays empty)
+            ptype = pricing_types_in[i] if i < len(pricing_types_in) else 'BASE'
+            if ptype not in valid_types:
+                ptype = 'BASE'
+            chan = pricing_channels[i] if i < len(pricing_channels) else 'BOTH'
+            if chan not in valid_chans:
+                chan = 'BOTH'
+            amount = _to_decimal(pricing_amounts[i] if i < len(pricing_amounts) else '0', Decimal('0'))
+            unit = (pricing_units[i] if i < len(pricing_units) else 'forfait').strip() or 'forfait'
+            desc = (pricing_descs[i] if i < len(pricing_descs) else '').strip()
+            min_q = _to_int(pricing_min_qty[i] if i < len(pricing_min_qty) else '1', 1)
+            max_q = _to_int(pricing_max_qty[i] if i < len(pricing_max_qty) else '', None)
+            min_a = _to_decimal(pricing_min_amt[i] if i < len(pricing_min_amt) else '', None)
+            max_a = _to_decimal(pricing_max_amt[i] if i < len(pricing_max_amt) else '', None)
+            prio = _to_int(pricing_priorities[i] if i < len(pricing_priorities) else '0', 0)
+            active = str(i) in pricing_active_idx
+
+            existing_pk = pricing_pks[i] if i < len(pricing_pks) else ''
+            defaults = dict(
+                service=service, pricing_type=ptype, channel=chan, name=name,
+                description=desc, amount=amount, unit=unit,
+                min_quantity=min_q, max_quantity=max_q,
+                min_amount=min_a, max_amount=max_a,
+                is_active=active, priority=prio,
+                updated_by=request.user,
+            )
+            if existing_pk:
+                try:
+                    pk_int = int(existing_pk)
+                    tier = ServicePricing.objects.get(pk=pk_int, service=service)
+                    for k, v in defaults.items():
+                        setattr(tier, k, v)
+                    tier.save()
+                    seen_pks.add(pk_int)
+                except (ServicePricing.DoesNotExist, ValueError, TypeError):
+                    tier = ServicePricing.objects.create(**defaults)
+                    seen_pks.add(tier.pk)
+            else:
+                tier = ServicePricing.objects.create(**defaults)
+                seen_pks.add(tier.pk)
+
+        # Delete tiers that existed before but are no longer in the POST
+        ServicePricing.objects.filter(service=service).exclude(pk__in=seen_pks).delete()
+
         messages.success(request, f"Service {service.name} mis à jour.")
         return redirect_back(request, 'dashboard:superadmin')
 
     return render(request, 'dashboard/superadmin/service_edit.html', {
         'service': service,
         'custom_fields': custom_fields,
+        'pricing_tiers': pricing_tiers,
+        'pricing_type_choices': ServicePricing.PRICING_TYPE_CHOICES,
+        'pricing_channel_choices': ServicePricing.CHANNEL_CHOICES,
     })
 
 
