@@ -168,32 +168,158 @@ def format_price(amount: float, currency: str = 'DZD') -> str:
     return f"{amount:,.0f} {currency}"
 
 
+# ============================================================================
+# CANONICAL COST RESOLVER  ===  the single source of truth for "how much?"
+# ============================================================================
+#
+# Three pricing sources coexist in the codebase:
+#
+#   1. ``ServicePricing`` tiers (DB, editable in the SuperAdmin service-edit
+#      page). These are what an operator authors when they configure
+#      per-sample prices, urgency surcharges, volume discounts, etc.
+#
+#   2. ``services_registry/<code>.yaml`` (the YAML registry consumed by
+#      ``calculate_price``). Older path. Defines per-multiplier pricing for
+#      9 IBTIKAR services. Still authoritative for those nine since their
+#      YAML descriptions encode logic that doesn't yet exist as tiers.
+#
+#   3. ``Service.ibtikar_price`` / ``Service.genoclab_price`` (flat columns).
+#      The last-resort fallback. Charges this amount per *sample* (not
+#      flat per request) so a GENOCLAB submission with 10 samples doesn't
+#      get billed the same as one with 1 sample.
+#
+# Precedence — fail UP, never silently DOWN:
+#
+#   * If any active ServicePricing tier exists for (service, channel), the
+#     DB tiers WIN. They reflect a deliberate operator decision and must
+#     not be silently overridden by older YAML or flat columns.
+#   * Otherwise, if a YAML registry definition exists for this service
+#     code, use ``calculate_price`` against it.
+#   * Otherwise, use the flat column × sample count.
+#
+# Every public submission path (IBTIKAR requester, GENOCLAB client, guest
+# submission) calls ``resolve_cost`` so the answer is identical regardless
+# of who's clicking.
+# ============================================================================
+
+def resolve_cost(
+    service,
+    channel: str,
+    sample_table=None,
+    service_params=None,
+    urgency: str = 'Normal',
+):
+    """Resolve the canonical cost for a request submission.
+
+    Returns ``{'total': float, 'source': str, 'breakdown': [...]}``.
+    ``source`` is one of ``'db_tiers'`` / ``'yaml_registry'`` / ``'flat'``
+    so the caller can surface which path was taken — useful when an admin
+    is debugging "why is my discount tier not firing?".
+
+    Never raises on bad input; falls back to the flat path and logs.
+    """
+    sample_table = sample_table or []
+    service_params = service_params or {}
+    if not service:
+        return {'total': 0.0, 'source': 'no_service', 'breakdown': []}
+    if channel not in ('IBTIKAR', 'GENOCLAB'):
+        channel = 'GENOCLAB' if channel.lower().startswith('g') else 'IBTIKAR'
+
+    # 1) DB tiers — what the SuperAdmin actually configured
+    try:
+        has_tiers = service.pricing_configs.filter(
+            is_active=True,
+        ).filter(
+            models.Q(channel=channel) | models.Q(channel='BOTH')
+        ).exists()
+    except Exception:
+        has_tiers = False
+
+    if has_tiers:
+        result = calculate_cost_from_db(
+            service, channel,
+            sample_table=sample_table,
+            service_params=service_params,
+            urgency=urgency,
+        )
+        result['source'] = 'db_tiers'
+        return result
+
+    # 2) YAML registry — for the legacy 9 IBTIKAR services
+    try:
+        from core.registry import get_service_def
+        yaml_def = get_service_def(service.code)
+    except Exception:
+        yaml_def = None
+
+    if yaml_def and yaml_def.get('pricing') and sample_table:
+        try:
+            yaml_result = calculate_price(yaml_def, service_params, sample_table)
+            return {
+                'total': float(yaml_result.get('total', 0)),
+                'source': 'yaml_registry',
+                'breakdown': [{
+                    'name': 'YAML pricing',
+                    'type': yaml_result.get('pricing_model', 'yaml'),
+                    'amount': float(yaml_result.get('unit_price', 0)),
+                    'quantity': yaml_result.get('number_of_units', 0),
+                    'subtotal': float(yaml_result.get('total', 0)),
+                }],
+                'yaml_breakdown': yaml_result.get('breakdown', {}),
+                'currency': yaml_result.get('currency', 'DZD'),
+            }
+        except (ValueError, KeyError, TypeError) as exc:
+            logger.warning(
+                "resolve_cost: YAML calculate_price failed for %s (%s); "
+                "falling through to flat",
+                service.code, exc,
+            )
+
+    # 3) Flat per-sample fallback — never per-request, so GENOCLAB billing
+    #    actually scales with sample count.
+    flat = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+    flat = float(flat or 0)
+    sample_count = max(1, len([s for s in sample_table if s]))
+    total = flat * sample_count
+    return {
+        'total': total,
+        'source': 'flat',
+        'breakdown': [{
+            'name': 'Prix forfaitaire (par échantillon)',
+            'type': 'FLAT',
+            'amount': flat,
+            'quantity': sample_count,
+            'subtotal': total,
+        }],
+    }
+
+
 def calculate_cost_from_db(service, channel, sample_table=None, service_params=None, urgency='Normal'):
     """
     Calculate cost based on ServicePricing configurations from database.
-    
+
     Args:
         service: Service model instance
         channel: 'IBTIKAR' or 'GENOCLAB'
         sample_table: List of sample dicts (optional)
         service_params: Dict of service parameters (optional)
         urgency: Urgency level for surcharge calculation
-    
+
     Returns:
         dict with cost breakdown and total
     """
     from decimal import Decimal
-    
+
     if not service:
         return {'error': 'Service is required', 'total': 0}
-    
+
     # Get active pricing configs for this service
     pricing_configs = service.pricing_configs.filter(
         is_active=True
     ).filter(
         models.Q(channel=channel) | models.Q(channel='BOTH')
     ).order_by('priority', 'pk')
-    
+
     if not pricing_configs.exists():
         # Fall back to service's base price
         base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
@@ -212,15 +338,15 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 'subtotal': total,
             }],
         }
-    
+
     breakdown = []
     total = Decimal('0')
     sample_count = len([s for s in sample_table if s]) if sample_table else 0
-    
+
     for config in pricing_configs:
         config_total = Decimal('0')
         quantity = 1
-        
+
         if config.pricing_type == 'BASE':
             quantity = sample_count if sample_count > 0 else 1
             config_total = config.amount * quantity
@@ -233,13 +359,17 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 quantity = len([v for v in service_params.values() if v])
             config_total = config.amount * quantity
         elif config.pricing_type == 'URGENCY_SURCHARGE':
-            if urgency in ['Urgent', 'Très urgent']:
+            if urgency in ('Urgent', 'Très urgent'):
                 quantity = 1
                 config_total = config.amount
         elif config.pricing_type == 'DISCOUNT':
             quantity = 1
-            config_total = -config.amount  # Negative for discount
-        
+            # DISCOUNT amount is conventionally stored NEGATIVE in the DB
+            # (matches the "Remise volume −500" pattern in the seed fixtures);
+            # but if an operator typed a positive number we treat it as a
+            # subtraction so the math is intuitive either way.
+            config_total = -abs(config.amount)
+
         total += config_total
         breakdown.append({
             'name': config.name,
@@ -248,7 +378,11 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             'quantity': quantity,
             'subtotal': float(config_total),
         })
-    
+
+    # Clamp at zero — a stack of discounts can't produce a negative bill.
+    if total < 0:
+        total = Decimal('0')
+
     return {
         'source': 'service_pricing_db',
         'pricing_configs_used': pricing_configs.count(),

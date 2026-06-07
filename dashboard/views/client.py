@@ -128,14 +128,26 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
-    # Use genoclab service to submit
+    # Resolve cost via the canonical pricing resolver. Without this,
+    # GENOCLAB used to bill a flat ``Service.genoclab_price`` regardless of
+    # sample count or admin-configured tiers — meaning 1 sample was billed
+    # the same as 50, and the pricing tiers in the admin UI did nothing.
+    from core.pricing import resolve_cost
+    price_result = resolve_cost(
+        service, 'GENOCLAB',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+    )
+    quote_amount = price_result.get('total') or float(service.genoclab_price or 0)
+
     req = submit_genoclab_request(
         data={
             'title': request.POST.get('title', f"Demande {service.name}"),
             'description': request.POST.get('description', ''),
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
-            'quote_amount': float(service.genoclab_price),
+            'quote_amount': quote_amount,
             'service_params': service_params,
             'sample_table': sample_table_data,
         },

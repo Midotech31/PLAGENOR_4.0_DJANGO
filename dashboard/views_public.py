@@ -173,7 +173,18 @@ def guest_submit(request):
             if declared_balance:
                 requester_data['declared_ibtikar_balance'] = declared_balance
 
-        quote = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+        # Use the canonical pricing resolver so guest submissions price the
+        # same way as authenticated submissions (DB tiers → YAML → flat).
+        from core.pricing import resolve_cost
+        _price_result = resolve_cost(
+            service, channel,
+            sample_table=sample_table_data,
+            service_params=service_params,
+            urgency=urgency,
+        )
+        quote = _price_result.get('total') or float(
+            service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+        )
 
         req = Request.objects.create(
             display_id=display_id,

@@ -146,18 +146,16 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
-    # Calculate cost from YAML pricing if available
-    from core.pricing import calculate_price
-    from core.registry import get_service_def
-    yaml_def = get_service_def(service.code)
-    if yaml_def and sample_table_data:
-        try:
-            price_result = calculate_price(yaml_def, service_params, sample_table_data)
-            budget_amount = price_result.get('total', float(service.ibtikar_price))
-        except (ValueError, KeyError):
-            budget_amount = float(service.ibtikar_price)
-    else:
-        budget_amount = float(service.ibtikar_price)
+    # Resolve cost via the canonical pricing resolver (DB tiers → YAML →
+    # flat). See core.pricing.resolve_cost for the precedence and rationale.
+    from core.pricing import resolve_cost
+    price_result = resolve_cost(
+        service, 'IBTIKAR',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+    )
+    budget_amount = price_result.get('total') or float(service.ibtikar_price or 0)
 
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
