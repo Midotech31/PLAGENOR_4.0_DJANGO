@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view, pricing_api
 from . import views
 
 app_name = 'dashboard'
@@ -93,6 +93,12 @@ urlpatterns = [
 
     # Service form API
     path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),
+
+    # Pricing-tier modal API (Phase 3.8 — drives the modal in service_edit.html)
+    path('api/service/<uuid:service_pk>/pricing/', pricing_api.pricing_list, name='pricing_list_api'),
+    path('api/service/<uuid:service_pk>/pricing/add/', pricing_api.pricing_add, name='pricing_add_api'),
+    path('api/pricing/<int:pricing_pk>/', pricing_api.pricing_update, name='pricing_update_api'),
+    path('api/pricing/<int:pricing_pk>/delete/', pricing_api.pricing_delete, name='pricing_delete_api'),
 
     # QR Code
     path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),

@@ -53,95 +53,24 @@
             </div>
 
             <!-- =================================================== -->
-            <!-- Detailed pricing tiers (ServicePricing model)       -->
+            <!-- Detailed pricing tiers — restored modal UI         -->
             <!-- =================================================== -->
+            <!--
+                The tiers below are saved instantly via JSON API (no need to
+                hit the form's Enregistrer button). Add/edit/delete each from
+                the modal — the list refreshes after every save.
+            -->
             <hr style="margin:32px 0 16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h4 style="margin:0;">{% trans "Configurations tarifaires détaillées" %}</h4>
-                <button type="button" class="btn btn-sm btn-primary" onclick="addPricingRow()">+ {% trans "Ajouter une règle" %}</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="showAddPricingModal()">+ {% trans "Ajouter un tarif" %}</button>
             </div>
             <p class="text-muted" style="margin-bottom:14px;">
-                {% trans "Définissez des règles fines: prix de base, prix par échantillon, majoration urgence, remise quantité, etc. Plusieurs règles peuvent coexister (la priorité plus basse est appliquée en premier)." %}
+                {% trans "Configurez les prix de base et les suppléments. Plusieurs règles peuvent coexister (priorité plus basse = appliquée en premier). Chaque modification est enregistrée immédiatement." %}
             </p>
-
-            <div id="pricing-container" style="display:flex; flex-direction:column; gap:12px;">
-                {% for tier in pricing_tiers %}
-                <div class="pricing-row" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fafafa;">
-                    <input type="hidden" name="pricing_pk" value="{{ tier.pk }}">
-                    <div class="form-row" style="margin-bottom:8px;">
-                        <div class="form-group" style="flex:2; min-width:220px;">
-                            <label style="font-size:0.78rem;">{% trans "Nom de la règle" %}</label>
-                            <input type="text" name="pricing_name" class="form-control" value="{{ tier.name }}" placeholder="ex: Prix de base, Majoration urgence" required>
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Type" %}</label>
-                            <select name="pricing_type" class="form-control">
-                                {% for code, label in pricing_type_choices %}
-                                <option value="{{ code }}" {% if tier.pricing_type == code %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Canal" %}</label>
-                            <select name="pricing_channel" class="form-control">
-                                {% for code, label in pricing_channel_choices %}
-                                <option value="{{ code }}" {% if tier.channel == code %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-bottom:8px;">
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Montant (DZD)" %}</label>
-                            <input type="number" name="pricing_amount" class="form-control" step="0.01" value="{{ tier.amount }}">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Unité" %}</label>
-                            <input type="text" name="pricing_unit" class="form-control" value="{{ tier.unit }}" placeholder="forfait, par échantillon, ...">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Qté min" %}</label>
-                            <input type="number" name="pricing_min_quantity" class="form-control" value="{{ tier.min_quantity }}" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Qté max" %}</label>
-                            <input type="number" name="pricing_max_quantity" class="form-control" value="{{ tier.max_quantity|default_if_none:'' }}" placeholder="∞">
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-bottom:8px;">
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Montant min applicable" %}</label>
-                            <input type="number" name="pricing_min_amount" class="form-control" step="0.01" value="{{ tier.min_amount|default_if_none:'' }}" placeholder="-">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Montant max applicable" %}</label>
-                            <input type="number" name="pricing_max_amount" class="form-control" step="0.01" value="{{ tier.max_amount|default_if_none:'' }}" placeholder="-">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.78rem;">{% trans "Priorité" %}</label>
-                            <input type="number" name="pricing_priority" class="form-control" value="{{ tier.priority }}">
-                        </div>
-                        <div class="form-group" style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                            <label style="font-size:0.78rem;">{% trans "Statut" %}</label>
-                            <label style="display:flex; align-items:center; gap:6px; margin:0; font-weight:400;">
-                                <input type="checkbox" name="pricing_is_active" value="{{ forloop.counter0 }}" {% if tier.is_active %}checked{% endif %}>
-                                {% trans "Active" %}
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom:6px;">
-                        <label style="font-size:0.78rem;">{% trans "Description (optionnel)" %}</label>
-                        <input type="text" name="pricing_description" class="form-control" value="{{ tier.description }}" placeholder="ex: Tarif appliqué pour les analyses urgentes">
-                    </div>
-                    <div style="text-align:right;">
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">— {% trans "Supprimer cette règle" %}</button>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-muted" style="padding:24px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center;">
-                    {% trans "Aucune règle tarifaire détaillée. Le prix forfaitaire ci-dessus sera utilisé. Cliquez sur « Ajouter une règle » pour définir des tarifs par échantillon, majorations, ou remises." %}
-                </div>
-                {% endfor %}
+            <div id="pricing-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <div id="pricing-empty" class="text-muted text-sm" style="padding:20px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
+                {% trans "Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les nouvelles demandes." %}
             </div>
 
             <!-- =================================================== -->
@@ -194,9 +123,106 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- Pricing-tier modal (restored from April 2026 design)         -->
+<!-- ============================================================ -->
+<div id="pricing-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; width:560px; max-width:95vw; padding:24px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <h4 id="pricing-modal-title" style="margin:0 0 16px 0;">{% trans "Ajouter un tarif" %}</h4>
+        <input type="hidden" id="edit-pricing-id">
+
+        <div class="form-group">
+            <label>{% trans "Nom du tarif" %} *</label>
+            <input type="text" id="pricing-name" class="form-control" placeholder="{% trans 'ex : Prix de base, Majoration urgence, Remise volume' %}">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Type" %}</label>
+                <select id="pricing-type" class="form-control">
+                    <option value="BASE">{% trans "Prix de base" %}</option>
+                    <option value="PER_SAMPLE">{% trans "Par échantillon" %}</option>
+                    <option value="PER_PARAMETER">{% trans "Par paramètre" %}</option>
+                    <option value="URGENCY_SURCHARGE">{% trans "Majoration urgence" %}</option>
+                    <option value="DISCOUNT">{% trans "Remise" %}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>{% trans "Canal" %}</label>
+                <select id="pricing-channel" class="form-control">
+                    <option value="BOTH">{% trans "Les deux" %}</option>
+                    <option value="IBTIKAR">IBTIKAR</option>
+                    <option value="GENOCLAB">GENOCLAB</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px;">
+            <div class="form-group">
+                <label>{% trans "Montant (DZD)" %}</label>
+                <input type="number" id="pricing-amount" class="form-control" step="0.01" value="0">
+            </div>
+            <div class="form-group">
+                <label>{% trans "Unité" %}</label>
+                <input type="text" id="pricing-unit" class="form-control" placeholder="{% trans 'forfait, par échantillon' %}">
+            </div>
+            <div class="form-group">
+                <label>{% trans "Priorité" %}</label>
+                <input type="number" id="pricing-priority" class="form-control" value="0">
+            </div>
+        </div>
+
+        <details style="margin-bottom:12px;">
+            <summary style="cursor:pointer; font-weight:600; color:#475569; padding:6px 0;">
+                {% trans "Conditions avancées (quantité, seuils)" %}
+            </summary>
+            <div style="padding-top:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label style="font-size:0.78rem;">{% trans "Qté min" %}</label>
+                        <input type="number" id="pricing-min-quantity" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.78rem;">{% trans "Qté max" %}</label>
+                        <input type="number" id="pricing-max-quantity" class="form-control" placeholder="∞">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label style="font-size:0.78rem;">{% trans "Montant min applicable" %}</label>
+                        <input type="number" id="pricing-min-amount" class="form-control" step="0.01" placeholder="-">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.78rem;">{% trans "Montant max applicable" %}</label>
+                        <input type="number" id="pricing-max-amount" class="form-control" step="0.01" placeholder="-">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <div class="form-group">
+            <label>{% trans "Description (optionnel)" %}</label>
+            <input type="text" id="pricing-description" class="form-control" placeholder="{% trans 'ex : Tarif appliqué pour les analyses urgentes' %}">
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+                <input type="checkbox" id="pricing-is-active" checked>
+                {% trans "Tarif actif" %}
+            </label>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:16px;">
+            <button type="button" class="btn btn-primary" onclick="savePricing()">{% trans "Enregistrer" %}</button>
+            <button type="button" class="btn btn-outline" onclick="closePricingModal()">{% trans "Annuler" %}</button>
+        </div>
+    </div>
+</div>
+
 <script>
+var SERVICE_ID = '{{ service.pk }}';
+var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 var fieldCount = {{ custom_fields.count }};
-var pricingCount = {{ pricing_tiers|length }};
 
 function addFieldRow() {
     var container = document.getElementById('custom-fields-container');
@@ -212,53 +238,174 @@ function addFieldRow() {
     fieldCount++;
 }
 
-function addPricingRow() {
-    var container = document.getElementById('pricing-container');
-    // Remove the empty-state placeholder if it's the only child
-    var ph = container.querySelector('.text-muted');
-    if (ph) ph.remove();
-    var idx = pricingCount;
-    var html =
-        '<div class="pricing-row" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fafafa;">' +
-        '<input type="hidden" name="pricing_pk" value="">' +
-        '<div class="form-row" style="margin-bottom:8px;">' +
-        '  <div class="form-group" style="flex:2; min-width:220px;"><label style="font-size:0.78rem;">Nom de la règle</label><input type="text" name="pricing_name" class="form-control" placeholder="ex: Prix de base" required></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="pricing_type" class="form-control">' +
-            '<option value="BASE">Prix de base</option><option value="PER_SAMPLE">Par échantillon</option><option value="PER_PARAMETER">Par paramètre</option><option value="URGENCY_SURCHARGE">Majoration urgence</option><option value="DISCOUNT">Remise</option>' +
-        '</select></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Canal</label><select name="pricing_channel" class="form-control">' +
-            '<option value="BOTH">Les deux</option><option value="IBTIKAR">IBTIKAR</option><option value="GENOCLAB">GENOCLAB</option>' +
-        '</select></div>' +
-        '</div>' +
-        '<div class="form-row" style="margin-bottom:8px;">' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Montant (DZD)</label><input type="number" name="pricing_amount" class="form-control" step="0.01" value="0"></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Unité</label><input type="text" name="pricing_unit" class="form-control" value="forfait"></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Qté min</label><input type="number" name="pricing_min_quantity" class="form-control" value="1" min="1"></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Qté max</label><input type="number" name="pricing_max_quantity" class="form-control" placeholder="∞"></div>' +
-        '</div>' +
-        '<div class="form-row" style="margin-bottom:8px;">' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Montant min</label><input type="number" name="pricing_min_amount" class="form-control" step="0.01" placeholder="-"></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Montant max</label><input type="number" name="pricing_max_amount" class="form-control" step="0.01" placeholder="-"></div>' +
-        '  <div class="form-group"><label style="font-size:0.78rem;">Priorité</label><input type="number" name="pricing_priority" class="form-control" value="0"></div>' +
-        '  <div class="form-group" style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">' +
-        '    <label style="font-size:0.78rem;">Statut</label>' +
-        '    <label style="display:flex; align-items:center; gap:6px; margin:0; font-weight:400;">' +
-        '      <input type="checkbox" name="pricing_is_active" value="' + idx + '" checked> Active' +
-        '    </label>' +
-        '  </div>' +
-        '</div>' +
-        '<div class="form-group" style="margin-bottom:6px;"><label style="font-size:0.78rem;">Description (optionnel)</label><input type="text" name="pricing_description" class="form-control"></div>' +
-        '<div style="text-align:right;"><button type="button" class="btn btn-sm btn-danger" onclick="removePricingRow(this)">— Supprimer cette règle</button></div>' +
-        '</div>';
-    container.insertAdjacentHTML('beforeend', html);
-    pricingCount++;
+// =============================================================
+// Pricing-tier modal driver (instant save via JSON API)
+// =============================================================
+
+var PRICING_API = {
+    list:   '/dashboard/api/service/' + SERVICE_ID + '/pricing/',
+    add:    '/dashboard/api/service/' + SERVICE_ID + '/pricing/add/',
+    update: function(id) { return '/dashboard/api/pricing/' + id + '/'; },
+    'delete': function(id) { return '/dashboard/api/pricing/' + id + '/delete/'; },
+};
+
+var TYPE_LABELS = {
+    BASE: '{% trans "Prix de base" %}',
+    PER_SAMPLE: '{% trans "Par échantillon" %}',
+    PER_PARAMETER: '{% trans "Par paramètre" %}',
+    URGENCY_SURCHARGE: '{% trans "Majoration urgence" %}',
+    DISCOUNT: '{% trans "Remise" %}'
+};
+var CHANNEL_LABELS = { BOTH: '{% trans "Les deux" %}', IBTIKAR: 'IBTIKAR', GENOCLAB: 'GENOCLAB' };
+var CHANNEL_COLORS = { BOTH: '#f1f5f9', IBTIKAR: '#ede9fe', GENOCLAB: '#cffafe' };
+
+function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
 }
 
-function removePricingRow(btn) {
-    var row = btn.closest('.pricing-row');
-    if (row && confirm("Supprimer cette règle tarifaire ?")) {
-        row.remove();
-    }
+function loadPricingConfigs() {
+    fetch(PRICING_API.list, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { renderPricingConfigs(data.configs || []); })
+        .catch(function(err) { console.error('pricing list failed:', err); });
 }
+
+function renderPricingConfigs(configs) {
+    var list = document.getElementById('pricing-list');
+    var empty = document.getElementById('pricing-empty');
+    if (!configs.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = configs.map(function(cfg) {
+        var typeLbl = TYPE_LABELS[cfg.pricing_type] || cfg.pricing_type;
+        var chanLbl = CHANNEL_LABELS[cfg.channel] || cfg.channel;
+        var amount = (cfg.amount || 0).toLocaleString('fr-DZ', {maximumFractionDigits: 2});
+        var unit = cfg.unit ? '<span style="color:#64748b;font-size:0.82rem;"> / ' + escHtml(cfg.unit) + '</span>' : '';
+        var inactive = cfg.is_active ? '' : '<span style="margin-left:8px;padding:2px 8px;border-radius:10px;font-size:0.7rem;background:#fee2e2;color:#dc2626;">{% trans "Inactif" %}</span>';
+        var qty = (cfg.min_quantity && cfg.min_quantity > 1) || cfg.max_quantity
+            ? '<div style="font-size:0.78rem;color:#64748b;margin-top:4px;">Qté: ' + cfg.min_quantity + ' – ' + (cfg.max_quantity || '∞') + '</div>' : '';
+        var desc = cfg.description
+            ? '<div style="font-size:0.82rem;color:#475569;margin-top:6px;">' + escHtml(cfg.description) + '</div>' : '';
+        return '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 16px; background:' + CHANNEL_COLORS[cfg.channel] + '; border-radius:8px; border:1px solid #e2e8f0;">' +
+            '<div style="flex:1;min-width:0;">' +
+                '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">' +
+                    '<strong style="font-size:0.95rem;">' + escHtml(cfg.name) + '</strong>' +
+                    '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;background:#fff;color:#475569;font-weight:600;">' + typeLbl + '</span>' +
+                    '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;background:#fff;color:#475569;">' + chanLbl + '</span>' +
+                    inactive +
+                '</div>' +
+                '<div style="margin-top:6px;font-size:0.95rem;color:#059669;font-weight:700;">' + amount + ' DZD' + unit + '</div>' +
+                qty + desc +
+            '</div>' +
+            '<div style="display:flex; gap:6px;">' +
+                '<button type="button" class="btn btn-sm btn-outline" onclick="editPricing(' + cfg.id + ')" title="{% trans "Modifier" %}">✏️</button>' +
+                '<button type="button" class="btn btn-sm btn-danger" onclick="deletePricing(' + cfg.id + ')" title="{% trans "Supprimer" %}">🗑</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function showAddPricingModal() {
+    document.getElementById('pricing-modal-title').textContent = '{% trans "Ajouter un tarif" %}';
+    document.getElementById('edit-pricing-id').value = '';
+    document.getElementById('pricing-name').value = '';
+    document.getElementById('pricing-type').value = 'BASE';
+    document.getElementById('pricing-channel').value = 'BOTH';
+    document.getElementById('pricing-amount').value = '0';
+    document.getElementById('pricing-priority').value = '0';
+    document.getElementById('pricing-unit').value = 'forfait';
+    document.getElementById('pricing-description').value = '';
+    document.getElementById('pricing-min-quantity').value = '1';
+    document.getElementById('pricing-max-quantity').value = '';
+    document.getElementById('pricing-min-amount').value = '';
+    document.getElementById('pricing-max-amount').value = '';
+    document.getElementById('pricing-is-active').checked = true;
+    document.getElementById('pricing-modal').style.display = 'flex';
+    document.getElementById('pricing-name').focus();
+}
+
+function editPricing(configId) {
+    fetch(PRICING_API.list, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var cfg = (data.configs || []).find(function(c) { return c.id === configId; });
+            if (!cfg) return;
+            document.getElementById('pricing-modal-title').textContent = '{% trans "Modifier le tarif" %}';
+            document.getElementById('edit-pricing-id').value = cfg.id;
+            document.getElementById('pricing-name').value = cfg.name;
+            document.getElementById('pricing-type').value = cfg.pricing_type;
+            document.getElementById('pricing-channel').value = cfg.channel;
+            document.getElementById('pricing-amount').value = cfg.amount;
+            document.getElementById('pricing-priority').value = cfg.priority;
+            document.getElementById('pricing-unit').value = cfg.unit || '';
+            document.getElementById('pricing-description').value = cfg.description || '';
+            document.getElementById('pricing-min-quantity').value = cfg.min_quantity || 1;
+            document.getElementById('pricing-max-quantity').value = cfg.max_quantity || '';
+            document.getElementById('pricing-min-amount').value = cfg.min_amount != null ? cfg.min_amount : '';
+            document.getElementById('pricing-max-amount').value = cfg.max_amount != null ? cfg.max_amount : '';
+            document.getElementById('pricing-is-active').checked = !!cfg.is_active;
+            document.getElementById('pricing-modal').style.display = 'flex';
+        });
+}
+
+function closePricingModal() {
+    document.getElementById('pricing-modal').style.display = 'none';
+}
+
+function savePricing() {
+    var editId = document.getElementById('edit-pricing-id').value;
+    var name = document.getElementById('pricing-name').value.trim();
+    if (!name) { alert('{% trans "Le nom du tarif est obligatoire." %}'); return; }
+    var url = editId ? PRICING_API.update(editId) : PRICING_API.add;
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('pricing_type', document.getElementById('pricing-type').value);
+    fd.append('channel', document.getElementById('pricing-channel').value);
+    fd.append('amount', document.getElementById('pricing-amount').value);
+    fd.append('priority', document.getElementById('pricing-priority').value);
+    fd.append('unit', document.getElementById('pricing-unit').value);
+    fd.append('description', document.getElementById('pricing-description').value);
+    fd.append('min_quantity', document.getElementById('pricing-min-quantity').value);
+    fd.append('max_quantity', document.getElementById('pricing-max-quantity').value);
+    fd.append('min_amount', document.getElementById('pricing-min-amount').value);
+    fd.append('max_amount', document.getElementById('pricing-max-amount').value);
+    fd.append('is_active', document.getElementById('pricing-is-active').checked ? 'on' : '');
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd
+    })
+    .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+    .then(function(res) {
+        if (!res.ok || res.data.error) {
+            alert('{% trans "Erreur" %} : ' + (res.data.error || res.data.detail || 'unknown'));
+        } else {
+            closePricingModal();
+            loadPricingConfigs();
+        }
+    })
+    .catch(function(err) { console.error(err); alert('{% trans "Erreur" %} : ' + err); });
+}
+
+function deletePricing(configId) {
+    if (!confirm('{% trans "Supprimer ce tarif ?" %}')) return;
+    fetch(PRICING_API['delete'](configId), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.error) alert('{% trans "Erreur" %} : ' + data.error);
+        else loadPricingConfigs();
+    });
+}
+
+// Load the tiers list on page load.
+document.addEventListener('DOMContentLoaded', loadPricingConfigs);
 </script>
 {% endblock %}
