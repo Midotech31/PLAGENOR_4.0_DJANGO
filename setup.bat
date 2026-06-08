@@ -77,6 +77,17 @@ REM 7. CMS content
 echo [6/9] Seeding CMS content ^(fr / en / ar^)...
 python manage.py seed_content >nul || goto :err
 
+REM 7b. Demo accounts (one per role — see seed_accounts.py for the table)
+echo [6b/9] Creating demo accounts ^(admin / amina / analyst / etc.^)...
+python manage.py seed_accounts --quiet
+echo       Login at http://localhost:8000/accounts/login/ — credentials below:
+echo         admin       / admin1234        ^(SUPER_ADMIN^)
+echo         admin_ops   / platform1234     ^(PLATFORM_ADMIN^)
+echo         analyst     / analyst1234      ^(MEMBER / Analyst^)
+echo         finance     / finance1234      ^(FINANCE^)
+echo         amina       / demo1234         ^(REQUESTER^)
+echo         client      / client1234       ^(CLIENT^)
+
 REM 8. Translation catalogs — silent if gettext missing, .mo files are in git anyway
 echo [7/9] Compiling translation catalogs ^(safe to fail on Windows^)...
 python manage.py compilemessages >nul 2>&1
