@@ -21,6 +21,51 @@
     {% include 'includes/kpi_card.html' with icon='x-circle' value=rejected label=lbl_rejected color='red' %}
 </div>
 
+<!--
+    IBTIKAR Annual Budget card. Surfaces the requester's used / cap /
+    remaining so they can size a new request before submitting (matches the
+    "IBTIKAR budget display on requester dashboard" feature from 328e510).
+    Colour follows utilisation: green <70% · orange 70-90% · red ≥90%.
+-->
+{% if budget_context %}
+{% with pct=budget_context.budget_pct %}
+<div class="card" style="margin-bottom:24px; background:linear-gradient(135deg, {% if pct >= 90 %}#fef2f2{% elif pct >= 70 %}#fff7ed{% else %}#f0fdf4{% endif %} 0%, #ffffff 100%); border-left:4px solid {% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">
+    <div class="card-body" style="padding:18px 22px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+            <div>
+                <h3 style="margin:0 0 4px; font-size:1rem;">{% trans "Budget IBTIKAR annuel" %}</h3>
+                <p class="text-sm text-muted" style="margin:0;">{% trans "Budget virtuel encadré par la DGRSDT — limite individuelle 200 000 DA / an." %}</p>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:1.6rem; font-weight:700; color:{% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">{{ budget_context.budget_remaining|floatformat:0 }} <span style="font-size:0.85rem; color:#64748b; font-weight:500;">DA</span></div>
+                <div class="text-xs text-muted">{% trans "Solde restant" %}</div>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="margin-top:16px; height:10px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+            <div style="width:{{ pct }}%; height:100%; background:{% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %}; transition:width 0.4s;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.85rem; color:#475569;">
+            <span><strong>{{ budget_context.budget_used|floatformat:0 }} DA</strong> {% trans "utilisés" %} ({{ pct }} %)</span>
+            <span>{% trans "Cap" %}: <strong>{{ budget_context.budget_cap|floatformat:0 }} DA</strong></span>
+        </div>
+
+        {% if pct >= 90 %}
+        <div style="margin-top:12px; padding:10px; background:#fee2e2; border-radius:6px; color:#991b1b; font-size:0.85rem;">
+            ⚠️ {% trans "Vous avez atteint plus de 90 % de votre budget annuel. Les nouvelles demandes seront vérifiées strictement." %}
+        </div>
+        {% elif pct >= 70 %}
+        <div style="margin-top:12px; padding:10px; background:#fef3c7; border-radius:6px; color:#92400e; font-size:0.85rem;">
+            ℹ️ {% trans "Plus de 70 % de votre budget est consommé. Pensez à prioriser vos prochaines analyses." %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
 <!-- Tab Navigation -->
 <div x-data="{tab: new URLSearchParams(window.location.search).get('tab') || 'requests'}">
     <div class="tab-list" style="margin-bottom: 24px;">
