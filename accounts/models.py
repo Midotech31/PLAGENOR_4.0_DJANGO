@@ -33,6 +33,38 @@ class User(AbstractUser):
         ('CLIENT', 'Client GENOCLAB'),
     ]
 
+    GENDER_CHOICES = [
+        ('M', 'Homme'),
+        ('F', 'Femme'),
+    ]
+
+    # Algerian wilayas — official 2021 list (58 entries: 48 historic + 10
+    # new southern wilayas created by the 2019/2021 reform). Stored as the
+    # numeric code (01-58) so the label can be translated independently.
+    WILAYA_CHOICES = [
+        ('01', 'Adrar'), ('02', 'Chlef'), ('03', 'Laghouat'),
+        ('04', "Oum El Bouaghi"), ('05', 'Batna'), ('06', 'Béjaïa'),
+        ('07', 'Biskra'), ('08', 'Béchar'), ('09', 'Blida'),
+        ('10', 'Bouira'), ('11', 'Tamanrasset'), ('12', 'Tébessa'),
+        ('13', 'Tlemcen'), ('14', 'Tiaret'), ('15', 'Tizi Ouzou'),
+        ('16', 'Alger'), ('17', 'Djelfa'), ('18', 'Jijel'),
+        ('19', 'Sétif'), ('20', 'Saïda'), ('21', 'Skikda'),
+        ('22', 'Sidi Bel Abbès'), ('23', 'Annaba'), ('24', 'Guelma'),
+        ('25', 'Constantine'), ('26', 'Médéa'), ('27', 'Mostaganem'),
+        ('28', "M'Sila"), ('29', 'Mascara'), ('30', 'Ouargla'),
+        ('31', 'Oran'), ('32', 'El Bayadh'), ('33', 'Illizi'),
+        ('34', 'Bordj Bou Arréridj'), ('35', 'Boumerdès'),
+        ('36', 'El Tarf'), ('37', 'Tindouf'), ('38', 'Tissemsilt'),
+        ('39', 'El Oued'), ('40', 'Khenchela'), ('41', 'Souk Ahras'),
+        ('42', 'Tipaza'), ('43', 'Mila'), ('44', 'Aïn Defla'),
+        ('45', 'Naâma'), ('46', 'Aïn Témouchent'), ('47', 'Ghardaïa'),
+        ('48', 'Relizane'), ('49', 'Timimoun'),
+        ('50', 'Bordj Badji Mokhtar'), ('51', 'Ouled Djellal'),
+        ('52', 'Béni Abbès'), ('53', 'In Salah'), ('54', 'In Guezzam'),
+        ('55', 'Touggourt'), ('56', 'Djanet'), ('57', "El M'Ghair"),
+        ('58', 'El Meniaa'),
+    ]
+
     objects = UserManager()
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='REQUESTER')
@@ -42,6 +74,15 @@ class User(AbstractUser):
     supervisor = models.CharField(max_length=200, default='', blank=True)
     laboratory = models.CharField(max_length=200, default='', blank=True)
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
+    # Demographics used by the stats dashboard. Both optional.
+    gender = models.CharField(
+        max_length=1, choices=GENDER_CHOICES, blank=True, default='',
+        verbose_name='Sexe',
+    )
+    wilaya = models.CharField(
+        max_length=2, choices=WILAYA_CHOICES, blank=True, default='',
+        verbose_name='Wilaya',
+    )
 
     # Login security
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='Photo de profil')
