@@ -38,12 +38,18 @@ def notification_click(request, pk):
     if notif.action_url:
         return _safe_redirect(request, notif.action_url)
 
-    # Fallback: redirect to dashboard
+    # Fallback: the user's own dashboard (role index), never a generic page.
     return redirect('dashboard:router')
 
 
 def _get_detail_url(user, req):
-    """Return the correct request detail URL based on user role."""
+    """Return the correct request-detail URL for this user's role.
+
+    A user who received a notification about a request is, by construction,
+    a party to it — so we route straight to the matching detail page. The
+    detail views keep their own ownership/assignment guards (incl. a
+    notification-based allowance for analysts), so this stays safe.
+    """
     from django.urls import reverse
 
     role = user.role
@@ -51,13 +57,7 @@ def _get_detail_url(user, req):
     if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
         return reverse('dashboard:admin_request_detail', args=[req.pk])
     elif role == 'MEMBER':
-        # Only if user is the assigned analyst
-        try:
-            if req.assigned_to and req.assigned_to.user_id == user.pk:
-                return reverse('dashboard:analyst_request_detail', args=[req.pk])
-        except Exception:
-            pass
-        return None
+        return reverse('dashboard:analyst_request_detail', args=[req.pk])
     elif role == 'REQUESTER':
         if req.requester_id == user.pk:
             return reverse('dashboard:requester_request_detail', args=[req.pk])

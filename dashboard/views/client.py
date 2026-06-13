@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back, safe_int
+from dashboard.utils import redirect_back, redirect_to_detail, safe_int
 from django.contrib import messages
 from django.utils import timezone
 
@@ -154,7 +154,7 @@ def create_request(request):
         user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} créée avec succès.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -181,7 +181,7 @@ def reject_quote(request, pk):
         messages.success(request, f"Devis refusé pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -284,7 +284,7 @@ def confirm_appointment(request, pk):
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-        return redirect_back(request, 'dashboard:client')
+        return redirect_to_detail(request, req, 'dashboard:client')
     # Only persist the confirmation flag once the status actually advanced.
     req.appointment_confirmed = True
     req.appointment_confirmed_at = timezone.now()
@@ -292,7 +292,7 @@ def confirm_appointment(request, pk):
         req.report_token = _uuid.uuid4()
     req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
     messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -328,7 +328,7 @@ def confirm_receipt(request, pk):
             notification_type='WORKFLOW',
         )
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -345,7 +345,7 @@ def suggest_alternative_date(request, pk):
             parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Date invalide.")
-            return redirect_back(request, 'dashboard:client')
+            return redirect_to_detail(request, req, 'dashboard:client')
         # Store the alternative date on the request
         req.alt_date_proposed = parsed_date
         req.alt_date_note = alt_note
@@ -365,7 +365,7 @@ def suggest_alternative_date(request, pk):
                 notification_type='WORKFLOW',
             )
         messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -382,4 +382,4 @@ def rate_service(request, pk):
         messages.success(request, "Merci pour votre évaluation.")
     else:
         messages.error(request, "Veuillez sélectionner une note entre 1 et 5.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')

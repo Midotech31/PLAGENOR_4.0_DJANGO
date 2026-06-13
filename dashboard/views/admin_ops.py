@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back, safe_int, safe_float
+from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
@@ -212,7 +212,7 @@ def transition_request(request, pk):
         messages.success(request, f"Demande {req.display_id} transférée vers {to_status}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:admin_ops')
+    return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -223,7 +223,7 @@ def assign_request(request, pk):
     member_id = request.POST.get('member_id')
     if not member_id:
         messages.error(request, "Veuillez sélectionner un analyste.")
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
     member = get_object_or_404(MemberProfile, pk=member_id)
 
     # A task an analyst declined sits at ASSIGNED with no assignee — it is
@@ -238,7 +238,7 @@ def assign_request(request, pk):
             f"La demande {req.display_id} n'est pas prête pour l'assignation "
             f"(statut actuel: {req.get_status_display()})."
         )
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
     req.assigned_to = member
     req.save(update_fields=['assigned_to'])
@@ -249,14 +249,14 @@ def assign_request(request, pk):
             actor=request.user, notes=f"Réassigné à {member.user.get_full_name()}",
         )
         messages.success(request, f"Demande {req.display_id} réassignée à {member.user.get_full_name()}.")
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
     try:
         transition(req, 'ASSIGNED', request.user, notes=f"Assigné à {member.user.get_full_name()}")
         messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur d'assignation: {e}")
-    return redirect_back(request, 'dashboard:admin_ops')
+    return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -338,7 +338,7 @@ def modify_appointment(request, pk):
     req = get_object_or_404(Request, pk=pk)
     if req.appointment_confirmed:
         messages.error(request, "Le RDV est déjà confirmé, impossible de modifier.")
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
     date_str = request.POST.get('appointment_date', '')
     if date_str:
         from datetime import datetime
@@ -346,10 +346,10 @@ def modify_appointment(request, pk):
             req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Date invalide.")
-            return redirect_back(request, 'dashboard:admin_ops')
+            return redirect_to_detail(request, req, 'dashboard:admin_ops')
         req.save(update_fields=['appointment_date'])
         messages.success(request, f"Date de RDV modifiée: {req.appointment_date}")
-    return redirect_back(request, 'dashboard:admin_ops')
+    return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
 
 @admin_required
@@ -383,7 +383,7 @@ def report_review(request, pk):
                 messages.success(request, f"Rapport {req.display_id} renvoyé pour révision.")
             except (InvalidTransitionError, AuthorizationError, ValueError) as e:
                 messages.error(request, str(e))
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
     allowed = get_allowed_transitions(req)
     return render(request, 'dashboard/admin_ops/report_review.html', {
         'req': req,
@@ -402,13 +402,13 @@ def adjust_cost(request, pk):
     
     if not new_price:
         messages.error(request, "Veuillez saisir un montant.")
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
     
     try:
         price = float(new_price)
     except ValueError:
         messages.error(request, "Montant invalide.")
-        return redirect_back(request, 'dashboard:admin_ops')
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
     
     old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
     req.admin_validated_price = price
@@ -429,7 +429,7 @@ def adjust_cost(request, pk):
     )
     
     messages.success(request, f"Coût ajusté pour {req.display_id}: {price:,.0f} DA. {f'Justification: {justification}' if justification else ''}")
-    return redirect_back(request, 'dashboard:admin_ops')
+    return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
 
 @admin_required

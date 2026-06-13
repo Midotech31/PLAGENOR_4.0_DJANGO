@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, redirect_to_detail
 from django.contrib import messages
 from django.utils import timezone
 
@@ -127,7 +127,7 @@ def accept_task(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -189,7 +189,7 @@ def workflow_action(request, pk):
             
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -225,7 +225,7 @@ def suggest_appointment(request, pk):
             messages.success(request, f"Date de RDV proposée: {req.appointment_date}" + (f" à {time_str}" if time_str else ""))
         except ValueError:
             messages.error(request, "Date invalide.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -233,9 +233,16 @@ def request_detail(request, pk):
     from core.models import RequestComment, Message
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    # Allow access to currently assigned requests AND historical ones (once completed/sent)
-    from core.models import RequestHistory
-    was_assigned = req.assigned_to == profile or req.history.filter(actor=request.user).exists()
+    # Allow access to currently assigned requests, historical ones (the
+    # member acted on them), AND any request this member has a notification
+    # about — so clicking a notification always opens the detail page rather
+    # than bouncing to the dashboard index.
+    from notifications.models import Notification
+    was_assigned = (
+        req.assigned_to == profile
+        or req.history.filter(actor=request.user).exists()
+        or Notification.objects.filter(user=request.user, request=req).exists()
+    )
     if not was_assigned:
         return HttpResponseForbidden()
     history = req.history.select_related('actor').order_by('created_at')
@@ -258,7 +265,7 @@ def accept_alt_date(request, pk):
         return HttpResponseForbidden()
     if not req.alt_date_proposed:
         messages.error(request, "Aucune date alternative à accepter.")
-        return redirect_back(request, 'dashboard:analyst')
+        return redirect_to_detail(request, req, 'dashboard:analyst')
 
     # Update appointment date to the proposed alternative
     import uuid as _uuid
@@ -295,7 +302,7 @@ def accept_alt_date(request, pk):
         )
 
     messages.success(request, f"Date alternative acceptée. RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -336,7 +343,7 @@ def decline_alt_date(request, pk):
         )
 
     messages.success(request, "Date alternative refusée. Le demandeur en sera notifié.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -351,11 +358,11 @@ def upload_report(request, pk):
     # For GENOCLAB: Payment must be confirmed before report upload
     if req.channel == 'GENOCLAB' and req.status != 'PAYMENT_CONFIRMED':
         messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
-        return redirect_back(request, 'dashboard:analyst')
-    
+        return redirect_to_detail(request, req, 'dashboard:analyst')
+
     if 'report_file' not in request.FILES:
         messages.error(request, "Veuillez sélectionner un fichier.")
-        return redirect_back(request, 'dashboard:analyst')
+        return redirect_to_detail(request, req, 'dashboard:analyst')
     # Stage the file and run the transition in a single DB transaction so a
     # transition failure rolls back the report_file column (preventing a
     # saved file path with an unchanged status). The file on disk may remain
@@ -368,9 +375,9 @@ def upload_report(request, pk):
             transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-        return redirect_back(request, 'dashboard:analyst')
+        return redirect_to_detail(request, req, 'dashboard:analyst')
     messages.success(request, f"Rapport uploadé pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
