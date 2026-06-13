@@ -22,6 +22,18 @@ class Service(models.Model):
     turnaround_days = models.IntegerField(default=7)
     image = models.ImageField(upload_to='service_images/', null=True, blank=True)
     active = models.BooleanField(default=True)
+    # Unified base-price + multipliers table the SuperAdmin edits to adjust
+    # tariffs when reagent/consumable costs vary. Shape, when present:
+    #   {
+    #     "base_price": {"non_pathogenic": 2500, "pathogenic": 4000},
+    #     "multipliers": {"Simple": 1, "Duplicate": 2, "Triplicate": 3},
+    #     "multiplier_param": "analysis_mode"
+    #   }
+    # Precedence at resolve_cost time is: ServicePricing tiers → THIS field →
+    # YAML registry → flat columns. Stays empty {} for the 9 legacy services
+    # until the SuperAdmin opens the editor (we then pre-fill from YAML so
+    # the visible values are the actual ones being applied).
+    pricing_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

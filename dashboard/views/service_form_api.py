@@ -39,13 +39,33 @@ def service_form_fragment(request, service_code):
     ]
     pricing = definition.get('pricing', {}) or {}
 
-    # Bridge: when the YAML pricing defines a ``multipliers`` table (e.g.
+    # SuperAdmin-edited pricing_data (Service.pricing_data) takes precedence
+    # over the YAML pricing block — reagent/consumable cost changes the admin
+    # makes in the UI must be the ones the requester sees and the engine bills.
+    db_pdata = {}
+    try:
+        from core.models import Service as _Svc
+        _svc = _Svc.objects.filter(code=service_code).first()
+        if _svc and isinstance(_svc.pricing_data, dict) and _svc.pricing_data.get('multipliers'):
+            db_pdata = _svc.pricing_data
+    except Exception:
+        db_pdata = {}
+    if db_pdata.get('base_price') or db_pdata.get('multipliers'):
+        # Surface the override to the cost calculator as if it were the YAML.
+        pricing = {
+            **pricing,
+            'base_price': db_pdata.get('base_price', pricing.get('base_price', {})),
+            'multipliers': db_pdata.get('multipliers', pricing.get('multipliers', {})),
+            'model': pricing.get('model', 'per_sample_table_row_with_multiplier'),
+        }
+
+    # Bridge: when pricing defines a ``multipliers`` table (e.g.
     # {Simple: 1, Duplicate: 2, Triplicate: 3} on a per_sample_table_row_with
     # _multiplier model), inject that map as ``option_pricing`` on the param
     # whose options match — the cost calculator only sees per-field
-    # data-option-pricing attributes, never the global YAML pricing block,
+    # data-option-pricing attributes, never the global pricing block,
     # so without this bridge Duplicate/Triplicate were silently ignored at
-    # cost-estimate time even though the YAML declared them.
+    # cost-estimate time.
     yaml_multipliers = (pricing or {}).get('multipliers') if isinstance(pricing, dict) else None
     if isinstance(yaml_multipliers, dict) and yaml_multipliers:
         # Compare as strings: YAML option values can be ints (e.g. duration

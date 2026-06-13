@@ -497,8 +497,70 @@ def service_edit(request, pk):
         #     the main form submit, so the Cancel button (or a half-filled
         #     form) never wipes the tiers an admin just configured.
 
+        # ---- Unified base-price & multipliers (Service.pricing_data) ------
+        # Same formula as before: base_price (pathogenic / non_pathogenic) ×
+        # multiplier (chosen via multiplier_param) × N_samples. The admin
+        # adjusts the numbers here when reagent/consumable costs vary.
+        bp_non = _to_decimal_or_none(request.POST.get('pd_base_non_pathogenic'))
+        bp_pat = _to_decimal_or_none(request.POST.get('pd_base_pathogenic'))
+        mult_param = (request.POST.get('pd_multiplier_param') or '').strip()
+        mult_keys = request.POST.getlist('pd_mult_key')
+        mult_factors = request.POST.getlist('pd_mult_factor')
+        multipliers = {}
+        for k, f in zip(mult_keys, mult_factors):
+            k = (k or '').strip()
+            if not k:
+                continue
+            try:
+                multipliers[k] = float(f)
+            except (TypeError, ValueError):
+                continue
+        if bp_non is not None or bp_pat is not None or multipliers or mult_param:
+            new_pdata = dict(service.pricing_data or {})
+            new_pdata['base_price'] = {
+                'non_pathogenic': float(bp_non) if bp_non is not None else (
+                    (service.pricing_data or {}).get('base_price', {}).get('non_pathogenic')
+                ),
+                'pathogenic': float(bp_pat) if bp_pat is not None else (
+                    (service.pricing_data or {}).get('base_price', {}).get('pathogenic')
+                ),
+            }
+            new_pdata['base_price'] = {k: v for k, v in new_pdata['base_price'].items() if v is not None}
+            if multipliers:
+                new_pdata['multipliers'] = multipliers
+            if mult_param:
+                new_pdata['multiplier_param'] = mult_param
+            service.pricing_data = new_pdata
+            service.save(update_fields=['pricing_data'])
+
         messages.success(request, f"Service {service.name} mis à jour.")
         return redirect_back(request, 'dashboard:superadmin')
+
+    # Build the pricing_data view context. If the admin hasn't authored any
+    # DB pricing yet for one of the 9 legacy services, pre-fill the form from
+    # the YAML registry so the visible numbers are the actual ones currently
+    # applied — first save then writes them to the DB.
+    pdata = service.pricing_data or {}
+    try:
+        from core.registry import get_service_def
+        yaml_def = get_service_def(service.code) or {}
+    except Exception:
+        yaml_def = {}
+    yaml_pricing = (yaml_def.get('pricing') or {})
+    yaml_base = yaml_pricing.get('base_price') or {}
+    yaml_mults = yaml_pricing.get('multipliers') or {}
+    yaml_params = yaml_def.get('parameters', []) or []
+    pricing_data_view = {
+        'base_non_pathogenic': pdata.get('base_price', {}).get('non_pathogenic',
+                                                              yaml_base.get('non_pathogenic') or ''),
+        'base_pathogenic': pdata.get('base_price', {}).get('pathogenic',
+                                                          yaml_base.get('pathogenic') or ''),
+        'multipliers': pdata.get('multipliers') or yaml_mults or {},
+        'multiplier_param': pdata.get('multiplier_param') or _guess_multiplier_param(yaml_params, yaml_mults),
+        'param_options': [p.get('name') for p in yaml_params if p.get('options')],
+        'has_db_override': bool(pdata.get('base_price') or pdata.get('multipliers')),
+        'has_yaml_default': bool(yaml_base or yaml_mults),
+    }
 
     return render(request, 'dashboard/superadmin/service_edit.html', {
         'service': service,
@@ -506,7 +568,34 @@ def service_edit(request, pk):
         'pricing_tiers': pricing_tiers,
         'pricing_type_choices': ServicePricing.PRICING_TYPE_CHOICES,
         'pricing_channel_choices': ServicePricing.CHANNEL_CHOICES,
+        'pricing_data_view': pricing_data_view,
     })
+
+
+def _to_decimal_or_none(value):
+    """Parse a form value to Decimal, or None if blank/invalid."""
+    from decimal import Decimal, InvalidOperation
+    if value is None:
+        return None
+    v = str(value).strip()
+    if v == '':
+        return None
+    try:
+        return Decimal(v.replace(',', '.'))
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _guess_multiplier_param(yaml_params, yaml_mults):
+    """Return the param name whose options match the multiplier keys."""
+    if not yaml_mults:
+        return ''
+    keys = {str(k) for k in yaml_mults.keys()}
+    for p in yaml_params:
+        opts = {str(o) for o in (p.get('options') or [])}
+        if opts and (opts & keys):
+            return p.get('name', '')
+    return ''
 
 
 @superadmin_required

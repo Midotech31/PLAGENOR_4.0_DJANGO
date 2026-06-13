@@ -54,6 +54,92 @@
             </div>
 
             <!-- =================================================== -->
+            <!-- Unified base price & multipliers — same formula as YAML  -->
+            <!-- =================================================== -->
+            <hr style="margin:32px 0 16px;">
+            <h4 style="margin-bottom:6px;">{% trans "Prix de base & multiplicateurs" %}</h4>
+            <p class="text-sm text-muted" style="margin:0 0 16px;">
+                {% blocktrans %}Formule : <strong>Prix de base × Multiplicateur × Nombre d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des consommables change — les nouvelles valeurs s'appliquent immédiatement aux estimations et aux devis.{% endblocktrans %}
+                {% if pricing_data_view.has_yaml_default and not pricing_data_view.has_db_override %}
+                <br><em>{% trans "Valeurs YAML par défaut affichées — premier enregistrement les copiera en base." %}</em>
+                {% endif %}
+            </p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{% trans "Prix non pathogène (DA)" %}</label>
+                    <input type="number" step="0.01" min="0" class="form-control"
+                           name="pd_base_non_pathogenic"
+                           value="{{ pricing_data_view.base_non_pathogenic }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Prix pathogène (DA)" %}</label>
+                    <input type="number" step="0.01" min="0" class="form-control"
+                           name="pd_base_pathogenic"
+                           value="{{ pricing_data_view.base_pathogenic }}"
+                           placeholder="{% trans 'idem si vide' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Paramètre porteur du multiplicateur" %}</label>
+                    <input type="text" class="form-control" name="pd_multiplier_param"
+                           value="{{ pricing_data_view.multiplier_param }}"
+                           list="multiplier-param-options"
+                           placeholder="analysis_mode, qc_level, …">
+                    <datalist id="multiplier-param-options">
+                        {% for opt in pricing_data_view.param_options %}
+                        <option value="{{ opt }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <label style="margin:0; font-weight:600;">{% trans "Table de multiplicateurs" %}</label>
+                <button type="button" class="btn btn-sm btn-outline" onclick="addMultiplierRow()">
+                    + {% trans "Ajouter une option" %}
+                </button>
+            </div>
+            <div id="pd-multiplier-rows" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                {% for k, v in pricing_data_view.multipliers.items %}
+                <div class="form-row" style="align-items:center;">
+                    <div class="form-group" style="flex:2;">
+                        <input type="text" class="form-control" name="pd_mult_key" value="{{ k }}"
+                               placeholder="{% trans 'ex. Simple, Duplicate, Triplicate' %}">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <input type="number" step="0.01" min="0" class="form-control"
+                               name="pd_mult_factor" value="{{ v }}" placeholder="× 1.0">
+                    </div>
+                    <div class="form-group" style="flex:0;">
+                        <button type="button" class="btn btn-sm btn-danger"
+                                onclick="this.closest('.form-row').remove()" title="{% trans 'Retirer' %}">×</button>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-muted" style="margin:0; padding:8px; border:1px dashed #cbd5e1; border-radius:6px; text-align:center;">
+                    {% trans "Aucun multiplicateur défini (×1 partout)." %}
+                </p>
+                {% endfor %}
+            </div>
+
+            <script>
+            function addMultiplierRow() {
+                const container = document.getElementById('pd-multiplier-rows');
+                const tpl = document.createElement('div');
+                tpl.className = 'form-row';
+                tpl.style.alignItems = 'center';
+                tpl.innerHTML =
+                    '<div class="form-group" style="flex:2;"><input type="text" class="form-control" name="pd_mult_key" placeholder="{% trans 'ex. Simple, Duplicate' %}"></div>' +
+                    '<div class="form-group" style="flex:1;"><input type="number" step="0.01" min="0" class="form-control" name="pd_mult_factor" placeholder="× 1.0"></div>' +
+                    '<div class="form-group" style="flex:0;"><button type="button" class="btn btn-sm btn-danger" onclick="this.closest(\'.form-row\').remove()">×</button></div>';
+                // remove the empty-state placeholder if present
+                const empty = container.querySelector('p');
+                if (empty) empty.remove();
+                container.appendChild(tpl);
+            }
+            </script>
+
+            <!-- =================================================== -->
             <!-- Detailed pricing tiers — restored modal UI         -->
             <!-- =================================================== -->
             <!--

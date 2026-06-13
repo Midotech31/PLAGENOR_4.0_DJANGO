@@ -245,12 +245,57 @@ def resolve_cost(
         result['source'] = 'db_tiers'
         return result
 
-    # 2) YAML registry — for the legacy 9 IBTIKAR services
+    # 2a) DB pricing_data — SuperAdmin-edited base price + multipliers
+    #     Same shape as a YAML ``pricing`` block, so the existing
+    #     ``calculate_price`` engine consumes it unchanged. This is the lever
+    #     for reagent/consumable cost variations: the SuperAdmin edits the
+    #     numbers in the UI and the next quote/estimate uses them, without
+    #     touching the YAML on disk.
+    pdata = getattr(service, 'pricing_data', None) or {}
+    db_pricing_block = None
+    if isinstance(pdata, dict) and pdata.get('base_price') and pdata.get('multipliers'):
+        db_pricing_block = {
+            'model': 'per_sample_table_row_with_multiplier',
+            'currency': pdata.get('currency', 'DZD'),
+            'base_price': pdata.get('base_price') or {},
+            'multipliers': pdata.get('multipliers') or {},
+        }
+
+    # 2b) YAML registry — for the legacy 9 IBTIKAR services (fallback when
+    #     pricing_data hasn't been authored yet).
     try:
         from core.registry import get_service_def
         yaml_def = get_service_def(service.code)
     except Exception:
         yaml_def = None
+
+    # If the SuperAdmin has authored pricing_data, that overrides the YAML
+    # pricing block while keeping the rest of the YAML definition (so
+    # ``calculate_price`` still sees ``service_code`` etc.).
+    if db_pricing_block and sample_table:
+        synthetic_def = dict(yaml_def or {})
+        synthetic_def['pricing'] = db_pricing_block
+        try:
+            db_result = calculate_price(synthetic_def, service_params, sample_table)
+            return {
+                'total': float(db_result.get('total', 0)),
+                'source': 'service_pricing_data',
+                'breakdown': [{
+                    'name': 'DB-authored base × multiplier × samples',
+                    'type': db_result.get('pricing_model', 'db'),
+                    'amount': float(db_result.get('unit_price', 0)),
+                    'quantity': db_result.get('number_of_units', 0),
+                    'subtotal': float(db_result.get('total', 0)),
+                }],
+                'yaml_breakdown': db_result.get('breakdown', {}),
+                'currency': db_result.get('currency', 'DZD'),
+            }
+        except (ValueError, KeyError, TypeError) as exc:
+            logger.warning(
+                "resolve_cost: pricing_data calculate_price failed for %s (%s); "
+                "falling through to YAML/flat",
+                service.code, exc,
+            )
 
     if yaml_def and yaml_def.get('pricing') and sample_table:
         try:
