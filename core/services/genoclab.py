@@ -60,4 +60,12 @@ def submit_genoclab_request(data: dict, user) -> Request:
     except Exception:
         pass
 
+    # Email the client their submission confirmation. Same fix as IBTIKAR:
+    # only the guest path was emailing; authenticated clients now get one too.
+    try:
+        from notifications.emails import notify_submission_confirmation
+        notify_submission_confirmation(request_obj)
+    except Exception:
+        pass
+
     return request_obj

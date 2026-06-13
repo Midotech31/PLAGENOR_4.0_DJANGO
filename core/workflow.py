@@ -230,8 +230,53 @@ def _create_notifications(request_obj, to_status):
 
 
 def _send_transition_emails(request_obj, old_status, to_status):
-    """Send email notifications for key transitions. Placeholder for future SMTP integration."""
-    pass
+    """Send email notifications on workflow transitions.
+
+    Routes the transition to the matching ``notifications.emails.notify_*``
+    function. Backend is config-driven (console in dev, SMTP when
+    ``SMTP_HOST`` is set in ``.env``). Failures never block a transition —
+    they're logged and swallowed.
+    """
+    try:
+        from notifications import emails as nem
+    except Exception:
+        return
+
+    def _safe(fn, *args, **kw):
+        try:
+            fn(*args, **kw)
+        except Exception as exc:
+            logger.exception(
+                "email notification %s failed for %s (%s -> %s): %s",
+                getattr(fn, '__name__', 'notify'),
+                getattr(request_obj, 'display_id', '?'),
+                old_status, to_status, exc,
+            )
+
+    # Dedicated templates first.
+    if to_status == 'ASSIGNED' and request_obj.assigned_to:
+        _safe(nem.notify_assignment, request_obj, request_obj.assigned_to)
+    elif to_status in ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'):
+        _safe(nem.notify_appointment, request_obj)
+    elif to_status in ('REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT'):
+        _safe(nem.notify_report_delivery, request_obj)
+
+    # Generic status-change email so the requester/client gets a paper
+    # trail of every meaningful step. Sent ON TOP of dedicated templates
+    # above when the status overlaps.
+    _CARE_STATUSES = {
+        'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
+        'IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED',
+        'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+        'REPORT_UPLOADED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER',
+        'COMPLETED', 'REJECTED',
+        'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT',
+        'QUOTE_REJECTED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED',
+        'PAYMENT_PENDING', 'PAYMENT_CONFIRMED', 'SENT_TO_CLIENT',
+    }
+    if to_status in _CARE_STATUSES:
+        _safe(nem.notify_status_change, request_obj, old_status, to_status)
 
 
 def _auto_generate_documents(request_obj, to_status):

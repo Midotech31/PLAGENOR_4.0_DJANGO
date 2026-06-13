@@ -63,6 +63,14 @@ def submit_ibtikar_request(data: dict, user) -> Request:
     except Exception:
         pass
 
+    # Email the requester their submission confirmation. The guest path
+    # already did this; authenticated requesters were missing it.
+    try:
+        from notifications.emails import notify_submission_confirmation
+        notify_submission_confirmation(request_obj)
+    except Exception:
+        pass
+
     return request_obj
 
 
