@@ -48,19 +48,27 @@ def service_form_fragment(request, service_code):
     # cost-estimate time even though the YAML declared them.
     yaml_multipliers = (pricing or {}).get('multipliers') if isinstance(pricing, dict) else None
     if isinstance(yaml_multipliers, dict) and yaml_multipliers:
-        mult_keys = set(yaml_multipliers.keys())
+        # Compare as strings: YAML option values can be ints (e.g. duration
+        # 1/2/3) while the multiplier keys are strings ("1"/"2"/"3") — a raw
+        # set intersection would miss them (int 1 != str "1").
+        mult_by_str = {str(k): v for k, v in yaml_multipliers.items()}
+        mult_str_keys = set(mult_by_str.keys())
         # Don't mutate the cached registry parameter dicts.
         parameters = [dict(p) for p in parameters]
         for p in parameters:
-            opts = set(p.get('options') or [])
+            opts = p.get('options') or []
             if not opts:
                 continue
+            opt_strs = {str(o) for o in opts}
             # Match the param whose options are the multiplier keys (covers
-            # analysis_mode, qc_level, sequencing_mode, drying_level, primer_type
-            # in the EGTP YAML registry).
-            if opts & mult_keys and not p.get('option_pricing'):
+            # analysis_mode, qc_level, sequencing_mode, drying_level,
+            # primer_type, duration_units_24h… in the EGTP YAML registry).
+            if opt_strs & mult_str_keys and not p.get('option_pricing'):
+                # Key the option_pricing by the ACTUAL option value the form
+                # posts (str), so the JS lookup matches the selected value.
                 p['option_pricing'] = {
-                    k: v for k, v in yaml_multipliers.items() if k in opts
+                    str(o): mult_by_str[str(o)]
+                    for o in opts if str(o) in mult_by_str
                 }
 
     # Also load DB-defined custom fields. A SuperAdmin can define a whole
