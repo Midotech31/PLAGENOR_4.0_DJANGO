@@ -120,8 +120,15 @@ def create_request(request):
 
     # Declared balance validation
     declared = safe_float(request.POST.get('declared_balance'))
-    if declared < 0 or declared > 200000:
-        messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
+    # Upper bound = the requester's REAL remaining budget, not a flat 200 000.
+    # check_ibtikar_budget gives us a context dict we can reuse.
+    _bcheck = check_ibtikar_budget(amount=0, requester=request.user)
+    declared_cap = float(_bcheck.get('remaining') or _bcheck.get('cap') or 200000)
+    if declared < 0 or declared > declared_cap:
+        messages.error(
+            request,
+            f"Le solde IBTIKAR déclaré doit être entre 0 et {declared_cap:,.0f} DA.",
+        )
         return redirect_back(request, 'dashboard:requester')
 
     # Collect YAML parameter values

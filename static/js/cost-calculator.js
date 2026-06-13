@@ -216,9 +216,32 @@
                 return pricing.base_price;
             }
             if (typeof pricing.base_price === 'object') {
-                // Return non_pathogenic price by default
-                return pricing.base_price.non_pathogenic || 
-                       pricing.base_price.default || 
+                // Detect the pathogenic flag from the form so the base price
+                // reflects the requester's choice instead of always returning
+                // non_pathogenic. The checkbox can be the global param or a
+                // per-row sample column ("pathogenic" / "isolat_pathogene"…).
+                var isPathogenic = false;
+                var pathEl = document.querySelector(
+                    'input[name="param_pathogenic"], ' +
+                    'select[name="param_pathogenic"], ' +
+                    'input[name^="sample_"][name$="_pathogenic"], ' +
+                    'select[name^="sample_"][name$="_pathogenic"]'
+                );
+                if (pathEl) {
+                    if (pathEl.type === 'checkbox') {
+                        isPathogenic = pathEl.checked;
+                    } else {
+                        var v = (pathEl.value || '').toString().toLowerCase();
+                        isPathogenic = v === 'true' || v === 'oui' || v === '1' ||
+                                       v === 'pathogenic' || v === 'pathogene' ||
+                                       v === 'pathogène';
+                    }
+                }
+                if (isPathogenic && pricing.base_price.pathogenic) {
+                    return pricing.base_price.pathogenic;
+                }
+                return pricing.base_price.non_pathogenic ||
+                       pricing.base_price.default ||
                        pricing.base_price.pathogenic || 0;
             }
         }

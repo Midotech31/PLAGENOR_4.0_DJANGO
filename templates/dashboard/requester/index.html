@@ -34,7 +34,9 @@
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
             <div>
                 <h3 style="margin:0 0 4px; font-size:1rem;">{% trans "Budget IBTIKAR annuel" %}</h3>
-                <p class="text-sm text-muted" style="margin:0;">{% trans "Budget virtuel encadré par la DGRSDT — limite individuelle 200 000 DA / an." %}</p>
+                <p class="text-sm text-muted" style="margin:0;">
+                    {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Budget virtuel encadré par la DGRSDT — limite individuelle {{ cap }} DA / an.{% endblocktrans %}
+                </p>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:1.6rem; font-weight:700; color:{% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">{{ budget_context.budget_remaining|floatformat:0 }} <span style="font-size:0.85rem; color:#64748b; font-weight:500;">DA</span></div>
@@ -111,7 +113,17 @@
                         </div>
                         <div class="form-group">
                             <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                            <input type="number" name="declared_balance" id="declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                            {# Pre-fill with the requester's REMAINING budget so the field shows
+                               their actual ceiling, not a hardcoded 200 000. Falls back to the
+                               cap when no remaining is known (first request of the year). #}
+                            <input type="number" name="declared_balance" id="declared_balance"
+                                   class="form-control" step="1"
+                                   value="{{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }}"
+                                   min="0"
+                                   max="{{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }}">
+                            <small class="text-muted" style="display:block; margin-top:4px;">
+                                {% blocktrans with rem=budget_context.budget_remaining|floatformat:0 %}Solde annuel restant : {{ rem }} DA{% endblocktrans %}
+                            </small>
                         </div>
                     </div>
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
@@ -137,8 +149,10 @@
                             estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
                         }
 
-                        if (balance < 0 || balance > 200000) {
-                            warning.innerHTML = '{% trans "Le solde déclaré doit être entre 0 et 200 000 DA." %}';
+                        // Cap = the requester's REMAINING budget (not a hardcoded 200000).
+                        var BUDGET_CAP = {{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }};
+                        if (balance < 0 || balance > BUDGET_CAP) {
+                            warning.innerHTML = '{% blocktrans with cap=budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 %}Le solde déclaré doit être entre 0 et {{ cap }} DA.{% endblocktrans %}';
                             warning.style.display = 'block';
                             submitBtn.disabled = true;
                         } else if (estimated > 0 && estimated > balance) {

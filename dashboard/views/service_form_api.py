@@ -39,6 +39,30 @@ def service_form_fragment(request, service_code):
     ]
     pricing = definition.get('pricing', {}) or {}
 
+    # Bridge: when the YAML pricing defines a ``multipliers`` table (e.g.
+    # {Simple: 1, Duplicate: 2, Triplicate: 3} on a per_sample_table_row_with
+    # _multiplier model), inject that map as ``option_pricing`` on the param
+    # whose options match — the cost calculator only sees per-field
+    # data-option-pricing attributes, never the global YAML pricing block,
+    # so without this bridge Duplicate/Triplicate were silently ignored at
+    # cost-estimate time even though the YAML declared them.
+    yaml_multipliers = (pricing or {}).get('multipliers') if isinstance(pricing, dict) else None
+    if isinstance(yaml_multipliers, dict) and yaml_multipliers:
+        mult_keys = set(yaml_multipliers.keys())
+        # Don't mutate the cached registry parameter dicts.
+        parameters = [dict(p) for p in parameters]
+        for p in parameters:
+            opts = set(p.get('options') or [])
+            if not opts:
+                continue
+            # Match the param whose options are the multiplier keys (covers
+            # analysis_mode, qc_level, sequencing_mode, drying_level, primer_type
+            # in the EGTP YAML registry).
+            if opts & mult_keys and not p.get('option_pricing'):
+                p['option_pricing'] = {
+                    k: v for k, v in yaml_multipliers.items() if k in opts
+                }
+
     # Also load DB-defined custom fields. A SuperAdmin can define a whole
     # service's form here: fields tagged ``parameter`` become questions
     # (db_fields, serialized with their variable-pricing / conditional-logic
