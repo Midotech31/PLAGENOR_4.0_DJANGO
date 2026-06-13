@@ -484,3 +484,147 @@ def apply_legacy_label_substitution(doc: DocumentType, field_map: Mapping[str, s
             if footer is not None:
                 _visit(footer.paragraphs)
                 _visit_tables(footer.tables)
+
+
+# Legacy IBTIKAR forms — sample-table population ---------------------------
+
+def _norm_token(text: str) -> str:
+    """Lowercase, strip accents and non-alphanumerics for fuzzy header match."""
+    import unicodedata
+    text = unicodedata.normalize('NFKD', text or '')
+    text = ''.join(c for c in text if not unicodedata.combining(c))
+    return re.sub(r'[^a-z0-9]', '', text.lower())
+
+
+# Synonym groups mapping a submitted sample key (or its tokens) to the
+# branded-form column it belongs in. Each entry: canonical -> set of tokens
+# that may appear either in the submitted key or the DOCX column header.
+_SAMPLE_COLUMN_SYNONYMS = [
+    ('code', {'code', 'samplecode', 'echantillon', 'sample', 'refechantillon', 'reference', 'ref'}),
+    ('origine', {'origine', 'origin', 'origineadn', 'origindna', 'source'}),
+    ('typeadn', {'typeadn', 'typednad', 'dnatype', 'type', 'typedna', 'adn', 'dna'}),
+    ('extraction', {'methode', 'extraction', 'methodeextraction', 'extractionmethod', 'method'}),
+    ('gene', {'gene', 'genecible', 'targetgene', 'cible', 'target', 'amplicon', 'taille'}),
+    ('amorces', {'amorces', 'primers', 'sequences', 'sequence', 'primer'}),
+    ('tm', {'tm', 'temperature', 'meltingtemp', 'tmc'}),
+    ('remarques', {'remarques', 'remarks', 'notes', 'note', 'commentaire', 'comment', 'observations'}),
+    ('numero', {'n', 'no', 'num', 'numero', 'number', 'ndordre'}),
+]
+
+
+def _canonical_for(token: str) -> Optional[str]:
+    """Return the canonical column group whose synonyms contain ``token``.
+
+    Exact matches win first (so a one-letter header like ``N`` maps to
+    ``numero``, not to ``code`` via a stray substring hit inside
+    ``echantillon``). Substring matching is the fallback and only fires for
+    tokens of 4+ chars against synonyms of 4+ chars, which is what compound
+    headers like ``genecibletaille`` need.
+    """
+    if not token:
+        return None
+    for canonical, toks in _SAMPLE_COLUMN_SYNONYMS:
+        if token in toks:
+            return canonical
+    if len(token) >= 4:
+        for canonical, toks in _SAMPLE_COLUMN_SYNONYMS:
+            for t in toks:
+                if len(t) >= 4 and (t in token or token in t):
+                    return canonical
+    return None
+
+
+def _set_cell_text(cell, value: str) -> None:
+    """Write ``value`` into a table cell, preserving the cell's first-run style."""
+    if not cell.paragraphs:
+        cell.add_paragraph(value)
+        return
+    para = cell.paragraphs[0]
+    if para.runs:
+        para.runs[0].text = value
+        for r in para.runs[1:]:
+            r.text = ''
+    else:
+        para.add_run(value)
+
+
+def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
+    """Fill the branded IBTIKAR form's sample table from the submitted data.
+
+    The egtp_*.docx forms ship as blank printable grids. Best practice is for
+    the generated document to carry everything the system already knows, so
+    the lab receives a complete form rather than re-typing the sample list by
+    hand. This maps each submitted ``sample_table`` row into the matching
+    DOCX columns (by accent-insensitive synonym matching on the header) and
+    fills the data rows, adding rows when there are more samples than the
+    template pre-printed.
+
+    Idempotent and defensive: any structural surprise (no recognisable table,
+    no samples) leaves the document untouched.
+    """
+    samples = getattr(request_obj, 'sample_table', None)
+    if not samples or not isinstance(samples, list):
+        return
+
+    # 1) Find the sample table: the one whose header row maps to >=2 known
+    #    sample columns. Skip the validation/visa table.
+    target_table = None
+    header_map = None  # {col_index: canonical}
+    for table in doc.tables:
+        if len(table.rows) < 2 or len(table.columns) < 3:
+            continue
+        hdr = {}
+        for ci, cell in enumerate(table.rows[0].cells):
+            canonical = _canonical_for(_norm_token(cell.text))
+            if canonical and canonical not in hdr.values():
+                hdr[ci] = canonical
+        # require at least a code/gene-ish match so we don't hit the visa table
+        if len(hdr) >= 2 and any(v in ('code', 'gene', 'numero') for v in hdr.values()):
+            target_table = table
+            header_map = hdr
+            break
+    if target_table is None or not header_map:
+        return
+
+    # 2) Build, per submitted sample, a {canonical: value} dict.
+    def sample_to_canonical(sample: dict) -> dict:
+        out = {}
+        if not isinstance(sample, dict):
+            return out
+        for key, val in sample.items():
+            if val in (None, '', [], {}):
+                continue
+            canonical = _canonical_for(_norm_token(str(key)))
+            if canonical and canonical not in out:
+                out[canonical] = str(val)
+        return out
+
+    rows_data = [sample_to_canonical(s) for s in samples]
+    rows_data = [r for r in rows_data if r]  # drop fully-empty rows
+    if not rows_data:
+        return
+
+    # 3) Identify the data rows (everything after the header) and fill them.
+    data_rows = target_table.rows[1:]
+    numero_cols = [ci for ci, c in header_map.items() if c == 'numero']
+
+    for idx, rdata in enumerate(rows_data):
+        if idx < len(data_rows):
+            row = data_rows[idx]
+        else:
+            row = target_table.add_row()
+        cells = row.cells
+        for ci, canonical in header_map.items():
+            if ci >= len(cells):
+                continue
+            if canonical == 'numero':
+                # keep/refresh the sequential number
+                _set_cell_text(cells[ci], str(idx + 1).zfill(2))
+                continue
+            value = rdata.get(canonical)
+            if value:
+                _set_cell_text(cells[ci], value)
+    # number any rows we added that have no numero filled yet
+    for ci in numero_cols:
+        for idx in range(len(data_rows), len(rows_data)):
+            pass  # already numbered above when the row was created

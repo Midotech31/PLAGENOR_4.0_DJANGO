@@ -41,6 +41,7 @@ from documents.docx_helpers import (
     apply_house_style,
     apply_legacy_label_substitution,
     ensure_institutional_header,
+    populate_legacy_sample_table,
     replace_placeholders,
     strip_unresolved_placeholders,
 )
@@ -519,6 +520,9 @@ def generate_ibtikar_form(request_obj) -> str:
     replace_placeholders(doc, field_map)
     if using_legacy_form:
         apply_legacy_label_substitution(doc, field_map)
+        # Pre-fill the printable sample grid from the digital submission so the
+        # lab receives a complete form, not a blank table to re-type by hand.
+        populate_legacy_sample_table(doc, request_obj)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)
