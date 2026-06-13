@@ -57,14 +57,34 @@ sample_table:
 
   columns:
     - name: sample_code
-      label: Amplicon identifier
+      label: "Code"
       type: string
       required: true
 
-    - name: amplicon_size_bp
-      label: Amplicon size (bp)
-      type: integer
-      required: true
+    - name: nom_du_gene
+      label: "Nom du géne"
+      type: string
+      required: false
+
+    - name: taille_du_gene
+      label: "Taille du géne (pb)"
+      type: string
+      required: false
+
+    - name: source_origine_de_l_echantillon
+      label: "Source/origine de l’échantillon"
+      type: string
+      required: false
+
+    - name: sequences_des_amorces_utilisees
+      label: "Séquences des amorces utilisées (5’-3’)"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

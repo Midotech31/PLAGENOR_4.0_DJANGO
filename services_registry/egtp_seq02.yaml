@@ -67,19 +67,34 @@ sample_table:
 
   columns:
     - name: sample_code
-      label: Sample identifier
+      label: "Code"
       type: string
       required: true
 
-    - name: material_type
-      label: Biological material
-      type: enum
-      required: true
-      options:
-        - Culture
-        - Tissue
-        - Blood
-        - Biomass
+    - name: type_d_echantillon
+      label: "Type d’échantillon (Sang, bactérie, tissu animal...)"
+      type: string
+      required: false
+
+    - name: date_de_prelevement
+      label: "Date de prélèvement"
+      type: string
+      required: false
+
+    - name: volume_quantite
+      label: "Volume (µl) / Quantité (g)"
+      type: string
+      required: false
+
+    - name: condition_de_stockage_etat_de_l_echantil
+      label: "Condition de stockage / Etat de l’échantillon"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

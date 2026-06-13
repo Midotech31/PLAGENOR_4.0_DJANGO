@@ -569,68 +569,115 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
     if not samples or not isinstance(samples, list):
         return
 
-    # 1) Find the sample table: the one whose header row maps to >=2 known
-    #    sample columns. Skip the validation/visa table.
+    # The YAML sample_table.columns carry, per service, the exact French
+    # label that appears on the fiche. We map each DOCX header to the YAML
+    # column whose label/name best matches it — so arbitrary service-specific
+    # columns (storage conditions, culture medium…) fill too, not just the
+    # known bio columns. Falls back to the synonym table when no YAML column
+    # definition is available.
+    service_code = getattr(getattr(request_obj, 'service', None), 'code', '') or ''
+    yaml_columns = []  # list of (name, normalized_label, normalized_name)
+    try:
+        from core.registry import get_service_def
+        sdef = get_service_def(service_code) or {}
+        for col in (sdef.get('sample_table', {}) or {}).get('columns', []) or []:
+            cname = col.get('name')
+            if not cname:
+                continue
+            yaml_columns.append((
+                cname,
+                _label_norm(col.get('label', cname)),
+                _label_norm(cname.replace('_', ' ')),
+            ))
+    except Exception:
+        yaml_columns = []
+
+    def header_to_field(header_text: str):
+        """Return the submitted-sample key this DOCX header maps to."""
+        h = _label_norm(header_text)
+        if h in ('n', 'no', 'num', 'numero'):
+            return '__numero__'
+        if not h:
+            return None
+        # 1) best YAML column by label/name overlap
+        best, best_score = None, 0
+        hw = set(h.split())
+        for cname, lnorm, nnorm in yaml_columns:
+            for cand in (lnorm, nnorm):
+                if not cand:
+                    continue
+                if cand == h or cand in h or h in cand:
+                    score = 1000 + len(cand)
+                else:
+                    cw = set(cand.split())
+                    score = len(hw & cw)
+                    if score == 0:
+                        continue
+                if score > best_score:
+                    best_score, best = score, cname
+        if best is not None and best_score > 0:
+            return best
+        # 2) synonym fallback (canonical key); samples may be keyed that way
+        canon = _canonical_for(_norm_token(header_text))
+        return canon
+
+    # 1) Find the sample table: the largest table with >=3 columns whose
+    #    header maps to >=2 fields (skips the 2-col validation/visa table).
     target_table = None
-    header_map = None  # {col_index: canonical}
-    for table in doc.tables:
+    header_map = None  # {col_index: field_key}
+    for table in sorted(doc.tables, key=lambda t: -len(t.columns)):
         if len(table.rows) < 2 or len(table.columns) < 3:
             continue
         hdr = {}
         for ci, cell in enumerate(table.rows[0].cells):
-            canonical = _canonical_for(_norm_token(cell.text))
-            if canonical and canonical not in hdr.values():
-                hdr[ci] = canonical
-        # require at least a code/gene-ish match so we don't hit the visa table
-        if len(hdr) >= 2 and any(v in ('code', 'gene', 'numero') for v in hdr.values()):
-            target_table = table
-            header_map = hdr
+            f = header_to_field(cell.text)
+            if f and (f == '__numero__' or f not in hdr.values()):
+                hdr[ci] = f
+        mapped = [v for v in hdr.values() if v != '__numero__']
+        if len(mapped) >= 2:
+            target_table, header_map = table, hdr
             break
     if target_table is None or not header_map:
         return
 
-    # 2) Build, per submitted sample, a {canonical: value} dict.
-    def sample_to_canonical(sample: dict) -> dict:
+    # 2) Normalise each submitted sample to {field_key: value}. Keys are the
+    #    YAML column names the online form posts; also accept synonym keys.
+    def sample_to_fields(sample: dict) -> dict:
         out = {}
         if not isinstance(sample, dict):
             return out
+        valid = {c[0] for c in yaml_columns}
         for key, val in sample.items():
             if val in (None, '', [], {}):
                 continue
-            canonical = _canonical_for(_norm_token(str(key)))
-            if canonical and canonical not in out:
-                out[canonical] = str(val)
+            sval = str(val)
+            if key in valid:
+                out[key] = sval
+            else:
+                canon = _canonical_for(_norm_token(str(key)))
+                if canon and canon not in out:
+                    out[canon] = sval
         return out
 
-    rows_data = [sample_to_canonical(s) for s in samples]
-    rows_data = [r for r in rows_data if r]  # drop fully-empty rows
+    rows_data = [sample_to_fields(s) for s in samples]
+    rows_data = [r for r in rows_data if r]
     if not rows_data:
         return
 
-    # 3) Identify the data rows (everything after the header) and fill them.
+    # 3) Fill data rows (after the header), adding rows when needed.
     data_rows = target_table.rows[1:]
-    numero_cols = [ci for ci, c in header_map.items() if c == 'numero']
-
     for idx, rdata in enumerate(rows_data):
-        if idx < len(data_rows):
-            row = data_rows[idx]
-        else:
-            row = target_table.add_row()
+        row = data_rows[idx] if idx < len(data_rows) else target_table.add_row()
         cells = row.cells
-        for ci, canonical in header_map.items():
+        for ci, field in header_map.items():
             if ci >= len(cells):
                 continue
-            if canonical == 'numero':
-                # keep/refresh the sequential number
+            if field == '__numero__':
                 _set_cell_text(cells[ci], str(idx + 1).zfill(2))
                 continue
-            value = rdata.get(canonical)
+            value = rdata.get(field)
             if value:
                 _set_cell_text(cells[ci], value)
-    # number any rows we added that have no numero filled yet
-    for ci in numero_cols:
-        for idx in range(len(data_rows), len(rows_data)):
-            pass  # already numbered above when the row was created
 
 
 # Legacy IBTIKAR forms — generic question-filler ---------------------------
