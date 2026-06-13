@@ -53,10 +53,13 @@
                 </div>
                 <div class="form-group">
                     <label>{% trans "Service" %} *</label>
-                    <select name="service_id" class="form-control" required>
+                    <select name="service_id" id="id_service" class="form-control" required>
                         <option value="">{% trans "Sélectionner un service..." %}</option>
                         {% for s in services %}
-                        <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                        <option value="{{ s.pk }}" data-code="{{ s.code }}"
+                                data-channel-availability="{{ s.channel_availability }}"
+                                data-ibtikar-price="{{ s.ibtikar_price }}"
+                                data-genoclab-price="{{ s.genoclab_price }}">{{ s.code }} — {{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -94,6 +97,31 @@
     var ibtFields = document.getElementById('ibtikar-guest-fields');
     var ibtIdInput = document.getElementById('guest_ibtikar_id');
 
+    var serviceSelect = document.getElementById('id_service');
+
+    function filterServicesByChannel() {
+        if (!channelSelect || !serviceSelect) return;
+        var ch = channelSelect.value || 'GENOCLAB';
+        var matchedFirst = null;
+        var selectedStillVisible = false;
+        for (var i = 0; i < serviceSelect.options.length; i++) {
+            var opt = serviceSelect.options[i];
+            if (!opt.value) { opt.hidden = false; continue; }            // keep placeholder
+            var avail = opt.getAttribute('data-channel-availability') || 'BOTH';
+            var show = (avail === 'BOTH' || avail === ch);
+            opt.hidden = !show; opt.disabled = !show;
+            if (show) {
+                if (!matchedFirst) matchedFirst = opt;
+                if (opt.value === serviceSelect.value) selectedStillVisible = true;
+                // Refresh the price suffix to the active channel's price
+                var price = opt.getAttribute(ch === 'IBTIKAR' ? 'data-ibtikar-price' : 'data-genoclab-price') || '0';
+                var label = opt.textContent.replace(/\s*\([^)]*\)\s*$/, '');
+                opt.textContent = label + ' (' + price + ' DA)';
+            }
+        }
+        if (!selectedStillVisible) serviceSelect.value = '';
+    }
+
     function toggleIbtFields() {
         if (!channelSelect || !ibtFields) return;
         if (channelSelect.value === 'IBTIKAR') {
@@ -103,6 +131,7 @@
             ibtFields.style.display = 'none';
             ibtIdInput.required = false;
         }
+        filterServicesByChannel();
     }
 
     if (channelSelect) {

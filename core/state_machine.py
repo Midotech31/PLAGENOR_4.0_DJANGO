@@ -55,7 +55,7 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
     "ORDER_UPLOADED":           {"INVOICE_GENERATED", "ASSIGNED"},  # invoice optional, then assign
     "INVOICE_GENERATED":        {"ASSIGNED"},  # Admin assigns after invoice issued
-    "QUOTE_REJECTED_BY_CLIENT": set(),     # terminal
+    "QUOTE_REJECTED_BY_CLIENT": {"QUOTE_DRAFT"},  # admin revises and re-sends
     "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},
     "APPOINTMENT_PROPOSED":     {"APPOINTMENT_CONFIRMED"},
     "APPOINTMENT_CONFIRMED":    {"SAMPLE_RECEIVED"},

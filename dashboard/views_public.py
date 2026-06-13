@@ -85,9 +85,15 @@ def service_landing(request, service_code):
 
 
 def guest_submit(request):
-    """Public guest submission form — no login required."""
+    """Public guest submission form — no login required.
+
+    Services for both channels are shown; the template filters the dropdown
+    client-side based on the chosen channel. Server-side, we re-check that
+    the chosen service is actually available on the chosen channel — the
+    client filter is UX, not a security boundary.
+    """
     services_qs = Service.objects.filter(
-        active=True, channel_availability__in=['BOTH', 'GENOCLAB']
+        active=True, channel_availability__in=['BOTH', 'IBTIKAR', 'GENOCLAB'],
     ).order_by('code')
 
     if request.method == 'POST':
@@ -112,6 +118,15 @@ def guest_submit(request):
         service = Service.objects.filter(pk=service_id, active=True).first()
         if not service:
             messages.error(request, "Service invalide.")
+            return render(request, 'pages/guest_submit.html', {
+                'services': services_qs,
+            })
+
+        # Re-check the service is actually available on the chosen channel
+        # — the template's client-side filter is UX only; users can craft a
+        # POST that bypasses it.
+        if service.channel_availability not in ('BOTH', channel):
+            messages.error(request, "Ce service n'est pas disponible sur le canal choisi.")
             return render(request, 'pages/guest_submit.html', {
                 'services': services_qs,
             })
