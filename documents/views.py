@@ -86,18 +86,50 @@ def _block_signature(req, template_type):
     return str(max(t.timestamp() if t else 0 for _, t in sig_parts))
 
 
+def _service_fields_signature(req):
+    """Hash of the service's ``custom_fields`` definition.
+
+    SuperAdmin edits to ``ServiceFormField`` (adding a column, renaming a
+    label, changing field_category…) don't bump ``Request.updated_at``, so
+    without this signature the document cache would keep serving the stale
+    pre-edit PDF until the request itself is modified. Querying only the
+    columns we need keeps this cheap (one row per ``custom_fields`` of the
+    request's service).
+    """
+    if not getattr(req, 'service_id', None):
+        return '0'
+    try:
+        from core.models import ServiceFormField
+        ids = list(
+            ServiceFormField.objects
+            .filter(service_id=req.service_id)
+            .order_by('pk').values_list('pk', flat=True)
+        )
+        if not ids:
+            return '0'
+        # signature = service pk + last form-fields id + their count, no
+        # timestamp on this model so we rely on (count, max id) which jumps
+        # whenever the wipe-and-recreate save runs.
+        return f"{req.service_id}-{len(ids)}-{ids[-1]}"
+    except Exception:
+        return '0'
+
+
 def _cached_doc_path(req, template_type, suffix='.docx'):
     """Versioned on-disk cache path for a generated document.
 
     Cache key includes ``Request.updated_at`` so request edits invalidate,
-    plus the DocumentBlock signature so admin notice edits also invalidate.
+    the DocumentBlock signature so admin notice edits invalidate, and the
+    ServiceFormField signature so SuperAdmin edits to the service's custom
+    fields also invalidate the cached document.
     """
     cache_dir = Path(settings.MEDIA_ROOT) / 'documents_cache'
     cache_dir.mkdir(parents=True, exist_ok=True)
     ts = int(req.updated_at.timestamp()) if req.updated_at else 0
     safe_id = (req.display_id or str(req.pk)).replace('/', '_')
     blocks_sig = _block_signature(req, template_type)
-    return cache_dir / f"{safe_id}__{template_type}__{ts}__{blocks_sig}{suffix}"
+    fields_sig = _service_fields_signature(req)
+    return cache_dir / f"{safe_id}__{template_type}__{ts}__{blocks_sig}__{fields_sig}{suffix}"
 
 
 def _cached_serve_doc(req, template_type, generator_fn, download_basename):
