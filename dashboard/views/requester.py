@@ -123,18 +123,6 @@ def create_request(request):
     if declared < 0 or declared > 200000:
         messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
         return redirect_back(request, 'dashboard:requester')
-    if service.ibtikar_price and float(service.ibtikar_price) > declared:
-        messages.warning(request, f"Attention: le coût estimé ({service.ibtikar_price} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
-
-    # Budget check before submission
-    budget_check = check_ibtikar_budget(amount=service.ibtikar_price, requester=request.user)
-    if budget_check['exceeded']:
-        messages.error(
-            request,
-            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
-            f"Reste: {budget_check['remaining']:,.0f} DZD."
-        )
-        return redirect_back(request, 'dashboard:requester')
 
     # Collect YAML parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -156,6 +144,22 @@ def create_request(request):
         urgency=request.POST.get('urgency', 'Normal'),
     )
     budget_amount = price_result.get('total') or float(service.ibtikar_price or 0)
+
+    if budget_amount > declared:
+        messages.warning(request, f"Attention: le coût estimé ({budget_amount:,.0f} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
+
+    # Budget guard runs on the RESOLVED amount — the same figure recorded as
+    # budget_amount below. Checking the flat service price here would let a
+    # multi-sample request slip past the 200K cap (check ≤ cap on 1× flat,
+    # record N× resolved).
+    budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
+    if budget_check['exceeded']:
+        messages.error(
+            request,
+            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
+            f"Reste: {budget_check['remaining']:,.0f} DZD."
+        )
+        return redirect_back(request, 'dashboard:requester')
 
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
