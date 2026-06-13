@@ -111,6 +111,26 @@ class User(AbstractUser):
         help_text='Laisser vide pour utiliser la langue du navigateur.',
     )
 
+    # IBTIKAR running balance, self-declared by the requester.
+    #
+    # NULL = the requester has NOT yet declared their residual balance for
+    # this year — the requester dashboard must surface a declaration prompt
+    # before any new request can be submitted. A non-null value (incl. 0) is
+    # the working balance used to size estimates and as the cap-check. After
+    # a request reaches COMPLETED, the resolved cost is deducted here. The
+    # requester can revise this number at any time to mirror what their
+    # actual DGRSDT IBTIKAR account shows (the IBTIKAR budget can be spent
+    # on platforms outside PLAGENOR too).
+    ibtikar_declared_balance = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        verbose_name='Solde IBTIKAR déclaré (DA)',
+    )
+    ibtikar_balance_declared_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Dernière mise à jour du solde IBTIKAR',
+    )
+
     class Meta:
         db_table = 'users'
 

@@ -22,50 +22,79 @@
 </div>
 
 <!--
-    IBTIKAR Annual Budget card. Surfaces the requester's used / cap /
-    remaining so they can size a new request before submitting (matches the
-    "IBTIKAR budget display on requester dashboard" feature from 328e510).
-    Colour follows utilisation: green <70% · orange 70-90% · red ≥90%.
+    IBTIKAR balance card. Two states:
+      1. needs_declaration → prompt the candidate to declare a residual
+         balance before any submission is allowed.
+      2. declared → show the running balance, an "update" affordance, and
+         the DGRSDT-account reminder.
 -->
 {% if budget_context %}
+{% if budget_context.needs_declaration %}
+<div class="card" style="margin-bottom:24px; background:linear-gradient(135deg, #fff7ed 0%, #ffffff 100%); border-left:4px solid #f59e0b;">
+    <div class="card-body" style="padding:18px 22px;">
+        <h3 style="margin:0 0 8px; font-size:1.05rem; display:flex; align-items:center; gap:10px; color:#1e293b;">
+            {% trans "Déclarez votre solde IBTIKAR" %}
+        </h3>
+        <p class="text-sm" style="margin:0 0 14px; color:#475569; line-height:1.6;">
+            {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Avant toute soumission, indiquez le montant résiduel disponible sur votre compte IBTIKAR (entre 0 et {{ cap }} DA). C'est ce montant qui servira de plafond pour l'estimation et la validation de votre demande. Vous pourrez l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre compte DGRSDT.{% endblocktrans %}
+        </p>
+        <form method="post" action="{% url 'dashboard:requester_declare_balance' %}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            {% csrf_token %}
+            <div class="form-group" style="margin:0; flex:1; min-width:220px;">
+                <label style="font-weight:600; font-size:.9rem;">{% trans "Solde IBTIKAR résiduel (DA)" %}</label>
+                <input type="number" name="declared_balance" class="form-control"
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
+                       required autofocus placeholder="0">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Valider mon solde" %}</button>
+        </form>
+    </div>
+</div>
+{% else %}
 {% with pct=budget_context.budget_pct %}
-<div class="card" style="margin-bottom:24px; background:linear-gradient(135deg, {% if pct >= 90 %}#fef2f2{% elif pct >= 70 %}#fff7ed{% else %}#f0fdf4{% endif %} 0%, #ffffff 100%); border-left:4px solid {% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">
+<div class="card" x-data="{ editing: false }" style="margin-bottom:24px; background:linear-gradient(135deg, {% if pct >= 90 %}#fef2f2{% elif pct >= 70 %}#fff7ed{% else %}#f0fdf4{% endif %} 0%, #ffffff 100%); border-left:4px solid {% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">
     <div class="card-body" style="padding:18px 22px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
             <div>
-                <h3 style="margin:0 0 4px; font-size:1rem;">{% trans "Budget IBTIKAR annuel" %}</h3>
+                <h3 style="margin:0 0 4px; font-size:1rem;">{% trans "Solde IBTIKAR déclaré" %}</h3>
                 <p class="text-sm text-muted" style="margin:0;">
-                    {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Budget virtuel encadré par la DGRSDT — limite individuelle {{ cap }} DA / an.{% endblocktrans %}
+                    {% if budget_context.last_declared_at %}{% blocktrans with dt=budget_context.last_declared_at|date:"d/m/Y H:i" %}Mis à jour le {{ dt }}.{% endblocktrans %} {% endif %}
+                    {% trans "Vous pouvez ajuster ce montant à tout moment." %}
                 </p>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:1.6rem; font-weight:700; color:{% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %};">{{ budget_context.budget_remaining|floatformat:0 }} <span style="font-size:0.85rem; color:#64748b; font-weight:500;">DA</span></div>
-                <div class="text-xs text-muted">{% trans "Solde restant" %}</div>
+                <div class="text-xs text-muted">{% trans "Solde déclaré disponible" %}</div>
             </div>
         </div>
 
-        <!-- Progress bar -->
-        <div style="margin-top:16px; height:10px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-            <div style="width:{{ pct }}%; height:100%; background:{% if pct >= 90 %}#dc2626{% elif pct >= 70 %}#f59e0b{% else %}#16a34a{% endif %}; transition:width 0.4s;"></div>
+        <!-- DGRSDT reminder — always visible once declared. -->
+        <div style="margin-top:14px; padding:10px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e3a8a; font-size:.85rem; line-height:1.5;">
+            {% trans "Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire." %}
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.85rem; color:#475569;">
-            <span><strong>{{ budget_context.budget_used|floatformat:0 }} DA</strong> {% trans "utilisés" %} ({{ pct }} %)</span>
-            <span>{% trans "Cap" %}: <strong>{{ budget_context.budget_cap|floatformat:0 }} DA</strong></span>
+        <!-- Update affordance -->
+        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+            <button type="button" class="btn btn-sm btn-outline" @click="editing = !editing" x-text="editing ? '{% trans 'Annuler' %}' : '{% trans 'Mettre à jour mon solde' %}'"></button>
         </div>
 
-        {% if pct >= 90 %}
-        <div style="margin-top:12px; padding:10px; background:#fee2e2; border-radius:6px; color:#991b1b; font-size:0.85rem;">
-            ⚠️ {% trans "Vous avez atteint plus de 90 % de votre budget annuel. Les nouvelles demandes seront vérifiées strictement." %}
-        </div>
-        {% elif pct >= 70 %}
-        <div style="margin-top:12px; padding:10px; background:#fef3c7; border-radius:6px; color:#92400e; font-size:0.85rem;">
-            ℹ️ {% trans "Plus de 70 % de votre budget est consommé. Pensez à prioriser vos prochaines analyses." %}
-        </div>
-        {% endif %}
+        <form method="post" action="{% url 'dashboard:requester_declare_balance' %}" x-show="editing" x-transition style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            {% csrf_token %}
+            <div class="form-group" style="margin:0; flex:1; min-width:220px;">
+                <label style="font-weight:600; font-size:.9rem;">{% trans "Nouveau solde IBTIKAR (DA)" %}</label>
+                <input type="number" name="declared_balance" class="form-control"
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
+                       value="{{ budget_context.budget_remaining|floatformat:0 }}" required>
+                <small class="text-muted" style="display:block; margin-top:4px;">
+                    {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Plafond annuel encadré par la DGRSDT : {{ cap }} DA.{% endblocktrans %}
+                </small>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+        </form>
     </div>
 </div>
 {% endwith %}
+{% endif %}
 {% endif %}
 
 <!-- Tab Navigation -->
@@ -79,6 +108,16 @@
 
     <!-- New Request -->
     <div x-show="tab === 'new'">
+        {% if budget_context.needs_declaration %}
+        <div class="card">
+            <div class="card-body" style="text-align:center; padding:40px 20px;">
+                <h3 style="margin:0 0 10px;">{% trans "Solde IBTIKAR non déclaré" %}</h3>
+                <p class="text-muted" style="margin:0;">
+                    {% trans "Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir soumettre une demande." %}
+                </p>
+            </div>
+        </div>
+        {% else %}
         <div class="card">
             <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande IBTIKAR" %}</h3></div>
             <div class="card-body">
@@ -102,27 +141,16 @@
                         <label>{% trans "Description" %}</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>{% trans "Urgence" %}</label>
-                            <select name="urgency" class="form-control">
-                                <option value="Normal">{% trans "Normal" %}</option>
-                                <option value="Urgent">{% trans "Urgent" %}</option>
-                                <option value="Très urgent">{% trans "Très urgent" %}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                            {# Pre-fill with the requester's REMAINING budget, not a hardcoded 200 000. #}
-                            <input type="number" name="declared_balance" id="declared_balance"
-                                   class="form-control" step="1"
-                                   value="{{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }}"
-                                   min="0"
-                                   max="{{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }}">
-                            <small class="text-muted" style="display:block; margin-top:4px;">
-                                {% blocktrans with rem=budget_context.budget_remaining|floatformat:0 %}Solde annuel restant : {{ rem }} DA{% endblocktrans %}
-                            </small>
-                        </div>
+                    <div class="form-group">
+                        <label>{% trans "Urgence" %}</label>
+                        <select name="urgency" class="form-control">
+                            <option value="Normal">{% trans "Normal" %}</option>
+                            <option value="Urgent">{% trans "Urgent" %}</option>
+                            <option value="Très urgent">{% trans "Très urgent" %}</option>
+                        </select>
+                    </div>
+                    <div style="padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; color:#475569; margin-bottom:12px; font-size:0.85rem;">
+                        {% blocktrans with rem=budget_context.budget_remaining|floatformat:0 %}Plafond pour cette demande : <strong>{{ rem }} DA</strong> (votre solde IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous avez vérifié votre compte DGRSDT.{% endblocktrans %}
                     </div>
                     <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
                     </div>
@@ -131,30 +159,21 @@
                 <script>
                 (function() {
                     var serviceSelect = document.querySelector('select[name="service_id"]');
-                    var balanceInput = document.getElementById('declared_balance');
                     var warning = document.getElementById('budget-warning');
                     var submitBtn = document.getElementById('btn-submit-request');
+                    var DECLARED_BALANCE = {{ budget_context.budget_remaining|default:0|floatformat:0 }};
 
                     function checkBudget() {
-                        if (!serviceSelect || !balanceInput || !warning) return;
+                        if (!serviceSelect || !warning) return;
                         var opt = serviceSelect.options[serviceSelect.selectedIndex];
                         if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
-                        var balance = parseFloat(balanceInput.value) || 0;
-                        // Read the actual computed cost from the cost-estimate element
                         var costEl = document.getElementById('cost-estimate');
                         var estimated = 0;
                         if (costEl && costEl.textContent && costEl.textContent !== '—') {
                             estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
                         }
-
-                        // Cap = the requester's REMAINING budget (not a hardcoded 200000).
-                        var BUDGET_CAP = {{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }};
-                        if (balance < 0 || balance > BUDGET_CAP) {
-                            warning.innerHTML = '{% blocktrans with cap=budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 %}Le solde déclaré doit être entre 0 et {{ cap }} DA.{% endblocktrans %}';
-                            warning.style.display = 'block';
-                            submitBtn.disabled = true;
-                        } else if (estimated > 0 && estimated > balance) {
-                            warning.innerHTML = '{% trans "Attention: le coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "dépasse votre solde déclaré" %} (' + balance.toLocaleString('fr-FR') + ' DA).';
+                        if (estimated > 0 && estimated > DECLARED_BALANCE) {
+                            warning.innerHTML = '{% trans "Coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "supérieur à votre solde déclaré" %} (' + DECLARED_BALANCE.toLocaleString('fr-FR') + ' DA).';
                             warning.style.display = 'block';
                             submitBtn.disabled = true;
                         } else {
@@ -162,15 +181,13 @@
                             submitBtn.disabled = false;
                         }
                     }
-
                     if (serviceSelect) serviceSelect.addEventListener('change', function(){ setTimeout(checkBudget, 100); });
-                    if (balanceInput) balanceInput.addEventListener('input', checkBudget);
-                    // Re-check when cost estimate updates
                     document.addEventListener('costUpdated', checkBudget);
                 })();
                 </script>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- My Requests -->

@@ -63,28 +63,96 @@ def get_ibtikar_budget_used(year: Optional[int] = None) -> float:
 
 
 def check_ibtikar_budget(amount, requester=None, request_obj=None) -> dict:
-    """Check if THIS STUDENT's budget allows the amount. Cap = 200K per student."""
-    used = get_ibtikar_budget_used_by_requester(requester.id) if requester else 0.0
-    cap = settings.IBTIKAR_BUDGET_CAP
-    projected = used + float(amount)
+    """Check if THIS STUDENT's *declared* balance allows the amount.
 
+    The cap is the requester's self-declared residual IBTIKAR balance
+    (`User.ibtikar_declared_balance`) — NOT a flat 200K — because the
+    DGRSDT IBTIKAR budget is shared across multiple platforms, so the
+    candidate is the only one who knows their true residual at any given
+    moment. The hard ceiling (settings.IBTIKAR_BUDGET_CAP, 200 000 DA)
+    is only used to validate the upper bound of what they can *declare*.
+
+    Returns `declared=None` when the requester has not yet declared a
+    balance — callers must surface a declaration prompt before letting
+    the requester submit.
+    """
+    declared = (
+        float(requester.ibtikar_declared_balance)
+        if requester and requester.ibtikar_declared_balance is not None
+        else None
+    )
+    hard_cap = settings.IBTIKAR_BUDGET_CAP
+    amount_f = float(amount)
+
+    if declared is None:
+        # Not declared yet — exceeded=True so the view refuses to submit
+        # until the requester declares a balance.
+        return {
+            'declared': None,
+            'cap': hard_cap,
+            'amount': amount_f,
+            'projected': amount_f,
+            'exceeded': True,
+            'remaining': 0.0,
+            'pct_used': 0.0,
+            'needs_declaration': True,
+        }
+
+    projected = amount_f
     result = {
-        'used': used,
-        'cap': cap,
-        'amount': float(amount),
+        'declared': declared,
+        'cap': hard_cap,
+        'amount': amount_f,
         'projected': projected,
-        'exceeded': projected > cap,
-        'remaining': max(0, cap - used),
-        'pct_used': round(used / cap * 100, 1) if cap > 0 else 0,
+        'exceeded': projected > declared,
+        'remaining': max(0, declared - projected),
+        'pct_used': round((amount_f / declared) * 100, 1) if declared > 0 else 0.0,
+        'needs_declaration': False,
     }
 
     if result['exceeded']:
         logger.warning(
-            "Budget IBTIKAR exceeded: requester=%s projected=%s cap=%s",
-            getattr(requester, 'id', '?'), projected, cap,
+            "Budget IBTIKAR exceeded: requester=%s amount=%s declared=%s",
+            getattr(requester, 'id', '?'), amount_f, declared,
         )
 
     return result
+
+
+def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
+    """Deduct a resolved request cost from the requester's declared
+    IBTIKAR balance. Called when an IBTIKAR request reaches COMPLETED
+    (report delivered + receipt confirmed).
+
+    Idempotency: caller passes `reason` (e.g. the request display_id)
+    so we don't double-deduct if the workflow is replayed. We log every
+    deduction; double-call protection at the workflow side uses a
+    per-request flag (see core.workflow._deduct_on_complete).
+
+    No-op if the requester never declared a balance — log a warning so
+    operators can investigate. Refuses to go negative; floors at 0.
+    """
+    from django.utils import timezone
+
+    if requester is None or requester.ibtikar_declared_balance is None:
+        logger.warning(
+            "deduct_ibtikar_balance skipped: requester=%s has no declared balance (amount=%s)",
+            getattr(requester, 'id', '?'), amount,
+        )
+        return {'deducted': 0.0, 'remaining': None, 'skipped': True}
+
+    before = float(requester.ibtikar_declared_balance)
+    after = max(0.0, before - float(amount))
+    requester.ibtikar_declared_balance = after
+    requester.ibtikar_balance_declared_at = timezone.now()
+    requester.save(update_fields=[
+        'ibtikar_declared_balance', 'ibtikar_balance_declared_at',
+    ])
+    logger.info(
+        "IBTIKAR deduction: requester=%s amount=%s before=%s after=%s reason=%s",
+        requester.id, amount, before, after, reason,
+    )
+    return {'deducted': float(amount), 'remaining': after, 'skipped': False}
 
 
 def approve_with_budget_override(request_obj, actor, amount: float, justification: str) -> dict:

@@ -112,24 +112,65 @@ def request_detail(request, pk):
 
 
 @requester_required
+def declare_ibtikar_balance(request):
+    """Self-declared residual IBTIKAR balance.
+
+    Stored on User (not on the request) so it persists across requests:
+    once declared, every new request is sized against this number and
+    every report-delivery deducts from it. The candidate can revise the
+    figure at any time — the DGRSDT IBTIKAR budget is shared across
+    multiple platforms, so the candidate is the only one who knows the
+    true current residual.
+    """
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from django.conf import settings as _s
+    raw = request.POST.get('declared_balance', '').strip()
+    try:
+        declared = float(raw)
+    except (TypeError, ValueError):
+        messages.error(request, "Veuillez saisir un montant valide.")
+        return redirect_back(request, 'dashboard:requester')
+
+    hard_cap = float(_s.IBTIKAR_BUDGET_CAP)
+    if declared < 0 or declared > hard_cap:
+        messages.error(
+            request,
+            f"Le solde déclaré doit être compris entre 0 et {hard_cap:,.0f} DA.",
+        )
+        return redirect_back(request, 'dashboard:requester')
+
+    request.user.ibtikar_declared_balance = declared
+    request.user.ibtikar_balance_declared_at = timezone.now()
+    request.user.save(update_fields=[
+        'ibtikar_declared_balance', 'ibtikar_balance_declared_at',
+    ])
+    messages.success(
+        request,
+        f"Solde IBTIKAR mis à jour : {declared:,.0f} DA. Vous pouvez maintenant soumettre votre demande.",
+    )
+    return redirect_back(request, 'dashboard:requester')
+
+
+@requester_required
 def create_request(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    # Declared balance validation
-    declared = safe_float(request.POST.get('declared_balance'))
-    # Upper bound = the requester's REAL remaining budget, not a flat 200 000.
-    # check_ibtikar_budget gives us a context dict we can reuse.
-    _bcheck = check_ibtikar_budget(amount=0, requester=request.user)
-    declared_cap = float(_bcheck.get('remaining') or _bcheck.get('cap') or 200000)
-    if declared < 0 or declared > declared_cap:
+    # Guard 1 — the requester must have declared a residual balance
+    # before any submission. Without a declared value we cannot size or
+    # cap-check a request, so reject the POST early with a clear redirect
+    # back to the dashboard where the declaration card is shown.
+    if request.user.ibtikar_declared_balance is None:
         messages.error(
             request,
-            f"Le solde IBTIKAR déclaré doit être entre 0 et {declared_cap:,.0f} DA.",
+            "Vous devez d'abord déclarer votre solde IBTIKAR résiduel "
+            "avant de soumettre une demande.",
         )
         return redirect_back(request, 'dashboard:requester')
+    declared = float(request.user.ibtikar_declared_balance)
 
     # Collect YAML parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -152,19 +193,17 @@ def create_request(request):
     )
     budget_amount = price_result.get('total') or float(service.ibtikar_price or 0)
 
-    if budget_amount > declared:
-        messages.warning(request, f"Attention: le coût estimé ({budget_amount:,.0f} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
-
-    # Budget guard runs on the RESOLVED amount — the same figure recorded as
-    # budget_amount below. Checking the flat service price here would let a
-    # multi-sample request slip past the 200K cap (check ≤ cap on 1× flat,
-    # record N× resolved).
+    # Budget guard — runs against the requester's DECLARED residual
+    # balance (User.ibtikar_declared_balance), not a flat 200K. The
+    # resolved cost is the basis; checking the flat service price would
+    # let a multi-sample request slip past the cap.
     budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
     if budget_check['exceeded']:
         messages.error(
             request,
-            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
-            f"Reste: {budget_check['remaining']:,.0f} DZD."
+            f"Coût estimé ({budget_amount:,.0f} DA) supérieur à votre solde déclaré "
+            f"({declared:,.0f} DA). Mettez à jour votre solde si vous avez vérifié "
+            f"votre compte DGRSDT, ou contactez l'administrateur."
         )
         return redirect_back(request, 'dashboard:requester')
 

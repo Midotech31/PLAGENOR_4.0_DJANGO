@@ -137,6 +137,11 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     # Audit log
     log_workflow_transition(request_obj, old_status, to_status, actor, {'notes': notes, 'forced': force})
 
+    # IBTIKAR balance deduction — fires once per request, at the moment
+    # the requester has confirmed reception (COMPLETED). The financial
+    # helper is responsible for idempotency safety.
+    _deduct_ibtikar_on_complete(request_obj, old_status, to_status)
+
     # Email notifications for key transitions
     _send_transition_emails(request_obj, old_status, to_status)
 
@@ -282,3 +287,47 @@ def _send_transition_emails(request_obj, old_status, to_status):
 def _auto_generate_documents(request_obj, to_status):
     """Auto-generate documents on specific transitions."""
     pass
+
+
+def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
+    """Deduct the resolved request cost from the requester's declared
+    IBTIKAR balance on the transition that marks reception as confirmed
+    (REQUEST → COMPLETED on the IBTIKAR channel).
+
+    Why this trigger and not REPORT_VALIDATED / SENT_TO_REQUESTER?
+    The user's rule is: once the requester has actually received the
+    report, the budget is consumed. ``confirm_receipt`` is what advances
+    the request to COMPLETED — that's the moment the candidate has the
+    deliverable in hand.
+
+    The actual amount deducted is ``budget_amount`` (the resolved cost
+    captured at submission and refined into ``admin_validated_price`` if
+    the admin re-priced the request). We prefer ``admin_validated_price``
+    when present, fall back to ``budget_amount``, and skip silently if
+    neither is set.
+
+    Failures here NEVER block the workflow — log and continue.
+    """
+    if to_status != 'COMPLETED' or request_obj.channel != 'IBTIKAR':
+        return
+    requester = getattr(request_obj, 'requester', None)
+    if requester is None:
+        return
+    amount = (
+        float(request_obj.admin_validated_price)
+        if getattr(request_obj, 'admin_validated_price', None)
+        else float(request_obj.budget_amount or 0)
+    )
+    if amount <= 0:
+        return
+    try:
+        from core.financial import deduct_ibtikar_balance
+        deduct_ibtikar_balance(
+            requester, amount,
+            reason=f"COMPLETED:{request_obj.display_id}",
+        )
+    except Exception as exc:
+        logger.exception(
+            "IBTIKAR deduction failed for %s (%s DA): %s",
+            request_obj.display_id, amount, exc,
+        )
