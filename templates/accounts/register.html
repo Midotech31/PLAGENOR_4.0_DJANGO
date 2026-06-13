@@ -113,6 +113,34 @@
                 {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
             </div>
 
+            {# Demographics — fuel the stats dashboard (wilaya + sexe). #}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_wilaya">{% trans "Wilaya" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="wilaya" id="id_wilaya" class="form-control">
+                        <option value="">— {% trans "Sélectionnez votre wilaya" %} —</option>
+                        {% for code, label in form.fields.wilaya.choices %}
+                            {% if code %}
+                            <option value="{{ code }}" {% if form.wilaya.value == code %}selected{% endif %}>{{ code }} — {{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.wilaya.errors %}<div class="form-error">{{ form.wilaya.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_gender">{% trans "Sexe" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="gender" id="id_gender" class="form-control">
+                        <option value="">—</option>
+                        {% for code, label in form.fields.gender.choices %}
+                            {% if code %}
+                            <option value="{{ code }}" {% if form.gender.value == code %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.gender.errors %}<div class="form-error">{{ form.gender.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_password1">{% trans "Mot de passe" %}</label>

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view, pricing_api
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view, pricing_api, stats
 from . import views
 
 app_name = 'dashboard'
@@ -111,4 +111,9 @@ urlpatterns = [
 
     # Revenue Archives (SUPER_ADMIN)
     path('revenue-archives/', superadmin.revenue_archives, name='revenue_archives'),
+
+    # Stats & métriques (role-aware: REQUESTER/CLIENT/MEMBER personal, FINANCE
+    # finance, PLATFORM_ADMIN/SUPER_ADMIN full + officiel export DOCX/PDF).
+    path('stats/', stats.stats_view, name='stats'),
+    path('stats/export/', stats.stats_export, name='stats_export'),
 ]

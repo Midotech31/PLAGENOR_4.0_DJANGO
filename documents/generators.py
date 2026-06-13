@@ -943,6 +943,98 @@ def _render_footer(doc: DocumentType) -> None:
     run.font.size = Pt(9)
 
 
+def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
+    """Generate the official statistics report DOCX.
+
+    Branded like every other PLAGENOR document — institutional header is
+    injected by ``ensure_institutional_header`` — so the PDF conversion
+    that follows yields a presentation-ready report.
+    """
+    doc = Document()
+    apply_house_style(doc)
+
+    doc.add_heading('PLAGENOR 4.0 — Statistiques institutionnelles', level=1)
+    doc.add_paragraph(
+        f"ESSBO — École Supérieure en Sciences Biologiques d'Oran")
+    doc.add_paragraph(
+        f"Édité le {datetime.now().strftime('%d/%m/%Y à %H:%M')} "
+        f"par {actor.get_full_name() or actor.username}"
+    )
+
+    # Active filters block
+    if filters:
+        doc.add_heading('Filtres appliqués', level=3)
+        label_map = {
+            'date_from': 'Du', 'date_to': 'Au', 'channel': 'Canal',
+            'service_code': 'Service', 'status': 'Statut',
+            'wilaya': 'Wilaya', 'organization': 'Établissement',
+            'gender': 'Sexe', 'analysis_frame': "Cadre d'analyse",
+        }
+        for k, v in filters.items():
+            doc.add_paragraph(f"• {label_map.get(k, k)} : {v}")
+
+    # Headline KPIs
+    kpis = bundle.get('kpis', {})
+    doc.add_heading('Indicateurs principaux', level=2)
+    kpi_table = doc.add_table(rows=9, cols=2)
+    kpi_table.style = 'Light Grid Accent 1'
+    rows = [
+        ('Demandes', kpis.get('total', 0)),
+        ('Complétées', kpis.get('completed', 0)),
+        ('En cours', kpis.get('in_progress', 0)),
+        ('Rejetées', kpis.get('rejected', 0)),
+        ('Taux de complétion', f"{kpis.get('completion_rate', 0)} %"),
+        ('Demandes IBTIKAR', kpis.get('ibtikar_count', 0)),
+        ('Demandes GENOCLAB', kpis.get('genoclab_count', 0)),
+        ('Revenu virtuel IBTIKAR', f"{kpis.get('ibtikar_virtual_revenue', 0):,.0f} DA"),
+        ('Revenu GENOCLAB', f"{kpis.get('genoclab_revenue', 0):,.0f} DA"),
+    ]
+    for i, (label, value) in enumerate(rows):
+        kpi_table.rows[i].cells[0].text = label
+        kpi_table.rows[i].cells[1].text = str(value)
+
+    def _section(title, key, col1='Catégorie'):
+        data = bundle.get(key)
+        if not data:
+            return
+        doc.add_heading(title, level=2)
+        t = doc.add_table(rows=len(data) + 1, cols=2)
+        t.style = 'Light Grid Accent 1'
+        t.rows[0].cells[0].text = col1
+        t.rows[0].cells[1].text = 'Demandes'
+        for i, r in enumerate(data, start=1):
+            t.rows[i].cells[0].text = str(r.get('label', '—'))
+            t.rows[i].cells[1].text = str(r.get('count', 0))
+
+    _section('Répartition par service', 'by_service', col1='Service')
+    _section('Répartition par statut', 'by_status', col1='Statut')
+    _section('Répartition par wilaya', 'by_wilaya', col1='Wilaya')
+    _section('Répartition par établissement', 'by_organization', col1='Établissement')
+    _section("Répartition par cadre d'analyse", 'by_analysis_frame', col1='Cadre')
+    _section('Répartition par sexe', 'by_gender', col1='Sexe')
+
+    trend = bundle.get('trend') or []
+    if trend:
+        doc.add_heading('Tendance mensuelle', level=2)
+        t = doc.add_table(rows=len(trend) + 1, cols=2)
+        t.style = 'Light Grid Accent 1'
+        t.rows[0].cells[0].text = 'Mois'
+        t.rows[0].cells[1].text = 'Demandes'
+        for i, r in enumerate(trend, start=1):
+            t.rows[i].cells[0].text = r['month']
+            t.rows[i].cells[1].text = str(r['count'])
+
+    _render_footer(doc)
+    ensure_institutional_header(doc)
+
+    out_dir = Path(settings.MEDIA_ROOT) / 'documents'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"PLAGENOR_Statistiques_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    filepath = out_dir / filename
+    doc.save(str(filepath))
+    return str(filepath)
+
+
 def generate_invoice_document(invoice_obj) -> str:
     """Standalone invoice DOCX (programmatic only — no template at present)."""
     doc = Document()

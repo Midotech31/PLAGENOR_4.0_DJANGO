@@ -52,6 +52,7 @@ class RegistrationForm(UserCreationForm):
         fields = (
             'username', 'first_name', 'last_name', 'email',
             'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
+            'wilaya', 'gender',
             'password1', 'password2',
         )
 
