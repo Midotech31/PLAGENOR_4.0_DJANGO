@@ -106,19 +106,39 @@
     --transition-spring: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html {
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Smoother strokes for body copy; OS default is "auto" which is
+       slightly thinner on macOS/iOS. */
+    text-rendering: optimizeLegibility;
+}
 body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
     min-height: 100vh;
+    /* Inter ships contextual alternates + true tabular figures; turn them
+       on globally so prices/dates align in columns. */
+    font-feature-settings: 'cv11', 'ss01', 'ss03', 'kern', 'liga';
+    font-optical-sizing: auto;
 }
 a { color: var(--primary); text-decoration: none; transition: color var(--transition); }
 a:hover { color: var(--primary-dark); }
 img { max-width: 100%; display: block; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
+
+/* Tabular figures wherever we line numbers up in columns (KPIs, money,
+   tables) — prevents the 1-3-7 width wobble that makes rows look ragged. */
+.kpi-value, .kpi-number, .stat-value, .money, .price,
+.table td, .table th,
+[data-tabular-nums] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'kern' 1, 'liga' 1;
+}
 
 /* ============================================================
    Sidebar — Premium Dark Design
@@ -2048,8 +2068,35 @@ tr.clickable-row:hover td {
      - SVG icons explicitly marked direction-aware (data-flip-rtl)
      - A small set of escape-hatch utility classes
    ============================================================ */
-html[dir="rtl"] {
+/* Arabic font: bind to the LANGUAGE (lang="ar"), not the direction.
+   Direction handles layout; language determines which script we render.
+   We have to target body / inputs / buttons explicitly because the body
+   rule above sets font-family on body, which would otherwise win over an
+   inherited value from <html>. The Latin fallback cascade preserves
+   Latin glyphs in their Latin font when an Arabic page mixes both
+   (e.g. "PCR" inside an Arabic sentence). */
+html[lang="ar"],
+html[lang^="ar-"],
+html[lang="ar"] body, html[lang^="ar-"] body,
+html[lang="ar"] input, html[lang^="ar-"] input,
+html[lang="ar"] select, html[lang^="ar-"] select,
+html[lang="ar"] textarea, html[lang^="ar-"] textarea,
+html[lang="ar"] button, html[lang^="ar-"] button {
     font-family: var(--font-rtl);
+    /* Cairo + Noto Arabic want their own kashida/contextual shaping. */
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+html[lang="ar"] body, html[lang^="ar-"] body {
+    /* Arabic glyphs sit on a slightly different baseline; nudge line-height
+       up a hair so descenders aren't clipped under tables/inputs. */
+    line-height: 1.7;
+}
+
+/* Even when the page is set to RTL via dir, only Arabic content needs the
+   Arabic font — a French RTL page (theoretical) should stay in Inter. */
+html[dir="rtl"]:not([lang="ar"]):not([lang^="ar-"]),
+html[dir="rtl"]:not([lang="ar"]):not([lang^="ar-"]) body {
+    font-family: var(--font);
 }
 
 /* Direction-aware icons (arrows etc.) — opt in via {% icon ... flip_rtl=True %},
