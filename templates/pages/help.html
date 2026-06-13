@@ -1,5 +1,6 @@
 {% extends "base_public.html" %}
 {% load i18n %}
+{% load icons %}
 {% block title %}{% trans "Centre d'aide" context "help" %} — PLAGENOR 4.0{% endblock %}
 
 {% block extra_css %}
@@ -8,14 +9,16 @@
     .help-hero h1 { font-size: 2.2rem; font-weight: 800; margin: 0 0 8px; }
     .help-hero p { opacity: 0.9; font-size: 1.05rem; margin: 0 auto; max-width: 640px; }
     .help-search { max-width: 560px; margin: 24px auto 0; position: relative; }
-    .help-search input { width: 100%; padding: 14px 18px; border-radius: 12px; border: none; font-size: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .help-search input { width: 100%; padding-block: 14px; padding-inline-start: 46px; padding-inline-end: 18px; border-radius: 12px; border: none; font-size: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .help-search .search-ic { position: absolute; inset-inline-start: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
     .help-wrap { max-width: 1080px; margin: -28px auto 60px; padding: 0 20px; }
     .help-quicknav { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 32px; }
-    .help-quicknav a { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; text-decoration: none; color: #1e293b; font-weight: 600; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .help-quicknav a:hover { border-color: #4F46E5; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,.12); }
-    .help-quicknav .ic { font-size: 1.6rem; }
+    .help-quicknav a { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; color: #1e293b; font-weight: 600; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .help-quicknav a:hover { border-color: #4F46E5; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,.12); color: #4F46E5; }
+    .help-quicknav .qn-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #ede9fe; color: #4F46E5; border-radius: 12px; }
     .help-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 26px 28px; margin-bottom: 22px; }
-    .help-section > h2 { font-size: 1.3rem; margin: 0 0 6px; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+    .help-section > h2 { font-size: 1.3rem; margin: 0 0 6px; color: #1e293b; display: flex; align-items: center; gap: 12px; }
+    .help-section > h2 .h2-ic { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #ede9fe; color: #4F46E5; border-radius: 10px; flex-shrink: 0; }
     .help-section > .sub { color: #64748b; font-size: .92rem; margin: 0 0 18px; }
     .help-steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
     .help-steps li { counter-increment: step; position: relative; padding-inline-start: 44px; margin-bottom: 16px; color: #334155; line-height: 1.6; }
@@ -23,7 +26,7 @@
     .faq-item { border-bottom: 1px solid #f1f5f9; }
     .faq-item:last-child { border-bottom: none; }
     .faq-q { width: 100%; text-align: start; background: none; border: none; padding: 16px 0; font-size: 1rem; font-weight: 600; color: #1e293b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .faq-q .chev { transition: transform .2s; color: #94a3b8; }
+    .faq-q .chev { transition: transform .2s; color: #94a3b8; display: inline-flex; }
     .faq-item.open .faq-q .chev { transform: rotate(180deg); }
     .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease; color: #475569; line-height: 1.7; }
     .faq-item.open .faq-a { max-height: 600px; padding-bottom: 16px; }
@@ -38,20 +41,20 @@
     <h1>{% trans "Centre d'aide PLAGENOR" %}</h1>
     <p>{% trans "Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — étape par étape." %}</p>
     <div class="help-search">
+        <span class="search-ic">{% icon 'search' size=20 %}</span>
         <input type="text" id="help-search-input" placeholder="{% trans 'Rechercher dans l’aide…' %}" autocomplete="off" oninput="helpFilter(this.value)">
     </div>
 </div>
 
 <div class="help-wrap">
 
-    {# ---- Quick navigation ------------------------------------------------ #}
     <div class="help-quicknav" id="help-quicknav">
-        <a href="#getting-started"><span class="ic">🚀</span>{% trans "Démarrer" context "help" %}</a>
-        <a href="#requester"><span class="ic">🎓</span>{% trans "Demandeur IBTIKAR" %}</a>
-        <a href="#client"><span class="ic">🏢</span>{% trans "Client GENOCLAB" %}</a>
-        <a href="#tracking"><span class="ic">🔍</span>{% trans "Suivi & rapports" context "help" %}</a>
-        <a href="#documents"><span class="ic">📄</span>{% trans "Documents" %}</a>
-        <a href="#faq"><span class="ic">❓</span>{% trans "FAQ" %}</a>
+        <a href="#getting-started"><span class="qn-ic">{% icon 'rocket' size=22 %}</span>{% trans "Démarrer" context "help" %}</a>
+        <a href="#requester"><span class="qn-ic">{% icon 'graduation-cap' size=22 %}</span>{% trans "Demandeur IBTIKAR" %}</a>
+        <a href="#client"><span class="qn-ic">{% icon 'building' size=22 %}</span>{% trans "Client GENOCLAB" %}</a>
+        <a href="#tracking"><span class="qn-ic">{% icon 'search' size=22 %}</span>{% trans "Suivi & rapports" context "help" %}</a>
+        <a href="#documents"><span class="qn-ic">{% icon 'file-text' size=22 %}</span>{% trans "Documents" %}</a>
+        <a href="#faq"><span class="qn-ic">{% icon 'help-circle' size=22 %}</span>{% trans "FAQ" %}</a>
     </div>
 
     {% if user_role %}
@@ -60,9 +63,8 @@
     </p>
     {% endif %}
 
-    {# ---- Getting started ------------------------------------------------- #}
     <div class="help-section help-searchable" id="getting-started">
-        <h2>🚀 {% trans "Bien démarrer" %}</h2>
+        <h2><span class="h2-ic">{% icon 'rocket' size=20 %}</span>{% trans "Bien démarrer" %}</h2>
         <p class="sub">{% trans "Créer un compte et comprendre les deux canaux." %}</p>
         <ol class="help-steps">
             <li>{% blocktrans %}Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos informations (nom, établissement, wilaya, e-mail).{% endblocktrans %}</li>
@@ -72,9 +74,8 @@
         </ol>
     </div>
 
-    {# ---- Requester (IBTIKAR) -------------------------------------------- #}
     <div class="help-section help-searchable" id="requester">
-        <h2>🎓 {% trans "Soumettre une demande IBTIKAR" context "help" %}{% if user_role == 'REQUESTER' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
+        <h2><span class="h2-ic">{% icon 'graduation-cap' size=20 %}</span>{% trans "Soumettre une demande IBTIKAR" context "help" %}{% if user_role == 'REQUESTER' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
         <p class="sub">{% trans "Pour les étudiants et chercheurs de l'ESSBO." %}</p>
         <ol class="help-steps">
             <li>{% blocktrans %}Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle demande</strong>.{% endblocktrans %}</li>
@@ -85,9 +86,8 @@
         </ol>
     </div>
 
-    {# ---- Client (GENOCLAB) ---------------------------------------------- #}
     <div class="help-section help-searchable" id="client">
-        <h2>🏢 {% trans "Demande GENOCLAB (commercial)" context "help" %}{% if user_role == 'CLIENT' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
+        <h2><span class="h2-ic">{% icon 'building' size=20 %}</span>{% trans "Demande GENOCLAB (commercial)" context "help" %}{% if user_role == 'CLIENT' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
         <p class="sub">{% trans "Pour les entreprises, laboratoires et institutions externes." %}</p>
         <ol class="help-steps">
             <li>{% blocktrans %}Soumettez votre demande avec les détails de l'analyse et vos échantillons.{% endblocktrans %}</li>
@@ -98,9 +98,8 @@
         </ol>
     </div>
 
-    {# ---- Tracking ------------------------------------------------------- #}
     <div class="help-section help-searchable" id="tracking">
-        <h2>🔍 {% trans "Suivre une demande & récupérer un rapport" %}</h2>
+        <h2><span class="h2-ic">{% icon 'search' size=20 %}</span>{% trans "Suivre une demande & récupérer un rapport" %}</h2>
         <p class="sub">{% trans "Où en est votre analyse, à tout moment." %}</p>
         <ol class="help-steps">
             <li>{% blocktrans %}Connecté : chaque demande affiche son <strong>statut en temps réel</strong> et son historique complet sur votre tableau de bord.{% endblocktrans %}</li>
@@ -110,9 +109,8 @@
         </ol>
     </div>
 
-    {# ---- Documents ------------------------------------------------------ #}
     <div class="help-section help-searchable" id="documents">
-        <h2>📄 {% trans "Documents générés" context "help" %}</h2>
+        <h2><span class="h2-ic">{% icon 'file-text' size=20 %}</span>{% trans "Documents générés" context "help" %}</h2>
         <p class="sub">{% trans "Formulaires officiels remplis automatiquement." %}</p>
         <ol class="help-steps">
             <li>{% blocktrans %}Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-rempli avec vos informations et vos échantillons.{% endblocktrans %}</li>
@@ -121,33 +119,32 @@
         </ol>
     </div>
 
-    {# ---- FAQ ------------------------------------------------------------ #}
     <div class="help-section help-searchable" id="faq">
-        <h2>❓ {% trans "Questions fréquentes" %}</h2>
+        <h2><span class="h2-ic">{% icon 'help-circle' size=20 %}</span>{% trans "Questions fréquentes" %}</h2>
         <p class="sub">{% trans "Réponses rapides aux questions courantes." %}</p>
 
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment changer la langue de l'interface ?" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment changer la langue de l'interface ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. L'interface bascule immédiatement, y compris en arabe avec mise en page de droite à gauche." %}</p></div>
         </div>
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Qu'est-ce que le budget IBTIKAR ?" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Qu'est-ce que le budget IBTIKAR ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord ; une demande qui le dépasse est bloquée automatiquement." %}</p></div>
         </div>
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment est calculé le coût d'une analyse ?" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment est calculé le coût d'une analyse ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de base dépend du caractère pathogène, le multiplicateur du mode d'analyse (simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant la saisie." %}</p></div>
         </div>
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Puis-je soumettre sans créer de compte ?" context "help" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Puis-je soumettre sans créer de compte ?" context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par e-mail et pouvez convertir votre soumission en compte complet plus tard." %}</p></div>
         </div>
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Je ne reçois pas les e-mails de notification ?" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Je ne reçois pas les e-mails de notification ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "Vérifiez votre dossier spam. Les notifications restent toujours consultables dans la cloche en haut de votre tableau de bord, même sans e-mail." %}</p></div>
         </div>
         <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "J'ai oublié mon mot de passe." context "help" %}<span class="chev">▾</span></button>
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "J'ai oublié mon mot de passe." context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
             <div class="faq-a"><p>{% trans "Contactez l'administrateur de la plateforme via la page Contact ; il pourra réinitialiser votre accès en toute sécurité." %}</p></div>
         </div>
     </div>
