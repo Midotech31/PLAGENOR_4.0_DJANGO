@@ -1,4 +1,7 @@
+import json
+
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -7,7 +10,22 @@ def get_item(dictionary, key):
     """Access a dictionary item by key in templates."""
     if dictionary is None:
         return None
+    if not hasattr(dictionary, 'get'):
+        return None
     return dictionary.get(key)
+
+
+@register.filter
+def as_json(value):
+    """Serialize a dict/list to a valid JSON string for an HTML data-attribute.
+
+    ``{{ value|safe }}`` would emit a Python repr (single quotes) that
+    ``JSON.parse`` rejects. This emits proper JSON so the client-side cost
+    calculator and conditional-logic engine can parse the attribute.
+    """
+    if value is None:
+        return ''
+    return mark_safe(json.dumps(value, ensure_ascii=False))
 
 
 @register.filter

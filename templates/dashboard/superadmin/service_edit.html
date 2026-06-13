@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load dashboard_extras %}
 
 {% block title %}{% trans "Modifier service" %} — PLAGENOR 4.0{% endblock %}
 
@@ -83,7 +84,8 @@
             </div>
             <div id="custom-fields-container" style="display:flex; flex-direction:column; gap:10px;">
                 {% for field in custom_fields %}
-                <div class="form-row custom-field-row" style="align-items:flex-end; border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">
+                <div class="custom-field-row" style="border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">
+                  <div class="form-row" style="align-items:flex-end;">
                     <div class="form-group">
                         <label style="font-size:0.78rem;">{% trans "Nom" %}</label>
                         <input type="text" name="field_name" class="form-control" value="{{ field.name }}">
@@ -110,6 +112,49 @@
                             <input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}
                         </label>
                     </div>
+                  </div>
+                  <details class="field-pricing-advanced" style="margin-top:8px;" {% if field.affects_pricing or field.option_pricing or field.conditional_logic %}open{% endif %}>
+                    <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 {% trans "Tarification conditionnelle & logique d'affichage" %}</summary>
+                    <div style="padding-top:10px; display:flex; flex-direction:column; gap:10px;">
+                        <label style="font-size:0.8rem; font-weight:500;">
+                            <input type="checkbox" name="field_affects_pricing" value="{{ forloop.counter0 }}" {% if field.affects_pricing %}checked{% endif %}>
+                            {% trans "Ce champ modifie le prix" %}
+                        </label>
+                        <div class="form-row" style="align-items:flex-end;">
+                            <div class="form-group">
+                                <label style="font-size:0.78rem;">{% trans "Type de modificateur" %}</label>
+                                <select name="field_price_modifier_type" class="form-control">
+                                    <option value="" {% if not field.price_modifier_type %}selected{% endif %}>—</option>
+                                    <option value="add" {% if field.price_modifier_type == 'add' %}selected{% endif %}>{% trans "Surcharge (+)" %}</option>
+                                    <option value="set" {% if field.price_modifier_type == 'set' %}selected{% endif %}>{% trans "Forfait (=)" %}</option>
+                                    <option value="multiply" {% if field.price_modifier_type == 'multiply' %}selected{% endif %}>{% trans "Multiplicateur (×)" %}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.78rem;">{% trans "Valeur" %}</label>
+                                <input type="number" step="0.01" name="field_price_modifier_value" class="form-control" value="{{ field.price_modifier_value|default_if_none:'' }}">
+                            </div>
+                        </div>
+                        <div class="form-row" style="align-items:flex-end;">
+                            <div class="form-group">
+                                <label style="font-size:0.78rem;">{% trans "Note condition (FR)" %}</label>
+                                <input type="text" name="field_condition_note_fr" class="form-control" value="{{ field.condition_note_fr }}">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.78rem;">{% trans "Note condition (EN)" %}</label>
+                                <input type="text" name="field_condition_note_en" class="form-control" value="{{ field.condition_note_en }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Prix par option (JSON)" %} <span style="color:#94a3b8; font-weight:400;">{% trans 'ex : {"Duplicata": 2, "Triplicata": 2.6}' %}</span></label>
+                            <input type="text" name="field_option_pricing" class="form-control" value='{{ field.option_pricing|as_json }}' placeholder='{"Express": 1500}'>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.78rem;">{% trans "Logique conditionnelle (JSON)" %} <span style="color:#94a3b8; font-weight:400;">{% trans 'ex : [{"trigger_field":"mode","trigger_value":"PCR","actions":["show","make_required"]}]' %}</span></label>
+                            <input type="text" name="field_conditional_logic" class="form-control" value='{{ field.conditional_logic|as_json }}' placeholder='[{"trigger_field":"...","trigger_value":"...","actions":["show"]}]'>
+                        </div>
+                    </div>
+                  </details>
                 </div>
                 {% endfor %}
             </div>
@@ -226,13 +271,32 @@ var fieldCount = {{ custom_fields.count }};
 
 function addFieldRow() {
     var container = document.getElementById('custom-fields-container');
+    var idx = fieldCount;
     var html =
-        '<div class="form-row custom-field-row" style="align-items:flex-end; border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">' +
+        '<div class="custom-field-row" style="border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">' +
+        '<div class="form-row" style="align-items:flex-end;">' +
         '<div class="form-group"><label style="font-size:0.78rem;">Nom</label><input type="text" name="field_name" class="form-control"></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Label</label><input type="text" name="field_label" class="form-control"></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Options</label><input type="text" name="field_options" class="form-control"></div>' +
-        '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + fieldCount + '"> Requis</label></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + idx + '"> Requis</label></div>' +
+        '</div>' +
+        '<details class="field-pricing-advanced" style="margin-top:8px;">' +
+        '<summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 Tarification conditionnelle & logique d\'affichage</summary>' +
+        '<div style="padding-top:10px; display:flex; flex-direction:column; gap:10px;">' +
+        '<label style="font-size:0.8rem; font-weight:500;"><input type="checkbox" name="field_affects_pricing" value="' + idx + '"> Ce champ modifie le prix</label>' +
+        '<div class="form-row" style="align-items:flex-end;">' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Type de modificateur</label><select name="field_price_modifier_type" class="form-control"><option value="">—</option><option value="add">Surcharge (+)</option><option value="set">Forfait (=)</option><option value="multiply">Multiplicateur (×)</option></select></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Valeur</label><input type="number" step="0.01" name="field_price_modifier_value" class="form-control"></div>' +
+        '</div>' +
+        '<div class="form-row" style="align-items:flex-end;">' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Note condition (FR)</label><input type="text" name="field_condition_note_fr" class="form-control"></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Note condition (EN)</label><input type="text" name="field_condition_note_en" class="form-control"></div>' +
+        '</div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Prix par option (JSON) <span style="color:#94a3b8;font-weight:400;">ex : {"Duplicata": 2, "Triplicata": 2.6}</span></label><input type="text" name="field_option_pricing" class="form-control" placeholder=\'{"Express": 1500}\'></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Logique conditionnelle (JSON) <span style="color:#94a3b8;font-weight:400;">ex : [{"trigger_field":"mode","trigger_value":"PCR","actions":["show","make_required"]}]</span></label><input type="text" name="field_conditional_logic" class="form-control" placeholder=\'[{"trigger_field":"...","trigger_value":"...","actions":["show"]}]\'></div>' +
+        '</div>' +
+        '</details>' +
         '</div>';
     container.insertAdjacentHTML('beforeend', html);
     fieldCount++;

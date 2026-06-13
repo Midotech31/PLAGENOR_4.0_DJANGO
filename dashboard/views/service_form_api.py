@@ -23,13 +23,28 @@ def service_form_fragment(request, service_code):
     sample_table = definition.get('sample_table', {})
     pricing = definition.get('pricing', {}) or {}
 
-    # Also load DB-defined custom fields if ServiceFormField model exists
+    # Also load DB-defined custom fields if ServiceFormField model exists.
+    # We serialize each field explicitly (rather than ``.values()``) so the
+    # request-form template can read variable-pricing and conditional-logic
+    # config: ``field.pricing_info``, ``field.option_pricing`` and
+    # ``field.conditional_logic``. These power the live cost estimate and the
+    # show/hide rules an admin configures on the service-edit page.
     db_fields = []
     try:
         from core.models import Service, ServiceFormField
         svc = Service.objects.filter(code=service_code).first()
         if svc:
-            db_fields = list(svc.custom_fields.all().values('name', 'label', 'field_type', 'options', 'required'))
+            for f in svc.custom_fields.all():
+                db_fields.append({
+                    'name': f.name,
+                    'label': f.label,
+                    'field_type': f.field_type,
+                    'options': f.options or [],
+                    'required': f.required,
+                    'pricing_info': f.pricing_info,
+                    'option_pricing': f.option_pricing or {},
+                    'conditional_logic': f.conditional_logic or [],
+                })
     except Exception:
         pass
 

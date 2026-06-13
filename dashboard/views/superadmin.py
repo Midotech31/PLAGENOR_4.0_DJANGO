@@ -424,22 +424,50 @@ def service_edit(request, pk):
         service.save()
 
         # ---- Custom form fields: wipe + recreate (simple, low-volume data)
+        import json
         service.custom_fields.all().delete()
         field_names = request.POST.getlist('field_name')
         field_labels = request.POST.getlist('field_label')
         field_types = request.POST.getlist('field_type')
         field_required = request.POST.getlist('field_required')
         field_options = request.POST.getlist('field_options')
+        # Variable-pricing + conditional-logic config (parallel lists, one per field)
+        field_affects = request.POST.getlist('field_affects_pricing')
+        field_mod_type = request.POST.getlist('field_price_modifier_type')
+        field_mod_value = request.POST.getlist('field_price_modifier_value')
+        field_note_fr = request.POST.getlist('field_condition_note_fr')
+        field_note_en = request.POST.getlist('field_condition_note_en')
+        field_option_pricing = request.POST.getlist('field_option_pricing')
+        field_conditional = request.POST.getlist('field_conditional_logic')
+
+        def _at(lst, idx, default=''):
+            return lst[idx] if idx < len(lst) else default
+
+        def _parse_json(raw, fallback):
+            raw = (raw or '').strip()
+            if not raw:
+                return fallback
+            try:
+                return json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                return fallback
+
         for i, name in enumerate(field_names):
             if not name.strip():
                 continue
-            import json
             opts = []
             if i < len(field_options) and field_options[i].strip():
                 try:
                     opts = json.loads(field_options[i])
                 except (json.JSONDecodeError, ValueError):
                     opts = [o.strip() for o in field_options[i].split(',') if o.strip()]
+
+            mod_value = _at(field_mod_value, i).strip()
+            try:
+                mod_value = Decimal(mod_value) if mod_value else None
+            except (InvalidOperation, ValueError):
+                mod_value = None
+
             ServiceFormField.objects.create(
                 service=service,
                 name=name.strip(),
@@ -448,6 +476,13 @@ def service_edit(request, pk):
                 required=str(i) in field_required,
                 options=opts,
                 sort_order=i,
+                affects_pricing=str(i) in field_affects,
+                price_modifier_type=_at(field_mod_type, i).strip(),
+                price_modifier_value=mod_value,
+                condition_note_fr=_at(field_note_fr, i).strip(),
+                condition_note_en=_at(field_note_en, i).strip(),
+                option_pricing=_parse_json(_at(field_option_pricing, i), {}),
+                conditional_logic=_parse_json(_at(field_conditional, i), []),
             )
 
         # ---- Pricing tiers are managed by the modal UI via the JSON API

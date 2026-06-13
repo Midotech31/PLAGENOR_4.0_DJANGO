@@ -34,6 +34,12 @@ class Service(models.Model):
 
 
 class ServiceFormField(models.Model):
+    PRICE_MODIFIER_CHOICES = [
+        ('add', 'Surcharge / Supplément'),
+        ('set', 'Forfait / Prix fixe'),
+        ('multiply', 'Multiplicateur'),
+    ]
+
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='custom_fields')
     name = models.CharField(max_length=100)
     label = models.CharField(max_length=200)
@@ -44,12 +50,63 @@ class ServiceFormField(models.Model):
     required = models.BooleanField(default=False)
     sort_order = models.IntegerField(default=0)
 
+    # --- Variable pricing (restored from validated v4.0) -----------------
+    # When a field's value changes the price, the requester-side calculator
+    # reads these to update the live cost estimate and show a notice.
+    affects_pricing = models.BooleanField(
+        default=False,
+        help_text='Selecting / filling this field changes the price',
+    )
+    price_modifier_type = models.CharField(
+        max_length=20, choices=PRICE_MODIFIER_CHOICES, blank=True, default='',
+        help_text='How the field modifies the price (add / set / multiply)',
+    )
+    price_modifier_value = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Amount, fixed price, or multiplier value',
+    )
+    condition_note_fr = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='French notice shown to the user about the extra charge',
+    )
+    condition_note_en = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='English notice shown to the user about the extra charge',
+    )
+    # Per-option pricing for enum/multi-choice fields:
+    #   {"Duplicata": 2, "Triplicata": 2.6}  (multipliers)
+    #   or {"Express": 1500}                 (per-option surcharges)
+    option_pricing = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per-option pricing map: {"option_value": number}',
+    )
+    # Conditional visibility / requirement rules:
+    #   [{"trigger_field": "mode", "trigger_value": "PCR",
+    #     "actions": ["show", "make_required"]}]
+    conditional_logic = models.JSONField(
+        default=list, blank=True,
+        help_text='Show/hide & required rules driven by other fields',
+    )
+
     class Meta:
         db_table = 'service_form_fields'
         ordering = ['sort_order', 'pk']
 
     def __str__(self):
         return f"{self.service.code} — {self.label}"
+
+    @property
+    def pricing_info(self):
+        """Nested dict the request-form template consumes (``field.pricing_info``)."""
+        if not self.affects_pricing or not self.price_modifier_type:
+            return None
+        return {
+            'affects_pricing': True,
+            'modifier_type': self.price_modifier_type,
+            'modifier_value': float(self.price_modifier_value) if self.price_modifier_value is not None else None,
+            'condition_note_fr': self.condition_note_fr or '',
+            'condition_note_en': self.condition_note_en or '',
+        }
 
 
 class ServicePricing(models.Model):

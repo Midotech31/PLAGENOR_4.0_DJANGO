@@ -6,8 +6,8 @@
     {% if not sample_table.enabled or param.name not in sample_table.column_names %}
     <div class="form-group"
          {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}
-         {% if param.option_pricing %}data-option-pricing='{{ param.option_pricing|safe }}'{% endif %}
-         {% if param.conditional_logic %}data-conditional-logic='{{ param.conditional_logic|safe }}'{% endif %}>
+         {% if param.option_pricing %}data-option-pricing='{{ param.option_pricing|as_json }}'{% endif %}
+         {% if param.conditional_logic %}data-conditional-logic='{{ param.conditional_logic|as_json }}'{% endif %}>
         {% if param.type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
@@ -38,8 +38,8 @@
     {% for field in db_fields %}
     <div class="form-group"
          {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}
-         {% if field.option_pricing %}data-option-pricing='{{ field.option_pricing|safe }}'{% endif %}
-         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|safe }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
+         {% if field.option_pricing %}data-option-pricing='{{ field.option_pricing|as_json }}'{% endif %}
+         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|as_json }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
         {% if field.field_type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
