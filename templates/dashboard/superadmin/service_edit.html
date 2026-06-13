@@ -95,6 +95,13 @@
                         <input type="text" name="field_label" class="form-control" value="{{ field.label }}">
                     </div>
                     <div class="form-group">
+                        <label style="font-size:0.78rem;">{% trans "Nature" %}</label>
+                        <select name="field_category" class="form-control">
+                            <option value="parameter" {% if field.field_category == 'parameter' %}selected{% endif %}>{% trans "Question" %}</option>
+                            <option value="sample_column" {% if field.field_category == 'sample_column' %}selected{% endif %}>{% trans "Colonne échantillon" %}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label style="font-size:0.78rem;">{% trans "Type" %}</label>
                         <select name="field_type" class="form-control">
                             <option value="string" {% if field.field_type == 'string' %}selected{% endif %}>{% trans "Texte" %}</option>
@@ -277,6 +284,7 @@ function addFieldRow() {
         '<div class="form-row" style="align-items:flex-end;">' +
         '<div class="form-group"><label style="font-size:0.78rem;">Nom</label><input type="text" name="field_name" class="form-control"></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Label</label><input type="text" name="field_label" class="form-control"></div>' +
+        '<div class="form-group"><label style="font-size:0.78rem;">Nature</label><select name="field_category" class="form-control"><option value="parameter">Question</option><option value="sample_column">Colonne échantillon</option></select></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Options</label><input type="text" name="field_options" class="form-control"></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + idx + '"> Requis</label></div>' +

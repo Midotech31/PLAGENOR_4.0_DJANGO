@@ -17,7 +17,14 @@ def service_form_fragment(request, service_code):
     """
     definition = get_service_def(service_code)
     if not definition:
-        return HttpResponse('<p class="text-muted">Service non trouvé.</p>')
+        # No YAML registry entry — this is fine for a service a SuperAdmin
+        # created from scratch. Its entire form (questions + sample columns)
+        # comes from the DB ``custom_fields`` loaded below. Only bail if the
+        # service itself doesn't exist.
+        from core.models import Service as _Service
+        if not _Service.objects.filter(code=service_code).exists():
+            return HttpResponse('<p class="text-muted">Service non trouvé.</p>')
+        definition = {}
 
     parameters = definition.get('parameters', [])
     # Copy so we can augment without mutating the cached registry dict.
@@ -32,30 +39,53 @@ def service_form_fragment(request, service_code):
     ]
     pricing = definition.get('pricing', {}) or {}
 
-    # Also load DB-defined custom fields if ServiceFormField model exists.
-    # We serialize each field explicitly (rather than ``.values()``) so the
-    # request-form template can read variable-pricing and conditional-logic
-    # config: ``field.pricing_info``, ``field.option_pricing`` and
-    # ``field.conditional_logic``. These power the live cost estimate and the
-    # show/hide rules an admin configures on the service-edit page.
+    # Also load DB-defined custom fields. A SuperAdmin can define a whole
+    # service's form here: fields tagged ``parameter`` become questions
+    # (db_fields, serialized with their variable-pricing / conditional-logic
+    # config), fields tagged ``sample_column`` become extra columns of the
+    # per-sample table — so a brand-new service with no YAML still renders a
+    # complete online form and a complete generated document.
     db_fields = []
+    db_columns = []
     try:
         from core.models import Service, ServiceFormField
         svc = Service.objects.filter(code=service_code).first()
         if svc:
-            for f in svc.custom_fields.all():
-                db_fields.append({
-                    'name': f.name,
-                    'label': f.label,
-                    'field_type': f.field_type,
-                    'options': f.options or [],
-                    'required': f.required,
-                    'pricing_info': f.pricing_info,
-                    'option_pricing': f.option_pricing or {},
-                    'conditional_logic': f.conditional_logic or [],
-                })
+            for f in svc.custom_fields.all().order_by('sort_order', 'pk'):
+                if getattr(f, 'field_category', 'parameter') == 'sample_column':
+                    db_columns.append({
+                        'name': f.name,
+                        'label': f.label,
+                        'type': 'enum' if f.field_type == 'enum' else (
+                            'number' if f.field_type == 'number' else 'string'),
+                        'options': f.options or [],
+                        'required': f.required,
+                    })
+                else:
+                    db_fields.append({
+                        'name': f.name,
+                        'label': f.label,
+                        'field_type': f.field_type,
+                        'options': f.options or [],
+                        'required': f.required,
+                        'pricing_info': f.pricing_info,
+                        'option_pricing': f.option_pricing or {},
+                        'conditional_logic': f.conditional_logic or [],
+                    })
     except Exception:
         pass
+
+    # Merge admin-defined sample columns into the (possibly empty) YAML table.
+    if db_columns:
+        existing = {c.get('name') for c in (sample_table.get('columns') or [])}
+        merged = list(sample_table.get('columns') or [])
+        for col in db_columns:
+            if col['name'] not in existing:
+                merged.append(col)
+        sample_table['enabled'] = True
+        sample_table.setdefault('min_rows', 1)
+        sample_table['columns'] = merged
+        sample_table['column_names'] = [c.get('name') for c in merged if c.get('name')]
 
     html = render_to_string('includes/service_form_fields.html', {
         'parameters': parameters,

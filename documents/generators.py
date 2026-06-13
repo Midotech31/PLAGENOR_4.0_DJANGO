@@ -515,10 +515,12 @@ def generate_ibtikar_form(request_obj) -> str:
                 doc = Document(str(path))
                 using_legacy_form = True
 
+    using_generic = False
     if doc is None:
         generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar_form_template.docx'
         if generic.exists():
             doc = Document(str(generic))
+            using_generic = True
 
     if doc is None:
         doc = _build_ibtikar_form_programmatic(request_obj, field_map)
@@ -535,6 +537,13 @@ def generate_ibtikar_form(request_obj) -> str:
         # used at most once. Without this, the Section 4 questions stayed
         # blank even when the requester answered them online.
         populate_legacy_param_questions(doc, request_obj)
+    elif using_generic:
+        # The generic template only carries identity placeholders. For a
+        # service with no branded egtp form (e.g. one a SuperAdmin created
+        # from scratch), render its questions and sample table so the
+        # generated document still carries everything the requester entered.
+        _render_service_params(doc, request_obj.service_params)
+        _render_sample_table(doc, request_obj.sample_table)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)

@@ -39,6 +39,10 @@ class ServiceFormField(models.Model):
         ('set', 'Forfait / Prix fixe'),
         ('multiply', 'Multiplicateur'),
     ]
+    CATEGORY_CHOICES = [
+        ('parameter', 'Question (paramètre du service)'),
+        ('sample_column', "Colonne du tableau d'échantillons"),
+    ]
 
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='custom_fields')
     name = models.CharField(max_length=100)
@@ -46,6 +50,13 @@ class ServiceFormField(models.Model):
     field_type = models.CharField(max_length=20, choices=[
         ('string', 'Texte'), ('enum', 'Liste'), ('boolean', 'Oui/Non'), ('number', 'Nombre'),
     ], default='string')
+    # Whether this field is a single question (shown once) or a column of the
+    # per-sample table (shown once per sample row). Lets a SuperAdmin define a
+    # brand-new service's whole online form — questions AND sample columns —
+    # which then flow to both the request form and the generated document.
+    field_category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default='parameter',
+    )
     options = models.JSONField(default=list, blank=True, help_text='Options for enum type')
     required = models.BooleanField(default=False)
     sort_order = models.IntegerField(default=0)

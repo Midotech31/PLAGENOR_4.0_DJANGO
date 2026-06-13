@@ -429,6 +429,7 @@ def service_edit(request, pk):
         field_names = request.POST.getlist('field_name')
         field_labels = request.POST.getlist('field_label')
         field_types = request.POST.getlist('field_type')
+        field_categories = request.POST.getlist('field_category')
         field_required = request.POST.getlist('field_required')
         field_options = request.POST.getlist('field_options')
         # Variable-pricing + conditional-logic config (parallel lists, one per field)
@@ -468,11 +469,16 @@ def service_edit(request, pk):
             except (InvalidOperation, ValueError):
                 mod_value = None
 
+            category = _at(field_categories, i, 'parameter').strip()
+            if category not in ('parameter', 'sample_column'):
+                category = 'parameter'
+
             ServiceFormField.objects.create(
                 service=service,
                 name=name.strip(),
                 label=field_labels[i].strip() if i < len(field_labels) else name.strip(),
                 field_type=field_types[i] if i < len(field_types) else 'string',
+                field_category=category,
                 required=str(i) in field_required,
                 options=opts,
                 sort_order=i,
