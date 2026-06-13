@@ -82,10 +82,13 @@ parameters:
       - Autre
 
   - name: product_volume_ul
-    label: PCR product volume to recover (µL)
-    label_fr: Volume du produit de PCR à récupérer (µL)
-    type: integer
+    label: PCR product volume to recover after amplification
+    label_fr: Volume du produit de PCR à récupérer après amplification
+    type: enum
     required: false
+    options:
+      - 25 µL
+      - 50 µL
 
   - name: product_recovery
     label: PCR product recovery

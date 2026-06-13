@@ -646,12 +646,14 @@ _EMPTY_ANSWER_HINTS = [
     "select an item",
 ]
 
-# Regex finds: "<question label>...: <hint>" (with the colon possibly missing
-# in rare cases). Group 1 = label, group 2 = the answer-slot text we replace.
+# Regex finds: "<question label> : <hint><optional trailing words>".
+# Group 1 = label, group 2 = the hint. Trailing text after the hint is
+# allowed because Word writes "Cliquez ou appuyez ici pour entrer du texte."
+# (the hint is not always at the very end of the line).
 _QUESTION_LINE_RE = re.compile(
-    r'^(.{8,160}?)\s*:?\s*(' +
+    r'^(.{8,160}?)\s*:\s*(' +
     '|'.join(re.escape(h) for h in _EMPTY_ANSWER_HINTS) +
-    r')\.?\s*$',
+    r')[^\n]*$',
     re.IGNORECASE | re.DOTALL,
 )
 
