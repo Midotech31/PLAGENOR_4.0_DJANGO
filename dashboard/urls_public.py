@@ -6,6 +6,7 @@ urlpatterns = [
     path('about/', views_public.about, name='about'),
     path('services/', views_public.services, name='services'),
     path('contact/', views_public.contact, name='contact'),
+    path('help/', views_public.help_center, name='help'),
     path('track/', views_public.track, name='track'),
     path('guest-submit/', views_public.guest_submit, name='guest_submit'),
     path('track/ibtikar-code/<uuid:pk>/', views_public.guest_ibtikar_code, name='guest_ibtikar_code'),

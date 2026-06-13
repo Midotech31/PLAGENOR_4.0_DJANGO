@@ -60,6 +60,17 @@ def contact(request):
     return render(request, 'pages/contact.html')
 
 
+def help_center(request):
+    """Multilingual help center (FR/EN/AR), public.
+
+    All copy is {% trans %}/{% blocktrans %} so it follows the active
+    language + RTL automatically. When a user is logged in we pass their
+    role so the template can highlight the guide that matters to them.
+    """
+    role = getattr(request.user, 'role', '') if request.user.is_authenticated else ''
+    return render(request, 'pages/help.html', {'user_role': role})
+
+
 def service_detail(request, service_code):
     """Detailed service page showing full YAML definition."""
     from core.registry import get_service_def
