@@ -113,9 +113,7 @@
                         </div>
                         <div class="form-group">
                             <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                            {# Pre-fill with the requester's REMAINING budget so the field shows
-                               their actual ceiling, not a hardcoded 200 000. Falls back to the
-                               cap when no remaining is known (first request of the year). #}
+                            {# Pre-fill with the requester's REMAINING budget, not a hardcoded 200 000. #}
                             <input type="number" name="declared_balance" id="declared_balance"
                                    class="form-control" step="1"
                                    value="{{ budget_context.budget_remaining|default:budget_context.budget_cap|floatformat:0 }}"
