@@ -174,6 +174,12 @@ PLATFORM_INSTITUTION = 'ESSBO'
 # Disable (DOCUMENT_PDF_ENABLED=False) to serve raw DOCX during dev/CI.
 DOCUMENT_PDF_ENABLED = os.getenv('DOCUMENT_PDF_ENABLED', 'True').lower() == 'true'
 
+# PDF conversion backend (see documents/pdf_converter.py):
+#   'spawn' (default) — one soffice process per call; robust, ~1.5-5s.
+#   'uno'             — warm LibreOffice listener per process; ~6x faster,
+#                       falls back to 'spawn' automatically on any failure.
+DOCUMENT_PDF_BACKEND = os.getenv('DOCUMENT_PDF_BACKEND', 'spawn').lower()
+
 # Email configuration
 # Use SMTP backend automatically when SMTP_HOST is configured in .env
 _smtp_host = os.getenv('SMTP_HOST') or os.getenv('EMAIL_HOST', '')
