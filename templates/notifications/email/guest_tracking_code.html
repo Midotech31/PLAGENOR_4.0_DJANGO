@@ -1,0 +1,108 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+
+{% block email_content %}
+<h2 style="margin: 0 0 20px; color: #1f2937;">
+    {% if language == 'en' %}Your Tracking Code{% else %}Votre code de suivi{% endif %}
+</h2>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Hello {{ guest_name }},
+    {% else %}
+    Bonjour {{ guest_name }},
+    {% endif %}
+</p>
+
+<p style="color: #4b5563; margin-bottom: 24px;">
+    {% if language == 'en' %}
+    Thank you for submitting your analysis request as a guest. Please save your tracking information below to monitor your request progress.
+    {% else %}
+    Merci d'avoir soumis votre demande d'analyse en tant qu'invité. Veuillez conserver vos informations de suivi ci-dessous pour surveiller l'avancement de votre demande.
+    {% endif %}
+</p>
+
+<div class="request-id">
+    <div class="label">{% if language == 'en' %}Your Request ID{% else %}Votre identifiant de demande{% endif %}</div>
+    <div class="value">{{ request.display_id }}</div>
+</div>
+
+<div style="background: #f0f4ff; border: 2px dashed #4F46E5; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+    <div class="label" style="font-size: 0.85rem; color: #6b7280; margin-bottom: 4px;">
+        {% if language == 'en' %}Tracking Token (keep this private){% else %}Token de suivi (conservez-le précieusement){% endif %}
+    </div>
+    <div style="font-size: 1.2rem; font-weight: 700; color: #4F46E5; font-family: 'Courier New', monospace; word-break: break-all;">
+        {{ request.guest_token }}
+    </div>
+</div>
+
+<p style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; color: #92400e;">
+    {% if language == 'en' %}
+    <strong>⚠️ Important:</strong> Keep your tracking token safe. Anyone with this token can view your request status.
+    {% else %}
+    <strong>⚠️ Important :</strong> Conservez votre token de suivi en toute sécurité. Toute personne possédant ce token peut voir le statut de votre demande.
+    {% endif %}
+</p>
+
+<div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Service{% else %}Service{% endif %}</span>
+        <span class="info-value">{{ request.service.name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Channel{% else %}Canal{% endif %}</span>
+        <span class="info-value">{{ request.get_channel_display }}</span>
+    </div>
+    {% if request.title %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Title{% else %}Titre{% endif %}</span>
+        <span class="info-value">{{ request.title|truncatechars:40 }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Submitted on{% else %}Soumis le{% endif %}</span>
+        <span class="info-value">{{ request.created_at|date:"d/m/Y H:i" }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">{% if language == 'en' %}Status{% else %}Statut{% endif %}</span>
+        <span class="info-value"><span class="status-badge">{{ request.get_status_display }}</span></span>
+    </div>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ tracking_url }}" class="button">
+        {% if language == 'en' %}🔍 Track Your Request{% else %}🔍 Suivre votre demande{% endif %}
+    </a>
+</div>
+
+<p style="color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
+    {% if language == 'en' %}
+    If the button doesn't work, copy this link into your browser:<br>
+    <a href="{{ tracking_url }}" style="word-break: break-all;">{{ tracking_url }}</a>
+    {% else %}
+    Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+    <a href="{{ tracking_url }}" style="word-break: break-all;">{{ tracking_url }}</a>
+    {% endif %}
+</p>
+
+<div style="background: #eff6ff; border-left: 4px solid #4F46E5; padding: 16px; margin: 20px 0; color: #1e40af;">
+    <p style="margin: 0 0 12px;">
+        {% if language == 'en' %}
+        <strong>Want full access?</strong> Create a free account to:
+        {% else %}
+        <strong>Want full access?</strong> Créez un compte gratuit pour :
+        {% endif %}
+    </p>
+    <ul style="margin: 0; padding-left: 20px;">
+        <li>{% if language == 'en' %}Receive email notifications on status updates{% else %}Recevoir des notifications par email sur les mises à jour{% endif %}</li>
+        <li>{% if language == 'en' %}Manage all your requests in one place{% else %}Gérer toutes vos demandes en un seul endroit{% endif %}</li>
+        <li>{% if language == 'en' %}Access your complete request history{% else %}Accéder à votre historique complet des demandes{% endif %}</li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin: 20px 0;">
+    <a href="{{ register_url }}" style="display: inline-block; background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+        {% if language == 'en' %}Create Free Account{% else %}Créer un compte gratuit{% endif %}
+    </a>
+</div>
+{% endblock %}
