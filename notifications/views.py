@@ -38,8 +38,27 @@ def notification_click(request, pk):
     if notif.action_url:
         return _safe_redirect(request, notif.action_url)
 
+    # Priority 4: route by notification type for notifications that have no
+    # request attached (e.g. REWARD points/gift/cheer notifications).
+    url = _type_based_url(request.user, notif)
+    if url:
+        return redirect(url)
+
     # Fallback: the user's own dashboard (role index), never a generic page.
     return redirect('dashboard:router')
+
+
+def _type_based_url(user, notif):
+    """Resolve a destination from the notification *type* when there is no
+    linked request. Today this routes REWARD notifications (points earned,
+    gift unlocked, cheer received) to the analyst's Points tab — which is
+    where the user expects to land after clicking "X points reçus".
+    """
+    from django.urls import reverse
+
+    if notif.notification_type == 'REWARD' and user.role == 'MEMBER':
+        return reverse('dashboard:analyst') + '?tab=points'
+    return None
 
 
 def _get_detail_url(user, req):
