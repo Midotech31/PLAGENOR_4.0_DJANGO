@@ -47,7 +47,7 @@ def _email_ctx(request_obj, **extra):
                              'preferred_language', 'fr') or 'fr',
         'base_url': '',
         'dashboard_url': '',
-        'support_email': 'support@plagenor.essbo.dz',
+        'support_email': 'genomicsplatform.essbo@gmail.com',
         'user_name': (request_obj.requester.get_full_name()
                        if request_obj.requester else
                        (request_obj.guest_name or '')),
