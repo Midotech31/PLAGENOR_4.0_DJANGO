@@ -540,10 +540,12 @@ def generate_ibtikar_form(request_obj) -> str:
     elif using_generic:
         # The generic template only carries identity placeholders. For a
         # service with no branded egtp form (e.g. one a SuperAdmin created
-        # from scratch), render its questions and sample table so the
-        # generated document still carries everything the requester entered.
-        _render_service_params(doc, request_obj.service_params)
-        _render_sample_table(doc, request_obj.sample_table)
+        # from scratch), render its questions and sample table — with proper
+        # human labels — so the generated document carries everything the
+        # requester entered.
+        _labels = _field_label_map(request_obj)
+        _render_service_params(doc, request_obj.service_params, _labels)
+        _render_sample_table(doc, request_obj.sample_table, _labels)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)
@@ -864,34 +866,69 @@ def _build_reception_form_programmatic(request_obj, field_map) -> DocumentType:
 
 # Section helpers (shared body builders) -----------------------------------
 
-def _render_sample_table(doc: DocumentType, sample_table) -> None:
+def _field_label_map(request_obj) -> dict:
+    """Map field/column ``name`` → human label for the request's service.
+
+    Pulls from the YAML registry (parameters + sample_table columns, FR label
+    preferred) and the DB ``custom_fields`` a SuperAdmin defined, so the
+    programmatic document shows "Objectif de l'analyse" instead of the raw
+    ``analysis_goal`` key.
+    """
+    labels = {}
+    svc = getattr(request_obj, 'service', None)
+    code = getattr(svc, 'code', '') or ''
+    try:
+        from core.registry import get_service_def
+        sdef = get_service_def(code) or {}
+        for p in sdef.get('parameters', []) or []:
+            if p.get('name'):
+                labels[p['name']] = p.get('label_fr') or p.get('label') or p['name']
+        for c in (sdef.get('sample_table', {}) or {}).get('columns', []) or []:
+            if c.get('name'):
+                labels[c['name']] = c.get('label') or c['name']
+    except Exception:
+        pass
+    try:
+        if svc is not None:
+            for f in svc.custom_fields.all():
+                if f.name:
+                    labels[f.name] = f.label or f.name
+    except Exception:
+        pass
+    return labels
+
+
+def _render_sample_table(doc: DocumentType, sample_table, label_map=None) -> None:
     if not sample_table or not isinstance(sample_table, list):
         return
     samples = [s for s in sample_table if isinstance(s, dict) and any(s.values())]
     if not samples:
         return
+    label_map = label_map or {}
     doc.add_heading('Tableau des échantillons', level=3)
     headers = list(samples[0].keys())
     table = doc.add_table(rows=len(samples) + 1, cols=len(headers))
     table.style = 'Light Grid Accent 1'
     for j, h in enumerate(headers):
-        table.rows[0].cells[j].text = h.replace('_', ' ').capitalize()
+        table.rows[0].cells[j].text = label_map.get(h) or h.replace('_', ' ').capitalize()
     for i, sample in enumerate(samples):
         for j, h in enumerate(headers):
             table.rows[i + 1].cells[j].text = str(sample.get(h, ''))
 
 
-def _render_service_params(doc: DocumentType, service_params) -> None:
+def _render_service_params(doc: DocumentType, service_params, label_map=None) -> None:
     if not service_params or not isinstance(service_params, dict):
         return
     non_empty = [(k, v) for k, v in service_params.items() if v not in (None, '', [], {})]
     if not non_empty:
         return
+    label_map = label_map or {}
     doc.add_heading('Paramètres du service', level=3)
     table = doc.add_table(rows=len(non_empty), cols=2)
     table.style = 'Light Grid Accent 1'
     for i, (key, value) in enumerate(non_empty):
-        table.rows[i].cells[0].text = key.replace('param_', '').replace('_', ' ').capitalize()
+        clean = key.replace('param_', '')
+        table.rows[i].cells[0].text = label_map.get(clean) or clean.replace('_', ' ').capitalize()
         table.rows[i].cells[1].text = str(value)
 
 
