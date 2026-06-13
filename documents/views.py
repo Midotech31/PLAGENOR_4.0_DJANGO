@@ -123,16 +123,28 @@ def _cached_serve_doc(req, template_type, generator_fn, download_basename):
             raise Http404("Document non disponible.")
         if not src.exists():
             raise Http404("Document non disponible.")
+        # Track every intermediate we create so the only surviving artifact
+        # is the file in documents_cache/. Without this, each cache-miss
+        # left an orphan DOCX (and PDF) in media/documents/ forever.
+        intermediates = [src]
         if pdf_enabled:
             rendered = convert_docx_to_pdf(src, output_dir=src.parent)
+            intermediates.append(rendered)
             # convert_docx_to_pdf returns the DOCX path on failure; cache it
             # with the right extension so we don't loop on conversion.
-            shutil.copy2(str(rendered), str(cache_path.with_suffix(rendered.suffix)))
             if rendered.suffix.lower() != suffix:
                 cache_path = cache_path.with_suffix(rendered.suffix)
                 download_name = f"{download_basename}{rendered.suffix}"
+            shutil.copy2(str(rendered), str(cache_path))
         else:
             shutil.copy2(str(src), str(cache_path))
+        # Remove intermediates now that the cache holds the served copy.
+        for tmp in intermediates:
+            try:
+                if Path(tmp).resolve() != cache_path.resolve():
+                    Path(tmp).unlink(missing_ok=True)
+            except OSError:
+                pass
     return _serve_file(str(cache_path), download_name)
 
 
