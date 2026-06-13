@@ -92,7 +92,7 @@
                     <tbody>
                         {% for placeholder in template.placeholders.all %}
                         <tr>
-                            <td><code>{{'{'}}{'{'}}{{{ placeholder.placeholder }}}}</code></td>
+                            <td><code>{% templatetag openvariable %} {{ placeholder.placeholder }} {% templatetag closevariable %}</code></td>
                             <td>{{ placeholder.description }}</td>
                             <td><small class="text-muted">{{ placeholder.example_value|default:"—" }}</small></td>
                         </tr>
