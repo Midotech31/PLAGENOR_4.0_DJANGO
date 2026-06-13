@@ -30,25 +30,11 @@ parameters:
       - Projet de doctorat
       - Autre
 
-  - name: dna_origin
-    label: Origin of DNA
-    label_fr: Origine de l’ADN
-    type: enum
-    required: true
-    options:
-      - Environmental
-      - Food
-      - Hospital / Clinical
-
-  - name: dna_type
-    label: Type of DNA
-    label_fr: Type de l’ADN
-    type: enum
-    required: true
-    options:
-      - Plasmidic
-      - Chromosomal
-      - Genomic
+  # NOTE: "Origine de l'ADN" and "Type de l'ADN" are PER-SAMPLE on the
+  # official IBTIKAR form (columns of the sample table), so they live in
+  # sample_table.columns below — not as global parameters. Keeping them as
+  # global params would force a double entry and leave the form's per-row
+  # columns blank.
 
   - name: pcr_kit
     label: PCR kit
@@ -103,14 +89,56 @@ sample_table:
   enabled: true
   min_rows: 1
 
+  # One row = one PCR reaction. Columns mirror the official IBTIKAR form's
+  # sample grid so every box on the printed fiche is captured online.
   columns:
     - name: sample_code
+      label: Code
       type: string
       required: true
 
+    - name: dna_origin
+      label: Origine de l’ADN
+      type: enum
+      required: true
+      options:
+        - Environmental
+        - Food
+        - Hospital / Clinical
+
+    - name: dna_type
+      label: Type de l’ADN
+      type: enum
+      required: true
+      options:
+        - Plasmidic
+        - Chromosomal
+        - Genomic
+
+    - name: extraction_method
+      label: Méthode de l’extraction d’ADN
+      type: string
+      required: false
+
     - name: target_gene
+      label: Gène cible / Taille de l’amplicon
       type: string
       required: true
+
+    - name: primer_sequences
+      label: Séquences des amorces utilisées (5’-3’)
+      type: string
+      required: false
+
+    - name: tm
+      label: Tm (°C)
+      type: number
+      required: false
+
+    - name: remarks
+      label: Remarques particulières
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

@@ -20,7 +20,16 @@ def service_form_fragment(request, service_code):
         return HttpResponse('<p class="text-muted">Service non trouvé.</p>')
 
     parameters = definition.get('parameters', [])
-    sample_table = definition.get('sample_table', {})
+    # Copy so we can augment without mutating the cached registry dict.
+    sample_table = dict(definition.get('sample_table', {}) or {})
+    # The template hides a parameter when its name is also a sample-table
+    # column (``param.name not in sample_table.column_names``). The registry
+    # only carries ``columns``; without an explicit ``column_names`` list the
+    # lookup resolves to '' and Django evaluates ``name not in ''`` as False,
+    # silently hiding EVERY Section-4 question. Compute the list here.
+    sample_table['column_names'] = [
+        c.get('name') for c in (sample_table.get('columns') or []) if c.get('name')
+    ]
     pricing = definition.get('pricing', {}) or {}
 
     # Also load DB-defined custom fields if ServiceFormField model exists.
