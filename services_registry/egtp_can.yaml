@@ -19,6 +19,17 @@ description: >
 # PARAMETERS (REGISTRY-DRIVEN UI)
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: nucleic_acid_type
     label: Type of nucleic acid
     type: enum

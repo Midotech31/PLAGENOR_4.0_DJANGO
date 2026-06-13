@@ -19,8 +19,20 @@ description: >
 # PARAMETERS
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: dna_origin
     label: Origin of DNA
+    label_fr: Origine de l’ADN
     type: enum
     required: true
     options:
@@ -30,6 +42,7 @@ parameters:
 
   - name: dna_type
     label: Type of DNA
+    label_fr: Type de l’ADN
     type: enum
     required: true
     options:
@@ -39,6 +52,7 @@ parameters:
 
   - name: pcr_kit
     label: PCR kit
+    label_fr: Type de kit PCR
     type: enum
     required: true
     options:
@@ -48,6 +62,7 @@ parameters:
 
   - name: qc_level
     label: Quality control level
+    label_fr: Techniques de contrôle qualité
     type: enum
     required: true
     options:
@@ -55,8 +70,26 @@ parameters:
       - Gel
       - ScanDrop + Gel
 
+  - name: size_marker
+    label: Size marker for agarose gel electrophoresis
+    label_fr: Marqueur de taille
+    type: enum
+    required: true
+    options:
+      - "100 bp ladder"
+      - "1 kb ladder"
+      - "GeneRuler 1 kb Plus"
+      - Autre
+
+  - name: product_volume_ul
+    label: PCR product volume to recover (µL)
+    label_fr: Volume du produit de PCR à récupérer (µL)
+    type: integer
+    required: false
+
   - name: product_recovery
     label: PCR product recovery
+    label_fr: Récupération du produit de PCR
     type: boolean
     required: true
 

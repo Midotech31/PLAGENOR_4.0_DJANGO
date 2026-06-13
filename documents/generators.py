@@ -41,6 +41,7 @@ from documents.docx_helpers import (
     apply_house_style,
     apply_legacy_label_substitution,
     ensure_institutional_header,
+    populate_legacy_param_questions,
     populate_legacy_sample_table,
     replace_placeholders,
     strip_unresolved_placeholders,
@@ -256,6 +257,11 @@ def build_field_map(request_obj) -> dict[str, str]:
         'CHANNEL': req.channel or '',
         'URGENCY': req.urgency or '',
         'STATUS': req.status or '',
+        # ``analysis_frame`` is a per-service YAML param the requester picks
+        # online (e.g. "PFE Classique" / "1275" / "008" / "Projet de doctorat"
+        # / "Autre"). Surfacing it in the field_map lets the legacy IBTIKAR
+        # forms substitute their "Cadre de l'analyse" line.
+        'ANALYSIS_FRAME': (req.service_params or {}).get('analysis_frame', ''),
 
         # ----- Financial ----------------------------------------------------
         'BUDGET_AMOUNT': _money(req.budget_amount),
@@ -523,6 +529,12 @@ def generate_ibtikar_form(request_obj) -> str:
         # Pre-fill the printable sample grid from the digital submission so the
         # lab receives a complete form, not a blank table to re-type by hand.
         populate_legacy_sample_table(doc, request_obj)
+        # Fill every "Choisissez un élément" / "Cliquez ici" answer slot from
+        # the requester's online service_params (PCR kit, QC level, marker
+        # size, recovered volume…). Fuzzy label match → answer; each param
+        # used at most once. Without this, the Section 4 questions stayed
+        # blank even when the requester answered them online.
+        populate_legacy_param_questions(doc, request_obj)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)

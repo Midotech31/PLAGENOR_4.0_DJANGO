@@ -414,6 +414,9 @@ _LEGACY_LABEL_RULES = [
      'TITLE', 'Titre du projet : * {value}'),
     (re.compile(r'Directeur de recherche\s*:\s*\*[^\n]*', re.IGNORECASE),
      'SUPERVISOR', 'Directeur de recherche : * {value}'),
+    # 3. Analysis framework (PFE / 1275 / 008 / Projet de doctorat / Autre)
+    (re.compile(r"Cadre de l[’']analyse\s*:\s*\*?[^\n]*", re.IGNORECASE),
+     'ANALYSIS_FRAME', 'Cadre de l’analyse : * {value}'),
 ]
 
 # Plain string substitutions for the request-number header and date stamps
@@ -628,3 +631,175 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
     for ci in numero_cols:
         for idx in range(len(data_rows), len(rows_data)):
             pass  # already numbered above when the row was created
+
+
+# Legacy IBTIKAR forms — generic question-filler ---------------------------
+
+# Hints that mark an "empty" answer slot in a Word form paragraph. When we see
+# any of these immediately after a label, we replace them with the requester's
+# answer.
+_EMPTY_ANSWER_HINTS = [
+    "choisissez un élément",
+    "choisissez un element",
+    "cliquez ou appuyez ici",
+    "click or tap here",
+    "select an item",
+]
+
+# Regex finds: "<question label>...: <hint>" (with the colon possibly missing
+# in rare cases). Group 1 = label, group 2 = the answer-slot text we replace.
+_QUESTION_LINE_RE = re.compile(
+    r'^(.{8,160}?)\s*:?\s*(' +
+    '|'.join(re.escape(h) for h in _EMPTY_ANSWER_HINTS) +
+    r')\.?\s*$',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _label_norm(text: str) -> str:
+    """Aggressive normalisation for fuzzy label matching."""
+    import unicodedata
+    text = unicodedata.normalize('NFKD', text or '')
+    text = ''.join(c for c in text if not unicodedata.combining(c))
+    # drop bracketed asides like "(chaque kit est associé à un tarif spécifique)"
+    text = re.sub(r'\([^)]*\)', ' ', text)
+    return re.sub(r'[^a-z0-9]+', ' ', text.lower()).strip()
+
+
+def _build_param_label_index(service_params: dict, service_code: str) -> list:
+    """Return [(normalized_label, value, original_label, original_name), ...]
+    drawn from the YAML registry so we can map the DOCX questions to answers
+    no matter how the labels are phrased.
+
+    Multiple entries per param are emitted when the YAML provides bilingual
+    labels (``label_fr`` / ``label_en``), so a French DOCX line can match an
+    English-labelled param via its French alias and vice versa.
+    """
+    if not service_params or not service_code:
+        return []
+    try:
+        from core.registry import get_service_def
+        sdef = get_service_def(service_code) or {}
+    except Exception:
+        sdef = {}
+    yaml_params = sdef.get('parameters') or []
+    by_name = {p['name']: p for p in yaml_params}
+    out = []
+    seen_norm = set()
+    for name, value in service_params.items():
+        if value in (None, '', [], {}):
+            continue
+        if isinstance(value, bool):
+            value = 'Oui' if value else 'Non'
+        elif not isinstance(value, str):
+            value = str(value)
+        p = by_name.get(name) or {}
+        labels = [
+            p.get('label_fr'),
+            p.get('label'),
+            p.get('label_en'),
+            name.replace('_', ' '),
+        ]
+        for raw in labels:
+            if not raw:
+                continue
+            norm = _label_norm(raw)
+            if not norm or norm in seen_norm:
+                continue
+            seen_norm.add(norm)
+            out.append((norm, value, raw, name))
+    return out
+
+
+def _fuzzy_pick(question_norm: str, candidates: list, used: set):
+    """Pick the best (label_norm, value, ...) candidate for ``question_norm``.
+
+    Scoring: exact match wins; otherwise count word overlap. A candidate is
+    skipped if it was already used for an earlier question. Ties resolve in
+    insertion order. Returns the candidate tuple or ``None`` when no overlap.
+    """
+    q_words = set(question_norm.split())
+    if not q_words:
+        return None
+    best = None
+    best_score = 0
+    for cand in candidates:
+        cand_norm = cand[0]
+        if cand_norm in used:
+            continue
+        c_words = set(cand_norm.split())
+        if not c_words:
+            continue
+        if cand_norm == question_norm or cand_norm in question_norm or question_norm in cand_norm:
+            score = len(c_words) + 1000  # exact/containment beats overlap
+        else:
+            overlap = len(q_words & c_words)
+            # require at least one substantive word in common (>= 3 chars)
+            if not any(w in q_words for w in c_words if len(w) >= 3 and w in q_words):
+                continue
+            score = overlap
+        if score > best_score:
+            best_score = score
+            best = cand
+    return best
+
+
+def populate_legacy_param_questions(doc: DocumentType, request_obj) -> None:
+    """Fill every "Choisissez un élément" / "Cliquez…" slot in the legacy
+    IBTIKAR forms with the answer the requester provided online.
+
+    The match is fuzzy on labels: the DOCX question (e.g. "Type de kit PCR
+    que vous souhaitez utiliser") is mapped to the YAML param whose label
+    overlaps the most ("PCR kit"). Each param is used at most once, so two
+    similar questions don't both grab the same answer.
+
+    Idempotent and defensive: paragraphs with no recognisable hint are
+    skipped; tables are walked recursively; styling is preserved by
+    rewriting only the first run.
+    """
+    service_code = getattr(getattr(request_obj, 'service', None), 'code', '') or ''
+    candidates = _build_param_label_index(
+        getattr(request_obj, 'service_params', None) or {},
+        service_code,
+    )
+    if not candidates:
+        return
+    used: set = set()
+
+    def _fill_paragraph(paragraph) -> None:
+        joined = ''.join(r.text or '' for r in paragraph.runs)
+        if not joined:
+            return
+        m = _QUESTION_LINE_RE.match(joined.strip())
+        if not m:
+            return
+        label_text, _hint = m.group(1).strip(), m.group(2)
+        # Skip the personal-info labels — those go through the label-rules path
+        # and we don't want a double substitution.
+        if re.search(r'(nom et prénom|adresse e-?mail|téléphone|laboratoire|fonction|directeur|titre du projet|cadre de l[’\']analyse)',
+                     label_text, re.IGNORECASE):
+            return
+        picked = _fuzzy_pick(_label_norm(label_text), candidates, used)
+        if not picked:
+            return
+        norm, value, _orig_label, _name = picked
+        used.add(norm)
+        new_text = f"{label_text} : {value}"
+        if paragraph.runs:
+            paragraph.runs[0].text = new_text
+            for r in paragraph.runs[1:]:
+                r.text = ''
+
+    def _visit_paragraphs(paragraphs):
+        for p in paragraphs:
+            _fill_paragraph(p)
+
+    def _visit_tables(tables):
+        for t in tables:
+            for row in t.rows:
+                for cell in row.cells:
+                    _visit_paragraphs(cell.paragraphs)
+                    _visit_tables(cell.tables)
+
+    _visit_paragraphs(doc.paragraphs)
+    _visit_tables(doc.tables)

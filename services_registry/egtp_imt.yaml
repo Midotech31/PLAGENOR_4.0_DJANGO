@@ -64,9 +64,11 @@ parameters:
     type: enum
     required: true
     options:
-      - Recherche académique
-      - Projet institutionnel
-      - Prestation de service
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
 
   - name: project_title
     label: Titre du projet
