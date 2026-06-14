@@ -658,6 +658,40 @@
                 <div class="data-card-row"><span class="text-muted">{% trans "Date de RDV" %}</span><strong>{{ req.appointment_date|date:"d/m/Y" }}</strong></div>
                 {% endif %}
                 <div class="data-card-row"><span class="text-muted">{% trans "RDV confirmé" %}</span><strong>{% if req.appointment_confirmed %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</strong></div>
+
+                {# Active-reassignment block — only meaningful while the
+                   request is still in the analyst's pipeline. Lets ops
+                   move a task to a colleague in case of delay/absence
+                   with a mandatory reason (audit trail + both members
+                   get notified). #}
+                {% if req.status in 'ASSIGNED APPOINTMENT_PROPOSED APPOINTMENT_CONFIRMED SAMPLE_RECEIVED ANALYSIS_STARTED ANALYSIS_FINISHED'.split %}
+                <div x-data="{ openReassign: false }" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-light);">
+                    <button type="button" class="btn btn-sm btn-outline" @click="openReassign = !openReassign" x-text="openReassign ? '{% trans 'Annuler' %}' : '{% trans 'Réassigner à un autre analyste' %}'"></button>
+                    <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" x-show="openReassign" x-transition x-cloak style="margin-top:12px; padding:12px; background:var(--neutral-50,#f8fafc); border-radius:8px;">
+                        {% csrf_token %}
+                        <p class="text-sm" style="margin:0 0 10px; color:#475569;">
+                            {% trans "Utilisez cette option en cas de retard, d'absence ou de surcharge de l'analyste actuel. L'ancien et le nouvel analyste seront notifiés." %}
+                        </p>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="font-size:0.85rem; font-weight:600;">{% trans "Nouvel analyste" %}</label>
+                            <select name="member_id" class="form-control" required>
+                                <option value="">{% trans "Choisir un membre…" %}</option>
+                                {% for m in available_members %}
+                                    {% if m != req.assigned_to %}
+                                    <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="font-size:0.85rem; font-weight:600;">{% trans "Raison" %} <span style="color:#dc2626;">*</span></label>
+                            <input type="text" name="reason" class="form-control" required minlength="5" maxlength="200" placeholder="{% trans 'Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires' %}">
+                            <small class="text-muted">{% trans "Cette raison est consignée dans l'historique de la demande." %}</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% trans "Confirmer la réassignation" %}</button>
+                    </form>
+                </div>
+                {% endif %}
                 {% else %}
                 <div class="text-muted">{% trans "Non encore assigné." %}</div>
                 {% endif %}
