@@ -387,6 +387,11 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     breakdown = []
     total = Decimal('0')
     sample_count = len([s for s in sample_table if s]) if sample_table else 0
+    # OVERRIDE short-circuit state — set inside the loop when an
+    # OVERRIDE-typed rule fires. Picked up after the loop to clamp the
+    # final total and stamp the source.
+    override = False
+    override_total = Decimal('0')
 
     for config in pricing_configs:
         config_total = Decimal('0')
@@ -414,6 +419,16 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             # but if an operator typed a positive number we treat it as a
             # subtraction so the math is intuitive either way.
             config_total = -abs(config.amount)
+        elif config.pricing_type == 'OVERRIDE':
+            # Forfait total — short-circuit the whole computation. The
+            # admin set a flat all-inclusive price; any other tier on this
+            # service is ignored, and the resulting breakdown reports a
+            # single line. We still build the rest of the loop so the audit
+            # trail records *which* rule fired.
+            quantity = 1
+            config_total = config.amount
+            override = True
+            override_total = config.amount
 
         total += config_total
         breakdown.append({
@@ -423,6 +438,18 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             'quantity': quantity,
             'subtotal': float(config_total),
         })
+
+    # OVERRIDE short-circuit — if any rule was OVERRIDE, the flat amount
+    # replaces every other line and the total clamps to it.
+    if override:
+        total = override_total
+        return {
+            'source': 'service_pricing_db_override',
+            'pricing_configs_used': pricing_configs.count(),
+            'sample_count': sample_count,
+            'total': float(total),
+            'breakdown': breakdown,
+        }
 
     # Clamp at zero — a stack of discounts can't produce a negative bill.
     if total < 0:

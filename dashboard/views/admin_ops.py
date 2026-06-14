@@ -260,6 +260,78 @@ def assign_request(request, pk):
 
 
 @admin_required
+def manage_observers(request, pk):
+    """Add or remove read-only observers on a request.
+
+    Observers are MemberProfile rows that get follow-only access to the
+    request: it shows up in their "Observations" tab, they can open the
+    detail page, but they cannot accept/decline/transition or upload the
+    report (those endpoints all check ``assigned_to == profile``).
+    Useful when a colleague needs to monitor progress on behalf of a
+    delayed/absent analyst, or for senior review without reassignment.
+
+    POST {action: add|remove, member_id: pk} — returns to the detail page.
+    """
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    req = get_object_or_404(Request, pk=pk)
+    action = request.POST.get('action', '').strip()
+    member_id = request.POST.get('member_id', '').strip()
+    if action not in ('add', 'remove') or not member_id:
+        messages.error(request, "Action invalide.")
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
+    member = get_object_or_404(MemberProfile, pk=member_id)
+
+    if action == 'add':
+        # Don't add the assignee as an observer — they already have full
+        # write access; observer status would be confusing/dead noise.
+        if req.assigned_to_id == member.pk:
+            messages.warning(
+                request,
+                f"{member.user.get_full_name()} est déjà l'analyste assigné.",
+            )
+            return redirect_to_detail(request, req, 'dashboard:admin_ops')
+        if req.informed_members.filter(pk=member.pk).exists():
+            messages.warning(request, f"{member.user.get_full_name()} suit déjà cette demande.")
+            return redirect_to_detail(request, req, 'dashboard:admin_ops')
+        req.informed_members.add(member)
+        RequestHistory.objects.create(
+            request=req, from_status=req.status, to_status=req.status,
+            actor=request.user,
+            notes=f"Observateur ajouté : {member.user.get_full_name()}",
+        )
+        Notification.objects.create(
+            user=member.user,
+            message=f"Vous avez été ajouté en observateur sur {req.display_id}.",
+            request=req, notification_type='ASSIGNMENT',
+        )
+        messages.success(
+            request,
+            f"{member.user.get_full_name()} suit désormais la demande {req.display_id}.",
+        )
+    else:  # remove
+        if not req.informed_members.filter(pk=member.pk).exists():
+            messages.warning(request, "Ce membre ne suit pas cette demande.")
+            return redirect_to_detail(request, req, 'dashboard:admin_ops')
+        req.informed_members.remove(member)
+        RequestHistory.objects.create(
+            request=req, from_status=req.status, to_status=req.status,
+            actor=request.user,
+            notes=f"Observateur retiré : {member.user.get_full_name()}",
+        )
+        Notification.objects.create(
+            user=member.user,
+            message=f"Vous ne suivez plus la demande {req.display_id}.",
+            request=req, notification_type='WORKFLOW',
+        )
+        messages.success(
+            request,
+            f"{member.user.get_full_name()} ne suit plus la demande {req.display_id}.",
+        )
+    return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+
+@admin_required
 def award_points(request, member_pk):
     if request.method != 'POST':
         return HttpResponseForbidden()

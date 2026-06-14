@@ -41,6 +41,7 @@ urlpatterns = [
     path('ops/request/<uuid:pk>/', admin_ops.request_detail, name='admin_request_detail'),
     path('ops/transition/<uuid:pk>/', admin_ops.transition_request, name='admin_transition'),
     path('ops/assign/<uuid:pk>/', admin_ops.assign_request, name='admin_assign'),
+    path('ops/observers/<uuid:pk>/', admin_ops.manage_observers, name='admin_manage_observers'),
     path('ops/points/<int:member_pk>/', admin_ops.award_points, name='admin_award_points'),
     path('ops/cheer/<int:member_pk>/', admin_ops.send_cheer, name='admin_send_cheer'),
     path('ops/gift/<int:member_pk>/', admin_ops.upload_gift, name='admin_upload_gift'),

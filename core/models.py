@@ -141,6 +141,10 @@ class ServicePricing(models.Model):
         ('PER_PARAMETER', 'Par paramètre'),
         ('URGENCY_SURCHARGE', 'Majoration urgence'),
         ('DISCOUNT', 'Remise'),
+        # OVERRIDE: forfait total — bypasses the (base × multiplier × N)
+        # computation entirely. Used when the platform agrees a flat
+        # all-inclusive price with a specific requester / client.
+        ('OVERRIDE', 'Forfait (override total)'),
     ]
     
     CHANNEL_CHOICES = [
@@ -274,6 +278,18 @@ class Request(models.Model):
     service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True)
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='requests_made')
     assigned_to = models.ForeignKey('accounts.MemberProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_requests')
+    # Members granted read-only follow access on this request — typically a
+    # colleague the admin_ops added so they can monitor progress in case
+    # the assignee is delayed or absent. Observers see the request in
+    # their "Observations" tab and can open the detail page, but every
+    # action endpoint still checks assigned_to and refuses for them.
+    informed_members = models.ManyToManyField(
+        'accounts.MemberProfile',
+        blank=True,
+        related_name='observed_requests',
+        verbose_name='Membres observateurs',
+        help_text='Membres ayant un accès en lecture sur cette demande (suivi).',
+    )
 
     # Financial
     budget_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)

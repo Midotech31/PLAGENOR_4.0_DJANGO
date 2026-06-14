@@ -59,6 +59,19 @@ def index(request):
         status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
     ).select_related('service', 'requester').order_by('-updated_at')[:30]
 
+    # Observations — read-only follow set by admin_ops. We exclude rows
+    # where the member is the assignee (those already appear in pending /
+    # in-progress / history) so the tab carries only the colleagues' work
+    # the analyst is keeping an eye on.
+    observed = Request.objects.filter(
+        informed_members=profile
+    ).exclude(
+        assigned_to=profile,
+    ).select_related(
+        'service', 'requester', 'assigned_to__user',
+    ).order_by('-updated_at')[:30]
+    observed_count = observed.count()
+
     # Points and cheers
     points_history = profile.points_history.order_by('-created_at')[:10]
     cheers = profile.cheers.order_by('-created_at')[:10]
@@ -100,6 +113,8 @@ def index(request):
         'pending_tasks': pending_tasks,
         'in_progress': in_progress,
         'history': history,
+        'observed': observed,
+        'observed_count': observed_count,
         'points_history': points_history,
         'cheers': cheers,
         'notifications': notifications,
@@ -233,17 +248,17 @@ def request_detail(request, pk):
     from core.models import RequestComment, Message
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    # Allow access to currently assigned requests, historical ones (the
-    # member acted on them), AND any request this member has a notification
-    # about — so clicking a notification always opens the detail page rather
-    # than bouncing to the dashboard index.
+    # Allow access in five cases. Observers (members the admin_ops added
+    # via ``manage_observers``) get the same read-only door — the
+    # template uses ``is_observer`` to hide action buttons.
     from notifications.models import Notification
-    was_assigned = (
-        req.assigned_to == profile
-        or req.history.filter(actor=request.user).exists()
-        or Notification.objects.filter(user=request.user, request=req).exists()
-    )
-    if not was_assigned:
+    is_assignee = (req.assigned_to == profile)
+    is_observer = req.informed_members.filter(pk=profile.pk).exists()
+    had_history = req.history.filter(actor=request.user).exists()
+    has_notification = Notification.objects.filter(
+        user=request.user, request=req,
+    ).exists()
+    if not (is_assignee or is_observer or had_history or has_notification):
         return HttpResponseForbidden()
     history = req.history.select_related('actor').order_by('created_at')
     comments = req.comments.select_related('author').order_by('created_at')
@@ -251,6 +266,9 @@ def request_detail(request, pk):
     return render(request, 'dashboard/analyst/request_detail.html', {
         'req': req, 'history': history, 'comments': comments,
         'messages_list': messages_list, 'now': timezone.now(),
+        # is_observer = True AND NOT assignee → hide every action UI.
+        'is_observer': is_observer and not is_assignee,
+        'is_assignee': is_assignee,
     })
 
 

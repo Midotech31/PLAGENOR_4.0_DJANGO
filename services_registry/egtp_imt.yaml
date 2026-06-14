@@ -165,10 +165,13 @@ pricing:
     non_pathogenic: 2500
     pathogenic: 4000
 
+  # Analysis-mode multipliers. Duplicate / Triplicate apply a small
+  # economy-of-scale rebate vs a strict ×2 / ×3, since running 2 or 3
+  # replicates of the same isolate shares some prep/setup cost.
   multipliers:
     Simple: 1
-    Duplicate: 2
-    Triplicate: 3
+    Duplicate: 1.8
+    Triplicate: 2.6
 
 # -----------------------------------------------------
 # IBTIKAR DOCX BINDING

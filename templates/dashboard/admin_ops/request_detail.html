@@ -664,6 +664,56 @@
             </div>
         </div>
 
+        <!-- Observers (read-only follow) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>{% trans "Observateurs" %}</h3>
+                <p class="text-sm text-muted" style="margin:4px 0 0;">
+                    {% trans "Membres autorisés à consulter cette demande en lecture seule (utile en cas de retard ou d'absence de l'analyste assigné)." %}
+                </p>
+            </div>
+            <div class="card-body">
+                {% with current_observers=req.informed_members.all %}
+                {% if current_observers %}
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+                    {% for obs in current_observers %}
+                    <div class="data-card-row" style="padding:8px 0;">
+                        <span>{{ obs.user.get_full_name|default:obs.user.username }}
+                            {% if obs.user.email %}<span class="text-muted text-sm"> &middot; {{ obs.user.email }}</span>{% endif %}
+                        </span>
+                        <form method="post" action="{% url 'dashboard:admin_manage_observers' req.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove">
+                            <input type="hidden" name="member_id" value="{{ obs.pk }}">
+                            <button type="submit" class="btn btn-sm btn-outline" title="{% trans 'Retirer ce suiveur' %}">{% trans "Retirer" %}</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-muted" style="margin:0 0 12px;">{% trans "Aucun observateur pour l'instant." %}</p>
+                {% endif %}
+                {% endwith %}
+
+                <form method="post" action="{% url 'dashboard:admin_manage_observers' req.pk %}" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="form-group" style="flex:1; min-width:220px; margin:0;">
+                        <label style="font-size:0.85rem; font-weight:600;">{% trans "Ajouter un observateur" %}</label>
+                        <select name="member_id" class="form-control" required>
+                            <option value="">{% trans "Choisir un membre…" %}</option>
+                            {% for m in available_members %}
+                                {% if m != req.assigned_to and m not in req.informed_members.all %}
+                                <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}{% if m.user.email %} — {{ m.user.email }}{% endif %}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+                </form>
+            </div>
+        </div>
+
         <!-- Order & Payment Information -->
         {% if req.channel == 'GENOCLAB' %}
         <div class="card mb-4" style="border-inline-start: 4px solid #7c3aed;">
