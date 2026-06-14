@@ -94,7 +94,12 @@
     /* Layout */
     --sidebar-width: 260px;
     --topbar-height: 64px;
-    --content-max: 1400px;
+    /* The shell / grids / tables now stretch to the viewport — only long
+       running text (descriptions, paragraphs) is capped at --readable-max
+       to keep line length comfortable (~75ch per typography best practice).
+       See .content-area below and the .readable scoped rule further down. */
+    --content-max: 100%;
+    --readable-max: 75ch;
 
     /* Typography */
     --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -354,6 +359,31 @@ input, select, textarea { font-family: inherit; }
     /* Same reason: keep the area inside its container instead of letting
        a single wide row drag the layout out. */
     min-width: 0;
+}
+
+/* ============================================================
+   Readability cap for long-form prose
+   The shell + grids stretch to the viewport (option 2: fluid width with
+   readable scope), but long running text — service descriptions, request
+   notes, justifications, comments, free-text remarks — would become hard
+   to read at 1800px+ if it spanned edge to edge. The 75ch cap matches the
+   typography rule of thumb (45–75 characters per line). Applied to plain
+   paragraphs inside cards, free-text fields in the detail pages, the
+   service description body and the help-center step content.
+   ============================================================ */
+.card-body > p,
+.card-body p.text-block,
+.readable,
+.help-section p,
+.help-steps li,
+.faq-a p,
+.report-card .citation-block p,
+.report-card .thank-you-message,
+.report-card .citation-intro,
+.report-card .authorship-clause,
+.report-card .collaboration-notice,
+.data-card-row .description-text {
+    max-width: var(--readable-max);
 }
 
 /* ============================================================
