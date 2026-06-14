@@ -379,19 +379,60 @@ function showFormPreview(formEl) {
     var sampleHtml = '';
     var sampleTable = document.getElementById('sample-table');
     if (sampleTable) {
-        var headers = [];
+        // Collect (col_name, label) pairs from the header — th[data-col]
+        // carries the YAML column name in data-col, the label is the text.
+        // We use both: data-col to match each input/select/textarea by
+        // name="sample_<idx>_<col>", label for the preview heading.
+        var headerCols = [];
         sampleTable.querySelectorAll('thead th[data-col]').forEach(function(th) {
-            headers.push(th.textContent.trim());
+            headerCols.push({ name: th.getAttribute('data-col'), label: th.textContent.trim() });
         });
+        // Fallback when the template didn't tag headers with data-col: use
+        // whatever the first row's fields are named, in document order.
+        if (headerCols.length === 0) {
+            var firstRow = document.querySelector('#sample-table-body tr');
+            if (firstRow) {
+                var seen = {};
+                firstRow.querySelectorAll('[name^="sample_"]').forEach(function(el) {
+                    var m = el.name.match(/^sample_\d+_(.+)$/);
+                    if (m && !seen[m[1]]) {
+                        seen[m[1]] = true;
+                        headerCols.push({ name: m[1], label: m[1].replace(/_/g, ' ') });
+                    }
+                });
+            }
+        }
+
+        function readFieldValue(el) {
+            if (!el) return '';
+            if (el.tagName === 'SELECT') {
+                var o = el.options[el.selectedIndex];
+                return o ? (o.text || o.value || '') : '';
+            }
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                return el.checked ? 'Oui' : '';
+            }
+            return el.value || '';
+        }
+
+        // Read every body row, collecting one cell per declared column
+        // (text input, select, number — all types — matched by name suffix).
+        // Rows where every column is empty are skipped so we don't pad the
+        // preview with five empty lines when the user added rows by mistake.
         var rows = [];
         document.querySelectorAll('#sample-table-body tr').forEach(function(tr) {
             var cells = [];
-            tr.querySelectorAll('input[type="text"]').forEach(function(input) {
-                cells.push(input.value || '—');
+            var hasValue = false;
+            headerCols.forEach(function(col) {
+                var field = tr.querySelector('[name$="_' + col.name + '"]');
+                var v = readFieldValue(field).trim();
+                if (v) hasValue = true;
+                cells.push(v || '—');
             });
-            if (cells.length > 0) rows.push(cells);
+            if (hasValue) rows.push(cells);
         });
 
+        var headers = headerCols.map(function(c) { return c.label; });
         if (headers.length > 0 && rows.length > 0) {
             sampleHtml = '<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">';
             sampleHtml += '<thead><tr>';
