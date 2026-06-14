@@ -108,13 +108,21 @@ class Command(BaseCommand):
             initial_value_fn=lambda: 0,
         )
 
+        # Build a sample_table whose keys match the chosen service's YAML
+        # column definitions (sample_code, dna_origin, dna_type for PCR;
+        # sample_id, organism, source for IMT; etc.). Using generic keys
+        # like "sample_id" / "source" / "note" matches no YAML schema, so
+        # the generated IBTIKAR fiche shipped with an empty sample grid.
+        # The requester form posts the YAML names — this seed must too.
+        sample_params, sample_rows = self._build_service_aware_samples(service, count=2)
+
         # Resolve the cost so budget_amount matches a real submission. We
         # use the same canonical resolver the requester form uses.
         from core.pricing import resolve_cost
         price_result = resolve_cost(
             service, 'IBTIKAR',
-            sample_table=[{'sample_id': 'DEMO-S1', 'source': 'isolat clinique'}],
-            service_params={'pathogenic': False, 'analysis_mode': 'Simple'},
+            sample_table=sample_rows,
+            service_params=sample_params,
             urgency='Normal',
         )
         budget_amount = float(price_result.get('total') or service.ibtikar_price or 5000)
@@ -147,12 +155,9 @@ class Command(BaseCommand):
             assigned_to=analyst_profile,
             budget_amount=budget_amount,
             declared_ibtikar_balance=float(requester.ibtikar_declared_balance),
-            service_params={'pathogenic': False, 'analysis_mode': 'Simple'},
+            service_params=sample_params,
             pricing=price_result,
-            sample_table=[
-                {'sample_id': 'DEMO-S1', 'source': 'isolat clinique', 'note': 'échantillon démo'},
-                {'sample_id': 'DEMO-S2', 'source': 'écouvillon', 'note': 'échantillon démo'},
-            ],
+            sample_table=sample_rows,
             requester_data={'organization': requester.organization or 'USTO'},
             **extras,
         )
@@ -254,6 +259,69 @@ class Command(BaseCommand):
         u.save()
         profile, _ = MemberProfile.objects.get_or_create(user=u)
         return profile
+
+    def _build_service_aware_samples(self, service, count=2):
+        """Produce (service_params, sample_table) that match the service's
+        YAML schema so the generated IBTIKAR form's grid fills properly.
+
+        For each YAML sample_table column: pick the first option if the
+        column is an enum, else a short placeholder derived from the
+        column label. For service_params: again first enum option, or
+        ``False``/``'Simple'``/``''`` defaults that the pricing formula
+        accepts. Falls back to the generic seed keys if no YAML schema is
+        available (custom DB-only service).
+        """
+        from core.registry import get_service_def
+        try:
+            sdef = get_service_def(service.code) or {}
+        except Exception:
+            sdef = {}
+
+        # service_params
+        params = {}
+        for p in (sdef.get('parameters') or []):
+            name = p.get('name')
+            if not name:
+                continue
+            ptype = (p.get('type') or '').lower()
+            opts = p.get('options') or []
+            if ptype == 'boolean' or ptype == 'checkbox':
+                params[name] = False
+            elif opts:
+                params[name] = opts[0]
+            else:
+                params[name] = ''
+
+        # sample_table rows
+        cols = (sdef.get('sample_table') or {}).get('columns') or []
+        if not cols:
+            # No YAML schema — fallback to generic keys so older / custom
+            # services at least surface something readable on the fiche.
+            rows = [
+                {'sample_id': f'DEMO-S{i+1}', 'source': 'échantillon démo'}
+                for i in range(count)
+            ]
+            return params, rows
+
+        rows = []
+        for i in range(count):
+            row = {}
+            for col in cols:
+                cname = col.get('name')
+                if not cname:
+                    continue
+                ctype = (col.get('type') or '').lower()
+                copts = col.get('options') or []
+                if copts:
+                    row[cname] = copts[0]
+                elif ctype in ('integer', 'int', 'number', 'float'):
+                    row[cname] = '1'
+                elif 'code' in cname or 'id' in cname:
+                    row[cname] = f'DEMO-S{i+1:02d}'
+                else:
+                    row[cname] = f'Demo {col.get("label", cname)}'
+            rows.append(row)
+        return params, rows
 
     def _ensure_service(self, code):
         """Pick the requested service, or the first IBTIKAR-eligible active service."""
