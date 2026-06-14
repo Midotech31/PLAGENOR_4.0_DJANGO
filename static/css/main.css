@@ -340,11 +340,20 @@ input, select, textarea { font-family: inherit; }
     margin-inline-start: var(--sidebar-width);
     min-height: 100vh;
     background: var(--bg);
+    /* Cap the working width to the viewport minus the sidebar so children
+       cannot push the page wider than what's actually visible. Without
+       this an oversized child (long URL, wide table) creates horizontal
+       scroll on the whole page. */
+    max-width: calc(100vw - var(--sidebar-width));
+    min-width: 0;
 }
 
 .content-area {
     padding: 32px;
     max-width: var(--content-max);
+    /* Same reason: keep the area inside its container instead of letting
+       a single wide row drag the layout out. */
+    min-width: 0;
 }
 
 /* ============================================================
@@ -799,6 +808,18 @@ input, select, textarea { font-family: inherit; }
     gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border-light);
+    /* Let children shrink past their intrinsic content width and let long
+       service names / IDs / descriptions wrap inside the card instead of
+       spilling out to the right. */
+    min-width: 0;
+}
+.data-card-row > * {
+    min-width: 0;
+    /* anywhere: break inside a word as a last resort. break-word would
+       keep the word whole until forced; anywhere starts breaking earlier,
+       which is what we want for IDs / long URLs / no-space strings. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 .data-card-row:last-child { border-bottom: none; }
 .data-card-title {
@@ -1129,9 +1150,17 @@ tbody tr:hover { background: var(--primary-50); }
 /* ============================================================
    Grid Utilities
    ============================================================ */
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+/* Grid utilities. Default grid items have min-width:auto, which sizes them
+   to their content and prevents shrinking — so long values (a service
+   title, a long ID, a description without spaces) push the column wider
+   than its fr-share and the whole page scrolls horizontally. min-width:0
+   on the children lets them respect the fraction. Paired with
+   overflow-wrap:anywhere on text cells (see .data-card-row strong) so
+   unbreakable strings still wrap inside their column. */
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
 
 /* ============================================================
    Spacing / Text Utilities
@@ -1719,6 +1748,21 @@ a:has(.service-card):hover .service-card,
     max-width: 360px;
     margin: 0 auto;
     line-height: 1.6;
+}
+
+/* ============================================================
+   Tablet / small-laptop adjustments
+   Sidebar (260px) + 2-column grids are too cramped under ~1100px of
+   viewport — the right column gets clipped and the page scrolls
+   horizontally. Collapse 2/3/4-col grids to 1 column before that
+   happens, while keeping the sidebar visible (mobile collapse only
+   kicks in at 768px).
+   ============================================================ */
+@media (max-width: 1100px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .content-area { padding: 24px; }
 }
 
 /* ============================================================
