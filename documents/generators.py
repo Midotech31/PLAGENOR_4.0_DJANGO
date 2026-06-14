@@ -633,6 +633,78 @@ def generate_platform_note(request_obj) -> str:
     return _save_document(doc, 'NOTE_PLT', request_obj)
 
 
+def _render_tariff_breakdown(doc, request_obj) -> None:
+    """Render an itemised tariff justification in the platform note.
+
+    Renders a styled section that breaks the total down by:
+      * Type d'analyse (service code + name)
+      * Mode d'analyse / niveau retenu (analysis_mode / qc_level / …)
+      * Caractère pathogène (Oui / Non)
+      * Prix de base unitaire
+      * Multiplicateur appliqué
+      * Nombre d'échantillons
+      * Total = base × multiplicateur × N
+
+    Source of truth: re-runs ``resolve_cost`` from ``core.pricing`` so the
+    figures here are the SAME ones the requester saw live in the form.
+    Robust to missing data: a missing field renders as "—".
+    """
+    from core.pricing import resolve_cost
+
+    doc.add_heading('Justification du tarif', level=2)
+
+    params = request_obj.service_params or {}
+    samples = request_obj.sample_table or []
+    n = len([s for s in samples if isinstance(s, dict) and any(v not in (None, '', [], {}) for v in s.values())])
+    if n == 0:
+        n = len(samples) or 1
+
+    result = {}
+    if request_obj.service:
+        try:
+            result = resolve_cost(
+                request_obj.service, request_obj.channel,
+                sample_table=samples, service_params=params,
+                urgency=request_obj.urgency or 'Normal',
+            )
+        except Exception:
+            result = {}
+
+    breakdown = result.get('breakdown', {}) or {}
+    if not isinstance(breakdown, dict):
+        breakdown = {}
+    base_price = breakdown.get('base_price', '—')
+    multiplier = breakdown.get('multiplier', '—')
+    mult_key = breakdown.get('multiplier_key', '—')
+    pathogenic = breakdown.get('pathogenic')
+    total = result.get('total', request_obj.budget_amount or 0)
+
+    rows = [
+        ("Type d'analyse",
+         f"{getattr(request_obj.service, 'code', '—')} — {getattr(request_obj.service, 'name', '')}"),
+        ("Mode / niveau retenu", str(mult_key) if mult_key else '—'),
+        ("Caractère pathogène",
+         '—' if pathogenic is None else ('Oui' if pathogenic else 'Non')),
+        ("Prix de base unitaire",
+         f"{base_price:,.0f} DZD".replace(',', ' ') if isinstance(base_price, (int, float)) else str(base_price)),
+        ("Multiplicateur appliqué",
+         f"× {multiplier}" if multiplier != '—' else '—'),
+        ("Nombre d'échantillons", str(n)),
+        ("Total",
+         f"{total:,.0f} DZD".replace(',', ' ') if isinstance(total, (int, float)) else str(total)),
+    ]
+    table = doc.add_table(rows=len(rows), cols=2)
+    table.style = 'Light Grid Accent 1'
+    for i, (label, value) in enumerate(rows):
+        table.rows[i].cells[0].text = label
+        table.rows[i].cells[1].text = value
+
+    doc.add_paragraph(
+        "Formule appliquée : Prix de base × Multiplicateur × Nombre d'échantillons.",
+        style='Intense Quote' if 'Intense Quote' in [s.name for s in doc.styles] else None,
+    )
+
+
 def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
     doc = Document()
     apply_house_style(doc)
@@ -681,6 +753,9 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
     doc.add_paragraph(f"Montant de cette prestation : {field_map['BUDGET_AMOUNT']}")
     if request_obj.declared_ibtikar_balance:
         doc.add_paragraph(f"Solde IBTIKAR déclaré : {field_map['IBTIKAR_BALANCE']}")
+
+    # Tariff justification — see _render_tariff_breakdown docstring.
+    _render_tariff_breakdown(doc, request_obj)
 
     if request_obj.assigned_to:
         doc.add_heading('Assignation', level=2)

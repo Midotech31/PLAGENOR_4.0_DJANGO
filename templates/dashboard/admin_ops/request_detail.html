@@ -698,6 +698,27 @@
             </div>
         </div>
 
+        <!-- Platform Note (IBTIKAR only) -->
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4" style="border-inline-start:4px solid #4f46e5;">
+            <div class="card-header">
+                <h3>{% trans "Note de plateforme" %}</h3>
+                <p class="text-sm text-muted" style="margin:4px 0 0;">
+                    {% trans "Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, mode, prix de base, multiplicateur, nombre d'échantillons, total). À partager manuellement avec le demandeur." %}
+                </p>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'dashboard:admin_platform_note' req.pk %}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger la note (.docx)" %}
+                </a>
+                <p class="text-xs text-muted" style="margin-top:10px;">
+                    {% trans "Accès limité : administrateurs des opérations, analyste assigné, observateurs." %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Observers (read-only follow) -->
         <div class="card mb-4">
             <div class="card-header">

@@ -86,6 +86,26 @@
         </div>
         {% endif %}
 
+        {# Platform note (IBTIKAR internal devis) — visible to the
+           assignee + observers. Useful for the analyst to defend the
+           tariff or print it for the requester. #}
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4" style="border-inline-start:4px solid #4f46e5;">
+            <div class="card-body" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:240px;">
+                    <strong>{% trans "Note de plateforme" %}</strong>
+                    <p class="text-sm text-muted" style="margin:4px 0 0;">
+                        {% trans "Devis interne avec la justification détaillée du tarif." %}
+                        {% if is_observer %}{% trans "(Vous y avez accès en lecture en tant qu'observateur.)" %}{% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'dashboard:admin_platform_note' req.pk %}" class="btn btn-outline">
+                    {% trans "Télécharger la note (.docx)" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Service Details -->
         {% if req.service %}
         <div class="card mb-4">

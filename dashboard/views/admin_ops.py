@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float
 from django.contrib import messages
@@ -341,6 +341,52 @@ def assign_request(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur d'assignation: {e}")
     return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+
+@login_required
+def platform_note_view(request, pk):
+    """Internal devis (note de plateforme) for IBTIKAR requests.
+
+    Visibility is strictly limited to people who legitimately need it:
+        * SUPER_ADMIN / PLATFORM_ADMIN
+        * the request's currently assigned analyst
+        * the request's observers (informed_members)
+    Everyone else gets 403. The note carries the full tariff
+    justification so the admin can defend the total line by line.
+
+    GENOCLAB has its own quote pipeline; this endpoint is IBTIKAR-only
+    and refuses (404) otherwise.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    if req.channel != 'IBTIKAR':
+        raise Http404("La note de plateforme est propre au canal IBTIKAR.")
+
+    user = request.user
+    is_admin = user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN')
+    is_assignee = (
+        req.assigned_to is not None
+        and req.assigned_to.user_id == user.pk
+    )
+    profile = getattr(user, 'member_profile', None)
+    is_observer = (
+        profile is not None
+        and req.informed_members.filter(pk=profile.pk).exists()
+    )
+    if not (is_admin or is_assignee or is_observer):
+        return HttpResponseForbidden()
+
+    # Generate fresh on each view so the document always reflects the
+    # current price / parameters / sample table. Cheap (a few hundred ms
+    # for a typical request), and avoids stale-cache classes of bugs.
+    from documents.generators import generate_platform_note
+    path = generate_platform_note(req)
+
+    # Stream as a download (attachment) using the FileResponse helper.
+    from django.http import FileResponse
+    return FileResponse(
+        open(path, 'rb'), as_attachment=True,
+        filename=f"NOTE_PLATEFORME_{req.display_id}.docx",
+    )
 
 
 @admin_required
