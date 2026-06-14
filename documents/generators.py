@@ -474,19 +474,24 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
     return None
 
 
-def _save_document(doc: DocumentType, prefix: str, request_obj) -> str:
+def _save_document(doc: DocumentType, prefix: str, request_obj, *, style_tables: bool = True) -> str:
     """Persist a generated document, but first run the house-style
     finishing pass so every artifact leaves the pipeline with the same
     typography / colours / footer / institutional header regardless of
     which generator built it. Per-generator code stays focused on the
     *content*; the *form* is centralised here.
+
+    ``style_tables=False`` skips the table-painting pass — used by the
+    platform note, which is meant to be copy-pasted into a portal text
+    area and so renders every figure as a paragraph rather than a table.
     """
     # Centralised finishing — these are all idempotent so calling them
     # in addition to whatever the generator already did is safe.
     apply_house_style(doc)
     ensure_institutional_header(doc)
     add_brand_footer(doc)
-    _apply_brand_table_style_everywhere(doc)
+    if style_tables:
+        _apply_brand_table_style_everywhere(doc)
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -677,15 +682,63 @@ def generate_platform_note(request_obj) -> str:
     replace_placeholders(doc, field_map)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
-    # Tariff justification table — appended even when a template was used,
-    # so the note never ships without the breakdown the admin / analyst
-    # need to defend the total. The programmatic builder already calls
-    # _render_tariff_breakdown internally, so we skip it there to avoid a
-    # duplicate section.
+    # Tariff justification — appended even when a template was used.
     if not using_programmatic:
         _render_tariff_breakdown(doc, request_obj)
     _inject_document_blocks(doc, 'PLATFORM_NOTE', request_obj)
-    return _save_document(doc, 'NOTE_PLT', request_obj)
+    # The platform note is meant to be copy-pasted into the DGRSDT
+    # IBTIKAR web portal. Word tables paste as tab-separated mush in
+    # browser text areas, so we transform any residual table (left over
+    # from an uploaded template) into "Label : value" paragraphs first.
+    _detableize(doc)
+    return _save_document(doc, 'NOTE_PLT', request_obj, style_tables=False)
+
+
+def _detableize(doc: DocumentType) -> None:
+    """Convert every Word table in the document into plain paragraphs.
+
+    Each row is flattened into one paragraph: when the table has two
+    columns, the layout is "label : value" with the label bolded; when
+    it has more columns, cells are joined with " — ". Empty rows are
+    dropped. The table is then removed from the document tree.
+
+    Used by the platform note generator so the resulting DOCX survives
+    a Ctrl+C / Ctrl+V into the DGRSDT portal's text areas, where Word
+    tables paste as tabs / line breaks chaos.
+    """
+    for table in list(doc.tables):
+        anchor = table._element  # the <w:tbl> xml element
+        parent = anchor.getparent()
+        if parent is None:
+            continue
+        idx = list(parent).index(anchor)
+
+        # Build the replacement paragraphs first (before removing the
+        # table so we still have access to its cells).
+        new_paragraphs = []
+        ncols = len(table.columns)
+        for row in table.rows:
+            cells = [(c.text or '').strip() for c in row.cells]
+            if not any(cells):
+                continue
+            if ncols == 2:
+                label, value = cells[0], cells[1]
+                p = doc.add_paragraph()
+                rl = p.add_run(f"{label} : " if label else '')
+                rl.bold = True
+                p.add_run(value)
+            else:
+                text = ' — '.join(c for c in cells if c)
+                p = doc.add_paragraph(text)
+            # add_paragraph appends to body; move it in front of the table.
+            new_paragraphs.append(p._element)
+
+        # Move the freshly-added paragraphs to the table's position, then
+        # drop the table.
+        for offset, new_p in enumerate(new_paragraphs):
+            new_p.getparent().remove(new_p)
+            parent.insert(idx + offset, new_p)
+        parent.remove(anchor)
 
 
 def _render_tariff_breakdown(doc, request_obj) -> None:
@@ -748,11 +801,20 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
         ("Total",
          f"{total:,.0f} DZD".replace(',', ' ') if isinstance(total, (int, float)) else str(total)),
     ]
-    table = doc.add_table(rows=len(rows), cols=2)
-    table.style = 'Light Grid Accent 1'
-    for i, (label, value) in enumerate(rows):
-        table.rows[i].cells[0].text = label
-        table.rows[i].cells[1].text = value
+    # Rendered as plain "Label : value" paragraphs (no Word table). The
+    # platform note is meant to be copy-pasted into the DGRSDT IBTIKAR
+    # portal, where pasted Word tables turn into tab-separated mush in
+    # the textareas. Paragraphs survive copy-paste cleanly.
+    for label, value in rows:
+        p = doc.add_paragraph()
+        run_l = p.add_run(f"{label} : ")
+        run_l.bold = True
+        run_v = p.add_run(str(value))
+        # Make the Total line visually stand out without using a table.
+        if label == 'Total':
+            run_l.font.size = Pt(12)
+            run_v.font.size = Pt(12)
+            run_v.bold = True
 
     doc.add_paragraph(
         "Formule appliquée : Prix de base × Multiplicateur × Nombre d'échantillons.",
@@ -771,8 +833,9 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
     doc.add_paragraph('')
 
     doc.add_heading('Demandeur', level=2)
-    table = doc.add_table(rows=7, cols=2)
-    table.style = 'Light Grid Accent 1'
+    # Plain "Label : value" paragraphs — no Word table. The note is
+    # designed to be copy-pasted into the DGRSDT IBTIKAR portal text
+    # areas, where Word tables become tab-separated garbage on paste.
     fields = [
         ('Nom complet', field_map['FULL_NAME']),
         ('Établissement', field_map['ETABLISSEMENT']),
@@ -782,9 +845,11 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
         ('Email', field_map['EMAIL']),
         ('Téléphone', field_map['PHONE']),
     ]
-    for i, (label, value) in enumerate(fields):
-        table.rows[i].cells[0].text = label
-        table.rows[i].cells[1].text = str(value or '')
+    for label, value in fields:
+        p = doc.add_paragraph()
+        run_l = p.add_run(f"{label} : ")
+        run_l.bold = True
+        p.add_run(str(value or ''))
 
     doc.add_heading('Service demandé', level=2)
     doc.add_paragraph(f"Code : {field_map['SERVICE_CODE']}")
