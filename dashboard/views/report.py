@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -104,3 +104,41 @@ def acknowledge_citation(request, token):
         return JsonResponse({'ok': True})
     except Request.DoesNotExist:
         return JsonResponse({'ok': False}, status=404)
+
+
+def download_report(request, token):
+    """Serve the actual report file — server-side gated on the citation
+    clause. Bypasses (devtools tampering, direct /media/ URLs, scripted
+    GETs without going through the modal) all land here and are blocked
+    until ``citation_acknowledged`` is True.
+    """
+    try:
+        req = Request.objects.get(report_token=token)
+    except Request.DoesNotExist:
+        raise Http404("Report not found")
+
+    if not req.report_file:
+        raise Http404("No report file")
+
+    # The gate. The viewer page already forces the modal in front of the
+    # download button; this is the defense-in-depth so nothing else works.
+    if not req.citation_acknowledged:
+        return redirect('report_view', token=token)
+
+    # First successful download = mark delivered (idempotent).
+    if not req.report_delivered:
+        with transaction.atomic():
+            locked = (
+                Request.objects.select_for_update()
+                .filter(pk=req.pk, report_delivered=False)
+                .first()
+            )
+            if locked is not None:
+                locked.report_delivered = True
+                locked.report_delivered_at = timezone.now()
+                locked.save(update_fields=['report_delivered', 'report_delivered_at'])
+
+    # FileResponse streams the file; as_attachment triggers the download
+    # dialog instead of inline preview.
+    return FileResponse(req.report_file.open('rb'), as_attachment=True,
+                        filename=f"{req.display_id}_rapport.pdf")

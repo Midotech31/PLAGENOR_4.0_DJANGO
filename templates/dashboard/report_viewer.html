@@ -321,32 +321,45 @@
 {% block extra_js %}
 <script>
 var citationAcknowledged = {{ req.citation_acknowledged|yesno:"true,false" }};
+var downloadUrl = "{% url 'report_download' token=req.report_token %}";
 
 function showAcknowledgmentModal(event) {
     event.preventDefault();
     if (citationAcknowledged) {
-        // Already acknowledged: go straight to download
-        window.location.href = document.getElementById('download-btn').getAttribute('data-url');
+        // Already acknowledged: go straight to download.
+        window.location.href = downloadUrl;
         return;
     }
     document.getElementById('acknowledgment-modal').style.display = 'flex';
 }
 
-function closeAcknowledgmentModal(redirectToDownload) {
+// Close without acknowledging — used by the X button and the click-outside
+// handler. Critically does NOT POST to the server, so the gate stays in
+// place until the user actually clicks "Continuer".
+function dismissAcknowledgmentModal() {
     document.getElementById('acknowledgment-modal').style.display = 'none';
-    // Mark acknowledged on the server
+}
+
+// Acknowledge + download. The download only fires AFTER the server has
+// confirmed the acknowledgment, so a network failure leaves the gate
+// closed instead of letting the file leak through.
+function acknowledgeAndDownload() {
+    var btn = document.getElementById('continue-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
     var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
         document.querySelector('[name=csrfmiddlewaretoken]').value : '';
     fetch('{% url "report_acknowledge" token=req.report_token %}', {
         method: 'POST',
         headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
         body: JSON.stringify({})
-    }).catch(function(){});
-    citationAcknowledged = true;
-    if (redirectToDownload !== false) {
-        var downloadUrl = document.getElementById('download-btn').getAttribute('data-url');
+    }).then(function(r) {
+        if (!r.ok) { throw new Error('ack failed'); }
+        citationAcknowledged = true;
         window.location.href = downloadUrl;
-    }
+    }).catch(function() {
+        if (btn) { btn.disabled = false; btn.textContent = '{% trans "Continuer vers l\'évaluation" %}'; }
+        alert('{% trans "Erreur réseau, veuillez réessayer." %}');
+    });
 }
 
 function copyCitation() {
@@ -360,12 +373,12 @@ function copyCitation() {
     });
 }
 
-// Close modal when clicking outside
+// Close modal when clicking outside — dismiss only, no acknowledgment.
 document.addEventListener('DOMContentLoaded', function() {
     var overlay = document.getElementById('acknowledgment-modal');
     if (overlay) {
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) { closeAcknowledgmentModal(); }
+            if (e.target === overlay) { dismissAcknowledgmentModal(); }
         });
     }
 });
@@ -426,7 +439,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         {% if req.report_file %}
         <div class="report-download">
-            <a href="#" data-url="{{ req.report_file.url }}" id="download-btn" onclick="showAcknowledgmentModal(event)">
+            {# The href points at the server-side gated route, never the raw
+               /media/ URL. Without acknowledgment the route redirects back
+               to this page, so devtools tampering or direct URL guessing
+               cannot bypass the citation clause. #}
+            <a href="{% url 'report_download' token=req.report_token %}" id="download-btn" onclick="showAcknowledgmentModal(event)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
@@ -438,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div id="acknowledgment-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content">
                 {% csrf_token %}
-                <button class="modal-close" onclick="closeAcknowledgmentModal(false)">&times;</button>
+                <button class="modal-close" onclick="dismissAcknowledgmentModal()">&times;</button>
                 
                 <!-- Animated DNA Illustration -->
                 <div class="dna-animation">
@@ -486,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="mailto:genomicsplatform.essbo@gmail.com">genomicsplatform.essbo@gmail.com</a>
                 </p>
 
-                <button class="continue-btn" onclick="closeAcknowledgmentModal()">
+                <button id="continue-btn" class="continue-btn" onclick="acknowledgeAndDownload()">
                     {% trans "Continuer vers l'évaluation" %}
                 </button>
             </div>

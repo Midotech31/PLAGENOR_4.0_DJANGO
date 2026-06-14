@@ -20,6 +20,7 @@ urlpatterns = [
     path('report/<uuid:token>/delivered/', report_views.mark_report_delivered, name='report_mark_delivered'),
     path('report/<uuid:token>/rate/', report_views.rate_report, name='report_rate'),
     path('report/<uuid:token>/acknowledge/', report_views.acknowledge_citation, name='report_acknowledge'),
+    path('report/<uuid:token>/download/', report_views.download_report, name='report_download'),
     path('', include('dashboard.urls_public')),
 ]
 
