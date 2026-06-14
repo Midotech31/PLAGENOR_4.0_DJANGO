@@ -291,6 +291,7 @@
                                 <th>{% trans "TVA" %}</th>
                                 <th>{% trans "TTC" %}</th>
                                 <th>{% trans "Date" %}</th>
+                                <th style="width:130px;">{% trans "Document" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -302,9 +303,15 @@
                             <td>{{ inv.vat_amount|floatformat:2 }} DA</td>
                             <td><strong>{{ inv.total_ttc|floatformat:2 }} DA</strong></td>
                             <td>{{ inv.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'dashboard:download_invoice' inv.pk %}" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:4px;" title="{% trans 'Télécharger la facture' %}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    {% trans "Télécharger" %}
+                                </a>
+                            </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">{% trans "Aucune facture." %}</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>

@@ -389,6 +389,76 @@ def platform_note_view(request, pk):
     )
 
 
+@login_required
+def download_quote(request, pk):
+    """Serve the GENOCLAB quote (devis) as a DOCX, with access gating.
+
+    Visibility:
+      * SUPER_ADMIN / PLATFORM_ADMIN
+      * the requester themselves (the CLIENT who owns the request)
+      * the assigned analyst, if any
+    GENOCLAB only — IBTIKAR doesn't use the commercial quote pipeline.
+    Refuses with 404 when no quote has been prepared yet (status before
+    QUOTE_DRAFT, or empty quote_detail), so the UI never points at an
+    empty document.
+    """
+    req = get_object_or_404(Request, pk=pk)
+    if req.channel != 'GENOCLAB':
+        raise Http404("Le devis est propre au canal GENOCLAB.")
+    if not req.quote_detail or req.status in ('REQUEST_CREATED',):
+        raise Http404("Aucun devis préparé pour cette demande.")
+
+    user = request.user
+    is_admin = user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN')
+    is_owner = (req.requester_id == user.pk)
+    is_assignee = (
+        req.assigned_to is not None
+        and req.assigned_to.user_id == user.pk
+    )
+    if not (is_admin or is_owner or is_assignee):
+        return HttpResponseForbidden()
+
+    from documents.generators import generate_quote
+    from django.http import FileResponse
+    path = generate_quote(req)
+    return FileResponse(
+        open(path, 'rb'), as_attachment=True,
+        filename=f"DEVIS_{req.display_id}.docx",
+    )
+
+
+@login_required
+def download_invoice(request, pk):
+    """Serve a GENOCLAB invoice as a DOCX, with access gating.
+
+    Visibility:
+      * SUPER_ADMIN / PLATFORM_ADMIN
+      * the invoice's billed client
+      * the assigned analyst of the underlying request (so they can
+        cross-check the figures against the analysis they performed)
+    """
+    invoice = get_object_or_404(Invoice, pk=pk)
+
+    user = request.user
+    is_admin = user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN')
+    is_owner = (invoice.client_id == user.pk)
+    is_assignee = (
+        invoice.request is not None
+        and invoice.request.assigned_to is not None
+        and invoice.request.assigned_to.user_id == user.pk
+    )
+    if not (is_admin or is_owner or is_assignee):
+        return HttpResponseForbidden()
+
+    from documents.generators import generate_invoice_document
+    from django.http import FileResponse
+    path = generate_invoice_document(invoice)
+    return FileResponse(
+        open(path, 'rb'), as_attachment=True,
+        filename=f"FACTURE_{invoice.invoice_number}.docx",
+    )
+
+
 @admin_required
 def manage_observers(request, pk):
     """Add or remove read-only observers on a request.

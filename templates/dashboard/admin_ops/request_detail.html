@@ -597,6 +597,26 @@
                 <div class="text-muted">{% trans "Aucune information financière." %}</div>
                 {% endif %}
 
+                {# GENOCLAB: download buttons for the official quote DOCX
+                   (once prepared) and any issued invoices. Permission is
+                   re-checked server-side by download_quote / download_invoice. #}
+                {% if req.channel == 'GENOCLAB' %}
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-light);">
+                    {% if req.quote_detail and req.quote_detail.items %}
+                    <a href="{% url 'dashboard:download_quote' req.pk %}" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Télécharger le devis" %}
+                    </a>
+                    {% endif %}
+                    {% for inv in req.invoice_set.all %}
+                    <a href="{% url 'dashboard:download_invoice' inv.pk %}" class="btn btn-sm btn-outline" style="display:inline-flex; align-items:center; gap:6px;" title="{{ inv.invoice_number }} — {{ inv.total_ttc|floatformat:2 }} DA">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        {% trans "Facture" %} {{ inv.invoice_number }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 {# Detailed quote breakdown #}
                 {% if req.quote_detail and req.quote_detail.items %}
                 <div style="margin-top:16px; border-top:1px solid var(--slate-200, #e2e8f0); padding-top:16px;">
