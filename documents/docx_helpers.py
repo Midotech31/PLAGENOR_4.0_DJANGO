@@ -17,8 +17,33 @@ from typing import Mapping, Optional
 
 from docx import Document
 from docx.document import Document as DocumentType
+from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches, Pt
+from docx.shared import Cm, Inches, Pt, RGBColor
+
+
+# House style constants — single source of truth for every generator.
+# Arial is the safest universal sans-serif on Word / LibreOffice / Mac
+# and renders identically on every platform we target.
+BRAND_FONT = 'Arial'
+BRAND_FONT_AR = 'Amiri'  # falls back to Arial when not installed
+# Indigo — same as the app's --primary-600.
+BRAND_COLOR = RGBColor(0x4F, 0x46, 0xE5)
+BRAND_DARK = RGBColor(0x1E, 0x29, 0x3B)  # slate-800 for body text
+BRAND_MUTED = RGBColor(0x64, 0x74, 0x8B)  # slate-500 for captions
+
+# Type scale (in pt) — keep in lock-step with the on-screen hierarchy
+# so the documents feel like an extension of the app, not a separate
+# thing. Title = institutional document title; H1 = top sections; H2 =
+# sub-sections; body = running text; caption = footers / fine print.
+SIZE_TITLE = 22
+SIZE_H1 = 16
+SIZE_H2 = 13
+SIZE_H3 = 11
+SIZE_BODY = 11
+SIZE_CAPTION = 9
 
 # Re-exports for callers: positional insertion primitives live in this
 # module so the generators only need a single import statement. See
@@ -180,23 +205,229 @@ def ensure_institutional_header(doc: DocumentType, banner_path: Optional[Path] =
 def apply_house_style(doc: DocumentType) -> None:
     """Apply the PLAGENOR house style to a programmatically built document.
 
-    A4 page size, symmetric 1" margins, body font 11pt. Idempotent — running
-    twice on the same doc produces the same result.
+    Sets page geometry (A4, slightly tighter margins than Word's default),
+    body type (Arial 11pt slate-800, line-spacing 1.15, 6pt after each
+    paragraph), and styles every heading level (H1/H2/H3) in the brand
+    indigo so the document hierarchy matches the on-screen app. Also
+    stamps the DOCX core metadata (Title, Author=ESSBO, Keywords) so the
+    file properties look professional in Word's Backstage / Finder
+    "Get Info". Idempotent.
     """
     A4_WIDTH = Inches(8.27)
     A4_HEIGHT = Inches(11.69)
     for section in doc.sections:
         section.page_width = A4_WIDTH
         section.page_height = A4_HEIGHT
-        section.top_margin = Inches(1.0)
-        section.bottom_margin = Inches(1.0)
-        section.left_margin = Inches(1.0)
-        section.right_margin = Inches(1.0)
+        section.top_margin = Cm(2.0)
+        section.bottom_margin = Cm(2.0)
+        section.left_margin = Cm(2.0)
+        section.right_margin = Cm(2.0)
+
+    # Body text — Arial 11, slate-800, 1.15 line-height, 6pt after.
     try:
-        style = doc.styles['Normal']
-        style.font.size = Pt(11)
+        normal = doc.styles['Normal']
+        normal.font.name = BRAND_FONT
+        # Word splits East-Asian / complex-script fonts onto separate
+        # rPr/rFonts attributes; setting only .name leaves Asian text on
+        # whatever Word fell back to. Force them all to Arial so the AR
+        # glyphs use a clean fallback when Amiri isn't installed.
+        rpr = normal.element.get_or_add_rPr()
+        rfonts = rpr.find(qn('w:rFonts'))
+        if rfonts is None:
+            rfonts = OxmlElement('w:rFonts')
+            rpr.insert(0, rfonts)
+        for attr in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
+            rfonts.set(qn(f'w:{attr}'), BRAND_FONT)
+        normal.font.size = Pt(SIZE_BODY)
+        normal.font.color.rgb = BRAND_DARK
+        pf = normal.paragraph_format
+        pf.line_spacing = 1.15
+        pf.space_after = Pt(6)
     except (KeyError, AttributeError):
         pass
+
+    # Title + headings — brand indigo, with comfortable space above.
+    _style_heading(doc, 'Title',     SIZE_TITLE, bold=True,  color=BRAND_COLOR, space_before=0, space_after=8)
+    _style_heading(doc, 'Heading 1', SIZE_H1,   bold=True,  color=BRAND_COLOR, space_before=14, space_after=4)
+    _style_heading(doc, 'Heading 2', SIZE_H2,   bold=True,  color=BRAND_COLOR, space_before=10, space_after=2)
+    _style_heading(doc, 'Heading 3', SIZE_H3,   bold=True,  color=BRAND_DARK,  space_before=6,  space_after=2)
+
+    # Core properties — show clean metadata in Word Backstage.
+    # python-docx defaults Author to "python-docx"; we always overwrite
+    # both that placeholder and any empty value with our institutional
+    # signature so the file's Properties screen never embarrasses us.
+    cp = doc.core_properties
+    if (cp.author or '').strip() in ('', 'python-docx'):
+        cp.author = 'PLAGENOR 4.0 — ESSBO'
+    if not (cp.title or '').strip():
+        cp.title = 'Document PLAGENOR'
+    if not (cp.subject or '').strip():
+        cp.subject = "École Supérieure en Sciences Biologiques d'Oran"
+    cp.keywords = 'PLAGENOR, ESSBO, IBTIKAR, GENOCLAB'
+
+
+def _style_heading(doc, style_name, size_pt, *, bold, color, space_before, space_after):
+    """Helper for apply_house_style — sets a heading style's font + colour
+    + spacing in one place so the rules stay consistent across H1/H2/H3."""
+    try:
+        style = doc.styles[style_name]
+    except KeyError:
+        return
+    style.font.name = BRAND_FONT
+    rpr = style.element.get_or_add_rPr()
+    rfonts = rpr.find(qn('w:rFonts'))
+    if rfonts is None:
+        rfonts = OxmlElement('w:rFonts')
+        rpr.insert(0, rfonts)
+    for attr in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
+        rfonts.set(qn(f'w:{attr}'), BRAND_FONT)
+    style.font.size = Pt(size_pt)
+    style.font.bold = bold
+    style.font.color.rgb = color
+    pf = style.paragraph_format
+    pf.space_before = Pt(space_before)
+    pf.space_after = Pt(space_after)
+    pf.keep_with_next = True
+
+
+def style_brand_table(table, *, accent: str = 'header') -> None:
+    """Style a python-docx Table to match the PLAGENOR look:
+      * Arial 11 in every cell, slate-800
+      * Header row (or first column) tinted indigo-50 with indigo-700
+        bold text, depending on ``accent``
+      * Thin slate-200 borders on every side
+      * Vertical centre alignment, comfortable cell padding
+    Idempotent. Safe on tables of any size; no-op if there's nothing
+    inside.
+    """
+    if not table.rows:
+        return
+
+    def _paint_cell(cell, *, bold=False, fill=None, fg=None):
+        for p in cell.paragraphs:
+            for r in p.runs or [p.add_run('')]:
+                r.font.name = BRAND_FONT
+                r.font.size = Pt(SIZE_BODY)
+                if bold:
+                    r.font.bold = True
+                if fg is not None:
+                    r.font.color.rgb = fg
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        if fill is not None:
+            tcPr = cell._tc.get_or_add_tcPr()
+            shd = tcPr.find(qn('w:shd'))
+            if shd is None:
+                shd = OxmlElement('w:shd')
+                tcPr.append(shd)
+            shd.set(qn('w:val'), 'clear')
+            shd.set(qn('w:color'), 'auto')
+            shd.set(qn('w:fill'), fill)
+
+    # Borders — thin slate-200 (E2E8F0) every side.
+    for row in table.rows:
+        for cell in row.cells:
+            tcPr = cell._tc.get_or_add_tcPr()
+            tcBorders = tcPr.find(qn('w:tcBorders'))
+            if tcBorders is None:
+                tcBorders = OxmlElement('w:tcBorders')
+                tcPr.append(tcBorders)
+            for side in ('top', 'left', 'bottom', 'right'):
+                border = tcBorders.find(qn(f'w:{side}'))
+                if border is None:
+                    border = OxmlElement(f'w:{side}')
+                    tcBorders.append(border)
+                border.set(qn('w:val'), 'single')
+                border.set(qn('w:sz'), '4')  # 1/2 pt
+                border.set(qn('w:color'), 'E2E8F0')
+
+    # Header tint.
+    if accent == 'header':
+        for cell in table.rows[0].cells:
+            _paint_cell(cell, bold=True, fill='EDE9FE', fg=BRAND_COLOR)
+        for row in table.rows[1:]:
+            for cell in row.cells:
+                _paint_cell(cell)
+    elif accent == 'first-col':
+        for row in table.rows:
+            _paint_cell(row.cells[0], bold=True, fill='F8FAFC', fg=BRAND_DARK)
+            for cell in row.cells[1:]:
+                _paint_cell(cell)
+    else:
+        for row in table.rows:
+            for cell in row.cells:
+                _paint_cell(cell)
+
+
+def add_brand_footer(doc: DocumentType, *, organisation: str = 'ESSBO — PLAGENOR 4.0') -> None:
+    """Drop a unified institutional footer into every section's primary
+    footer: org name left, "Page X / Y" right, separated by a thin top
+    border. Idempotent — skipped if a footer paragraph already carries
+    a PLAGENOR signature, so re-running on a re-styled doc won't double
+    up.
+    """
+    for section in doc.sections:
+        footer = section.footer
+        if footer is None:
+            continue
+        signature = f"{organisation}"
+        # Skip only when the footer already carries our two-field layout
+        # (org name + page X / Y). A bare PLAGENOR signature paragraph
+        # left by a legacy template still needs to be upgraded — we
+        # detect the upgrade by checking for the field-code marker that
+        # _add_field_run emits ("NUMPAGES").
+        first_xml = footer.paragraphs[0]._p.xml if footer.paragraphs else ''
+        if 'NUMPAGES' in first_xml:
+            continue  # already stamped with the new layout
+        p = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+        # Wipe whatever was there.
+        for r in list(p.runs):
+            r.text = ''
+        # Org name on the left.
+        run = p.add_run(signature)
+        run.font.name = BRAND_FONT
+        run.font.size = Pt(SIZE_CAPTION)
+        run.font.color.rgb = BRAND_MUTED
+        # Tab + Page X / Y on the right.
+        p.add_run('\t').font.size = Pt(SIZE_CAPTION)
+        # Insert the field codes for PAGE / NUMPAGES via low-level oxml.
+        _add_field_run(p, 'PAGE')
+        sep = p.add_run(' / ')
+        sep.font.name = BRAND_FONT
+        sep.font.size = Pt(SIZE_CAPTION)
+        sep.font.color.rgb = BRAND_MUTED
+        _add_field_run(p, 'NUMPAGES')
+        # Right-align the second field via tab stops at the right margin.
+        from docx.enum.text import WD_TAB_ALIGNMENT
+        pf = p.paragraph_format
+        tab_position = section.page_width - section.left_margin - section.right_margin
+        pf.tab_stops.add_tab_stop(tab_position, alignment=WD_TAB_ALIGNMENT.RIGHT)
+
+
+def _add_field_run(paragraph, field_code: str) -> None:
+    """Insert a Word field (PAGE, NUMPAGES, DATE…) as a run on the
+    paragraph. Word evaluates these at open time.
+    """
+    run = paragraph.add_run()
+    run.font.name = BRAND_FONT
+    run.font.size = Pt(SIZE_CAPTION)
+    run.font.color.rgb = BRAND_MUTED
+    r = run._r
+    fld_begin = OxmlElement('w:fldChar')
+    fld_begin.set(qn('w:fldCharType'), 'begin')
+    instr = OxmlElement('w:instrText')
+    instr.set(qn('xml:space'), 'preserve')
+    instr.text = f' {field_code} '
+    fld_sep = OxmlElement('w:fldChar')
+    fld_sep.set(qn('w:fldCharType'), 'separate')
+    fallback = OxmlElement('w:t')
+    fallback.text = '1'
+    fld_end = OxmlElement('w:fldChar')
+    fld_end.set(qn('w:fldCharType'), 'end')
+    r.append(fld_begin)
+    r.append(instr)
+    r.append(fld_sep)
+    r.append(fallback)
+    r.append(fld_end)
 
 
 # Positional paragraph insertion -------------------------------------------

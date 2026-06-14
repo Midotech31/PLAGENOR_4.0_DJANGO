@@ -36,6 +36,7 @@ from docx.shared import Pt
 
 from documents.docx_helpers import (
     _find_anchor_for_position,
+    add_brand_footer,
     add_paragraph_after,
     add_paragraph_before,
     apply_house_style,
@@ -45,6 +46,7 @@ from documents.docx_helpers import (
     populate_legacy_sample_table,
     replace_placeholders,
     strip_unresolved_placeholders,
+    style_brand_table,
 )
 
 _PLACEHOLDER_BARE_RE = re.compile(r'\{\{[A-Z0-9_]+\}\}')
@@ -473,6 +475,19 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
 
 
 def _save_document(doc: DocumentType, prefix: str, request_obj) -> str:
+    """Persist a generated document, but first run the house-style
+    finishing pass so every artifact leaves the pipeline with the same
+    typography / colours / footer / institutional header regardless of
+    which generator built it. Per-generator code stays focused on the
+    *content*; the *form* is centralised here.
+    """
+    # Centralised finishing — these are all idempotent so calling them
+    # in addition to whatever the generator already did is safe.
+    apply_house_style(doc)
+    ensure_institutional_header(doc)
+    add_brand_footer(doc)
+    _apply_brand_table_style_everywhere(doc)
+
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
     safe_id = (request_obj.display_id or str(request_obj.pk)).replace('/', '_')
@@ -480,6 +495,38 @@ def _save_document(doc: DocumentType, prefix: str, request_obj) -> str:
     filepath = out_dir / filename
     doc.save(str(filepath))
     return str(filepath)
+
+
+def _apply_brand_table_style_everywhere(doc: DocumentType) -> None:
+    """Apply the unified brand table style to every table in the doc.
+
+    Detects a header row heuristically: if the first row's first cell
+    is bold or visibly a label, treat the first row as the header tint;
+    otherwise fall back to a left-column accent for the IBTIKAR
+    two-column "label : value" layouts. This way every generator picks
+    up the same visual without having to refactor each call site.
+    """
+    for table in doc.tables:
+        if not table.rows:
+            continue
+        # Heuristic: 2-column tables with non-numeric first column are
+        # almost always label/value layouts.
+        accent = 'header'
+        if len(table.columns) == 2 and len(table.rows) >= 2:
+            first_col_vals = [
+                (r.cells[0].text or '').strip()
+                for r in table.rows[:min(4, len(table.rows))]
+            ]
+            looks_labelled = sum(
+                1 for v in first_col_vals if v and not v.replace(' ', '').isdigit()
+            ) >= 2
+            if looks_labelled:
+                accent = 'first-col'
+        try:
+            style_brand_table(table, accent=accent)
+        except Exception:
+            # Don't let one mal-formed table break the whole document.
+            pass
 
 
 # Generators ----------------------------------------------------------------
@@ -623,12 +670,20 @@ def generate_platform_note(request_obj) -> str:
         if generic.exists():
             doc = Document(str(generic))
 
+    using_programmatic = doc is None
     if doc is None:
         doc = _build_platform_note_programmatic(request_obj, field_map)
 
     replace_placeholders(doc, field_map)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
+    # Tariff justification table — appended even when a template was used,
+    # so the note never ships without the breakdown the admin / analyst
+    # need to defend the total. The programmatic builder already calls
+    # _render_tariff_breakdown internally, so we skip it there to avoid a
+    # duplicate section.
+    if not using_programmatic:
+        _render_tariff_breakdown(doc, request_obj)
     _inject_document_blocks(doc, 'PLATFORM_NOTE', request_obj)
     return _save_document(doc, 'NOTE_PLT', request_obj)
 
