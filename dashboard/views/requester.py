@@ -39,6 +39,17 @@ def index(request):
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
     ).select_related('service').order_by('-updated_at')[:30]
 
+    # Lazy backfill: any archived request with an uploaded report but
+    # no report_token gets one now, so the archives table can route the
+    # download through the gated /report/<token>/ view (the only path
+    # that enforces the citation clause). Cheap — only fires for the
+    # handful of legacy rows without a token.
+    import uuid as _uuid
+    for _req in archived:
+        if _req.report_file and not _req.report_token:
+            _req.report_token = _uuid.uuid4()
+            _req.save(update_fields=['report_token'])
+
     # Available services for new request
     services = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'IBTIKAR']
@@ -68,6 +79,14 @@ def index(request):
 @requester_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    # Lazy backfill: any uploaded report needs a report_token so the
+    # download passes through the gated /report/<token>/ route + citation
+    # clause. Older rows (created before the token was introduced)
+    # otherwise fell back to the raw /media/ URL, bypassing the gate.
+    if req.report_file and not req.report_token:
+        import uuid as _uuid
+        req.report_token = _uuid.uuid4()
+        req.save(update_fields=['report_token'])
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
 

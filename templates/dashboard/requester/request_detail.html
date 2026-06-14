@@ -229,7 +229,9 @@
         </div>
         {% elif req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
+            {# Always route through report_view so the citation clause gate
+               fires; the view backfills report_token if missing. #}
+            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>

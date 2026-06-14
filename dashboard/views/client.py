@@ -42,6 +42,14 @@ def index(request):
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
     ).select_related('service').order_by('-updated_at')[:30]
 
+    # Lazy backfill of report_token for legacy archived rows — see
+    # requester.index for the rationale (gated download via report_view).
+    import uuid as _uuid
+    for _req in archived:
+        if _req.report_file and not _req.report_token:
+            _req.report_token = _uuid.uuid4()
+            _req.save(update_fields=['report_token'])
+
     # Services for new request
     services = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'GENOCLAB']
@@ -68,6 +76,12 @@ def index(request):
 @client_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    # Lazy backfill: ensure report_token exists so download goes through
+    # the citation gate. See requester.request_detail for rationale.
+    if req.report_file and not req.report_token:
+        import uuid as _uuid
+        req.report_token = _uuid.uuid4()
+        req.save(update_fields=['report_token'])
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
 
