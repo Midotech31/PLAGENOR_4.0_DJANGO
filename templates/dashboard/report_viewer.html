@@ -439,11 +439,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         {% if req.report_file %}
         <div class="report-download">
-            {# The href points at the server-side gated route, never the raw
-               /media/ URL. Without acknowledgment the route redirects back
-               to this page, so devtools tampering or direct URL guessing
-               cannot bypass the citation clause. #}
-            <a href="{% url 'report_download' token=req.report_token %}" id="download-btn" onclick="showAcknowledgmentModal(event)">
+            {# Always point at the server-side gated route, never the raw
+               /media/ URL. For IBTIKAR (academic) the JS intercepts the
+               click to show the citation modal first; for GENOCLAB
+               (commercial) the click navigates directly and the view
+               serves the file — paying clients are not researchers
+               obliged to cite the platform. #}
+            <a href="{% url 'report_download' token=req.report_token %}" id="download-btn"
+               {% if req.channel == 'IBTIKAR' %}onclick="showAcknowledgmentModal(event)"{% endif %}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
@@ -451,7 +454,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </a>
         </div>
 
-        <!-- Acknowledgment & Citation Modal -->
+        {% if req.channel == 'IBTIKAR' %}
+        <!-- Acknowledgment & Citation Modal — IBTIKAR (academic) only -->
         <div id="acknowledgment-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content">
                 {% csrf_token %}
@@ -508,7 +512,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </button>
             </div>
         </div>
-        {% endif %}
+        {% endif %}{# /IBTIKAR-only citation modal #}
+        {% endif %}{# /req.report_file #}
 
         <div class="star-rating">
             {% if req.service_rating %}

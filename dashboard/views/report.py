@@ -108,9 +108,12 @@ def acknowledge_citation(request, token):
 
 def download_report(request, token):
     """Serve the actual report file — server-side gated on the citation
-    clause. Bypasses (devtools tampering, direct /media/ URLs, scripted
-    GETs without going through the modal) all land here and are blocked
-    until ``citation_acknowledged`` is True.
+    clause for IBTIKAR (academic) requests only. GENOCLAB (commercial)
+    clients are paying customers, not researchers required to cite the
+    platform in publications; they download directly. Bypasses (devtools
+    tampering, direct /media/ URLs, scripted GETs without going through
+    the modal) all land here and are blocked for IBTIKAR until
+    ``citation_acknowledged`` is True.
     """
     try:
         req = Request.objects.get(report_token=token)
@@ -120,9 +123,10 @@ def download_report(request, token):
     if not req.report_file:
         raise Http404("No report file")
 
-    # The gate. The viewer page already forces the modal in front of the
-    # download button; this is the defense-in-depth so nothing else works.
-    if not req.citation_acknowledged:
+    # The gate — only IBTIKAR. GENOCLAB requests skip straight to the
+    # FileResponse below. The viewer page renders the modal for IBTIKAR
+    # only; this is the defense-in-depth so nothing else can bypass it.
+    if req.channel == 'IBTIKAR' and not req.citation_acknowledged:
         return redirect('report_view', token=token)
 
     # First successful download = mark delivered (idempotent).
