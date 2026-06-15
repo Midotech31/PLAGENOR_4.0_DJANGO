@@ -26,7 +26,6 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 from documents.docx_helpers import (
-    BRAND_COLOR,
     BRAND_DARK,
     BRAND_FONT,
     BRAND_MUTED,
@@ -36,6 +35,16 @@ from documents.docx_helpers import (
     SIZE_H2,
     _GENOCLAB_LOGO,
 )
+
+
+# Logo colours — sampled from the GENOCLAB asset itself (see comment at
+# the bottom of this module for the sampling script). Used in place of
+# the PLAGENOR indigo for everything on commercial documents so the
+# devis/facture visually descend from the GENOCLAB brand instead of the
+# academic one.
+GCL_NAVY = RGBColor(0x18, 0x30, 0x60)   # the "CLAB" + DNA helix dark blue
+GCL_TEAL = RGBColor(0x18, 0xA8, 0xA8)   # the "GENO" + building turquoise
+GCL_TEAL_TINT = 'D8F0F0'                # very-light teal fill for header row
 
 
 # Default values for every editable string. Kept in lock-step with the
@@ -78,6 +87,119 @@ def cms_get(key: str, default: str = '') -> str:
     except Exception:
         pass
     return CMS_DEFAULTS.get(key, default)
+
+
+# ── Amount-to-words ────────────────────────────────────────────────────────
+# Tiny standalone French converter. We avoid a num2words dependency to
+# keep requirements.txt unchanged. Algerian French uses the Belgian /
+# Swiss style "septante / nonante" for some, but the official invoicing
+# convention sticks to the French standard ("soixante-dix / quatre-vingt-
+# dix"), so we follow that.
+
+_UNITS = ('zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept',
+          'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze',
+          'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf')
+_TENS = ('', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante',
+         'soixante', 'quatre-vingt', 'quatre-vingt')
+
+
+def _two_digits(n: int) -> str:
+    if n < 20:
+        return _UNITS[n]
+    tens, units = divmod(n, 10)
+    base = _TENS[tens]
+    if tens in (7, 9):
+        # 70-79 → soixante-dix, soixante-onze, …
+        # 90-99 → quatre-vingt-dix, quatre-vingt-onze, …
+        return f"{base}-{_UNITS[10 + units]}" if units else f"{base}-{_UNITS[10]}"
+    if tens == 8 and units == 0:
+        return 'quatre-vingts'
+    if units == 1 and tens in (2, 3, 4, 5, 6):
+        return f"{base} et un"
+    if units == 0:
+        return base
+    return f"{base}-{_UNITS[units]}"
+
+
+def _three_digits(n: int, *, followed_by_multiplier: bool = False) -> str:
+    """French 0-999 written out.
+
+    ``followed_by_multiplier`` should be True when this triplet is the
+    multiplier of a higher unit (mille / million / milliard). It strips
+    the plural 's' on 'cent' since "cent" loses its plural mark whenever
+    it precedes another numeral name (deux cent mille — not "deux cents
+    mille").
+    """
+    if n == 0:
+        return ''
+    if n < 100:
+        return _two_digits(n)
+    hundreds, rest = divmod(n, 100)
+    if hundreds == 1:
+        head = 'cent'
+    else:
+        head = f"{_UNITS[hundreds]} cent"
+        # Plural "s" on "cent" only when it isn't followed by another
+        # number (so "deux cents" but "deux cent mille").
+        if rest == 0 and not followed_by_multiplier:
+            head += 's'
+    if rest:
+        return f"{head} {_two_digits(rest)}"
+    return head
+
+
+def amount_in_words_fr(amount) -> str:
+    """Return a French textual representation of ``amount`` in DZD.
+
+    Example:
+        amount_in_words_fr(11900) -> "onze mille neuf cents"
+        amount_in_words_fr(123)   -> "cent vingt-trois"
+        amount_in_words_fr(1000.50) -> "mille et 50/100"
+
+    Caller is responsible for appending the currency name. Cents (chimes)
+    are rendered as a fraction so the legal phrasing stays unambiguous.
+    """
+    try:
+        amt = float(amount)
+    except (TypeError, ValueError):
+        return ''
+    if amt < 0:
+        return f"moins {amount_in_words_fr(-amt)}"
+    integer_part = int(amt)
+    cents = round((amt - integer_part) * 100)
+
+    if integer_part == 0:
+        words = 'zéro'
+    else:
+        # Split into milliards / millions / mille / units.
+        groups = []
+        for power, label in [(10**9, 'milliard'), (10**6, 'million'),
+                             (10**3, 'mille'), (1, '')]:
+            count = integer_part // power
+            integer_part = integer_part % power
+            if count == 0:
+                continue
+            if label == 'mille':
+                # "mille" is invariable — never an 's'. And "un mille" is
+                # wrong; just write "mille" when count == 1.
+                if count == 1:
+                    groups.append('mille')
+                else:
+                    groups.append(f"{_three_digits(count, followed_by_multiplier=True)} mille")
+            elif label == '':
+                groups.append(_three_digits(count))
+            else:
+                # million / milliard — keep the 's' when plural.
+                plural = 's' if count > 1 else ''
+                groups.append(f"{_three_digits(count, followed_by_multiplier=True)} {label}{plural}")
+        words = ' '.join(g for g in groups if g)
+
+    if cents:
+        words += f" et {cents:02d}/100"
+    return words
+
+
+# ── End amount-to-words helpers ────────────────────────────────────────────
 
 
 def _money(value, currency: str = 'DA') -> str:
@@ -147,7 +269,7 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
     run.font.name = BRAND_FONT
     run.font.size = Pt(SIZE_H1 + 4)  # 20 pt
     run.font.bold = True
-    run.font.color.rgb = BRAND_COLOR
+    run.font.color.rgb = GCL_NAVY
 
     # Two-column header: issuer left, client right.
     table = doc.add_table(rows=1, cols=2)
@@ -173,7 +295,7 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
     ])
 
     # Client block (right)
-    client_paras = [("Client", {'bold': True, 'color': BRAND_COLOR})]
+    client_paras = [("Client", {'bold': True, 'color': GCL_NAVY})]
     if client_name:
         client_paras.append((client_name, {'bold': True, 'size': SIZE_BODY + 1}))
     for line in (client_lines or []):
@@ -239,9 +361,9 @@ def add_prestation_table(doc: DocumentType, line_items,
     headers = ['Prestation', 'Quantité', 'Prix unitaire (DA)', 'Montant (DA)']
     for i, h in enumerate(headers):
         _set_cell_text(table.rows[0].cells[i], h,
-                       bold=True, color=BRAND_COLOR,
+                       bold=True, color=GCL_NAVY,
                        align=(WD_ALIGN_PARAGRAPH.CENTER if i > 0 else WD_ALIGN_PARAGRAPH.LEFT))
-        _shade_cell(table.rows[0].cells[i], 'EDE9FE')
+        _shade_cell(table.rows[0].cells[i], GCL_TEAL_TINT)
 
     # Item rows
     subtotal_ht = Decimal('0')
@@ -278,18 +400,18 @@ def add_prestation_table(doc: DocumentType, line_items,
         _set_cell_text(
             merged, label,
             bold=True, size=SIZE_BODY + (1 if big else 0),
-            color=BRAND_COLOR if big else BRAND_DARK,
+            color=GCL_NAVY if big else BRAND_DARK,
             align=WD_ALIGN_PARAGRAPH.RIGHT,
         )
         amount_cell = table.rows[row_idx].cells[3]
         _set_cell_text(
             amount_cell, _money_int(value),
             bold=True, size=SIZE_BODY + (1 if big else 0),
-            color=BRAND_COLOR if big else BRAND_DARK,
+            color=GCL_NAVY if big else BRAND_DARK,
             align=WD_ALIGN_PARAGRAPH.RIGHT,
         )
         if big:
-            _shade_cell(amount_cell, 'EDE9FE')
+            _shade_cell(amount_cell, GCL_TEAL_TINT)
 
     base_row = 1 + len(line_items)
     _total_row(base_row,     "Sous-total HT",                                                       float(subtotal_ht))
@@ -298,6 +420,7 @@ def add_prestation_table(doc: DocumentType, line_items,
 
     # Thin slate-200 borders on every cell of the table (data area).
     _apply_thin_borders(table)
+    return total_ttc
 
 
 def _apply_thin_borders(table) -> None:
@@ -320,12 +443,49 @@ def _apply_thin_borders(table) -> None:
                 el.set(qn('w:color'), 'E2E8F0')
 
 
-def add_genoclab_footer(doc: DocumentType) -> None:
-    """Legal & office block at the bottom of the document — amount-in-
-    words line + registered office + contact. All three are CMS-editable.
+def add_genoclab_footer(doc: DocumentType, *, total_amount=None) -> None:
+    """Legal & office block at the bottom of the document.
+
+    Renders three CMS-editable blocks:
+      1. The "Arrêtée la présente facture à la somme de …" legal phrase.
+         When ``total_amount`` is supplied, the variable part (the
+         underscored slot in the CMS default, or any "{amount_words}" /
+         "{amount}" placeholder if the SuperAdmin uses one) is filled
+         automatically with both the words and the figures, so the
+         document is legally complete out of the box. The SuperAdmin
+         keeps full control over the surrounding wording.
+      2. The "Siège social …" line (CMS).
+      3. The contact / website line (CMS).
     """
     doc.add_paragraph()  # spacer
-    legal = doc.add_paragraph(cms_get('genoclab_footer_legal'))
+
+    legal_text = cms_get('genoclab_footer_legal')
+    if total_amount is not None:
+        words = amount_in_words_fr(total_amount).strip()
+        figures = _money_int(total_amount)
+        words_upper = words[:1].upper() + words[1:] if words else ''
+
+        if '{amount_words}' in legal_text or '{amount}' in legal_text:
+            # Explicit placeholders — fill them in.
+            legal_text = (
+                legal_text
+                .replace('{amount_words}', words_upper)
+                .replace('{amount}', f"{figures} DA")
+            )
+        else:
+            # Default phrasing has a long "____" placeholder we replace
+            # with the words; we then append "(soit XXX DA)" so the
+            # figure is unambiguous.
+            import re as _re
+            underscores = _re.search(r'_{5,}', legal_text)
+            if underscores:
+                legal_text = legal_text.replace(
+                    underscores.group(0), words_upper)
+            else:
+                legal_text = legal_text.rstrip(' .') + f" {words_upper}"
+            legal_text = legal_text.rstrip(' .') + f" (soit {figures} DA)."
+
+    legal = doc.add_paragraph(legal_text)
     for run in legal.runs:
         run.font.name = BRAND_FONT
         run.font.size = Pt(SIZE_BODY)

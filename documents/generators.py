@@ -990,8 +990,8 @@ def _build_genoclab_doc(
                        'quantity': 1, 'unit_price': float(report_fees),
                        'total': float(report_fees)})
 
-    add_prestation_table(doc, items + extras, vat_rate=vat_rate)
-    add_genoclab_footer(doc)
+    grand_total = add_prestation_table(doc, items + extras, vat_rate=vat_rate)
+    add_genoclab_footer(doc, total_amount=grand_total)
     return doc
 
 
@@ -1351,8 +1351,8 @@ def generate_invoice_document(invoice_obj) -> str:
             'total': it.get('total'),
         })
 
-    add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate or 0.19))
-    add_genoclab_footer(doc)
+    grand_total = add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate or 0.19))
+    add_genoclab_footer(doc, total_amount=grand_total)
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
