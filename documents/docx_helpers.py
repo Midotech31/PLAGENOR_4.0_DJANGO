@@ -166,6 +166,11 @@ def strip_unresolved_placeholders(doc: DocumentType) -> None:
 # Banner / letterhead -------------------------------------------------------
 
 _LOGO_BANNER = Path(__file__).resolve().parent / 'assets' / 'institutional_banner.png'
+# GENOCLAB-specific commercial logo used on quotes and invoices only.
+# The DGRSDT-bearing institutional banner above is academic; the
+# commercial side of the platform (devis, factures) is branded as
+# GENOCELAB.
+_GENOCLAB_LOGO = Path(__file__).resolve().parent / 'assets' / 'genoclab_logo.png'
 
 
 def ensure_institutional_header(doc: DocumentType, banner_path: Optional[Path] = None) -> None:

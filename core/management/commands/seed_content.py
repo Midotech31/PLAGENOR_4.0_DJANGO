@@ -73,6 +73,34 @@ DEFAULTS_FR = {
     'login_logo_sub': 'Plateforme de Gestion des Opérations',
     'login_footer_1': "ESSBO — Université d'Oran",
     'login_footer_2': 'Conçu par Prof. Mohamed Merzoug',
+
+    # === GENOCLAB commercial documents (devis & facture) =================
+    # Every field here is rendered in the generated quote / invoice.
+    # SuperAdmin can edit any of them at /dashboard/home/content/update/
+    # (or via /admin/) — change the bank account / NIF / footer wording
+    # without touching code.
+    'genoclab_quote_title':       'Facture Proforma',
+    'genoclab_invoice_title':     'Facture',
+    'genoclab_issuer_name':       "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
+    'genoclab_issuer_address1':   'BP 1042 SAIM MOHAMED,',
+    'genoclab_issuer_address2':   'Cité Emir Abdelkader (EX-INESSMO)',
+    'genoclab_issuer_address3':   '31000 Oran',
+    'genoclab_issuer_treasury':   'Cpte Trésor : 00831001131000208471',
+    'genoclab_issuer_nif':        'N.I.F : 415020000310784',
+    'genoclab_issuer_ccp':        "Cpte CCP Agent comptable de l'ESSBO : 007999990000",
+    'genoclab_issuer_phone':      'Téléphone / Fax : +213 41 24 63 59',
+    'genoclab_vat_rate':          '0.19',
+    'genoclab_footer_legal':      (
+        'Arrêtée la présente facture à la somme de '
+        '____________________________________________________________ Dinars Algériens.'
+    ),
+    'genoclab_footer_office':     (
+        'Siège social — BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran'
+    ),
+    'genoclab_footer_contact':    (
+        "École Supérieure en Sciences Biologiques d'Oran (ESSBO) · "
+        'https://essb-oran.edu.dz/'
+    ),
 }
 
 DEFAULTS_EN = {

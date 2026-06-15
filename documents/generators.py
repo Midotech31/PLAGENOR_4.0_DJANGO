@@ -474,22 +474,27 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
     return None
 
 
-def _save_document(doc: DocumentType, prefix: str, request_obj, *, style_tables: bool = True) -> str:
+def _save_document(doc: DocumentType, prefix: str, request_obj,
+                   *, style_tables: bool = True,
+                   skip_institutional: bool = False,
+                   skip_brand_footer: bool = False) -> str:
     """Persist a generated document, but first run the house-style
     finishing pass so every artifact leaves the pipeline with the same
     typography / colours / footer / institutional header regardless of
     which generator built it. Per-generator code stays focused on the
     *content*; the *form* is centralised here.
 
-    ``style_tables=False`` skips the table-painting pass — used by the
-    platform note, which is meant to be copy-pasted into a portal text
-    area and so renders every figure as a paragraph rather than a table.
+    Kwargs let the GENOCLAB-side generators opt out of pieces that
+    don't fit their look (no DGRSDT banner, no ESSBO/PLAGENOR footer —
+    they have their own GENOCELAB equivalents).
     """
     # Centralised finishing — these are all idempotent so calling them
     # in addition to whatever the generator already did is safe.
     apply_house_style(doc)
-    ensure_institutional_header(doc)
-    add_brand_footer(doc)
+    if not skip_institutional:
+        ensure_institutional_header(doc)
+    if not skip_brand_footer:
+        add_brand_footer(doc)
     if style_tables:
         _apply_brand_table_style_everywhere(doc)
 
@@ -890,8 +895,14 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
 
 
 def generate_quote(request_obj) -> str:
-    """GENOCLAB quote. Priority: uploaded template → static generic
-    template → programmatic fallback.
+    """GENOCLAB quote (Facture Proforma).
+
+    Renders the SAIDAL-style commercial layout: GENOCELAB logo,
+    issuer + client header (issuer details are CMS-editable so the
+    SuperAdmin can refresh bank accounts or NIF without code), table
+    of prestations × prix × montant, HT / TVA / TTC totals, and a
+    legal footer block. No ESSBO/PLAGENOR institutional banner — this
+    is the commercial side of the platform, not academic.
     """
     field_map = build_field_map(request_obj)
 
@@ -903,26 +914,85 @@ def generate_quote(request_obj) -> str:
     field_map['QUOTE_NUMBER'] = quote_number
     field_map['INVOICE_NUMBER'] = quote_number  # legacy alias
 
-    doc: Optional[DocumentType] = None
-
-    if request_obj.service:
-        uploaded = _get_uploaded_template(request_obj.service, 'QUOTE')
-        if uploaded:
-            doc = Document(str(uploaded))
-
-    if doc is None:
-        generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'quote_template.docx'
-        if generic.exists():
-            doc = Document(str(generic))
-
-    if doc is None:
-        doc = _build_quote_programmatic(request_obj, field_map)
-
-    replace_placeholders(doc, field_map)
-    strip_unresolved_placeholders(doc)
-    ensure_institutional_header(doc)
+    doc = _build_genoclab_doc(
+        title_key='genoclab_quote_title',
+        doc_number=quote_number,
+        request_obj=request_obj,
+        line_items=(request_obj.quote_detail or {}).get('items') or [],
+        admin_fees=(request_obj.quote_detail or {}).get('admin_fees', 0),
+        report_fees=(request_obj.quote_detail or {}).get('report_fees', 0),
+        vat_rate=(request_obj.quote_detail or {}).get('vat_rate'),
+    )
     _inject_document_blocks(doc, 'QUOTE', request_obj)
-    return _save_document(doc, 'DEVIS', request_obj)
+    # Skip the ESSBO institutional header + ESSBO/PLAGENOR footer —
+    # GENOCLAB documents have their own header/footer built above.
+    return _save_document(
+        doc, 'DEVIS', request_obj,
+        style_tables=False,        # tables are already styled by our layout
+        skip_institutional=True,   # GENOCELAB header instead
+        skip_brand_footer=True,    # GENOCLAB-specific footer text
+    )
+
+
+def _build_genoclab_doc(
+    *, title_key: str, doc_number: str, request_obj,
+    line_items, admin_fees=0, report_fees=0, vat_rate=None,
+) -> DocumentType:
+    """Common builder for the GENOCLAB quote and invoice — assembles
+    header + prestation table + totals + legal footer in one place so
+    quote and invoice always carry the same look and field discipline.
+    """
+    from documents.genoclab_layout import (
+        add_genoclab_header, add_prestation_table, add_genoclab_footer,
+        cms_get,
+    )
+    doc = Document()
+    apply_house_style(doc)
+
+    # Client coords — pulled from the requester profile, with sensible
+    # blanks when something is missing.
+    requester = getattr(request_obj, 'requester', None)
+    client_name = ''
+    client_lines = []
+    if requester is not None:
+        client_name = requester.get_full_name() or requester.username or ''
+        org = getattr(requester, 'organization', '')
+        phone = getattr(requester, 'phone', '')
+        email = getattr(requester, 'email', '')
+        if org: client_lines.append(org)
+        if phone: client_lines.append(f"Tél : {phone}")
+        if email: client_lines.append(email)
+
+    add_genoclab_header(
+        doc,
+        title=cms_get(title_key),
+        doc_number=doc_number,
+        doc_date=datetime.now().strftime('%d/%m/%Y'),
+        client_name=client_name,
+        client_lines=client_lines,
+    )
+
+    # Add a small spacer paragraph.
+    doc.add_paragraph()
+
+    # Build the prestation list. admin_fees / report_fees come from the
+    # quote_detail and become their own line items so they're visible in
+    # the table — the SuperAdmin / client sees exactly where every DA
+    # goes.
+    items = list(line_items or [])
+    extras = []
+    if admin_fees and float(admin_fees) > 0:
+        extras.append({'label': 'Frais administratifs',
+                       'quantity': 1, 'unit_price': float(admin_fees),
+                       'total': float(admin_fees)})
+    if report_fees and float(report_fees) > 0:
+        extras.append({'label': 'Frais de rapport',
+                       'quantity': 1, 'unit_price': float(report_fees),
+                       'total': float(report_fees)})
+
+    add_prestation_table(doc, items + extras, vat_rate=vat_rate)
+    add_genoclab_footer(doc)
+    return doc
 
 
 def _build_quote_programmatic(request_obj, field_map) -> DocumentType:
@@ -1231,30 +1301,62 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
 
 
 def generate_invoice_document(invoice_obj) -> str:
-    """Standalone invoice DOCX (programmatic only — no template at present)."""
+    """GENOCLAB invoice (final, post-payment).
+
+    Same SAIDAL-style layout as the quote (generate_quote): GENOCELAB
+    logo, CMS-editable issuer block, client block, prestation grid,
+    HT / TVA / TTC totals, legal footer. Differs only in the title
+    (Facture, from the genoclab_invoice_title CMS key) and the source
+    of the line items (the Invoice's line_items JSON).
+    """
+    from documents.genoclab_layout import (
+        add_genoclab_header, add_prestation_table, add_genoclab_footer,
+        cms_get,
+    )
     doc = Document()
     apply_house_style(doc)
-    doc.add_heading(f'Facture {invoice_obj.invoice_number}', level=1)
-    doc.add_paragraph('GENOCLAB — ESSBO')
-    doc.add_paragraph(f"Date : {invoice_obj.created_at.strftime('%d/%m/%Y')}")
-    if invoice_obj.client:
-        doc.add_paragraph(f"Client : {invoice_obj.client.get_full_name()}")
 
-    table = doc.add_table(rows=3, cols=2)
-    table.style = 'Light Grid Accent 1'
-    table.rows[0].cells[0].text = 'Sous-total HT'
-    table.rows[0].cells[1].text = _money_2dp(invoice_obj.subtotal_ht)
-    table.rows[1].cells[0].text = f"TVA ({float(invoice_obj.vat_rate) * 100:.0f}%)"
-    table.rows[1].cells[1].text = _money_2dp(invoice_obj.vat_amount)
-    table.rows[2].cells[0].text = 'Total TTC'
-    table.rows[2].cells[1].text = _money_2dp(invoice_obj.total_ttc)
+    # Client coords from the invoice row.
+    client = invoice_obj.client
+    client_name = ''
+    client_lines = []
+    if client is not None:
+        client_name = client.get_full_name() or client.username or ''
+        org = getattr(client, 'organization', '')
+        phone = getattr(client, 'phone', '')
+        email = getattr(client, 'email', '')
+        if org: client_lines.append(org)
+        if phone: client_lines.append(f"Tél : {phone}")
+        if email: client_lines.append(email)
+    elif invoice_obj.request and invoice_obj.request.requester:
+        client_name = invoice_obj.request.requester.get_full_name() or ''
 
-    ensure_institutional_header(doc)
-    _render_footer(doc)
+    add_genoclab_header(
+        doc,
+        title=cms_get('genoclab_invoice_title'),
+        doc_number=invoice_obj.invoice_number,
+        doc_date=invoice_obj.created_at.strftime('%d/%m/%Y'),
+        client_name=client_name,
+        client_lines=client_lines,
+    )
+    doc.add_paragraph()
+
+    # line_items on Invoice carries 'description' instead of 'label'.
+    items = []
+    for it in (invoice_obj.line_items or []):
+        items.append({
+            'label': it.get('description') or it.get('label') or '',
+            'quantity': it.get('quantity', 0),
+            'unit_price': it.get('unit_price', 0),
+            'total': it.get('total'),
+        })
+
+    add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate or 0.19))
+    add_genoclab_footer(doc)
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"INVOICE_{invoice_obj.invoice_number}.docx"
+    filename = f"FACTURE_{invoice_obj.invoice_number}.docx"
     filepath = out_dir / filename
     doc.save(str(filepath))
     return str(filepath)
