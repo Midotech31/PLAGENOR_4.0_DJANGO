@@ -684,7 +684,7 @@
                    move a task to a colleague in case of delay/absence
                    with a mandatory reason (audit trail + both members
                    get notified). #}
-                {% if req.status in 'ASSIGNED APPOINTMENT_PROPOSED APPOINTMENT_CONFIRMED SAMPLE_RECEIVED ANALYSIS_STARTED ANALYSIS_FINISHED'.split %}
+                {% if can_reassign_active %}
                 <div x-data="{ openReassign: false }" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-light);">
                     <button type="button" class="btn btn-sm btn-outline" @click="openReassign = !openReassign" x-text="openReassign ? '{% trans 'Annuler' %}' : '{% trans 'Réassigner à un autre analyste' %}'"></button>
                     <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" x-show="openReassign" x-transition x-cloak style="margin-top:12px; padding:12px; background:var(--neutral-50,#f8fafc); border-radius:8px;">

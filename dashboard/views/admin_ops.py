@@ -186,6 +186,14 @@ def request_detail(request, pk):
     if req.service:
         yaml_def = get_service_def(req.service.code)
 
+    # Pre-compute the "still in the analyst pipeline" flag for the
+    # template. Django's {% if x in 'A B C'.split %} hack tries to call
+    # str.split as an attribute and fails with TemplateSyntaxError, so
+    # we hand the check off here instead.
+    REASSIGN_ACTIVE_STATES = (
+        'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+    )
     context = {
         'req': req,
         'history': history,
@@ -196,6 +204,7 @@ def request_detail(request, pk):
         'available_members': MemberProfile.objects.filter(available=True).select_related('user'),
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
+        'can_reassign_active': req.status in REASSIGN_ACTIVE_STATES,
     }
     return render(request, 'dashboard/admin_ops/request_detail.html', context)
 
