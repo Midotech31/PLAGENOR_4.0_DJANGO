@@ -477,20 +477,30 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
 def _save_document(doc: DocumentType, prefix: str, request_obj,
                    *, style_tables: bool = True,
                    skip_institutional: bool = False,
-                   skip_brand_footer: bool = False) -> str:
+                   skip_brand_footer: bool = False,
+                   skip_house_style: bool = False) -> str:
     """Persist a generated document, but first run the house-style
     finishing pass so every artifact leaves the pipeline with the same
     typography / colours / footer / institutional header regardless of
     which generator built it. Per-generator code stays focused on the
     *content*; the *form* is centralised here.
 
-    Kwargs let the GENOCLAB-side generators opt out of pieces that
-    don't fit their look (no DGRSDT banner, no ESSBO/PLAGENOR footer —
-    they have their own GENOCELAB equivalents).
+    Kwargs let specific generators opt out of pieces of the centralised
+    finishing pass:
+      * skip_house_style  — don't rewrite fonts/colours/headings.
+        Used by the IBTIKAR legacy templates, which ship with their
+        own typography already polished by the ESSBO team.
+      * skip_institutional — don't inject the DGRSDT banner. Used by
+        GENOCLAB-side documents (devis, facture) which have their own
+        GENOCLAB letterhead.
+      * skip_brand_footer — don't add the "ESSBO — PLAGENOR 4.0 / page
+        X / Y" footer.
+      * style_tables — repaint every table with the brand header tint.
     """
     # Centralised finishing — these are all idempotent so calling them
     # in addition to whatever the generator already did is safe.
-    apply_house_style(doc)
+    if not skip_house_style:
+        apply_house_style(doc)
     if not skip_institutional:
         ensure_institutional_header(doc)
     if not skip_brand_footer:
@@ -606,6 +616,20 @@ def generate_ibtikar_form(request_obj) -> str:
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)
+    # The egtp_*.docx IBTIKAR templates are the official printable forms
+    # of the platform — they ship with their own typography, table
+    # styling and footer. Repainting them with the unified PLAGENOR
+    # house style overrides those carefully crafted fonts and colours
+    # and gives the result an inconsistent / "loud" feel. So we skip
+    # the finishing pass for legacy / generic templates: only the
+    # programmatic fallback gets the centralised look.
+    if using_legacy_form or using_generic:
+        return _save_document(
+            doc, 'IBTIKAR', request_obj,
+            skip_house_style=True,    # preserve the template's own fonts
+            style_tables=False,       # preserve the template's own table look
+            skip_brand_footer=True,   # the template already has its footer
+        )
     return _save_document(doc, 'IBTIKAR', request_obj)
 
 

@@ -915,6 +915,18 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
             if value:
                 _set_cell_text(cells[ci], value)
 
+    # 4) Drop the pre-printed empty rows that are no longer needed. The
+    # template ships with N blank rows so the printed form can hold any
+    # submission size; once we've filled rows_data of them, the rest is
+    # just visual noise. Iterate from the back so removals don't shift
+    # the indices of the rows we still want.
+    used_rows = len(rows_data)
+    available_rows = len(data_rows)
+    if available_rows > used_rows:
+        for surplus_idx in range(available_rows - 1, used_rows - 1, -1):
+            row = data_rows[surplus_idx]
+            row._element.getparent().remove(row._element)
+
 
 # Legacy IBTIKAR forms — generic question-filler ---------------------------
 
