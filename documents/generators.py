@@ -770,6 +770,43 @@ def _detableize(doc: DocumentType) -> None:
         parent.remove(anchor)
 
 
+def _summarise_samples(samples, total_n) -> str:
+    """Return a one-line sample summary for the platform note.
+
+    The DGRSDT IBTIKAR portal doesn't need the detailed per-sample grid
+    (that lives in the lab's reception form). The platform note only
+    needs to know *how many* samples and, when an "isolat type" column
+    is heterogeneous, the count per type.
+
+    Strategy:
+      * Look for the first categorical column that varies across rows
+        (organism_type, sample_origin, dna_type, …).
+      * If two or more distinct values exist, format as
+        "N (X bactéries, Y levures, …)".
+      * Otherwise return just "N échantillon(s)".
+    """
+    if not samples or total_n <= 0:
+        return f"{total_n}" if total_n else "—"
+    # Common categorical column names — keep the order: most specific first.
+    candidate_cols = ('organism_type', 'sample_origin', 'dna_type',
+                      'primer_type', 'sequencing_mode', 'source')
+    chosen = None
+    for col in candidate_cols:
+        values = [str((s or {}).get(col, '')).strip() for s in samples if isinstance(s, dict)]
+        values = [v for v in values if v]
+        if len(set(values)) >= 2:
+            chosen = (col, values)
+            break
+    base = f"{total_n} échantillon" + ('s' if total_n > 1 else '')
+    if chosen is None:
+        return base
+    _, values = chosen
+    from collections import Counter
+    counts = Counter(values)
+    parts = [f"{c} {label}" for label, c in counts.most_common()]
+    return f"{base} ({', '.join(parts)})"
+
+
 def _render_tariff_breakdown(doc, request_obj) -> None:
     """Render an itemised tariff justification in the platform note.
 
@@ -779,12 +816,14 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
       * Caractère pathogène (Oui / Non)
       * Prix de base unitaire
       * Multiplicateur appliqué
-      * Nombre d'échantillons
-      * Total = base × multiplicateur × N
+      * Nombre d'échantillons (résumé : compte total + ventilation par
+        type quand l'isolat est hétérogène — pas le détail ligne à ligne)
+      * Total = base × multiplicateur × N (utilise admin_validated_price
+        si l'admin_ops a réajusté le tarif)
 
     Source of truth: re-runs ``resolve_cost`` from ``core.pricing`` so the
     figures here are the SAME ones the requester saw live in the form.
-    Robust to missing data: a missing field renders as "—".
+    Defensive against missing data — every label degrades to "—".
     """
     from core.pricing import resolve_cost
 
@@ -808,13 +847,63 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
             result = {}
 
     breakdown = result.get('breakdown', {}) or {}
-    if not isinstance(breakdown, dict):
+    # resolve_cost returns a dict for the YAML/programmatic paths and a
+    # list for the DB-tier path. Accept either and back-fill the missing
+    # fields directly from the service_params + YAML when we got a list.
+    if isinstance(breakdown, list):
         breakdown = {}
-    base_price = breakdown.get('base_price', '—')
-    multiplier = breakdown.get('multiplier', '—')
-    mult_key = breakdown.get('multiplier_key', '—')
+
+    # First pass: lift whatever the dict-breakdown gave us.
+    base_price = breakdown.get('base_price')
+    multiplier = breakdown.get('multiplier')
+    mult_key = breakdown.get('multiplier_key')
     pathogenic = breakdown.get('pathogenic')
-    total = result.get('total', request_obj.budget_amount or 0)
+
+    # Second pass: fall back to the service definition + params when the
+    # cost path didn't provide a dict breakdown (DB tiers, OVERRIDE, …).
+    if pathogenic is None and 'pathogenic' in params:
+        pathogenic = bool(params.get('pathogenic'))
+    if mult_key is None:
+        for k in ('analysis_mode', 'qc_level', 'sequencing_mode',
+                  'drying_level', 'primer_type'):
+            v = params.get(k)
+            if v:
+                mult_key = str(v)
+                break
+    # If still missing, dig into the YAML registry for base price /
+    # multiplier so the four target fields never stay at "—" on a
+    # well-priced service.
+    if base_price is None or multiplier is None:
+        try:
+            from core.registry import get_service_def
+            sdef = get_service_def(getattr(request_obj.service, 'code', '')) or {}
+            pricing = sdef.get('pricing', {}) or {}
+            bp_map = pricing.get('base_price', {}) or {}
+            mult_map = pricing.get('multipliers', {}) or {}
+            if base_price is None:
+                key = 'pathogenic' if pathogenic else 'non_pathogenic'
+                base_price = bp_map.get(key) or bp_map.get('default')
+            if multiplier is None and mult_key is not None:
+                multiplier = mult_map.get(str(mult_key))
+                if multiplier is None:
+                    multiplier = mult_map.get(mult_key)
+        except Exception:
+            pass
+
+    # Total — prefer admin_validated_price (admin re-pricing post-
+    # submission) over the live resolver result, over the saved
+    # budget_amount.
+    admin_price = getattr(request_obj, 'admin_validated_price', None)
+    if admin_price:
+        total = float(admin_price)
+        price_source = 'Réajusté par administration'
+    else:
+        total = result.get('total') or request_obj.budget_amount or 0
+        price_source = None
+
+    # Sample summary — count total + breakdown by primary categorical
+    # column (organism_type, etc.) when the column is heterogeneous.
+    samples_label = _summarise_samples(samples, n)
 
     rows = [
         ("Type d'analyse",
@@ -823,13 +912,17 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
         ("Caractère pathogène",
          '—' if pathogenic is None else ('Oui' if pathogenic else 'Non')),
         ("Prix de base unitaire",
-         f"{base_price:,.0f} DZD".replace(',', ' ') if isinstance(base_price, (int, float)) else str(base_price)),
+         f"{float(base_price):,.0f} DZD".replace(',', ' ')
+         if isinstance(base_price, (int, float)) else '—'),
         ("Multiplicateur appliqué",
-         f"× {multiplier}" if multiplier != '—' else '—'),
-        ("Nombre d'échantillons", str(n)),
+         f"× {multiplier}" if multiplier not in (None, '—') else '—'),
+        ("Nombre d'échantillons", samples_label),
         ("Total",
-         f"{total:,.0f} DZD".replace(',', ' ') if isinstance(total, (int, float)) else str(total)),
+         f"{float(total):,.0f} DZD".replace(',', ' ')
+         if isinstance(total, (int, float)) else str(total)),
     ]
+    if price_source:
+        rows.append(("Source du tarif", price_source))
     # Rendered as plain "Label : value" paragraphs (no Word table). The
     # platform note is meant to be copy-pasted into the DGRSDT IBTIKAR
     # portal, where pasted Word tables turn into tab-separated mush in

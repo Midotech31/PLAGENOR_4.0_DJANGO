@@ -384,6 +384,28 @@ def platform_note_view(request, pk):
     if not (is_admin or is_assignee or is_observer):
         return HttpResponseForbidden()
 
+    # Status gate. The platform note is the DGRSDT-bound devis the
+    # admin uses to argue the budget consumption — it only makes sense
+    # AFTER pedagogical + financial validation. Generating it before
+    # the request has passed those checks would let the admin (or an
+    # observer) print a document with an unvalidated tariff.
+    READY_STATUSES = {
+        'PLATFORM_NOTE_GENERATED', 'IBTIKAR_SUBMISSION_PENDING',
+        'IBTIKAR_CODE_SUBMITTED', 'ASSIGNED',
+        'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+        'REPORT_UPLOADED', 'REPORT_VALIDATED',
+        'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED',
+    }
+    if req.status not in READY_STATUSES:
+        messages.error(
+            request,
+            "La note de plateforme ne peut être générée qu'après la "
+            "validation pédagogique et financière de la demande "
+            f"(statut actuel : {req.get_status_display()})."
+        )
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
     # Generate fresh on each view so the document always reflects the
     # current price / parameters / sample table. Cheap (a few hundred ms
     # for a typical request), and avoids stale-cache classes of bugs.
