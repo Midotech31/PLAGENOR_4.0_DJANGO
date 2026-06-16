@@ -740,7 +740,8 @@ def _norm_token(text: str) -> str:
 # that may appear either in the submitted key or the DOCX column header.
 _SAMPLE_COLUMN_SYNONYMS = [
     ('code', {'code', 'samplecode', 'echantillon', 'sample', 'refechantillon', 'reference', 'ref'}),
-    ('origine', {'origine', 'origin', 'origineadn', 'origindna', 'source'}),
+    ('origine', {'origine', 'origin', 'origineadn', 'origindna', 'source',
+                 'sampleorigin', 'sourceisolement', 'sourcedisolement'}),
     ('typeadn', {'typeadn', 'typednad', 'dnatype', 'type', 'typedna', 'adn', 'dna'}),
     ('extraction', {'methode', 'extraction', 'methodeextraction', 'extractionmethod', 'method'}),
     ('gene', {'gene', 'genecible', 'targetgene', 'cible', 'target', 'amplicon', 'taille'}),
@@ -835,7 +836,16 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
             return '__numero__'
         if not h:
             return None
-        # 1) best YAML column by label/name overlap
+        # 1) best YAML column by label/name overlap. We score in three
+        # tiers and refuse the weakest one when it would steal a column
+        # from a stronger candidate elsewhere in the table:
+        #   * 1000+ — substring / exact match (very confident)
+        #   *   N  — N words in common (use only when N >= 3, or when
+        #            no stronger candidate matches that key)
+        # The bag-of-words tier was producing false positives like
+        # "Source d'isolement" → isolation_date (2 shared words "d" /
+        # "isolement" with "Date d'isolement"); with the >=3 floor it
+        # falls through to the synonym fallback instead.
         best, best_score = None, 0
         hw = set(h.split())
         for cname, lnorm, nnorm in yaml_columns:
@@ -847,7 +857,7 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
                 else:
                     cw = set(cand.split())
                     score = len(hw & cw)
-                    if score == 0:
+                    if score < 3:  # raise the bar — was: score == 0
                         continue
                 if score > best_score:
                     best_score, best = score, cname
@@ -889,6 +899,15 @@ def populate_legacy_sample_table(doc: DocumentType, request_obj) -> None:
             sval = str(val)
             if key in valid:
                 out[key] = sval
+                # Also index by the canonical so a DOCX header matched
+                # via the synonym fallback (e.g. "Source d'isolement" →
+                # canonical 'origine') still finds the value when the
+                # YAML key is something else ('sample_origin').
+                canon = _canonical_for(
+                    _norm_token(str(key).replace('_', ''))
+                )
+                if canon and canon not in out:
+                    out[canon] = sval
             else:
                 canon = _canonical_for(_norm_token(str(key)))
                 if canon and canon not in out:
