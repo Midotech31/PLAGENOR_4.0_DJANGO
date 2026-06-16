@@ -24,6 +24,12 @@
     </a>
 </div>
 
+{# Prominent appointment banner — surfaces the RDV date front and centre
+   so the requester can't miss what was proposed. #}
+{% url 'dashboard:requester_confirm_appointment' req.pk as appt_confirm_url %}
+{% url 'dashboard:requester_alt_date' req.pk as appt_alt_url %}
+{% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
+
 <div class="grid-2" style="gap:24px; margin-top:24px;">
     <!-- LEFT COLUMN -->
     <div>
@@ -320,4 +326,8 @@
     </div>
 </div>
 {% endif %}
+
+{# Same step-by-step timeline the analyst and the admin_ops see, so the
+   requester can follow the progress of their request. #}
+{% include 'includes/workflow_timeline.html' %}
 {% endblock %}

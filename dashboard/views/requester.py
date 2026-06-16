@@ -121,11 +121,16 @@ def request_detail(request, pk):
         request=req, to_user=request.user
     ).select_related('from_user').order_by('created_at')
 
+    # Workflow history — same view as the analyst's, so the requester
+    # can follow the progress of their own request step by step.
+    history = req.history.select_related('actor').order_by('created_at')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
+        'history': history,
     }
     return render(request, 'dashboard/requester/request_detail.html', context)
 

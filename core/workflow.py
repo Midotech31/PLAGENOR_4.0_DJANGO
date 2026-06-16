@@ -187,20 +187,18 @@ def _create_notifications(request_obj, to_status):
                 notification_type='WORKFLOW',
             )
 
-        # Notify the requester/client on relevant transitions
-        if request_obj.requester and to_status in (
-            # IBTIKAR states
-            'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
-            'IBTIKAR_SUBMISSION_PENDING', 'ASSIGNED', 'APPOINTMENT_PROPOSED',
-            'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'REJECTED',
-            # GENOCLAB states - Full pipeline notifications
-            'QUOTE_SENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
-            'SENT_TO_CLIENT',
-            'ORDER_UPLOADED',  # Client uploads purchase order
-            'PAYMENT_PENDING',  # Client needs to pay
-            'REPORT_UPLOADED',  # Report uploaded, awaiting validation
-            'REPORT_VALIDATED',  # Report validated
-        ):
+        # In-app notify the requester/client on EVERY workflow transition
+        # so they can follow the full progress of their request. Email is
+        # rationed separately to the milestones in _IMPORTANT_EMAIL_STATUSES
+        # so the inbox stays uncluttered while the in-app feed stays
+        # complete. Skip only purely-internal transitions that never reach
+        # the user-facing pipeline.
+        _SILENT_FOR_REQUESTER = {
+            'REQUEST_CREATED',          # internal seed status
+            'PENDING_ACCEPTANCE',       # analyst-side ack, invisible to candidate
+            'ADMIN_REVIEW',             # internal validation step
+        }
+        if request_obj.requester and to_status not in _SILENT_FOR_REQUESTER:
             Notification.objects.create(
                 user=request_obj.requester,
                 message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
@@ -269,18 +267,27 @@ def _send_transition_emails(request_obj, old_status, to_status):
     # Generic status-change email so the requester/client gets a paper
     # trail of every meaningful step. Sent ON TOP of dedicated templates
     # above when the status overlaps.
-    _CARE_STATUSES = {
-        'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED',
-        'IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED',
-        'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
-        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
-        'REPORT_UPLOADED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER',
-        'COMPLETED', 'REJECTED',
-        'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT',
-        'QUOTE_REJECTED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED',
-        'PAYMENT_PENDING', 'PAYMENT_CONFIRMED', 'SENT_TO_CLIENT',
+    # Email is reserved for the milestones the user actually needs to act
+    # on or that materially change the request's status. The in-app
+    # notification ringtone fires on every transition (see
+    # _create_notifications) so nothing is lost — only the inbox stays
+    # uncluttered.
+    _IMPORTANT_EMAIL_STATUSES = {
+        # IBTIKAR — validations + handoffs + end-state
+        'VALIDATION_FINANCE',         # request approved, will be billed
+        'PLATFORM_NOTE_GENERATED',    # note ready, requester acts next
+        'IBTIKAR_SUBMISSION_PENDING', # requester needs to submit code
+        'APPOINTMENT_PROPOSED',       # requester needs to confirm
+        'APPOINTMENT_CONFIRMED',      # confirmation receipt
+        'SENT_TO_REQUESTER',          # report is ready to download
+        'COMPLETED', 'REJECTED',      # terminal states
+        # GENOCLAB — quote / payment / report milestones
+        'QUOTE_SENT',                 # client must decide
+        'INVOICE_GENERATED',          # client must pay
+        'PAYMENT_PENDING',            # gentle nudge
+        'SENT_TO_CLIENT',             # report is ready
     }
-    if to_status in _CARE_STATUSES:
+    if to_status in _IMPORTANT_EMAIL_STATUSES:
         _safe(nem.notify_status_change, request_obj, old_status, to_status)
 
 

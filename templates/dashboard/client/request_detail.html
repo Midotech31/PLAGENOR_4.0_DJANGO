@@ -4,6 +4,9 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% url 'dashboard:client_confirm_appointment' req.pk as appt_confirm_url %}
+{% url 'dashboard:client_alt_date' req.pk as appt_alt_url %}
+{% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -468,4 +471,8 @@
     </div>
 </div>
 {% endif %}
+
+{# Same step-by-step timeline the analyst and the admin_ops see, so the
+   client can follow the progress of their request. #}
+{% include 'includes/workflow_timeline.html' %}
 {% endblock %}
