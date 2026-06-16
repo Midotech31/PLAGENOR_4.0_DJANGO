@@ -125,23 +125,48 @@ def replace_placeholders(doc: DocumentType, field_map: Mapping[str, str]) -> Non
                 visit_tables(footer.tables)
 
 
+def _strip_in_subtree(element) -> None:
+    """Walk every ``<w:t>`` text node under ``element`` and remove any
+    ``{{KEY}}`` markers in it. Catches placeholders nested inside
+    Content Controls (``<w:sdt>``), hyperlinks, smart tags, etc., which
+    the paragraph.runs accessor skips.
+    """
+    try:
+        for t in element.iter(qn('w:t')):
+            if t.text and _PLACEHOLDER_RE.search(t.text):
+                t.text = _PLACEHOLDER_RE.sub('', t.text)
+    except Exception:
+        # Don't let a malformed run break the whole document.
+        return
+
+
 def strip_unresolved_placeholders(doc: DocumentType) -> None:
     """Remove any ``{{...}}`` markers still present after substitution.
 
     A stray placeholder reaching the user is worse than a missing value;
     this helper sweeps after ``replace_placeholders`` to keep the output
     clean even when a template uses a key the field_map does not provide.
+
+    Walks every ``<w:t>`` element in the document tree (not just the
+    paragraph-level runs python-docx exposes by default), so placeholders
+    embedded inside a Content Control (``<w:sdt>``), a hyperlink, a smart
+    tag, or a footnote also get scrubbed. The egtp_imt.docx template ships
+    with a ``{{FUNCTION}}`` placeholder inside an ``<w:sdt>`` that the
+    paragraph-runs-only pass missed.
     """
     def visit(paragraphs):
         for p in paragraphs:
             joined = ''.join(r.text or '' for r in p.runs)
-            if not joined or not _PLACEHOLDER_RE.search(joined):
-                continue
-            cleaned = _PLACEHOLDER_RE.sub('', joined)
-            if p.runs:
-                p.runs[0].text = cleaned
-                for r in p.runs[1:]:
-                    r.text = ''
+            if joined and _PLACEHOLDER_RE.search(joined):
+                cleaned = _PLACEHOLDER_RE.sub('', joined)
+                if p.runs:
+                    p.runs[0].text = cleaned
+                    for r in p.runs[1:]:
+                        r.text = ''
+            # Defence in depth — also walk every <w:t> inside this
+            # paragraph tree (Content Controls, smart tags, …). The
+            # paragraph.runs loop above misses them.
+            _strip_in_subtree(p._p)
 
     def visit_tables(tables):
         for t in tables:
