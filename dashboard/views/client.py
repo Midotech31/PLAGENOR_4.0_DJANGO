@@ -299,6 +299,23 @@ def confirm_appointment(request, pk):
         return HttpResponseForbidden()
     import uuid as _uuid
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    # Réconciliation d'un état désynchronisé (cf. requester.confirm_appointment) :
+    # on ramène la demande à APPOINTMENT_PROPOSED si une date est posée mais
+    # que le statut est resté à ASSIGNED, pour que la confirmation aboutisse.
+    if req.status == 'ASSIGNED' and req.appointment_date:
+        try:
+            transition(req, 'APPOINTMENT_PROPOSED',
+                       req.appointment_proposed_by or request.user,
+                       notes='RDV proposé (régularisation)', force=True)
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
+    if req.status != 'APPOINTMENT_PROPOSED':
+        messages.error(
+            request,
+            "Aucun rendez-vous à confirmer pour le moment. L'analyste doit "
+            "d'abord proposer une date."
+        )
+        return redirect_to_detail(request, req, 'dashboard:client')
     try:
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:

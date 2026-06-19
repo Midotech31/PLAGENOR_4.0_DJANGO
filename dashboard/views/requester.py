@@ -294,6 +294,24 @@ def confirm_appointment(request, pk):
     import uuid as _uuid
     from core.workflow import transition
     from core.exceptions import InvalidTransitionError, AuthorizationError
+    # Réconciliation d'un état désynchronisé : une date a été proposée mais
+    # la demande n'est jamais passée à APPOINTMENT_PROPOSED (transition de
+    # l'analyste avalée, ou avancement forcé par un admin). On la ramène à
+    # l'état « proposé » pour que la confirmation du demandeur n'échoue pas.
+    if req.status == 'ASSIGNED' and req.appointment_date:
+        try:
+            transition(req, 'APPOINTMENT_PROPOSED',
+                       req.appointment_proposed_by or request.user,
+                       notes='RDV proposé (régularisation)', force=True)
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
+    if req.status != 'APPOINTMENT_PROPOSED':
+        messages.error(
+            request,
+            "Aucun rendez-vous à confirmer pour le moment. L'analyste doit "
+            "d'abord proposer une date."
+        )
+        return redirect_to_detail(request, req, 'dashboard:requester')
     try:
         transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:

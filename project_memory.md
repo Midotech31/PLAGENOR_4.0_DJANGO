@@ -1,7 +1,12 @@
 # PLAGENOR 4.0 — Project Memory
 
 ## Current Objective
-- Security audit done. Awaiting go-ahead on remediation.
+- Awaiting next task.
+
+## Verification (handoff items, 2026-06-19)
+- Platform note: gating + 4 fields + admin reprice + sample summary = ALL implemented (verified in code). No change needed.
+- Appointment banner: implemented, date prominent. No change needed.
+- Requester confirm appointment: normal flow (APPOINTMENT_PROPOSED) works on great-newton (proven via shell). ROOT CAUSE of recurring "cannot accept" = desync state where date set but status stuck at ASSIGNED -> confirm transition invalid. FIXED: requester+client confirm_appointment views now reconcile ASSIGNED+date -> APPOINTMENT_PROPOSED (force) before confirming, + friendly msg if no RDV. Commit pending.
 
 ## Security Findings (2026-06-19)
 - CRITICAL: `.env.supabase` tracked in git w/ REAL DATABASE_URL (live Supabase cred). Fix: rotate pw + `git rm --cached` + gitignore + purge history.
