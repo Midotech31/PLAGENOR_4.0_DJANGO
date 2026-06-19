@@ -3,6 +3,13 @@
 ## Current Objective
 - Awaiting next task.
 
+## Institution naming (done)
+- Removed false "Université d'Oran" / "University of Oran" affiliation everywhere (ESSBO is independent).
+- Replaced with "École Supérieure en Sciences Biologiques d'Oran (ESSBO)" / EN equiv; address -> "ESSBO, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran".
+- Files: base_email.html, base_public.html, login.html, superadmin/index.html, contact.html, seed_content.py (FR+EN).
+- KEPT (legitimate): generic "Université / Organisation" form labels, "toutes les universités algériennes", ESSBO's own correct name in doc generators. plagenor_data.json CMS values already clean.
+- NOTE: live DB CMS may need re-seed if it holds old seeded values (dump is already clean).
+
 ## Registration vs guest messaging (done)
 - guest_submit.html: value-prop banner + Créer un compte CTA.
 - guest_submit_success.html: convert-to-account block.

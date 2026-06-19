@@ -37,7 +37,7 @@ DEFAULTS_FR = {
     'footer_description': "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB.",
     'footer_copyright': '© 2026 ESSBO — Tous droits réservés',
     'footer_credit': 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO',
-    'footer_contact_1': "ESSBO — Université d'Oran",
+    'footer_contact_1': "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
     'footer_contact_2': 'Prof. Mohamed Merzoug',
 
     # About page
@@ -60,7 +60,7 @@ DEFAULTS_FR = {
     'contact_title': 'Contactez-nous',
     'contact_subtitle': "Pour toute question, n'hésitez pas à nous contacter.",
     'contact_institution': "ESSBO — École Supérieure en Sciences Biologiques d'Oran",
-    'contact_address': "Université d'Oran, Oran, Algérie",
+    'contact_address': "ESSBO, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran, Algérie",
     'contact_email': 'genomicsplatform.essbo@gmail.com',
     'contact_phone': '+213 (0) 41 XX XX XX',
     'contact_name': 'Prof. Mohamed Merzoug',
@@ -71,7 +71,7 @@ DEFAULTS_FR = {
     'login_subtitle': 'Accédez à votre espace PLAGENOR',
     'login_logo_text': 'PLAGENOR 4.0',
     'login_logo_sub': 'Plateforme de Gestion des Opérations',
-    'login_footer_1': "ESSBO — Université d'Oran",
+    'login_footer_1': "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
     'login_footer_2': 'Conçu par Prof. Mohamed Merzoug',
 
     # === GENOCLAB commercial documents (devis & facture) =================
@@ -126,7 +126,7 @@ DEFAULTS_EN = {
     'footer_description': "ESSBO Scientific Operations Management Platform. Developed for managing the IBTIKAR and GENOCLAB channels.",
     'footer_copyright': '© 2026 ESSBO — All rights reserved',
     'footer_credit': 'PLAGENOR 4.0 — Designed by Prof. Mohamed Merzoug | ESSBO',
-    'footer_contact_1': "ESSBO — University of Oran",
+    'footer_contact_1': "Higher School of Biological Sciences of Oran (ESSBO)",
     'footer_contact_2': 'Prof. Mohamed Merzoug',
     'about_title': 'About PLAGENOR',
     'about_intro': "ESSBO (Higher School of Biological Sciences of Oran) hosts PLAGENOR, a shared research service funded by DGRSDT (General Directorate for Scientific Research and Technological Development).",
@@ -145,7 +145,7 @@ DEFAULTS_EN = {
     'contact_title': 'Contact us',
     'contact_subtitle': "For any question, do not hesitate to contact us.",
     'contact_institution': "ESSBO — Higher School of Biological Sciences of Oran",
-    'contact_address': "University of Oran, Oran, Algeria",
+    'contact_address': "ESSBO, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran, Algeria",
     'contact_email': 'genomicsplatform.essbo@gmail.com',
     'contact_phone': '+213 (0) 41 XX XX XX',
     'contact_name': 'Prof. Mohamed Merzoug',
@@ -154,7 +154,7 @@ DEFAULTS_EN = {
     'login_subtitle': 'Access your PLAGENOR workspace',
     'login_logo_text': 'PLAGENOR 4.0',
     'login_logo_sub': 'Operations Management Platform',
-    'login_footer_1': "ESSBO — University of Oran",
+    'login_footer_1': "Higher School of Biological Sciences of Oran (ESSBO)",
     'login_footer_2': 'Designed by Prof. Mohamed Merzoug',
 }
 
