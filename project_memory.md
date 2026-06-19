@@ -1,7 +1,14 @@
 # PLAGENOR 4.0 — Project Memory
 
 ## Current Objective
-- Awaiting next task. Last unit of work (timeline anonymity + unify) shipped.
+- Security audit done. Awaiting go-ahead on remediation.
+
+## Security Findings (2026-06-19)
+- CRITICAL: `.env.supabase` tracked in git w/ REAL DATABASE_URL (live Supabase cred). Fix: rotate pw + `git rm --cached` + gitignore + purge history.
+- MED: 2 GitHub PATs exposed in chat transcript — revoke.
+- MED: report_token links never expire, allow rating/citation writes (capability link by design).
+- LOW: `as_json` filter mark_safe(json.dumps) — XSS-safe only b/c admin input; HSTS_PRELOAD off; bare except in _notify_report_consulted.
+- GOOD: DEBUG/SECRET_KEY secure-by-default, full SECURE_* when prod, no raw SQL/eval, report download server-side gated, UUID4 tokens.
 
 ## Completed Tasks
 - Switched to branch `claude/great-newton-6Ce7v` (user-authorized).
