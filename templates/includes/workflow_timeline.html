@@ -1,8 +1,11 @@
 {% load i18n %}
 {# Workflow history timeline — shared between analyst / requester / client.
-   Each row shows the transition (from → to), the actor, the date and the
-   note. Keeps the requester/client informed of every step their request
-   went through, with the same level of detail as the analyst sees. #}
+   Each row shows the transition (from → to), the date and the note.
+   Keeps the requester/client informed of every step their request went
+   through, with the same level of detail as the analyst sees.
+   ``show_actor`` must be passed as True ONLY for the analyst view: the
+   requester / client must never see the analyst's identity (anonymat),
+   so the actor column is hidden unless explicitly enabled. #}
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
     <div class="card-body">
@@ -23,9 +26,11 @@
                 <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
                 {% endif %}
             </div>
+            {% if show_actor %}
             <div style="min-width:100px; text-align:end;">
                 <span class="text-sm">{{ h.actor.first_name|default:"Système" }}</span>
             </div>
+            {% endif %}
         </div>
         {% empty %}
         <div class="text-muted">{% trans "Aucun historique." %}</div>
