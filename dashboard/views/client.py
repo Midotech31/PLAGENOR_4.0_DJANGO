@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back, redirect_to_detail, safe_int
+from dashboard.utils import redirect_back, redirect_to_detail, safe_int, confirm_appointment_flow
 from django.contrib import messages
 from django.utils import timezone
 
@@ -126,6 +126,11 @@ def request_detail(request, pk):
         'sample_headers': sample_headers,
         'messages_list': messages_list,
         'history': history,
+        # Cf. requester.request_detail : RDV à confirmer par le client.
+        'appointment_pending': bool(
+            req.appointment_date and not req.appointment_confirmed
+            and req.status in ('APPOINTMENT_PROPOSED', 'ASSIGNED')
+        ),
     }
     return render(request, 'dashboard/client/request_detail.html', context)
 
@@ -297,37 +302,8 @@ def upload_payment_receipt(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    import uuid as _uuid
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    # Réconciliation d'un état désynchronisé (cf. requester.confirm_appointment) :
-    # on ramène la demande à APPOINTMENT_PROPOSED si une date est posée mais
-    # que le statut est resté à ASSIGNED, pour que la confirmation aboutisse.
-    if req.status == 'ASSIGNED' and req.appointment_date:
-        try:
-            transition(req, 'APPOINTMENT_PROPOSED',
-                       req.appointment_proposed_by or request.user,
-                       notes='RDV proposé (régularisation)', force=True)
-        except (InvalidTransitionError, AuthorizationError, ValueError):
-            pass
-    if req.status != 'APPOINTMENT_PROPOSED':
-        messages.error(
-            request,
-            "Aucun rendez-vous à confirmer pour le moment. L'analyste doit "
-            "d'abord proposer une date."
-        )
-        return redirect_to_detail(request, req, 'dashboard:client')
-    try:
-        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
-    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-        messages.error(request, str(e))
-        return redirect_to_detail(request, req, 'dashboard:client')
-    # Only persist the confirmation flag once the status actually advanced.
-    req.appointment_confirmed = True
-    req.appointment_confirmed_at = timezone.now()
-    if not req.report_token:
-        req.report_token = _uuid.uuid4()
-    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
-    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+    confirm_appointment_flow(request, req)
     return redirect_to_detail(request, req, 'dashboard:client')
 
 

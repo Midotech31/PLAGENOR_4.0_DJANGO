@@ -439,12 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         {% if req.report_file %}
         <div class="report-download">
-            {# Always point at the server-side gated route, never the raw
-               /media/ URL. For IBTIKAR (academic) the JS intercepts the
-               click to show the citation modal first; for GENOCLAB
-               (commercial) the click navigates directly and the view
-               serves the file — paying clients are not researchers
-               obliged to cite the platform. #}
+            {# Toujours la route protégée côté serveur (jamais /media/) ; IBTIKAR ouvre la modale de citation. #}
             <a href="{% url 'report_download' token=req.report_token %}" id="download-btn"
                {% if req.channel == 'IBTIKAR' %}onclick="showAcknowledgmentModal(event)"{% endif %}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

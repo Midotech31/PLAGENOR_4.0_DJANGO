@@ -597,9 +597,7 @@
                 <div class="text-muted">{% trans "Aucune information financière." %}</div>
                 {% endif %}
 
-                {# GENOCLAB: download buttons for the official quote DOCX
-                   (once prepared) and any issued invoices. Permission is
-                   re-checked server-side by download_quote / download_invoice. #}
+                {# GENOCLAB : téléchargement devis/factures (permission re-vérifiée côté serveur). #}
                 {% if req.channel == 'GENOCLAB' %}
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-light);">
                     {% if req.quote_detail and req.quote_detail.items %}
@@ -679,11 +677,7 @@
                 {% endif %}
                 <div class="data-card-row"><span class="text-muted">{% trans "RDV confirmé" %}</span><strong>{% if req.appointment_confirmed %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</strong></div>
 
-                {# Active-reassignment block — only meaningful while the
-                   request is still in the analyst's pipeline. Lets ops
-                   move a task to a colleague in case of delay/absence
-                   with a mandatory reason (audit trail + both members
-                   get notified). #}
+                {# Réassignation active : déplacer une tâche vers un collègue (raison obligatoire, audit). #}
                 {% if can_reassign_active %}
                 <div x-data="{ openReassign: false }" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-light);">
                     <button type="button" class="btn btn-sm btn-outline" @click="openReassign = !openReassign" x-text="openReassign ? '{% trans 'Annuler' %}' : '{% trans 'Réassigner à un autre analyste' %}'"></button>

@@ -380,8 +380,7 @@
         </div>
         {% if req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            {# Always route through report_view so the citation clause gate
-               fires; the view backfills report_token if missing. #}
+            {# Toujours passer par report_view (clause de citation + backfill du token). #}
             <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem; text-decoration:none;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
@@ -472,7 +471,6 @@
 </div>
 {% endif %}
 
-{# Same step-by-step timeline the analyst and the admin_ops see, so the
-   client can follow the progress of their request. #}
+{# Même timeline pas-à-pas que l'analyste, pour le suivi du client. #}
 {% include 'includes/workflow_timeline.html' %}
 {% endblock %}

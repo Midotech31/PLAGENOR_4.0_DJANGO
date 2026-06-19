@@ -1,25 +1,22 @@
 {% load i18n %}
-{# Prominent appointment banner — shown when an RDV has been proposed or
-   confirmed. The requester / client need this front and centre so they
-   don't miss a date that the analyst suggested. ``confirm_url`` and
-   ``alt_url`` are passed in by the includer so the same partial works
-   for both the requester and the client templates. #}
+{# Bandeau de rendez-vous. ``confirm_url`` / ``alt_url`` et ``appointment_pending`` #}
+{# sont fournis par le template incluant (demandeur ou client). #}
 {% if req.appointment_date %}
 <div style="margin:18px 0; padding:18px 22px; border-radius:14px;
-            {% if req.appointment_confirmed %}
-            background:linear-gradient(135deg,#dcfce7,#f0fdf4); border:1px solid #86efac;
-            {% else %}
+            {% if appointment_pending %}
             background:linear-gradient(135deg,#fef3c7,#fffbeb); border:1px solid #fcd34d;
+            {% else %}
+            background:linear-gradient(135deg,#dcfce7,#f0fdf4); border:1px solid #86efac;
             {% endif %}
             display:flex; gap:18px; flex-wrap:wrap; align-items:center;">
     <div style="font-size:2.4rem; line-height:1;">📅</div>
     <div style="flex:1; min-width:220px;">
         <div style="font-size:0.85rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
-                    color:{% if req.appointment_confirmed %}#15803d{% else %}#92400e{% endif %};">
-            {% if req.appointment_confirmed %}
-                {% trans "Rendez-vous confirmé" %}
-            {% else %}
+                    color:{% if appointment_pending %}#92400e{% else %}#15803d{% endif %};">
+            {% if appointment_pending %}
                 {% trans "Rendez-vous proposé — en attente de votre confirmation" %}
+            {% else %}
+                {% trans "Rendez-vous confirmé" %}
             {% endif %}
         </div>
         <div style="font-size:1.4rem; font-weight:700; color:#1e293b; margin-top:4px;">
@@ -31,7 +28,7 @@
         </div>
         {% endif %}
     </div>
-    {% if not req.appointment_confirmed and confirm_url %}
+    {% if appointment_pending and confirm_url %}
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <form method="post" action="{{ confirm_url }}" style="display:inline;">
             {% csrf_token %}

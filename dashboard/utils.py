@@ -40,6 +40,74 @@ def redirect_back(request, fallback_url='dashboard:router'):
         return redirect('/')
 
 
+def confirm_appointment_flow(request, req):
+    """Confirme le rendez-vous proposé, de façon idempotente et robuste.
+
+    Gère tous les cas qui faisaient échouer la confirmation côté demandeur /
+    client :
+      * statut déjà à APPOINTMENT_CONFIRMED (ou plus avancé) mais drapeau
+        ``appointment_confirmed`` resté à False → on synchronise le drapeau ;
+      * date posée mais statut resté à ASSIGNED → on régularise vers
+        APPOINTMENT_PROPOSED avant de confirmer ;
+      * cas normal APPOINTMENT_PROPOSED → confirmation.
+    Pose les messages utilisateur ; ne redirige pas (le caller s'en charge).
+    """
+    import uuid
+    from django.contrib import messages
+    from django.utils import timezone
+    from core.workflow import transition
+    from core.exceptions import InvalidTransitionError, AuthorizationError
+
+    # Statuts où le RDV est déjà acté au niveau du workflow.
+    _CONFIRMED_OR_LATER = {
+        'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED', 'ANALYSIS_STARTED',
+        'ANALYSIS_FINISHED', 'REPORT_UPLOADED', 'ADMIN_REVIEW',
+        'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'COMPLETED', 'CLOSED',
+    }
+
+    def _sync_flag():
+        updated = []
+        if not req.appointment_confirmed:
+            req.appointment_confirmed = True
+            req.appointment_confirmed_at = timezone.now()
+            updated += ['appointment_confirmed', 'appointment_confirmed_at']
+        if not req.report_token:
+            req.report_token = uuid.uuid4()
+            updated.append('report_token')
+        if updated:
+            req.save(update_fields=updated)
+
+    if req.status in _CONFIRMED_OR_LATER:
+        _sync_flag()
+        messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+        return
+
+    if req.status == 'ASSIGNED' and req.appointment_date:
+        try:
+            transition(req, 'APPOINTMENT_PROPOSED',
+                       req.appointment_proposed_by or request.user,
+                       notes='RDV proposé (régularisation)', force=True)
+        except (InvalidTransitionError, AuthorizationError, ValueError):
+            pass
+
+    if req.status != 'APPOINTMENT_PROPOSED':
+        messages.error(
+            request,
+            "Aucun rendez-vous à confirmer pour le moment. "
+            "L'analyste doit d'abord proposer une date."
+        )
+        return
+
+    try:
+        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+        return
+
+    _sync_flag()
+    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
+
+
 def redirect_to_detail(request, req, fallback_url='dashboard:router'):
     """Redirect to the request's role-specific detail page after an action.
 

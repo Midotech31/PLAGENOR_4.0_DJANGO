@@ -1,11 +1,7 @@
 {% load i18n %}
-{# Workflow history timeline — shared between analyst / requester / client.
-   Each row shows the transition (from → to), the date and the note.
-   Keeps the requester/client informed of every step their request went
-   through, with the same level of detail as the analyst sees.
-   ``show_actor`` must be passed as True ONLY for the analyst view: the
-   requester / client must never see the analyst's identity (anonymat),
-   so the actor column is hidden unless explicitly enabled. #}
+{# Timeline d'historique du workflow, partagée analyste / demandeur / client. #}
+{# show_actor=True uniquement pour l'analyste : le demandeur / client ne #}
+{# doit jamais voir l'identité de l'analyste (anonymat). #}
 <div class="card mb-4" style="margin-top:24px;">
     <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
     <div class="card-body">

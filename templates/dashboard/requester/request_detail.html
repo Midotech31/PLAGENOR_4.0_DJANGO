@@ -24,8 +24,7 @@
     </a>
 </div>
 
-{# Prominent appointment banner — surfaces the RDV date front and centre
-   so the requester can't miss what was proposed. #}
+{# Bandeau de rendez-vous, mis en avant pour le demandeur. #}
 {% url 'dashboard:requester_confirm_appointment' req.pk as appt_confirm_url %}
 {% url 'dashboard:requester_alt_date' req.pk as appt_alt_url %}
 {% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
@@ -235,8 +234,7 @@
         </div>
         {% elif req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            {# Always route through report_view so the citation clause gate
-               fires; the view backfills report_token if missing. #}
+            {# Toujours passer par report_view (clause de citation + backfill du token). #}
             <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; padding:12px 20px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
@@ -327,7 +325,6 @@
 </div>
 {% endif %}
 
-{# Same step-by-step timeline the analyst and the admin_ops see, so the
-   requester can follow the progress of their request. #}
+{# Même timeline pas-à-pas que l'analyste, pour le suivi du demandeur. #}
 {% include 'includes/workflow_timeline.html' %}
 {% endblock %}

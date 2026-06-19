@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## RDV confirm + comment-leak fixes (done, verified via live HTTP)
+- Multi-line {# #} comments leak as text in Django -> collapsed ALL to single-line across templates (banner, timeline, requester/client/admin_ops/analyst/report_viewer/guest pages).
+- RDV desync (status APPOINTMENT_CONFIRMED but flag False) caused "Aucun RDV à confirmer" error. Fix: shared dashboard/utils.confirm_appointment_flow() — idempotent: if status confirmed-or-later sync flag+success; ASSIGNED+date reconcile; PROPOSED->CONFIRMED. requester+client views call it.
+- Banner now keyed off view-computed `appointment_pending` (status in PROPOSED/ASSIGNED & not confirmed & date) -> green/no-button when confirmed.
+
 ## Institution naming (done)
 - Removed false "Université d'Oran" / "University of Oran" affiliation everywhere (ESSBO is independent).
 - Replaced with "École Supérieure en Sciences Biologiques d'Oran (ESSBO)" / EN equiv; address -> "ESSBO, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran".
