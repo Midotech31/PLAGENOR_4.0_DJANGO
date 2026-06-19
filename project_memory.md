@@ -3,6 +3,13 @@
 ## Current Objective
 - Awaiting next task.
 
+## Registration vs guest messaging (done)
+- guest_submit.html: value-prop banner + Créer un compte CTA.
+- guest_submit_success.html: convert-to-account block.
+- guest_tracking_code.html email: fixed FR "Want full access?" leftover + enriched benefits.
+- help.html: new "Compte ou invité ?" section + quicknav + enriched FAQ.
+- Note: convert_guest auto-attaches existing guest requests to new account.
+
 ## Verification (handoff items, 2026-06-19)
 - Platform note: gating + 4 fields + admin reprice + sample summary = ALL implemented (verified in code). No change needed.
 - Appointment banner: implemented, date prominent. No change needed.

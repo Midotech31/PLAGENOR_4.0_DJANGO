@@ -9,6 +9,26 @@
     <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
     <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
 
+    {# Pourquoi créer un compte plutôt que soumettre en invité — affiché en
+       amont pour proposer la meilleure expérience sans bloquer l'invité. #}
+    <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+                background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+                border:1px solid #c7d2fe; border-radius:14px; padding:18px 20px; margin-top:20px;">
+        <div style="flex:1; min-width:260px;">
+            <strong style="color:#3730a3;">{% trans "Conseil : créez un compte gratuit" %}</strong>
+            <p class="text-sm" style="margin:6px 0 0; color:#4338ca;">
+                {% trans "En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous pilotez vos demandes de bout en bout :" %}
+            </p>
+            <ul class="text-sm" style="margin:8px 0 0; padding-inline-start:18px; color:#4338ca;">
+                <li>{% trans "Tableau de bord unique pour toutes vos demandes et leur historique complet" %}</li>
+                <li>{% trans "Notifications en temps réel à chaque étape (validation, rendez-vous, rapport prêt)" %}</li>
+                <li>{% trans "Confirmation des rendez-vous et téléchargement sécurisé des rapports" %}</li>
+                <li>{% trans "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant" %}</li>
+            </ul>
+        </div>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="white-space:nowrap;">{% trans "Créer un compte" %}</a>
+    </div>
+
     <div class="card" style="margin-top: 24px;">
         <div class="card-body" style="padding: 32px;">
             <form method="post" action="{% url 'guest_submit' %}">

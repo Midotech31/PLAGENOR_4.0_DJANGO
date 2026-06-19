@@ -50,6 +50,7 @@
 
     <div class="help-quicknav" id="help-quicknav">
         <a href="#getting-started"><span class="qn-ic">{% icon 'rocket' size=22 %}</span>{% trans "Démarrer" context "help" %}</a>
+        <a href="#account-vs-guest"><span class="qn-ic">{% icon 'unlock' size=22 %}</span>{% trans "Compte ou invité" %}</a>
         <a href="#requester"><span class="qn-ic">{% icon 'graduation-cap' size=22 %}</span>{% trans "Demandeur IBTIKAR" %}</a>
         <a href="#client"><span class="qn-ic">{% icon 'building' size=22 %}</span>{% trans "Client GENOCLAB" %}</a>
         <a href="#tracking"><span class="qn-ic">{% icon 'search' size=22 %}</span>{% trans "Suivi & rapports" context "help" %}</a>
@@ -71,6 +72,18 @@
             <li>{% blocktrans %}Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> (étudiant/chercheur, budget annuel encadré) ou <strong>Client GENOCLAB</strong> (prestation commerciale avec devis).{% endblocktrans %}</li>
             <li>{% blocktrans %}Connectez-vous : vous arrivez sur votre tableau de bord personnel.{% endblocktrans %}</li>
             <li>{% blocktrans %}Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission invité » et suivre votre demande avec le code reçu par e-mail.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="account-vs-guest">
+        <h2><span class="h2-ic">{% icon 'unlock' size=20 %}</span>{% trans "Compte ou soumission invité ?" %}</h2>
+        <p class="sub">{% trans "Les deux fonctionnent — mais un compte vous donne le contrôle complet." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}<strong>En invité</strong>, vous soumettez sans créer de compte et recevez un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se fait demande par demande, via ce code uniquement.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un <strong>tableau de bord unique</strong> avec leur <strong>historique complet</strong> et la timeline détaillée de chaque étape.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Vous recevez des <strong>notifications en temps réel</strong> dans l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon sécurisée.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : retrouvez devis, bons de commande, factures et paiements au même endroit.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : vos demandes existantes sont automatiquement rattachées à votre nouveau compte.{% endblocktrans %}</li>
         </ol>
     </div>
 
@@ -137,7 +150,7 @@
         </div>
         <div class="faq-item">
             <button class="faq-q" onclick="helpToggle(this)">{% trans "Puis-je soumettre sans créer de compte ?" context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par e-mail et pouvez convertir votre soumission en compte complet plus tard." %}</p></div>
+            <div class="faq-a"><p>{% trans "Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos demandes sur un tableau de bord, ajoute les notifications en temps réel, la confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez convertir une soumission invité en compte à tout moment, et vos demandes existantes y seront rattachées." %}</p></div>
         </div>
         <div class="faq-item">
             <button class="faq-q" onclick="helpToggle(this)">{% trans "Je ne reçois pas les e-mails de notification ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
