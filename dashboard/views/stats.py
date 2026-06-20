@@ -43,6 +43,7 @@ def _common_filters(request):
 @login_required
 def stats_view(request):
     """Role-aware stats dashboard."""
+    from core.bilan import available_sections, DEFAULT_SECTIONS
     filters = _common_filters(request)
     bundle = stats_for_user(request.user, **filters)
     context = {
@@ -52,23 +53,48 @@ def stats_view(request):
         'gender_choices': User.GENDER_CHOICES,
         'channels': [('IBTIKAR', 'IBTIKAR'), ('GENOCLAB', 'GENOCLAB')],
         'is_admin': request.user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'),
+        'bilan_sections': available_sections(),
+        'bilan_default_sections': DEFAULT_SECTIONS,
     }
     return render(request, 'dashboard/stats.html', context)
 
 
 @login_required
 def stats_export(request):
-    """Download an official statistics document (DOCX, PDF when possible).
+    """Download the configured activity report (bilan).
 
-    Restricted to admin roles — personal scopes don't need a paper export.
+    Restricted to admin roles. Excel (.xlsx) is the default, fully
+    configurable format — the admin picks the dimensions, the period
+    granularity and the filters. DOCX/PDF remains available as a fallback
+    summary via ``format=docx``.
     """
     if request.user.role not in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
         return HttpResponseForbidden()
 
+    filters = _common_filters(request)
+    fmt = (request.GET.get('format') or 'xlsx').lower()
+
+    if fmt in ('xlsx', 'excel'):
+        from core.bilan import build_bilan, DEFAULT_SECTIONS
+        from documents.stats_excel import generate_bilan_excel
+        sections = request.GET.getlist('sections') or list(DEFAULT_SECTIONS)
+        granularity = (request.GET.get('granularity') or 'month').lower()
+        if granularity not in ('month', 'quarter', 'year'):
+            granularity = 'month'
+        bilan = build_bilan(filters, sections=sections, granularity=granularity)
+        xlsx_path = Path(generate_bilan_excel(bilan, filters, request.user))
+        download_name = f"PLAGENOR_Bilan_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        response = FileResponse(
+            open(xlsx_path, 'rb'),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{download_name}"'
+        return response
+
+    # --- DOCX / PDF fallback (summary document) ---
     from documents.generators import generate_stats_report
     from documents.pdf_converter import convert_docx_to_pdf
 
-    filters = _common_filters(request)
     bundle = stats_for_user(request.user, **filters)
     docx_path = Path(generate_stats_report(bundle, filters, request.user))
     suffix = '.docx'

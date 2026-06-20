@@ -3,6 +3,13 @@
 ## Current Objective
 - Awaiting next task.
 
+## Configurable activity report (bilan Excel) — done, verified live
+- core/bilan.py: configurable engine on top of core.stats. 12 dimensions (channel, period[month/quarter/year], service, service_type, category/nature, analysis_mode, analysis_frame, organism_type, status, organization/établissement, wilaya, gender). Each section = count + part(%) + montant IBTIKAR/GENOCLAB/total + totals row. build_bilan(filters, sections, granularity); available_sections(); DEFAULT_SECTIONS.
+- documents/stats_excel.py: openpyxl pro workbook. Synthèse sheet (institution header, période, KPIs) + one styled sheet per dimension (frozen header, autofilter, banded rows, DZD/percent formats, totals).
+- dashboard/views/stats.py stats_export: format=xlsx (default) -> bilan Excel with selected sections+granularity; format=docx -> old summary fallback.
+- templates/dashboard/stats.html: admin "Générer un bilan (Excel)" configurator (granularity + section checkboxes), carries current filters.
+- Verified end-to-end via HTTP: configurator renders, export returns valid xlsx honoring selected dimensions.
+
 ## Branding scrub in DB (done)
 - seed_content uses get_or_create -> never overwrites existing CMS rows, so source-only fixes don't touch already-seeded DBs.
 - Added data migration core/0021_scrub_university_of_oran_branding: replaces in PlatformContent.value: جامعة وهران -> المدرسة العليا للعلوم البيولوجية بوهران; Université d'Oran -> École Supérieure...(ESSBO); University of Oran -> Higher School...(ESSBO). Runs on migrate, cleans every deployment. Verified on data/plagenor.db (now 0 hits all 3 langs).

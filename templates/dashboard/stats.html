@@ -69,11 +69,46 @@
             <button type="submit" class="btn btn-primary">{% trans "Appliquer" %}</button>
         </div>
         <div class="form-group" style="flex:0;">
-            <a href="{% url 'dashboard:stats_export' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">
-                📥 {% trans "Exporter" %}
+            <a href="{% url 'dashboard:stats_export' %}?format=docx&{{ request.GET.urlencode }}" class="btn btn-secondary" title="{% trans 'Document de synthèse Word/PDF' %}">
+                📄 {% trans "Synthèse Word" %}
             </a>
         </div>
     </div>
+</form>
+
+{# === Bilan configurator (Excel) ======================================== #}
+<form method="get" action="{% url 'dashboard:stats_export' %}" class="card" style="padding:16px 18px; margin-bottom:18px; border:1px solid var(--primary-light, #e0e7ff);">
+    {# Reprend les filtres courants pour que le bilan respecte la période/portée sélectionnée. #}
+    {% for key, val in filters.items %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endfor %}
+    <input type="hidden" name="format" value="xlsx">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <span style="font-size:1.6rem;">📊</span>
+        <div>
+            <h3 style="margin:0;">{% trans "Générer un bilan d'activité (Excel)" %}</h3>
+            <p class="text-sm text-muted" style="margin:2px 0 0;">{% trans "Choisissez les dimensions, la granularité de la période et la portée (filtres ci-dessus). Le bilan inclut effectifs, parts (%) et montants par canal." %}</p>
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:0.78rem;">{% trans "Granularité de la période" %}</label>
+        <select name="granularity" class="form-control" style="max-width:240px;">
+            <option value="month">{% trans "Mensuelle" %}</option>
+            <option value="quarter">{% trans "Trimestrielle" %}</option>
+            <option value="year">{% trans "Annuelle" %}</option>
+        </select>
+    </div>
+
+    <label style="font-size:0.78rem; display:block; margin-bottom:6px;">{% trans "Dimensions à inclure" %}</label>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:6px 18px; margin-bottom:14px;">
+        {% for key, title in bilan_sections %}
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:400; cursor:pointer;">
+            <input type="checkbox" name="sections" value="{{ key }}" {% if key in bilan_default_sections %}checked{% endif %}>
+            {{ title }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">⬇ {% trans "Télécharger le bilan Excel" %}</button>
 </form>
 {% endif %}
 
