@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## Branding scrub in DB (done)
+- seed_content uses get_or_create -> never overwrites existing CMS rows, so source-only fixes don't touch already-seeded DBs.
+- Added data migration core/0021_scrub_university_of_oran_branding: replaces in PlatformContent.value: جامعة وهران -> المدرسة العليا للعلوم البيولوجية بوهران; Université d'Oran -> École Supérieure...(ESSBO); University of Oran -> Higher School...(ESSBO). Runs on migrate, cleans every deployment. Verified on data/plagenor.db (now 0 hits all 3 langs).
+- KEPT: generic "الجامعة / المؤسسة" (University/Organization) form label in ar .po.
+
 ## Shared workflow pipeline stepper (done, verified live)
 - Extracted admin_ops "Visual Workflow Tracker" (channel-aware IBTIKAR/GENOCLAB stepper) into templates/includes/workflow_pipeline.html.
 - Included full-width on requester + client request_detail (replaced old cramped pipeline-dot cards); admin_ops now includes the partial too.
