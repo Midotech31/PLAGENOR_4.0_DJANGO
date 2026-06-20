@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## Shared workflow pipeline stepper (done, verified live)
+- Extracted admin_ops "Visual Workflow Tracker" (channel-aware IBTIKAR/GENOCLAB stepper) into templates/includes/workflow_pipeline.html.
+- Included full-width on requester + client request_detail (replaced old cramped pipeline-dot cards); admin_ops now includes the partial too.
+- "Prochaine étape" badges only render when allowed_transitions in context (admin only) -> not leaked to requester/client.
+
 ## RDV confirm + comment-leak fixes (done, verified via live HTTP)
 - Multi-line {# #} comments leak as text in Django -> collapsed ALL to single-line across templates (banner, timeline, requester/client/admin_ops/analyst/report_viewer/guest pages).
 - RDV desync (status APPOINTMENT_CONFIRMED but flag False) caused "Aucun RDV à confirmer" error. Fix: shared dashboard/utils.confirm_appointment_flow() — idempotent: if status confirmed-or-later sync flag+success; ASSIGNED+date reconcile; PROPOSED->CONFIRMED. requester+client views call it.

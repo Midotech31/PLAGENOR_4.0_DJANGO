@@ -29,6 +29,9 @@
 {% url 'dashboard:requester_alt_date' req.pk as appt_alt_url %}
 {% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
 
+{# Suivi visuel du workflow (même style que les opérations). #}
+{% include 'includes/workflow_pipeline.html' %}
+
 <div class="grid-2" style="gap:24px; margin-top:24px;">
     <!-- LEFT COLUMN -->
     <div>
@@ -144,41 +147,6 @@
                 {% else %}
                 <div class="text-muted">{% trans "En attente d'assignation." %}</div>
                 {% endif %}
-            </div>
-        </div>
-
-        <!-- Pipeline visualization -->
-        <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Pipeline" %}</h3></div>
-            <div class="card-body">
-                <div class="pipeline">
-                    {% with s=req.status %}
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Soumis" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s != 'SUBMITTED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'VALIDATION_PEDAGOGIQUE' %}active{% elif s != 'SUBMITTED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Validation" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'PENDING_ACCEPTANCE' %}active{% elif s in 'APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Assigné" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'ANALYSIS_STARTED,ANALYSIS_FINISHED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_STARTED' or s == 'ANALYSIS_FINISHED' %}active{% elif s in 'REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_REQUESTER,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_REQUESTER' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
-                    </div>
-                    {% endwith %}
-                </div>
             </div>
         </div>
 
