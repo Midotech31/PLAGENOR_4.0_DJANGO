@@ -181,7 +181,7 @@ DEFAULTS_AR = {
     'footer_description': "منصة إدارة العمليات العلمية لـ ESSBO. مطورة لإدارة قناتي IBTIKAR وGENOCLAB.",
     'footer_copyright': '© 2026 ESSBO — جميع الحقوق محفوظة',
     'footer_credit': 'PLAGENOR 4.0 — تصميم البروفيسور محمد مرزوق | ESSBO',
-    'footer_contact_1': "ESSBO — جامعة وهران",
+    'footer_contact_1': "ESSBO — المدرسة العليا للعلوم البيولوجية بوهران",
     'footer_contact_2': 'البروفيسور محمد مرزوق',
     'about_title': 'حول PLAGENOR',
     'about_intro': "تستضيف ESSBO منصة PLAGENOR، خدمة بحثية مشتركة ممولة من DGRSDT.",
@@ -200,7 +200,7 @@ DEFAULTS_AR = {
     'contact_title': 'اتصل بنا',
     'contact_subtitle': "لأي استفسار، لا تتردد في الاتصال بنا.",
     'contact_institution': "ESSBO — المدرسة العليا للعلوم البيولوجية بوهران",
-    'contact_address': "جامعة وهران، وهران، الجزائر",
+    'contact_address': "المدرسة العليا للعلوم البيولوجية بوهران، وهران، الجزائر",
     'contact_email': 'genomicsplatform.essbo@gmail.com',
     'contact_phone': '+213 (0) 41 XX XX XX',
     'contact_name': 'البروفيسور محمد مرزوق',
@@ -209,7 +209,7 @@ DEFAULTS_AR = {
     'login_subtitle': 'ادخل إلى مساحتك في PLAGENOR',
     'login_logo_text': 'PLAGENOR 4.0',
     'login_logo_sub': 'منصة إدارة العمليات',
-    'login_footer_1': "ESSBO — جامعة وهران",
+    'login_footer_1': "ESSBO — المدرسة العليا للعلوم البيولوجية بوهران",
     'login_footer_2': 'تصميم البروفيسور محمد مرزوق',
 }
 
