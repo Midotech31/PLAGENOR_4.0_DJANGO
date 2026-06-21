@@ -3,6 +3,12 @@
 ## Current Objective
 - Awaiting next task.
 
+## Modern emoji rendering (Twemoji) — done, verified
+- All emojis render via Twemoji 15.1 (latest colour SVG set) for a consistent modern look on every OS/browser, never the basic native glyphs.
+- CDN twemoji.min.js + static/js/twemoji-init.js loaded in base.html + base_public.html. init parses document.body on load, re-parses on htmx:afterSwap, exposes window.twemojiParse(node).
+- img.emoji CSS in main.css (inline, 1em). report_viewer rating re-parses its dynamic emoji via window.twemojiParse.
+- Dependency: jsdelivr CDN at runtime (falls back to native glyphs if blocked).
+
 ## Rating-after-download nudge (done, verified live)
 - Both requester(IBTIKAR) + client(GENOCLAB) now land on the rating step right after downloading (report_viewer.html).
 - Download via hidden iframe (no navigation) -> revealRating() scrolls + spotlight pulse. IBTIKAR: clause modal first; GENOCLAB: directDownload (no clause).

@@ -472,6 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function apply(v) {
         v = parseInt(v, 10) || 5;
         emojiEl.textContent = EMOJI[v];
+        if (window.twemojiParse) { window.twemojiParse(emojiEl); }
         emojiEl.classList.remove('bounce');
         void emojiEl.offsetWidth;
         emojiEl.classList.add('bounce');
