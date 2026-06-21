@@ -3,6 +3,12 @@
 ## Current Objective
 - Awaiting next task.
 
+## Rating-after-download nudge (done, verified live)
+- Both requester(IBTIKAR) + client(GENOCLAB) now land on the rating step right after downloading (report_viewer.html).
+- Download via hidden iframe (no navigation) -> revealRating() scrolls + spotlight pulse. IBTIKAR: clause modal first; GENOCLAB: directDownload (no clause).
+- Persuasive rating (implicit, never asks for 5★ in words): 5★ pre-selected by default, dynamic emoji (😞→🤩) + reaction text happiest at 5, comment placeholder primes positives. Low scores get empathetic copy.
+- Client GENOCLAB confirmed = direct download, no clause (per user).
+
 ## Report citation-clause gate hardened (done, verified live)
 - Bug: requester could download report without signing clause via direct report_file.url links AND raw /media/reports/<file> URL.
 - Fixed template bypasses: requester index (window.open report_file.url), requester request_detail (report_file.url fallback), client index (report_file.url) -> all route through report_view (gated).

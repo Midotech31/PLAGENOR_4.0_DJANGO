@@ -155,6 +155,40 @@
         border-radius: 8px;
         font-weight: 600;
     }
+    /* Persuasive rating block */
+    .rate-emoji {
+        font-size: 3.2rem;
+        line-height: 1;
+        margin-bottom: 8px;
+        transition: transform 0.2s ease;
+    }
+    .rate-sub {
+        color: var(--neutral-500, #64748b);
+        font-size: 0.9rem;
+        max-width: 420px;
+        margin: 0 auto 18px;
+    }
+    .rate-reaction {
+        min-height: 22px;
+        font-weight: 700;
+        color: #059669;
+        margin-bottom: 14px;
+        transition: color 0.15s ease;
+    }
+    /* Post-download spotlight: draws the eye to the rating, gently insistent. */
+    .star-rating.rating-spotlight {
+        animation: rate-pulse 1.6s ease-in-out 2;
+        border-radius: 16px;
+    }
+    @keyframes rate-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(79,70,229,0); transform: scale(1); }
+        50% { box-shadow: 0 0 0 8px rgba(79,70,229,0.12); transform: scale(1.015); }
+    }
+    .rate-emoji.bounce { animation: rate-bounce 0.4s ease; }
+    @keyframes rate-bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.25); }
+    }
     @media (max-width: 600px) {
         .report-details {
             grid-template-columns: 1fr;
@@ -326,11 +360,45 @@ var downloadUrl = "{% url 'report_download' token=req.report_token %}";
 function showAcknowledgmentModal(event) {
     event.preventDefault();
     if (citationAcknowledged) {
-        // Already acknowledged: go straight to download.
-        window.location.href = downloadUrl;
+        // Already acknowledged: download in-page, then surface the rating.
+        triggerDownload(downloadUrl);
+        revealRating();
         return;
     }
     document.getElementById('acknowledgment-modal').style.display = 'flex';
+}
+
+// GENOCLAB (and any non-gated channel): direct download, no clause, but the
+// rating step is surfaced for everyone right after the file is fetched.
+function directDownload(event) {
+    event.preventDefault();
+    triggerDownload(downloadUrl);
+    revealRating();
+}
+
+// Download via a hidden iframe so the page never navigates away — the user
+// stays on the report page and lands on the rating step.
+function triggerDownload(url) {
+    var ifr = document.getElementById('dl-frame');
+    if (!ifr) {
+        ifr = document.createElement('iframe');
+        ifr.id = 'dl-frame';
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
+    }
+    ifr.src = url;
+}
+
+// Bring the rating into focus right after download — scroll + a gentle
+// spotlight pulse so it can't be missed.
+function revealRating() {
+    var block = document.querySelector('.star-rating');
+    if (!block) { return; }
+    setTimeout(function () {
+        block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        block.classList.add('rating-spotlight');
+        setTimeout(function () { block.classList.remove('rating-spotlight'); }, 3400);
+    }, 400);
 }
 
 // Close without acknowledging — used by the X button and the click-outside
@@ -355,7 +423,9 @@ function acknowledgeAndDownload() {
     }).then(function(r) {
         if (!r.ok) { throw new Error('ack failed'); }
         citationAcknowledged = true;
-        window.location.href = downloadUrl;
+        dismissAcknowledgmentModal();
+        triggerDownload(downloadUrl);
+        revealRating();
     }).catch(function() {
         if (btn) { btn.disabled = false; btn.textContent = '{% trans "Continuer vers l\'évaluation" %}'; }
         alert('{% trans "Erreur réseau, veuillez réessayer." %}');
@@ -382,6 +452,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Rating interaction — emotional feedback that gently anchors on a top
+// rating (default pre-selected) without ever asking for it in words.
+(function () {
+    var EMOJI = {1: '😞', 2: '😕', 3: '🙂', 4: '😊', 5: '🤩'};
+    var REACT = {
+        1: "{% trans 'Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer.' %}",
+        2: "{% trans 'Nous voulons vraiment faire mieux pour vous.' %}",
+        3: "{% trans 'Merci — nous prenons note de vos remarques.' %}",
+        4: "{% trans 'Super, merci beaucoup !' %}",
+        5: "{% trans 'Excellent — un immense merci, cela compte vraiment pour notre équipe !' %}"
+    };
+    var COLOR = {1: '#dc2626', 2: '#ea580c', 3: '#ca8a04', 4: '#16a34a', 5: '#059669'};
+    var emojiEl = document.getElementById('rate-emoji');
+    var reactEl = document.getElementById('rate-reaction');
+    var stars = document.getElementById('stars');
+    if (!stars || !emojiEl || !reactEl) { return; }
+    function apply(v) {
+        v = parseInt(v, 10) || 5;
+        emojiEl.textContent = EMOJI[v];
+        emojiEl.classList.remove('bounce');
+        void emojiEl.offsetWidth;
+        emojiEl.classList.add('bounce');
+        reactEl.textContent = REACT[v];
+        reactEl.style.color = COLOR[v];
+    }
+    stars.addEventListener('change', function (e) {
+        if (e.target.name === 'rating') { apply(e.target.value); }
+    });
+    Array.prototype.forEach.call(stars.querySelectorAll('label'), function (lab) {
+        lab.addEventListener('mouseenter', function () {
+            var id = lab.getAttribute('for');
+            if (id) { apply(id.replace('star', '')); }
+        });
+    });
+    stars.addEventListener('mouseleave', function () {
+        var checked = stars.querySelector('input[name=rating]:checked');
+        apply(checked ? checked.value : 5);
+    });
+    apply(5);
+})();
 
 // Mark the report as delivered via a POST beacon — GET stays a pure read.
 // Idempotent server-side; flips report_delivered only on the first call.
@@ -441,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="report-download">
             {# Toujours la route protégée côté serveur (jamais /media/) ; IBTIKAR ouvre la modale de citation. #}
             <a href="{% url 'report_download' token=req.report_token %}" id="download-btn"
-               {% if req.channel == 'IBTIKAR' %}onclick="showAcknowledgmentModal(event)"{% endif %}>
+               onclick="{% if req.channel == 'IBTIKAR' %}showAcknowledgmentModal(event){% else %}directDownload(event){% endif %}">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
@@ -532,18 +643,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% trans "Merci pour votre évaluation" %}
                 </div>
             {% else %}
-                <h3>{% trans "Évaluez notre service" %}</h3>
-                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form">
+                <div class="rate-emoji" id="rate-emoji">🤩</div>
+                <h3 id="rate-heading">{% trans "Comment s'est passée votre expérience ?" %}</h3>
+                <p class="rate-sub">{% trans "Votre analyse a mobilisé notre équipe et nos plateformes. Votre retour compte énormément pour nous." %}</p>
+                <form method="post" action="{% url 'report_rate' token=req.report_token %}" class="rating-form" id="rating-form">
                     {% csrf_token %}
-                    <div class="stars">
+                    <div class="stars" id="stars">
                         {% for i in "54321" %}
-                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}">
+                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}"{% if i == '5' %} checked{% endif %}>
                         <label for="star{{ i }}">&#9733;</label>
                         {% endfor %}
                     </div>
-                    <textarea name="comment" placeholder="{% trans 'Commentaire (optionnel)...' %}"></textarea>
+                    <div class="rate-reaction" id="rate-reaction">{% trans "Excellent — un immense merci, cela compte vraiment pour notre équipe !" %}</div>
+                    <textarea name="comment" id="rate-comment" placeholder="{% trans 'Ce qui vous a marqué : réactivité de l’équipe, clarté des résultats, qualité de l’accompagnement…' %}"></textarea>
                     <br>
-                    <button type="submit">{% trans "Envoyer" %}</button>
+                    <button type="submit">{% trans "Partager mon avis" %}</button>
                 </form>
             {% endif %}
         </div>
