@@ -37,9 +37,44 @@ class Notification(models.Model):
             models.Index(fields=['created_at']),
         ]
 
+    # Context icon (from core.templatetags.icons set) + accent colour per type,
+    # so the notification panel shows a glanceable visual cue, not just text.
+    _ICON_BY_TYPE = {
+        'INFO': 'message-square',
+        'WORKFLOW': 'flag',
+        'SYSTEM': 'zap',
+        'ASSIGNMENT': 'clipboard',
+        'STATUS_CHANGE': 'send',
+        'APPOINTMENT': 'clock',
+        'REPORT': 'file-text',
+        'PAYMENT': 'dollar-sign',
+        'REWARD': 'award',
+    }
+    _ACCENT_BY_TYPE = {
+        'INFO': '#64748b',
+        'WORKFLOW': '#4f46e5',
+        'SYSTEM': '#0ea5e9',
+        'ASSIGNMENT': '#7c3aed',
+        'STATUS_CHANGE': '#2563eb',
+        'APPOINTMENT': '#d97706',
+        'REPORT': '#059669',
+        'PAYMENT': '#16a34a',
+        'REWARD': '#eab308',
+    }
+
+    @property
+    def icon(self):
+        """Icon name for the context cue (see core.templatetags.icons)."""
+        return self._ICON_BY_TYPE.get(self.notification_type, 'message-square')
+
+    @property
+    def accent(self):
+        """Accent colour for the notification's icon badge."""
+        return self._ACCENT_BY_TYPE.get(self.notification_type, '#64748b')
+
     def __str__(self):
         return f"{self.user} — {self.message[:50]}"
-    
+
     def get_absolute_url(self):
         """Resolve the request-detail URL for the recipient's role.
 

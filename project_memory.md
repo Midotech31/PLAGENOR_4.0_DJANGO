@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## Notification context icons restored (done, verified)
+- Notifications showed text only (no per-type icon). Added Notification.icon + Notification.accent properties (map notification_type -> icon name from core icons + accent colour). No migration (properties only).
+- Rendered an accent-tinted icon badge in topbar dropdown + includes/notification_list.html via {% icon notif.icon %}.
+- Types->icons: INFO message-square, WORKFLOW flag, SYSTEM zap, ASSIGNMENT clipboard, STATUS_CHANGE send, APPOINTMENT clock, REPORT file-text, PAYMENT dollar-sign, REWARD award.
+
 ## Modern emoji rendering (Twemoji) — done, verified
 - All emojis render via Twemoji 15.1 (latest colour SVG set) for a consistent modern look on every OS/browser, never the basic native glyphs.
 - CDN twemoji.min.js + static/js/twemoji-init.js loaded in base.html + base_public.html. init parses document.body on load, re-parses on htmx:afterSwap, exposes window.twemojiParse(node).

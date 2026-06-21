@@ -33,9 +33,14 @@
                 <div class="dropdown-divider"></div>
                 <div style="max-height:300px; overflow-y:auto;">
                     {% for notif in recent_notifications %}
-                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
-                        <div style="font-size:0.85rem; color:#1e293b;">{{ notif.message|truncatechars:60 }}</div>
-                        <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                    <a href="{% url 'notifications:click' notif.pk %}" class="dropdown-item" style="display:flex; align-items:flex-start; gap:10px; padding:10px 16px; text-decoration:none; color:inherit; cursor:pointer; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
+                        <div style="flex-shrink:0; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:{{ notif.accent }}1a; color:{{ notif.accent }};">
+                            {% icon notif.icon size=15 %}
+                        </div>
+                        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                            <div style="font-size:0.85rem; color:#1e293b; {% if not notif.read %}font-weight:600;{% endif %}">{{ notif.message|truncatechars:60 }}</div>
+                            <div class="text-muted" style="font-size:0.7rem;">{{ notif.created_at|timesince }} {% trans "ago" %}</div>
+                        </div>
                     </a>
                     {% empty %}
                     <div class="dropdown-item text-muted" style="display:flex; justify-content:center; padding:16px;">{% trans "Aucune notification" %}</div>
