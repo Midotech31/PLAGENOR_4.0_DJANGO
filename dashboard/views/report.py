@@ -1,5 +1,10 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.db import transaction
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import (
+    FileResponse, Http404, HttpResponse, HttpResponseForbidden, JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -146,3 +151,31 @@ def download_report(request, token):
     # dialog instead of inline preview.
     return FileResponse(req.report_file.open('rb'), as_attachment=True,
                         filename=f"{req.display_id}_rapport.pdf")
+
+
+def protected_report_media(request, path):
+    """Gate direct ``/media/reports/<file>`` access behind the citation clause.
+
+    Report files live under ``MEDIA_ROOT/reports/`` and would otherwise be
+    served raw by the static media handler (and by most web servers in
+    production) — letting an IBTIKAR requester grab the PDF without ever
+    accepting the authorship / citation clause. This view intercepts every
+    request for a report file: IBTIKAR reports are refused until
+    ``citation_acknowledged`` is True; GENOCLAB (commercial) reports and any
+    non-report media fall through to normal serving.
+    """
+    rel = f"reports/{path}"
+    req = Request.objects.filter(report_file=rel).first()
+    if req is not None and req.channel == 'IBTIKAR' and not req.citation_acknowledged:
+        if req.report_token:
+            return redirect('report_view', token=req.report_token)
+        return HttpResponseForbidden(
+            "Veuillez accepter la clause d'auteur et de citation avant de "
+            "télécharger le rapport."
+        )
+    # Acknowledged IBTIKAR, GENOCLAB, or unknown file → serve from MEDIA_ROOT.
+    full = Path(settings.MEDIA_ROOT) / rel
+    if not full.is_file():
+        raise Http404("Fichier introuvable")
+    return FileResponse(open(full, 'rb'))
+

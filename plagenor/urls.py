@@ -21,6 +21,10 @@ urlpatterns = [
     path('report/<uuid:token>/rate/', report_views.rate_report, name='report_rate'),
     path('report/<uuid:token>/acknowledge/', report_views.acknowledge_citation, name='report_acknowledge'),
     path('report/<uuid:token>/download/', report_views.download_report, name='report_download'),
+    # Gate raw report files: /media/reports/<file> goes through the citation
+    # clause. Declared BEFORE the static() media handler so it wins.
+    path('media/reports/<path:path>', report_views.protected_report_media,
+         name='protected_report_media'),
     path('', include('dashboard.urls_public')),
 ]
 

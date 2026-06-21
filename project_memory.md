@@ -3,6 +3,12 @@
 ## Current Objective
 - Awaiting next task.
 
+## Report citation-clause gate hardened (done, verified live)
+- Bug: requester could download report without signing clause via direct report_file.url links AND raw /media/reports/<file> URL.
+- Fixed template bypasses: requester index (window.open report_file.url), requester request_detail (report_file.url fallback), client index (report_file.url) -> all route through report_view (gated).
+- NEW: protected_report_media view + url 'media/reports/<path>' (declared before static()): IBTIKAR + not citation_acknowledged -> redirect to report_view; else serve. Closes raw /media/ bypass.
+- Verified: unsigned IBTIKAR raw media + download = 302 blocked; after acknowledge = 200. GENOCLAB exempt (serves).
+
 ## Configurable activity report (bilan Excel) — done, verified live
 - core/bilan.py: configurable engine on top of core.stats. 12 dimensions (channel, period[month/quarter/year], service, service_type, category/nature, analysis_mode, analysis_frame, organism_type, status, organization/établissement, wilaya, gender). Each section = count + part(%) + montant IBTIKAR/GENOCLAB/total + totals row. build_bilan(filters, sections, granularity); available_sections(); DEFAULT_SECTIONS.
 - documents/stats_excel.py: openpyxl pro workbook. Synthèse sheet (institution header, période, KPIs) + one styled sheet per dimension (frozen header, autofilter, banded rows, DZD/percent formats, totals).

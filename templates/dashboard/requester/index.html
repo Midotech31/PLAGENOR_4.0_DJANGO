@@ -307,7 +307,7 @@
                         {% if req.report_file %}
                         <form method="post" action="{% url 'dashboard:requester_confirm' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary" onclick="window.open('{{ req.report_file.url }}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
+                            <button type="submit" class="btn btn-primary" onclick="window.open('{% url 'report_view' req.report_token %}', '_blank')" style="display:flex; align-items:center; gap:8px; padding:10px 20px;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger le rapport et confirmer la réception" %}
                             </button>
