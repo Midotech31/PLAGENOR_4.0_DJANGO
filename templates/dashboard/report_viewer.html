@@ -622,6 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endif %}{# /IBTIKAR-only citation modal #}
         {% endif %}{# /req.report_file #}
 
+        {% if not is_staff_viewer %}{# l'analyste / l'admin ne notent pas #}
         <div class="star-rating">
             {% if req.service_rating %}
                 <h3>{% trans "Votre évaluation" %}</h3>
@@ -662,6 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </form>
             {% endif %}
         </div>
+        {% endif %}{# /not is_staff_viewer #}
     </div>
 </div>
 {% endblock %}

@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## Staff exempt from report clause + rating (done, verified)
+- Analyst(MEMBER)/admins(SUPER_ADMIN,PLATFORM_ADMIN,FINANCE) download reports from history anytime: no citation clause, no rating.
+- report.py: _is_internal_staff(user) helper. download_report + protected_report_media skip the IBTIKAR gate for staff. report_viewer passes is_staff_viewer -> rating block hidden for staff in report_viewer.html.
+- Verified (test client): requester rating=shown/download=302; analyst+admin rating=hidden/download=200; anon=302.
+
 ## Notification context icons restored (done, verified)
 - Notifications showed text only (no per-type icon). Added Notification.icon + Notification.accent properties (map notification_type -> icon name from core icons + accent colour). No migration (properties only).
 - Rendered an accent-tinted icon badge in topbar dropdown + includes/notification_list.html via {% icon notif.icon %}.

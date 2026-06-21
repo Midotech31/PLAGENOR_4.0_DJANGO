@@ -14,6 +14,18 @@ from core.models import Request
 from dashboard.utils import safe_int
 
 
+# Internal staff (analyst / admins / finance) are never subject to the
+# citation clause nor the rating step — they consult and download reports
+# from the history at any time. The gate only concerns the academic
+# requester. Clients (GENOCLAB) are already exempt by channel.
+_STAFF_ROLES = {'MEMBER', 'SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'}
+
+
+def _is_internal_staff(user) -> bool:
+    return (getattr(user, 'is_authenticated', False)
+            and getattr(user, 'role', '') in _STAFF_ROLES)
+
+
 def report_viewer(request, token):
     """Public report viewing page — accessed via the report_token UUID link.
 
@@ -25,7 +37,10 @@ def report_viewer(request, token):
         req = Request.objects.get(report_token=token)
     except Request.DoesNotExist:
         raise Http404("Report not found")
-    return render(request, 'dashboard/report_viewer.html', {'req': req})
+    return render(request, 'dashboard/report_viewer.html', {
+        'req': req,
+        'is_staff_viewer': _is_internal_staff(request.user),
+    })
 
 
 @require_POST
@@ -128,10 +143,10 @@ def download_report(request, token):
     if not req.report_file:
         raise Http404("No report file")
 
-    # The gate — only IBTIKAR. GENOCLAB requests skip straight to the
-    # FileResponse below. The viewer page renders the modal for IBTIKAR
-    # only; this is the defense-in-depth so nothing else can bypass it.
-    if req.channel == 'IBTIKAR' and not req.citation_acknowledged:
+    # The gate — only IBTIKAR, and only for the requester. Internal staff
+    # (analyst / admins) download from the history without restriction.
+    if (req.channel == 'IBTIKAR' and not req.citation_acknowledged
+            and not _is_internal_staff(request.user)):
         return redirect('report_view', token=token)
 
     # First successful download = mark delivered (idempotent).
@@ -166,7 +181,9 @@ def protected_report_media(request, path):
     """
     rel = f"reports/{path}"
     req = Request.objects.filter(report_file=rel).first()
-    if req is not None and req.channel == 'IBTIKAR' and not req.citation_acknowledged:
+    if (req is not None and req.channel == 'IBTIKAR'
+            and not req.citation_acknowledged
+            and not _is_internal_staff(request.user)):
         if req.report_token:
             return redirect('report_view', token=req.report_token)
         return HttpResponseForbidden(
