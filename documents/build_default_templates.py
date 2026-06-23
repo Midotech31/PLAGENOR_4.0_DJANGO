@@ -81,10 +81,10 @@ def build_platform_note_template() -> Path:
     doc.add_paragraph('Titre : {{TITLE}}')
     doc.add_paragraph('Description : {{DESCRIPTION}}')
     doc.add_paragraph('Paramètres : {{SERVICE_PARAMS}}')
-    doc.add_paragraph('Échantillons : {{SAMPLE_TABLE}}')
+    doc.add_paragraph('Échantillons : {{SAMPLE_SUMMARY}}')
 
     doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
-    doc.add_paragraph('Budget annuel par étudiant : 200 000 DZD')
+    doc.add_paragraph('Budget annuel par étudiant : 200 000 DA')
     doc.add_paragraph('Montant de cette prestation : {{BUDGET_AMOUNT}}')
     doc.add_paragraph('Solde IBTIKAR déclaré : {{IBTIKAR_BALANCE}}')
 

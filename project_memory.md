@@ -3,6 +3,14 @@
 ## Current Objective
 - Awaiting next task.
 
+## Audit documents + corrections (done, verified)
+- Audit des 6 documents générés. GENOCLAB devis/facture = irréprochables (totaux, montant en lettres). Corrections appliquées:
+- Note de plateforme: params en FR (Oui/Non, labels FR via _PARAM_LABELS/_fr_param_value), échantillons = résumé (nouveau {{SAMPLE_SUMMARY}} + _format_sample_summary), multiplicateur défaut ×1, note "réajustement administratif" quand admin override (ne prétend plus une formule fausse).
+- Monnaie uniformisée DA + séparateur espace partout: _money/_money_2dp (default DA + replace ','->' '), stats report, templates (platform_note_template.docx, build_default_templates.py). Plus aucun DZD.
+- Formulaire IBTIKAR: fuite "Renseignements_Inventeurs.docx" retirée du template egtp_imt.docx. Colonnes Code/Conditions se remplissent avec les vraies clés registre (sample_code/culture_conditions) — l'audit initial utilisait de mauvaises clés de test.
+- Fiche réception: liste échantillons en labels FR (détail conservé, {{SAMPLE_TABLE}} inchangé).
+- Reste possible: graphiques dans bilan/stats (aucune figure actuellement).
+
 ## Staff exempt from report clause + rating (done, verified)
 - Analyst(MEMBER)/admins(SUPER_ADMIN,PLATFORM_ADMIN,FINANCE) download reports from history anytime: no citation clause, no rating.
 - report.py: _is_internal_staff(user) helper. download_report + protected_report_media skip the IBTIKAR gate for staff. report_viewer passes is_staff_viewer -> rating block hidden for staff in report_viewer.html.

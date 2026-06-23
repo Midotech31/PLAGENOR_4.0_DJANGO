@@ -65,22 +65,65 @@ IBTIKAR_TEMPLATE_MAP = {
 }
 
 
-def _money(value, currency='DZD', placeholder='N/A'):
+def _money(value, currency='DA', placeholder='N/A'):
     if value is None:
         return placeholder
     try:
-        return f"{value:,.0f} {currency}"
+        return f"{value:,.0f} {currency}".replace(',', ' ')
     except (TypeError, ValueError):
         return placeholder
 
 
-def _money_2dp(value, currency='DZD', placeholder='N/A'):
+def _money_2dp(value, currency='DA', placeholder='N/A'):
     if value is None:
         return placeholder
     try:
-        return f"{value:,.2f} {currency}"
+        return f"{value:,.2f} {currency}".replace(',', ' ')
     except (TypeError, ValueError):
         return placeholder
+
+
+# French labels + values for service_params, so the platform note never
+# shows raw English keys ("Analysis mode") or Python booleans ("True").
+_PARAM_LABELS = {
+    'analysis_mode': "Mode d'analyse",
+    'analysis_frame': "Cadre de l'analyse",
+    'pathogenic': "Caractère pathogène",
+    'qc_level': "Niveau de contrôle qualité",
+    'sequencing_mode': "Mode de séquençage",
+    'drying_level': "Niveau de séchage",
+    'primer_type': "Type d'amorce",
+    'primer_length_category': "Catégorie de longueur d'amorce",
+    'organism_type': "Type de micro-organisme",
+    'sample_origin': "Source d'isolement",
+    'project_title': "Titre du projet",
+    'dna_type': "Type d'ADN",
+    'nucleic_acid_type': "Type d'acides nucléiques",
+    'maldi_target_type': "Type de cible MALDI",
+    'sample_type': "Type d'échantillon",
+    # per-sample table keys
+    'sample_code': "Code",
+    'isolation_date': "Date d'isolement",
+    'culture_medium': "Milieu de culture",
+    'culture_conditions': "Conditions de culture",
+    'remarks': "Remarques",
+}
+_PARAM_VALUES = {
+    'simple': 'Simple', 'duplicate': 'Duplicata', 'duplicata': 'Duplicata',
+    'triplicate': 'Triplicata', 'triplicata': 'Triplicata', 'standard': 'Standard',
+}
+
+
+def _fr_param_label(key) -> str:
+    k = str(key).replace('param_', '')
+    return _PARAM_LABELS.get(k, k.replace('_', ' ').capitalize())
+
+
+def _fr_param_value(value) -> str:
+    if isinstance(value, bool):
+        return 'Oui' if value else 'Non'
+    s = str(value).strip()
+    return _PARAM_VALUES.get(s.lower(), s)
 
 
 def _safe_attr(obj, attr, default=''):
@@ -129,8 +172,20 @@ def _format_sample_table_text(sample_table):
         non_empty = [(k, v) for k, v in sample.items() if v not in (None, '', [])]
         if not non_empty:
             continue
-        lines.append(f"#{i} " + " | ".join(f"{k}: {v}" for k, v in non_empty))
+        lines.append(f"#{i} — " + ", ".join(
+            f"{_fr_param_label(k)} : {_fr_param_value(v)}" for k, v in non_empty))
     return '\n'.join(lines)
+
+
+def _format_sample_summary(sample_table):
+    """One-line sample summary (count + per-type) for the platform note."""
+    if not sample_table or not isinstance(sample_table, list):
+        return ''
+    n = len([s for s in sample_table
+             if isinstance(s, dict) and any(v not in (None, '', [], {}) for v in s.values())])
+    if not n:
+        n = len(sample_table)
+    return _summarise_samples(sample_table, n)
 
 
 def _format_service_params(service_params):
@@ -141,8 +196,7 @@ def _format_service_params(service_params):
     for key, value in service_params.items():
         if value in (None, '', [], {}):
             continue
-        clean = key.replace('param_', '').replace('_', ' ').strip().capitalize()
-        out.append(f"{clean}: {value}")
+        out.append(f"{_fr_param_label(key)} : {_fr_param_value(value)}")
     return '\n'.join(out)
 
 
@@ -284,6 +338,7 @@ def build_field_map(request_obj) -> dict[str, str]:
 
         # ----- Free-text dumps ---------------------------------------------
         'SAMPLE_TABLE': _format_sample_table_text(req.sample_table),
+        'SAMPLE_SUMMARY': _format_sample_summary(req.sample_table),
         'SERVICE_PARAMS': _format_service_params(req.service_params),
     }
     return field_map
@@ -890,6 +945,11 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
         except Exception:
             pass
 
+    # Default to a 1× multiplier when the mode carries none (e.g. a single
+    # 'simple' analysis) so the tariff line never stays at "—".
+    if multiplier is None:
+        multiplier = 1
+
     # Total — prefer admin_validated_price (admin re-pricing post-
     # submission) over the live resolver result, over the saved
     # budget_amount.
@@ -912,13 +972,13 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
         ("Caractère pathogène",
          '—' if pathogenic is None else ('Oui' if pathogenic else 'Non')),
         ("Prix de base unitaire",
-         f"{float(base_price):,.0f} DZD".replace(',', ' ')
+         f"{float(base_price):,.0f} DA".replace(',', ' ')
          if isinstance(base_price, (int, float)) else '—'),
         ("Multiplicateur appliqué",
          f"× {multiplier}" if multiplier not in (None, '—') else '—'),
         ("Nombre d'échantillons", samples_label),
         ("Total",
-         f"{float(total):,.0f} DZD".replace(',', ' ')
+         f"{float(total):,.0f} DA".replace(',', ' ')
          if isinstance(total, (int, float)) else str(total)),
     ]
     if price_source:
@@ -938,8 +998,16 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
             run_v.font.size = Pt(12)
             run_v.bold = True
 
+    # When the admin re-priced the request, the unit figures above are
+    # indicative — the total is the validated amount, not their product.
+    if price_source:
+        note = ("Montant total arrêté par réajustement administratif ; "
+                "les valeurs unitaires ci-dessus sont fournies à titre indicatif.")
+    else:
+        note = ("Formule appliquée : Prix de base × Multiplicateur × "
+                "Nombre d'échantillons.")
     doc.add_paragraph(
-        "Formule appliquée : Prix de base × Multiplicateur × Nombre d'échantillons.",
+        note,
         style='Intense Quote' if 'Intense Quote' in [s.name for s in doc.styles] else None,
     )
 
@@ -987,11 +1055,33 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
     doc.add_paragraph(f"Canal : {field_map['CHANNEL']}")
     doc.add_paragraph(f"Urgence : {field_map['URGENCY']}")
 
-    _render_service_params(doc, request_obj.service_params)
-    _render_sample_table(doc, request_obj.sample_table)
+    # Paramètres en français propre (labels FR, Oui/Non) — pas de clés
+    # anglaises ni de booléens Python dans un document destiné au DGRSDT.
+    params = request_obj.service_params if isinstance(request_obj.service_params, dict) else {}
+    param_items = [(k, v) for k, v in params.items() if v not in (None, '', [], {})]
+    if param_items:
+        doc.add_heading('Paramètres du service', level=3)
+        for k, v in param_items:
+            p = doc.add_paragraph()
+            run_l = p.add_run(f"{_fr_param_label(k)} : ")
+            run_l.bold = True
+            p.add_run(_fr_param_value(v))
+
+    # Résumé des échantillons (effectif + ventilation par type) — pas la
+    # grille détaillée (qui surcharge le devis et colle mal dans le portail).
+    samples = request_obj.sample_table or []
+    n_samples = len([s for s in samples
+                     if isinstance(s, dict) and any(x not in (None, '', [], {}) for x in s.values())])
+    if not n_samples:
+        n_samples = len(samples)
+    if samples:
+        p = doc.add_paragraph()
+        run_l = p.add_run("Échantillons : ")
+        run_l.bold = True
+        p.add_run(_summarise_samples(samples, n_samples))
 
     doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
-    doc.add_paragraph('Budget annuel par étudiant : 200 000 DZD')
+    doc.add_paragraph('Budget annuel par étudiant : 200 000 DA')
     doc.add_paragraph(f"Montant de cette prestation : {field_map['BUDGET_AMOUNT']}")
     if request_obj.declared_ibtikar_balance:
         doc.add_paragraph(f"Solde IBTIKAR déclaré : {field_map['IBTIKAR_BALANCE']}")
@@ -1368,8 +1458,8 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
         ('Taux de complétion', f"{kpis.get('completion_rate', 0)} %"),
         ('Demandes IBTIKAR', kpis.get('ibtikar_count', 0)),
         ('Demandes GENOCLAB', kpis.get('genoclab_count', 0)),
-        ('Revenu virtuel IBTIKAR', f"{kpis.get('ibtikar_virtual_revenue', 0):,.0f} DA"),
-        ('Revenu GENOCLAB', f"{kpis.get('genoclab_revenue', 0):,.0f} DA"),
+        ('Revenu virtuel IBTIKAR', f"{kpis.get('ibtikar_virtual_revenue', 0):,.0f} DA".replace(',', ' ')),
+        ('Revenu GENOCLAB', f"{kpis.get('genoclab_revenue', 0):,.0f} DA".replace(',', ' ')),
     ]
     for i, (label, value) in enumerate(rows):
         kpi_table.rows[i].cells[0].text = label
