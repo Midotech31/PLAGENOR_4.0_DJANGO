@@ -3,6 +3,9 @@
 ## Current Objective
 - Awaiting next task.
 
+## Graphiques bilan Excel (done)
+- documents/stats_excel.py: chart par feuille de dimension (BarChart horizontal des effectifs, top 15) + PieChart "Répartition par canal" sur la Synthèse. Vérifié: 13 chart parts embarqués, classeur valide.
+
 ## Audit documents + corrections (done, verified)
 - Audit des 6 documents générés. GENOCLAB devis/facture = irréprochables (totaux, montant en lettres). Corrections appliquées:
 - Note de plateforme: params en FR (Oui/Non, labels FR via _PARAM_LABELS/_fr_param_value), échantillons = résumé (nouveau {{SAMPLE_SUMMARY}} + _format_sample_summary), multiplicateur défaut ×1, note "réajustement administratif" quand admin override (ne prétend plus une formule fausse).

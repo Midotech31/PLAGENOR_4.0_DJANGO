@@ -22,6 +22,7 @@ from django.conf import settings
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.chart import BarChart, PieChart, Reference
 
 
 # Brand palette
@@ -119,6 +120,25 @@ def _write_section(ws, section, start_row=1):
     widths = [40, 12, 12] + [22] * (ncols - 3)
     for c in range(1, ncols + 1):
         ws.column_dimensions[get_column_letter(c)].width = widths[c - 1] if c - 1 < len(widths) else 18
+
+    # Figure: horizontal bar chart of the counts by category (top 15),
+    # placed to the right of the table.
+    first_data = header_row + 1
+    last_data = totals_row - 1
+    if last_data >= first_data:
+        max_row = min(last_data, first_data + 14)
+        chart = BarChart()
+        chart.type = 'bar'
+        chart.style = 10
+        chart.title = section['title']
+        chart.legend = None
+        data = Reference(ws, min_col=2, max_col=2, min_row=header_row, max_row=max_row)
+        cats = Reference(ws, min_col=1, min_row=first_data, max_row=max_row)
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(cats)
+        chart.height = max(6.0, (max_row - first_data + 1) * 0.55)
+        chart.width = 15
+        ws.add_chart(chart, f"{get_column_letter(ncols + 2)}{header_row}")
     return totals_row
 
 
@@ -179,6 +199,7 @@ def generate_bilan_excel(bilan: dict, filters: dict, actor) -> str:
     r = 6
     ws.cell(row=r, column=1, value="Indicateurs clés").font = _title_font(13)
     r += 1
+    ib_row = gc_row = None
     for label, value, fmt in kpi_rows:
         lc = ws.cell(row=r, column=1, value=label)
         lc.font = Font(bold=True)
@@ -188,9 +209,25 @@ def generate_bilan_excel(bilan: dict, filters: dict, actor) -> str:
         vc.number_format = fmt
         vc.alignment = Alignment(horizontal='right')
         vc.border = _BORDER
+        if label == "Demandes IBTIKAR":
+            ib_row = r
+        elif label == "Demandes GENOCLAB":
+            gc_row = r
         r += 1
     ws.column_dimensions['A'].width = 34
     ws.column_dimensions['B'].width = 22
+
+    # Figure: répartition des demandes par canal (IBTIKAR vs GENOCLAB).
+    if ib_row and gc_row == ib_row + 1 and (k['ibtikar_count'] or k['genoclab_count']):
+        pie = PieChart()
+        pie.title = "Répartition par canal"
+        data = Reference(ws, min_col=2, min_row=ib_row, max_row=gc_row)
+        cats = Reference(ws, min_col=1, min_row=ib_row, max_row=gc_row)
+        pie.add_data(data, titles_from_data=False)
+        pie.set_categories(cats)
+        pie.height = 7
+        pie.width = 11
+        ws.add_chart(pie, "D6")
 
     # ---- One sheet per section -----------------------------------------
     used = {'Synthèse'}
