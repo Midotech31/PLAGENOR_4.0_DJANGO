@@ -3,6 +3,11 @@
 ## Current Objective
 - Awaiting next task.
 
+## Deploiement gratuit (prepare)
+- Stack reco: app sur Render (free web service) + DB Supabase (Postgres gratuit persistant, multi-comptes) + media -> Supabase Storage (TODO, disque Render ephemere).
+- Fichiers ajoutes: render.yaml (blueprint), build.sh (pip+collectstatic+migrate+seed), Procfile (gunicorn), runtime.txt (py3.11.9).
+- settings.py: ALLOWED_HOSTS auto-ajoute RENDER_EXTERNAL_HOSTNAME; CSRF_TRUSTED_ORIGINS depuis env ou derive des hosts https (sinon login/inscription = 403 en prod).
+
 ## Graphiques bilan Excel (done)
 - documents/stats_excel.py: chart par feuille de dimension (BarChart horizontal des effectifs, top 15) + PieChart "Répartition par canal" sur la Synthèse. Vérifié: 13 chart parts embarqués, classeur valide.
 

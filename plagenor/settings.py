@@ -25,6 +25,25 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Hostname injected by the hosting platform (Render / Railway / Koyeb…) so the
+# app works on *.onrender.com & co. without editing ALLOWED_HOSTS by hand.
+_platform_host = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if _platform_host and _platform_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_platform_host)
+
+# CSRF trusted origins — REQUIRED for POST requests (login, registration,
+# every form) over HTTPS on the production domain(s). Without this Django
+# rejects them with 403. Set CSRF_TRUSTED_ORIGINS in the env (comma-separated,
+# scheme included) or it is derived from the non-local hosts as https origins.
+_csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', '').strip()
+if _csrf_env:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{h.strip()}" for h in ALLOWED_HOSTS
+        if h.strip() and h.strip() not in ('localhost', '127.0.0.1')
+    ]
+
 INSTALLED_APPS = [
     # django-modeltranslation must be loaded BEFORE django.contrib.admin so
     # the admin sees its registered translation options at class-definition
