@@ -60,6 +60,7 @@
 <div class="card">
     <div class="card-body">
         {% if templates %}
+        <div class="table-wrapper">
         <table class="table">
             <thead>
                 <tr>
@@ -125,6 +126,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         <div class="empty-state">
             <i class="fa fa-file-word-o"></i>

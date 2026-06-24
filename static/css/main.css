@@ -133,6 +133,14 @@ body {
 a { color: var(--primary); text-decoration: none; transition: color var(--transition); }
 a:hover { color: var(--primary-dark); }
 img { max-width: 100%; display: block; }
+
+/* Safety net against page-wide horizontal scroll on phones: a single
+   oversized child (a long unbroken string, a wide inline-styled row)
+   must not drag the whole document sideways. `clip` (unlike `hidden`)
+   does NOT create a scroll container, so the sticky topbar keeps working. */
+html, body { overflow-x: clip; max-width: 100%; }
+/* Long words / URLs / IDs wrap instead of forcing the viewport wider. */
+p, h1, h2, h3, h4, td, th, li, span, div { overflow-wrap: break-word; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
 
@@ -1083,6 +1091,8 @@ textarea.form-control {
    ============================================================ */
 .table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;   /* momentum scroll on iOS */
+    overscroll-behavior-x: contain;      /* don't bounce the page when the table reaches its edge */
     border-radius: var(--radius);
     border: 1px solid var(--border-light);
     background: var(--surface);
@@ -1828,6 +1838,10 @@ a:has(.service-card):hover .service-card,
     }
     .main-content {
         margin-inline-start: 0;
+        /* On phones the sidebar is an overlay, so the content must use the
+           FULL viewport. The desktop cap (100vw - sidebar) would otherwise
+           squeeze the page into ~500px with a dead gap on the side. */
+        max-width: 100%;
     }
     .topbar-hamburger {
         display: flex;
@@ -1836,11 +1850,42 @@ a:has(.service-card):hover .service-card,
         padding: 20px 16px;
     }
     .topbar {
-        padding: 0 16px;
+        padding: 0 14px;
+        gap: 8px;
     }
-    .topbar-search input {
-        width: 160px;
+    .topbar-right { gap: 6px; }
+    /* Let the title shrink/ellipsis instead of shoving the actions off-screen. */
+    .topbar-left { min-width: 0; flex: 1; }
+    .topbar-title {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
+    /* Search + the standalone logout button are redundant on mobile
+       (logout also lives in the profile dropdown) — hide to save space. */
+    .topbar-search { display: none; }
+    .topbar-logout { display: none; }
+    /* Keep dropdowns inside the viewport. */
+    .notif-dropdown,
+    .profile-dropdown { width: min(320px, calc(100vw - 24px)); }
+
+    /* No-zoom inputs: iOS Safari zooms when a focused field is < 16px.
+       Bump form controls to 16px on touch widths. */
+    .form-control,
+    input, select, textarea { font-size: 16px; }
+
+    /* Comfortable tap targets (WCAG 2.5.5 / ~44px) for primary controls. */
+    .btn, .sidebar-nav a, .dropdown-item, .topbar-bell,
+    .topbar-hamburger, .topbar-avatar-btn { min-height: 44px; }
+
+    /* Action rows wrap instead of overflowing. */
+    .card-header, .page-header, .btn-group, .form-actions, .filter-bar {
+        flex-wrap: wrap;
+    }
+    /* Full-width primary buttons read better on narrow screens. */
+    .form-actions .btn, .card-body > form > .btn-primary { width: 100%; }
+
     .kpi-grid {
         grid-template-columns: 1fr 1fr;
         gap: 12px;
@@ -1855,11 +1900,25 @@ a:has(.service-card):hover .service-card,
     .channel-cards { grid-template-columns: 1fr; margin: -28px 16px 32px; }
     .services-grid { grid-template-columns: 1fr 1fr; padding: 0 16px; }
     .footer-grid { grid-template-columns: 1fr; gap: 32px; }
-    .public-nav { padding: 0 16px; }
-    .public-nav .nav-links { gap: 16px; }
+    .public-nav { padding: 0 12px; gap: 10px; }
+    .nav-brand { flex-shrink: 0; }
+    /* Keep every link reachable: scroll the bar horizontally instead of
+       hiding items behind a menu the user can't open. */
+    .public-nav .nav-links {
+        gap: 16px;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;            /* Firefox */
+        flex-wrap: nowrap;
+    }
+    .public-nav .nav-links::-webkit-scrollbar { display: none; }
+    .public-nav .nav-links a { white-space: nowrap; flex-shrink: 0; }
     .auth-card { padding: 28px; }
     .role-selector { grid-template-columns: 1fr; }
-    .tab-list { overflow-x: auto; }
+    .tab-list { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Modal dialogs: never wider than the screen. */
+    .modal, .modal-content { width: auto; max-width: calc(100vw - 24px); }
 }
 
 @media (max-width: 480px) {
@@ -1870,7 +1929,9 @@ a:has(.service-card):hover .service-card,
     .hero-logos img { height: 40px; }
     .hero h1 { font-size: 1.6rem; }
     .track-form { flex-direction: column; }
-    .public-nav .nav-links a:not(.btn) { display: none; }
+    /* Keep the brand + primary CTA prominent; secondary links stay
+       reachable via the horizontal scroll set up at the 768 breakpoint. */
+    .nav-brand { font-size: 1rem; }
     .auth-card { padding: 24px 20px; }
 }
 

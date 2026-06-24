@@ -4,6 +4,16 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Responsive / smartphone (done, verified check+compile)
+- Bug majeur corrige: .main-content gardait max-width:calc(100vw - sidebar) a <=768px -> contenu ecrase ~500px avec vide lateral. Fix: max-width:100% en mobile.
+- Garde anti-scroll horizontal global: html,body overflow-x:clip (pas hidden -> sticky topbar OK) + overflow-wrap:break-word.
+- iOS no-zoom: inputs/.form-control = 16px a <=768px.
+- Topbar mobile: search + bouton logout redondant masques, titre ellipsis, dropdowns largeur min(320px, 100vw-24px), tap targets 44px.
+- Tables: .table-wrapper momentum scroll + overscroll contain. 3 tables larges non-wrappees corrigees (service_form_fields sample table overflow:auto, documents/template_list + template_detail wrap .table-wrapper).
+- Public nav: liens ne sont plus caches a 480px -> scroll horizontal (tous accessibles).
+- Header/btn rows flex-wrap; boutons form pleine largeur mobile; modals max-width:100vw-24px.
+- Cache-buster CSS v5->v6 dans base.html + base_public.html.
+
 ## Création admin sans shell (done, pushed 7fccc64)
 - Render free tier = pas de Shell (upgrade payant). Donc createsuperuser interactif impossible.
 - Ajout core/management/commands/ensure_superuser.py: cree un SUPER_ADMIN depuis DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL. Idempotent (no-op si vars absentes; si user existe -> garantit is_superuser/is_staff/role=SUPER_ADMIN; mot de passe reecrit seulement avec --update-password).
