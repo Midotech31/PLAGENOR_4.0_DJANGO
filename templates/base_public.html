@@ -14,7 +14,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'icons/favicon.svg' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=7">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="auth-page">
@@ -30,7 +30,8 @@
             {% if user.is_authenticated %}
             <a href="{% url 'dashboard:router' %}" class="btn btn-primary btn-sm">{% trans "Tableau de bord" %}</a>
             {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-sm" style="background:#4F46E5; color:#fff; font-weight:600; padding:8px 20px; border-radius:8px;">{% trans "Connexion" %}</a>
+            <a href="{% url 'accounts:login' %}" class="nav-cta nav-cta-ghost">{% trans "Connexion" %}</a>
+            <a href="{% url 'accounts:register' %}" class="nav-cta nav-cta-solid">{% trans "Inscription" %}</a>
             {% endif %}
             <form id="public-lang-form" style="display:none;"></form>
             {% include 'includes/language_switcher.html' with style='compact' %}
