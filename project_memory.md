@@ -1,7 +1,14 @@
 # PLAGENOR 4.0 — Project Memory
 
 ## Current Objective
-- Awaiting next task.
+- Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
+- RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
+
+## Création admin sans shell (done, pushed 7fccc64)
+- Render free tier = pas de Shell (upgrade payant). Donc createsuperuser interactif impossible.
+- Ajout core/management/commands/ensure_superuser.py: cree un SUPER_ADMIN depuis DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL. Idempotent (no-op si vars absentes; si user existe -> garantit is_superuser/is_staff/role=SUPER_ADMIN; mot de passe reecrit seulement avec --update-password).
+- build.sh appelle `python manage.py ensure_superuser || true` apres les seeds.
+- Table users (db_table='users'). Alternative SQL direct possible via Supabase SQL Editor si besoin immediat (INSERT avec make_password hash).
 
 ## Deploiement gratuit (prepare)
 - Stack reco: app sur Render (free web service) + DB Supabase (Postgres gratuit persistant, multi-comptes) + media -> Supabase Storage (TODO, disque Render ephemere).
