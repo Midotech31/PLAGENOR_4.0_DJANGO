@@ -1350,8 +1350,10 @@ tbody tr:hover { background: var(--primary-50); }
 .public-nav .nav-links .btn { margin-inline-start: 8px; }
 
 /* Auth CTAs in the public nav — Connexion (ghost) + Inscription (solid),
-   both always visible at the top. */
-.nav-cta {
+   both always visible at the top. Selectors are scoped through
+   `.public-nav .nav-links a` so they out-rank that rule's grey link
+   colour (otherwise the solid button would render grey-on-indigo). */
+.public-nav .nav-links a.nav-cta {
     display: inline-flex;
     align-items: center;
     font-size: 0.85rem;
@@ -1362,22 +1364,22 @@ tbody tr:hover { background: var(--primary-50); }
     white-space: nowrap;
     transition: all var(--transition);
 }
-.nav-cta-ghost {
+.public-nav .nav-links a.nav-cta-ghost {
     color: var(--primary);
     border: 1.5px solid var(--primary-300, #c7d2fe);
     background: transparent;
 }
-.nav-cta-ghost:hover {
+.public-nav .nav-links a.nav-cta-ghost:hover {
     background: var(--primary-50, #eef2ff);
     color: var(--primary-dark);
 }
-.nav-cta-solid {
+.public-nav .nav-links a.nav-cta-solid {
     color: #fff;
     background: var(--primary, #4F46E5);
     border: 1.5px solid var(--primary, #4F46E5);
     box-shadow: 0 2px 6px rgba(79,70,229,0.25);
 }
-.nav-cta-solid:hover {
+.public-nav .nav-links a.nav-cta-solid:hover {
     background: var(--primary-dark, #4338ca);
     color: #fff;
     transform: translateY(-1px);
