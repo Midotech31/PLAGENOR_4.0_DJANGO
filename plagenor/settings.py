@@ -150,10 +150,52 @@ AUTH_PASSWORD_VALIDATORS = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- File storage ---------------------------------------------------------
+# Static files are always served by WhiteNoise. Uploaded media goes to
+# Supabase Storage (S3-compatible) when the SUPABASE_S3_* env vars are set —
+# Render's free disk is ephemeral, so without this generated reports and
+# uploads vanish on every restart/redeploy. Locally (no env vars) it falls
+# back to the filesystem under MEDIA_ROOT. Either way files are served
+# *through Django* (see plagenor.storages.SupabaseMediaStorage and the
+# media URL routes) so the IBTIKAR citation gate keeps working and the
+# bucket can stay private.
+_STATICFILES_STORAGE = {
+    'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+}
+
+USE_SUPABASE_STORAGE = bool(
+    os.getenv('SUPABASE_S3_ENDPOINT')
+    and os.getenv('SUPABASE_S3_ACCESS_KEY_ID')
+    and os.getenv('SUPABASE_S3_SECRET_ACCESS_KEY')
+)
+
+if USE_SUPABASE_STORAGE:
+    STORAGES = {
+        'default': {'BACKEND': 'plagenor.storages.SupabaseMediaStorage'},
+        'staticfiles': _STATICFILES_STORAGE,
+    }
+    # Supabase Storage S3 endpoint, e.g.
+    # https://<project-ref>.supabase.co/storage/v1/s3
+    AWS_S3_ENDPOINT_URL = os.getenv('SUPABASE_S3_ENDPOINT')
+    AWS_ACCESS_KEY_ID = os.getenv('SUPABASE_S3_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('SUPABASE_S3_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('SUPABASE_S3_BUCKET', 'media')
+    # Supabase exposes a single region per project; it must be supplied.
+    AWS_S3_REGION_NAME = os.getenv('SUPABASE_S3_REGION', 'eu-central-1')
+    # Supabase only supports path-style addressing.
+    AWS_S3_ADDRESSING_STYLE = 'path'
+    AWS_DEFAULT_ACL = None          # bucket is private; no per-object ACLs
+    AWS_QUERYSTRING_AUTH = False    # we never hand out S3 URLs anyway
+    AWS_S3_FILE_OVERWRITE = False   # keep distinct uploads from colliding
+else:
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': _STATICFILES_STORAGE,
+    }
 
 LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'fr')
 LANGUAGES = [

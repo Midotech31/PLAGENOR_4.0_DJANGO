@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from django.views.i18n import JavaScriptCatalog
 
 from dashboard.views import report as report_views
@@ -22,11 +20,12 @@ urlpatterns = [
     path('report/<uuid:token>/acknowledge/', report_views.acknowledge_citation, name='report_acknowledge'),
     path('report/<uuid:token>/download/', report_views.download_report, name='report_download'),
     # Gate raw report files: /media/reports/<file> goes through the citation
-    # clause. Declared BEFORE the static() media handler so it wins.
+    # clause. Declared BEFORE the generic media handler so it wins.
     path('media/reports/<path:path>', report_views.protected_report_media,
          name='protected_report_media'),
+    # All other uploaded media is streamed from the storage backend (Supabase
+    # Storage in prod, local FS in dev). MEDIA_ROOT is not web-served in
+    # production and the bucket is private, so Django streams the bytes.
+    path('media/<path:path>', report_views.serve_media, name='serve_media'),
     path('', include('dashboard.urls_public')),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

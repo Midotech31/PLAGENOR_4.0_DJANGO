@@ -1,6 +1,4 @@
-from pathlib import Path
-
-from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.http import (
     FileResponse, Http404, HttpResponse, HttpResponseForbidden, JsonResponse,
@@ -190,9 +188,26 @@ def protected_report_media(request, path):
             "Veuillez accepter la clause d'auteur et de citation avant de "
             "télécharger le rapport."
         )
-    # Acknowledged IBTIKAR, GENOCLAB, or unknown file → serve from MEDIA_ROOT.
-    full = Path(settings.MEDIA_ROOT) / rel
-    if not full.is_file():
+    # Acknowledged IBTIKAR, GENOCLAB, or unknown file → stream from the
+    # configured storage backend (Supabase Storage in prod, local FS in dev).
+    if not default_storage.exists(rel):
         raise Http404("Fichier introuvable")
-    return FileResponse(open(full, 'rb'))
+    return FileResponse(default_storage.open(rel, 'rb'))
+
+
+def serve_media(request, path):
+    """Stream ordinary uploaded media through the configured storage backend.
+
+    Report PDFs are NOT served here — they have their own gated route
+    (``protected_report_media``), declared before this catch-all so it wins.
+    The ``reports/`` guard below is defensive in case routing order ever
+    changes. This view exists because media lives on Supabase Storage (or the
+    local disk in dev) and must be streamed by Django: ``MEDIA_ROOT`` is not
+    web-served in production, and the bucket is private.
+    """
+    if path.startswith('reports/'):
+        raise Http404("Fichier introuvable")
+    if not default_storage.exists(path):
+        raise Http404("Fichier introuvable")
+    return FileResponse(default_storage.open(path, 'rb'))
 

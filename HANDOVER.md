@@ -164,11 +164,22 @@ All shipped & pushed. See `project_memory.md` for the detailed per-feature log.
 - (Earlier finding) `.env.supabase` had been tracked with a real cred — verify
   it's gitignored / history handled.
 
+**Done — media persistence (Supabase Storage):**
+- Uploaded media (report PDFs, order/payment files, avatars, gift/service
+  images, DOCX templates) now persists on **Supabase Storage** (S3-compatible)
+  instead of Render's ephemeral disk. Falls back to the local filesystem in dev
+  when the `SUPABASE_S3_*` env vars are absent. See §9 for the one-time setup.
+- Files are still served **through Django** (URLs stay `/media/<name>`), so the
+  IBTIKAR citation gate keeps working and the bucket stays private. This also
+  fixed a latent prod bug: non-report media (avatars, order/receipt files) was
+  never web-served in production (the old `static()` media handler only ran
+  under `DEBUG`).
+
 **Offered, not started (optional improvements):**
-- **Media persistence**: Render disk is ephemeral → move uploads/reports to
-  **Supabase Storage** (S3-compatible) so generated reports survive restarts.
 - **PDF generation**: a Dockerfile with **LibreOffice** headless if server-side
   DOCX→PDF is needed in prod.
+- On-demand generated docs (devis/facture/note/bilan) still write to the local
+  ephemeral disk and are streamed once — fine, they are regenerated on demand.
 
 ---
 
@@ -199,9 +210,36 @@ All shipped & pushed. See `project_memory.md` for the detailed per-feature log.
   near the `@media` queries ~line 1790+; nav CTAs near `.public-nav`).
 - Public shell: `templates/base_public.html` (nav with Sign in/Sign up).
   App shell: `templates/base.html` (sidebar + topbar).
-- Reports gating: `dashboard/views/report.py` (`_is_internal_staff`,
-  `protected_report_media`).
+- Reports gating + media serving: `dashboard/views/report.py`
+  (`_is_internal_staff`, `protected_report_media`, `serve_media`).
+- Media storage backend: `plagenor/storages.py` (`SupabaseMediaStorage`);
+  config in `plagenor/settings.py` (`STORAGES` / `USE_SUPABASE_STORAGE`).
 - Appointment flow: `dashboard/utils.py` (`confirm_appointment_flow`).
 - Bilan: `core/bilan.py` + `documents/stats_excel.py`.
 - Generators: `documents/generators.py`.
 - Per-feature changelog: `project_memory.md`.
+
+---
+
+## 9. Supabase Storage setup (one-time, for persistent media)
+
+Without this, `SUPABASE_S3_*` is unset → the app uses the local disk (fine for
+dev, ephemeral on Render so reports/uploads vanish on restart).
+
+1. **Supabase dashboard → Storage → New bucket**: name it `media`, keep it
+   **Private** (do NOT make it public — the citation gate relies on Django
+   serving the files, and the bucket should not be world-readable).
+2. **Project Settings → Storage → S3 connection**: copy the **endpoint URL**
+   (`https://<project-ref>.supabase.co/storage/v1/s3`) and **region**, then
+   **generate an S3 access key** (gives an access key id + secret).
+3. **On Render → Environment**, add:
+   - `SUPABASE_S3_ENDPOINT` = the endpoint URL above
+   - `SUPABASE_S3_REGION` = the region (e.g. `eu-central-1`)
+   - `SUPABASE_S3_ACCESS_KEY_ID` = the generated key id
+   - `SUPABASE_S3_SECRET_ACCESS_KEY` = the generated secret
+   - `SUPABASE_S3_BUCKET` = `media` (optional; defaults to `media`)
+4. Redeploy. New uploads land in Supabase Storage. **Existing files already on
+   the ephemeral disk are not migrated** — re-upload any that must persist
+   (reports are regenerated/re-uploaded by analysts anyway).
+
+Deps added: `django-storages==1.14.4` + `boto3` (in `requirements.txt`).

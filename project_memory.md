@@ -4,6 +4,16 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Media persistence -> Supabase Storage (done, verified)
+- Probleme: disque Render free = ephemere -> rapports/uploads (report_file, order_file, payment_receipt_file, avatars, gift/service images, templates DOCX) perdus a chaque restart/redeploy.
+- Fix: STORAGES['default'] = plagenor/storages.SupabaseMediaStorage (S3-compatible, django-storages + boto3) quand SUPABASE_S3_ENDPOINT/ACCESS_KEY_ID/SECRET_ACCESS_KEY presents; sinon FileSystemStorage (dev). Bucket prive.
+- SupabaseMediaStorage.url() force le retour vers /media/<name> -> tous les fichiers restent servis PAR Django (jamais d'URL S3 directe/signee exposee). Garde la clause de citation IBTIKAR effective + bucket prive.
+- report.py: protected_report_media sert via default_storage.open (au lieu de open(MEDIA_ROOT/...)); nouvelle vue serve_media pour le reste du media (avatars/orders/receipts/images/templates) -> route media/<path> apres media/reports/<path>.
+- BONUS: corrige un bug latent prod -> l'ancien static(MEDIA_URL) ne tournait que sous DEBUG, donc le media non-rapport ne se servait pas en prod. serve_media le sert maintenant dans tous les envs.
+- Docs generes a la demande (devis/facture/note/bilan) restent en ecriture disque locale + stream immediat (regenerables) -> hors scope, OK.
+- Env vars (Render): SUPABASE_S3_ENDPOINT, SUPABASE_S3_REGION, SUPABASE_S3_ACCESS_KEY_ID, SUPABASE_S3_SECRET_ACCESS_KEY, SUPABASE_S3_BUCKET(=media). Voir HANDOVER §9.
+- Verifie: manage.py check (mode FS + mode Supabase) OK; backend Supabase instancie (bucket/endpoint/path-style/prive) + url()->/media/; routing reports->gate, autres->serve_media; serve_media 200/404; clause IBTIKAR non-acquittee=403, acquittee=200 (octets corrects streames depuis le storage).
+
 ## Responsive / smartphone (done, verified check+compile)
 - Bug majeur corrige: .main-content gardait max-width:calc(100vw - sidebar) a <=768px -> contenu ecrase ~500px avec vide lateral. Fix: max-width:100% en mobile.
 - Garde anti-scroll horizontal global: html,body overflow-x:clip (pas hidden -> sticky topbar OK) + overflow-wrap:break-word.
