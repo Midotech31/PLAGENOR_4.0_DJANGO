@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.contrib import messages
 from datetime import datetime
 
+from accounts.countries import COUNTRY_CHOICES
 from core.models import Service, Request, RequestHistory
 from core.sequences import next_display_id
 from dashboard.utils import safe_float
@@ -112,6 +113,9 @@ def guest_submit(request):
         guest_email = request.POST.get('guest_email', '').strip()
         guest_phone = request.POST.get('guest_phone', '').strip()
         organization = request.POST.get('organization', '').strip()
+        organization_type = request.POST.get('organization_type', '').strip()
+        organization_type_other = request.POST.get('organization_type_other', '').strip()
+        country = request.POST.get('country', '').strip()
         channel = request.POST.get('channel', 'GENOCLAB').strip()
         if channel not in ('IBTIKAR', 'GENOCLAB'):
             channel = 'GENOCLAB'
@@ -124,6 +128,7 @@ def guest_submit(request):
             messages.error(request, "Veuillez remplir tous les champs obligatoires.")
             return render(request, 'pages/guest_submit.html', {
                 'services': services_qs,
+                'country_choices': COUNTRY_CHOICES,
             })
 
         service = Service.objects.filter(pk=service_id, active=True).first()
@@ -131,6 +136,7 @@ def guest_submit(request):
             messages.error(request, "Service invalide.")
             return render(request, 'pages/guest_submit.html', {
                 'services': services_qs,
+                'country_choices': COUNTRY_CHOICES,
             })
 
         # Re-check the service is actually available on the chosen channel
@@ -140,6 +146,7 @@ def guest_submit(request):
             messages.error(request, "Ce service n'est pas disponible sur le canal choisi.")
             return render(request, 'pages/guest_submit.html', {
                 'services': services_qs,
+                'country_choices': COUNTRY_CHOICES,
             })
 
         # Generate display_id atomically (race-free) — guest GCL shares the
@@ -187,6 +194,12 @@ def guest_submit(request):
         requester_data = {}
         if organization:
             requester_data['organization'] = organization
+        if organization_type:
+            requester_data['organization_type'] = organization_type
+        if organization_type == 'autre' and organization_type_other:
+            requester_data['organization_type_other'] = organization_type_other
+        if country:
+            requester_data['country'] = country
 
         # IBTIKAR-specific fields
         ibtikar_id = ''
@@ -252,6 +265,7 @@ def guest_submit(request):
 
     return render(request, 'pages/guest_submit.html', {
         'services': services_qs,
+        'country_choices': COUNTRY_CHOICES,
     })
 
 

@@ -50,6 +50,29 @@
                     <label>{% trans "Organisation" %}</label>
                     <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}">
                 </div>
+                <div class="form-group">
+                    <label>{% trans "Type d'organisation" %}</label>
+                    <select name="organization_type" id="id_guest_org_type" class="form-control">
+                        <option value="">— {% trans "Sélectionner" %} —</option>
+                        <option value="academique">{% trans "Académique" %}</option>
+                        <option value="entreprise">{% trans "Entreprise" %}</option>
+                        <option value="laboratoire">{% trans "Laboratoire" %}</option>
+                        <option value="particulier">{% trans "Particulier" %}</option>
+                        <option value="autre">{% trans "Autre" %}</option>
+                    </select>
+                </div>
+                <div class="form-group" id="guest-org-other-group" style="display:none;">
+                    <label>{% trans "Préciser (autre)" %}</label>
+                    <input type="text" name="organization_type_other" class="form-control" placeholder="{% trans 'Précisez le type d\'organisation' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Pays" %}</label>
+                    <select name="country" class="form-control">
+                        {% for code, label in country_choices %}
+                        <option value="{{ code }}" {% if code == 'DZ' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
                 <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
                 <div class="form-group">
@@ -115,6 +138,18 @@
     var channelSelect = document.getElementById('id_channel');
     var ibtFields = document.getElementById('ibtikar-guest-fields');
     var ibtIdInput = document.getElementById('guest_ibtikar_id');
+
+    // Reveal the "other organisation type" box only when "Autre" is chosen.
+    var guestOrgType = document.getElementById('id_guest_org_type');
+    var guestOrgOther = document.getElementById('guest-org-other-group');
+    function toggleGuestOrgOther() {
+        if (guestOrgOther) {
+            guestOrgOther.style.display =
+                (guestOrgType && guestOrgType.value === 'autre') ? '' : 'none';
+        }
+    }
+    if (guestOrgType) { guestOrgType.addEventListener('change', toggleGuestOrgOther); }
+    toggleGuestOrgOther();
 
     var serviceSelect = document.getElementById('id_service');
 

@@ -74,6 +74,33 @@
                 {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_organization_type">{% trans "Type d'organisation" %} *</label>
+                    <select name="organization_type" id="id_organization_type" class="form-control" required>
+                        {% for code, label in form.fields.organization_type.choices %}
+                        <option value="{{ code }}" {% if form.organization_type.value == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.organization_type.errors %}<div class="form-error">{{ form.organization_type.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_country">{% trans "Pays" %} *</label>
+                    <select name="country" id="id_country" class="form-control" required>
+                        {% for code, label in form.fields.country.choices %}
+                        <option value="{{ code }}" {% if form.country.value == code or form.country.value == None and code == 'DZ' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.country.errors %}<div class="form-error">{{ form.country.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group" id="org-type-other-group" style="display:none;">
+                <label for="id_organization_type_other">{% trans "Préciser (autre)" %}</label>
+                <input type="text" name="organization_type_other" id="id_organization_type_other" class="form-control" value="{{ form.organization_type_other.value|default:'' }}" placeholder="{% trans 'Précisez le type d\'organisation' %}">
+                {% if form.organization_type_other.errors %}<div class="form-error">{{ form.organization_type_other.errors.0 }}</div>{% endif %}
+            </div>
+
             <div id="academic-fields" style="display:none;">
                 <div class="form-group">
                     <label for="id_student_level">{% trans "Niveau" %}</label>
@@ -197,6 +224,18 @@
         });
     });
     toggleAcademic();
+
+    // Reveal the free-text box only when organisation type = "Autre".
+    var orgType = document.getElementById('id_organization_type');
+    var orgOtherGroup = document.getElementById('org-type-other-group');
+    var orgOther = document.getElementById('id_organization_type_other');
+    function toggleOrgOther() {
+        var isOther = orgType && orgType.value === 'autre';
+        if (orgOtherGroup) { orgOtherGroup.style.display = isOther ? '' : 'none'; }
+        if (orgOther) { orgOther.required = isOther; }
+    }
+    if (orgType) { orgType.addEventListener('change', toggleOrgOther); }
+    toggleOrgOther();
 
     // Validate ibtikar_id on form submit
     document.querySelector('form').addEventListener('submit', function(e) {

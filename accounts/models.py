@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .countries import COUNTRY_CHOICES
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
@@ -38,6 +40,16 @@ class User(AbstractUser):
         ('F', 'Femme'),
     ]
 
+    # Organisation type — GENOCLAB (commercial) clients are mostly companies
+    # and private labs, not just academics. "Autre" reveals a free-text box.
+    ORGANIZATION_TYPE_CHOICES = [
+        ('academique', 'Académique'),
+        ('entreprise', 'Entreprise'),
+        ('laboratoire', 'Laboratoire'),
+        ('particulier', 'Particulier'),
+        ('autre', 'Autre'),
+    ]
+
     # Algerian wilayas — official 2021 list (58 entries: 48 historic + 10
     # new southern wilayas created by the 2019/2021 reform). Stored as the
     # numeric code (01-58) so the label can be translated independently.
@@ -69,6 +81,18 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='REQUESTER')
     organization = models.CharField(max_length=200, default='', blank=True)
+    organization_type = models.CharField(
+        max_length=20, choices=ORGANIZATION_TYPE_CHOICES, blank=True, default='',
+        verbose_name="Type d'organisation",
+    )
+    organization_type_other = models.CharField(
+        max_length=200, blank=True, default='',
+        verbose_name="Préciser le type d'organisation",
+    )
+    country = models.CharField(
+        max_length=2, choices=COUNTRY_CHOICES, blank=True, default='DZ',
+        verbose_name='Pays',
+    )
     phone = models.CharField(max_length=50, default='', blank=True)
     student_level = models.CharField(max_length=100, default='', blank=True)
     supervisor = models.CharField(max_length=200, default='', blank=True)
