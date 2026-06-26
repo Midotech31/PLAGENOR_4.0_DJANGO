@@ -4,6 +4,18 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Registration: organization type + country (done, verified)
+- GENOCLAB clients sont surtout entreprises/labos. Ajout User.organization_type (academique/entreprise/laboratoire/particulier/autre) + organization_type_other (texte libre si "autre") + country (liste ISO 3166 complete, accounts/countries.py, defaut DZ Algerie).
+- RegistrationForm: 3 nouveaux champs + clean() exige le detail si "autre". register.html: selects + boite "autre" conditionnelle + JS toggle. Formulaire service invite (guest_submit) idem: vue stocke dans requester_data, country_choices passe au contexte.
+- Migration accounts/0010. Verifie: check OK, templates compilent, 193 pays, 6 choix type.
+- RESTE possible: exposer organization_type/country dans l'edition de profil (profile view ne MAJ que organization actuellement).
+
+## i18n: EN + AR completes (done, verified)
+- makemessages rafraichi (gettext installe). Comble TOUS les msgstr vides: 56 EN + 56 AR (observateurs/lecture seule, reassignation, nudges de notation, consignes solde IBTIKAR, configurateur bilan Excel, bannieres RDV, aide invite-vs-compte, + nouveaux champs type orga/pays).
+- HTML (<strong>), placeholders %(name)s et %% preserves; compilemessages sans erreur de format. FR = langue source (msgstr vides = fallback msgid FR, normal).
+- Fix: apostrophe echappee dans un {% trans %} cassait l'extraction -> passe au pattern {% trans "..." as var %}.
+- Script de remplissage: scratchpad/fill_po.py + fill_po2.py (polib).
+
 ## Media persistence -> Supabase Storage (done, verified)
 - Probleme: disque Render free = ephemere -> rapports/uploads (report_file, order_file, payment_receipt_file, avatars, gift/service images, templates DOCX) perdus a chaque restart/redeploy.
 - Fix: STORAGES['default'] = plagenor/storages.SupabaseMediaStorage (S3-compatible, django-storages + boto3) quand SUPABASE_S3_ENDPOINT/ACCESS_KEY_ID/SECRET_ACCESS_KEY presents; sinon FileSystemStorage (dev). Bucket prive.

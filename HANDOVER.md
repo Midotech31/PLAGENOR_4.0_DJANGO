@@ -175,7 +175,25 @@ All shipped & pushed. See `project_memory.md` for the detailed per-feature log.
   never web-served in production (the old `static()` media handler only ran
   under `DEBUG`).
 
+**Registration enhancements (done):**
+- `User.organization_type` (Académique/Entreprise/Laboratoire/Particulier/Autre)
+  + `organization_type_other` free text + `country` (full ISO 3166 list,
+  `accounts/countries.py`, default `DZ`). Added to the account registration
+  form AND the public guest service form. Migration `accounts/0010`.
+
+**i18n (done):** EN + AR catalogs fully translated (no empty `msgstr`); FR is
+the source language. After adding UI strings, run
+`python manage.py makemessages -l en -l ar -l fr --no-location`, fill the new
+entries, then `compilemessages`. The `.mo` files are committed.
+
+**In progress — admin "edit all app elements" (Full visual CMS):**
+- User wants admins to edit every text/label/option app-wide. A
+  `PlatformContent` key-value CMS already exists (Content tab). This is a large,
+  multi-step effort — being built incrementally.
+
 **Offered, not started (optional improvements):**
+- Expose `organization_type` / `country` in the profile editor (the profile
+  view currently only updates `organization`).
 - **PDF generation**: a Dockerfile with **LibreOffice** headless if server-side
   DOCX→PDF is needed in prod.
 - On-demand generated docs (devis/facture/note/bilan) still write to the local
