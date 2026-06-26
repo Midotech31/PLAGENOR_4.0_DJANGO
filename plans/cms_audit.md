@@ -41,7 +41,7 @@ until the worker process restarts. Phase A must clear/scope this cache on save.
 
 ## Recommended phased plan
 
-### Phase A — Unified Content Manager (highest value, ~1 session)
+### Phase A — Unified Content Manager ✅ DONE (commit 4b51fa9)
 Rebuild the Content tab into a proper editor:
 - All keys listed with **FR / EN / AR side-by-side**, inline edit + save.
 - **Search/filter** by key or text; flag "used" keys vs orphans.

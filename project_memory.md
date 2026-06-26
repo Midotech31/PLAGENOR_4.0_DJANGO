@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## CMS Phase A — Unified Content Manager (done, verified)
+- Onglet Contenu superadmin refondu: 1 ligne par cle avec FR/EN/AR cote a cote, edites/enregistres ensemble. Formulaire "nouvelle entree" 3 langues, suppression par cle (toutes langues), recherche cle+valeurs, badge "langues manquantes".
+- Backend: vue index groupe le contenu par cle (content_rows). Nouvelles vues content_save (upsert toutes langues) + content_delete_key. URLs content/save/ + content/delete-key/.
+- BUG corrige: core/templatetags/cms.py avait un cache module jamais invalide -> edits invisibles jusqu'au restart worker. Maintenant TTL 60s + clear_cms_cache() appele sur chaque ecriture (update/save/delete).
+- Verifie: check OK, template compile, test fonctionnel (cache stale->fresh apres clear; save-all ecrit 3 langues; delete-key supprime tout).
+- Plan complet: plans/cms_audit.md. Reste: Phase B (options dropdown editables), Phase C (etendre {% cms %} aux pages contenu), Phase D (overlay click-to-edit, optionnel).
+
 ## Registration: organization type + country (done, verified)
 - GENOCLAB clients sont surtout entreprises/labos. Ajout User.organization_type (academique/entreprise/laboratoire/particulier/autre) + organization_type_other (texte libre si "autre") + country (liste ISO 3166 complete, accounts/countries.py, defaut DZ Algerie).
 - RegistrationForm: 3 nouveaux champs + clean() exige le detail si "autre". register.html: selects + boite "autre" conditionnelle + JS toggle. Formulaire service invite (guest_submit) idem: vue stocke dans requester_data, country_choices passe au contexte.
