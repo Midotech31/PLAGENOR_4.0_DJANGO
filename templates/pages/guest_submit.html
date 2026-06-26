@@ -61,9 +61,10 @@
                         <option value="autre">{% trans "Autre" %}</option>
                     </select>
                 </div>
+                {% trans "Précisez le type d'organisation" as ph_org_other %}
                 <div class="form-group" id="guest-org-other-group" style="display:none;">
                     <label>{% trans "Préciser (autre)" %}</label>
-                    <input type="text" name="organization_type_other" class="form-control" placeholder="{% trans 'Précisez le type d\'organisation' %}">
+                    <input type="text" name="organization_type_other" class="form-control" placeholder="{{ ph_org_other }}">
                 </div>
                 <div class="form-group">
                     <label>{% trans "Pays" %}</label>

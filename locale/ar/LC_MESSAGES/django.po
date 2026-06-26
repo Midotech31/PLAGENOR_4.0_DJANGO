@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-13 11:01+0100\n"
+"POT-Creation-Date: 2026-06-27 00:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,187 +17,127 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-#: accounts/forms.py:13 templates/accounts/profile.html:41
-#: templates/accounts/register.html:66
-#: templates/dashboard/admin_ops/request_detail.html:473
-#: templates/dashboard/admin_ops/request_detail.html:477
-#: templates/dashboard/analyst/index.html:299
-#: templates/dashboard/superadmin/index.html:168
-#: templates/dashboard/superadmin/index.html:234
-#: templates/dashboard/superadmin/reset_account_confirm.html:41
-#: templates/dashboard/superadmin/user_edit.html:33
-#: templates/documents/template_form.html:133 templates/pages/about.html:53
-#: templates/pages/contact.html:24 templates/pages/guest_submit.html:23
 msgid "Email"
 msgstr "البريد الإلكتروني"
 
-#: accounts/forms.py:18
 msgid "Demandeur IBTIKAR (étudiant/chercheur)"
 msgstr "مُقدِّم طلب IBTIKAR (طالب/باحث)"
 
-#: accounts/forms.py:19
 msgid "Client GENOCLAB (externe)"
 msgstr "عميل GENOCLAB (خارجي)"
 
-#: accounts/forms.py:20 templates/dashboard/superadmin/index.html:172
-#: templates/dashboard/superadmin/index.html:214
-#: templates/dashboard/superadmin/index.html:235
-#: templates/dashboard/superadmin/reset_account_confirm.html:43
-#: templates/dashboard/superadmin/user_edit.html:37
 msgid "Rôle"
 msgstr "الدور"
 
-#: accounts/forms.py:24 templates/accounts/register.html:72
 msgid "Université / Organisation"
 msgstr "الجامعة / المؤسسة"
 
-#: accounts/forms.py:28
 msgid "— Sélectionner —"
 msgstr "— اختر —"
 
-#: accounts/forms.py:29 templates/accounts/register.html:82
+#, fuzzy
+#| msgid "Votre organisation"
+msgid "Type d'organisation"
+msgstr "مؤسستك"
+
+msgid "Préciser (autre)"
+msgstr "تحديد (أخرى)"
+
+msgid "Pays"
+msgstr "البلد"
+
 msgid "Master (fin de cycle)"
 msgstr "ماستر (سنة التخرج)"
 
-#: accounts/forms.py:30 templates/accounts/register.html:83
 msgid "Ingéniorat (fin de cycle)"
 msgstr "مهندس دولة (سنة التخرج)"
 
-#: accounts/forms.py:31 templates/accounts/register.html:84
 msgid "Doctorat"
 msgstr "دكتوراه"
 
-#: accounts/forms.py:34 templates/accounts/register.html:79
-#: templates/dashboard/admin_ops/request_detail.html:481
 msgid "Niveau"
 msgstr "المستوى"
 
-#: accounts/forms.py:36 templates/accounts/profile.html:53
-#: templates/accounts/register.html:91
-#: templates/dashboard/admin_ops/request_detail.html:480
-#: templates/dashboard/superadmin/user_edit.html:55
 msgid "Laboratoire"
 msgstr "المختبر"
 
-#: accounts/forms.py:37 templates/accounts/profile.html:57
-#: templates/accounts/register.html:97
-#: templates/dashboard/admin_ops/request_detail.html:482
 msgid "Directeur de recherche"
 msgstr "المشرف العلمي"
 
-#: accounts/forms.py:40 templates/accounts/register.html:103
-#: templates/pages/guest_submit.html:45
 msgid "Identifiant IBTIKAR-DGRSDT"
 msgstr "معرّف IBTIKAR-DGRSDT"
 
-#: accounts/forms.py:41 templates/accounts/register.html:105
-#: templates/pages/guest_submit.html:47
 msgid "Format: IDGRSTDXXXXX"
 msgstr "الصيغة: IDGRSTDXXXXX"
 
-#: accounts/forms.py:47 templates/accounts/convert_guest_verify.html:30
-#: templates/accounts/profile.html:45 templates/accounts/register.html:111
-#: templates/dashboard/admin_ops/request_detail.html:474
-#: templates/dashboard/admin_ops/request_detail.html:478
-#: templates/dashboard/analyst/index.html:301
-#: templates/dashboard/superadmin/index.html:186
-#: templates/dashboard/superadmin/user_edit.html:45
-#: templates/documents/template_form.html:134 templates/pages/about.html:54
-#: templates/pages/contact.html:28 templates/pages/guest_submit.html:27
 msgid "Téléphone"
 msgstr "الهاتف"
 
-#: accounts/forms.py:62
 msgid "Cet email est déjà enregistré"
 msgstr "هذا البريد الإلكتروني مسجَّل مسبقاً"
 
-#: accounts/views.py:76
+msgid "Veuillez préciser le type d'organisation."
+msgstr "يرجى تحديد نوع المؤسسة."
+
 msgid "Profil mis à jour."
 msgstr "تم تحديث الملف الشخصي."
 
-#: accounts/views.py:104
 msgid "Email requis."
 msgstr "البريد الإلكتروني مطلوب."
 
-#: accounts/views.py:107
 msgid "Un compte avec cet email existe déjà."
 msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً."
 
-#: accounts/views.py:127
-#: templates/accounts/email/guest_conversion_verify.html:5
 msgid "Vérification de votre adresse — PLAGENOR 4.0"
 msgstr "التحقُّق من بريدك الإلكتروني — PLAGENOR 4.0"
 
-#: accounts/views.py:128
 #, python-format
 msgid "Pour finaliser la création de votre compte, ouvrez ce lien : %(url)s"
 msgstr "لإكمال إنشاء حسابك، افتح هذا الرابط: %(url)s"
 
-#: accounts/views.py:154
 msgid "Lien expiré. Veuillez recommencer."
 msgstr "انتهت صلاحية الرابط. يرجى المحاولة مجدداً."
 
-#: accounts/views.py:157
 msgid "Lien invalide."
 msgstr "رابط غير صالح."
 
-#: accounts/views.py:162
 msgid "Un compte avec cet email existe déjà — veuillez vous connecter."
 msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً — يرجى تسجيل الدخول."
 
-#: accounts/views.py:203
 #, python-format
 msgid "Compte créé ! %(count)d demande(s) liée(s) à votre compte."
 msgstr "تم إنشاء الحساب! تم ربط %(count)d طلب بحسابك."
 
-#: accounts/views.py:219 templates/dashboard/superadmin/user_edit.html:69
 msgid "Nouveau mot de passe"
 msgstr "كلمة المرور الجديدة"
 
-#: accounts/views.py:224 templates/accounts/register.html:151
 msgid "Confirmer le mot de passe"
 msgstr "تأكيد كلمة المرور"
 
-#: accounts/views.py:233
 msgid "Les deux mots de passe ne correspondent pas."
 msgstr "كلمتا المرور غير متطابقتين."
 
-#: accounts/views.py:253
 msgid "Votre mot de passe a été mis à jour avec succès."
 msgstr "تم تحديث كلمة المرور بنجاح."
 
-#: dashboard/views/superadmin.py:173
-#: templates/dashboard/admin_ops/request_detail.html:752
-#: templates/dashboard/requester/index.html:209
-#: templates/dashboard/requester/request_detail.html:185
 msgid "Formulaire IBTIKAR"
 msgstr "نموذج IBTIKAR"
 
-#: dashboard/views/superadmin.py:174
 msgid "Note de plateforme"
 msgstr "مذكرة المنصة"
 
-#: dashboard/views/superadmin.py:175
-#: templates/dashboard/admin_ops/request_detail.html:761
 msgid "Fiche de réception"
 msgstr "وثيقة الاستلام"
 
-#: dashboard/views/superadmin.py:176
-#: templates/dashboard/analyst/request_detail.html:42
-#: templates/dashboard/client/index.html:102
-#: templates/dashboard/client/request_detail.html:325
 msgid "Devis"
 msgstr "عرض الأسعار"
 
-#: dashboard/views/superadmin.py:926
 msgid "Vous ne pouvez pas réinitialiser votre propre compte."
 msgstr "لا يمكنك إعادة تعيين حسابك الخاص."
 
-#: dashboard/views/superadmin.py:955
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
 msgstr "إعادة تعيين حسابك على PLAGENOR 4.0"
 
-#: dashboard/views/superadmin.py:977
 #, python-format
 msgid ""
 "Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
@@ -206,18 +146,12 @@ msgstr ""
 "تمت إعادة تعيين حساب %(username)s بنجاح. تم إرسال بريد إلكتروني يحتوي على "
 "التعليمات."
 
-#: templates/accounts/convert_guest.html:4 templates/accounts/login.html:60
-#: templates/accounts/register.html:10
-#: templates/pages/guest_submit_success.html:36
-#: templates/pages/service_landing.html:33
 msgid "Créer un compte"
 msgstr "إنشاء حساب"
 
-#: templates/accounts/convert_guest.html:8
 msgid "Créer votre compte"
 msgstr "إنشاء حسابك"
 
-#: templates/accounts/convert_guest.html:9
 msgid ""
 "Convertissez votre soumission invité en un compte permanent. Pour des "
 "raisons de sécurité nous vérifions d'abord votre adresse email."
@@ -225,11 +159,9 @@ msgstr ""
 "حوِّل طلبك المُرسَل كزائر إلى حساب دائم. لدواعٍ أمنية، نتحقّق أولاً من بريدك"
 " الإلكتروني."
 
-#: templates/accounts/convert_guest.html:15
 msgid "Vérifiez votre messagerie"
 msgstr "تحقَّق من بريدك"
 
-#: templates/accounts/convert_guest.html:16
 #, python-format
 msgid ""
 "Si l'adresse <strong>%(email)s</strong> correspond à des soumissions invité,"
@@ -239,159 +171,98 @@ msgstr ""
 "إذا كان العنوان <strong>%(email)s</strong> مرتبطاً بطلبات أُرسِلت كزائر، فقد"
 " أُرسِل إليه للتو رابط تحقُّق. انقر الرابط لإكمال إنشاء حسابك."
 
-#: templates/accounts/convert_guest.html:18
 msgid "Le lien expire après 24 heures."
 msgstr "تنتهي صلاحية الرابط بعد 24 ساعة."
 
-#: templates/accounts/convert_guest.html:25
 msgid "Email utilisé lors de votre soumission invité"
 msgstr "البريد الإلكتروني المستخدم في طلبك كزائر"
 
-#: templates/accounts/convert_guest.html:28
 msgid "Envoyer le lien de vérification"
 msgstr "إرسال رابط التحقُّق"
 
-#: templates/accounts/convert_guest.html:35
-#: templates/pages/guest_submit.html:90
 msgid "Vous avez déjà un compte?"
 msgstr "هل لديك حساب بالفعل؟"
 
-#: templates/accounts/convert_guest.html:35 templates/accounts/login.html:6
-#: templates/base_public.html:33 templates/base_public.html:78
-#: templates/pages/guest_submit.html:90
 msgid "Connexion"
 msgstr "تسجيل الدخول"
 
-#: templates/accounts/convert_guest_verify.html:4
 msgid "Finaliser la création de compte"
 msgstr "إكمال إنشاء الحساب"
 
-#: templates/accounts/convert_guest_verify.html:8
 msgid "Finaliser votre compte"
 msgstr "إكمال حسابك"
 
-#: templates/accounts/convert_guest_verify.html:9
 msgid ""
 "Votre adresse email a été vérifiée. Complétez vos informations et choisissez"
 " un mot de passe."
 msgstr "تم التحقُّق من بريدك الإلكتروني. أكمل معلوماتك واختر كلمة مرور."
 
-#: templates/accounts/convert_guest_verify.html:16
 msgid "Email vérifié"
 msgstr "تم التحقُّق من البريد الإلكتروني"
 
-#: templates/accounts/convert_guest_verify.html:21
-#: templates/accounts/profile.html:32 templates/accounts/register.html:48
-#: templates/dashboard/analyst/request_detail.html:83
-#: templates/dashboard/superadmin/index.html:158
-#: templates/dashboard/superadmin/user_edit.html:23
 msgid "Prénom"
 msgstr "الاسم"
 
-#: templates/accounts/convert_guest_verify.html:25
-#: templates/accounts/profile.html:36 templates/accounts/register.html:53
-#: templates/dashboard/admin_ops/prepare_quote.html:99
-#: templates/dashboard/admin_ops/request_detail.html:472
-#: templates/dashboard/admin_ops/request_detail.html:504
-#: templates/dashboard/analyst/index.html:298
-#: templates/dashboard/analyst/request_detail.html:95
-#: templates/dashboard/client/request_detail.html:36
-#: templates/dashboard/requester/request_detail.html:36
-#: templates/dashboard/superadmin/index.html:162
-#: templates/dashboard/superadmin/index.html:233
-#: templates/dashboard/superadmin/index.html:306
-#: templates/dashboard/superadmin/index.html:401
-#: templates/dashboard/superadmin/index.html:447
-#: templates/dashboard/superadmin/index.html:498
-#: templates/dashboard/superadmin/index.html:517
-#: templates/dashboard/superadmin/index.html:1045
-#: templates/dashboard/superadmin/service_edit.html:19
-#: templates/dashboard/superadmin/service_edit.html:176
-#: templates/dashboard/superadmin/user_edit.html:27
-#: templates/documents/template_confirm_delete.html:29
-#: templates/documents/template_list.html:66
 msgid "Nom"
 msgstr "اللقب"
 
-#: templates/accounts/convert_guest_verify.html:34
-#: templates/accounts/login.html:33 templates/accounts/register.html:146
-#: templates/dashboard/superadmin/index.html:190
 msgid "Mot de passe"
 msgstr "كلمة المرور"
 
-#: templates/accounts/convert_guest_verify.html:36
 msgid "8 caractères minimum, non purement numérique."
 msgstr "8 أحرف على الأقل، وألا تكون أرقاماً فقط."
 
-#: templates/accounts/convert_guest_verify.html:38
-#: templates/accounts/register.html:157
 msgid "Créer mon compte"
 msgstr "إنشاء حسابي"
 
-#: templates/accounts/email/account_reset.html:5
 msgid "Réinitialisation de compte PLAGENOR 4.0"
 msgstr "إعادة تعيين حساب PLAGENOR 4.0"
 
-#: templates/accounts/email/account_reset.html:11
-#: templates/accounts/email/guest_conversion_verify.html:11
 msgid "Plateforme de Gestion des Opérations Scientifiques"
 msgstr "منصة إدارة العمليات العلمية"
 
-#: templates/accounts/email/account_reset.html:14
 msgid "Réinitialisation de votre compte"
 msgstr "إعادة تعيين حسابك"
 
-#: templates/accounts/email/account_reset.html:15
 #, python-format
 msgid "Bonjour %(name)s,"
 msgstr "مرحباً %(name)s،"
 
-#: templates/accounts/email/account_reset.html:16
 #, python-format
 msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
 msgstr "تمت إعادة تعيين حسابك على %(platform)s من قِبل %(admin)s."
 
-#: templates/accounts/email/account_reset.html:19
 msgid "Mot de passe temporaire"
 msgstr "كلمة مرور مؤقتة"
 
-#: templates/accounts/email/account_reset.html:25
 msgid ""
 "Ce mot de passe temporaire expire après 24 heures ou dès la première "
 "utilisation."
 msgstr "تنتهي صلاحية كلمة المرور المؤقتة بعد 24 ساعة أو عند أول استخدام."
 
-#: templates/accounts/email/account_reset.html:26
 msgid ""
 "Vous serez immédiatement invité à définir un nouveau mot de passe après "
 "connexion."
 msgstr "سيُطلب منك فور تسجيل الدخول تعيين كلمة مرور جديدة."
 
-#: templates/accounts/email/account_reset.html:27
 msgid "Ne partagez jamais votre mot de passe avec quiconque."
 msgstr "لا تُشارك كلمة المرور مع أي شخص أبداً."
 
-#: templates/accounts/email/account_reset.html:32
-#: templates/accounts/login.html:54 templates/accounts/register.html:161
 msgid "Se connecter"
 msgstr "تسجيل الدخول"
 
-#: templates/accounts/email/account_reset.html:36
 msgid ""
 "Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter"
 " immédiatement l'administrateur de la plateforme."
 msgstr ""
 "إذا لم تكن على علم بإعادة التعيين هذه، يرجى التواصل مع مسؤول المنصة فوراً."
 
-#: templates/accounts/email/guest_conversion_verify.html:14
 msgid "Vérification de votre adresse email"
 msgstr "التحقُّق من بريدك الإلكتروني"
 
-#: templates/accounts/email/guest_conversion_verify.html:15
 msgid "Bonjour,"
 msgstr "مرحباً،"
 
-#: templates/accounts/email/guest_conversion_verify.html:16
 #, python-format
 msgid ""
 "Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur "
@@ -400,1489 +271,926 @@ msgstr ""
 "طلب شخص ما — على الأرجح أنت — إنشاء حساب على PLAGENOR&nbsp;4.0 باستخدام "
 "العنوان <strong>%(email)s</strong>."
 
-#: templates/accounts/email/guest_conversion_verify.html:17
 msgid ""
 "Pour finaliser la création de votre compte et lier vos demandes invité, "
 "cliquez sur le bouton ci-dessous :"
 msgstr "لإكمال إنشاء حسابك وربط طلباتك كزائر، انقر الزر أدناه:"
 
-#: templates/accounts/email/guest_conversion_verify.html:20
 msgid "Vérifier mon adresse et créer mon compte"
 msgstr "تحقَّق من عنواني وأنشئ حسابي"
 
-#: templates/accounts/email/guest_conversion_verify.html:25
 msgid "Ce lien expire après 24 heures."
 msgstr "تنتهي صلاحية هذا الرابط بعد 24 ساعة."
 
-#: templates/accounts/email/guest_conversion_verify.html:26
 msgid ""
 "Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
 "message — aucun compte ne sera créé."
 msgstr "إذا لم تطلب إنشاء حساب، فتجاهل هذه الرسالة — لن يُنشأ أي حساب."
 
-#: templates/accounts/email/guest_conversion_verify.html:27
 msgid "Ne partagez jamais ce lien."
 msgstr "لا تُشارك هذا الرابط مع أي شخص."
 
-#: templates/accounts/email/guest_conversion_verify.html:32
 msgid ""
 "Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur "
 ":"
 msgstr "إذا لم يعمل الزر، انسخ الرابط التالي والصقه في متصفحك:"
 
-#: templates/accounts/force_change_password.html:4
-#: templates/accounts/force_change_password.html:16
 msgid "Changement de mot de passe obligatoire"
 msgstr "تغيير كلمة المرور إلزامي"
 
-#: templates/accounts/force_change_password.html:17
 msgid ""
 "Votre compte a été réinitialisé. Vous devez définir un nouveau mot de passe "
 "avant de continuer."
 msgstr "تمت إعادة تعيين حسابك. يجب عليك تعيين كلمة مرور جديدة قبل المتابعة."
 
-#: templates/accounts/force_change_password.html:25
-#: templates/accounts/register.html:15
 msgid "Veuillez corriger les erreurs ci-dessous."
 msgstr "يرجى تصحيح الأخطاء أدناه."
 
-#: templates/accounts/force_change_password.html:35
 msgid "Minimum 8 caractères."
 msgstr "8 أحرف على الأقل."
 
-#: templates/accounts/force_change_password.html:42
 msgid "Définir le nouveau mot de passe"
 msgstr "تعيين كلمة المرور الجديدة"
 
-#: templates/accounts/login.html:21
 msgid "Identifiant ou mot de passe incorrect."
 msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
 
-#: templates/accounts/login.html:29
-#: templates/dashboard/superadmin/reset_account_confirm.html:39
 msgid "Identifiant"
 msgstr "اسم المستخدم"
 
-#: templates/accounts/login.html:30
 msgid "Entrez votre identifiant"
 msgstr "أدخل اسم المستخدم"
 
-#: templates/accounts/login.html:35
 msgid "Entrez votre mot de passe"
 msgstr "أدخل كلمة المرور"
 
-#: templates/accounts/login.html:36
 msgid "Afficher/masquer le mot de passe"
 msgstr "إظهار/إخفاء كلمة المرور"
 
-#: templates/accounts/login.html:51
 msgid "Se souvenir de moi"
 msgstr "تذكَّرني"
 
-#: templates/accounts/login.html:57
 msgid "ou"
 msgstr "أو"
 
-#: templates/accounts/login.html:60
 msgid "Pas encore de compte ?"
 msgstr "ليس لديك حساب بعد؟"
 
-#: templates/accounts/login.html:61
 msgid "Demande sans compte ?"
 msgstr "طلب بدون حساب؟"
 
-#: templates/accounts/login.html:61
 msgid "Soumettre en tant qu'invité"
 msgstr "الإرسال كزائر"
 
-#: templates/accounts/login.html:62
 msgid "Suivre une demande"
 msgstr "تتبُّع طلب"
 
-#: templates/accounts/profile.html:4 templates/accounts/profile.html:8
-#: templates/includes/sidebar.html:226 templates/includes/topbar.html:69
 msgid "Mon Profil"
 msgstr "ملفي الشخصي"
 
-#: templates/accounts/profile.html:13
 msgid "Informations personnelles"
 msgstr "المعلومات الشخصية"
 
-#: templates/accounts/profile.html:26
 msgid "Photo de profil"
 msgstr "الصورة الشخصية"
 
-#: templates/accounts/profile.html:49
 msgid "Organisation / Université"
 msgstr "المؤسسة / الجامعة"
 
-#: templates/accounts/profile.html:62
 #, fuzzy
 #| msgid "Note Générée"
 msgid "Langue préférée"
 msgstr "تم إصدار المذكرة"
 
-#: templates/accounts/profile.html:68
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr "اتركه فارغًا لاستخدام اللغة التي يكتشفها متصفحك."
 
-#: templates/accounts/profile.html:73
 msgid "Techniques maîtrisées"
 msgstr "التقنيات المُتقَنة"
 
-#: templates/accounts/profile.html:86
-#: templates/dashboard/superadmin/index.html:1005
 msgid "Mettre à jour"
 msgstr "تحديث"
 
-#: templates/accounts/register.html:5 templates/base_public.html:79
 msgid "Inscription"
 msgstr "إنشاء حساب"
 
-#: templates/accounts/register.html:11
 msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
 msgstr "أنشئ حساباً لتقديم طلبات التحاليل"
 
-#: templates/accounts/register.html:25
 msgid ""
 "Après inscription, vous serez redirigé vers le formulaire de soumission pour"
 " le service"
 msgstr "بعد إنشاء الحساب، ستُوجَّه إلى نموذج تقديم طلب للخدمة"
 
-#: templates/accounts/register.html:35
 msgid "Étudiant / Chercheur"
 msgstr "طالب / باحث"
 
-#: templates/accounts/register.html:41
 msgid "Client externe"
 msgstr "عميل خارجي"
 
-#: templates/accounts/register.html:60
 msgid "Identifiant souhaité"
 msgstr "اسم المستخدم المرغوب"
 
-#: templates/accounts/register.html:81
+#, fuzzy
+#| msgid "Votre organisation"
+msgid "Précisez le type d'organisation"
+msgstr "مؤسستك"
+
 msgid "Sélectionner"
 msgstr "اختر"
 
-#: templates/accounts/register.html:86
 msgid ""
 "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
 "algériennes"
 msgstr "ماستر، مهندس دولة (سنة التخرج) أو دكتوراه — جميع الجامعات الجزائرية"
 
-#: templates/accounts/register.html:92
 msgid "Nom du laboratoire"
 msgstr "اسم المختبر"
 
-#: templates/accounts/register.html:98
 msgid "Nom du directeur de recherche"
 msgstr "اسم المشرف العلمي"
 
-#: templates/accounts/register.html:111 templates/accounts/register.html:119
-#: templates/accounts/register.html:131
 msgid "optionnel"
 msgstr "اختياري"
 
-#: templates/accounts/register.html:119 templates/dashboard/stats.html:43
-#: templates/dashboard/stats.html:133
 msgid "Wilaya"
 msgstr "الولاية"
 
-#: templates/accounts/register.html:121
 #, fuzzy
 #| msgid "Sélectionner"
 msgid "Sélectionnez votre wilaya"
 msgstr "اختر"
 
-#: templates/accounts/register.html:131 templates/dashboard/stats.html:52
-#: templates/dashboard/stats.html:178
 msgid "Sexe"
 msgstr "الجنس"
 
-#: templates/accounts/register.html:161
 msgid "Vous avez déjà un compte ?"
 msgstr "هل لديك حساب بالفعل؟"
 
-#: templates/base_public.html:24 templates/base_public.html:67
-#: templates/pages/home.html:6
 msgid "Accueil"
 msgstr "الرئيسية"
 
-#: templates/base_public.html:25 templates/base_public.html:68
-#: templates/dashboard/superadmin/index.html:104
-#: templates/includes/sidebar.html:32 templates/pages/services.html:4
 msgid "Services"
 msgstr "الخدمات"
 
-#: templates/base_public.html:26 templates/base_public.html:69
-#: templates/pages/about.html:5
 msgid "À propos"
 msgstr "حول"
 
-#: templates/base_public.html:27 templates/base_public.html:70
-#: templates/base_public.html:75 templates/dashboard/admin_ops/index.html:486
-#: templates/pages/contact.html:5 templates/pages/help.html:156
 msgid "Contact"
 msgstr "تواصل معنا"
 
-#: templates/base_public.html:28 templates/documents/template_detail.html:143
-#: templates/includes/sidebar.html:230
 msgid "Aide"
 msgstr "مساعدة"
 
-#: templates/base_public.html:29
-#: templates/dashboard/client/request_detail.html:295
-#: templates/dashboard/requester/request_detail.html:128
-#: templates/pages/track.html:4
 msgid "Suivi"
 msgstr "التتبُّع"
 
-#: templates/base_public.html:31 templates/dashboard/placeholder.html:4
-#: templates/dashboard/placeholder.html:9 templates/includes/sidebar.html:20
-#: templates/includes/sidebar.html:85 templates/includes/sidebar.html:116
-#: templates/includes/sidebar.html:147 templates/includes/sidebar.html:174
-#: templates/includes/sidebar.html:197 templates/includes/topbar.html:10
-#: templates/includes/topbar.html:73
 msgid "Tableau de bord"
 msgstr "لوحة التحكم"
 
-#: templates/base_public.html:66
 msgid "Liens rapides"
 msgstr "روابط سريعة"
 
-#: templates/base_public.html:71
 #, fuzzy
 #| msgid "Entrées d'audit"
 msgid "Centre d'aide"
 msgstr "إدخالات التدقيق"
 
-#: templates/base_public.html:72
 msgid "Suivi de demande"
 msgstr "تتبُّع الطلب"
 
-#: templates/dashboard/admin_ops/index.html:5
-#: templates/includes/sidebar.html:17
 msgid "Administration"
 msgstr "الإدارة"
 
-#: templates/dashboard/admin_ops/index.html:9
-#: templates/dashboard/analyst/index.html:9
-#: templates/dashboard/client/index.html:8
-#: templates/dashboard/finance/index.html:8
-#: templates/dashboard/requester/index.html:8
-#: templates/dashboard/superadmin/index.html:10
 msgid "Bonjour"
 msgstr "مرحباً"
 
-#: templates/dashboard/admin_ops/index.html:10
 msgid "Gestion des demandes et assignations"
 msgstr "إدارة الطلبات والإسنادات"
 
-#: templates/dashboard/admin_ops/index.html:15
-#: templates/dashboard/client/index.html:14
-#: templates/dashboard/requester/index.html:14
 msgid "Total demandes"
 msgstr "إجمالي الطلبات"
 
-#: templates/dashboard/admin_ops/index.html:16
-#: templates/dashboard/admin_ops/index.html:27
-#: templates/dashboard/analyst/index.html:28
-#: templates/dashboard/finance/index.html:131
-#: templates/includes/sidebar.html:89 templates/includes/sidebar.html:120
 msgid "En attente"
 msgstr "قيد الانتظار"
 
-#: templates/dashboard/admin_ops/index.html:17
-#: templates/dashboard/analyst/index.html:17
-#: templates/dashboard/client/index.html:16
-#: templates/dashboard/placeholder.html:29
-#: templates/dashboard/requester/index.html:16
-#: templates/dashboard/stats.html:83
-#: templates/dashboard/superadmin/index.html:19
 msgid "Complétées"
 msgstr "المكتملة"
 
-#: templates/dashboard/admin_ops/index.html:28
-#: templates/dashboard/admin_ops/index.html:423
-#: templates/dashboard/superadmin/index.html:653
-#: templates/includes/sidebar.html:78 templates/includes/sidebar.html:93
 msgid "Toutes les demandes"
 msgstr "جميع الطلبات"
 
-#: templates/dashboard/admin_ops/index.html:29
-#: templates/dashboard/admin_ops/request_detail.html:650
-#: templates/includes/sidebar.html:97
 msgid "Assignation"
 msgstr "الإسناد"
 
-#: templates/dashboard/admin_ops/index.html:30
-#: templates/dashboard/finance/index.html:28
-#: templates/dashboard/finance/index.html:47
-#: templates/includes/sidebar.html:101 templates/includes/sidebar.html:155
 msgid "Budget"
 msgstr "الميزانية"
 
-#: templates/dashboard/admin_ops/index.html:31
-#: templates/dashboard/admin_ops/index.html:531
-#: templates/dashboard/admin_ops/index.html:680
 msgid "Performance"
 msgstr "الأداء"
 
-#: templates/dashboard/admin_ops/index.html:32
 msgid "Avis"
 msgstr "التقييمات"
 
-#: templates/dashboard/admin_ops/index.html:33
 msgid "Rapports"
 msgstr "التقارير"
 
-#: templates/dashboard/admin_ops/index.html:41
 msgid "Demandes à valider"
 msgstr "طلبات بانتظار التحقُّق"
 
-#: templates/dashboard/admin_ops/index.html:48
-#: templates/dashboard/admin_ops/index.html:195
-#: templates/dashboard/admin_ops/index.html:249
-#: templates/dashboard/admin_ops/index.html:285
-#: templates/dashboard/admin_ops/index.html:353
-#: templates/dashboard/admin_ops/index.html:511
-#: templates/dashboard/admin_ops/index.html:575
-#: templates/dashboard/client/request_detail.html:229
-#: templates/dashboard/client/request_detail.html:272
-#: templates/documents/template_list.html:98
 msgid "Voir"
 msgstr "عرض"
 
-#: templates/dashboard/admin_ops/index.html:54
-#: templates/dashboard/admin_ops/index.html:201
-#: templates/dashboard/admin_ops/index.html:581
 msgid "Invité"
 msgstr "زائر"
 
-#: templates/dashboard/admin_ops/index.html:62
-#: templates/dashboard/admin_ops/index.html:449
 msgid "Validation Pédagogique"
 msgstr "التحقُّق البيداغوجي"
 
-#: templates/dashboard/admin_ops/index.html:68
-#: templates/dashboard/admin_ops/index.html:80
-#: templates/dashboard/admin_ops/index.html:126
-#: templates/dashboard/admin_ops/index.html:138
-#: templates/dashboard/admin_ops/request_detail.html:893
-#: templates/dashboard/finance/index.html:58
 msgid "Rejeter"
 msgstr "رفض"
 
-#: templates/dashboard/admin_ops/index.html:75
-#: templates/dashboard/admin_ops/index.html:450
 msgid "Validation Finance"
 msgstr "التحقُّق المالي"
 
-#: templates/dashboard/admin_ops/index.html:86
 msgid "Coût de la prestation"
 msgstr "تكلفة الخدمة"
 
-#: templates/dashboard/admin_ops/index.html:89
-#: templates/includes/service_form_fields.html:162
 msgid "Coût estimé"
 msgstr "التكلفة التقديرية"
 
-#: templates/dashboard/admin_ops/index.html:94
 msgid "Coût validé"
 msgstr "التكلفة المُعتمَدة"
 
-#: templates/dashboard/admin_ops/index.html:100
-#: templates/dashboard/admin_ops/request_detail.html:487
-#: templates/dashboard/admin_ops/request_detail.html:594
-#: templates/dashboard/requester/request_detail.html:118
 msgid "Solde IBTIKAR déclaré"
 msgstr "الرصيد المُصرَّح به في IBTIKAR"
 
-#: templates/dashboard/admin_ops/index.html:108
 msgid "Ajuster le coût (DA)"
 msgstr "تعديل التكلفة (دج)"
 
-#: templates/dashboard/admin_ops/index.html:112
-#: templates/dashboard/admin_ops/request_detail.html:963
 msgid "Justification"
 msgstr "المُبرِّر"
 
-#: templates/dashboard/admin_ops/index.html:113
-#: templates/dashboard/client/index.html:145
-#: templates/dashboard/requester/index.html:237
 msgid "Raison du changement..."
 msgstr "سبب التغيير..."
 
-#: templates/dashboard/admin_ops/index.html:115
 msgid "Ajuster"
 msgstr "تعديل"
 
-#: templates/dashboard/admin_ops/index.html:121
 msgid "Valider & Générer Note"
 msgstr "تأكيد وإصدار المذكرة"
 
-#: templates/dashboard/admin_ops/index.html:133
 msgid "Préparer devis"
 msgstr "إعداد عرض الأسعار"
 
-#: templates/dashboard/admin_ops/index.html:145
 msgid "Envoyer devis"
 msgstr "إرسال عرض الأسعار"
 
-#: templates/dashboard/admin_ops/index.html:149
 msgid "En attente de réponse du client"
 msgstr "بانتظار رد العميل"
 
-#: templates/dashboard/admin_ops/index.html:155
 msgid "Générer facture"
 msgstr "إصدار الفاتورة"
 
-#: templates/dashboard/admin_ops/index.html:162
 msgid "Confirmer paiement"
 msgstr "تأكيد الدفع"
 
-#: templates/dashboard/admin_ops/index.html:168
-#: templates/dashboard/admin_ops/index.html:222
-#: templates/dashboard/admin_ops/index.html:263
-#: templates/dashboard/admin_ops/index.html:331
-#: templates/dashboard/admin_ops/index.html:383
-#: templates/dashboard/admin_ops/index.html:502
-#: templates/dashboard/admin_ops/index.html:506
 msgid "Contacter par email"
 msgstr "التواصل عبر البريد الإلكتروني"
 
-#: templates/dashboard/admin_ops/index.html:170
-#: templates/dashboard/admin_ops/index.html:175
-#: templates/dashboard/admin_ops/index.html:224
-#: templates/dashboard/admin_ops/index.html:229
-#: templates/dashboard/admin_ops/index.html:265
-#: templates/dashboard/admin_ops/index.html:333
-#: templates/dashboard/admin_ops/index.html:385
-#: templates/dashboard/admin_ops/index.html:390
-#: templates/dashboard/admin_ops/request_detail.html:981
-#: templates/dashboard/admin_ops/request_detail.html:986
 msgid "Contacter"
 msgstr "تواصل"
 
-#: templates/dashboard/admin_ops/index.html:181
 msgid "Aucune demande en attente de validation."
 msgstr "لا توجد طلبات بانتظار التحقُّق."
 
-#: templates/dashboard/admin_ops/index.html:188
-#: templates/dashboard/admin_ops/index.html:569
 msgid "Demandes à assigner"
 msgstr "طلبات بانتظار الإسناد"
 
-#: templates/dashboard/admin_ops/index.html:207
 msgid "Télécharger la Note de Plateforme"
 msgstr "تنزيل مذكرة المنصة"
 
-#: templates/dashboard/admin_ops/index.html:214
-#: templates/dashboard/admin_ops/index.html:587
-#: templates/dashboard/admin_ops/request_detail.html:919
 msgid "Assigner à"
 msgstr "إسناد إلى"
 
-#: templates/dashboard/admin_ops/index.html:219
-#: templates/dashboard/admin_ops/index.html:592
-#: templates/dashboard/admin_ops/request_detail.html:924
 msgid "Assigner"
 msgstr "إسناد"
 
-#: templates/dashboard/admin_ops/index.html:235
-#: templates/dashboard/admin_ops/index.html:596
 msgid ""
 "Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer"
 " par la validation."
 msgstr ""
 "لا توجد طلبات جاهزة للإسناد. يجب أن تمر الطلبات أولاً بمرحلة التحقُّق."
 
-#: templates/dashboard/admin_ops/index.html:242
 msgid "Rapports à réviser"
 msgstr "تقارير بانتظار المراجعة"
 
-#: templates/dashboard/admin_ops/index.html:254
-#: templates/dashboard/admin_ops/index.html:291
-#: templates/dashboard/admin_ops/index.html:359
-#: templates/dashboard/admin_ops/index.html:537
-#: templates/dashboard/admin_ops/index.html:748
-#: templates/dashboard/admin_ops/report_review.html:18
-#: templates/dashboard/analyst/index.html:5 templates/pages/track.html:41
 msgid "Analyste"
 msgstr "المحلِّل"
 
-#: templates/dashboard/admin_ops/index.html:258
 msgid "Réviser rapport"
 msgstr "مراجعة التقرير"
 
-#: templates/dashboard/admin_ops/index.html:260
-#: templates/dashboard/admin_ops/index.html:750
-#: templates/dashboard/admin_ops/report_review.html:25
-#: templates/dashboard/superadmin/index.html:960
-#: templates/dashboard/superadmin/index.html:998
-#: templates/includes/ibtikar_submission_workflow.html:32
 msgid "Télécharger"
 msgstr "تنزيل"
 
-#: templates/dashboard/admin_ops/index.html:271
 msgid "Aucun rapport en attente de révision."
 msgstr "لا توجد تقارير بانتظار المراجعة."
 
-#: templates/dashboard/admin_ops/index.html:278
 msgid "Complétions et clôtures"
 msgstr "الإتمام والإغلاق"
 
-#: templates/dashboard/admin_ops/index.html:301
 msgid "Transmettre au demandeur"
 msgstr "إرسال إلى المُقدِّم"
 
-#: templates/dashboard/admin_ops/index.html:311
 msgid "Transmettre au client"
 msgstr "إرسال إلى العميل"
 
-#: templates/dashboard/admin_ops/index.html:319
 msgid "Clôturer"
 msgstr "إغلاق"
 
-#: templates/dashboard/admin_ops/index.html:326
 msgid "Archiver"
 msgstr "أرشفة"
 
-#: templates/dashboard/admin_ops/index.html:339
 msgid "Aucune demande en attente de complétion."
 msgstr "لا توجد طلبات بانتظار الإتمام."
 
-#: templates/dashboard/admin_ops/index.html:346
 msgid "En cours de traitement"
 msgstr "قيد المعالجة"
 
-#: templates/dashboard/admin_ops/index.html:364
-#: templates/dashboard/client/index.html:154
 msgid "RDV proposé"
 msgstr "تم اقتراح موعد"
 
-#: templates/dashboard/admin_ops/index.html:364
 msgid "En attente de confirmation du demandeur"
 msgstr "بانتظار تأكيد المُقدِّم"
 
-#: templates/dashboard/admin_ops/index.html:368
-#: templates/dashboard/admin_ops/request_detail.html:973
 msgid "Modifier RDV"
 msgstr "تعديل الموعد"
 
-#: templates/dashboard/admin_ops/index.html:375
 msgid "Marquer échantillon reçu"
 msgstr "تعليم العيِّنة كمستلَمة"
 
-#: templates/dashboard/admin_ops/index.html:379
-#: templates/dashboard/analyst/index.html:16
-#: templates/dashboard/analyst/index.html:29
-#: templates/dashboard/client/index.html:15
-#: templates/dashboard/placeholder.html:38
-#: templates/dashboard/requester/index.html:15
-#: templates/dashboard/stats.html:84 templates/includes/sidebar.html:124
 msgid "En cours"
 msgstr "قيد التنفيذ"
 
-#: templates/dashboard/admin_ops/index.html:396
 msgid "Envoyer message"
 msgstr "إرسال رسالة"
 
-#: templates/dashboard/admin_ops/index.html:399
-#: templates/dashboard/analyst/index.html:237
-#: templates/dashboard/analyst/request_detail.html:235
 msgid "Message..."
 msgstr "الرسالة..."
 
-#: templates/dashboard/admin_ops/index.html:400
-#: templates/dashboard/analyst/index.html:238
-#: templates/dashboard/analyst/request_detail.html:274
-#: templates/dashboard/client/index.html:147
-#: templates/dashboard/client/index.html:262
-#: templates/dashboard/report_viewer.html:529
-#: templates/dashboard/requester/index.html:239
-#: templates/dashboard/requester/index.html:328
 msgid "Envoyer"
 msgstr "إرسال"
 
-#: templates/dashboard/admin_ops/index.html:412
 msgid "Aucune demande en cours de traitement."
 msgstr "لا توجد طلبات قيد المعالجة."
 
-#: templates/dashboard/admin_ops/index.html:429
 msgid "Tous les canaux"
 msgstr "جميع القنوات"
 
-#: templates/dashboard/admin_ops/index.html:434
 msgid "Tous les statuts"
 msgstr "جميع الحالات"
 
-#: templates/dashboard/admin_ops/index.html:435
 msgid "Commun"
 msgstr "مشترك"
 
-#: templates/dashboard/admin_ops/index.html:436
-#: templates/dashboard/admin_ops/index.html:484
-#: templates/dashboard/requester/index.html:268
-#: templates/dashboard/requester/request_detail.html:163
-#: templates/includes/request_card.html:13
 msgid "Assigné"
 msgstr "مُسنَد"
 
-#: templates/dashboard/admin_ops/index.html:437
 msgid "RDV Proposé"
 msgstr "تم اقتراح موعد"
 
-#: templates/dashboard/admin_ops/index.html:438
 msgid "RDV Confirmé"
 msgstr "تم تأكيد الموعد"
 
-#: templates/dashboard/admin_ops/index.html:439
 msgid "Échantillon Reçu"
 msgstr "تم استلام العيِّنة"
 
-#: templates/dashboard/admin_ops/index.html:440
 msgid "Analyse Démarrée"
 msgstr "بدأ التحليل"
 
-#: templates/dashboard/admin_ops/index.html:441
 msgid "Analyse Terminée"
 msgstr "اكتمل التحليل"
 
-#: templates/dashboard/admin_ops/index.html:442
 msgid "Rapport Uploadé"
 msgstr "تم رفع التقرير"
 
-#: templates/dashboard/admin_ops/index.html:443
 msgid "Rapport Validé"
 msgstr "تم اعتماد التقرير"
 
-#: templates/dashboard/admin_ops/index.html:444
 msgid "Complété"
 msgstr "مكتمل"
 
-#: templates/dashboard/admin_ops/index.html:445
 msgid "Rejeté"
 msgstr "مرفوض"
 
-#: templates/dashboard/admin_ops/index.html:448
-#: templates/dashboard/requester/index.html:258
-#: templates/dashboard/requester/request_detail.html:153
 msgid "Soumis"
 msgstr "تم الإرسال"
 
-#: templates/dashboard/admin_ops/index.html:451
 msgid "Note Générée"
 msgstr "تم إصدار المذكرة"
 
-#: templates/dashboard/admin_ops/index.html:452
 msgid "En attente soumission IBTIKAR"
 msgstr "بانتظار الإرسال إلى IBTIKAR"
 
-#: templates/dashboard/admin_ops/index.html:453
-#: templates/includes/ibtikar_submission_workflow.html:89
 msgid "Code IBTIKAR soumis"
 msgstr "تم إرسال رمز IBTIKAR"
 
-#: templates/dashboard/admin_ops/index.html:454
 msgid "Transmis au Demandeur"
 msgstr "تم الإرسال إلى المُقدِّم"
 
-#: templates/dashboard/admin_ops/index.html:455
 msgid "Clôturé"
 msgstr "مُغلَق"
 
-#: templates/dashboard/admin_ops/index.html:458
 msgid "Demande Créée"
 msgstr "تم إنشاء الطلب"
 
-#: templates/dashboard/admin_ops/index.html:459
 msgid "Devis En Cours"
 msgstr "عرض الأسعار قيد الإعداد"
 
-#: templates/dashboard/admin_ops/index.html:460
 msgid "Devis Envoyé"
 msgstr "تم إرسال عرض الأسعار"
 
-#: templates/dashboard/admin_ops/index.html:461
 msgid "Devis Accepté"
 msgstr "تم قبول عرض الأسعار"
 
-#: templates/dashboard/admin_ops/index.html:462
 msgid "Devis Refusé"
 msgstr "تم رفض عرض الأسعار"
 
-#: templates/dashboard/admin_ops/index.html:463
 msgid "Facture Émise"
 msgstr "تم إصدار الفاتورة"
 
-#: templates/dashboard/admin_ops/index.html:464
 msgid "Paiement Confirmé"
 msgstr "تم تأكيد الدفع"
 
-#: templates/dashboard/admin_ops/index.html:465
 msgid "Transmis au Client"
 msgstr "تم الإرسال إلى العميل"
 
-#: templates/dashboard/admin_ops/index.html:466
 msgid "Archivé"
 msgstr "مُؤرشَف"
 
-#: templates/dashboard/admin_ops/index.html:469
-#: templates/includes/topbar.html:15
 msgid "Rechercher..."
 msgstr "بحث..."
 
-#: templates/dashboard/admin_ops/index.html:470
-#: templates/dashboard/superadmin/audit_log.html:32
-#: templates/dashboard/superadmin/index.html:222
-#: templates/dashboard/superadmin/index.html:681
-#: templates/documents/block_list.html:48
 msgid "Filtrer"
 msgstr "تصفية"
 
-#: templates/dashboard/admin_ops/index.html:472
-#: templates/dashboard/superadmin/audit_log.html:33
-#: templates/dashboard/superadmin/index.html:270
-#: templates/documents/block_list.html:50
-#: templates/documents/template_list.html:53
 msgid "Réinitialiser"
 msgstr "إعادة تعيين"
 
-#: templates/dashboard/admin_ops/index.html:479
-#: templates/dashboard/analyst/index.html:265
-#: templates/dashboard/client/index.html:325
-#: templates/dashboard/requester/index.html:354
-#: templates/dashboard/superadmin/index.html:693
-#: templates/dashboard/superadmin/index.html:947
 msgid "ID"
 msgstr "المعرّف"
 
-#: templates/dashboard/admin_ops/index.html:480
-#: templates/dashboard/admin_ops/request_detail.html:518
-#: templates/dashboard/analyst/index.html:266
-#: templates/dashboard/client/index.html:326
-#: templates/dashboard/client/request_detail.html:48
-#: templates/dashboard/requester/index.html:355
-#: templates/dashboard/requester/request_detail.html:48
-#: templates/dashboard/superadmin/index.html:694
-#: templates/dashboard/superadmin/index.html:948
-#: templates/documents/block_confirm_delete.html:23
-#: templates/documents/block_list.html:66
 msgid "Titre"
 msgstr "العنوان"
 
-#: templates/dashboard/admin_ops/index.html:481
-#: templates/dashboard/admin_ops/report_review.html:16
-#: templates/dashboard/report_viewer.html:418
-#: templates/dashboard/stats.html:34
-#: templates/dashboard/superadmin/index.html:405
-#: templates/dashboard/superadmin/index.html:448
-#: templates/dashboard/superadmin/index.html:660
-#: templates/dashboard/superadmin/index.html:695
-#: templates/dashboard/superadmin/index.html:949
-#: templates/dashboard/superadmin/revenue_archives.html:20
-#: templates/dashboard/superadmin/service_edit.html:23
-#: templates/dashboard/superadmin/service_edit.html:289
-#: templates/pages/guest_submit.html:37 templates/pages/track.html:26
 msgid "Canal"
 msgstr "القناة"
 
-#: templates/dashboard/admin_ops/index.html:482
-#: templates/dashboard/admin_ops/report_review.html:19
-#: templates/dashboard/analyst/index.html:268
-#: templates/dashboard/client/index.html:328
-#: templates/dashboard/finance/index.html:81
-#: templates/dashboard/requester/index.html:357
-#: templates/dashboard/stats.html:117
-#: templates/dashboard/superadmin/index.html:122
-#: templates/dashboard/superadmin/index.html:236
-#: templates/dashboard/superadmin/index.html:517
-#: templates/dashboard/superadmin/index.html:668
-#: templates/dashboard/superadmin/index.html:696
-#: templates/documents/template_form.html:146
-#: templates/documents/template_list.html:44
-#: templates/documents/template_list.html:69 templates/pages/track.html:22
 msgid "Statut"
 msgstr "الحالة"
 
-#: templates/dashboard/admin_ops/index.html:483
-#: templates/dashboard/superadmin/index.html:698
 msgid "Demandeur"
 msgstr "المُقدِّم"
 
-#: templates/dashboard/admin_ops/index.html:485
-#: templates/dashboard/analyst/index.html:269
-#: templates/dashboard/analyst/request_detail.html:217
-#: templates/dashboard/client/index.html:293
-#: templates/dashboard/client/index.html:330
-#: templates/dashboard/finance/index.html:115
-#: templates/dashboard/requester/index.html:359
-#: templates/dashboard/superadmin/audit_log.html:48
-#: templates/dashboard/superadmin/index.html:700
-#: templates/dashboard/superadmin/index.html:816 templates/pages/track.html:30
 msgid "Date"
 msgstr "التاريخ"
 
-#: templates/dashboard/admin_ops/index.html:514
-#: templates/dashboard/superadmin/index.html:762
 msgid "Aucune demande trouvée."
 msgstr "لم يُعثر على أي طلب."
 
-#: templates/dashboard/admin_ops/index.html:526
 msgid "Panneau d'assignation"
 msgstr "لوحة الإسناد"
 
-#: templates/dashboard/admin_ops/index.html:528
 msgid "Analystes disponibles"
 msgstr "المحلِّلون المتاحون"
 
-#: templates/dashboard/admin_ops/index.html:530
 msgid ""
 "Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet"
 msgstr "لمنح النقاط أو إرسال التشجيع، استخدم علامة التبويب"
 
-#: templates/dashboard/admin_ops/index.html:538
-#: templates/dashboard/admin_ops/index.html:643
-#: templates/dashboard/analyst/index.html:304
-#: templates/dashboard/superadmin/index.html:307
 msgid "Charge"
 msgstr "العبء"
 
-#: templates/dashboard/admin_ops/index.html:539
-#: templates/dashboard/analyst/index.html:305
-#: templates/dashboard/superadmin/index.html:107
-#: templates/dashboard/superadmin/index.html:308
-#: templates/includes/sidebar.html:44
 msgid "Productivité"
 msgstr "الإنتاجية"
 
-#: templates/dashboard/admin_ops/index.html:540
-#: templates/dashboard/admin_ops/index.html:661
-#: templates/dashboard/admin_ops/index.html:690
-#: templates/dashboard/analyst/index.html:32
-#: templates/dashboard/analyst/index.html:306
-#: templates/dashboard/analyst/index.html:353
-#: templates/dashboard/analyst/index.html:508
-#: templates/dashboard/analyst/index.html:514
-#: templates/dashboard/superadmin/index.html:309
-#: templates/dashboard/superadmin/index.html:357
-#: templates/includes/_points_hero.html:11 templates/includes/sidebar.html:136
 msgid "Points"
 msgstr "النقاط"
 
-#: templates/dashboard/admin_ops/index.html:541
-#: templates/dashboard/analyst/index.html:307
-#: templates/dashboard/superadmin/index.html:311
 msgid "Disponible"
 msgstr "متاح"
 
-#: templates/dashboard/admin_ops/index.html:558
-#: templates/dashboard/admin_ops/request_detail.html:655
-#: templates/dashboard/admin_ops/request_detail.html:660
-#: templates/dashboard/analyst/index.html:307
-#: templates/dashboard/analyst/request_detail.html:165
-#: templates/dashboard/client/request_detail.html:298
-#: templates/dashboard/client/request_detail.html:300
-#: templates/dashboard/client/request_detail.html:305
-#: templates/dashboard/requester/request_detail.html:131
-#: templates/dashboard/requester/request_detail.html:133
-#: templates/dashboard/requester/request_detail.html:138
-#: templates/dashboard/superadmin/audit_log.html:66
-#: templates/dashboard/superadmin/index.html:343
-#: templates/dashboard/superadmin/index.html:463
-#: templates/dashboard/superadmin/index.html:829
-#: templates/dashboard/superadmin/index.html:1058
-#: templates/documents/block_list.html:91
 msgid "Oui"
 msgstr "نعم"
 
-#: templates/dashboard/admin_ops/index.html:560
-#: templates/dashboard/admin_ops/request_detail.html:660
-#: templates/dashboard/analyst/index.html:307
-#: templates/dashboard/analyst/request_detail.html:165
-#: templates/dashboard/client/request_detail.html:305
-#: templates/dashboard/requester/request_detail.html:138
-#: templates/dashboard/superadmin/index.html:345
-#: templates/dashboard/superadmin/index.html:463
-#: templates/dashboard/superadmin/index.html:829
-#: templates/dashboard/superadmin/index.html:1058
-#: templates/documents/block_list.html:93
 msgid "Non"
 msgstr "لا"
 
-#: templates/dashboard/admin_ops/index.html:605
-#: templates/dashboard/finance/index.html:14
-#: templates/dashboard/superadmin/index.html:788
 msgid "Budget IBTIKAR (virtuel)"
 msgstr "ميزانية IBTIKAR (افتراضية)"
 
-#: templates/dashboard/admin_ops/index.html:606
-#: templates/dashboard/finance/index.html:15
-#: templates/dashboard/superadmin/index.html:794
 msgid "Revenus GENOCLAB (réel)"
 msgstr "إيرادات GENOCLAB (فعلية)"
 
-#: templates/dashboard/admin_ops/index.html:618
 msgid "Performance & Points"
 msgstr "الأداء والنقاط"
 
-#: templates/dashboard/admin_ops/index.html:619
-#: templates/dashboard/analyst/index.html:336
 msgid "analystes"
 msgstr "محلِّلون"
 
-#: templates/dashboard/admin_ops/index.html:650
 msgid "pts"
 msgstr "نقطة"
 
-#: templates/dashboard/admin_ops/index.html:655
 msgid "prod."
 msgstr "إنتاجية"
 
-#: templates/dashboard/admin_ops/index.html:662
-#: templates/dashboard/superadmin/index.html:360
 msgid "Raison"
 msgstr "السبب"
 
-#: templates/dashboard/admin_ops/index.html:663
 msgid "Attribuer points"
 msgstr "منح النقاط"
 
-#: templates/dashboard/admin_ops/index.html:665
 msgid "Pts"
 msgstr "نقاط"
 
-#: templates/dashboard/admin_ops/index.html:670
 msgid "Message encourageant..."
 msgstr "رسالة تشجيعية..."
 
-#: templates/dashboard/admin_ops/index.html:670
-#: templates/dashboard/analyst/request_detail.html:180
-#: templates/dashboard/client/index.html:144
-#: templates/dashboard/requester/index.html:236
 msgid "Message"
 msgstr "الرسالة"
 
-#: templates/dashboard/admin_ops/index.html:671
 msgid "Envoyer un encouragement"
 msgstr "إرسال تشجيع"
 
-#: templates/dashboard/admin_ops/index.html:703
 msgid "Cadeau récupéré"
 msgstr "تم استلام الهدية"
 
-#: templates/dashboard/admin_ops/index.html:705
 msgid "En attente de récupération"
 msgstr "بانتظار الاستلام"
 
-#: templates/dashboard/admin_ops/index.html:708
 msgid "Boîte débloquée — ajoutez une récompense"
 msgstr "تم فتح الصندوق — أضف مكافأة"
 
-#: templates/dashboard/admin_ops/index.html:714
 msgid "Image récompense"
 msgstr "صورة المكافأة"
 
-#: templates/dashboard/admin_ops/index.html:715
 msgid "Déposer la récompense"
 msgstr "إيداع المكافأة"
 
-#: templates/dashboard/admin_ops/index.html:716
 msgid "Déposer"
 msgstr "إيداع"
 
-#: templates/dashboard/admin_ops/index.html:728
-#: templates/dashboard/superadmin/index.html:367
 msgid "Aucun analyste enregistré."
 msgstr "لا يوجد محلِّلون مسجَّلون."
 
-#: templates/dashboard/admin_ops/index.html:738
 msgid "Rapports en attente de révision"
 msgstr "تقارير بانتظار المراجعة"
 
-#: templates/dashboard/admin_ops/index.html:757
 msgid "Notes..."
 msgstr "ملاحظات..."
 
-#: templates/dashboard/admin_ops/index.html:758
 msgid "Valider"
 msgstr "تأكيد"
 
-#: templates/dashboard/admin_ops/index.html:763
 msgid "Raison du renvoi..."
 msgstr "سبب الإرجاع..."
 
-#: templates/dashboard/admin_ops/index.html:764
 msgid "Renvoyer"
 msgstr "إرجاع"
 
-#: templates/dashboard/admin_ops/index.html:770
 msgid "Aucun rapport en attente."
 msgstr "لا توجد تقارير قيد الانتظار."
 
-#: templates/dashboard/admin_ops/index.html:786
 msgid "Note moyenne"
 msgstr "متوسط التقييم"
 
-#: templates/dashboard/admin_ops/index.html:795
 msgid "Total avis"
 msgstr "إجمالي التقييمات"
 
-#: templates/dashboard/admin_ops/index.html:802
 msgid "Répartition des notes"
 msgstr "توزيع التقييمات"
 
-#: templates/dashboard/admin_ops/index.html:822
 msgid "Avis récents"
 msgstr "أحدث التقييمات"
 
-#: templates/dashboard/admin_ops/index.html:837
 msgid "Par"
 msgstr "بواسطة"
 
-#: templates/dashboard/admin_ops/index.html:848
 msgid "Aucun avis pour le moment."
 msgstr "لا توجد تقييمات حتى الآن."
 
-#: templates/dashboard/admin_ops/prepare_quote.html:4
-#: templates/dashboard/admin_ops/prepare_quote.html:10
 msgid "Préparer le devis"
 msgstr "إعداد عرض الأسعار"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:18
 msgid "Retour au détail"
 msgstr "العودة إلى التفاصيل"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:28
 msgid "Estimation automatique (YAML)"
 msgstr "تقدير تلقائي (YAML)"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:30
 msgid "Modèle de tarification"
 msgstr "نموذج التسعير"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:31
 msgid "Nombre d'unités"
 msgstr "عدد الوحدات"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:32
-#: templates/dashboard/client/request_detail.html:136
 msgid "Prix unitaire"
 msgstr "سعر الوحدة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:33
 msgid "Total estimé"
 msgstr "الإجمالي التقديري"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:48
-#: templates/dashboard/admin_ops/request_detail.html:532
-#: templates/dashboard/analyst/request_detail.html:106
-#: templates/dashboard/client/request_detail.html:62
-#: templates/dashboard/requester/request_detail.html:62
 msgid "Paramètres du service"
 msgstr "إعدادات الخدمة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:63
-#: templates/dashboard/admin_ops/request_detail.html:547
-#: templates/dashboard/analyst/request_detail.html:121
-#: templates/dashboard/client/request_detail.html:77
-#: templates/dashboard/requester/request_detail.html:77
 msgid "Tableau des échantillons"
 msgstr "جدول العيِّنات"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:96
-#: templates/dashboard/admin_ops/report_review.html:17
-#: templates/dashboard/analyst/index.html:267
-#: templates/dashboard/client/index.html:42
-#: templates/dashboard/client/index.html:327
-#: templates/dashboard/report_viewer.html:414
-#: templates/dashboard/requester/index.html:88
-#: templates/dashboard/requester/index.html:356
-#: templates/dashboard/stats.html:100
-#: templates/dashboard/superadmin/index.html:697
-#: templates/dashboard/superadmin/index.html:1044
-#: templates/documents/block_list.html:30
-#: templates/documents/block_list.html:63
-#: templates/documents/template_confirm_delete.html:33
-#: templates/documents/template_detail.html:35
-#: templates/documents/template_form.html:24
-#: templates/documents/template_form.html:142
-#: templates/documents/template_list.html:34
-#: templates/documents/template_list.html:67
-#: templates/pages/guest_submit.html:55
-#: templates/pages/guest_submit_success.html:25 templates/pages/track.html:35
 msgid "Service"
 msgstr "الخدمة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:98
-#: templates/dashboard/admin_ops/request_detail.html:503
-#: templates/dashboard/analyst/request_detail.html:94
-#: templates/dashboard/client/request_detail.html:35
-#: templates/dashboard/requester/request_detail.html:35
-#: templates/dashboard/superadmin/index.html:397
-#: templates/dashboard/superadmin/index.html:446
 msgid "Code"
 msgstr "الرمز"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:100
-#: templates/dashboard/superadmin/index.html:419
 msgid "Prix GENOCLAB"
 msgstr "سعر GENOCLAB"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:112
 msgid "Lignes du devis"
 msgstr "بنود عرض الأسعار"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:113
-#: templates/includes/service_form_fields.html:125
 msgid "Ajouter une ligne"
 msgstr "إضافة بند"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:123
 msgid "Frais et TVA"
 msgstr "الرسوم والضريبة على القيمة المُضافة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:127
 msgid "Frais administratifs (DA)"
 msgstr "الرسوم الإدارية (دج)"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:131
 msgid "Frais de rapport (DA)"
 msgstr "رسوم التقرير (دج)"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:136
 #, python-format
 msgid "Taux TVA (%%)"
 msgstr "معدل الضريبة على القيمة المُضافة (%%)"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:144
 msgid "Récapitulatif"
 msgstr "الملخَّص"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:146
-#: templates/dashboard/admin_ops/request_detail.html:625
-#: templates/dashboard/client/request_detail.html:153
-#: templates/dashboard/superadmin/index.html:811
 msgid "Sous-total HT"
 msgstr "المجموع الفرعي قبل الضريبة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:147
-#: templates/dashboard/admin_ops/request_detail.html:627
-#: templates/dashboard/client/request_detail.html:158
 msgid "Frais administratifs"
 msgstr "الرسوم الإدارية"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:148
-#: templates/dashboard/admin_ops/request_detail.html:630
-#: templates/dashboard/client/request_detail.html:164
 msgid "Frais de rapport"
 msgstr "رسوم التقرير"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:149
-#: templates/dashboard/admin_ops/request_detail.html:632
-#: templates/dashboard/client/request_detail.html:169
 msgid "Sous-total avant TVA"
 msgstr "المجموع الفرعي قبل الضريبة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:150
-#: templates/dashboard/admin_ops/request_detail.html:633
-#: templates/dashboard/client/index.html:291
-#: templates/dashboard/client/request_detail.html:173
-#: templates/dashboard/finance/index.html:112
-#: templates/dashboard/superadmin/index.html:812
 msgid "TVA"
 msgstr "الضريبة على القيمة المُضافة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:152
-#: templates/dashboard/admin_ops/request_detail.html:634
-#: templates/dashboard/client/index.html:190
-#: templates/dashboard/client/request_detail.html:177
-#: templates/dashboard/superadmin/index.html:813
 msgid "Total TTC"
 msgstr "الإجمالي شامل الضريبة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:160
-#: templates/dashboard/admin_ops/request_detail.html:640
-#: templates/dashboard/client/request_detail.html:185
-#: templates/dashboard/superadmin/audit_log.html:53
 msgid "Notes"
 msgstr "ملاحظات"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:162
 msgid "Notes internes ou commentaires pour le client..."
 msgstr "ملاحظات داخلية أو تعليقات للعميل..."
 
-#: templates/dashboard/admin_ops/prepare_quote.html:169
 msgid "Enregistrer brouillon"
 msgstr "حفظ كمسودة"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:172
 msgid "Envoyer au client"
 msgstr "إرسال إلى العميل"
 
-#: templates/dashboard/admin_ops/report_review.html:4
 msgid "Révision rapport"
 msgstr "مراجعة التقرير"
 
-#: templates/dashboard/admin_ops/report_review.html:8
 msgid "Révision du rapport"
 msgstr "مراجعة التقرير"
 
-#: templates/dashboard/admin_ops/report_review.html:24
-#: templates/dashboard/analyst/request_detail.html:62
-#: templates/dashboard/client/request_detail.html:345
-#: templates/dashboard/superadmin/index.html:950
 msgid "Rapport"
 msgstr "التقرير"
 
-#: templates/dashboard/admin_ops/report_review.html:35
 msgid "Valider le rapport"
 msgstr "اعتماد التقرير"
 
-#: templates/dashboard/admin_ops/report_review.html:41
-#: templates/dashboard/analyst/index.html:90
 msgid "Notes de révision"
 msgstr "ملاحظات المراجعة"
 
-#: templates/dashboard/admin_ops/report_review.html:42
 msgid "Indiquez les corrections nécessaires..."
 msgstr "بيِّن التعديلات المطلوبة..."
 
-#: templates/dashboard/admin_ops/report_review.html:44
-#: templates/dashboard/admin_ops/request_detail.html:907
 msgid "Renvoyer pour révision"
 msgstr "الإرجاع للمراجعة"
 
-#: templates/dashboard/admin_ops/report_review.html:50
 msgid "Retour"
 msgstr "رجوع"
 
-#: templates/dashboard/admin_ops/request_detail.html:5
-#: templates/dashboard/analyst/request_detail.html:4
-#: templates/dashboard/client/request_detail.html:4
-#: templates/dashboard/requester/request_detail.html:4
 msgid "Détail demande"
 msgstr "تفاصيل الطلب"
 
-#: templates/dashboard/admin_ops/request_detail.html:20
-#: templates/dashboard/analyst/request_detail.html:19
-#: templates/dashboard/client/request_detail.html:18
-#: templates/dashboard/requester/request_detail.html:18
 msgid "Créée le"
 msgstr "تاريخ الإنشاء"
 
-#: templates/dashboard/admin_ops/request_detail.html:21
-#: templates/dashboard/analyst/request_detail.html:20
-#: templates/dashboard/client/request_detail.html:19
-#: templates/dashboard/requester/request_detail.html:19
 msgid "Mise à jour"
 msgstr "آخر تحديث"
 
-#: templates/dashboard/admin_ops/request_detail.html:25
 msgid "Retour aux opérations"
 msgstr "العودة إلى العمليات"
 
-#: templates/dashboard/admin_ops/request_detail.html:37
-msgid "Suivi du workflow"
-msgstr "تتبُّع سير العمل"
-
-#: templates/dashboard/admin_ops/request_detail.html:42
-msgid "Prochaine étape"
-msgstr "الخطوة التالية"
-
-#: templates/dashboard/admin_ops/request_detail.html:444
-msgid "Demande rejetée"
-msgstr "تم رفض الطلب"
-
-#: templates/dashboard/admin_ops/request_detail.html:451
-msgid "Workflow terminé avec succès"
-msgstr "اكتمل سير العمل بنجاح"
-
-#: templates/dashboard/admin_ops/request_detail.html:469
-#: templates/dashboard/analyst/request_detail.html:81
 msgid "Informations du demandeur"
 msgstr "بيانات المُقدِّم"
 
-#: templates/dashboard/admin_ops/request_detail.html:476
-#: templates/documents/template_form.html:132
-#: templates/pages/guest_submit.html:19
 msgid "Nom complet"
 msgstr "الاسم الكامل"
 
-#: templates/dashboard/admin_ops/request_detail.html:479
-#: templates/dashboard/analyst/index.html:300
-#: templates/dashboard/analyst/request_detail.html:84
-#: templates/dashboard/superadmin/index.html:180
-#: templates/dashboard/superadmin/user_edit.html:51
-#: templates/documents/template_form.html:135
-#: templates/pages/guest_submit.html:31
 msgid "Organisation"
 msgstr "المؤسسة"
 
-#: templates/dashboard/admin_ops/request_detail.html:484
 msgid "ID IBTIKAR"
 msgstr "معرّف IBTIKAR"
 
-#: templates/dashboard/admin_ops/request_detail.html:490
 msgid "Code IBTIKAR-DGRSDT"
 msgstr "رمز IBTIKAR-DGRSDT"
 
-#: templates/dashboard/admin_ops/request_detail.html:493
 msgid "Aucun demandeur associé."
 msgstr "لا يوجد مُقدِّم مرتبط."
 
-#: templates/dashboard/admin_ops/request_detail.html:501
-#: templates/dashboard/analyst/request_detail.html:92
-#: templates/dashboard/client/request_detail.html:33
-#: templates/dashboard/requester/request_detail.html:33
 msgid "Détails du service"
 msgstr "تفاصيل الخدمة"
 
-#: templates/dashboard/admin_ops/request_detail.html:506
-#: templates/dashboard/admin_ops/request_detail.html:521
-#: templates/dashboard/admin_ops/request_detail.html:608
-#: templates/dashboard/analyst/request_detail.html:97
-#: templates/dashboard/client/index.html:56
-#: templates/dashboard/client/request_detail.html:38
-#: templates/dashboard/client/request_detail.html:51
-#: templates/dashboard/client/request_detail.html:135
-#: templates/dashboard/requester/index.html:102
-#: templates/dashboard/requester/request_detail.html:38
-#: templates/dashboard/requester/request_detail.html:51
-#: templates/dashboard/superadmin/index.html:428
-#: templates/dashboard/superadmin/service_edit.html:47
-#: templates/documents/template_detail.html:46
-#: templates/documents/template_detail.html:88
-#: templates/documents/template_form.html:56
-#: templates/pages/guest_submit.html:72
 msgid "Description"
 msgstr "الوصف"
 
-#: templates/dashboard/admin_ops/request_detail.html:508
 msgid "Disponibilité"
 msgstr "التوفُّر"
 
-#: templates/dashboard/admin_ops/request_detail.html:509
 msgid "Délai estimé"
 msgstr "المدة التقديرية"
 
-#: templates/dashboard/admin_ops/request_detail.html:509
-#: templates/pages/service_detail.html:53 templates/pages/services.html:27
 msgid "jours"
 msgstr "أيام"
 
-#: templates/dashboard/admin_ops/request_detail.html:516
-#: templates/dashboard/client/request_detail.html:46
-#: templates/dashboard/requester/request_detail.html:46
-#: templates/pages/guest_submit.html:35
 msgid "Détails de la demande"
 msgstr "تفاصيل الطلب"
 
-#: templates/dashboard/admin_ops/request_detail.html:525
-#: templates/dashboard/client/index.html:60
-#: templates/dashboard/client/request_detail.html:55
-#: templates/dashboard/requester/index.html:107
-#: templates/dashboard/requester/request_detail.html:55
-#: templates/pages/guest_submit.html:76
 msgid "Urgence"
 msgstr "الأولوية"
 
-#: templates/dashboard/admin_ops/request_detail.html:582
-#: templates/dashboard/client/request_detail.html:112
-#: templates/dashboard/requester/request_detail.html:112
 msgid "Informations financières"
 msgstr "المعلومات المالية"
 
-#: templates/dashboard/admin_ops/request_detail.html:585
-#: templates/dashboard/client/request_detail.html:118
-#: templates/dashboard/requester/request_detail.html:115
 msgid "Budget estimé"
 msgstr "الميزانية التقديرية"
 
-#: templates/dashboard/admin_ops/request_detail.html:588
-#: templates/dashboard/client/request_detail.html:115
 msgid "Montant du devis"
 msgstr "قيمة عرض الأسعار"
 
-#: templates/dashboard/admin_ops/request_detail.html:591
 msgid "Prix validé par admin"
 msgstr "السعر المُعتمَد من المسؤول"
 
-#: templates/dashboard/admin_ops/request_detail.html:597
-#: templates/dashboard/client/request_detail.html:121
-#: templates/dashboard/requester/request_detail.html:121
 msgid "Aucune information financière."
 msgstr "لا توجد معلومات مالية."
 
-#: templates/dashboard/admin_ops/request_detail.html:603
-#: templates/dashboard/client/request_detail.html:129
+#, fuzzy
+#| msgid "Télécharger Note"
+msgid "Télécharger le devis"
+msgstr "تنزيل المذكرة"
+
+#, fuzzy
+#| msgid "Factures"
+msgid "Facture"
+msgstr "الفواتير"
+
 msgid "Détail du devis"
 msgstr "تفاصيل عرض الأسعار"
 
-#: templates/dashboard/admin_ops/request_detail.html:609
 msgid "P.U."
 msgstr "سعر الوحدة"
 
-#: templates/dashboard/admin_ops/request_detail.html:610
 msgid "Qté"
 msgstr "الكمية"
 
-#: templates/dashboard/admin_ops/request_detail.html:611
-#: templates/dashboard/client/request_detail.html:138
 msgid "Total"
 msgstr "الإجمالي"
 
-#: templates/dashboard/admin_ops/request_detail.html:653
-#: templates/dashboard/client/request_detail.html:298
-#: templates/dashboard/requester/index.html:196
-#: templates/dashboard/requester/request_detail.html:131
 msgid "Analyste assigné"
 msgstr "المحلِّل المُسنَد"
 
-#: templates/dashboard/admin_ops/request_detail.html:655
 msgid "Acceptée"
 msgstr "مقبول"
 
-#: templates/dashboard/admin_ops/request_detail.html:658
-#: templates/dashboard/client/request_detail.html:303
-#: templates/dashboard/requester/request_detail.html:136
 msgid "Date de RDV"
 msgstr "تاريخ الموعد"
 
-#: templates/dashboard/admin_ops/request_detail.html:660
-#: templates/dashboard/client/request_detail.html:305
-#: templates/dashboard/requester/request_detail.html:138
 msgid "RDV confirmé"
 msgstr "تم تأكيد الموعد"
 
-#: templates/dashboard/admin_ops/request_detail.html:662
+msgid "Annuler"
+msgstr "إلغاء"
+
+msgid "Réassigner à un autre analyste"
+msgstr "إعادة الإسناد إلى محلل آخر"
+
+msgid ""
+"Utilisez cette option en cas de retard, d'absence ou de surcharge de "
+"l'analyste actuel. L'ancien et le nouvel analyste seront notifiés."
+msgstr ""
+"استخدم هذا الخيار في حال تأخّر المحلل الحالي أو غيابه أو زيادة أعبائه. سيتم "
+"إشعار المحلل السابق والجديد معًا."
+
+#, fuzzy
+#| msgid "Espace analyste"
+msgid "Nouvel analyste"
+msgstr "فضاء المحلِّل"
+
+msgid "Choisir un membre…"
+msgstr "اختر عضوًا…"
+
+msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
+msgstr "مثال: تأخّر المحلل الحالي بسبب ملفات أخرى ذات أولوية"
+
+#, fuzzy
+#| msgid "Cette action est enregistrée dans le journal d'audit."
+msgid "Cette raison est consignée dans l'historique de la demande."
+msgstr "يُسجَّل هذا الإجراء في سجل التدقيق."
+
+#, fuzzy
+#| msgid "Confirmer la réinitialisation"
+msgid "Confirmer la réassignation"
+msgstr "تأكيد إعادة التعيين"
+
 msgid "Non encore assigné."
 msgstr "لم يُسنَد بعد."
 
-#: templates/dashboard/admin_ops/request_detail.html:673
+msgid ""
+"Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, "
+"mode, prix de base, multiplicateur, nombre d'échantillons, total). À "
+"partager manuellement avec le demandeur."
+msgstr ""
+"عرض سعر داخلي لـ IBTIKAR: تبرير مفصّل للسعر (نوع التحليل، الوضع، السعر "
+"الأساسي، المُعامِل، عدد العينات، الإجمالي). يُشارَك يدويًا مع مقدّم الطلب."
+
+#, fuzzy
+#| msgid "Télécharger Note"
+msgid "Télécharger la note (.docx)"
+msgstr "تنزيل المذكرة"
+
+msgid ""
+"Accès limité : administrateurs des opérations, analyste assigné, "
+"observateurs."
+msgstr "وصول محدود: مديرو العمليات، المحلل المُسنَد، المراقبون."
+
+msgid "Observateurs"
+msgstr "المراقبون"
+
+msgid ""
+"Membres autorisés à consulter cette demande en lecture seule (utile en cas "
+"de retard ou d'absence de l'analyste assigné)."
+msgstr ""
+"الأعضاء المسموح لهم بالاطلاع على هذا الطلب للقراءة فقط (مفيد في حال تأخّر "
+"المحلل المُسنَد أو غيابه)."
+
+#, fuzzy
+#| msgid "Restaurer une sauvegarde"
+msgid "Retirer ce suiveur"
+msgstr "استعادة نسخة احتياطية"
+
+msgid "Retirer"
+msgstr "إزالة"
+
+msgid "Aucun observateur pour l'instant."
+msgstr "لا يوجد مراقبون حتى الآن."
+
+#, fuzzy
+#| msgid "Ajouter un service"
+msgid "Ajouter un observateur"
+msgstr "إضافة خدمة"
+
+msgid "Ajouter"
+msgstr "إضافة"
+
 msgid "Commande & Paiement"
 msgstr "أمر الشراء والدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:682
 msgid "Bon de Commande Uploadé"
 msgstr "تم رفع أمر الشراء"
 
-#: templates/dashboard/admin_ops/request_detail.html:685
 msgid "En attente du Bon de Commande"
 msgstr "بانتظار أمر الشراء"
 
-#: templates/dashboard/admin_ops/request_detail.html:692
 msgid "Voir le Bon de Commande"
 msgstr "عرض أمر الشراء"
 
-#: templates/dashboard/admin_ops/request_detail.html:694
-#: templates/dashboard/admin_ops/request_detail.html:720
 msgid "Uploadé le"
 msgstr "تاريخ الرفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:698
 msgid ""
 "Le client doit uploader le Bon de Commande (pièce obligatoire selon le Code "
 "de Commerce Algérien) après validation du devis."
@@ -1890,754 +1198,514 @@ msgstr ""
 "يجب على العميل رفع أمر الشراء (وثيقة إلزامية وفقاً للقانون التجاري الجزائري)"
 " بعد اعتماد عرض الأسعار."
 
-#: templates/dashboard/admin_ops/request_detail.html:708
 msgid "Reçu de Paiement Uploadé"
 msgstr "تم رفع إيصال الدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:711
 msgid "En attente du Paiement"
 msgstr "بانتظار الدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:718
 msgid "Voir le Reçu de Paiement"
 msgstr "عرض إيصال الدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:725
 msgid ""
 "Le client doit payer et uploader le reçu de paiement pour recevoir son "
 "rapport."
 msgstr "يجب على العميل الدفع ورفع إيصال الدفع لاستلام تقريره."
 
-#: templates/dashboard/admin_ops/request_detail.html:727
 msgid "Le paiement sera requis après la fin de l'analyse."
 msgstr "سيُطلب الدفع بعد انتهاء التحليل."
 
-#: templates/dashboard/admin_ops/request_detail.html:737
 msgid "Paiement confirmé"
 msgstr "تم تأكيد الدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:738
 msgid "Le rapport peut être délivré au client"
 msgstr "يمكن تسليم التقرير إلى العميل"
 
-#: templates/dashboard/admin_ops/request_detail.html:747
-#: templates/dashboard/requester/request_detail.html:183
-#: templates/dashboard/superadmin/index.html:108
-#: templates/includes/sidebar.html:48 templates/includes/sidebar.html:105
-#: templates/pages/help.html:53
 msgid "Documents"
 msgstr "الوثائق"
 
-#: templates/dashboard/admin_ops/request_detail.html:757
 msgid "Note de Plateforme"
 msgstr "مذكرة المنصة"
 
-#: templates/dashboard/admin_ops/request_detail.html:766
 msgid "Rapport d'analyse"
 msgstr "تقرير التحليل"
 
-#: templates/dashboard/admin_ops/request_detail.html:778
 msgid "Avis client"
 msgstr "تقييم العميل"
 
-#: templates/dashboard/admin_ops/request_detail.html:794
 msgid "Évalué le"
 msgstr "تاريخ التقييم"
 
-#: templates/dashboard/admin_ops/request_detail.html:803
-#: templates/dashboard/analyst/request_detail.html:247
 msgid "QR Code Rapport"
 msgstr "رمز QR للتقرير"
 
-#: templates/dashboard/admin_ops/request_detail.html:806
-#: templates/dashboard/analyst/request_detail.html:250
 msgid "Scannez pour accéder à la page du rapport"
 msgstr "امسح الرمز للوصول إلى صفحة التقرير"
 
-#: templates/dashboard/admin_ops/request_detail.html:814
-#: templates/dashboard/analyst/request_detail.html:257
-#: templates/dashboard/client/request_detail.html:450
-#: templates/dashboard/requester/request_detail.html:307
 msgid "Messages"
 msgstr "الرسائل"
 
-#: templates/dashboard/admin_ops/request_detail.html:832
-#: templates/dashboard/analyst/request_detail.html:355
 msgid "Commentaires"
 msgstr "التعليقات"
 
-#: templates/dashboard/admin_ops/request_detail.html:851
-#: templates/dashboard/analyst/request_detail.html:323
 msgid "Historique du workflow"
 msgstr "سجل سير العمل"
 
-#: templates/dashboard/admin_ops/request_detail.html:876
-#: templates/dashboard/analyst/index.html:282
-#: templates/dashboard/analyst/request_detail.html:347
 msgid "Aucun historique."
 msgstr "لا يوجد سجل."
 
-#: templates/dashboard/admin_ops/request_detail.html:883
-#: templates/dashboard/analyst/request_detail.html:281
-#: templates/dashboard/superadmin/index.html:237
-#: templates/dashboard/superadmin/index.html:312
-#: templates/dashboard/superadmin/index.html:452
-#: templates/dashboard/superadmin/index.html:517
-#: templates/dashboard/superadmin/index.html:601
-#: templates/dashboard/superadmin/index.html:701
-#: templates/dashboard/superadmin/index.html:716
-#: templates/documents/block_list.html:70
-#: templates/documents/template_detail.html:111
-#: templates/documents/template_list.html:71
 msgid "Actions"
 msgstr "الإجراءات"
 
-#: templates/dashboard/admin_ops/request_detail.html:895
 msgid "Notifier le demandeur (soumission IBTIKAR)"
 msgstr "إشعار المُقدِّم (الإرسال إلى IBTIKAR)"
 
-#: templates/dashboard/admin_ops/request_detail.html:899
 msgid "Transmettre le rapport au demandeur"
 msgstr "إرسال التقرير إلى المُقدِّم"
 
-#: templates/dashboard/admin_ops/request_detail.html:904
 msgid "Transmettre le rapport au client"
 msgstr "إرسال التقرير إلى العميل"
 
-#: templates/dashboard/admin_ops/request_detail.html:932
 msgid "Préparer / Modifier le devis"
 msgstr "إعداد / تعديل عرض الأسعار"
 
-#: templates/dashboard/admin_ops/request_detail.html:942
 msgid "Générer la facture"
 msgstr "إصدار الفاتورة"
 
-#: templates/dashboard/admin_ops/request_detail.html:953
 msgid "Confirmer le paiement"
 msgstr "تأكيد الدفع"
 
-#: templates/dashboard/admin_ops/request_detail.html:962
 msgid "Coût DA"
 msgstr "التكلفة (دج)"
 
-#: templates/dashboard/admin_ops/request_detail.html:964
 msgid "Ajuster coût"
 msgstr "تعديل التكلفة"
 
-#: templates/dashboard/admin_ops/request_detail.html:994
 msgid "Télécharger Note"
 msgstr "تنزيل المذكرة"
 
-#: templates/dashboard/admin_ops/request_detail.html:999
 msgid "Aucune action disponible pour ce statut."
 msgstr "لا توجد إجراءات متاحة لهذه الحالة."
 
-#: templates/dashboard/analyst/index.html:10
 msgid "Espace analyste"
 msgstr "فضاء المحلِّل"
 
-#: templates/dashboard/analyst/index.html:15
 msgid "Assignées"
 msgstr "المُسنَدة"
 
-#: templates/dashboard/analyst/index.html:18
 #, python-format
 msgid "Productivité %%"
 msgstr "الإنتاجية %%"
 
-#: templates/dashboard/analyst/index.html:30
-#: templates/dashboard/analyst/index.html:259
-#: templates/dashboard/finance/index.html:31
-#: templates/includes/sidebar.html:128 templates/includes/sidebar.html:167
-#: templates/pages/track.html:45
+#, fuzzy
+#| msgid "Opérations"
+msgid "Observations"
+msgstr "العمليات"
+
 msgid "Historique"
 msgstr "السجل"
 
-#: templates/dashboard/analyst/index.html:31
-#: templates/includes/sidebar.html:132
 msgid "Profil"
 msgstr "الملف الشخصي"
 
-#: templates/dashboard/analyst/index.html:33
-#: templates/dashboard/client/index.html:31
-#: templates/dashboard/requester/index.html:77
-#: templates/includes/notification_list.html:5
-#: templates/includes/sidebar.html:140 templates/includes/sidebar.html:190
-#: templates/includes/sidebar.html:217 templates/includes/topbar.html:30
 msgid "Notifications"
 msgstr "الإشعارات"
 
-#: templates/dashboard/analyst/index.html:39
 msgid "Tâches en attente"
 msgstr "المهام قيد الانتظار"
 
-#: templates/dashboard/analyst/index.html:54
-#: templates/dashboard/analyst/index.html:222
 msgid "Accepter"
 msgstr "قبول"
 
-#: templates/dashboard/analyst/index.html:58
 msgid "Décliner"
 msgstr "رفض"
 
-#: templates/dashboard/analyst/index.html:60
 msgid "Raison..."
 msgstr "السبب..."
 
-#: templates/dashboard/analyst/index.html:61
-#: templates/dashboard/finance/index.html:61
 msgid "Confirmer"
 msgstr "تأكيد"
 
-#: templates/dashboard/analyst/index.html:67
 msgid "Aucune tâche en attente."
 msgstr "لا توجد مهام قيد الانتظار."
 
-#: templates/dashboard/analyst/index.html:76
 msgid "Travaux en cours"
 msgstr "الأعمال الجارية"
 
-#: templates/dashboard/analyst/index.html:104
-#: templates/dashboard/client/index.html:89
-#: templates/dashboard/requester/index.html:192
 msgid "Voir détails"
 msgstr "عرض التفاصيل"
 
-#: templates/dashboard/analyst/index.html:146
-#: templates/dashboard/analyst/request_detail.html:288
 msgid "Échantillon reçu"
 msgstr "تم استلام العيِّنة"
 
-#: templates/dashboard/analyst/index.html:152
-#: templates/dashboard/analyst/request_detail.html:295
 msgid "Démarrer analyse"
 msgstr "بدء التحليل"
 
-#: templates/dashboard/analyst/index.html:158
-#: templates/dashboard/analyst/request_detail.html:302
 msgid "Terminer analyse"
 msgstr "إنهاء التحليل"
 
-#: templates/dashboard/analyst/index.html:164
-#: templates/dashboard/analyst/request_detail.html:309
 msgid "Uploader rapport"
 msgstr "رفع التقرير"
 
-#: templates/dashboard/analyst/index.html:175
 msgid "Proposer un rendez-vous"
 msgstr "اقتراح موعد"
 
-#: templates/dashboard/analyst/index.html:179
-#: templates/dashboard/analyst/request_detail.html:160
-#: templates/dashboard/analyst/request_detail.html:175
 msgid "Date proposée"
 msgstr "التاريخ المقترح"
 
-#: templates/dashboard/analyst/index.html:186
-#: templates/dashboard/analyst/request_detail.html:221
 msgid "Heure"
 msgstr "الوقت"
 
-#: templates/dashboard/analyst/index.html:199
 msgid "Message au demandeur"
 msgstr "رسالة إلى المُقدِّم"
 
-#: templates/dashboard/analyst/index.html:200
 msgid "Ex: Apportez vos échantillons frais"
 msgstr "مثال: أحضر العيِّنات طازجة"
 
-#: templates/dashboard/analyst/index.html:202
 msgid "Proposer ce RDV"
 msgstr "اقتراح هذا الموعد"
 
-#: templates/dashboard/analyst/index.html:204
 msgid ""
 "Le demandeur recevra une notification pour confirmer ou demander un "
 "changement de date."
 msgstr "سيتلقى المُقدِّم إشعاراً لتأكيد الموعد أو طلب تغييره."
 
-#: templates/dashboard/analyst/index.html:214
 msgid "Date alternative proposée"
 msgstr "تم اقتراح تاريخ بديل"
 
-#: templates/dashboard/analyst/index.html:226
-#: templates/dashboard/analyst/request_detail.html:197
 msgid "Refuser"
 msgstr "رفض"
 
-#: templates/dashboard/analyst/index.html:234
 msgid "Répondre"
 msgstr "الرد"
 
-#: templates/dashboard/analyst/index.html:250
 msgid "Aucun travail en cours."
 msgstr "لا توجد أعمال جارية."
 
-#: templates/dashboard/analyst/index.html:294
+#, fuzzy
+#| msgid "Demandes à assigner"
+msgid "Demandes que vous suivez"
+msgstr "طلبات بانتظار الإسناد"
+
+msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
+msgstr "وصول للقراءة فقط. لا يمكنك التصرّف في هذه الطلبات."
+
+#, fuzzy
+#| msgid "Profil mis à jour."
+msgid "Dernière mise à jour"
+msgstr "تم تحديث الملف الشخصي."
+
+#, fuzzy
+#| msgid "Toutes les demandes"
+msgid "Consulter cette demande"
+msgstr "جميع الطلبات"
+
+#, fuzzy
+#| msgid "Aucune demande en cours de traitement."
+msgid "Aucune demande à observer pour l'instant."
+msgstr "لا توجد طلبات قيد المعالجة."
+
+msgid ""
+"L'administrateur des opérations peut vous ajouter en suivi sur une demande "
+"pour que vous puissiez en surveiller l'avancement (par exemple en cas de "
+"retard d'un collègue)."
+msgstr ""
+"يمكن لمدير العمليات إضافتك كمتابع على طلب لتتمكّن من مراقبة تقدّمه (على سبيل"
+" المثال في حال تأخّر أحد الزملاء)."
+
 msgid "Mon profil"
 msgstr "ملفي الشخصي"
 
-#: templates/dashboard/analyst/index.html:312
 msgid "Mes techniques"
 msgstr "تقنياتي"
 
-#: templates/dashboard/analyst/index.html:336
 msgid "sur"
 msgstr "من"
 
-#: templates/dashboard/analyst/index.html:346
 msgid "Score de productivité"
 msgstr "درجة الإنتاجية"
 
-#: templates/dashboard/analyst/index.html:366
 msgid "Cadeau récupéré !"
 msgstr "تم استلام الهدية!"
 
-#: templates/dashboard/analyst/index.html:367
 msgid "Merci pour votre excellent travail. Continuez comme ça !"
 msgstr "شكراً على عملك الممتاز. واصل على هذا المنوال!"
 
-#: templates/dashboard/analyst/index.html:375
 msgid "Boîte surprise débloquée !"
 msgstr "تم فتح صندوق المفاجآت!"
 
-#: templates/dashboard/analyst/index.html:376
 msgid ""
 "Vous avez cumulé 100 points ! Une récompense vous attend chez "
 "l'administrateur."
 msgstr "لقد جمعت 100 نقطة! تنتظرك مكافأة لدى المسؤول."
 
-#: templates/dashboard/analyst/index.html:379
 msgid "Récompense"
 msgstr "المكافأة"
 
-#: templates/dashboard/analyst/index.html:380
 msgid "Voici votre récompense — allez la récupérer !"
 msgstr "ها هي مكافأتك — اذهب لاستلامها!"
 
-#: templates/dashboard/analyst/index.html:383
 msgid "L'administrateur prépare votre récompense..."
 msgstr "يقوم المسؤول بإعداد مكافأتك..."
 
-#: templates/dashboard/analyst/index.html:389
 msgid "Marquer comme récupéré"
 msgstr "تعليم كمستلَمة"
 
-#: templates/dashboard/analyst/index.html:400
 msgid "Boîte surprise presque débloquée !"
 msgstr "صندوق المفاجآت على وشك أن يُفتح!"
 
-#: templates/dashboard/analyst/index.html:401
 msgid "Objectif : 100 points"
 msgstr "الهدف: 100 نقطة"
 
-#: templates/dashboard/analyst/index.html:427
 msgid "Activité & Points"
 msgstr "النشاط والنقاط"
 
-#: templates/dashboard/analyst/index.html:428
 msgid "événements"
 msgstr "حدث"
 
-#: templates/dashboard/analyst/index.html:447
 msgid "Complétez des demandes pour gagner vos premiers points !"
 msgstr "أكمل الطلبات لكسب أولى نقاطك!"
 
-#: templates/dashboard/analyst/index.html:457
 msgid "Encouragements"
 msgstr "رسائل التشجيع"
 
-#: templates/dashboard/analyst/index.html:477
 msgid "Vos encouragements apparaîtront ici."
 msgstr "ستظهر رسائل التشجيع هنا."
 
-#: templates/dashboard/analyst/index.html:488
 msgid "Badges & Objectifs"
 msgstr "الأوسمة والأهداف"
 
-#: templates/dashboard/analyst/index.html:496
 msgid "Première analyse"
 msgstr "أول تحليل"
 
-#: templates/dashboard/analyst/index.html:497
-#: templates/dashboard/analyst/index.html:503
-#: templates/dashboard/analyst/index.html:509
-#: templates/dashboard/analyst/index.html:515
-#: templates/dashboard/analyst/index.html:521
-#: templates/dashboard/analyst/index.html:527
 msgid "Débloqué"
 msgstr "مفتوح"
 
-#: templates/dashboard/analyst/index.html:502
 msgid "5 Analyses"
 msgstr "5 تحاليل"
 
-#: templates/dashboard/analyst/index.html:520
 msgid "Points — Expert"
 msgstr "النقاط — خبير"
 
-#: templates/dashboard/analyst/index.html:526
 msgid "Analyses"
 msgstr "التحاليل"
 
-#: templates/dashboard/analyst/index.html:540
-#: templates/dashboard/client/index.html:357
-#: templates/dashboard/requester/index.html:386
 msgid "Aucune notification."
 msgstr "لا توجد إشعارات."
 
-#: templates/dashboard/analyst/request_detail.html:24
-#: templates/dashboard/client/request_detail.html:23
-#: templates/dashboard/requester/request_detail.html:23
-#: templates/dashboard/superadmin/user_edit.html:9
 msgid "Retour au tableau de bord"
 msgstr "العودة إلى لوحة التحكم"
 
-#: templates/dashboard/analyst/request_detail.html:31
 msgid "Pipeline GENOCLAB"
 msgstr "مسار GENOCLAB"
 
-#: templates/dashboard/analyst/request_detail.html:37
-#: templates/dashboard/client/index.html:97
-#: templates/dashboard/client/request_detail.html:320
 msgid "Créée"
 msgstr "تم الإنشاء"
 
-#: templates/dashboard/analyst/request_detail.html:47
-#: templates/dashboard/client/request_detail.html:330
 msgid "BC"
 msgstr "أمر الشراء"
 
-#: templates/dashboard/analyst/request_detail.html:52
-#: templates/dashboard/client/index.html:112
-#: templates/dashboard/client/request_detail.html:335
-#: templates/dashboard/requester/index.html:273
-#: templates/dashboard/requester/request_detail.html:168
-#: templates/includes/sidebar.html:113
 msgid "Analyse"
 msgstr "التحليل"
 
-#: templates/dashboard/analyst/request_detail.html:57
-#: templates/dashboard/client/index.html:107
-#: templates/dashboard/client/request_detail.html:340
-#: templates/dashboard/finance/index.html:114
-#: templates/dashboard/superadmin/index.html:814
 msgid "Paiement"
 msgstr "الدفع"
 
-#: templates/dashboard/analyst/request_detail.html:67
-#: templates/dashboard/client/index.html:117
-#: templates/dashboard/client/request_detail.html:350
-#: templates/dashboard/requester/index.html:278
-#: templates/dashboard/requester/request_detail.html:173
 msgid "Terminé"
 msgstr "مُنتهٍ"
 
-#: templates/dashboard/analyst/request_detail.html:156
-#: templates/pages/track.html:38
+msgid "Devis interne avec la justification détaillée du tarif."
+msgstr "عرض سعر داخلي مع تبرير مفصّل للسعر."
+
+msgid "(Vous y avez accès en lecture en tant qu'observateur.)"
+msgstr "(لديك حق الوصول للقراءة بصفتك مراقبًا.)"
+
 msgid "Rendez-vous"
 msgstr "الموعد"
 
-#: templates/dashboard/analyst/request_detail.html:164
 msgid "Confirmé"
 msgstr "مؤكَّد"
 
-#: templates/dashboard/analyst/request_detail.html:172
 msgid "Date alternative proposée par le demandeur"
 msgstr "تاريخ بديل اقترحه المُقدِّم"
 
-#: templates/dashboard/analyst/request_detail.html:190
 msgid "Accepter cette date"
 msgstr "قبول هذا التاريخ"
 
-#: templates/dashboard/analyst/request_detail.html:202
 msgid "Raison du refus"
 msgstr "سبب الرفض"
 
-#: templates/dashboard/analyst/request_detail.html:203
 msgid "Ex: Je ne suis pas disponible ce jour-là..."
 msgstr "مثال: لست متاحاً في ذلك اليوم..."
 
-#: templates/dashboard/analyst/request_detail.html:205
 msgid "Confirmer le refus"
 msgstr "تأكيد الرفض"
 
-#: templates/dashboard/analyst/request_detail.html:234
-#: templates/dashboard/client/index.html:268
-#: templates/dashboard/client/index.html:329
-#: templates/dashboard/requester/index.html:334
-#: templates/dashboard/requester/index.html:358
 msgid "Note"
 msgstr "ملاحظة"
 
-#: templates/dashboard/analyst/request_detail.html:237
 msgid "Proposer"
 msgstr "اقتراح"
 
-#: templates/dashboard/analyst/request_detail.html:268
 msgid "Aucun message."
 msgstr "لا توجد رسائل."
 
-#: templates/dashboard/analyst/request_detail.html:273
 msgid "Répondre..."
 msgstr "الرد..."
 
-#: templates/dashboard/analyst/request_detail.html:313
 msgid "Voir rapport"
 msgstr "عرض التقرير"
 
-#: templates/dashboard/client/index.html:4 templates/pages/help.html:51
 msgid "Client GENOCLAB"
 msgstr "عميل GENOCLAB"
 
-#: templates/dashboard/client/index.html:9
 msgid "Espace GENOCLAB"
 msgstr "فضاء GENOCLAB"
 
-#: templates/dashboard/client/index.html:17
-#: templates/dashboard/requester/index.html:17
-#: templates/dashboard/stats.html:85
 msgid "Rejetées"
 msgstr "المرفوضة"
 
-#: templates/dashboard/client/index.html:27
-#: templates/dashboard/requester/index.html:74
-#: templates/includes/sidebar.html:178 templates/includes/sidebar.html:201
 msgid "Nouvelle demande"
 msgstr "طلب جديد"
 
-#: templates/dashboard/client/index.html:28
-#: templates/dashboard/requester/index.html:75
-#: templates/includes/sidebar.html:182 templates/includes/sidebar.html:205
 msgid "Mes demandes"
 msgstr "طلباتي"
 
-#: templates/dashboard/client/index.html:29
-#: templates/dashboard/finance/index.html:16
-#: templates/dashboard/superadmin/index.html:802
-#: templates/includes/sidebar.html:159 templates/includes/sidebar.html:209
 msgid "Factures"
 msgstr "الفواتير"
 
-#: templates/dashboard/client/index.html:30
-#: templates/dashboard/client/index.html:319
-#: templates/dashboard/finance/index.html:30
-#: templates/dashboard/requester/index.html:76
-#: templates/dashboard/requester/index.html:348
-#: templates/includes/sidebar.html:163 templates/includes/sidebar.html:186
-#: templates/includes/sidebar.html:213
 msgid "Archives"
 msgstr "الأرشيف"
 
-#: templates/dashboard/client/index.html:37
 msgid "Soumettre une nouvelle demande GENOCLAB"
 msgstr "إرسال طلب GENOCLAB جديد"
 
-#: templates/dashboard/client/index.html:44
-#: templates/dashboard/requester/index.html:90
-#: templates/pages/guest_submit.html:57
 msgid "Sélectionner un service..."
 msgstr "اختر خدمة..."
 
-#: templates/dashboard/client/index.html:52
-#: templates/dashboard/requester/index.html:98
-#: templates/pages/guest_submit.html:68
 msgid "Titre de la demande"
 msgstr "عنوان الطلب"
 
-#: templates/dashboard/client/index.html:53
 msgid "Ex: Analyse complète..."
 msgstr "مثال: تحليل شامل..."
 
-#: templates/dashboard/client/index.html:57
-#: templates/dashboard/requester/index.html:103
-#: templates/pages/guest_submit.html:73
 msgid "Décrivez votre demande..."
 msgstr "صف طلبك..."
 
-#: templates/dashboard/client/index.html:62
-#: templates/dashboard/requester/index.html:109
-#: templates/pages/guest_submit.html:78
 msgid "Normal"
 msgstr "عادي"
 
-#: templates/dashboard/client/index.html:63
-#: templates/dashboard/requester/index.html:110
-#: templates/pages/guest_submit.html:79
 msgid "Urgent"
 msgstr "عاجل"
 
-#: templates/dashboard/client/index.html:64
-#: templates/dashboard/requester/index.html:111
-#: templates/pages/guest_submit.html:80
 msgid "Très urgent"
 msgstr "عاجل جداً"
 
-#: templates/dashboard/client/index.html:67
-#: templates/dashboard/requester/index.html:129
 msgid "Vérifier et soumettre"
 msgstr "المراجعة والإرسال"
 
-#: templates/dashboard/client/index.html:76
-#: templates/dashboard/requester/index.html:179
 msgid "Mes demandes actives"
 msgstr "طلباتي النشطة"
 
-#: templates/dashboard/client/index.html:126
-#: templates/dashboard/requester/index.html:218
 msgid "Rendez-vous proposé"
 msgstr "تم اقتراح موعد"
 
-#: templates/dashboard/client/index.html:132
-#: templates/dashboard/requester/index.html:224
 msgid "Confirmer ce RDV"
 msgstr "تأكيد هذا الموعد"
 
-#: templates/dashboard/client/index.html:137
-#: templates/dashboard/requester/index.html:229
 msgid "Proposer une autre date"
 msgstr "اقتراح تاريخ آخر"
 
-#: templates/dashboard/client/index.html:140
-#: templates/dashboard/requester/index.html:232
 msgid "Date souhaitée"
 msgstr "التاريخ المرغوب"
 
-#: templates/dashboard/client/index.html:157
-#: templates/dashboard/requester/index.html:248
 msgid "Confirmer RDV"
 msgstr "تأكيد الموعد"
 
-#: templates/dashboard/client/index.html:166
 msgid "Devis reçu"
 msgstr "تم استلام عرض الأسعار"
 
-#: templates/dashboard/client/index.html:179
 msgid "Frais admin."
 msgstr "الرسوم الإدارية"
 
-#: templates/dashboard/client/index.html:185
 msgid "Frais rapport"
 msgstr "رسوم التقرير"
 
-#: templates/dashboard/client/index.html:198
-#: templates/dashboard/client/request_detail.html:196
 msgid "Accepter le devis"
 msgstr "قبول عرض الأسعار"
 
-#: templates/dashboard/client/index.html:202
-#: templates/dashboard/client/request_detail.html:203
 msgid "Refuser le devis"
 msgstr "رفض عرض الأسعار"
 
-#: templates/dashboard/client/index.html:204
 msgid "Voir détail"
 msgstr "عرض التفاصيل"
 
-#: templates/dashboard/client/index.html:214
-#: templates/dashboard/requester/index.html:288
 msgid "Votre rapport est prêt"
 msgstr "تقريرك جاهز"
 
-#: templates/dashboard/client/index.html:221
-#: templates/dashboard/client/request_detail.html:377
-#: templates/dashboard/client/request_detail.html:417
-#: templates/dashboard/report_viewer.html:433
-#: templates/dashboard/requester/request_detail.html:219
-#: templates/dashboard/requester/request_detail.html:234
-#: templates/dashboard/requester/request_detail.html:273
-#: templates/pages/track.html:76
 msgid "Télécharger le rapport"
 msgstr "تنزيل التقرير"
 
-#: templates/dashboard/client/index.html:228
-#: templates/dashboard/client/request_detail.html:384
-#: templates/dashboard/requester/request_detail.html:226
-#: templates/dashboard/requester/request_detail.html:240
 msgid "Confirmer la réception"
 msgstr "تأكيد الاستلام"
 
-#: templates/dashboard/client/index.html:237
-#: templates/dashboard/client/request_detail.html:393
-#: templates/dashboard/requester/index.html:303
-#: templates/dashboard/requester/request_detail.html:249
 msgid "Confirmer la réception du rapport"
 msgstr "تأكيد استلام التقرير"
 
-#: templates/dashboard/client/index.html:247
-#: templates/dashboard/client/request_detail.html:409
-#: templates/dashboard/requester/index.html:313
-#: templates/dashboard/requester/request_detail.html:265
 msgid "Évaluez le service"
 msgstr "قيِّم الخدمة"
 
-#: templates/dashboard/client/index.html:248
-#: templates/dashboard/client/request_detail.html:410
-#: templates/dashboard/requester/index.html:314
-#: templates/dashboard/requester/request_detail.html:266
 msgid "Votre avis nous aide à améliorer nos services."
 msgstr "يساعدنا تقييمك على تحسين خدماتنا."
 
-#: templates/dashboard/client/index.html:261
-#: templates/dashboard/client/request_detail.html:432
-#: templates/dashboard/report_viewer.html:527
-#: templates/dashboard/requester/index.html:327
-#: templates/dashboard/requester/request_detail.html:288
 msgid "Commentaire (optionnel)..."
 msgstr "تعليق (اختياري)..."
 
-#: templates/dashboard/client/index.html:273
-#: templates/dashboard/requester/index.html:339
 msgid "Aucune demande active. Soumettez votre première demande!"
 msgstr "لا توجد طلبات نشطة. أرسل طلبك الأول!"
 
-#: templates/dashboard/client/index.html:282
 msgid "Mes factures"
 msgstr "فواتيري"
 
-#: templates/dashboard/client/index.html:288
-#: templates/dashboard/finance/index.html:108
-#: templates/dashboard/superadmin/index.html:808
 msgid "N° Facture"
 msgstr "رقم الفاتورة"
 
-#: templates/dashboard/client/index.html:289
-#: templates/dashboard/finance/index.html:110
-#: templates/dashboard/superadmin/audit_log.html:49
-#: templates/dashboard/superadmin/index.html:809
 msgid "Demande"
 msgstr "الطلب"
 
-#: templates/dashboard/client/index.html:290
-#: templates/dashboard/finance/index.html:111
 msgid "HT"
 msgstr "قبل الضريبة"
 
-#: templates/dashboard/client/index.html:292
-#: templates/dashboard/finance/index.html:113
 msgid "TTC"
 msgstr "شامل الضريبة"
 
-#: templates/dashboard/client/index.html:307
-#: templates/dashboard/finance/index.html:140
-#: templates/dashboard/superadmin/index.html:833
+#, fuzzy
+#| msgid "Documents"
+msgid "Document"
+msgstr "الوثائق"
+
+#, fuzzy
+#| msgid "Générer la facture"
+msgid "Télécharger la facture"
+msgstr "إصدار الفاتورة"
+
 msgid "Aucune facture."
 msgstr "لا توجد فواتير."
 
-#: templates/dashboard/client/index.html:344
-#: templates/dashboard/requester/index.html:373
 msgid "Aucune archive."
 msgstr "لا يوجد أرشيف."
 
-#: templates/dashboard/client/request_detail.html:137
+#, fuzzy
+#| msgid "Télécharger le Bon de Commande"
+msgid "Télécharger le devis officiel (.docx)"
+msgstr "رفع أمر الشراء"
+
 msgid "Quantité"
 msgstr "الكمية"
 
-#: templates/dashboard/client/request_detail.html:218
 msgid "Bon de Commande Obligatoire"
 msgstr "أمر الشراء إلزامي"
 
-#: templates/dashboard/client/request_detail.html:223
 msgid ""
 "Selon le Code de Commerce Algérien, vous devez fournir un Bon de Commande "
 "(BC) pour toute transaction commerciale. Veuillez télécharger votre BC ci-"
@@ -2646,235 +1714,186 @@ msgstr ""
 "وفقاً للقانون التجاري الجزائري، يجب عليك تقديم أمر شراء لكل معاملة تجارية. "
 "يرجى رفع أمر الشراء أدناه."
 
-#: templates/dashboard/client/request_detail.html:228
 msgid "Bon de Commande déjà téléchargé"
 msgstr "تم رفع أمر الشراء مسبقاً"
 
-#: templates/dashboard/client/request_detail.html:240
 msgid "Télécharger le Bon de Commande"
 msgstr "رفع أمر الشراء"
 
-#: templates/dashboard/client/request_detail.html:255
 msgid "Paiement Requis pour Recevoir Votre Rapport"
 msgstr "الدفع مطلوب لاستلام تقريرك"
 
-#: templates/dashboard/client/request_detail.html:260
 msgid ""
 "Votre analyse est terminée. Pour recevoir votre rapport, veuillez effectuer "
 "le paiement et télécharger le reçu ci-dessous."
 msgstr ""
 "اكتمل التحليل. لاستلام تقريرك، يرجى إتمام عملية الدفع ورفع الإيصال أدناه."
 
-#: templates/dashboard/client/request_detail.html:265
 msgid "Montant à payer"
 msgstr "المبلغ المستحَق"
 
-#: templates/dashboard/client/request_detail.html:271
 msgid "Reçu de paiement déjà téléchargé"
 msgstr "تم رفع إيصال الدفع مسبقاً"
 
-#: templates/dashboard/client/request_detail.html:278
 msgid "Télécharger votre reçu de paiement:"
 msgstr "ارفع إيصال الدفع:"
 
-#: templates/dashboard/client/request_detail.html:284
 msgid "Confirmer le Paiement"
 msgstr "تأكيد الدفع"
 
-#: templates/dashboard/client/request_detail.html:300
-#: templates/dashboard/requester/request_detail.html:133
 msgid "Tâche acceptée"
 msgstr "تم قبول المهمة"
 
-#: templates/dashboard/client/request_detail.html:307
 msgid "En attente de traitement."
 msgstr "بانتظار المعالجة."
 
-#: templates/dashboard/client/request_detail.html:314
-#: templates/dashboard/requester/request_detail.html:147
-msgid "Pipeline"
-msgstr "المسار"
-
-#: templates/dashboard/client/request_detail.html:368
-#: templates/dashboard/requester/request_detail.html:210
 msgid "Votre rapport d'analyse est prêt"
 msgstr "تقرير التحليل الخاص بك جاهز"
 
-#: templates/dashboard/client/request_detail.html:369
-#: templates/dashboard/requester/request_detail.html:211
 msgid "Téléchargez-le et confirmez la réception pour finaliser votre demande."
 msgstr "قم بتنزيله وأكِّد الاستلام لإنهاء طلبك."
 
-#: templates/dashboard/client/request_detail.html:433
-#: templates/dashboard/requester/request_detail.html:289
 msgid "Envoyer mon évaluation"
 msgstr "إرسال تقييمي"
 
-#: templates/dashboard/client/request_detail.html:441
-#: templates/dashboard/report_viewer.html:498
-#: templates/dashboard/requester/request_detail.html:297
 msgid "Votre évaluation"
 msgstr "تقييمك"
 
-#: templates/dashboard/finance/index.html:4
-#: templates/includes/sidebar.html:144
 msgid "Finance"
 msgstr "المالية"
 
-#: templates/dashboard/finance/index.html:9
 msgid "Gestion financière IBTIKAR & GENOCLAB"
 msgstr "الإدارة المالية لـ IBTIKAR و GENOCLAB"
 
-#: templates/dashboard/finance/index.html:17
 msgid "Étudiants IBTIKAR"
 msgstr "طلاب IBTIKAR"
 
-#: templates/dashboard/finance/index.html:27
-#: templates/includes/sidebar.html:151
 msgid "Validation IBTIKAR"
 msgstr "التحقُّق من IBTIKAR"
 
-#: templates/dashboard/finance/index.html:29
-#: templates/dashboard/finance/index.html:102
 msgid "Factures GENOCLAB"
 msgstr "فواتير GENOCLAB"
 
-#: templates/dashboard/finance/index.html:37
 msgid "Demandes IBTIKAR — Validation financière"
 msgstr "طلبات IBTIKAR — التحقُّق المالي"
 
-#: templates/dashboard/finance/index.html:47
 msgid "Solde déclaré"
 msgstr "الرصيد المُصرَّح به"
 
-#: templates/dashboard/finance/index.html:53
 msgid "Approuver"
 msgstr "اعتماد"
 
-#: templates/dashboard/finance/index.html:60
 msgid "Raison du rejet..."
 msgstr "سبب الرفض..."
 
-#: templates/dashboard/finance/index.html:67
 msgid "Aucune demande en attente de validation financière."
 msgstr "لا توجد طلبات بانتظار التحقُّق المالي."
 
-#: templates/dashboard/finance/index.html:76
 msgid "Budget IBTIKAR par statut"
 msgstr "ميزانية IBTIKAR حسب الحالة"
 
-#: templates/dashboard/finance/index.html:81
 msgid "Budget total"
 msgstr "الميزانية الإجمالية"
 
-#: templates/dashboard/finance/index.html:93
 msgid "Aucune donnée budgétaire."
 msgstr "لا توجد بيانات للميزانية."
 
-#: templates/dashboard/finance/index.html:109
-#: templates/dashboard/superadmin/index.html:810
 msgid "Client"
 msgstr "العميل"
 
-#: templates/dashboard/finance/index.html:132
 msgid "Partiel"
 msgstr "جزئي"
 
-#: templates/dashboard/finance/index.html:133
 msgid "Payé"
 msgstr "مدفوع"
 
-#: templates/dashboard/finance/index.html:152
-#: templates/dashboard/superadmin/index.html:1085
 msgid "Archives des revenus"
 msgstr "أرشيف الإيرادات"
 
-#: templates/dashboard/finance/index.html:156
 msgid "IBTIKAR complétés"
 msgstr "IBTIKAR المكتملة"
 
-#: templates/dashboard/finance/index.html:159
 msgid "GENOCLAB complétés"
 msgstr "GENOCLAB المكتملة"
 
-#: templates/dashboard/finance/index.html:169
 msgid "Historique financier"
 msgstr "السجل المالي"
 
-#: templates/dashboard/finance/index.html:172
 msgid "Total IBTIKAR (virtuel)"
 msgstr "إجمالي IBTIKAR (افتراضي)"
 
-#: templates/dashboard/finance/index.html:173
 msgid "Total GENOCLAB (réel)"
 msgstr "إجمالي GENOCLAB (فعلي)"
 
-#: templates/dashboard/finance/index.html:174
 msgid "Factures émises"
 msgstr "الفواتير الصادرة"
 
-#: templates/dashboard/finance/index.html:175
 msgid "Étudiants uniques"
 msgstr "الطلاب الفريدون"
 
-#: templates/dashboard/placeholder.html:10
 msgid "Bienvenue"
 msgstr "أهلاً بك"
 
-#: templates/dashboard/placeholder.html:20 templates/dashboard/stats.html:82
-#: templates/dashboard/stats.html:100 templates/dashboard/stats.html:117
-#: templates/dashboard/stats.html:133 templates/dashboard/stats.html:148
-#: templates/dashboard/stats.html:163 templates/dashboard/stats.html:178
-#: templates/dashboard/stats.html:207
-#: templates/dashboard/superadmin/index.html:103
 msgid "Demandes"
 msgstr "الطلبات"
 
-#: templates/dashboard/placeholder.html:48
 msgid "Tableau de bord en construction"
 msgstr "لوحة التحكم قيد الإنشاء"
 
-#: templates/dashboard/placeholder.html:49
 msgid ""
 "Les widgets et statistiques spécifiques à votre rôle seront bientôt "
 "disponibles."
 msgstr "ستتوفر قريباً الأدوات والإحصاءات الخاصة بدورك."
 
-#: templates/dashboard/report_viewer.html:357
+#, fuzzy
+#| msgid "Continuer vers l'évaluation"
+msgid "Continuer vers l\\'évaluation"
+msgstr "المتابعة إلى التقييم"
+
+msgid "Erreur réseau, veuillez réessayer."
+msgstr "خطأ في الشبكة، يرجى المحاولة مرة أخرى."
+
 msgid "Copié !"
 msgstr "تم النسخ!"
 
-#: templates/dashboard/report_viewer.html:400
+msgid ""
+"Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer."
+msgstr "نعتذر بصدق — أخبرنا بما يمكننا تحسينه."
+
+msgid "Nous voulons vraiment faire mieux pour vous."
+msgstr "نريد حقًا أن نقدّم لك ما هو أفضل."
+
+msgid "Merci — nous prenons note de vos remarques."
+msgstr "شكرًا — لقد سجّلنا ملاحظاتك."
+
+msgid "Super, merci beaucoup !"
+msgstr "رائع، شكرًا جزيلًا!"
+
+msgid "Excellent — un immense merci, cela compte vraiment pour notre équipe !"
+msgstr "ممتاز — شكرًا جزيلًا، هذا يعني الكثير لفريقنا!"
+
 msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
 msgstr "منصة إدارة العمليات العلمية — ESSBO"
 
-#: templates/dashboard/report_viewer.html:404
 msgid "Merci pour votre confiance"
 msgstr "شكراً لثقتك"
 
-#: templates/dashboard/report_viewer.html:405
 msgid ""
 "Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous."
 msgstr "تقرير التحليل جاهز. يمكنك تنزيله أدناه."
 
-#: templates/dashboard/report_viewer.html:410
 msgid "Référence"
 msgstr "المرجع"
 
-#: templates/dashboard/report_viewer.html:422
-#: templates/documents/template_form.html:144
 msgid "Date de soumission"
 msgstr "تاريخ الإرسال"
 
-#: templates/dashboard/report_viewer.html:455
 msgid "Remerciements et Clause de Citation"
 msgstr "الشكر والاستشهاد"
 
-#: templates/dashboard/report_viewer.html:458
 msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
 msgstr "شكراً لاستخدامك PLAGENOR 4.0! تقريرك جاهز."
 
-#: templates/dashboard/report_viewer.html:462
 msgid ""
 "Pour reconnaître le soutien et les contributions de notre Plateforme de "
 "Technologie Génomique, veuillez inclure la citation suivante dans toute "
@@ -2883,11 +1902,9 @@ msgstr ""
 "تقديراً لدعم ومساهمات منصة التكنولوجيا الجينومية لدينا، يرجى تضمين الاستشهاد"
 " التالي في أي نشر أو عرض يستند إلى البيانات أو التحاليل المُنجزة:"
 
-#: templates/dashboard/report_viewer.html:466
 msgid "Copier"
 msgstr "نسخ"
 
-#: templates/dashboard/report_viewer.html:473
 msgid ""
 "Cette recherche a été réalisée au sein de la Plateforme de Technologie "
 "Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). "
@@ -2898,7 +1915,6 @@ msgstr ""
 " بوهران (ESSBO). نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات "
 "وتفسيرها."
 
-#: templates/dashboard/report_viewer.html:478
 msgid ""
 "Veuillez également vous assurer que toute contribution substantielle du "
 "personnel de la plateforme est reconnue conformément aux directives standard"
@@ -2907,7 +1923,6 @@ msgstr ""
 "يرجى أيضاً التأكد من الاعتراف بأي مساهمة جوهرية لطاقم المنصة وفقاً للمعايير "
 "المعتمدة في التأليف العلمي."
 
-#: templates/dashboard/report_viewer.html:482
 msgid ""
 "Toute production scientifique incluant des analyses réalisées sur PLAGENOR "
 "implique l'inclusion des membres ayant contribué. Contactez le responsable "
@@ -2917,660 +1932,542 @@ msgstr ""
 "المساهمين فيه. تواصل مع المسؤول عبر البريد الإلكتروني للمنصة للاتفاق على "
 "الشروط."
 
-#: templates/dashboard/report_viewer.html:490
 msgid "Continuer vers l'évaluation"
 msgstr "المتابعة إلى التقييم"
 
-#: templates/dashboard/report_viewer.html:515
 msgid "Merci pour votre évaluation"
 msgstr "شكراً على تقييمك"
 
-#: templates/dashboard/report_viewer.html:518
-msgid "Évaluez notre service"
-msgstr "قيِّم خدمتنا"
+msgid "Comment s'est passée votre expérience ?"
+msgstr "كيف كانت تجربتك؟"
 
-#: templates/dashboard/requester/index.html:4 templates/pages/help.html:50
+msgid ""
+"Votre analyse a mobilisé notre équipe et nos plateformes. Votre retour "
+"compte énormément pour nous."
+msgstr "لقد استدعى تحليلك جهد فريقنا ومنصّاتنا. ملاحظاتك تعني لنا الكثير."
+
+msgid ""
+"Ce qui vous a marqué : réactivité de l’équipe, clarté des résultats, qualité"
+" de l’accompagnement…"
+msgstr "ما لفت انتباهك: سرعة استجابة الفريق، وضوح النتائج، جودة المرافقة…"
+
+msgid "Partager mon avis"
+msgstr "شارك رأيي"
+
 msgid "Demandeur IBTIKAR"
 msgstr "مُقدِّم طلب IBTIKAR"
 
-#: templates/dashboard/requester/index.html:9
 msgid "Espace IBTIKAR"
 msgstr "فضاء IBTIKAR"
 
-#: templates/dashboard/requester/index.html:36
 #, fuzzy
-#| msgid "Budget IBTIKAR (virtuel)"
-msgid "Budget IBTIKAR annuel"
-msgstr "ميزانية IBTIKAR (افتراضية)"
+#| msgid "Saisissez votre code IBTIKAR"
+msgid "Déclarez votre solde IBTIKAR"
+msgstr "أدخل رمز IBTIKAR"
 
-#: templates/dashboard/requester/index.html:38
 #, python-format
 msgid ""
-"Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
+"Avant toute soumission, indiquez le montant résiduel disponible sur votre "
+"compte IBTIKAR (entre 0 et %(cap)s DA). C'est ce montant qui servira de "
+"plafond pour l'estimation et la validation de votre demande. Vous pourrez "
+"l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre "
+"compte DGRSDT."
+msgstr ""
+"قبل أي تقديم، أدخِل المبلغ المتبقّي المتاح في حساب IBTIKAR الخاص بك (بين 0 و"
+" %(cap)s دج). سيُستخدَم هذا المبلغ كحد أقصى لتقدير طلبك والتحقق منه. يمكنك "
+"تعديله قبل كل طلب جديد ليعكس الحالة الفعلية لحساب DGRSDT الخاص بك."
+
+#, fuzzy
+#| msgid "Solde IBTIKAR déclaré (DA)"
+msgid "Solde IBTIKAR résiduel (DA)"
+msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
+
+msgid "Valider mon solde"
+msgstr "تأكيد رصيدي"
+
+#, fuzzy, python-format
+#| msgid "Mis à jour le"
+msgid "Mis à jour le %(dt)s."
+msgstr "تاريخ التحديث"
+
+msgid "Vous pouvez ajuster ce montant à tout moment."
+msgstr "يمكنك تعديل هذا المبلغ في أي وقت."
+
+#, fuzzy
+#| msgid "Solde déclaré"
+msgid "Solde déclaré disponible"
+msgstr "الرصيد المُصرَّح به"
+
+msgid ""
+"Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
+"de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par "
+"d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire."
+msgstr ""
+"تذكير: تحقّق من الرصيد المعروض في حساب IBTIKAR (DGRSDT) قبل تقديم طلب جديد. "
+"قد تستهلك منصّات أخرى ميزانية IBTIKAR — حدِّث هذا المبلغ أدناه عند الحاجة."
+
+#, fuzzy
+#| msgid "Mettre à jour"
+msgid "Mettre à jour mon solde"
+msgstr "تحديث"
+
+#, fuzzy
+#| msgid "Budget IBTIKAR (DA)"
+msgid "Nouveau solde IBTIKAR (DA)"
+msgstr "ميزانية IBTIKAR (دج)"
+
+#, fuzzy, python-format
+#| msgid ""
+#| "Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
+msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
 msgstr ""
 "ميزانية افتراضية تؤطّرها المديرية العامة للبحث العلمي (DGRSDT) — الحد الفردي"
 " %(cap)s دج / سنة."
 
-#: templates/dashboard/requester/index.html:43
-msgid "Solde restant"
-msgstr "الرصيد المتبقي"
+msgid "Enregistrer"
+msgstr "حفظ"
 
-#: templates/dashboard/requester/index.html:53
-msgid "utilisés"
-msgstr "مُستخدَم"
+#, fuzzy
+#| msgid "Solde IBTIKAR déclaré"
+msgid "Solde IBTIKAR non déclaré"
+msgstr "الرصيد المُصرَّح به في IBTIKAR"
 
-#: templates/dashboard/requester/index.html:54
-msgid "Cap"
-msgstr "السقف"
-
-#: templates/dashboard/requester/index.html:59
-#, python-format
 msgid ""
-"Vous avez atteint plus de 90 %% de votre budget annuel. Les nouvelles "
-"demandes seront vérifiées strictement."
-msgstr ""
-"لقد بلغت أكثر من 90 %% من ميزانيتك السنوية. ستخضع الطلبات الجديدة لمراجعة "
-"دقيقة."
+"Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
+"soumettre une demande."
+msgstr "أعلِن أولًا عن رصيد IBTIKAR المتبقّي أعلاه لتتمكّن من تقديم طلب."
 
-#: templates/dashboard/requester/index.html:63
-#, python-format
-msgid ""
-"Plus de 70 %% de votre budget est consommé. Pensez à prioriser vos "
-"prochaines analyses."
-msgstr ""
-"تم استهلاك أكثر من 70 %% من ميزانيتك. يُنصح بترتيب أولويات تحاليلك القادمة."
-
-#: templates/dashboard/requester/index.html:83
 msgid "Soumettre une nouvelle demande IBTIKAR"
 msgstr "إرسال طلب IBTIKAR جديد"
 
-#: templates/dashboard/requester/index.html:99
 msgid "Ex: Analyse DRX échantillon..."
 msgstr "مثال: تحليل DRX لعيِّنة..."
 
-#: templates/dashboard/requester/index.html:115
-#: templates/pages/guest_submit.html:50
-msgid "Solde IBTIKAR déclaré (DA)"
-msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
-
-#: templates/dashboard/requester/index.html:123
 #, python-format
-msgid "Solde annuel restant : %(rem)s DA"
-msgstr "الرصيد السنوي المتبقي: %(rem)s دج"
+msgid ""
+"Plafond pour cette demande : <strong>%(rem)s DA</strong> (votre solde "
+"IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous "
+"avez vérifié votre compte DGRSDT."
+msgstr ""
+"الحد الأقصى لهذا الطلب: <strong>%(rem)s دج</strong> (رصيد IBTIKAR المُعلَن)."
+" حدِّث هذا الرصيد في البطاقة أعلاه إذا تحقّقت من حساب DGRSDT الخاص بك."
 
-#: templates/dashboard/requester/index.html:153
-#, fuzzy, python-format
-#| msgid "Le solde déclaré doit être entre 0 et 200 000 DA."
-msgid "Le solde déclaré doit être entre 0 et %(cap)s DA."
-msgstr "يجب أن يتراوح الرصيد المُصرَّح به بين 0 و200 000 دج."
-
-#: templates/dashboard/requester/index.html:157
-msgid "Attention: le coût estimé"
-msgstr "تنبيه: التكلفة التقديرية"
-
-#: templates/dashboard/requester/index.html:157
-msgid "dépasse votre solde déclaré"
+#, fuzzy
+#| msgid "dépasse votre solde déclaré"
+msgid "supérieur à votre solde déclaré"
 msgstr "تتجاوز الرصيد المُصرَّح به"
 
-#: templates/dashboard/requester/index.html:197
 msgid "RDV"
 msgstr "الموعد"
 
-#: templates/dashboard/requester/index.html:197
 msgid "confirmé"
 msgstr "مؤكَّد"
 
-#: templates/dashboard/requester/index.html:263
-#: templates/dashboard/requester/request_detail.html:158
 msgid "Validation"
 msgstr "التحقُّق"
 
-#: templates/dashboard/requester/index.html:295
 msgid "Télécharger le rapport et confirmer la réception"
 msgstr "تنزيل التقرير وتأكيد الاستلام"
 
-#: templates/dashboard/requester/request_detail.html:140
 msgid "En attente d'assignation."
 msgstr "بانتظار الإسناد."
 
-#: templates/dashboard/stats.html:3
-#: templates/dashboard/superadmin/index.html:1144
-#: templates/includes/sidebar.html:52 templates/includes/sidebar.html:109
 msgid "Statistiques"
 msgstr "الإحصاءات"
 
-#: templates/dashboard/stats.html:7
 #, fuzzy
 #| msgid "Statistiques"
 msgid "Statistiques & métriques"
 msgstr "الإحصاءات"
 
-#: templates/dashboard/stats.html:10
 msgid "Vue institutionnelle complète"
 msgstr "عرض مؤسساتي كامل"
 
-#: templates/dashboard/stats.html:12
 #, fuzzy
 #| msgid "Historique financier"
 msgid "Vue financière"
 msgstr "السجل المالي"
 
-#: templates/dashboard/stats.html:14
 #, fuzzy
 #| msgid "Assignation"
 msgid "Mes assignations"
 msgstr "الإسناد"
 
-#: templates/dashboard/stats.html:16
 #, fuzzy
 #| msgid "Productivité"
 msgid "Mon activité"
 msgstr "الإنتاجية"
 
-#: templates/dashboard/stats.html:26
 msgid "Du"
 msgstr "من"
 
-#: templates/dashboard/stats.html:30
 msgid "Au"
 msgstr "إلى"
 
-#: templates/dashboard/stats.html:36
-#: templates/dashboard/superadmin/index.html:662
-#: templates/dashboard/superadmin/index.html:670
-#: templates/documents/block_list.html:23
-#: templates/documents/block_list.html:32
-#: templates/documents/template_list.html:46
 msgid "Tous"
 msgstr "الكل"
 
-#: templates/dashboard/stats.html:45 templates/documents/block_list.html:42
 #, fuzzy
 #| msgid "Ajouter"
 msgid "Toutes"
 msgstr "إضافة"
 
-#: templates/dashboard/stats.html:61 templates/dashboard/stats.html:148
 #, fuzzy
 #| msgid "Paiement"
 msgid "Établissement"
 msgstr "الدفع"
 
-#: templates/dashboard/stats.html:65
 #, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Cadre d'analyse"
 msgstr "تقرير التحليل"
 
-#: templates/dashboard/stats.html:69
 msgid "Appliquer"
 msgstr "تطبيق"
 
-#: templates/dashboard/stats.html:73
-msgid "Exporter"
-msgstr "تصدير"
+msgid "Document de synthèse Word/PDF"
+msgstr "مستند ملخّص Word/PDF"
 
-#: templates/dashboard/stats.html:86
+msgid "Synthèse Word"
+msgstr "ملخّص Word"
+
+msgid "Générer un bilan d'activité (Excel)"
+msgstr "إنشاء تقرير نشاط (Excel)"
+
+#, python-format
+msgid ""
+"Choisissez les dimensions, la granularité de la période et la portée "
+"(filtres ci-dessus). Le bilan inclut effectifs, parts (%%) et montants par "
+"canal."
+msgstr ""
+"اختر الأبعاد ودقة الفترة والنطاق (المرشّحات أعلاه). يتضمّن التقرير الأعداد "
+"والنِّسب (%%) والمبالغ حسب القناة."
+
+msgid "Granularité de la période"
+msgstr "دقة الفترة"
+
+msgid "Mensuelle"
+msgstr "شهرية"
+
+msgid "Trimestrielle"
+msgstr "فصلية"
+
+#, fuzzy
+#| msgid "Annuler"
+msgid "Annuelle"
+msgstr "إلغاء"
+
+msgid "Dimensions à inclure"
+msgstr "الأبعاد المراد تضمينها"
+
+#, fuzzy
+#| msgid "Télécharger le rapport"
+msgid "Télécharger le bilan Excel"
+msgstr "تنزيل التقرير"
+
 #, fuzzy
 #| msgid "Retour aux opérations"
 msgid "Taux complétion"
 msgstr "العودة إلى العمليات"
 
-#: templates/dashboard/stats.html:89
 #, fuzzy
 #| msgid "Demandeur IBTIKAR"
 msgid "Revenu virtuel IBTIKAR"
 msgstr "مُقدِّم طلب IBTIKAR"
 
-#: templates/dashboard/stats.html:90
 #, fuzzy
 #| msgid "Revenue GENOCLAB (DA)"
 msgid "Revenu GENOCLAB"
 msgstr "إيرادات GENOCLAB (دج)"
 
-#: templates/dashboard/stats.html:97
 #, fuzzy
 #| msgid "Ajouter service"
 msgid "Par service"
 msgstr "إضافة خدمة"
 
-#: templates/dashboard/stats.html:105
 #, fuzzy
 #| msgid "Aucune demande"
 msgid "Aucune donnée"
 msgstr "لا توجد طلبات"
 
-#: templates/dashboard/stats.html:114
 #, fuzzy
 #| msgid "Statut"
 msgid "Par statut"
 msgstr "الحالة"
 
-#: templates/dashboard/stats.html:130
 msgid "Par wilaya"
 msgstr "حسب الولاية"
 
-#: templates/dashboard/stats.html:145
 #, fuzzy
 #| msgid "Paiement"
 msgid "Par établissement"
 msgstr "الدفع"
 
-#: templates/dashboard/stats.html:160
 #, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Par cadre d'analyse"
 msgstr "تقرير التحليل"
 
-#: templates/dashboard/stats.html:163
 msgid "Cadre"
 msgstr "الإطار"
 
-#: templates/dashboard/stats.html:175
 msgid "Par sexe"
 msgstr "حسب الجنس"
 
-#: templates/dashboard/stats.html:191
 #, fuzzy
 #| msgid "Archives mensuelles"
 msgid "Tendance mensuelle"
 msgstr "الأرشيف الشهري"
 
-#: templates/dashboard/superadmin/audit_log.html:4
-#: templates/dashboard/superadmin/audit_log.html:8
-#: templates/dashboard/superadmin/index.html:1075
 msgid "Journal d'audit"
 msgstr "سجل التدقيق"
 
-#: templates/dashboard/superadmin/audit_log.html:9
 msgid "Historique des actions sur la plateforme"
 msgstr "سجل الإجراءات على المنصة"
 
-#: templates/dashboard/superadmin/audit_log.html:17
 msgid "Date début"
 msgstr "تاريخ البداية"
 
-#: templates/dashboard/superadmin/audit_log.html:21
 msgid "Date fin"
 msgstr "تاريخ النهاية"
 
-#: templates/dashboard/superadmin/audit_log.html:25
 msgid "Action/Statut"
 msgstr "الإجراء/الحالة"
 
-#: templates/dashboard/superadmin/audit_log.html:26
 msgid "Ex: ASSIGNED..."
 msgstr "مثال: ASSIGNED..."
 
-#: templates/dashboard/superadmin/audit_log.html:29
-#: templates/dashboard/superadmin/reset_account_confirm.html:37
 msgid "Utilisateur"
 msgstr "المستخدم"
 
-#: templates/dashboard/superadmin/audit_log.html:30
 msgid "Nom..."
 msgstr "الاسم..."
 
-#: templates/dashboard/superadmin/audit_log.html:41
 msgid "Entrées d'audit"
 msgstr "إدخالات التدقيق"
 
-#: templates/dashboard/superadmin/audit_log.html:50
 msgid "De"
 msgstr "من"
 
-#: templates/dashboard/superadmin/audit_log.html:51
 msgid "Vers"
 msgstr "إلى"
 
-#: templates/dashboard/superadmin/audit_log.html:52
 msgid "Acteur"
 msgstr "المنفِّذ"
 
-#: templates/dashboard/superadmin/audit_log.html:54
 msgid "Forcé"
 msgstr "إجباري"
 
-#: templates/dashboard/superadmin/audit_log.html:69
 msgid "Aucune entrée d'audit."
 msgstr "لا توجد إدخالات تدقيق."
 
-#: templates/dashboard/superadmin/audit_log.html:81
 msgid "Précédent"
 msgstr "السابق"
 
-#: templates/dashboard/superadmin/audit_log.html:83
-#: templates/dashboard/superadmin/index.html:285
-#: templates/dashboard/superadmin/index.html:378
-#: templates/dashboard/superadmin/index.html:772
-#: templates/dashboard/superadmin/index.html:844
 msgid "Page"
 msgstr "الصفحة"
 
-#: templates/dashboard/superadmin/audit_log.html:85
 msgid "Suivant"
 msgstr "التالي"
 
-#: templates/dashboard/superadmin/index.html:5
 msgid "Super Admin"
 msgstr "المسؤول الأعلى"
 
-#: templates/dashboard/superadmin/index.html:11
 msgid "Vue d'ensemble de la plateforme"
 msgstr "نظرة عامة على المنصة"
 
-#: templates/dashboard/superadmin/index.html:16
-#: templates/dashboard/superadmin/index.html:101
-#: templates/dashboard/superadmin/index.html:203
-#: templates/includes/sidebar.html:24
 msgid "Utilisateurs"
 msgstr "المستخدمون"
 
-#: templates/dashboard/superadmin/index.html:17
-#: templates/dashboard/superadmin/index.html:102
-#: templates/dashboard/superadmin/index.html:1151
-#: templates/includes/sidebar.html:28
 msgid "Analystes"
 msgstr "المحلِّلون"
 
-#: templates/dashboard/superadmin/index.html:18
 msgid "Demandes actives"
 msgstr "الطلبات النشطة"
 
-#: templates/dashboard/superadmin/index.html:28
-#: templates/dashboard/superadmin/index.html:1149
 msgid "Services actifs"
 msgstr "الخدمات النشطة"
 
-#: templates/dashboard/superadmin/index.html:29
-#: templates/dashboard/superadmin/index.html:105
-#: templates/dashboard/superadmin/index.html:310
-#: templates/dashboard/superadmin/index.html:1150
 msgid "Techniques"
 msgstr "التقنيات"
 
-#: templates/dashboard/superadmin/index.html:38
 msgid "Budget IBTIKAR (DA)"
 msgstr "ميزانية IBTIKAR (دج)"
 
-#: templates/dashboard/superadmin/index.html:39
 msgid "Revenue GENOCLAB (DA)"
 msgstr "إيرادات GENOCLAB (دج)"
 
-#: templates/dashboard/superadmin/index.html:40
 msgid "Note moyenne / 5"
 msgstr "متوسط التقييم / 5"
 
-#: templates/dashboard/superadmin/index.html:53
 msgid "Actions rapides"
 msgstr "إجراءات سريعة"
 
-#: templates/dashboard/superadmin/index.html:58
 msgid "Gérer utilisateurs"
 msgstr "إدارة المستخدمين"
 
-#: templates/dashboard/superadmin/index.html:62
 msgid "Ajouter service"
 msgstr "إضافة خدمة"
 
-#: templates/dashboard/superadmin/index.html:66
 msgid "Ajouter technique"
 msgstr "إضافة تقنية"
 
-#: templates/dashboard/superadmin/index.html:70
 msgid "Modifier contenu"
 msgstr "تعديل المحتوى"
 
-#: templates/dashboard/superadmin/index.html:76
 msgid "Derniers utilisateurs"
 msgstr "أحدث المستخدمين"
 
-#: templates/dashboard/superadmin/index.html:91
 msgid "Aucun utilisateur récent."
 msgstr "لا يوجد مستخدمون مؤخراً."
 
-#: templates/dashboard/superadmin/index.html:100
 msgid "Vue d'ensemble"
 msgstr "نظرة عامة"
 
-#: templates/dashboard/superadmin/index.html:106
-#: templates/includes/sidebar.html:40
 msgid "Paiements"
 msgstr "المدفوعات"
 
-#: templates/dashboard/superadmin/index.html:109
-#: templates/includes/sidebar.html:36
 msgid "Formulaires"
 msgstr "النماذج"
 
-#: templates/dashboard/superadmin/index.html:110
-#: templates/documents/block_form.html:81
 msgid "Contenu"
 msgstr "المحتوى"
 
-#: templates/dashboard/superadmin/index.html:111
-#: templates/includes/sidebar.html:64
 msgid "Système"
 msgstr "النظام"
 
-#: templates/dashboard/superadmin/index.html:117
 msgid "Répartition par statut"
 msgstr "التوزيع حسب الحالة"
 
-#: templates/dashboard/superadmin/index.html:122
-#: templates/dashboard/superadmin/service_edit.html:196
 msgid "Nombre"
 msgstr "العدد"
 
-#: templates/dashboard/superadmin/index.html:133
 msgid "Aucune demande"
 msgstr "لا توجد طلبات"
 
-#: templates/dashboard/superadmin/index.html:134
 msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
 msgstr "لا توجد طلبات حتى الآن. ستظهر الإحصاءات هنا."
 
-#: templates/dashboard/superadmin/index.html:146
 msgid "Créer un utilisateur"
 msgstr "إنشاء مستخدم"
 
-#: templates/dashboard/superadmin/index.html:147
 msgid "Masquer"
 msgstr "إخفاء"
 
-#: templates/dashboard/superadmin/index.html:147
 msgid "Afficher"
 msgstr "إظهار"
 
-#: templates/dashboard/superadmin/index.html:154
-#: templates/dashboard/superadmin/user_edit.html:19
 msgid "Nom d'utilisateur"
 msgstr "اسم المستخدم"
 
-#: templates/dashboard/superadmin/index.html:194
-#: templates/documents/block_form.html:88
 msgid "Créer"
 msgstr "إنشاء"
 
-#: templates/dashboard/superadmin/index.html:210
-#: templates/dashboard/superadmin/index.html:677
 msgid "Recherche"
 msgstr "بحث"
 
-#: templates/dashboard/superadmin/index.html:211
 msgid "Nom, email, username..."
 msgstr "الاسم، البريد الإلكتروني، اسم المستخدم..."
 
-#: templates/dashboard/superadmin/index.html:216
 msgid "Tous les rôles"
 msgstr "جميع الأدوار"
 
-#: templates/dashboard/superadmin/index.html:224
 msgid "Effacer les filtres"
 msgstr "مسح عوامل التصفية"
 
-#: templates/dashboard/superadmin/index.html:248
-#: templates/dashboard/superadmin/index.html:451
-#: templates/documents/block_form.html:70
-#: templates/documents/block_list.html:69
-#: templates/documents/template_detail.html:17
-#: templates/documents/template_list.html:90
 msgid "Actif"
 msgstr "نشط"
 
-#: templates/dashboard/superadmin/index.html:250
-#: templates/dashboard/superadmin/index.html:861
-#: templates/dashboard/superadmin/service_edit.html:447
-#: templates/documents/template_detail.html:19
-#: templates/documents/template_list.html:92
 msgid "Inactif"
 msgstr "غير نشط"
 
-#: templates/dashboard/superadmin/index.html:254
-#: templates/dashboard/superadmin/index.html:465
-#: templates/dashboard/superadmin/index.html:539
-#: templates/dashboard/superadmin/index.html:633
-#: templates/dashboard/superadmin/index.html:1029
-#: templates/dashboard/superadmin/service_edit.html:464
-#: templates/documents/block_list.html:97
-#: templates/documents/template_detail.html:115
-#: templates/documents/template_list.html:101
 msgid "Modifier"
 msgstr "تعديل"
 
-#: templates/dashboard/superadmin/index.html:256
 msgid "Désactiver cet utilisateur ?"
 msgstr "هل تريد تعطيل هذا المستخدم؟"
 
-#: templates/dashboard/superadmin/index.html:256
 msgid "Activer cet utilisateur ?"
 msgstr "هل تريد تفعيل هذا المستخدم؟"
 
-#: templates/dashboard/superadmin/index.html:259
-#: templates/dashboard/superadmin/index.html:469
-#: templates/dashboard/superadmin/index.html:543
-#: templates/documents/block_list.html:101
-#: templates/documents/template_detail.html:122
-#: templates/documents/template_list.html:107
 msgid "Désactiver"
 msgstr "تعطيل"
 
-#: templates/dashboard/superadmin/index.html:259
-#: templates/documents/block_list.html:101
-#: templates/documents/template_detail.html:129
-#: templates/documents/template_list.html:114
 msgid "Activer"
 msgstr "تفعيل"
 
-#: templates/dashboard/superadmin/index.html:266
 msgid "Réinitialiser / Reset Account"
 msgstr "إعادة تعيين / Reset Account"
 
-#: templates/dashboard/superadmin/index.html:299
 msgid "Analystes / Opérateurs"
 msgstr "المحلِّلون / المُشغِّلون"
 
-#: templates/dashboard/superadmin/index.html:324
 msgid "tech."
 msgstr "تقنية"
 
-#: templates/dashboard/superadmin/index.html:337
 msgid "Sauvegarder"
 msgstr "حفظ"
 
-#: templates/dashboard/superadmin/index.html:352
 msgid "Rendre indisponible"
 msgstr "جعله غير متاح"
 
-#: templates/dashboard/superadmin/index.html:352
 msgid "Rendre disponible"
 msgstr "جعله متاحاً"
 
-#: templates/dashboard/superadmin/index.html:391
 msgid "Ajouter un service"
 msgstr "إضافة خدمة"
 
-#: templates/dashboard/superadmin/index.html:415
 msgid "Prix IBTIKAR"
 msgstr "سعر IBTIKAR"
 
-#: templates/dashboard/superadmin/index.html:423
-#: templates/dashboard/superadmin/service_edit.html:42
 msgid "Délai (jours)"
 msgstr "المدة (بالأيام)"
 
-#: templates/dashboard/superadmin/index.html:432
-#: templates/dashboard/superadmin/service_edit.html:51
 msgid "Image"
 msgstr "الصورة"
 
-#: templates/dashboard/superadmin/index.html:435
 msgid "Créer le service"
 msgstr "إنشاء الخدمة"
 
-#: templates/dashboard/superadmin/index.html:440
 msgid "Services existants"
 msgstr "الخدمات الموجودة"
 
-#: templates/dashboard/superadmin/index.html:449
-#: templates/includes/sidebar.html:171
 msgid "IBTIKAR"
 msgstr "IBTIKAR"
 
-#: templates/dashboard/superadmin/index.html:450
-#: templates/includes/sidebar.html:194
 msgid "GENOCLAB"
 msgstr "GENOCLAB"
 
-#: templates/dashboard/superadmin/index.html:474
-#: templates/dashboard/superadmin/index.html:548
 msgid "Réactiver"
 msgstr "إعادة التفعيل"
 
-#: templates/dashboard/superadmin/index.html:480
 msgid "Aucun service."
 msgstr "لا توجد خدمات."
 
-#: templates/dashboard/superadmin/index.html:492
 msgid "Ajouter une technique"
 msgstr "إضافة تقنية"
 
-#: templates/dashboard/superadmin/index.html:502
-#: templates/dashboard/superadmin/index.html:517
-#: templates/dashboard/superadmin/index.html:526
 msgid "Catégorie"
 msgstr "الفئة"
 
-#: templates/dashboard/superadmin/index.html:506
-#: templates/dashboard/superadmin/index.html:872
-msgid "Ajouter"
-msgstr "إضافة"
-
-#: templates/dashboard/superadmin/index.html:513
 msgid "Techniques existantes"
 msgstr "التقنيات الموجودة"
 
-#: templates/dashboard/superadmin/index.html:527
 msgid "OK"
 msgstr "موافق"
 
-#: templates/dashboard/superadmin/index.html:533
 msgid "Active"
 msgstr "نشطة"
 
-#: templates/dashboard/superadmin/index.html:535
 msgid "Inactive"
 msgstr "غير نشطة"
 
-#: templates/dashboard/superadmin/index.html:554
 msgid "Aucune technique."
 msgstr "لا توجد تقنيات."
 
-#: templates/dashboard/superadmin/index.html:566
 msgid "Gestion du contenu"
 msgstr "إدارة المحتوى"
 
-#: templates/dashboard/superadmin/index.html:569
 msgid ""
 "Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
 "Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
@@ -3579,137 +2476,77 @@ msgstr ""
 "عدّل النص المعروض على الموقع (العناوين، الأزرار، الأوصاف). انقر على «تعديل» "
 "في أي سطر لتحريره، أو استخدم النموذج أدناه لإنشاء مدخل جديد."
 
-#: templates/dashboard/superadmin/index.html:575
-#: templates/dashboard/superadmin/index.html:601
 msgid "Clé"
 msgstr "المفتاح"
 
-#: templates/dashboard/superadmin/index.html:579
-#: templates/dashboard/superadmin/index.html:601
-#: templates/documents/block_confirm_delete.html:22
-#: templates/documents/block_form.html:44
-#: templates/documents/block_list.html:40
-#: templates/documents/block_list.html:65
 msgid "Langue"
 msgstr "اللغة"
 
-#: templates/dashboard/superadmin/index.html:588
-#: templates/dashboard/superadmin/index.html:601
-#: templates/dashboard/superadmin/service_edit.html:227
 msgid "Valeur"
 msgstr "القيمة"
 
-#: templates/dashboard/superadmin/index.html:591
-#: templates/dashboard/superadmin/index.html:623
-#: templates/dashboard/superadmin/service_edit.html:354
-#: templates/dashboard/superadmin/user_edit.html:74
-#: templates/documents/block_form.html:88
-#: templates/documents/template_form.html:103
-msgid "Enregistrer"
-msgstr "حفظ"
-
-#: templates/dashboard/superadmin/index.html:596
 #, fuzzy
 #| msgid "Techniques existantes"
 msgid "Contenu existant"
 msgstr "التقنيات الموجودة"
 
-#: templates/dashboard/superadmin/index.html:597
 msgid "Filtrer par clé, langue, ou valeur..."
 msgstr "تصفية حسب المفتاح أو اللغة أو القيمة..."
 
-#: templates/dashboard/superadmin/index.html:601
 msgid "Modifié"
 msgstr "آخر تعديل"
 
-#: templates/dashboard/superadmin/index.html:624
-#: templates/dashboard/superadmin/reset_account_confirm.html:13
-#: templates/dashboard/superadmin/reset_account_confirm.html:68
-#: templates/dashboard/superadmin/service_edit.html:258
-#: templates/dashboard/superadmin/service_edit.html:355
-#: templates/dashboard/superadmin/user_edit.html:75
-#: templates/documents/block_confirm_delete.html:29
-#: templates/documents/block_form.html:90
-#: templates/documents/template_confirm_delete.html:55
-#: templates/documents/template_form.html:109
-msgid "Annuler"
-msgstr "إلغاء"
-
-#: templates/dashboard/superadmin/index.html:637
 msgid "Supprimer cette entrée ?"
 msgstr "هل تريد حذف هذا الإدخال؟"
 
-#: templates/dashboard/superadmin/index.html:637
-#: templates/dashboard/superadmin/service_edit.html:465
-#: templates/documents/block_list.html:106
-#: templates/documents/template_detail.html:135
-#: templates/documents/template_form.html:113
-#: templates/documents/template_list.html:119
 msgid "Supprimer"
 msgstr "حذف"
 
-#: templates/dashboard/superadmin/index.html:678
 msgid "ID ou titre..."
 msgstr "المعرّف أو العنوان..."
 
-#: templates/dashboard/superadmin/index.html:684
 msgid "CSV"
 msgstr "CSV"
 
-#: templates/dashboard/superadmin/index.html:699
 msgid "Assigné à"
 msgstr "مُسنَد إلى"
 
-#: templates/dashboard/superadmin/index.html:724
 msgid "Forcer une transition"
 msgstr "فرض انتقال"
 
-#: templates/dashboard/superadmin/index.html:729
 msgid "Sélectionner le statut cible"
 msgstr "اختر الحالة المستهدفة"
 
-#: templates/dashboard/superadmin/index.html:736
 msgid "Justification (min. 10 caractères)"
 msgstr "المُبرِّر (10 أحرف على الأقل)"
 
-#: templates/dashboard/superadmin/index.html:738
 msgid "Forcer la transition"
 msgstr "فرض الانتقال"
 
-#: templates/dashboard/superadmin/index.html:744
 msgid "Override budgétaire"
 msgstr "تجاوز الميزانية"
 
-#: templates/dashboard/superadmin/index.html:748
 msgid "Montant budget"
 msgstr "قيمة الميزانية"
 
-#: templates/dashboard/superadmin/index.html:751
 msgid "Justification pour l override..."
 msgstr "مُبرِّر التجاوز..."
 
-#: templates/dashboard/superadmin/index.html:753
 msgid "Approuver override"
 msgstr "اعتماد التجاوز"
 
-#: templates/dashboard/superadmin/index.html:815
 msgid "Verrouillé"
 msgstr "مُقفَل"
 
-#: templates/dashboard/superadmin/index.html:856
 msgid "Méthodes de paiement"
 msgstr "طرق الدفع"
 
-#: templates/dashboard/superadmin/index.html:869
 msgid "Nom de la méthode"
 msgstr "اسم الطريقة"
 
-#: templates/dashboard/superadmin/index.html:879
-#: templates/dashboard/superadmin/index.html:884
 msgid "Réinitialiser les compteurs"
 msgstr "إعادة تعيين العدّادات"
 
-#: templates/dashboard/superadmin/index.html:881
 msgid ""
 "Archive les données de revenus actuelles et réinitialise les compteurs du "
 "tableau de bord. Cette action est irréversible."
@@ -3717,63 +2554,49 @@ msgstr ""
 "تتم أرشفة بيانات الإيرادات الحالية وإعادة تعيين عدّادات لوحة التحكم. هذا "
 "الإجراء غير قابل للتراجع."
 
-#: templates/dashboard/superadmin/index.html:882
 msgid ""
 "Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
 "données seront archivées."
 msgstr "هل أنت متأكد من إعادة تعيين عدّادات الإيرادات؟ ستتم أرشفة البيانات."
 
-#: templates/dashboard/superadmin/index.html:894
 msgid "Productivité des analystes"
 msgstr "إنتاجية المحلِّلين"
 
-#: templates/dashboard/superadmin/index.html:903
 msgid "assignées"
 msgstr "المُسنَدة"
 
-#: templates/dashboard/superadmin/index.html:903
 msgid "complétées"
 msgstr "المكتملة"
 
-#: templates/dashboard/superadmin/index.html:907
 msgid "Score"
 msgstr "النتيجة"
 
-#: templates/dashboard/superadmin/index.html:912
 msgid "Fire"
 msgstr "ممتاز"
 
-#: templates/dashboard/superadmin/index.html:914
 msgid "Very Good"
 msgstr "جيد جداً"
 
-#: templates/dashboard/superadmin/index.html:916
 msgid "Good"
 msgstr "جيد"
 
-#: templates/dashboard/superadmin/index.html:931
 msgid "Aucune donnée de productivité."
 msgstr "لا توجد بيانات للإنتاجية."
 
-#: templates/dashboard/superadmin/index.html:941
 msgid "Rapports générés"
 msgstr "التقارير الصادرة"
 
-#: templates/dashboard/superadmin/index.html:951
 msgid "Mis à jour"
 msgstr "آخر تحديث"
 
-#: templates/dashboard/superadmin/index.html:964
 msgid "Aucun rapport disponible."
 msgstr "لا توجد تقارير متاحة."
 
-#: templates/dashboard/superadmin/index.html:974
 #, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Blocs de contenu personnalisés"
 msgstr "الحقول المخصَّصة"
 
-#: templates/dashboard/superadmin/index.html:977
 msgid ""
 "Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
 "remarques) injectés dans les documents générés — globalement ou pour un "
@@ -3784,25 +2607,21 @@ msgstr ""
 "المُولَّدة — بشكل عام أو لخدمة محددة. يتم حلّ العناصر النائبة {{FULL_NAME}} "
 "و{{DISPLAY_ID}} و{{DATE}} وغيرها تلقائيًا."
 
-#: templates/dashboard/superadmin/index.html:980
 #, fuzzy
 #| msgid "Gestion du contenu"
 msgid "Gérer les blocs de contenu"
 msgstr "إدارة المحتوى"
 
-#: templates/dashboard/superadmin/index.html:981
 #, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Modèles DOCX personnalisés"
 msgstr "الحقول المخصَّصة"
 
-#: templates/dashboard/superadmin/index.html:988
 #, fuzzy
 #| msgid "Templates DOCX"
 msgid "Templates DOCX globaux"
 msgstr "قوالب DOCX"
 
-#: templates/dashboard/superadmin/index.html:990
 msgid ""
 "Mettez à jour les templates DOCX utilisés pour la génération automatique des"
 " documents. Un backup est créé automatiquement avant chaque mise à jour."
@@ -3810,69 +2629,47 @@ msgstr ""
 "حدِّث قوالب DOCX المستخدمة في توليد الوثائق تلقائياً. تُنشأ نسخة احتياطية "
 "تلقائياً قبل كل تحديث."
 
-#: templates/dashboard/superadmin/index.html:1017
 msgid "Configuration des formulaires par service"
 msgstr "تكوين النماذج حسب الخدمة"
 
-#: templates/dashboard/superadmin/index.html:1038
 msgid "Champs personnalisés"
 msgstr "الحقول المخصَّصة"
 
-#: templates/dashboard/superadmin/index.html:1046
-#: templates/dashboard/superadmin/service_edit.html:180
 msgid "Label"
 msgstr "التسمية"
 
-#: templates/dashboard/superadmin/index.html:1047
-#: templates/dashboard/superadmin/service_edit.html:191
-#: templates/dashboard/superadmin/service_edit.html:279
-#: templates/documents/block_confirm_delete.html:13
-#: templates/documents/template_confirm_delete.html:37
-#: templates/documents/template_detail.html:42
-#: templates/documents/template_list.html:24
-#: templates/documents/template_list.html:68
 msgid "Type"
 msgstr "النوع"
 
-#: templates/dashboard/superadmin/index.html:1048
-#: templates/dashboard/superadmin/service_edit.html:205
 msgid "Requis"
 msgstr "إلزامي"
 
-#: templates/dashboard/superadmin/index.html:1061
 msgid "Aucun champ personnalisé."
 msgstr "لا توجد حقول مخصَّصة."
 
-#: templates/dashboard/superadmin/index.html:1077
 msgid ""
 "Consultez l'historique complet de toutes les transitions, actions et "
 "modifications effectuées sur la plateforme."
 msgstr ""
 "اطّلع على السجل الكامل لجميع الانتقالات والإجراءات والتعديلات على المنصة."
 
-#: templates/dashboard/superadmin/index.html:1080
 msgid "Voir le journal d'audit"
 msgstr "عرض سجل التدقيق"
 
-#: templates/dashboard/superadmin/index.html:1087
 msgid ""
 "Consultez les archives mensuelles des revenus GENOCLAB et des budgets "
 "IBTIKAR."
 msgstr "اطّلع على الأرشيف الشهري لإيرادات GENOCLAB وميزانيات IBTIKAR."
 
-#: templates/dashboard/superadmin/index.html:1090
 msgid "Voir les archives"
 msgstr "عرض الأرشيف"
 
-#: templates/dashboard/superadmin/index.html:1097
 msgid "Contacts & Newsletter"
 msgstr "جهات الاتصال والنشرة الإخبارية"
 
-#: templates/dashboard/superadmin/index.html:1099
 msgid "Exporter tous les emails (CSV)"
 msgstr "تصدير جميع رسائل البريد (CSV)"
 
-#: templates/dashboard/superadmin/index.html:1100
 msgid ""
 "Exporte tous les emails des utilisateurs enregistrés et des invités pour "
 "envoi de newsletters."
@@ -3880,23 +2677,18 @@ msgstr ""
 "يتم تصدير جميع رسائل البريد للمستخدمين المسجَّلين والزوار لإرسال النشرات "
 "الإخبارية."
 
-#: templates/dashboard/superadmin/index.html:1104
 msgid "Sauvegarde"
 msgstr "النسخ الاحتياطي"
 
-#: templates/dashboard/superadmin/index.html:1108
 msgid "Télécharger une sauvegarde"
 msgstr "تنزيل نسخة احتياطية"
 
-#: templates/dashboard/superadmin/index.html:1110
 msgid "Télécharge une copie de la base de données SQLite."
 msgstr "يتم تنزيل نسخة من قاعدة بيانات SQLite."
 
-#: templates/dashboard/superadmin/index.html:1114
 msgid "Restaurer une sauvegarde"
 msgstr "استعادة نسخة احتياطية"
 
-#: templates/dashboard/superadmin/index.html:1116
 msgid ""
 "Attention : cette opération remplace la base de données actuelle. Un backup "
 "automatique sera créé avant la restauration. Le serveur devra être redémarré"
@@ -3905,7 +2697,6 @@ msgstr ""
 "تنبيه: تستبدل هذه العملية قاعدة البيانات الحالية. سيتم إنشاء نسخة احتياطية "
 "تلقائية قبل الاستعادة. ويجب إعادة تشغيل الخادم بعدها."
 
-#: templates/dashboard/superadmin/index.html:1117
 msgid ""
 "Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base"
 " actuelle sera créé automatiquement."
@@ -3913,58 +2704,42 @@ msgstr ""
 "هل أنت متأكد من استعادة قاعدة البيانات؟ ستُنشأ نسخة احتياطية تلقائية للقاعدة"
 " الحالية."
 
-#: templates/dashboard/superadmin/index.html:1124
 msgid "Restaurer"
 msgstr "استعادة"
 
-#: templates/dashboard/superadmin/index.html:1132
 msgid "Informations plateforme"
 msgstr "معلومات المنصة"
 
-#: templates/dashboard/superadmin/index.html:1135
 msgid "Version"
 msgstr "الإصدار"
 
-#: templates/dashboard/superadmin/index.html:1136
 msgid "Auteur"
 msgstr "المؤلف"
 
-#: templates/dashboard/superadmin/index.html:1137
-#: templates/pages/contact.html:16
 msgid "Institution"
 msgstr "المؤسسة"
 
-#: templates/dashboard/superadmin/index.html:1138
 msgid "Base de données"
 msgstr "قاعدة البيانات"
 
-#: templates/dashboard/superadmin/index.html:1139
 msgid "Framework"
 msgstr "إطار العمل"
 
-#: templates/dashboard/superadmin/index.html:1147
 msgid "Utilisateurs totaux"
 msgstr "إجمالي المستخدمين"
 
-#: templates/dashboard/superadmin/index.html:1148
 msgid "Demandes totales"
 msgstr "إجمالي الطلبات"
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:5
-#: templates/dashboard/superadmin/reset_account_confirm.html:10
-#: templates/dashboard/superadmin/reset_account_confirm.html:66
 msgid "Réinitialiser le compte"
 msgstr "إعادة تعيين الحساب"
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:24
 msgid "Confirmer la réinitialisation"
 msgstr "تأكيد إعادة التعيين"
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:28
 msgid "Attention"
 msgstr "تنبيه"
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:29
 #, python-format
 msgid ""
 "\n"
@@ -3977,16 +2752,13 @@ msgstr ""
 "            ستُحفظ جميع البيانات المرتبطة (الطلبات، التقارير، السجل).\n"
 "            "
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:49
 msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
 msgstr "سيتم توليد كلمة مرور مؤقتة آمنة (16 حرفاً)."
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:50
 msgid ""
 "L'utilisateur devra changer son mot de passe dès la prochaine connexion."
 msgstr "سيُطلب من المستخدم تغيير كلمة المرور عند تسجيل الدخول التالي."
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:52
 #, python-format
 msgid ""
 "Un email avec le mot de passe temporaire sera envoyé à "
@@ -3995,90 +2767,70 @@ msgstr ""
 "سيتم إرسال بريد إلكتروني يتضمن كلمة المرور المؤقتة إلى "
 "<strong>%(email)s</strong>."
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:54
 msgid ""
 "Aucun email configuré — le mot de passe temporaire sera affiché dans la "
 "notification."
 msgstr "لا يوجد بريد إلكتروني مُكوَّن — ستظهر كلمة المرور المؤقتة في الإشعار."
 
-#: templates/dashboard/superadmin/reset_account_confirm.html:56
 msgid "Cette action est enregistrée dans le journal d'audit."
 msgstr "يُسجَّل هذا الإجراء في سجل التدقيق."
 
-#: templates/dashboard/superadmin/revenue_archives.html:4
-#: templates/dashboard/superadmin/revenue_archives.html:8
 msgid "Archives de revenus"
 msgstr "أرشيف الإيرادات"
 
-#: templates/dashboard/superadmin/revenue_archives.html:9
 msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
 msgstr "الأرشيف الشهري لإيرادات IBTIKAR و GENOCLAB"
 
-#: templates/dashboard/superadmin/revenue_archives.html:13
 msgid "Archives mensuelles"
 msgstr "الأرشيف الشهري"
 
-#: templates/dashboard/superadmin/revenue_archives.html:19
 msgid "Période"
 msgstr "الفترة"
 
-#: templates/dashboard/superadmin/revenue_archives.html:21
 msgid "Revenu total"
 msgstr "إجمالي الإيرادات"
 
-#: templates/dashboard/superadmin/revenue_archives.html:22
 msgid "Nombre demandes"
 msgstr "عدد الطلبات"
 
-#: templates/dashboard/superadmin/revenue_archives.html:23
 msgid "Archivé le"
 msgstr "تاريخ الأرشفة"
 
-#: templates/dashboard/superadmin/revenue_archives.html:36
 msgid "Aucune archive. Exécutez"
 msgstr "لا يوجد أرشيف. شغِّل"
 
-#: templates/dashboard/superadmin/revenue_archives.html:36
 msgid "pour générer les archives."
 msgstr "لتوليد الأرشيف."
 
-#: templates/dashboard/superadmin/service_edit.html:5
 msgid "Modifier service"
 msgstr "تعديل الخدمة"
 
-#: templates/dashboard/superadmin/service_edit.html:9
 msgid "Modifier le service"
 msgstr "تعديل الخدمة"
 
-#: templates/dashboard/superadmin/service_edit.html:33
 #, fuzzy
 #| msgid "Prix IBTIKAR (DA)"
 msgid "Prix IBTIKAR (DZD)"
 msgstr "سعر IBTIKAR (دج)"
 
-#: templates/dashboard/superadmin/service_edit.html:35
 msgid ""
 "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
 "ci-dessous)"
 msgstr "سعر إجمالي (يُستخدَم إذا لم تُحدَّد أي قاعدة تسعير مفصّلة أدناه)"
 
-#: templates/dashboard/superadmin/service_edit.html:38
 #, fuzzy
 #| msgid "Prix GENOCLAB (DA)"
 msgid "Prix GENOCLAB (DZD)"
 msgstr "سعر GENOCLAB (دج)"
 
-#: templates/dashboard/superadmin/service_edit.html:53
 msgid "Image actuelle"
 msgstr "الصورة الحالية"
 
-#: templates/dashboard/superadmin/service_edit.html:60
 #, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Prix de base & multiplicateurs"
 msgstr "أحدث المستخدمين"
 
-#: templates/dashboard/superadmin/service_edit.html:62
 msgid ""
 "Formule : <strong>Prix de base × Multiplicateur × Nombre "
 "d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des "
@@ -4089,77 +2841,58 @@ msgstr ""
 "عند تغيّر أسعار الكواشف أو المستهلكات — تُطبَّق القيم الجديدة فورًا على "
 "التقديرات وعروض الأسعار."
 
-#: templates/dashboard/superadmin/service_edit.html:64
 msgid ""
 "Valeurs YAML par défaut affichées — premier enregistrement les copiera en "
 "base."
 msgstr "القيم الافتراضية من YAML معروضة — أول حفظ سينسخها إلى قاعدة البيانات."
 
-#: templates/dashboard/superadmin/service_edit.html:70
 #, fuzzy
 #| msgid "non pathogène"
 msgid "Prix non pathogène (DA)"
 msgstr "غير مُمرِض"
 
-#: templates/dashboard/superadmin/service_edit.html:76
 #, fuzzy
 #| msgid "pathogène"
 msgid "Prix pathogène (DA)"
 msgstr "مُمرِض"
 
-#: templates/dashboard/superadmin/service_edit.html:80
 msgid "idem si vide"
 msgstr "نفسه إذا كان فارغًا"
 
-#: templates/dashboard/superadmin/service_edit.html:83
 msgid "Paramètre porteur du multiplicateur"
 msgstr "الحقل الذي يحمل المُعامِل"
 
-#: templates/dashboard/superadmin/service_edit.html:97
 #, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Table de multiplicateurs"
 msgstr "أحدث المستخدمين"
 
-#: templates/dashboard/superadmin/service_edit.html:99
 #, fuzzy
 #| msgid "Ajouter une ligne"
 msgid "Ajouter une option"
 msgstr "إضافة بند"
 
-#: templates/dashboard/superadmin/service_edit.html:107
 msgid "ex. Simple, Duplicate, Triplicate"
 msgstr "مثال: Simple، Duplicate، Triplicate"
 
-#: templates/dashboard/superadmin/service_edit.html:115
-msgid "Retirer"
-msgstr "إزالة"
-
-#: templates/dashboard/superadmin/service_edit.html:120
 #, fuzzy
 #| msgid "Aucun utilisateur récent."
 msgid "Aucun multiplicateur défini (×1 partout)."
 msgstr "لا يوجد مستخدمون مؤخراً."
 
-#: templates/dashboard/superadmin/service_edit.html:132
 msgid "ex. Simple, Duplicate"
 msgstr "مثال: Simple، Duplicate"
 
-#: templates/dashboard/superadmin/service_edit.html:152
 #, fuzzy
 #| msgid "Configuration des formulaires par service"
 msgid "Configurations tarifaires détaillées"
 msgstr "تكوين النماذج حسب الخدمة"
 
-#: templates/dashboard/superadmin/service_edit.html:153
-#: templates/dashboard/superadmin/service_edit.html:269
-#: templates/dashboard/superadmin/service_edit.html:472
 #, fuzzy
 #| msgid "Ajouter un service"
 msgid "Ajouter un tarif"
 msgstr "إضافة خدمة"
 
-#: templates/dashboard/superadmin/service_edit.html:156
 msgid ""
 "Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
 "coexister (priorité plus basse = appliquée en premier). Chaque modification "
@@ -4168,103 +2901,81 @@ msgstr ""
 "اضبط الأسعار الأساسية والرسوم الإضافية. يمكن أن تتعايش عدة قواعد (الأولوية "
 "الأدنى = تُطبَّق أولًا). يُحفَظ كل تعديل فورًا."
 
-#: templates/dashboard/superadmin/service_edit.html:160
 msgid ""
 "Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les "
 "nouvelles demandes."
 msgstr "لا يوجد تسعير مفصّل. يُستخدَم السعر الإجمالي أعلاه للطلبات الجديدة."
 
-#: templates/dashboard/superadmin/service_edit.html:168
 msgid "Champs personnalisés du formulaire"
 msgstr "الحقول المخصَّصة للنموذج"
 
-#: templates/dashboard/superadmin/service_edit.html:169
 msgid "Ajouter un champ"
 msgstr "إضافة حقل"
 
-#: templates/dashboard/superadmin/service_edit.html:184
 #, fuzzy
 #| msgid "Factures"
 msgid "Nature"
 msgstr "الفواتير"
 
-#: templates/dashboard/superadmin/service_edit.html:186
 #, fuzzy
 #| msgid "Description"
 msgid "Question"
 msgstr "الوصف"
 
-#: templates/dashboard/superadmin/service_edit.html:187
 #, fuzzy
 #| msgid "par échantillon"
 msgid "Colonne échantillon"
 msgstr "لكل عيِّنة"
 
-#: templates/dashboard/superadmin/service_edit.html:193
 msgid "Texte"
 msgstr "نص"
 
-#: templates/dashboard/superadmin/service_edit.html:194
 msgid "Liste"
 msgstr "قائمة"
 
-#: templates/dashboard/superadmin/service_edit.html:195
 msgid "Oui/Non"
 msgstr "نعم/لا"
 
-#: templates/dashboard/superadmin/service_edit.html:200
 msgid "Options (virgules)"
 msgstr "الخيارات (مفصولة بفواصل)"
 
-#: templates/dashboard/superadmin/service_edit.html:210
 msgid "Tarification conditionnelle & logique d'affichage"
 msgstr "التسعير الشرطي ومنطق العرض"
 
-#: templates/dashboard/superadmin/service_edit.html:214
 msgid "Ce champ modifie le prix"
 msgstr "هذا الحقل يؤثّر على السعر"
 
-#: templates/dashboard/superadmin/service_edit.html:218
 #, fuzzy
 #| msgid "Type de document"
 msgid "Type de modificateur"
 msgstr "نوع الوثيقة"
 
-#: templates/dashboard/superadmin/service_edit.html:221
 msgid "Surcharge (+)"
 msgstr "رسم إضافي (+)"
 
-#: templates/dashboard/superadmin/service_edit.html:222
 msgid "Forfait (=)"
 msgstr "سعر ثابت (=)"
 
-#: templates/dashboard/superadmin/service_edit.html:223
 #, fuzzy
 #| msgid "Utilisateur"
 msgid "Multiplicateur (×)"
 msgstr "المستخدم"
 
-#: templates/dashboard/superadmin/service_edit.html:233
 msgid "Note condition (FR)"
 msgstr "ملاحظة الشرط (FR)"
 
-#: templates/dashboard/superadmin/service_edit.html:237
 msgid "Note condition (EN)"
 msgstr "ملاحظة الشرط (EN)"
 
-#: templates/dashboard/superadmin/service_edit.html:242
 msgid "Prix par option (JSON)"
 msgstr "السعر لكل خيار (JSON)"
 
-#: templates/dashboard/superadmin/service_edit.html:242
 msgid "ex : {\"Duplicata\": 2, \"Triplicata\": 2.6}"
 msgstr "مثال: {\"Duplicata\": 2, \"Triplicata\": 2.6}"
 
-#: templates/dashboard/superadmin/service_edit.html:246
 msgid "Logique conditionnelle (JSON)"
 msgstr "المنطق الشرطي (JSON)"
 
-#: templates/dashboard/superadmin/service_edit.html:246
 msgid ""
 "ex : "
 "[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
@@ -4272,235 +2983,174 @@ msgstr ""
 "مثال: "
 "[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
 
-#: templates/dashboard/superadmin/service_edit.html:257
 msgid "Enregistrer toutes les modifications"
 msgstr "حفظ كل التعديلات"
 
-#: templates/dashboard/superadmin/service_edit.html:273
 #, fuzzy
 #| msgid "Nom du laboratoire"
 msgid "Nom du tarif"
 msgstr "اسم المختبر"
 
-#: templates/dashboard/superadmin/service_edit.html:274
 msgid "ex : Prix de base, Majoration urgence, Remise volume"
 msgstr "مثال: السعر الأساسي، رسم الاستعجال، خصم الكمية"
 
-#: templates/dashboard/superadmin/service_edit.html:281
-#: templates/dashboard/superadmin/service_edit.html:411
 msgid "Prix de base"
 msgstr "السعر الأساسي"
 
-#: templates/dashboard/superadmin/service_edit.html:282
-#: templates/dashboard/superadmin/service_edit.html:412
 #, fuzzy
 #| msgid "par échantillon"
 msgid "Par échantillon"
 msgstr "لكل عيِّنة"
 
-#: templates/dashboard/superadmin/service_edit.html:283
-#: templates/dashboard/superadmin/service_edit.html:413
 msgid "Par paramètre"
 msgstr "حسب الحقل"
 
-#: templates/dashboard/superadmin/service_edit.html:284
-#: templates/dashboard/superadmin/service_edit.html:414
 msgid "Majoration urgence"
 msgstr "رسم الاستعجال"
 
-#: templates/dashboard/superadmin/service_edit.html:285
-#: templates/dashboard/superadmin/service_edit.html:415
 msgid "Remise"
 msgstr "خصم"
 
-#: templates/dashboard/superadmin/service_edit.html:291
-#: templates/dashboard/superadmin/service_edit.html:417
 msgid "Les deux"
 msgstr "كلاهما"
 
-#: templates/dashboard/superadmin/service_edit.html:300
 msgid "Montant (DZD)"
 msgstr "المبلغ (دج)"
 
-#: templates/dashboard/superadmin/service_edit.html:304
 msgid "Unité"
 msgstr "الوحدة"
 
-#: templates/dashboard/superadmin/service_edit.html:305
 #, fuzzy
 #| msgid "par échantillon"
 msgid "forfait, par échantillon"
 msgstr "لكل عيِّنة"
 
-#: templates/dashboard/superadmin/service_edit.html:308
-#: templates/documents/block_form.html:63
-#: templates/documents/block_list.html:68
 msgid "Priorité"
 msgstr "الأولوية"
 
-#: templates/dashboard/superadmin/service_edit.html:315
 msgid "Conditions avancées (quantité, seuils)"
 msgstr "شروط متقدمة (الكمية، العتبات)"
 
-#: templates/dashboard/superadmin/service_edit.html:320
 msgid "Qté min"
 msgstr "الكمية الدنيا"
 
-#: templates/dashboard/superadmin/service_edit.html:324
 msgid "Qté max"
 msgstr "الكمية القصوى"
 
-#: templates/dashboard/superadmin/service_edit.html:330
 #, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant min applicable"
 msgstr "المبلغ المستحَق"
 
-#: templates/dashboard/superadmin/service_edit.html:334
 #, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant max applicable"
 msgstr "المبلغ المستحَق"
 
-#: templates/dashboard/superadmin/service_edit.html:342
 #, fuzzy
 #| msgid "Description"
 msgid "Description (optionnel)"
 msgstr "الوصف"
 
-#: templates/dashboard/superadmin/service_edit.html:343
 msgid "ex : Tarif appliqué pour les analyses urgentes"
 msgstr "مثال: التعريفة المطبَّقة على التحاليل المستعجلة"
 
-#: templates/dashboard/superadmin/service_edit.html:349
 #, fuzzy
 #| msgid "Tarification"
 msgid "Tarif actif"
 msgstr "التسعير"
 
-#: templates/dashboard/superadmin/service_edit.html:496
 #, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le tarif"
 msgstr "تعديل الخدمة"
 
-#: templates/dashboard/superadmin/service_edit.html:521
 #, fuzzy
 #| msgid "Changement de mot de passe obligatoire"
 msgid "Le nom du tarif est obligatoire."
 msgstr "تغيير كلمة المرور إلزامي"
 
-#: templates/dashboard/superadmin/service_edit.html:544
-#: templates/dashboard/superadmin/service_edit.html:550
-#: templates/dashboard/superadmin/service_edit.html:561
 msgid "Erreur"
 msgstr "خطأ"
 
-#: templates/dashboard/superadmin/service_edit.html:554
 #, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce tarif ?"
 msgstr "هل تريد حذف هذا الإدخال؟"
 
-#: templates/dashboard/superadmin/user_edit.html:4
-#: templates/dashboard/superadmin/user_edit.html:8
 msgid "Modifier utilisateur"
 msgstr "تعديل المستخدم"
 
-#: templates/dashboard/superadmin/user_edit.html:13
 msgid "Informations de l'utilisateur"
 msgstr "بيانات المستخدم"
 
-#: templates/dashboard/superadmin/user_edit.html:59
 msgid "Directeur de thèse"
 msgstr "المشرف على الأطروحة"
 
-#: templates/dashboard/superadmin/user_edit.html:65
 msgid "Niveau étudiant"
 msgstr "المستوى الدراسي"
 
-#: templates/dashboard/superadmin/user_edit.html:69
 msgid "laisser vide pour ne pas changer"
 msgstr "اتركه فارغاً للإبقاء عليه كما هو"
 
-#: templates/documents/block_confirm_delete.html:4
 #, fuzzy
 #| msgid "Supprimer le Modèle"
 msgid "Supprimer le bloc"
 msgstr "حذف القالب"
 
-#: templates/documents/block_confirm_delete.html:8
-#: templates/documents/block_list.html:104
 #, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce bloc ?"
 msgstr "هل تريد حذف هذا الإدخال؟"
 
-#: templates/documents/block_confirm_delete.html:14
-#: templates/documents/block_form.html:29
 #, fuzzy
 #| msgid "Services existants"
 msgid "Services concernés"
 msgstr "الخدمات الموجودة"
 
-#: templates/documents/block_confirm_delete.html:18
 #, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous les services)"
 msgstr "جميع الخدمات"
 
-#: templates/documents/block_confirm_delete.html:21
-#: templates/documents/block_form.html:55
-#: templates/documents/block_list.html:64
 #, fuzzy
 #| msgid "Inscription"
 msgid "Position"
 msgstr "إنشاء حساب"
 
-#: templates/documents/block_confirm_delete.html:28
 #, fuzzy
 #| msgid "Supprimer"
 msgid "Oui, supprimer"
 msgstr "حذف"
 
-#: templates/documents/block_form.html:4
 #, fuzzy
 #| msgid "Modifier"
 msgid "Modifier bloc"
 msgstr "تعديل"
 
-#: templates/documents/block_form.html:4
-#: templates/documents/block_list.html:13
 #, fuzzy
 #| msgid "Nouveau modèle"
 msgid "Nouveau bloc"
 msgstr "قالب جديد"
 
-#: templates/documents/block_form.html:9
 #, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le bloc"
 msgstr "تعديل الخدمة"
 
-#: templates/documents/block_form.html:9
 #, fuzzy
 #| msgid "Nouveau mot de passe"
 msgid "Nouveau bloc de contenu"
 msgstr "كلمة المرور الجديدة"
 
-#: templates/documents/block_form.html:11
 msgid ""
 "Le contenu de ce bloc sera injecté dans le document généré à la position "
 "choisie."
 msgstr "سيُدرَج محتوى هذه الكتلة في الوثيقة المُولَّدة في الموضع المختار."
 
-#: templates/documents/block_form.html:21
-#: templates/documents/block_list.html:21
-#: templates/documents/template_form.html:36
 msgid "Type de document"
 msgstr "نوع الوثيقة"
 
-#: templates/documents/block_form.html:31
 msgid ""
 "Aucune case cochée = bloc global (s'applique à tous les services). Cochez un"
 " sous-ensemble pour cibler ces services uniquement."
@@ -4508,27 +3158,22 @@ msgstr ""
 "عدم تحديد أي خانة = كتلة عامة (تنطبق على جميع الخدمات). حدّد مجموعة فرعية "
 "لاستهداف تلك الخدمات فقط."
 
-#: templates/documents/block_form.html:65
 msgid "Plus bas = inséré en premier"
 msgstr "الأدنى = يُدرَج أولًا"
 
-#: templates/documents/block_form.html:76
 #, fuzzy
 #| msgid "Commentaire (optionnel)..."
 msgid "Titre (optionnel)"
 msgstr "تعليق (اختياري)..."
 
-#: templates/documents/block_form.html:77
 msgid "Affiché en gras au-dessus du texte"
 msgstr "يُعرَض بخط عريض فوق النص"
 
-#: templates/documents/block_form.html:82
 msgid ""
 "Texte à injecter dans le document. Séparez les paragraphes avec une ligne "
 "vide."
 msgstr "النص المراد إدراجه في الوثيقة. افصل بين الفقرات بسطر فارغ."
 
-#: templates/documents/block_form.html:83
 msgid ""
 "Astuce : les placeholders comme {{FULL_NAME}}, {{DISPLAY_ID}}, "
 "{{SERVICE_NAME}}, {{DATE}} sont résolus lors de la génération."
@@ -4536,19 +3181,16 @@ msgstr ""
 "نصيحة: تُحلّ العناصر النائبة مثل {{FULL_NAME}} و{{DISPLAY_ID}} "
 "و{{SERVICE_NAME}} و{{DATE}} عند التوليد."
 
-#: templates/documents/block_list.html:4
 #, fuzzy
 #| msgid "Modifier contenu"
 msgid "Blocs de contenu"
 msgstr "تعديل المحتوى"
 
-#: templates/documents/block_list.html:8
 #, fuzzy
 #| msgid "Placeholders documentés"
 msgid "Blocs de contenu des documents"
 msgstr "العناصر النائبة الموثَّقة"
 
-#: templates/documents/block_list.html:9
 msgid ""
 "Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
 "(formulaire IBTIKAR, note de plateforme, devis, fiche de réception)."
@@ -4556,172 +3198,125 @@ msgstr ""
 "أضف أو عدّل الفقرات المُدرَجة في الوثائق المُولَّدة (استمارة IBTIKAR، مذكرة "
 "المنصة، عرض السعر، استمارة الاستلام)."
 
-#: templates/documents/block_list.html:14
 #, fuzzy
 #| msgid "Modèle de"
 msgid "Modèles DOCX"
 msgstr "قالب لـ"
 
-#: templates/documents/block_list.html:33
 #, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous services)"
 msgstr "جميع الخدمات"
 
-#: templates/documents/block_list.html:62
-#, fuzzy
-#| msgid "Documents"
-msgid "Document"
-msgstr "الوثائق"
-
-#: templates/documents/block_list.html:67
 msgid "Aperçu"
 msgstr "معاينة"
 
-#: templates/documents/block_list.html:81
 msgid "Global"
 msgstr "عام"
 
-#: templates/documents/block_list.html:111
 msgid "Aucun bloc défini. Cliquez sur « Nouveau bloc » pour en créer un."
 msgstr "لا توجد كتلة مُعرَّفة. انقر على «كتلة جديدة» لإنشاء واحدة."
 
-#: templates/documents/template_confirm_delete.html:4
 msgid "Supprimer le Modèle"
 msgstr "حذف القالب"
 
-#: templates/documents/template_confirm_delete.html:8
 msgid "Confirmer la suppression"
 msgstr "تأكيد الحذف"
 
-#: templates/documents/template_confirm_delete.html:13
 msgid "Attention !"
 msgstr "تنبيه!"
 
-#: templates/documents/template_confirm_delete.html:16
 msgid "Êtes-vous sûr de vouloir supprimer le modèle"
 msgstr "هل أنت متأكد من حذف القالب"
 
-#: templates/documents/template_confirm_delete.html:21
 msgid ""
 "Cette action est irréversible. Le fichier sera définitivement supprimé."
 msgstr "هذا الإجراء غير قابل للتراجع. سيُحذف الملف نهائياً."
 
-#: templates/documents/template_confirm_delete.html:41
-#: templates/documents/template_detail.html:50
 msgid "Fichier"
 msgstr "الملف"
 
-#: templates/documents/template_confirm_delete.html:52
 msgid "Oui, supprimer définitivement"
 msgstr "نعم، احذف نهائياً"
 
-#: templates/documents/template_confirm_delete.html:64
-#: templates/documents/template_detail.html:164
 msgid "Retour à la liste"
 msgstr "العودة إلى القائمة"
 
-#: templates/documents/template_detail.html:12
 msgid "Modèle de"
 msgstr "قالب لـ"
 
-#: templates/documents/template_detail.html:30
 msgid "Informations"
 msgstr "المعلومات"
 
-#: templates/documents/template_detail.html:57
 msgid "Aucun fichier"
 msgstr "لا يوجد ملف"
 
-#: templates/documents/template_detail.html:62
 msgid "Créé par"
 msgstr "أنشأه"
 
-#: templates/documents/template_detail.html:66
-#: templates/documents/template_list.html:70
 msgid "Créé le"
 msgstr "تاريخ الإنشاء"
 
-#: templates/documents/template_detail.html:70
 msgid "Mis à jour le"
 msgstr "تاريخ التحديث"
 
-#: templates/documents/template_detail.html:81
 msgid "Placeholders documentés"
 msgstr "العناصر النائبة الموثَّقة"
 
-#: templates/documents/template_detail.html:87
 msgid "Placeholder"
 msgstr "العنصر النائب"
 
-#: templates/documents/template_detail.html:89
 msgid "Exemple"
 msgstr "مثال"
 
-#: templates/documents/template_detail.html:147
 msgid ""
 "Ce modèle sera utilisé pour générer automatiquement des documents lorsqu'un "
 "utilisateur demande un document de type"
 msgstr ""
 "سيُستخدم هذا القالب لتوليد الوثائق تلقائياً عند طلب المستخدم وثيقة من نوع"
 
-#: templates/documents/template_detail.html:149
 msgid "pour le service"
 msgstr "للخدمة"
 
-#: templates/documents/template_detail.html:155
 msgid ""
 "Seul un modèle actif par service/type sera utilisé. Les autres seront "
 "désactivés automatiquement."
 msgstr ""
 "سيُستخدم قالب نشط واحد فقط لكل خدمة/نوع. وستُعطَّل القوالب الأخرى تلقائياً."
 
-#: templates/documents/template_form.html:4
-#: templates/documents/template_form.html:10
 msgid "Modifier le Modèle"
 msgstr "تعديل القالب"
 
-#: templates/documents/template_form.html:4
 msgid "Créer un Modèle"
 msgstr "إنشاء قالب"
 
-#: templates/documents/template_form.html:12
 msgid "Créer un Nouveau Modèle"
 msgstr "إنشاء قالب جديد"
 
-#: templates/documents/template_form.html:26
 msgid "Sélectionner un service"
 msgstr "اختر خدمة"
 
-#: templates/documents/template_form.html:38
 msgid "Sélectionner un type"
 msgstr "اختر نوعاً"
 
-#: templates/documents/template_form.html:49
 msgid "Nom du modèle"
 msgstr "اسم القالب"
 
-#: templates/documents/template_form.html:52
 msgid "ex: Formulaire IBTIKAR CAN 2024"
 msgstr "مثال: نموذج IBTIKAR CAN 2024"
 
-#: templates/documents/template_form.html:58
 msgid "Décrivez ce modèle et son utilisation..."
 msgstr "صف هذا القالب وطريقة استخدامه..."
 
-#: templates/documents/template_form.html:63
 msgid "Fichier DOCX"
 msgstr "ملف DOCX"
 
-#: templates/documents/template_form.html:65
 msgid "Actuel"
 msgstr "الحالي"
 
-#: templates/documents/template_form.html:75
 msgid "Choisir un fichier DOCX..."
 msgstr "اختر ملف DOCX..."
 
-#: templates/documents/template_form.html:80
 msgid ""
 "Le fichier doit être un document DOCX avec des placeholders (ex: "
 "{{FULL_NAME}}, {{PROJECT_TITLE}})"
@@ -4729,167 +3324,147 @@ msgstr ""
 "يجب أن يكون الملف وثيقة DOCX تحتوي على عناصر نائبة (مثال: {{FULL_NAME}}، "
 "{{PROJECT_TITLE}})"
 
-#: templates/documents/template_form.html:90
 msgid "Modèle actif"
 msgstr "قالب نشط"
 
-#: templates/documents/template_form.html:94
 msgid ""
 "Un seul modèle actif par service et type sera utilisé pour la génération des"
 " documents."
 msgstr "سيُستخدم قالب نشط واحد لكل خدمة ونوع في توليد الوثائق."
 
-#: templates/documents/template_form.html:105
 msgid "Créer le modèle"
 msgstr "إنشاء القالب"
 
-#: templates/documents/template_form.html:124
 msgid "Placeholders disponibles"
 msgstr "العناصر النائبة المتاحة"
 
-#: templates/documents/template_form.html:127
 msgid ""
 "Utilisez ces placeholders dans votre document Word (entourés de doubles "
 "accolades) :"
 msgstr "استخدم هذه العناصر النائبة في وثيقة Word (محاطة بأقواس مزدوجة):"
 
-#: templates/documents/template_form.html:130
 msgid "Informations client"
 msgstr "بيانات العميل"
 
-#: templates/documents/template_form.html:136
-msgid "Pays"
-msgstr "البلد"
-
-#: templates/documents/template_form.html:140
 msgid "Informations demande"
 msgstr "بيانات الطلب"
 
-#: templates/documents/template_form.html:143
 msgid "Titre du projet"
 msgstr "عنوان المشروع"
 
-#: templates/documents/template_form.html:145
 msgid "ID de la demande"
 msgstr "معرّف الطلب"
 
-#: templates/documents/template_form.html:153
 msgid ""
 "Les placeholders seront remplacés par les valeurs correspondantes lors de la"
 " génération du document."
 msgstr "ستُستبدَل العناصر النائبة بالقيم المقابلة عند توليد الوثيقة."
 
-#: templates/documents/template_list.html:4
 msgid "Gestion des Modèles"
 msgstr "إدارة القوالب"
 
-#: templates/documents/template_list.html:8
 msgid "Gestion des Modèles de Documents"
 msgstr "إدارة قوالب الوثائق"
 
-#: templates/documents/template_list.html:9
 msgid "Gérez les modèles DOCX pour la génération automatique des documents"
 msgstr "أدِر قوالب DOCX لتوليد الوثائق تلقائياً"
 
-#: templates/documents/template_list.html:15
 msgid "Nouveau modèle"
 msgstr "قالب جديد"
 
-#: templates/documents/template_list.html:26
 msgid "Tous les types"
 msgstr "جميع الأنواع"
 
-#: templates/documents/template_list.html:36
 msgid "Tous les services"
 msgstr "جميع الخدمات"
 
-#: templates/documents/template_list.html:47
 msgid "Actifs"
 msgstr "النشطة"
 
-#: templates/documents/template_list.html:48
 msgid "Inactifs"
 msgstr "غير النشطة"
 
-#: templates/documents/template_list.html:131
 msgid "Aucun modèle trouvé."
 msgstr "لم يُعثر على أي قالب."
 
-#: templates/documents/template_list.html:133
 msgid "Créer le premier modèle"
 msgstr "إنشاء أول قالب"
 
-#: templates/includes/_points_hero.html:21
 msgid "Prochain palier"
 msgstr "المرحلة التالية"
 
-#: templates/includes/_points_hero.html:37
 msgid "Niveau atteint !"
 msgstr "تم بلوغ المستوى!"
 
-#: templates/includes/_points_hero.html:39
 msgid "Objectif"
 msgstr "الهدف"
 
-#: templates/includes/_points_hero.html:42
 msgid "Continuez comme ça !"
 msgstr "واصل على هذا المنوال!"
 
-#: templates/includes/ibtikar_submission_workflow.html:16
+msgid "Rendez-vous proposé — en attente de votre confirmation"
+msgstr "موعد مقترح — في انتظار تأكيدك"
+
+#, fuzzy
+#| msgid "Rendez-vous proposé"
+msgid "Rendez-vous confirmé"
+msgstr "تم اقتراح موعد"
+
+#, python-format
+msgid "Vous avez proposé une date alternative : %(alt)s."
+msgstr "لقد اقترحت تاريخًا بديلًا: %(alt)s."
+
+#, fuzzy
+#| msgid "Confirmer le refus"
+msgid "Confirmer ce rendez-vous"
+msgstr "تأكيد الرفض"
+
+#, fuzzy
+#| msgid "Commentaire (optionnel)..."
+msgid "Note (optionnelle)"
+msgstr "تعليق (اختياري)..."
+
 msgid "Votre demande a été acceptée"
 msgstr "تم قبول طلبك"
 
-#: templates/includes/ibtikar_submission_workflow.html:18
 msgid "Cher(e) étudiant(e) / doctorant(e),"
 msgstr "عزيزي الطالب / طالب الدكتوراه،"
 
-#: templates/includes/ibtikar_submission_workflow.html:19
 msgid "Veuillez suivre les étapes ci-dessous :"
 msgstr "يرجى اتباع الخطوات أدناه:"
 
-#: templates/includes/ibtikar_submission_workflow.html:28
 msgid "Téléchargez le formulaire IBTIKAR"
 msgstr "نزِّل نموذج IBTIKAR"
 
-#: templates/includes/ibtikar_submission_workflow.html:40
 msgid "Soumettez votre demande sur IBTIKAR-DGRSDT"
 msgstr "أرسل طلبك على IBTIKAR-DGRSDT"
 
-#: templates/includes/ibtikar_submission_workflow.html:44
 msgid "Accéder à IBTIKAR-DGRSDT"
 msgstr "الوصول إلى IBTIKAR-DGRSDT"
 
-#: templates/includes/ibtikar_submission_workflow.html:52
 msgid "Revenez ici et saisissez votre code IBTIKAR"
 msgstr "عُد إلى هنا وأدخل رمز IBTIKAR"
 
-#: templates/includes/ibtikar_submission_workflow.html:53
 msgid ""
 "Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on "
 "vous fixe un rendez-vous."
 msgstr "بمجرد إرسال طلبك على IBTIKAR، أدخل الرمز ليتم تحديد موعد لك."
 
-#: templates/includes/ibtikar_submission_workflow.html:61
 msgid "Saisissez votre code IBTIKAR"
 msgstr "أدخل رمز IBTIKAR"
 
-#: templates/includes/ibtikar_submission_workflow.html:65
 msgid "Code de votre demande IBTIKAR"
 msgstr "رمز طلب IBTIKAR"
 
-#: templates/includes/ibtikar_submission_workflow.html:66
 msgid "Ex: IBK-DGRSDT-2026-XXXX"
 msgstr "مثال: IBK-DGRSDT-2026-XXXX"
 
-#: templates/includes/ibtikar_submission_workflow.html:68
 msgid "Soumettre le code"
 msgstr "إرسال الرمز"
 
-#: templates/includes/ibtikar_submission_workflow.html:75
 msgid "Revoir les instructions"
 msgstr "مراجعة التعليمات"
 
-#: templates/includes/ibtikar_submission_workflow.html:90
 msgid ""
 "Votre code a été transmis au responsable de la plateforme. Une proposition "
 "de date pour la réception de vos échantillons vous sera communiquée "
@@ -4898,234 +3473,252 @@ msgstr ""
 "تم إرسال رمزك إلى مسؤول المنصة. سيتم تبليغك قريباً بتاريخ مقترح لاستلام "
 "عيِّناتك."
 
-#: templates/includes/notification_list.html:10
-#: templates/includes/topbar.html:48
 msgid "Tout marquer comme lu"
 msgstr "تعليم الكل كمقروء"
 
-#: templates/includes/notification_list.html:27
-#: templates/includes/topbar.html:38
 msgid "ago"
 msgstr "منذ"
 
-#: templates/includes/service_form_fields.html:22
-#: templates/includes/service_form_fields.html:53
-#: templates/includes/service_form_fields.html:106
 msgid "Choisir"
 msgstr "اختر"
 
-#: templates/includes/service_form_fields.html:137
-#: templates/pages/service_detail.html:32
 msgid "Tarification"
 msgstr "التسعير"
 
-#: templates/includes/service_form_fields.html:141
-#: templates/includes/service_form_fields.html:146
-#: templates/includes/service_form_fields.html:148
-#: templates/includes/service_form_fields.html:150
-#: templates/includes/service_form_fields.html:153
 msgid "par échantillon"
 msgstr "لكل عيِّنة"
 
-#: templates/includes/service_form_fields.html:146
 msgid "non pathogène"
 msgstr "غير مُمرِض"
 
-#: templates/includes/service_form_fields.html:146
 msgid "pathogène"
 msgstr "مُمرِض"
 
-#: templates/includes/service_form_fields.html:155
 msgid "Standard"
 msgstr "قياسي"
 
-#: templates/includes/service_form_fields.html:163
 msgid ""
 "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse."
 msgstr "قد يختلف هذا المبلغ حسب عدد العيِّنات ونوع التحليل."
 
-#: templates/includes/service_form_fields.html:165
 msgid "Suppléments actifs:"
 msgstr "الرسوم الإضافية الفعّالة:"
 
-#: templates/includes/service_form_fields.html:222
 msgid "Cette option inclut des frais supplémentaires."
 msgstr "يتضمّن هذا الخيار رسومًا إضافية."
 
-#: templates/includes/service_form_fields.html:224
 msgid "(sera ajouté au coût final)."
 msgstr "(سيُضاف إلى التكلفة النهائية)."
 
-#: templates/includes/service_form_fields.html:228
 msgid ""
 "Des frais supplémentaires s\\'appliquent. Le montant exact sera communiqué "
 "lors de la validation."
 msgstr "تُطبَّق رسوم إضافية. سيُبلَّغ عن المبلغ الدقيق عند المصادقة."
 
-#: templates/includes/sidebar.html:11
 msgid "Plateforme de Gestion des Opérations"
 msgstr "منصة إدارة العمليات"
 
-#: templates/includes/sidebar.html:56
 msgid "Audit"
 msgstr "التدقيق"
 
-#: templates/includes/sidebar.html:60
 msgid "Archives revenus"
 msgstr "أرشيف الإيرادات"
 
-#: templates/includes/sidebar.html:67 templates/includes/sidebar.html:82
 msgid "Opérations"
 msgstr "العمليات"
 
-#: templates/includes/sidebar.html:70
 msgid "Gestion des demandes"
 msgstr "إدارة الطلبات"
 
-#: templates/includes/sidebar.html:74
 msgid "Validation & Assignation"
 msgstr "التحقُّق والإسناد"
 
-#: templates/includes/sidebar.html:249 templates/includes/topbar.html:80
-#: templates/includes/topbar.html:92
 msgid "Déconnexion"
 msgstr "تسجيل الخروج"
 
-#: templates/includes/topbar.html:31
 msgid "non lues"
 msgstr "غير مقروءة"
 
-#: templates/includes/topbar.html:41
 msgid "Aucune notification"
 msgstr "لا توجد إشعارات"
 
-#: templates/pages/about.html:55 templates/pages/contact.html:20
+msgid "Suivi du workflow"
+msgstr "تتبُّع سير العمل"
+
+msgid "Prochaine étape"
+msgstr "الخطوة التالية"
+
+msgid "Demande rejetée"
+msgstr "تم رفض الطلب"
+
+msgid "Workflow terminé avec succès"
+msgstr "اكتمل سير العمل بنجاح"
+
 msgid "Adresse"
 msgstr "العنوان"
 
-#: templates/pages/contact.html:32
 msgid "Responsable"
 msgstr "المسؤول"
 
-#: templates/pages/contact.html:36
 msgid "Plateforme"
 msgstr "المنصة"
 
-#: templates/pages/contact.html:44
-#: templates/pages/guest_submit_success.html:37
 msgid "Retour à l'accueil"
 msgstr "العودة إلى الرئيسية"
 
-#: templates/pages/guest_submit.html:5
 msgid "Soumission invité"
 msgstr "الإرسال كزائر"
 
-#: templates/pages/guest_submit.html:9
 msgid "Soumettre une demande (invité)"
 msgstr "إرسال طلب (كزائر)"
 
-#: templates/pages/guest_submit.html:10
 msgid ""
 "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code "
 "de suivi."
 msgstr "أرسل طلب تحليل دون إنشاء حساب. ستتلقى رمز تتبُّع."
 
-#: templates/pages/guest_submit.html:17
+#, fuzzy
+#| msgid "Créer un compte"
+msgid "Conseil : créez un compte gratuit"
+msgstr "إنشاء حساب"
+
+msgid ""
+"En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
+"pilotez vos demandes de bout en bout :"
+msgstr ""
+"كزائر، لا تتلقّى سوى رمز تتبّع بسيط. أما بحساب، فتدير طلباتك من البداية إلى "
+"النهاية:"
+
+msgid ""
+"Tableau de bord unique pour toutes vos demandes et leur historique complet"
+msgstr "لوحة تحكّم واحدة لجميع طلباتك وسجلّها الكامل"
+
+#, fuzzy
+#| msgid ""
+#| "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+#| "assignation, rendez-vous, rapport prêt)."
+msgid ""
+"Notifications en temps réel à chaque étape (validation, rendez-vous, rapport"
+" prêt)"
+msgstr ""
+"تتلقّى <strong>بريدًا إلكترونيًا في كل خطوة</strong> (المصادقة، التعيين، "
+"الموعد، جاهزية التقرير)."
+
+msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
+msgstr "تأكيد المواعيد والتنزيل الآمن للتقارير"
+
+msgid "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant"
+msgstr "مقدّم طلب IBTIKAR: تتبّع ميزانية DGRSDT المتبقية"
+
 msgid "Vos informations"
 msgstr "بياناتك"
 
-#: templates/pages/guest_submit.html:20
 msgid "Votre nom complet"
 msgstr "اسمك الكامل"
 
-#: templates/pages/guest_submit.html:24
 msgid "votre@email.com"
 msgstr "your@email.com"
 
-#: templates/pages/guest_submit.html:28
 msgid "Numéro de téléphone"
 msgstr "رقم الهاتف"
 
-#: templates/pages/guest_submit.html:32
 msgid "Votre organisation"
 msgstr "مؤسستك"
 
-#: templates/pages/guest_submit.html:39
+#, fuzzy
+#| msgid "académique"
+msgid "Académique"
+msgstr "أكاديمي"
+
+msgid "Entreprise"
+msgstr "شركة"
+
+#, fuzzy
+#| msgid "Partiel"
+msgid "Particulier"
+msgstr "جزئي"
+
+msgid "Autre"
+msgstr "أخرى"
+
 msgid "externe"
 msgstr "خارجي"
 
-#: templates/pages/guest_submit.html:40
 msgid "académique"
 msgstr "أكاديمي"
 
-#: templates/pages/guest_submit.html:69
+msgid "Solde IBTIKAR déclaré (DA)"
+msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
+
 msgid "Ex: Analyse DRX..."
 msgstr "مثال: تحليل DRX..."
 
-#: templates/pages/guest_submit.html:84
 msgid "Soumettre la demande"
 msgstr "إرسال الطلب"
 
-#: templates/pages/guest_submit_success.html:5
 msgid "Demande soumise"
 msgstr "تم إرسال الطلب"
 
-#: templates/pages/guest_submit_success.html:13
 msgid "Demande soumise avec succès!"
 msgstr "تم إرسال الطلب بنجاح!"
 
-#: templates/pages/guest_submit_success.html:17
 msgid "Code de suivi"
 msgstr "رمز التتبُّع"
 
-#: templates/pages/guest_submit_success.html:21
 msgid "Token de suivi"
 msgstr "رمز التتبُّع"
 
-#: templates/pages/guest_submit_success.html:31
 msgid ""
 "Conservez votre code de suivi pour suivre l'avancement de votre demande."
 msgstr "احتفظ برمز التتبُّع لمتابعة تقدُّم طلبك."
 
-#: templates/pages/guest_submit_success.html:35
+#, fuzzy
+#| msgid "Créer un compte pour gérer vos demandes"
+msgid "Créez un compte pour aller plus loin"
+msgstr "أنشئ حساباً لإدارة طلباتك"
+
+msgid ""
+"Suivez cette demande et les suivantes depuis un tableau de bord unique, "
+"recevez les notifications à chaque étape et confirmez vos rendez-vous. Votre"
+" demande actuelle sera automatiquement rattachée à votre compte."
+msgstr ""
+"تابِع هذا الطلب والطلبات التالية من لوحة تحكّم واحدة، واستلِم الإشعارات في "
+"كل مرحلة وأكِّد مواعيدك. سيُربَط طلبك الحالي تلقائيًا بحسابك."
+
 msgid "Suivre ma demande"
 msgstr "تتبُّع طلبي"
 
-#: templates/pages/help.html:3
 msgctxt "help"
 msgid "Centre d'aide"
 msgstr "مركز المساعدة"
 
-#: templates/pages/help.html:38
 msgid "Centre d'aide PLAGENOR"
 msgstr "مركز مساعدة PLAGENOR"
 
-#: templates/pages/help.html:39
 msgid ""
 "Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — "
 "étape par étape."
 msgstr "كل ما تحتاج معرفته لتقديم تحاليلك وتتبّعها وإدارتها — خطوة بخطوة."
 
-#: templates/pages/help.html:41
-#| msgid "Rechercher"
 msgid "Rechercher dans l’aide…"
 msgstr "البحث في المساعدة…"
 
-#: templates/pages/help.html:49
 msgctxt "help"
 msgid "Démarrer"
 msgstr "البدء"
 
-#: templates/pages/help.html:52
+#, fuzzy
+#| msgid "Soumission invité"
+msgid "Compte ou invité"
+msgstr "الإرسال كزائر"
+
 msgctxt "help"
 msgid "Suivi & rapports"
 msgstr "التتبّع والتقارير"
 
-#: templates/pages/help.html:54
 msgid "FAQ"
 msgstr "الأسئلة الشائعة"
 
-#: templates/pages/help.html:59
 #, python-format
 msgid ""
 "Connecté en tant que <strong>%(user_role)s</strong> — les sections qui vous "
@@ -5134,16 +3727,12 @@ msgstr ""
 "مُسجَّل الدخول بصفة <strong>%(user_role)s</strong> — الأقسام التي تهمّك "
 "مميَّزة أدناه."
 
-#: templates/pages/help.html:65
 msgid "Bien démarrer"
 msgstr "البدء"
 
-#: templates/pages/help.html:66
-#| msgid "Créer un compte pour gérer vos demandes"
 msgid "Créer un compte et comprendre les deux canaux."
 msgstr "أنشئ حسابًا وافهم القناتَين."
 
-#: templates/pages/help.html:68
 msgid ""
 "Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos "
 "informations (nom, établissement, wilaya, e-mail)."
@@ -5151,7 +3740,6 @@ msgstr ""
 "انقر على <strong>التسجيل</strong> أعلى اليمين واملأ معلوماتك (الاسم، "
 "المؤسسة، الولاية، البريد الإلكتروني)."
 
-#: templates/pages/help.html:69
 msgid ""
 "Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> "
 "(étudiant/chercheur, budget annuel encadré) ou <strong>Client "
@@ -5160,11 +3748,9 @@ msgstr ""
 "اختر ملفك: <strong>مقدِّم طلب IBTIKAR</strong> (طالب/باحث، ميزانية سنوية "
 "مؤطَّرة) أو <strong>عميل GENOCLAB</strong> (خدمة تجارية مع عرض سعر)."
 
-#: templates/pages/help.html:70
 msgid "Connectez-vous : vous arrivez sur votre tableau de bord personnel."
 msgstr "سجّل الدخول: ستصل إلى لوحة التحكم الخاصة بك."
 
-#: templates/pages/help.html:71
 msgid ""
 "Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission "
 "invité » et suivre votre demande avec le code reçu par e-mail."
@@ -5172,32 +3758,79 @@ msgstr ""
 "يمكنك أيضًا التقديم <strong>دون حساب</strong> عبر «تقديم كضيف» وتتبّع طلبك "
 "بالرمز المُستلَم عبر البريد الإلكتروني."
 
-#: templates/pages/help.html:77
+#, fuzzy
+#| msgid "Soumission invité"
+msgid "Compte ou soumission invité ?"
+msgstr "الإرسال كزائر"
+
+msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
+msgstr "كلاهما يعمل — لكن الحساب يمنحك التحكم الكامل."
+
+msgid ""
+"<strong>En invité</strong>, vous soumettez sans créer de compte et recevez "
+"un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se"
+" fait demande par demande, via ce code uniquement."
+msgstr ""
+"<strong>كزائر</strong>، تقدّم دون إنشاء حساب وتتلقّى <strong>رمز "
+"تتبّع</strong> عبر البريد الإلكتروني. إنه سريع، لكن التتبّع يتم طلبًا بطلب، "
+"عبر هذا الرمز فقط."
+
+msgid ""
+"<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un "
+"<strong>tableau de bord unique</strong> avec leur <strong>historique "
+"complet</strong> et la timeline détaillée de chaque étape."
+msgstr ""
+"<strong>بحساب</strong>، تُجمَع كل طلباتك في <strong>لوحة تحكّم "
+"واحدة</strong> مع <strong>سجلّها الكامل</strong> والمخطّط الزمني المفصّل لكل"
+" مرحلة."
+
+msgid ""
+"Vous recevez des <strong>notifications en temps réel</strong> dans "
+"l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos "
+"rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon "
+"sécurisée."
+msgstr ""
+"تتلقّى <strong>إشعارات فورية</strong> داخل التطبيق (وعبر البريد الإلكتروني "
+"في المراحل الرئيسية)، و<strong>تؤكّد مواعيدك</strong> وتنزّل "
+"<strong>تقاريرك</strong> بطريقة آمنة."
+
+msgid ""
+"<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT "
+"restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : "
+"retrouvez devis, bons de commande, factures et paiements au même endroit."
+msgstr ""
+"<strong>مقدّم طلب IBTIKAR</strong>: تتبّع <strong>ميزانية DGRSDT "
+"المتبقية</strong> قبل التقديم. <strong>عميل GENOCLAB</strong>: اعثر على عروض"
+" الأسعار وأوامر الشراء والفواتير والمدفوعات في مكان واحد."
+
+msgid ""
+"Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : "
+"vos demandes existantes sont automatiquement rattachées à votre nouveau "
+"compte."
+msgstr ""
+"سبق أن قدّمت كزائر؟ استخدم <strong>«التحويل إلى حساب»</strong>: تُربَط "
+"طلباتك الحالية تلقائيًا بحسابك الجديد."
+
 msgctxt "help"
 msgid "Soumettre une demande IBTIKAR"
 msgstr "تقديم طلب IBTIKAR"
 
-#: templates/pages/help.html:77 templates/pages/help.html:90
 msgid "Vous"
 msgstr "أنت"
 
-#: templates/pages/help.html:78
 msgid "Pour les étudiants et chercheurs de l'ESSBO."
 msgstr "لطلبة وباحثي ESSBO."
 
-#: templates/pages/help.html:80
 msgid ""
 "Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle "
 "demande</strong>."
 msgstr "في لوحة التحكم، افتح علامة التبويب <strong>طلب جديد</strong>."
 
-#: templates/pages/help.html:81
 msgid ""
 "Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, "
 "Séquençage…)."
 msgstr "اختر <strong>الخدمة</strong> المطلوبة (مثل PCR، MALDI-TOF، التسلسل…)."
 
-#: templates/pages/help.html:82
 msgid ""
 "Remplissez les <strong>questions du service</strong> (type de kit, contrôle "
 "qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût "
@@ -5207,7 +3840,6 @@ msgstr ""
 "و<strong>جدول العينات</strong>. تتحدّث <strong>التكلفة التقديرية "
 "مباشرةً</strong>."
 
-#: templates/pages/help.html:83
 msgid ""
 "Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en "
 "haut — la demande est bloquée si elle dépasse le plafond."
@@ -5215,7 +3847,6 @@ msgstr ""
 "تحقّق من <strong>ميزانية IBTIKAR السنوية المتبقية</strong> المعروضة في "
 "الأعلى — يُحظَر الطلب إذا تجاوز السقف."
 
-#: templates/pages/help.html:84
 msgid ""
 "Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une "
 "confirmation par e-mail avec votre identifiant de demande."
@@ -5223,21 +3854,17 @@ msgstr ""
 "انقر على <strong>المراجعة والإرسال</strong>. ستتلقّى تأكيدًا عبر البريد "
 "الإلكتروني مع معرّف طلبك."
 
-#: templates/pages/help.html:90
 msgctxt "help"
 msgid "Demande GENOCLAB (commercial)"
 msgstr "طلب GENOCLAB (تجاري)"
 
-#: templates/pages/help.html:91
 msgid "Pour les entreprises, laboratoires et institutions externes."
 msgstr "للشركات والمخابر والمؤسسات الخارجية."
 
-#: templates/pages/help.html:93
 msgid ""
 "Soumettez votre demande avec les détails de l'analyse et vos échantillons."
 msgstr "قدّم طلبك مع تفاصيل التحليل وعيّناتك."
 
-#: templates/pages/help.html:94
 msgid ""
 "La plateforme prépare un <strong>devis détaillé</strong> que vous recevez "
 "par e-mail."
@@ -5245,7 +3872,6 @@ msgstr ""
 "تُعِدّ المنصة <strong>عرض سعر مفصّلًا</strong> تتلقّاه عبر البريد "
 "الإلكتروني."
 
-#: templates/pages/help.html:95
 msgid ""
 "<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe "
 "peut vous en proposer un nouveau."
@@ -5253,7 +3879,6 @@ msgstr ""
 "<strong>اقبل أو ارفض</strong> عرض السعر. في حال الرفض، يمكن للفريق اقتراح "
 "عرض جديد."
 
-#: templates/pages/help.html:96
 msgid ""
 "Téléversez votre <strong>bon de commande</strong>, puis réglez selon la "
 "<strong>facture</strong> émise."
@@ -5261,21 +3886,17 @@ msgstr ""
 "حمّل <strong>سند الطلب</strong> الخاص بك، ثم ادفع وفق "
 "<strong>الفاتورة</strong> الصادرة."
 
-#: templates/pages/help.html:97
 msgid ""
 "L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la "
 "facture."
 msgstr "يبدأ التحليل؛ وتتلقّى <strong>التقرير النهائي</strong> مع الفاتورة."
 
-#: templates/pages/help.html:103
 msgid "Suivre une demande & récupérer un rapport"
 msgstr "تتبّع طلب واسترجاع تقرير"
 
-#: templates/pages/help.html:104
 msgid "Où en est votre analyse, à tout moment."
 msgstr "وضع تحليلك في أي وقت."
 
-#: templates/pages/help.html:106
 msgid ""
 "Connecté : chaque demande affiche son <strong>statut en temps réel</strong> "
 "et son historique complet sur votre tableau de bord."
@@ -5283,7 +3904,6 @@ msgstr ""
 "مُسجَّل الدخول: يعرض كل طلب <strong>حالته في الوقت الفعلي</strong> وسجلّه "
 "الكامل على لوحة التحكم."
 
-#: templates/pages/help.html:107
 msgid ""
 "Invité : utilisez la page <strong>Suivi</strong> avec le "
 "<strong>code</strong> reçu par e-mail à la soumission."
@@ -5291,7 +3911,6 @@ msgstr ""
 "ضيف: استخدم صفحة <strong>التتبّع</strong> بالـ<strong>رمز</strong> المُستلَم"
 " عبر البريد الإلكتروني عند التقديم."
 
-#: templates/pages/help.html:108
 msgid ""
 "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
 "assignation, rendez-vous, rapport prêt)."
@@ -5299,23 +3918,19 @@ msgstr ""
 "تتلقّى <strong>بريدًا إلكترونيًا في كل خطوة</strong> (المصادقة، التعيين، "
 "الموعد، جاهزية التقرير)."
 
-#: templates/pages/help.html:109
 msgid ""
 "Quand le rapport est validé, un <strong>lien de téléchargement</strong> "
 "sécurisé vous est envoyé."
 msgstr ""
 "عند المصادقة على التقرير، يُرسَل إليك <strong>رابط تحميل</strong> آمن."
 
-#: templates/pages/help.html:115
 msgctxt "help"
 msgid "Documents générés"
 msgstr "الوثائق المُولَّدة"
 
-#: templates/pages/help.html:116
 msgid "Formulaires officiels remplis automatiquement."
 msgstr "استمارات رسمية تُملأ تلقائيًا."
 
-#: templates/pages/help.html:118
 msgid ""
 "Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-"
 "rempli avec vos informations et vos échantillons."
@@ -5323,7 +3938,6 @@ msgstr ""
 "تُولَّد <strong>استمارة IBTIKAR</strong> تلقائيًا، معبّأة مسبقًا بمعلوماتك "
 "وعيّناتك."
 
-#: templates/pages/help.html:119
 msgid ""
 "La <strong>note de plateforme</strong>, le <strong>devis</strong> et la "
 "<strong>fiche de réception</strong> sont disponibles au téléchargement "
@@ -5332,7 +3946,6 @@ msgstr ""
 "تتوفّر <strong>مذكرة المنصة</strong> و<strong>عرض السعر</strong> "
 "و<strong>استمارة الاستلام</strong> للتحميل (PDF)."
 
-#: templates/pages/help.html:120
 msgid ""
 "Tous portent l'<strong>en-tête institutionnel officiel</strong> (République "
 "algérienne, Ministère, ESSBO, PLAGENOR)."
@@ -5340,19 +3953,15 @@ msgstr ""
 "تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية "
 "الجزائرية، الوزارة، ESSBO، PLAGENOR)."
 
-#: templates/pages/help.html:126
 msgid "Questions fréquentes"
 msgstr "الأسئلة الشائعة"
 
-#: templates/pages/help.html:127
 msgid "Réponses rapides aux questions courantes."
 msgstr "إجابات سريعة عن الأسئلة الشائعة."
 
-#: templates/pages/help.html:130
 msgid "Comment changer la langue de l'interface ?"
 msgstr "كيف أغيّر لغة الواجهة؟"
 
-#: templates/pages/help.html:131
 msgid ""
 "Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. "
 "L'interface bascule immédiatement, y compris en arabe avec mise en page de "
@@ -5361,11 +3970,9 @@ msgstr ""
 "استخدم محدِّد FR / EN / ع أعلى يمين كل صفحة. تتبدّل الواجهة فورًا، بما في "
 "ذلك العربية بتخطيط من اليمين إلى اليسار."
 
-#: templates/pages/help.html:134
 msgid "Qu'est-ce que le budget IBTIKAR ?"
 msgstr "ما هي ميزانية IBTIKAR؟"
 
-#: templates/pages/help.html:135
 msgid ""
 "C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque "
 "étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord "
@@ -5374,11 +3981,9 @@ msgstr ""
 "هي ميزانية افتراضية سنوية تؤطّرها DGRSDT، تُمنَح لكل طالب/باحث. يظهر رصيدك "
 "المتبقي على لوحة التحكم؛ ويُحظَر تلقائيًا أي طلب يتجاوزه."
 
-#: templates/pages/help.html:138
 msgid "Comment est calculé le coût d'une analyse ?"
 msgstr "كيف تُحسَب تكلفة التحليل؟"
 
-#: templates/pages/help.html:139
 msgid ""
 "Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de "
 "base dépend du caractère pathogène, le multiplicateur du mode d'analyse "
@@ -5389,24 +3994,26 @@ msgstr ""
 "الطابع المُمرِض، والمُعامِل على نمط التحليل (مفرد، مُكرَّر، ثلاثي…). يظهر "
 "التقدير مباشرةً أثناء الإدخال."
 
-#: templates/pages/help.html:142
 msgctxt "help"
 msgid "Puis-je soumettre sans créer de compte ?"
 msgstr "هل يمكنني التقديم دون إنشاء حساب؟"
 
-#: templates/pages/help.html:143
 msgid ""
-"Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par "
-"e-mail et pouvez convertir votre soumission en compte complet plus tard."
+"Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par "
+"e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos "
+"demandes sur un tableau de bord, ajoute les notifications en temps réel, la "
+"confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez "
+"convertir une soumission invité en compte à tout moment, et vos demandes "
+"existantes y seront rattachées."
 msgstr ""
-"نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
-"تحويل تقديمك إلى حساب كامل لاحقًا."
+"نعم. استخدم «التقديم كزائر»: تتلقّى رمز تتبّع عبر البريد الإلكتروني. ومع "
+"ذلك، يبقى الحساب المجاني موصى به — فهو يجمع كل طلباتك في لوحة تحكّم واحدة "
+"ويضيف الإشعارات الفورية وتأكيد المواعيد وتتبّع ميزانية IBTIKAR. يمكنك تحويل "
+"تقديم الزائر إلى حساب في أي وقت، وستُربَط طلباتك الحالية به."
 
-#: templates/pages/help.html:146
 msgid "Je ne reçois pas les e-mails de notification ?"
 msgstr "لا أتلقّى رسائل الإشعارات؟"
 
-#: templates/pages/help.html:147
 msgid ""
 "Vérifiez votre dossier spam. Les notifications restent toujours consultables"
 " dans la cloche en haut de votre tableau de bord, même sans e-mail."
@@ -5414,129 +4021,154 @@ msgstr ""
 "تحقّق من مجلد الرسائل غير المرغوبة. تبقى الإشعارات متاحة دائمًا في الجرس "
 "أعلى لوحة التحكم، حتى بدون بريد إلكتروني."
 
-#: templates/pages/help.html:150
 msgctxt "help"
 msgid "J'ai oublié mon mot de passe."
 msgstr "نسيت كلمة المرور."
 
-#: templates/pages/help.html:151
 msgid ""
 "Contactez l'administrateur de la plateforme via la page Contact ; il pourra "
 "réinitialiser votre accès en toute sécurité."
 msgstr ""
 "تواصل مع مسؤول المنصة عبر صفحة الاتصال؛ يمكنه إعادة تعيين وصولك بأمان."
 
-#: templates/pages/help.html:156
 msgid "Aucun résultat. Essayez d'autres mots-clés ou consultez la page"
 msgstr "لا توجد نتائج. جرّب كلمات مفتاحية أخرى أو زر صفحة"
 
-#: templates/pages/help.html:160
 msgid "Vous n'avez pas trouvé votre réponse ?"
 msgstr "لم تجد إجابتك؟"
 
-#: templates/pages/help.html:161
 msgctxt "help"
 msgid "Contactez-nous"
 msgstr "اتصل بنا"
 
-#: templates/pages/service_detail.html:9
-#: templates/pages/service_landing.html:56
 msgid "Retour aux services"
 msgstr "العودة إلى الخدمات"
 
-#: templates/pages/service_detail.html:51
 msgid "Délai de traitement"
 msgstr "مدة المعالجة"
 
-#: templates/pages/service_detail.html:64
 msgid "Exigences & conformité"
 msgstr "المتطلبات والالتزام"
 
-#: templates/pages/service_detail.html:83
 msgid "Demander ce service"
 msgstr "اطلب هذه الخدمة"
 
-#: templates/pages/service_landing.html:28
 msgid "Recommandé"
 msgstr "مُوصى به"
 
-#: templates/pages/service_landing.html:34
 msgid ""
 "Suivez l'état de votre demande, recevez des notifications et accédez à votre"
 " historique."
 msgstr "تابع حالة طلبك، تلقَّ الإشعارات، واطلع على سجلك."
 
-#: templates/pages/service_landing.html:35
 msgid "S'inscrire"
 msgstr "إنشاء حساب"
 
-#: templates/pages/service_landing.html:45
 msgid "Continuer en tant qu'invité"
 msgstr "المتابعة كزائر"
 
-#: templates/pages/service_landing.html:46
 msgid ""
 "Soumettez votre demande sans compte. Vous recevrez un code de suivi unique."
 msgstr "أرسل طلبك دون حساب. ستتلقى رمز تتبُّع فريداً."
 
-#: templates/pages/service_landing.html:47
 msgid "Soumettre sans compte"
 msgstr "الإرسال دون حساب"
 
-#: templates/pages/service_landing.html:49
 msgid "Canal IBTIKAR: votre identifiant IBTIKAR-DGRSDT sera requis."
 msgstr "قناة IBTIKAR: سيكون معرّف IBTIKAR-DGRSDT مطلوباً."
 
-#: templates/pages/services.html:8
 msgid "Nos Services"
 msgstr "خدماتنا"
 
-#: templates/pages/services.html:9
 msgid "Catalogue des analyses et prestations proposées"
 msgstr "كتالوج التحاليل والخدمات المُقدَّمة"
 
-#: templates/pages/services.html:30
 msgid "En savoir plus"
 msgstr "اعرف المزيد"
 
-#: templates/pages/services.html:31
 msgid "Demander"
 msgstr "طلب"
 
-#: templates/pages/services.html:39
 msgid "Aucun service disponible"
 msgstr "لا توجد خدمات متاحة"
 
-#: templates/pages/services.html:40
 msgid "Les services seront bientôt publiés. Revenez plus tard."
 msgstr "ستُنشر الخدمات قريباً. يرجى العودة لاحقاً."
 
-#: templates/pages/track.html:8
 msgid "Suivi de votre demande"
 msgstr "تتبُّع طلبك"
 
-#: templates/pages/track.html:9
 msgid ""
 "Entrez votre identifiant de demande ou votre token de suivi pour consulter "
 "l'état d'avancement."
 msgstr "أدخل معرّف طلبك أو رمز التتبُّع لعرض حالة التقدُّم."
 
-#: templates/pages/track.html:11
 msgid "Ex: IBT-2026-0042 ou votre token..."
 msgstr "مثال: IBT-2026-0042 أو رمزك..."
 
-#: templates/pages/track.html:12
 msgid "Rechercher"
 msgstr "بحث"
 
-#: templates/pages/track.html:83
 msgid "Créer un compte pour gérer vos demandes"
 msgstr "أنشئ حساباً لإدارة طلباتك"
 
-#: templates/pages/track.html:88
 msgid "Aucun résultat"
 msgstr "لا توجد نتائج"
 
-#: templates/pages/track.html:89
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التحقُّق والمحاولة مجدداً."
+
+#~ msgid "Pipeline"
+#~ msgstr "المسار"
+
+#~ msgid "Évaluez notre service"
+#~ msgstr "قيِّم خدمتنا"
+
+#, fuzzy
+#~ msgid "Budget IBTIKAR annuel"
+#~ msgstr "ميزانية IBTIKAR (افتراضية)"
+
+#~ msgid "Solde restant"
+#~ msgstr "الرصيد المتبقي"
+
+#~ msgid "utilisés"
+#~ msgstr "مُستخدَم"
+
+#~ msgid "Cap"
+#~ msgstr "السقف"
+
+#, python-format
+#~ msgid ""
+#~ "Vous avez atteint plus de 90 %% de votre budget annuel. Les nouvelles "
+#~ "demandes seront vérifiées strictement."
+#~ msgstr ""
+#~ "لقد بلغت أكثر من 90 %% من ميزانيتك السنوية. ستخضع الطلبات الجديدة لمراجعة "
+#~ "دقيقة."
+
+#, python-format
+#~ msgid ""
+#~ "Plus de 70 %% de votre budget est consommé. Pensez à prioriser vos "
+#~ "prochaines analyses."
+#~ msgstr ""
+#~ "تم استهلاك أكثر من 70 %% من ميزانيتك. يُنصح بترتيب أولويات تحاليلك القادمة."
+
+#, python-format
+#~ msgid "Solde annuel restant : %(rem)s DA"
+#~ msgstr "الرصيد السنوي المتبقي: %(rem)s دج"
+
+#, fuzzy, python-format
+#~ msgid "Le solde déclaré doit être entre 0 et %(cap)s DA."
+#~ msgstr "يجب أن يتراوح الرصيد المُصرَّح به بين 0 و200 000 دج."
+
+#~ msgid "Attention: le coût estimé"
+#~ msgstr "تنبيه: التكلفة التقديرية"
+
+#~ msgid "Exporter"
+#~ msgstr "تصدير"
+
+#~ msgid ""
+#~ "Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par "
+#~ "e-mail et pouvez convertir votre soumission en compte complet plus tard."
+#~ msgstr ""
+#~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
+#~ "تحويل تقديمك إلى حساب كامل لاحقًا."

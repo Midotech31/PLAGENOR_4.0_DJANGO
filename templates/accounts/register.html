@@ -95,9 +95,10 @@
                 </div>
             </div>
 
+            {% trans "Précisez le type d'organisation" as ph_org_other %}
             <div class="form-group" id="org-type-other-group" style="display:none;">
                 <label for="id_organization_type_other">{% trans "Préciser (autre)" %}</label>
-                <input type="text" name="organization_type_other" id="id_organization_type_other" class="form-control" value="{{ form.organization_type_other.value|default:'' }}" placeholder="{% trans 'Précisez le type d\'organisation' %}">
+                <input type="text" name="organization_type_other" id="id_organization_type_other" class="form-control" value="{{ form.organization_type_other.value|default:'' }}" placeholder="{{ ph_org_other }}">
                 {% if form.organization_type_other.errors %}<div class="form-error">{{ form.organization_type_other.errors.0 }}</div>{% endif %}
             </div>
 
