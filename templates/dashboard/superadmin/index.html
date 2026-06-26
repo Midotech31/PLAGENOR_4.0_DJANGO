@@ -561,83 +561,91 @@
     </div>
 
     <!-- Content Tab -->
-    <div x-show="tab === 'content'" x-data="{ filter: '', editingPk: null }">
+    <div x-show="tab === 'content'" x-data="{ filter: '', editingKey: null, showNew: false }">
         <div class="card">
-            <div class="card-header"><h3>{% trans "Gestion du contenu" %}</h3></div>
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                <h3>{% trans "Gestion du contenu" %}</h3>
+                <button type="button" class="btn btn-sm btn-primary" @click="showNew = !showNew">{% trans "Nouvelle entrée" %}</button>
+            </div>
             <div class="card-body">
                 <p class="text-muted" style="margin-bottom:12px;">
-                    {% trans "Modifiez le texte affiché sur le site (titres, boutons, descriptions). Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire ci-dessous pour créer une nouvelle entrée." %}
+                    {% trans "Modifiez le texte affiché sur le site dans les trois langues (Français, English, العربية). Une valeur vide retombe sur la langue par défaut puis sur le texte du gabarit." %}
                 </p>
-                <form method="post" action="{% url 'dashboard:superadmin_content_update' %}" id="content-create-form">
+
+                <!-- Create a new key (all languages at once) -->
+                <form method="post" action="{% url 'dashboard:superadmin_content_save' %}" x-show="showNew" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:20px;">
                     {% csrf_token %}
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>{% trans "Clé" %}</label>
-                            <input type="text" name="key" id="content-create-key" class="form-control" required placeholder="hero_title">
-                        </div>
-                        <div class="form-group">
-                            <label>{% trans "Langue" %}</label>
-                            <select name="lang" id="content-create-lang" class="form-control" required>
-                                {% for code, label in platform_content_languages %}
-                                <option value="{{ code }}" {% if code == LANGUAGE_CODE %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
                     <div class="form-group">
-                        <label>{% trans "Valeur" %}</label>
-                        <textarea name="value" id="content-create-value" class="form-control" rows="4"></textarea>
+                        <label>{% trans "Clé" %}</label>
+                        <input type="text" name="key" class="form-control" required placeholder="hero_title">
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+                    {% for code, label in platform_content_languages %}
+                    <div class="form-group">
+                        <label>{{ label }}</label>
+                        <textarea name="value_{{ code }}" class="form-control" rows="2" {% if code == 'ar' %}dir="rtl"{% endif %}></textarea>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">{% trans "Créer" %}</button>
+                    <button type="button" class="btn btn-outline" @click="showNew = false">{% trans "Annuler" %}</button>
                 </form>
 
-                {% if platform_content %}
-                <div style="margin-top:24px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <strong>{% trans "Contenu existant" %} ({{ platform_content|length }})</strong>
-                    <input type="text" x-model="filter" class="form-control" placeholder="{% trans 'Filtrer par clé, langue, ou valeur...' %}" style="max-width:320px;">
+                {% if content_rows %}
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <strong>{% trans "Contenu existant" %} ({{ content_rows|length }} {% trans "clés" %})</strong>
+                    <input type="text" x-model="filter" class="form-control" placeholder="{% trans 'Filtrer par clé ou texte…' %}" style="max-width:320px;">
                 </div>
                 <div class="table-wrapper" style="margin-top:12px;">
                     <table>
-                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Langue" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th style="white-space:nowrap;">{% trans "Actions" %}</th></tr></thead>
+                        <thead><tr>
+                            <th>{% trans "Clé" %}</th>
+                            <th>{% trans "Français" %}</th>
+                            <th>English</th>
+                            <th>العربية</th>
+                            <th style="white-space:nowrap;">{% trans "Actions" %}</th>
+                        </tr></thead>
                         <tbody>
-                        {% for pc in platform_content %}
-                        <tr x-show="!filter || '{{ pc.key|escapejs }}'.toLowerCase().includes(filter.toLowerCase()) || '{{ pc.get_lang_display|escapejs }}'.toLowerCase().includes(filter.toLowerCase()) || `{{ pc.value|truncatechars:200|escapejs }}`.toLowerCase().includes(filter.toLowerCase())">
-                            <!-- View mode -->
-                            <template x-if="editingPk !== {{ pc.pk }}">
-                                <td><strong class="font-mono">{{ pc.key }}</strong></td>
-                            </template>
-                            <template x-if="editingPk === {{ pc.pk }}">
-                                <td><strong class="font-mono">{{ pc.key }}</strong></td>
-                            </template>
-                            <td><span class="badge">{{ pc.get_lang_display }}</span></td>
-
-                            <!-- Value cell: read OR edit -->
-                            <td x-show="editingPk !== {{ pc.pk }}">{{ pc.value|truncatechars:120 }}</td>
-                            <td x-show="editingPk === {{ pc.pk }}" style="min-width:300px;">
-                                <form method="post" action="{% url 'dashboard:superadmin_content_update' %}" style="display:flex; gap:8px; align-items:flex-start;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="key" value="{{ pc.key }}">
-                                    <input type="hidden" name="lang" value="{{ pc.lang }}">
-                                    <textarea name="value" class="form-control" rows="3" required style="flex:1;">{{ pc.value }}</textarea>
-                                    <div style="display:flex; flex-direction:column; gap:4px;">
-                                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Enregistrer" %}</button>
-                                        <button type="button" class="btn btn-sm btn-outline" @click="editingPk = null">{% trans "Annuler" %}</button>
-                                    </div>
-                                </form>
+                        {% for row in content_rows %}
+                        {% with rid=row.key|slugify %}
+                        <tr x-show="!filter || `{{ row.key|escapejs }} {{ row.fr|default:''|escapejs }} {{ row.en|default:''|escapejs }} {{ row.ar|default:''|escapejs }}`.toLowerCase().includes(filter.toLowerCase())">
+                            <td>
+                                <strong class="font-mono">{{ row.key }}</strong>
+                                {% if row.missing %}<br><span class="badge" style="background:#fef3c7; color:#92400e;" title="{% trans 'Langues manquantes' %}">⚠ {{ row.missing|join:", " }}</span>{% endif %}
                             </td>
-
-                            <td class="text-muted" style="white-space:nowrap;">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ row.fr|default:""|truncatechars:80 }}</td>
+                            <td>{{ row.en|default:""|truncatechars:80 }}</td>
+                            <td dir="rtl">{{ row.ar|default:""|truncatechars:80 }}</td>
                             <td style="white-space:nowrap;">
-                                <button type="button" class="btn btn-sm btn-primary"
-                                        x-show="editingPk !== {{ pc.pk }}"
-                                        @click="editingPk = {{ pc.pk }}">{% trans "Modifier" %}</button>
-                                <form method="post" action="{% url 'dashboard:superadmin_content_delete' pc.pk %}" style="display:inline;"
-                                      x-show="editingPk !== {{ pc.pk }}">
+                                <button type="button" class="btn btn-sm btn-primary" @click="editingKey = (editingKey === '{{ rid }}' ? null : '{{ rid }}')">{% trans "Modifier" %}</button>
+                                <form method="post" action="{% url 'dashboard:superadmin_content_delete_key' %}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
+                                    <input type="hidden" name="key" value="{{ row.key }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette clé dans toutes les langues ?" %}')">{% trans "Supprimer" %}</button>
                                 </form>
                             </td>
                         </tr>
+                        <tr x-show="editingKey === '{{ rid }}'">
+                            <td colspan="5" style="background:#f8fafc;">
+                                <form method="post" action="{% url 'dashboard:superadmin_content_save' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="key" value="{{ row.key }}">
+                                    <div class="form-group">
+                                        <label>{% trans "Français" %}</label>
+                                        <textarea name="value_fr" class="form-control" rows="2">{{ row.fr|default:"" }}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>English</label>
+                                        <textarea name="value_en" class="form-control" rows="2">{{ row.en|default:"" }}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>العربية</label>
+                                        <textarea name="value_ar" class="form-control" rows="2" dir="rtl">{{ row.ar|default:"" }}</textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Enregistrer" %}</button>
+                                    <button type="button" class="btn btn-sm btn-outline" @click="editingKey = null">{% trans "Annuler" %}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endwith %}
                         {% endfor %}
                         </tbody>
                     </table>

@@ -1,3 +1,5 @@
+import time
+
 from django import template
 from django.conf import settings
 from django.utils.translation import get_language
@@ -6,7 +8,18 @@ from core.models import PlatformContent
 
 register = template.Library()
 
+# In-process cache: {(key, lang): (value, expires_at)}. Avoids a DB hit per
+# {% cms %} call (a content page can reference dozens of keys). Entries carry a
+# short TTL so edits self-heal across worker processes within ``_CACHE_TTL``,
+# and ``clear_cms_cache()`` wipes the whole cache immediately after an admin
+# save/delete (single-worker deploys see edits at once).
 _content_cache = {}
+_CACHE_TTL = 60  # seconds
+
+
+def clear_cms_cache():
+    """Drop every cached content value — call after any PlatformContent write."""
+    _content_cache.clear()
 
 
 def _normalize_lang(code):
@@ -30,15 +43,17 @@ def cms(key, default=''):
     """
     lang = _normalize_lang(get_language())
     cache_key = (key, lang)
-    if cache_key in _content_cache:
-        return _content_cache[cache_key]
+    cached = _content_cache.get(cache_key)
+    if cached is not None and cached[1] > time.monotonic():
+        return cached[0] or default
     try:
         obj = PlatformContent.objects.filter(key=key, lang=lang).first()
         if obj is None and lang != settings.LANGUAGE_CODE:
             obj = PlatformContent.objects.filter(key=key, lang=settings.LANGUAGE_CODE).first()
-        if obj and obj.value:
-            _content_cache[cache_key] = obj.value
-            return obj.value
+        value = obj.value if (obj and obj.value) else ''
+        _content_cache[cache_key] = (value, time.monotonic() + _CACHE_TTL)
+        if value:
+            return value
     except Exception:
         pass
     return default

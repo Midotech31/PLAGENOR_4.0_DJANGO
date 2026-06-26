@@ -10,6 +10,7 @@ from django.conf import settings
 
 from accounts.models import User, MemberProfile, Technique
 from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField
+from core.templatetags.cms import clear_cms_cache
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
 
@@ -60,6 +61,18 @@ def index(request):
     services = Service.objects.order_by('code')
     techniques = Technique.objects.order_by('name')
     platform_content = PlatformContent.objects.order_by('key', 'lang')
+    # Group content one row per key with all three languages side by side so
+    # the Content Manager can edit FR/EN/AR together.
+    _content_langs = [code for code, _ in PlatformContent.LANGUAGE_CHOICES]
+    _grouped = {}
+    for pc in platform_content:
+        row = _grouped.setdefault(pc.key, {'key': pc.key, 'updated_at': pc.updated_at})
+        row[pc.lang] = pc.value
+        if pc.updated_at and (row['updated_at'] is None or pc.updated_at > row['updated_at']):
+            row['updated_at'] = pc.updated_at
+    for row in _grouped.values():
+        row['missing'] = [lg for lg in _content_langs if not (row.get(lg) or '').strip()]
+    content_rows = sorted(_grouped.values(), key=lambda r: r['key'])
 
     recent_requests = Request.objects.filter(archived=False).order_by('-created_at')[:5]
     recent_users = User.objects.order_by('-date_joined')[:5]
@@ -148,6 +161,7 @@ def index(request):
         'services': services,
         'techniques': techniques,
         'platform_content': platform_content,
+        'content_rows': content_rows,
         'platform_content_languages': PlatformContent.LANGUAGE_CHOICES,
         'status_dist': status_dist,
         'recent_requests': recent_requests,
@@ -316,12 +330,13 @@ def service_reactivate(request, pk):
 
 @superadmin_required
 def content_delete(request, pk):
-    """Delete a platform content entry."""
+    """Delete a single platform content row (one key + one language)."""
     if request.method != 'POST':
         return HttpResponseForbidden()
     content = get_object_or_404(PlatformContent, pk=pk)
     key = content.key
     content.delete()
+    clear_cms_cache()
     messages.success(request, f"Contenu '{key}' supprimé.")
     return redirect_back(request, 'dashboard:superadmin')
 
@@ -344,7 +359,48 @@ def content_update(request):
         lang=lang,
         defaults={'value': value, 'updated_by': request.user},
     )
+    clear_cms_cache()
     messages.success(request, f"Contenu '{key}' [{lang}] mis à jour.")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
+def content_save(request):
+    """Upsert all three languages of one content key in a single submit.
+
+    POST: key, value_fr, value_en, value_ar. A blank language value clears
+    that translation (the {% cms %} tag then falls back to the default
+    language, then to the template default).
+    """
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    key = request.POST.get('key', '').strip()
+    if not key:
+        messages.error(request, "Clé manquante.")
+        return redirect_back(request, 'dashboard:superadmin')
+    for code, _label in PlatformContent.LANGUAGE_CHOICES:
+        value = request.POST.get(f'value_{code}', '')
+        PlatformContent.objects.update_or_create(
+            key=key, lang=code,
+            defaults={'value': value, 'updated_by': request.user},
+        )
+    clear_cms_cache()
+    messages.success(request, f"Contenu '{key}' enregistré (toutes les langues).")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
+def content_delete_key(request):
+    """Delete every language row for a content key. POST: key."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    key = request.POST.get('key', '').strip()
+    if not key:
+        messages.error(request, "Clé manquante.")
+        return redirect_back(request, 'dashboard:superadmin')
+    deleted, _ = PlatformContent.objects.filter(key=key).delete()
+    clear_cms_cache()
+    messages.success(request, f"Contenu '{key}' supprimé ({deleted} entrée(s)).")
     return redirect_back(request, 'dashboard:superadmin')
 
 
