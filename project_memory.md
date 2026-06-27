@@ -4,9 +4,11 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
-## Tests — first real coverage (done, 28 passing)
-- Avant: 0 test. Maintenant 28 tests sur les chemins critiques (argent + securite). `python manage.py test` = 28 OK.
+## Tests — first real coverage (done, 43 passing)
+- Avant: 0 test. Maintenant 43 tests sur les chemins critiques (argent + securite). `python manage.py test` = 43 OK.
 - core/tests.py: calculate_price (multiplier/pathogene/fixed + cas d'erreur), resolve_cost (fallback flat, normalisation canal), check_ibtikar_budget (non-declare bloque, dans/au-dessus du solde, cap depuis settings).
+- core/tests.py (workflow): get_allowed_next_states, check_role_permission (super-admin bypass, mauvais role refuse, edge inconnu fail-closed), transition (succes maj statut+historique, cible invalide -> InvalidTransitionError, mauvais role -> AuthorizationError), force_transition (bypass graph, statut inconnu raise).
+- core/tests.py (invoice): compute_invoice_totals (VAT 19%, lignes+frais, VAT 0, arrondi 2dp, vide). NOUVEAU helper core/financial.compute_invoice_totals extrait du calcul inline du devis (admin_ops.py) -> DRY + testable, math identique.
 - dashboard/tests.py: gate rapport — IBTIKAR non-acquitte bloque, acquitte servi, GENOCLAB exempt; serve_media stream + 404.
 - accounts/tests.py: inscription type "autre" exige detail, pays sauve, email duplique rejete.
 - CI: .github/workflows/django.yml etait MORT (Python 3.7-3.9 vs Django 5.1 besoin 3.10+, trigger main seulement, pas de SECRET_KEY). Fix pret LOCALEMENT (py3.11, trigger claude/** + main + PR, SECRET_KEY CI) mais NON poussable: PAT sans scope `workflow` ET MCP app token 403. ACTION USER: appliquer le YAML via l'editeur web GitHub OU fournir un PAT avec scope workflow.

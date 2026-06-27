@@ -763,22 +763,11 @@ def prepare_quote(request, pk):
         vat_rate = safe_float(request.POST.get('vat_rate'), default=19) / 100
         notes = request.POST.get('quote_notes', '')
 
-        subtotal_ht = sum(item['total'] for item in items)
-        subtotal_before_tax = subtotal_ht + admin_fees + report_fees
-        vat_amount = round(subtotal_before_tax * vat_rate, 2)
-        total_ttc = round(subtotal_before_tax + vat_amount, 2)
+        from core.financial import compute_invoice_totals
+        totals = compute_invoice_totals(items, admin_fees, report_fees, vat_rate)
+        total_ttc = totals['total_ttc']
 
-        quote_detail = {
-            'items': items,
-            'subtotal_ht': subtotal_ht,
-            'admin_fees': admin_fees,
-            'report_fees': report_fees,
-            'subtotal_before_tax': subtotal_before_tax,
-            'vat_rate': vat_rate,
-            'vat_amount': vat_amount,
-            'total_ttc': total_ttc,
-            'notes': notes,
-        }
+        quote_detail = {'items': items, 'notes': notes, **totals}
 
         req.quote_detail = quote_detail
         req.quote_amount = total_ttc

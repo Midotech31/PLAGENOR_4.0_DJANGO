@@ -16,6 +16,36 @@ logger = logging.getLogger('plagenor.financial')
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# GENOCLAB — Invoice / quote totals (HT → VAT → TTC)
+# ═══════════════════════════════════════════════════════════════════════════
+def compute_invoice_totals(line_items, admin_fees=0, report_fees=0, vat_rate=0.19):
+    """Compute HT / VAT / TTC for a GENOCLAB quote or invoice.
+
+    ``line_items``: iterable of dicts each carrying a numeric ``total`` (the
+    per-line subtotal). ``vat_rate`` is a fraction (0.19 = 19%). Returns the
+    breakdown dict used by both the quote builder and the invoice. VAT and the
+    grand total are rounded to 2 decimals; the HT subtotal mirrors the prior
+    inline math (unrounded sum) to keep existing invoice amounts identical.
+    """
+    admin_fees = float(admin_fees or 0)
+    report_fees = float(report_fees or 0)
+    vat_rate = float(vat_rate or 0)
+    subtotal_ht = sum(float(i.get('total', 0) or 0) for i in line_items)
+    subtotal_before_tax = subtotal_ht + admin_fees + report_fees
+    vat_amount = round(subtotal_before_tax * vat_rate, 2)
+    total_ttc = round(subtotal_before_tax + vat_amount, 2)
+    return {
+        'subtotal_ht': subtotal_ht,
+        'admin_fees': admin_fees,
+        'report_fees': report_fees,
+        'subtotal_before_tax': subtotal_before_tax,
+        'vat_rate': vat_rate,
+        'vat_amount': vat_amount,
+        'total_ttc': total_ttc,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # IBTIKAR — Virtual Revenue (per-student budget tracking)
 # ═══════════════════════════════════════════════════════════════════════════
 
