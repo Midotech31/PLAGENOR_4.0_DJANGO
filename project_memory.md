@@ -4,6 +4,15 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Best-practices hardening (safe subset, done)
+- CI reparee + VERTE: .github/workflows/django.yml (py3.11, trigger main+claude/**+PR, SECRET_KEY) -> run #9 success sur fc0a0d1. Tourne check + 43 tests a chaque push.
+- Dependabot: .github/dependabot.yml (pip + github-actions, hebdo) -> PRs de MAJ deps/securite reviewables.
+- pip-audit en CI: etape NON-bloquante (continue-on-error) -> visibilite CVE sans casser le build.
+- SECURITY.md: politique secrets (jamais en commit/chat, rotation, push protection), config prod, bucket prive.
+- PR ouverte great-newton -> main pour instaurer le flux review/CI-gate.
+- VOLONTAIREMENT NON FAIT (risque core-logic / destabilisation, demande user): refactor Decimal des montants (compute_invoice_totals utilise float comme l'original) ; gating lint/pin requirements (risque CI rouge / build deploy) ; Sentry (dep runtime). A faire avec validation explicite + tests.
+- ACTIONS USER (settings only): activer branch protection sur main (require Django CI), activer secret scanning+push protection, revoquer les PAT exposes, upgrade Render (cold start), upgrade hosting.
+
 ## Tests — first real coverage (done, 43 passing)
 - Avant: 0 test. Maintenant 43 tests sur les chemins critiques (argent + securite). `python manage.py test` = 43 OK.
 - core/tests.py: calculate_price (multiplier/pathogene/fixed + cas d'erreur), resolve_cost (fallback flat, normalisation canal), check_ibtikar_budget (non-declare bloque, dans/au-dessus du solde, cap depuis settings).

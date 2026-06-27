@@ -33,3 +33,10 @@ jobs:
       run: python manage.py check
     - name: Run tests
       run: python manage.py test
+    - name: Dependency vulnerability audit (informational)
+      # Non-blocking: surfaces known CVEs in dependencies without failing the
+      # build, so a vulnerable transitive package never silently blocks merges.
+      continue-on-error: true
+      run: |
+        pip install pip-audit
+        pip-audit || true
