@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Hardening round 2 — deferred items (done, user-authorized, 49 tests)
+- Decimal money: compute_invoice_totals utilise Decimal + ROUND_HALF_UP (au lieu de float + round() banquier). Retourne des floats (JSON-safe pour quote_detail + DecimalField). Valeurs identiques sur les cas normaux; +tests (arrondi half-up 0.125->0.13, json-safe).
+- Tests integration: deduct_ibtikar_balance (reduit le solde, plancher 0, skip si non-declare) + bout-en-bout: transition IBTIKAR SENT_TO_REQUESTER->COMPLETED deduit budget_amount du solde declare. Suite = 49 tests OK.
+- Requirements epingles: dj-database-url==3.1.2, psycopg2-binary==2.9.10, boto3==1.43.36, sentry-sdk==2.63.0 (versions verifiees en local py3.11; psycopg2 = Postgres prod uniquement).
+- Sentry: init garde dans settings.py, NO-OP sauf si SENTRY_DSN present (try/except, ne casse jamais le boot). Vars .env.example: SENTRY_DSN/ENVIRONMENT/TRACES_SAMPLE_RATE.
+- Verifie: check OK (avec et sans DSN), 49 tests OK.
+
 ## Best-practices hardening (safe subset, done)
 - CI reparee + VERTE: .github/workflows/django.yml (py3.11, trigger main+claude/**+PR, SECRET_KEY) -> run #9 success sur fc0a0d1. Tourne check + 43 tests a chaque push.
 - Dependabot: .github/dependabot.yml (pip + github-actions, hebdo) -> PRs de MAJ deps/securite reviewables.

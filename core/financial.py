@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Optional
 
 from django.conf import settings
@@ -18,30 +19,46 @@ logger = logging.getLogger('plagenor.financial')
 # ═══════════════════════════════════════════════════════════════════════════
 # GENOCLAB — Invoice / quote totals (HT → VAT → TTC)
 # ═══════════════════════════════════════════════════════════════════════════
+def _money(value) -> Decimal:
+    """Coerce a value to Decimal via str() so float artefacts don't leak in."""
+    try:
+        return Decimal(str(value if value not in (None, '') else 0))
+    except (InvalidOperation, ValueError, TypeError):
+        return Decimal('0')
+
+
+def _q2(amount: Decimal) -> Decimal:
+    """Round to 2 decimals using ROUND_HALF_UP (the conventional invoice rule)."""
+    return amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
 def compute_invoice_totals(line_items, admin_fees=0, report_fees=0, vat_rate=0.19):
     """Compute HT / VAT / TTC for a GENOCLAB quote or invoice.
 
     ``line_items``: iterable of dicts each carrying a numeric ``total`` (the
-    per-line subtotal). ``vat_rate`` is a fraction (0.19 = 19%). Returns the
-    breakdown dict used by both the quote builder and the invoice. VAT and the
-    grand total are rounded to 2 decimals; the HT subtotal mirrors the prior
-    inline math (unrounded sum) to keep existing invoice amounts identical.
+    per-line subtotal). ``vat_rate`` is a fraction (0.19 = 19%).
+
+    Arithmetic is done in ``Decimal`` to avoid binary-float drift on money, and
+    VAT / total are rounded to 2 decimals with ROUND_HALF_UP (standard invoice
+    rounding — not Python's banker's rounding). Values are returned as ``float``
+    so the result stays JSON-serialisable for ``Request.quote_detail`` and
+    assignable to the ``DecimalField`` invoice columns, exactly as before.
     """
-    admin_fees = float(admin_fees or 0)
-    report_fees = float(report_fees or 0)
-    vat_rate = float(vat_rate or 0)
-    subtotal_ht = sum(float(i.get('total', 0) or 0) for i in line_items)
+    admin_fees = _money(admin_fees)
+    report_fees = _money(report_fees)
+    vat_rate = _money(vat_rate)
+    subtotal_ht = sum((_money(i.get('total', 0)) for i in line_items), Decimal('0'))
     subtotal_before_tax = subtotal_ht + admin_fees + report_fees
-    vat_amount = round(subtotal_before_tax * vat_rate, 2)
-    total_ttc = round(subtotal_before_tax + vat_amount, 2)
+    vat_amount = _q2(subtotal_before_tax * vat_rate)
+    total_ttc = _q2(subtotal_before_tax + vat_amount)
     return {
-        'subtotal_ht': subtotal_ht,
-        'admin_fees': admin_fees,
-        'report_fees': report_fees,
-        'subtotal_before_tax': subtotal_before_tax,
-        'vat_rate': vat_rate,
-        'vat_amount': vat_amount,
-        'total_ttc': total_ttc,
+        'subtotal_ht': float(subtotal_ht),
+        'admin_fees': float(admin_fees),
+        'report_fees': float(report_fees),
+        'subtotal_before_tax': float(subtotal_before_tax),
+        'vat_rate': float(vat_rate),
+        'vat_amount': float(vat_amount),
+        'total_ttc': float(total_ttc),
     }
 
 

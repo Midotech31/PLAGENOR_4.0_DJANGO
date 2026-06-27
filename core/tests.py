@@ -10,7 +10,9 @@ from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 
 from core.exceptions import AuthorizationError, InvalidTransitionError
-from core.financial import check_ibtikar_budget, compute_invoice_totals
+from core.financial import (
+    check_ibtikar_budget, compute_invoice_totals, deduct_ibtikar_balance,
+)
 from core.models import Request, RequestHistory, Service
 from core.pricing import calculate_price, resolve_cost
 from core.state_machine import get_allowed_next_states
@@ -205,6 +207,19 @@ class InvoiceTotalsTests(SimpleTestCase):
         t = compute_invoice_totals([], vat_rate=0.19)
         self.assertEqual(t['total_ttc'], 0.0)
 
+    def test_half_up_rounding(self):
+        # 0.25 * 0.5 = 0.125 -> ROUND_HALF_UP gives 0.13 (Python round() would
+        # banker's-round to 0.12). Decimal arithmetic makes this deterministic.
+        t = compute_invoice_totals([{'total': 0.25}], vat_rate=0.5)
+        self.assertEqual(t['vat_amount'], 0.13)
+        self.assertEqual(t['total_ttc'], 0.38)
+
+    def test_returns_json_safe_floats(self):
+        import json
+        t = compute_invoice_totals([{'total': 1500}], vat_rate=0.19)
+        json.dumps(t)  # must not raise (stored in Request.quote_detail JSONField)
+        self.assertIsInstance(t['total_ttc'], float)
+
 
 # ---------------------------------------------------------------------------
 # Workflow state machine + role permissions
@@ -277,3 +292,52 @@ class WorkflowTransitionTests(TestCase):
         req = self._req()
         with self.assertRaises(InvalidTransitionError):
             force_transition(req, 'NOT_A_STATUS', self.admin)
+
+
+# ---------------------------------------------------------------------------
+# IBTIKAR balance deduction (unit + end-to-end on COMPLETED)
+# ---------------------------------------------------------------------------
+class IbtikarDeductionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.User = User
+        cls.admin = User.objects.create(username='ded-admin', role='SUPER_ADMIN')
+
+    def test_deduct_reduces_declared_balance(self):
+        u = self.User.objects.create(
+            username='ded1', role='REQUESTER',
+            ibtikar_declared_balance=Decimal('50000'))
+        res = deduct_ibtikar_balance(u, 12000, reason='x')
+        u.refresh_from_db()
+        self.assertEqual(res['remaining'], 38000.0)
+        self.assertEqual(float(u.ibtikar_declared_balance), 38000.0)
+
+    def test_deduct_floors_at_zero(self):
+        u = self.User.objects.create(
+            username='ded2', role='REQUESTER',
+            ibtikar_declared_balance=Decimal('5000'))
+        deduct_ibtikar_balance(u, 9000, reason='x')
+        u.refresh_from_db()
+        self.assertEqual(float(u.ibtikar_declared_balance), 0.0)
+
+    def test_deduct_skips_when_no_declared_balance(self):
+        u = self.User.objects.create(username='ded3', role='REQUESTER',
+                                     ibtikar_declared_balance=None)
+        res = deduct_ibtikar_balance(u, 1000, reason='x')
+        self.assertTrue(res['skipped'])
+
+    def test_completing_ibtikar_request_deducts_budget(self):
+        """End-to-end: SENT_TO_REQUESTER -> COMPLETED on IBTIKAR deducts the
+        resolved cost from the requester's declared balance."""
+        u = self.User.objects.create(
+            username='ded-flow', role='REQUESTER',
+            ibtikar_declared_balance=Decimal('100000'))
+        req = Request.objects.create(
+            channel='IBTIKAR', status='SENT_TO_REQUESTER',
+            requester=u, budget_amount=Decimal('30000'))
+        transition(req, 'COMPLETED', self.admin, notes='receipt confirmed')
+        req.refresh_from_db()
+        u.refresh_from_db()
+        self.assertEqual(req.status, 'COMPLETED')
+        self.assertEqual(float(u.ibtikar_declared_balance), 70000.0)

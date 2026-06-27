@@ -312,3 +312,20 @@ LOGGING = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ─── Error monitoring (Sentry) ───────────────────────────────────────────
+# Opt-in and fully no-op unless SENTRY_DSN is set in the environment, so this
+# never affects local/dev or any deploy that hasn't configured it. When a DSN
+# is present, unhandled exceptions are reported with the Django integration.
+SENTRY_DSN = os.getenv('SENTRY_DSN', '').strip()
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            environment=os.getenv('SENTRY_ENVIRONMENT', 'production'),
+            traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0')),
+            send_default_pii=False,
+        )
+    except Exception:  # never let monitoring setup break boot
+        pass
