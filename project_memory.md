@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Tests — first real coverage (done, 28 passing)
+- Avant: 0 test. Maintenant 28 tests sur les chemins critiques (argent + securite). `python manage.py test` = 28 OK.
+- core/tests.py: calculate_price (multiplier/pathogene/fixed + cas d'erreur), resolve_cost (fallback flat, normalisation canal), check_ibtikar_budget (non-declare bloque, dans/au-dessus du solde, cap depuis settings).
+- dashboard/tests.py: gate rapport — IBTIKAR non-acquitte bloque, acquitte servi, GENOCLAB exempt; serve_media stream + 404.
+- accounts/tests.py: inscription type "autre" exige detail, pays sauve, email duplique rejete.
+- CI: .github/workflows/django.yml etait MORT (Python 3.7-3.9 vs Django 5.1 besoin 3.10+, trigger main seulement, pas de SECRET_KEY). Fix pret LOCALEMENT (py3.11, trigger claude/** + main + PR, SECRET_KEY CI) mais NON poussable: PAT sans scope `workflow` ET MCP app token 403. ACTION USER: appliquer le YAML via l'editeur web GitHub OU fournir un PAT avec scope workflow.
+
 ## CMS Phase A — Unified Content Manager (done, verified)
 - Onglet Contenu superadmin refondu: 1 ligne par cle avec FR/EN/AR cote a cote, edites/enregistres ensemble. Formulaire "nouvelle entree" 3 langues, suppression par cle (toutes langues), recherche cle+valeurs, badge "langues manquantes".
 - Backend: vue index groupe le contenu par cle (content_rows). Nouvelles vues content_save (upsert toutes langues) + content_delete_key. URLs content/save/ + content/delete-key/.
