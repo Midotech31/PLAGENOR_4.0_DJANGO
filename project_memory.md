@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## CRITICAL — disappearing accounts = ephemeral SQLite (fixed guard + user action)
+- SYMPTOME: compte cree par superadmin -> disparait apres redeploy/restart/spin-down.
+- CAUSE: settings.py tombait en fallback SQLite (disque Render EPHEMERE) quand DATABASE_URL absent -> toutes les donnees effacees a chaque restart. build.sh n'est PAS destructif (seeds idempotents); le probleme = DATABASE_URL non defini en prod.
+- FIX CODE: settings.py refuse desormais de demarrer en prod (DEBUG=False) sans DATABASE_URL -> raise ImproperlyConfigured (comme SECRET_KEY). DEBUG=true garde SQLite local. Verifie: DEBUG=true sans URL=OK SQLite; DEBUG=false sans URL=raise; URL defini=Postgres. 49 tests OK.
+- ACTION USER (resolution reelle): Render -> Environment -> definir DATABASE_URL = chaine Supabase (Session pooler port 5432, encoder @ -> %40) -> redeploy. Apres ca les comptes persistent. NB: les donnees SQLite ephemeres sont perdues; le schema Supabase sera (re)cree par migrate au deploy, admin recree par ensure_superuser.
+- DIAGNOSTIC BONUS: avec ce guard, si le prochain deploy CRASH avec "DATABASE_URL is not set", la cause est confirmee; s'il deploie OK, DATABASE_URL etait deja defini et chercher ailleurs.
+
 ## Hardening round 2 — deferred items (done, user-authorized, 49 tests)
 - Decimal money: compute_invoice_totals utilise Decimal + ROUND_HALF_UP (au lieu de float + round() banquier). Retourne des floats (JSON-safe pour quote_detail + DecimalField). Valeurs identiques sur les cas normaux; +tests (arrondi half-up 0.125->0.13, json-safe).
 - Tests integration: deduct_ibtikar_balance (reduit le solde, plancher 0, skip si non-declare) + bout-en-bout: transition IBTIKAR SENT_TO_REQUESTER->COMPLETED deduit budget_amount du solde declare. Suite = 49 tests OK.

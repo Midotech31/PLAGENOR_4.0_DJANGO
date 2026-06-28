@@ -131,14 +131,26 @@ if os.getenv('DATABASE_URL'):
             ssl_require=True,
         )
     }
-else:
-    # SQLite fallback for local development without PostgreSQL
+elif DEBUG:
+    # SQLite fallback for local development without PostgreSQL.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': DATA_DIR / 'plagenor.db',
         }
     }
+else:
+    # Refuse to run in production on the ephemeral SQLite fallback: on hosts
+    # like Render the disk is wiped on every restart/redeploy, so all data
+    # (accounts, requests…) would silently vanish. Fail loudly instead, the
+    # same way SECRET_KEY does, so the operator sets DATABASE_URL.
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        "DATABASE_URL is not set. Refusing to start on the ephemeral SQLite "
+        "fallback in production — data would be lost on every restart. Set "
+        "DATABASE_URL to your PostgreSQL (Supabase) connection string, or set "
+        "DEBUG=true for local SQLite development."
+    )
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
