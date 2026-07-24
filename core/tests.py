@@ -385,6 +385,80 @@ class EndToEndPipelineTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
+# Bilan (configurable activity report) engine
+# ---------------------------------------------------------------------------
+class BilanEngineTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        svc = Service.objects.create(code='B_SVC', name='Bilan Svc')
+        u = User.objects.create(username='bilan-req', role='REQUESTER')
+        for i, ch in enumerate(['IBTIKAR', 'GENOCLAB', 'IBTIKAR']):
+            Request.objects.create(
+                channel=ch, status='COMPLETED', service=svc, requester=u,
+                display_id=f'BIL-{i}', budget_amount=Decimal('1000'))
+
+    def test_available_sections_nonempty(self):
+        from core.bilan import available_sections
+        secs = available_sections()
+        self.assertTrue(secs)
+        self.assertTrue(all(len(s) == 2 for s in secs))
+
+    def test_build_bilan_returns_kpis_and_sections(self):
+        from core.bilan import build_bilan
+        result = build_bilan(filters={}, sections=['channel'])
+        self.assertIn('kpis', result)
+        self.assertIn('sections', result)
+        self.assertTrue(len(result['sections']) >= 1)
+        # The channel section should tally our 3 requests.
+        channel_section = result['sections'][0]
+        self.assertIn('rows', channel_section)
+
+    def test_build_bilan_defaults_when_no_sections(self):
+        from core.bilan import build_bilan
+        result = build_bilan(filters={}, sections=None)
+        self.assertTrue(len(result['sections']) >= 1)
+
+
+# ---------------------------------------------------------------------------
+# ensure_superuser + seed commands (management commands smoke)
+# ---------------------------------------------------------------------------
+class ManagementCommandTests(TestCase):
+    def test_ensure_superuser_creates_from_env(self):
+        import os
+        from django.core.management import call_command
+        from accounts.models import User
+        os.environ['DJANGO_SUPERUSER_USERNAME'] = 'seed-admin'
+        os.environ['DJANGO_SUPERUSER_PASSWORD'] = 'S3cret!pass9'
+        os.environ['DJANGO_SUPERUSER_EMAIL'] = 'admin@essbo.dz'
+        try:
+            call_command('ensure_superuser')
+            u = User.objects.get(username='seed-admin')
+            self.assertTrue(u.is_superuser)
+            self.assertEqual(u.role, 'SUPER_ADMIN')
+            # Idempotent: a second run must not error or duplicate.
+            call_command('ensure_superuser')
+            self.assertEqual(User.objects.filter(username='seed-admin').count(), 1)
+        finally:
+            for k in ('DJANGO_SUPERUSER_USERNAME', 'DJANGO_SUPERUSER_PASSWORD',
+                      'DJANGO_SUPERUSER_EMAIL'):
+                os.environ.pop(k, None)
+
+    def test_ensure_superuser_noop_without_env(self):
+        from django.core.management import call_command
+        from accounts.models import User
+        before = User.objects.count()
+        call_command('ensure_superuser')  # no env → skip, no error
+        self.assertEqual(User.objects.count(), before)
+
+    def test_seed_services_and_content_run(self):
+        from django.core.management import call_command
+        call_command('seed_services')
+        call_command('seed_content')
+        self.assertTrue(Service.objects.exists())
+
+
+# ---------------------------------------------------------------------------
 # IBTIKAR balance deduction (unit + end-to-end on COMPLETED)
 # ---------------------------------------------------------------------------
 class IbtikarDeductionTests(TestCase):

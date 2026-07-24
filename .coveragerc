@@ -15,4 +15,4 @@ show_missing = False
 skip_covered = False
 # Floor set just below current coverage (~34% of non-test code). Ratchet UP
 # as tests grow — never down. Guards against large coverage regressions in CI.
-fail_under = 30
+fail_under = 34
