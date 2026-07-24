@@ -19,9 +19,54 @@ _GUEST_TOKEN_SALT = 'guest-conversion'
 _GUEST_TOKEN_TTL = 24 * 60 * 60  # 24 hours
 
 
+# Brute-force lockout: after MAX_LOGIN_ATTEMPTS consecutive failures the
+# account is locked for LOCKOUT_MINUTES. The User model has carried
+# ``login_attempts`` / ``locked_until`` since the start — this wires them up.
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        from django.utils import timezone
+        user = form.get_user()
+        if user.locked_until and user.locked_until > timezone.now():
+            remaining = int((user.locked_until - timezone.now()).total_seconds() // 60) + 1
+            form.add_error(None, _(
+                "Compte temporairement verrouillé suite à des tentatives "
+                "échouées. Réessayez dans %(minutes)d minute(s)."
+            ) % {'minutes': remaining})
+            # super() on purpose: a correct-password attempt during the lock
+            # window must not be counted as another failure.
+            return super().form_invalid(form)
+        # Successful login within an unlocked window → reset the counters.
+        if user.login_attempts or user.locked_until:
+            user.login_attempts = 0
+            user.locked_until = None
+            user.save(update_fields=['login_attempts', 'locked_until'])
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        from django.utils import timezone
+        username = (self.request.POST.get('username') or '').strip()
+        if username:
+            # Count the failure for the targeted account (if it exists) and
+            # lock after the threshold. Never leaks whether the account
+            # exists: the response is the same generic form error either way.
+            user = User.objects.filter(username__iexact=username).first()
+            if user is not None:
+                user.login_attempts = (user.login_attempts or 0) + 1
+                fields = ['login_attempts']
+                if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                    user.locked_until = timezone.now() + timezone.timedelta(
+                        minutes=LOCKOUT_MINUTES)
+                    user.login_attempts = 0
+                    fields.append('locked_until')
+                user.save(update_fields=fields)
+        return super().form_invalid(form)
 
 
 class CustomLogoutView(LogoutView):

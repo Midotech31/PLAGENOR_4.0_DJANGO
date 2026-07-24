@@ -1,5 +1,6 @@
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import Q
 from django.http import (
     FileResponse, Http404, HttpResponse, HttpResponseForbidden, JsonResponse,
 )
@@ -161,9 +162,12 @@ def download_report(request, token):
                 locked.save(update_fields=['report_delivered', 'report_delivered_at'])
 
     # FileResponse streams the file; as_attachment triggers the download
-    # dialog instead of inline preview.
+    # dialog instead of inline preview. Keep the report's real extension —
+    # naming a .docx ".pdf" breaks the file for the recipient.
+    import os as _os
+    _ext = _os.path.splitext(req.report_file.name)[1].lower() or '.pdf'
     return FileResponse(req.report_file.open('rb'), as_attachment=True,
-                        filename=f"{req.display_id}_rapport.pdf")
+                        filename=f"{req.display_id}_rapport{_ext}")
 
 
 def protected_report_media(request, path):
@@ -195,6 +199,37 @@ def protected_report_media(request, path):
     return FileResponse(default_storage.open(rel, 'rb'))
 
 
+# Prefixes anyone may fetch: shown on public pages (login avatars, service
+# cards). Everything else carries business data and is authorised below.
+_PUBLIC_MEDIA_PREFIXES = ('avatars/', 'service_images/')
+# Purchase orders / payment receipts: confidential commercial documents.
+_OWNER_MEDIA_PREFIXES = ('orders/', 'payments/')
+
+
+def _may_access_media(user, path) -> bool:
+    """Authorisation policy for non-report media.
+
+    - avatars/ + service_images/  → public (rendered on public pages).
+    - orders/ + payments/         → internal staff OR the request's owner.
+    - anything else (documents/, document_templates/, gifts/, …) → staff only.
+      Generated devis/factures have predictable sequential filenames, so they
+      must never be guessable by anonymous visitors; authenticated flows
+      stream them through their own permission-checked views instead.
+    """
+    if path.startswith(_PUBLIC_MEDIA_PREFIXES):
+        return True
+    if path.startswith(_OWNER_MEDIA_PREFIXES):
+        if _is_internal_staff(user):
+            return True
+        if not getattr(user, 'is_authenticated', False):
+            return False
+        return Request.objects.filter(
+            Q(order_file=path) | Q(payment_receipt_file=path),
+            requester=user,
+        ).exists()
+    return _is_internal_staff(user)
+
+
 def serve_media(request, path):
     """Stream ordinary uploaded media through the configured storage backend.
 
@@ -204,8 +239,13 @@ def serve_media(request, path):
     changes. This view exists because media lives on Supabase Storage (or the
     local disk in dev) and must be streamed by Django: ``MEDIA_ROOT`` is not
     web-served in production, and the bucket is private.
+
+    Access control lives in ``_may_access_media``; denials answer 404 (not
+    403) so unauthorized probing cannot confirm that a file exists.
     """
     if path.startswith('reports/'):
+        raise Http404("Fichier introuvable")
+    if not _may_access_media(request.user, path):
         raise Http404("Fichier introuvable")
     if not default_storage.exists(path):
         raise Http404("Fichier introuvable")

@@ -114,8 +114,17 @@ def guest_submit(request):
         guest_phone = request.POST.get('guest_phone', '').strip()
         organization = request.POST.get('organization', '').strip()
         organization_type = request.POST.get('organization_type', '').strip()
+        # Whitelist against the model's declared choices — client-side selects
+        # are advisory only; a crafted POST could store arbitrary strings.
+        from accounts.models import User as _User
+        _valid_org_types = {c for c, _ in _User.ORGANIZATION_TYPE_CHOICES}
+        if organization_type not in _valid_org_types:
+            organization_type = ''
         organization_type_other = request.POST.get('organization_type_other', '').strip()
         country = request.POST.get('country', '').strip()
+        _valid_countries = {c for c, _ in COUNTRY_CHOICES}
+        if country not in _valid_countries:
+            country = ''
         channel = request.POST.get('channel', 'GENOCLAB').strip()
         if channel not in ('IBTIKAR', 'GENOCLAB'):
             channel = 'GENOCLAB'

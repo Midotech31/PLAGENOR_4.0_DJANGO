@@ -381,6 +381,18 @@ def upload_report(request, pk):
     if 'report_file' not in request.FILES:
         messages.error(request, "Veuillez sélectionner un fichier.")
         return redirect_to_detail(request, req, 'dashboard:analyst')
+    # Whitelist report formats — same policy as the client uploads. Without
+    # this, an arbitrary file (e.g. .html) would be stored and later streamed
+    # inline by protected_report_media, opening a stored-XSS vector.
+    import os as _os
+    _allowed = {'.pdf', '.doc', '.docx'}
+    _ext = _os.path.splitext(request.FILES['report_file'].name)[1].lower()
+    if _ext not in _allowed:
+        messages.error(
+            request,
+            f"Type de fichier non autorisé pour le rapport. Formats acceptés: "
+            f"{', '.join(sorted(_allowed))}")
+        return redirect_to_detail(request, req, 'dashboard:analyst')
     # Stage the file and run the transition in a single DB transaction so a
     # transition failure rolls back the report_file column (preventing a
     # saved file path with an unchanged status). The file on disk may remain

@@ -4,6 +4,14 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Audit securite complet (fait, 60 tests)
+- Couverture auth verifiee sur TOUTES les vues (decorateurs OK; non-decores = helpers prives ou fragment public voulu). Sequences atomiques OK, CSRF OK (1 exemption justifiee token), pas de SQL brut/eval.
+- FIX HAUTE 1: serve_media servait orders/, payments/, documents/ (devis/factures generes a noms PREVISIBLES, IDs sequentiels) SANS authentification (regression de la route media/<path>). Nouvelle politique _may_access_media: avatars/+service_images/ publics; orders/+payments/ = staff OU proprietaire (Request.requester); tout le reste = staff uniquement. Refus = 404 (pas de fuite d'existence). 7 tests.
+- FIX HAUTE 2: brute-force login inexistant — login_attempts/locked_until JAMAIS utilises. CustomLoginView: 5 echecs -> verrou 15 min; mot de passe correct pendant verrou refuse SANS compter comme echec; succes reinitialise compteurs. 5 tests (+override STORAGES en test car manifest whitenoise).
+- FIX MOY: upload_report analyste sans validation d'extension -> whitelist .pdf/.doc/.docx (sinon .html stocke = XSS via protected_report_media inline). + download_report garde la vraie extension (nommait tout .pdf).
+- FIX MIN: guest_submit whitelist serveur organization_type + country contre les choices du modele.
+- NOTES (LOW, non corriges volontairement): as_json mark_safe + pricing_json|safe (donnees admin/YAML uniquement — surveiller si jamais exposees a saisie utilisateur); template_detail description|safe (page admin); check_email = enumeration d'emails (necessaire UX inscription); report_token sans expiration (capability link par design); HSTS_PRELOAD off.
+
 ## CRITICAL — disappearing accounts = ephemeral SQLite (fixed guard + user action)
 - SYMPTOME: compte cree par superadmin -> disparait apres redeploy/restart/spin-down.
 - CAUSE: settings.py tombait en fallback SQLite (disque Render EPHEMERE) quand DATABASE_URL absent -> toutes les donnees effacees a chaque restart. build.sh n'est PAS destructif (seeds idempotents); le probleme = DATABASE_URL non defini en prod.
