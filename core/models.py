@@ -460,6 +460,48 @@ class PlatformContent(models.Model):
         return f'{self.key} [{self.lang}]'
 
 
+class Announcement(models.Model):
+    """Platform-wide announcement shown as a banner on the dashboard to a
+    chosen audience (all / staff / requesters / clients). Managed by admins."""
+    LEVEL_CHOICES = [('info', 'Info'), ('warning', 'Avertissement'), ('success', 'Succès')]
+    AUDIENCE_CHOICES = [
+        ('ALL', 'Tout le monde'),
+        ('STAFF', 'Personnel (admins/analystes/finance)'),
+        ('REQUESTERS', 'Demandeurs IBTIKAR'),
+        ('CLIENTS', 'Clients GENOCLAB'),
+    ]
+    _STAFF_ROLES = ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER', 'FINANCE')
+
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default='info')
+    audience = models.CharField(max_length=12, choices=AUDIENCE_CHOICES, default='ALL')
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'announcements'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} [{self.audience}]'
+
+    def visible_to(self, user) -> bool:
+        if not self.active or not getattr(user, 'is_authenticated', False):
+            return False
+        if self.audience == 'ALL':
+            return True
+        role = getattr(user, 'role', '')
+        if self.audience == 'STAFF':
+            return role in self._STAFF_ROLES
+        if self.audience == 'REQUESTERS':
+            return role == 'REQUESTER'
+        if self.audience == 'CLIENTS':
+            return role == 'CLIENT'
+        return False
+
+
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=100, unique=True)
     active = models.BooleanField(default=True)

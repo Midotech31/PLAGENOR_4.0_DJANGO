@@ -173,6 +173,49 @@ class PrivacyAndDataExportTests(TestCase):
         self.assertNotIn('Theirs', titles)
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
+class AnnouncementTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.admin = User.objects.create_user(
+            username='ann-admin', password='x', role='SUPER_ADMIN',
+            is_superuser=True, is_staff=True)
+        cls.requester = User.objects.create_user(
+            username='ann-req', password='x', role='REQUESTER')
+        cls.client_user = User.objects.create_user(
+            username='ann-cli', password='x', role='CLIENT')
+
+    def test_visible_to_audience_targeting(self):
+        from core.models import Announcement
+        a = Announcement.objects.create(title='T', message='M', audience='REQUESTERS')
+        self.assertTrue(a.visible_to(self.requester))
+        self.assertFalse(a.visible_to(self.client_user))
+        a.audience = 'ALL'
+        self.assertTrue(a.visible_to(self.client_user))
+        a.active = False
+        self.assertFalse(a.visible_to(self.requester))
+
+    def test_admin_can_create_and_it_shows_on_dashboard(self):
+        self.client.force_login(self.admin)
+        resp = self.client.post('/dashboard/home/announcement/create/', {
+            'title': 'Maintenance', 'message': 'Samedi 22h', 'level': 'warning',
+            'audience': 'ALL'})
+        self.assertEqual(resp.status_code, 302)
+        from core.models import Announcement
+        self.assertTrue(Announcement.objects.filter(title='Maintenance').exists())
+        # The banner appears on a dashboard for a targeted user.
+        self.client.force_login(self.requester)
+        page = self.client.get('/dashboard/requester/')
+        self.assertContains(page, 'Maintenance')
+
+    def test_non_admin_cannot_create(self):
+        self.client.force_login(self.requester)
+        resp = self.client.post('/dashboard/home/announcement/create/', {
+            'title': 'X', 'message': 'Y'})
+        self.assertEqual(resp.status_code, 403)
+
+
 class HealthEndpointTests(TestCase):
     def test_healthz_ok(self):
         resp = self.client.get('/healthz')

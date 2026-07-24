@@ -9,3 +9,13 @@ def notifications(request):
             'recent_notifications': unread.order_by('-created_at')[:10],
         }
     return {}
+
+
+def announcements(request):
+    """Active platform announcements targeted at the current user's audience."""
+    if not request.user.is_authenticated:
+        return {}
+    from core.models import Announcement
+    active = Announcement.objects.filter(active=True)
+    visible = [a for a in active if a.visible_to(request.user)]
+    return {'active_announcements': visible}

@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 from django.conf import settings
 
 from accounts.models import User, MemberProfile, Technique
-from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField
+from core.models import Service, Request, PlatformContent, Invoice, PaymentMethod, ServiceFormField, Announcement
 from core.templatetags.cms import clear_cms_cache
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
@@ -163,6 +163,9 @@ def index(request):
         'platform_content': platform_content,
         'content_rows': content_rows,
         'platform_content_languages': PlatformContent.LANGUAGE_CHOICES,
+        'announcements': Announcement.objects.all()[:50],
+        'announcement_levels': Announcement.LEVEL_CHOICES,
+        'announcement_audiences': Announcement.AUDIENCE_CHOICES,
         'status_dist': status_dist,
         'recent_requests': recent_requests,
         'recent_users': recent_users,
@@ -361,6 +364,51 @@ def content_update(request):
     )
     clear_cms_cache()
     messages.success(request, f"Contenu '{key}' [{lang}] mis à jour.")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
+def announcement_create(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.models import Announcement
+    title = (request.POST.get('title') or '').strip()
+    message = (request.POST.get('message') or '').strip()
+    level = request.POST.get('level', 'info')
+    audience = request.POST.get('audience', 'ALL')
+    valid_levels = {c for c, _ in Announcement.LEVEL_CHOICES}
+    valid_aud = {c for c, _ in Announcement.AUDIENCE_CHOICES}
+    if not title or not message:
+        messages.error(request, "Titre et message obligatoires.")
+        return redirect_back(request, 'dashboard:superadmin')
+    Announcement.objects.create(
+        title=title, message=message,
+        level=level if level in valid_levels else 'info',
+        audience=audience if audience in valid_aud else 'ALL',
+        created_by=request.user)
+    messages.success(request, "Annonce publiée.")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
+def announcement_toggle(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.models import Announcement
+    a = get_object_or_404(Announcement, pk=pk)
+    a.active = not a.active
+    a.save(update_fields=['active'])
+    messages.success(request, "Annonce mise à jour.")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
+def announcement_delete(request, pk):
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from core.models import Announcement
+    get_object_or_404(Announcement, pk=pk).delete()
+    messages.success(request, "Annonce supprimée.")
     return redirect_back(request, 'dashboard:superadmin')
 
 

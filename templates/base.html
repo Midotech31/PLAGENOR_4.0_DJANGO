@@ -48,6 +48,12 @@
             <script>setTimeout(function(){var c=document.getElementById('toast-container');if(c)c.style.opacity='0';setTimeout(function(){if(c)c.remove();},400);},4000);</script>
             {% endif %}
 
+            {% for a in active_announcements %}
+            <div class="alert alert-{{ a.level }}" role="status" style="margin-bottom:12px;">
+                <strong>{{ a.title }}</strong> — {{ a.message }}
+            </div>
+            {% endfor %}
+
             {% block content %}{% endblock %}
         </main>
     </div>
