@@ -1,0 +1,25 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+{% block title %}PLAGENOR 4.0 — {% trans "Vérification en deux étapes" %}{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>{% trans "Vérification en deux étapes" %}</h2>
+        <p class="auth-subtitle">{% trans "Saisissez le code à 6 chiffres affiché dans votre application d'authentification." %}</p>
+        {% if error %}<div class="alert alert-danger" style="margin-bottom:16px;">{{ error }}</div>{% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_code">{% trans "Code de vérification" %}</label>
+                <input type="text" name="code" id="id_code" class="form-control" required
+                       inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*"
+                       maxlength="6" autofocus style="letter-spacing:0.3em;text-align:center;">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Vérifier" %}</button>
+        </form>
+        <div class="auth-links">
+            <p><a href="{% url 'accounts:login' %}">{% trans "Annuler" %}</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

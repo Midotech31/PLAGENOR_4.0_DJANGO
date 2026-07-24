@@ -115,6 +115,85 @@ class LoginLockoutTests(TestCase):
         self.assertEqual(resp.status_code, 302)  # lock in the past → login OK
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
+class TwoFactorTests(TestCase):
+    """Opt-in TOTP: enrollment, login gate, and Super Admin reset."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.user = User.objects.create_user(
+            username='tfa', password='RightPass!42', role='MEMBER')
+
+    def _enable_totp(self, user):
+        import pyotp
+        secret = pyotp.random_base32()
+        user.totp_secret = secret
+        user.totp_enabled = True
+        user.save(update_fields=['totp_secret', 'totp_enabled'])
+        return secret
+
+    def test_user_without_2fa_logs_in_directly(self):
+        resp = self.client.post('/accounts/login/',
+                                {'username': 'tfa', 'password': 'RightPass!42'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertNotIn('/2fa/verify', resp.url)
+
+    def test_2fa_user_is_redirected_to_verify_and_not_logged_in(self):
+        self._enable_totp(self.user)
+        resp = self.client.post('/accounts/login/',
+                                {'username': 'tfa', 'password': 'RightPass!42'})
+        self.assertRedirects(resp, '/accounts/2fa/verify/')
+        # Password alone must NOT authenticate.
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_2fa_correct_code_completes_login(self):
+        import pyotp
+        secret = self._enable_totp(self.user)
+        self.client.post('/accounts/login/',
+                         {'username': 'tfa', 'password': 'RightPass!42'})
+        code = pyotp.TOTP(secret).now()
+        resp = self.client.post('/accounts/2fa/verify/', {'code': code})
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('_auth_user_id', self.client.session)
+
+    def test_2fa_wrong_code_rejected(self):
+        self._enable_totp(self.user)
+        self.client.post('/accounts/login/',
+                         {'username': 'tfa', 'password': 'RightPass!42'})
+        resp = self.client.post('/accounts/2fa/verify/', {'code': '000000'})
+        self.assertEqual(resp.status_code, 200)  # re-rendered with error
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_verify_without_pending_session_redirects_to_login(self):
+        resp = self.client.get('/accounts/2fa/verify/')
+        self.assertRedirects(resp, '/accounts/login/')
+
+    def test_enrollment_confirms_with_valid_code(self):
+        import pyotp
+        self.client.force_login(self.user)
+        r1 = self.client.get('/accounts/2fa/setup/')
+        secret = self.client.session['pending_totp_secret']
+        code = pyotp.TOTP(secret).now()
+        r2 = self.client.post('/accounts/2fa/setup/', {'code': code})
+        self.assertEqual(r2.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.totp_enabled)
+        self.assertEqual(self.user.totp_secret, secret)
+
+    def test_superadmin_reset_disables_2fa(self):
+        self._enable_totp(self.user)
+        admin = User.objects.create_user(
+            username='sa-2fa', password='x', role='SUPER_ADMIN',
+            is_superuser=True, is_staff=True)
+        self.client.force_login(admin)
+        resp = self.client.post(f'/dashboard/home/user/{self.user.pk}/reset-2fa/')
+        self.assertEqual(resp.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.totp_enabled)
+        self.assertEqual(self.user.totp_secret, '')
+
+
 @override_settings(
     STORAGES=_TEST_STORAGES,
     EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',

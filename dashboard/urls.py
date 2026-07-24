@@ -20,6 +20,7 @@ urlpatterns = [
     path('home/technique/<int:pk>/delete/', superadmin.technique_delete, name='superadmin_technique_delete'),
     path('home/technique/<int:pk>/edit/', superadmin.technique_edit, name='superadmin_technique_edit'),
     path('home/technique/<int:pk>/reactivate/', superadmin.technique_reactivate, name='superadmin_technique_reactivate'),
+    path('home/user/<int:pk>/reset-2fa/', superadmin.reset_2fa, name='superadmin_reset_2fa'),
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
     path('home/content/save/', superadmin.content_save, name='superadmin_content_save'),
     path('home/content/delete-key/', superadmin.content_delete_key, name='superadmin_content_delete_key'),

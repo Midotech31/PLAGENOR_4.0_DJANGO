@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Phase 2 (fait, 77 tests)
+- Tests E2E: parcours COMPLETS des 2 canaux via transition() avec acteurs role-appropries. IBTIKAR DRAFT->CLOSED (16 transitions) + assertion deduction budget une seule fois sur COMPLETED + 16 lignes RequestHistory. GENOCLAB REQUEST_CREATED->ARCHIVED (18). + test negatif (CLIENT ne peut pas faire l'etape finance).
+- Couverture: coverage.py en CI, .coveragerc (omit migrations/tests/wsgi/settings), plancher fail_under=22 (actuel 24% du code non-test). A remonter au fil des tests, jamais baisser.
+- Accessibilite (WCAG additif): skip-link + <main role=main> sur les 2 shells, :focus-visible global, .sr-only, nav aria-label. lang/dir deja dynamiques (RTL arabe). CSS ?v=9.
+- 2FA TOTP OPT-IN (pyotp==2.10.0): champs User.totp_secret/totp_enabled (migration 0011). Login inchange pour non-inscrits; si totp_enabled -> gate verify apres mot de passe (session pending_2fa_user, pas de login tant que code non valide). Enrolement dans profil (QR via qrcode lib, secret en session jusqu'a confirmation). Desactivation self-service. RESET par Super Admin (users tab, pas de codes de secours par design). Vues: two_factor_verify/setup/disable + superadmin.reset_2fa. 7 tests.
+- RESTE Phase 2 possible: remonter la couverture (tests generateurs docs, vues), audit accessibilite navigateur (axe/Lighthouse).
+
 ## Phase 1 durcissement production (fait, 67 tests)
 - Mot de passe oublie: flux Django natif (token signe/expirable/usage unique) + templates FR styles + emails HTML/txt + lien sur login. Ne revele pas l'existence d'un email. Reset efface le verrou brute-force. Vues: ForgotPassword{,Done,Confirm,Complete}View. 3 tests.
 - Healthchecks: /healthz (liveness, sans DB) + /readyz (readiness, SELECT 1 -> 503 si DB down), non-caches, sans auth. Pour monitoring uptime externe (UptimeRobot) + Render health check. plagenor/health.py. 2 tests.

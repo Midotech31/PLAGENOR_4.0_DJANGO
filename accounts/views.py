@@ -57,6 +57,13 @@ class CustomLoginView(LoginView):
             user.login_attempts = 0
             user.locked_until = None
             user.save(update_fields=['login_attempts', 'locked_until'])
+        # 2FA gate (opt-in): password is correct, but if the user enrolled in
+        # TOTP we hold the session and demand a code before actually logging in.
+        # Users without 2FA are completely unaffected.
+        if user.totp_enabled and user.totp_secret:
+            self.request.session['pending_2fa_user'] = user.pk
+            self.request.session['pending_2fa_next'] = self.get_success_url()
+            return redirect('accounts:two_factor_verify')
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -380,3 +387,83 @@ def check_email(request):
         return JsonResponse({'exists': exists})
     except Exception:
         return JsonResponse({'exists': False})
+
+
+# ── Two-factor authentication (TOTP, opt-in) ──────────────────────────────
+def _totp_uri(user, secret):
+    import pyotp
+    return pyotp.totp.TOTP(secret).provisioning_uri(
+        name=user.username, issuer_name='PLAGENOR')
+
+
+def _qr_data_uri(text):
+    """Render a QR code for the otpauth URI as an inline PNG data URI."""
+    import io, base64, qrcode
+    img = qrcode.make(text)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+
+
+def two_factor_verify(request):
+    """Second step of login for TOTP-enrolled users. The user's pk was staged
+    in the session by CustomLoginView after a correct password."""
+    import pyotp
+    uid = request.session.get('pending_2fa_user')
+    if not uid:
+        return redirect('accounts:login')
+    user = User.objects.filter(pk=uid, totp_enabled=True).first()
+    if user is None:
+        request.session.pop('pending_2fa_user', None)
+        return redirect('accounts:login')
+    error = None
+    if request.method == 'POST':
+        code = (request.POST.get('code') or '').strip().replace(' ', '')
+        if pyotp.TOTP(user.totp_secret).verify(code, valid_window=1):
+            nxt = request.session.pop('pending_2fa_next', None)
+            request.session.pop('pending_2fa_user', None)
+            login(request, user)
+            return redirect(nxt or '/dashboard/')
+        error = _("Code invalide ou expiré. Réessayez.")
+    return render(request, 'accounts/two_factor_verify.html', {'error': error})
+
+
+@login_required
+def two_factor_setup(request):
+    """Enroll the current user in TOTP. GET shows a QR + pending secret held in
+    the session; POST with a valid code confirms and enables 2FA."""
+    import pyotp
+    if request.user.totp_enabled:
+        messages.info(request, _("La double authentification est déjà activée."))
+        return redirect('accounts:profile')
+    secret = request.session.get('pending_totp_secret')
+    if not secret:
+        secret = pyotp.random_base32()
+        request.session['pending_totp_secret'] = secret
+    if request.method == 'POST':
+        code = (request.POST.get('code') or '').strip().replace(' ', '')
+        if pyotp.TOTP(secret).verify(code, valid_window=1):
+            request.user.totp_secret = secret
+            request.user.totp_enabled = True
+            request.user.save(update_fields=['totp_secret', 'totp_enabled'])
+            request.session.pop('pending_totp_secret', None)
+            messages.success(request, _("Double authentification activée."))
+            return redirect('accounts:profile')
+        messages.error(request, _("Code invalide. Vérifiez l'heure de votre appareil et réessayez."))
+    uri = _totp_uri(request.user, secret)
+    return render(request, 'accounts/two_factor_setup.html', {
+        'qr_data_uri': _qr_data_uri(uri),
+        'secret': secret,
+    })
+
+
+@login_required
+def two_factor_disable(request):
+    """Turn off 2FA for the current user (requires POST)."""
+    if request.method != 'POST':
+        return redirect('accounts:profile')
+    request.user.totp_secret = ''
+    request.user.totp_enabled = False
+    request.user.save(update_fields=['totp_secret', 'totp_enabled'])
+    messages.success(request, _("Double authentification désactivée."))
+    return redirect('accounts:profile')

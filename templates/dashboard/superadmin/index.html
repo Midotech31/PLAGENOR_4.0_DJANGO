@@ -269,6 +269,16 @@
                                     </svg>
                                     {% trans "Réinitialiser" %}
                                 </a>
+                                {% if u.totp_enabled %}
+                                <form method="post" action="{% url 'dashboard:superadmin_reset_2fa' u.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline"
+                                            title="{% trans 'Réinitialiser la 2FA (perte du téléphone)' %}"
+                                            onclick="return confirm('{% trans "Réinitialiser la double authentification de cet utilisateur ?" %}')">
+                                        {% trans "Reset 2FA" %}
+                                    </button>
+                                </form>
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>

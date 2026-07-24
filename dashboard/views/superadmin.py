@@ -365,6 +365,20 @@ def content_update(request):
 
 
 @superadmin_required
+def reset_2fa(request, pk):
+    """Disable a user's two-factor auth — recovery path when a device is lost
+    (no self-service recovery codes by design)."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    target = get_object_or_404(User, pk=pk)
+    target.totp_secret = ''
+    target.totp_enabled = False
+    target.save(update_fields=['totp_secret', 'totp_enabled'])
+    messages.success(request, f"2FA réinitialisée pour {target.username}.")
+    return redirect_back(request, 'dashboard:superadmin')
+
+
+@superadmin_required
 def content_save(request):
     """Upsert all three languages of one content key in a single submit.
 

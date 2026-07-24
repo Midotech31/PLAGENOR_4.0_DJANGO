@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}PLAGENOR 4.0 — {% trans "Activer la double authentification" %}{% endblock %}
+{% block content %}
+<div class="content-header"><h1>{% trans "Double authentification (2FA)" %}</h1></div>
+<div class="card" style="max-width:560px;">
+    <div class="card-body">
+        <p>{% trans "Scannez ce QR code avec une application d'authentification (Google Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 chiffres pour confirmer." %}</p>
+        <div style="text-align:center;margin:20px 0;">
+            <img src="{{ qr_data_uri }}" alt="{% trans 'QR code de configuration 2FA' %}" style="width:200px;height:200px;">
+        </div>
+        <p class="text-muted" style="font-size:0.85rem;">
+            {% trans "Clé manuelle (si vous ne pouvez pas scanner) :" %}
+            <br><code style="user-select:all;">{{ secret }}</code>
+        </p>
+        <form method="post" style="margin-top:16px;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_code">{% trans "Code de vérification" %}</label>
+                <input type="text" name="code" id="id_code" class="form-control" required
+                       inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                       style="letter-spacing:0.3em;text-align:center;max-width:200px;">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Activer la 2FA" %}</button>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

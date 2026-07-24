@@ -135,6 +135,12 @@ class User(AbstractUser):
         help_text='Laisser vide pour utiliser la langue du navigateur.',
     )
 
+    # Optional TOTP two-factor auth (opt-in, mainly for staff). When
+    # ``totp_enabled`` is True the login flow demands a 6-digit code after the
+    # password. A Super Admin can reset both fields if a device is lost.
+    totp_secret = models.CharField(max_length=64, blank=True, default='')
+    totp_enabled = models.BooleanField(default=False, verbose_name='2FA activé')
+
     # IBTIKAR running balance, self-declared by the requester.
     #
     # NULL = the requester has NOT yet declared their residual balance for
