@@ -26,10 +26,12 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Hostname injected by the hosting platform (Render / Railway / Koyeb…) so the
-# app works on *.onrender.com & co. without editing ALLOWED_HOSTS by hand.
-_platform_host = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
-if _platform_host and _platform_host not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(_platform_host)
+# app works on *.onrender.com / *.up.railway.app without editing ALLOWED_HOSTS
+# by hand. Railway exposes RAILWAY_PUBLIC_DOMAIN; Render, RENDER_EXTERNAL_HOSTNAME.
+for _var in ('RENDER_EXTERNAL_HOSTNAME', 'RAILWAY_PUBLIC_DOMAIN'):
+    _platform_host = os.getenv(_var, '').strip()
+    if _platform_host and _platform_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_platform_host)
 
 # CSRF trusted origins — REQUIRED for POST requests (login, registration,
 # every form) over HTTPS on the production domain(s). Without this Django
