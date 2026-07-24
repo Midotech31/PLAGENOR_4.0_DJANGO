@@ -6,9 +6,16 @@ GENOCLAB clients and internal staff are exempt. These guard
 """
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from core.models import Request
+
+# Plain (non-manifest) storages so template {% static %} works without a
+# collectstatic run in tests.
+_TEST_STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
 
 
 def _save_report(name='reports/gatecheck.pdf', data=b'PDF-BYTES'):
@@ -49,6 +56,40 @@ class ReportGateTests(TestCase):
     def test_serve_media_404_on_missing(self):
         resp = self.client.get('/media/avatars/does-not-exist.png')
         self.assertEqual(resp.status_code, 404)
+
+
+@override_settings(STORAGES=_TEST_STORAGES,
+                   EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class RateLimitTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_password_reset_throttles_after_limit(self):
+        # ForgotPasswordView: 5 POSTs / hour per IP → the 6th is 429.
+        codes = []
+        for _ in range(7):
+            r = self.client.post('/accounts/password-reset/', {'email': 'x@example.com'})
+            codes.append(r.status_code)
+        self.assertNotIn(429, codes[:5])
+        self.assertEqual(codes[-1], 429)
+
+    def test_get_requests_not_throttled(self):
+        for _ in range(10):
+            r = self.client.get('/accounts/password-reset/')
+            self.assertEqual(r.status_code, 200)
+
+
+class HealthEndpointTests(TestCase):
+    def test_healthz_ok(self):
+        resp = self.client.get('/healthz')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()['status'], 'ok')
+
+    def test_readyz_ok_with_db(self):
+        resp = self.client.get('/readyz')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()['database'], 'ok')
 
 
 class MediaAuthorizationTests(TestCase):

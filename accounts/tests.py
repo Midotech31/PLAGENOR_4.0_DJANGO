@@ -68,6 +68,8 @@ class LoginLockoutTests(TestCase):
     """Brute-force protection: 5 failures lock the account for 15 minutes."""
 
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()  # isolate the per-IP login rate-limit counter
         self.user = User.objects.create_user(
             username='lockme', password='RightPass!42', role='CLIENT')
 
@@ -121,6 +123,8 @@ class PasswordResetFlowTests(TestCase):
     """End-to-end self-service reset: request → email link → set new password."""
 
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()  # isolate the per-IP password-reset rate-limit counter
         self.user = User.objects.create_user(
             username='resetme', email='reset@example.com',
             password='OldPass!42', role='CLIENT')

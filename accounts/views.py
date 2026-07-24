@@ -8,6 +8,9 @@ from django.contrib.auth.views import (
     PasswordResetConfirmView, PasswordResetCompleteView,
 )
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+
+from core.ratelimit import rate_limit
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
@@ -31,6 +34,8 @@ MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
 
 
+# Per-IP throttles (defence-in-depth on top of the per-account lockout).
+@method_decorator(rate_limit('login', limit=20, window=300), name='dispatch')
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
@@ -81,6 +86,7 @@ class CustomLogoutView(LogoutView):
 # ── Self-service password reset (Django-native: signed, expiring, one-time
 #    token). Subclassed only to point at our styled templates + reset the
 #    lockout counters on completion. Never reveals whether an email exists.
+@method_decorator(rate_limit('pwreset', limit=5, window=3600), name='dispatch')
 class ForgotPasswordView(PasswordResetView):
     template_name = 'accounts/password_reset_form.html'
     email_template_name = 'accounts/email/password_reset_email.txt'

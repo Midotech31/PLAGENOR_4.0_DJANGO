@@ -6,6 +6,7 @@ from datetime import datetime
 
 from accounts.countries import COUNTRY_CHOICES
 from core.models import Service, Request, RequestHistory
+from core.ratelimit import rate_limit
 from core.sequences import next_display_id
 from dashboard.utils import safe_float
 
@@ -96,6 +97,7 @@ def service_landing(request, service_code):
     return render(request, 'pages/service_landing.html', {'service': service})
 
 
+@rate_limit('guest_submit', limit=10, window=3600)
 def guest_submit(request):
     """Public guest submission form — no login required.
 

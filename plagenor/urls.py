@@ -3,8 +3,12 @@ from django.urls import path, include
 from django.views.i18n import JavaScriptCatalog
 
 from dashboard.views import report as report_views
+from plagenor import health
 
 urlpatterns = [
+    # Health / readiness probes for uptime monitoring (no auth, no cache).
+    path('healthz', health.healthz, name='healthz'),
+    path('readyz', health.readyz, name='readyz'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('dashboard.urls')),
