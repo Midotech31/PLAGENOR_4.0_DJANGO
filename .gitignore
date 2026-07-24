@@ -29,3 +29,6 @@ documents/docx_templates/*.bak.docx
 # Operator-local data dumps produced by ad-hoc Supabase / inspection scripts
 plagenor_data*.json
 plagenor_data_clean.json
+
+.coverage
+htmlcov/

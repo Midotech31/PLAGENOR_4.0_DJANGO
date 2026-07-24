@@ -31,8 +31,11 @@ jobs:
         pip install -r requirements.txt
     - name: System check
       run: python manage.py check
-    - name: Run tests
-      run: python manage.py test
+    - name: Run tests with coverage
+      run: |
+        pip install coverage
+        coverage run manage.py test
+        coverage report
     - name: Dependency vulnerability audit (informational)
       # Non-blocking: surfaces known CVEs in dependencies without failing the
       # build, so a vulnerable transitive package never silently blocks merges.
