@@ -80,6 +80,67 @@ class RateLimitTests(TestCase):
             self.assertEqual(r.status_code, 200)
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
+class RoleDashboardAccessTests(TestCase):
+    """Router + per-role landing pages: right role renders (200), wrong role
+    is forbidden (403), anonymous is redirected to login."""
+
+    LANDINGS = {
+        'SUPER_ADMIN': '/dashboard/home/',
+        'PLATFORM_ADMIN': '/dashboard/ops/',
+        'MEMBER': '/dashboard/analyst/',
+        'FINANCE': '/dashboard/finance/',
+        'REQUESTER': '/dashboard/requester/',
+        'CLIENT': '/dashboard/client/',
+    }
+
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.User = User
+        cls.users = {
+            role: User.objects.create_user(
+                username=f'role-{role}', password='x', role=role,
+                is_superuser=(role == 'SUPER_ADMIN'),
+                is_staff=(role in ('SUPER_ADMIN', 'PLATFORM_ADMIN')))
+            for role in cls.LANDINGS
+        }
+
+    def test_router_redirects_each_role_to_its_landing(self):
+        targets = {
+            'SUPER_ADMIN': '/dashboard/home/', 'PLATFORM_ADMIN': '/dashboard/ops/',
+            'MEMBER': '/dashboard/analyst/', 'FINANCE': '/dashboard/finance/',
+            'REQUESTER': '/dashboard/requester/', 'CLIENT': '/dashboard/client/',
+        }
+        for role, target in targets.items():
+            self.client.force_login(self.users[role])
+            resp = self.client.get('/dashboard/')
+            self.assertEqual(resp.status_code, 302)
+            self.assertTrue(resp.url.rstrip('/').endswith(target.rstrip('/')),
+                            f"{role} → {resp.url}")
+
+    def test_each_landing_renders_for_its_role(self):
+        for role, url in self.LANDINGS.items():
+            self.client.force_login(self.users[role])
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, 200, f"{role} {url} → {resp.status_code}")
+
+    def test_wrong_role_is_forbidden(self):
+        # A CLIENT must not reach any staff/other-role landing.
+        self.client.force_login(self.users['CLIENT'])
+        for role, url in self.LANDINGS.items():
+            if role == 'CLIENT':
+                continue
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, 403, f"CLIENT reached {url}")
+
+    def test_anonymous_redirected_to_login(self):
+        for url in self.LANDINGS.values():
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, 302)
+            self.assertIn('/accounts/login', resp.url)
+
+
 class HealthEndpointTests(TestCase):
     def test_healthz_ok(self):
         resp = self.client.get('/healthz')
