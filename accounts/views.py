@@ -2,7 +2,12 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import (
+    LoginView, LogoutView,
+    PasswordResetView, PasswordResetDoneView,
+    PasswordResetConfirmView, PasswordResetCompleteView,
+)
+from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
@@ -71,6 +76,39 @@ class CustomLoginView(LoginView):
 
 class CustomLogoutView(LogoutView):
     next_page = '/'
+
+
+# ── Self-service password reset (Django-native: signed, expiring, one-time
+#    token). Subclassed only to point at our styled templates + reset the
+#    lockout counters on completion. Never reveals whether an email exists.
+class ForgotPasswordView(PasswordResetView):
+    template_name = 'accounts/password_reset_form.html'
+    email_template_name = 'accounts/email/password_reset_email.txt'
+    html_email_template_name = 'accounts/email/password_reset_email.html'
+    subject_template_name = 'accounts/email/password_reset_subject.txt'
+    success_url = reverse_lazy('accounts:password_reset_done')
+
+
+class ForgotPasswordDoneView(PasswordResetDoneView):
+    template_name = 'accounts/password_reset_done.html'
+
+
+class ForgotPasswordConfirmView(PasswordResetConfirmView):
+    template_name = 'accounts/password_reset_confirm.html'
+    success_url = reverse_lazy('accounts:password_reset_complete')
+
+    def form_valid(self, form):
+        # A completed reset clears any brute-force lockout on the account.
+        user = form.user
+        if user.login_attempts or user.locked_until:
+            user.login_attempts = 0
+            user.locked_until = None
+            user.save(update_fields=['login_attempts', 'locked_until'])
+        return super().form_valid(form)
+
+
+class ForgotPasswordCompleteView(PasswordResetCompleteView):
+    template_name = 'accounts/password_reset_complete.html'
 
 
 class RegisterView(CreateView):

@@ -51,6 +51,9 @@
                     {% trans "Se souvenir de moi" %}
                 </label>
             </div>
+            <div style="text-align:right;margin:-6px 0 12px;">
+                <a href="{% url 'accounts:password_reset' %}" style="font-size:0.85rem;">{% trans "Mot de passe oublié ?" %}</a>
+            </div>
             <button type="submit" class="btn btn-primary">{% trans "Se connecter" %}</button>
         </form>
 

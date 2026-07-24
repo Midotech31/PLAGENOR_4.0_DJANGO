@@ -12,4 +12,9 @@ urlpatterns = [
     path('convert-guest/verify/<str:token>/', views.convert_guest_verify, name='convert_guest_verify'),
     path('check-email/', views.check_email, name='check_email'),
     path('force-change-password/', views.force_change_password, name='force_change_password'),
+    # Self-service password reset (Django-native token flow).
+    path('password-reset/', views.ForgotPasswordView.as_view(), name='password_reset'),
+    path('password-reset/done/', views.ForgotPasswordDoneView.as_view(), name='password_reset_done'),
+    path('password-reset/confirm/<uidb64>/<token>/', views.ForgotPasswordConfirmView.as_view(), name='password_reset_confirm'),
+    path('password-reset/complete/', views.ForgotPasswordCompleteView.as_view(), name='password_reset_complete'),
 ]

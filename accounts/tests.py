@@ -111,3 +111,53 @@ class LoginLockoutTests(TestCase):
         resp = self.client.post('/accounts/login/',
                                 {'username': 'lockme', 'password': 'RightPass!42'})
         self.assertEqual(resp.status_code, 302)  # lock in the past → login OK
+
+
+@override_settings(
+    STORAGES=_TEST_STORAGES,
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class PasswordResetFlowTests(TestCase):
+    """End-to-end self-service reset: request → email link → set new password."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='resetme', email='reset@example.com',
+            password='OldPass!42', role='CLIENT')
+
+    def test_request_sends_email_for_existing_address(self):
+        from django.core import mail
+        resp = self.client.post('/accounts/password-reset/', {'email': 'reset@example.com'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('password-reset/confirm/', mail.outbox[0].body)
+
+    def test_request_silent_for_unknown_address(self):
+        from django.core import mail
+        resp = self.client.post('/accounts/password-reset/', {'email': 'nobody@example.com'})
+        self.assertEqual(resp.status_code, 302)  # same response — no enumeration
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_full_reset_sets_new_password_and_clears_lock(self):
+        from django.core import mail
+        from django.utils import timezone
+        # Lock the account first, then reset.
+        self.user.login_attempts = 5
+        self.user.locked_until = timezone.now() + timezone.timedelta(minutes=15)
+        self.user.save(update_fields=['login_attempts', 'locked_until'])
+
+        self.client.post('/accounts/password-reset/', {'email': 'reset@example.com'})
+        # Extract uid/token from the emailed confirm link.
+        import re
+        m = re.search(r'password-reset/confirm/([^/]+)/([^/\s]+)/', mail.outbox[0].body)
+        uidb64, token = m.group(1), m.group(2)
+        # Django swaps the token into the session on the first GET.
+        r1 = self.client.get(f'/accounts/password-reset/confirm/{uidb64}/{token}/')
+        self.assertEqual(r1.status_code, 302)
+        r2 = self.client.post(r1.url, {
+            'new_password1': 'BrandNew!99', 'new_password2': 'BrandNew!99'})
+        self.assertEqual(r2.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('BrandNew!99'))
+        self.assertEqual(self.user.login_attempts, 0)
+        self.assertIsNone(self.user.locked_until)
