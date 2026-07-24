@@ -13,4 +13,6 @@ urlpatterns = [
     path('service/<str:service_code>/detail/', views_public.service_detail, name='service_detail'),
     path('service/<str:service_code>/', views_public.service_landing, name='service_landing'),
     path('switch-language/', views_public.switch_language, name='switch_language'),
+    path('confidentialite/', views_public.privacy, name='privacy'),
+    path('mes-donnees/export/', views_public.export_my_data, name='export_my_data'),
 ]

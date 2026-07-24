@@ -141,6 +141,38 @@ class RoleDashboardAccessTests(TestCase):
             self.assertIn('/accounts/login', resp.url)
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
+class PrivacyAndDataExportTests(TestCase):
+    def test_privacy_page_is_public(self):
+        resp = self.client.get('/confidentialite/')
+        self.assertEqual(resp.status_code, 200)
+
+    def test_data_export_requires_login(self):
+        resp = self.client.get('/mes-donnees/export/')
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('/accounts/login', resp.url)
+
+    def test_data_export_returns_own_data_only(self):
+        from accounts.models import User
+        me = User.objects.create_user(username='exp-me', password='x',
+                                      role='CLIENT', email='me@example.com')
+        other = User.objects.create_user(username='exp-other', password='x',
+                                         role='CLIENT')
+        Request.objects.create(channel='GENOCLAB', requester=me, title='Mine',
+                               display_id='EXP-MINE-1')
+        Request.objects.create(channel='GENOCLAB', requester=other, title='Theirs',
+                               display_id='EXP-THEIRS-1')
+        self.client.force_login(me)
+        resp = self.client.get('/mes-donnees/export/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('attachment', resp['Content-Disposition'])
+        data = resp.json()
+        self.assertEqual(data['account']['email'], 'me@example.com')
+        titles = [r['title'] for r in data['requests']]
+        self.assertIn('Mine', titles)
+        self.assertNotIn('Theirs', titles)
+
+
 class HealthEndpointTests(TestCase):
     def test_healthz_ok(self):
         resp = self.client.get('/healthz')

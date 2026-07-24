@@ -4,6 +4,12 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Phase 3 (fait, 87 tests, couverture 24%->34%)
+- Tests vues: routeur + 6 dashboards par role (rendu 200 pour le bon role, 403 autres, redirect anon). Exerce toutes les vues d'atterrissage. 24%->27%.
+- Tests generateurs DOCX: generate_invoice_document + generate_ibtikar_form rouverts avec python-docx (valide) + assertions valeurs (num facture, ligne, display_id); build_field_map. 27%->34%. Plancher CI remonte 22->30.
+- Conformite donnees: page /confidentialite/ (textes editables CMS privacy_*), export /mes-donnees/export/ (JSON des donnees perso + demandes de l'utilisateur, login requis, ne renvoie QUE ses donnees). Lien footer. Suppression = via admin (note sur la page, pas de self-service destructif par design). 3 tests.
+- NON FAIT volontairement (risque/stabilite): refactoring CSS/vues massif (touche du code qui marche, faible ROI). A faire progressivement si besoin.
+
 ## Phase 2 (fait, 77 tests)
 - Tests E2E: parcours COMPLETS des 2 canaux via transition() avec acteurs role-appropries. IBTIKAR DRAFT->CLOSED (16 transitions) + assertion deduction budget une seule fois sur COMPLETED + 16 lignes RequestHistory. GENOCLAB REQUEST_CREATED->ARCHIVED (18). + test negatif (CLIENT ne peut pas faire l'etape finance).
 - Couverture: coverage.py en CI, .coveragerc (omit migrations/tests/wsgi/settings), plancher fail_under=22 (actuel 24% du code non-test). A remonter au fil des tests, jamais baisser.

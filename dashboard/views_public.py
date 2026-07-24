@@ -27,6 +27,49 @@ def about(request):
     return render(request, 'pages/about.html')
 
 
+def privacy(request):
+    """Privacy / legal notice page. All text is CMS-editable (privacy_* keys)
+    with sensible French defaults baked into the template."""
+    return render(request, 'pages/privacy.html')
+
+
+def export_my_data(request):
+    """Personal-data export (data-access right): the requesting user downloads
+    a JSON of their account fields + a summary of their own requests."""
+    from django.contrib.auth.decorators import login_required as _lr
+    from django.http import JsonResponse
+
+    @_lr
+    def _inner(req):
+        u = req.user
+        data = {
+            'account': {
+                'username': u.username, 'email': u.email,
+                'first_name': u.first_name, 'last_name': u.last_name,
+                'role': u.role, 'organization': u.organization,
+                'organization_type': u.organization_type,
+                'country': u.country, 'phone': u.phone,
+                'wilaya': u.wilaya, 'gender': u.gender,
+                'date_joined': u.date_joined.isoformat() if u.date_joined else None,
+                'preferred_language': u.preferred_language,
+                'two_factor_enabled': u.totp_enabled,
+            },
+            'requests': [
+                {
+                    'display_id': r.display_id, 'channel': r.channel,
+                    'status': r.status, 'title': r.title,
+                    'created_at': r.created_at.isoformat() if r.created_at else None,
+                    'service_rating': r.service_rating,
+                }
+                for r in Request.objects.filter(requester=u).order_by('created_at')
+            ],
+        }
+        resp = JsonResponse(data, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+        resp['Content-Disposition'] = 'attachment; filename="mes-donnees-plagenor.json"'
+        return resp
+    return _inner(request)
+
+
 def services(request):
     services = Service.objects.filter(active=True)
     return render(request, 'pages/services.html', {'services': services})
