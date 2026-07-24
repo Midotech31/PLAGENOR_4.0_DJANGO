@@ -295,6 +295,96 @@ class WorkflowTransitionTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
+# End-to-end pipeline walks — drive each channel through its full happy path
+# with role-appropriate actors, proving the state machine + role matrix +
+# key side effects (IBTIKAR budget deduction) all hold together.
+# ---------------------------------------------------------------------------
+class EndToEndPipelineTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User, MemberProfile
+        cls.admin = User.objects.create(username='e2e-admin', role='PLATFORM_ADMIN')
+        cls.finance = User.objects.create(username='e2e-fin', role='FINANCE')
+        cls.analyst_user = User.objects.create(username='e2e-analyst', role='MEMBER')
+        cls.analyst = MemberProfile.objects.get(user=cls.analyst_user)
+
+    def _step(self, req, to, actor):
+        transition(req, to, actor, notes=f'e2e→{to}')
+        req.refresh_from_db()
+        self.assertEqual(req.status, to)
+
+    def test_ibtikar_full_pipeline_deducts_budget(self):
+        from accounts.models import User
+        requester = User.objects.create(
+            username='e2e-req', role='REQUESTER',
+            ibtikar_declared_balance=Decimal('100000'))
+        req = Request.objects.create(
+            channel='IBTIKAR', status='DRAFT', requester=requester,
+            assigned_to=self.analyst, budget_amount=Decimal('40000'))
+
+        self._step(req, 'SUBMITTED', requester)
+        self._step(req, 'VALIDATION_PEDAGOGIQUE', self.admin)
+        self._step(req, 'VALIDATION_FINANCE', self.admin)
+        self._step(req, 'PLATFORM_NOTE_GENERATED', self.finance)
+        self._step(req, 'IBTIKAR_SUBMISSION_PENDING', self.admin)
+        self._step(req, 'IBTIKAR_CODE_SUBMITTED', requester)
+        self._step(req, 'ASSIGNED', self.admin)
+        self._step(req, 'APPOINTMENT_PROPOSED', self.analyst_user)
+        self._step(req, 'APPOINTMENT_CONFIRMED', requester)
+        self._step(req, 'SAMPLE_RECEIVED', self.analyst_user)
+        self._step(req, 'ANALYSIS_STARTED', self.analyst_user)
+        self._step(req, 'ANALYSIS_FINISHED', self.analyst_user)
+        self._step(req, 'REPORT_UPLOADED', self.analyst_user)
+        self._step(req, 'REPORT_VALIDATED', self.admin)
+        self._step(req, 'SENT_TO_REQUESTER', self.admin)
+        self._step(req, 'COMPLETED', requester)
+
+        # Budget deducted exactly once on COMPLETED.
+        requester.refresh_from_db()
+        self.assertEqual(float(requester.ibtikar_declared_balance), 60000.0)
+
+        # History records every step (16 transitions).
+        self.assertEqual(RequestHistory.objects.filter(request=req).count(), 16)
+
+        self._step(req, 'CLOSED', self.admin)  # terminal
+
+    def test_genoclab_full_pipeline(self):
+        from accounts.models import User
+        client = User.objects.create(username='e2e-client', role='CLIENT')
+        req = Request.objects.create(
+            channel='GENOCLAB', status='REQUEST_CREATED', requester=client,
+            assigned_to=self.analyst, quote_amount=Decimal('50000'))
+
+        self._step(req, 'QUOTE_DRAFT', self.admin)
+        self._step(req, 'QUOTE_SENT', self.admin)
+        self._step(req, 'QUOTE_VALIDATED_BY_CLIENT', client)
+        self._step(req, 'ORDER_UPLOADED', client)
+        self._step(req, 'INVOICE_GENERATED', self.finance)
+        self._step(req, 'ASSIGNED', self.admin)
+        self._step(req, 'APPOINTMENT_PROPOSED', self.analyst_user)
+        self._step(req, 'APPOINTMENT_CONFIRMED', client)
+        self._step(req, 'SAMPLE_RECEIVED', self.analyst_user)
+        self._step(req, 'ANALYSIS_STARTED', self.analyst_user)
+        self._step(req, 'ANALYSIS_FINISHED', self.analyst_user)
+        self._step(req, 'PAYMENT_PENDING', self.admin)
+        self._step(req, 'PAYMENT_CONFIRMED', client)
+        self._step(req, 'REPORT_UPLOADED', self.analyst_user)
+        self._step(req, 'REPORT_VALIDATED', self.admin)
+        self._step(req, 'SENT_TO_CLIENT', self.admin)
+        self._step(req, 'COMPLETED', client)
+        self._step(req, 'ARCHIVED', self.admin)  # terminal
+
+    def test_genoclab_client_cannot_self_validate_finance_step(self):
+        # A CLIENT must NOT be able to drive the finance/invoice transition.
+        from accounts.models import User
+        client = User.objects.create(username='e2e-client2', role='CLIENT')
+        req = Request.objects.create(
+            channel='GENOCLAB', status='ORDER_UPLOADED', requester=client)
+        with self.assertRaises(AuthorizationError):
+            transition(req, 'INVOICE_GENERATED', client)
+
+
+# ---------------------------------------------------------------------------
 # IBTIKAR balance deduction (unit + end-to-end on COMPLETED)
 # ---------------------------------------------------------------------------
 class IbtikarDeductionTests(TestCase):
