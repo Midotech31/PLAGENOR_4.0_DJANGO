@@ -1,0 +1,55 @@
+name: Database Backup
+
+# Weekly (Mondays 03:00 UTC) + on-demand. Dumps the Postgres database and
+# uploads it as a downloadable, retained artifact. No-op (does not fail) if
+# the DATABASE_URL secret is not configured, so the Actions tab stays green.
+#
+# SETUP: repo Settings → Secrets and variables → Actions → New secret
+#        name DATABASE_URL, value = the same Supabase connection string used
+#        on Render (direct connection recommended for pg_dump).
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secret
+        id: guard
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL secret not set — skipping backup."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install PostgreSQL 16 client
+        if: steps.guard.outputs.run == 'true'
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Dump database
+        if: steps.guard.outputs.run == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ts=$(date -u +%Y%m%d-%H%M%S)
+          /usr/lib/postgresql/16/bin/pg_dump "$DATABASE_URL" --no-owner --no-privileges \
+            | gzip -9 > "plagenor-backup-$ts.sql.gz"
+          ls -lh plagenor-backup-*.sql.gz
+
+      - name: Upload backup artifact
+        if: steps.guard.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: plagenor-backup-*.sql.gz
+          retention-days: 90

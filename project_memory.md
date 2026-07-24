@@ -4,6 +4,13 @@
 - Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
 - RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
 
+## Phase 1 durcissement production (fait, 67 tests)
+- Mot de passe oublie: flux Django natif (token signe/expirable/usage unique) + templates FR styles + emails HTML/txt + lien sur login. Ne revele pas l'existence d'un email. Reset efface le verrou brute-force. Vues: ForgotPassword{,Done,Confirm,Complete}View. 3 tests.
+- Healthchecks: /healthz (liveness, sans DB) + /readyz (readiness, SELECT 1 -> 503 si DB down), non-caches, sans auth. Pour monitoring uptime externe (UptimeRobot) + Render health check. plagenor/health.py. 2 tests.
+- Rate limiting: core/ratelimit.py (sans dependance, fail-open, cache Django, par IP). Applique: login 20/5min, password-reset 5/h (anti email-bomb), guest_submit 10/h (anti spam). GET passent. Defense en profondeur sur le lockout par compte. 2 tests. NB: LocMemCache par worker -> limite effective xN workers (OK pour ralentir; Redis pour exactitude).
+- Sauvegarde DB planifiee: .github/workflows/db-backup.yml (cron hebdo lundi 03h UTC + manuel). pg_dump 16 -> gzip -> artifact retenu 90j. Skip propre si secret DATABASE_URL absent. ACTION USER: ajouter le secret DATABASE_URL dans repo Settings -> Secrets Actions.
+- RESTE Phase 1 (actions user): DATABASE_URL sur Render (bloquant deploiement), Render Starter, DSN Sentry, rotation PAT.
+
 ## Audit securite complet (fait, 60 tests)
 - Couverture auth verifiee sur TOUTES les vues (decorateurs OK; non-decores = helpers prives ou fragment public voulu). Sequences atomiques OK, CSRF OK (1 exemption justifiee token), pas de SQL brut/eval.
 - FIX HAUTE 1: serve_media servait orders/, payments/, documents/ (devis/factures generes a noms PREVISIBLES, IDs sequentiels) SANS authentification (regression de la route media/<path>). Nouvelle politique _may_access_media: avatars/+service_images/ publics; orders/+payments/ = staff OU proprietaire (Request.requester); tout le reste = staff uniquement. Refus = 404 (pas de fuite d'existence). 7 tests.
