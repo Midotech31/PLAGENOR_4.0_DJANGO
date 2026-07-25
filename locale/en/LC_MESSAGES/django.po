@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-27 00:34+0100\n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,10 +35,9 @@ msgstr "University / Organization"
 msgid "— Sélectionner —"
 msgstr "— Select —"
 
-#, fuzzy
 #| msgid "Votre organisation"
 msgid "Type d'organisation"
-msgstr "Your organization"
+msgstr "Organization type"
 
 msgid "Préciser (autre)"
 msgstr "Specify (other)"
@@ -78,6 +77,14 @@ msgstr "This email is already registered"
 
 msgid "Veuillez préciser le type d'organisation."
 msgstr "Please specify the organization type."
+
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+"Account temporarily locked after failed attempts. Try again in %(minutes)d "
+"minute(s)."
 
 msgid "Profil mis à jour."
 msgstr "Profile updated."
@@ -119,6 +126,21 @@ msgstr "The two passwords do not match."
 
 msgid "Votre mot de passe a été mis à jour avec succès."
 msgstr "Your password has been updated successfully."
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr "Invalid or expired code. Please try again."
+
+msgid "La double authentification est déjà activée."
+msgstr "Two-factor authentication is already enabled."
+
+msgid "Double authentification activée."
+msgstr "Two-factor authentication enabled."
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr "Invalid code. Check your device's clock and try again."
+
+msgid "Double authentification désactivée."
+msgstr "Two-factor authentication disabled."
 
 msgid "Formulaire IBTIKAR"
 msgstr "IBTIKAR Form"
@@ -305,6 +327,59 @@ msgid ""
 msgstr ""
 "If the button does not work, copy and paste this link into your browser:"
 
+#| msgid "Réinitialisation de votre compte"
+msgid "Réinitialisation du mot de passe"
+msgstr "Password reset"
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+"You requested a password reset for your PLAGENOR account. Click the button "
+"below to choose a new one."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Réinitialiser mon mot de passe"
+msgstr "Reset my password"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+"This link works only once and expires shortly. If you did not request it, "
+"simply ignore this e-mail: your password will remain unchanged."
+
+#| msgid "Centre d'aide PLAGENOR"
+msgid "L'équipe PLAGENOR"
+msgstr "The PLAGENOR team"
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+"Hello,\n"
+"\n"
+"You requested a password reset for your PLAGENOR account.\n"
+"\n"
+"Click the link below to choose a new password:"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+"This link works only once and expires shortly. If you did not request it, simply ignore this e-mail: your password will remain unchanged.\n"
+"\n"
+"— The PLAGENOR team"
+
+#| msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr "Reset your PLAGENOR password"
+
 msgid "Changement de mot de passe obligatoire"
 msgstr "Password change required"
 
@@ -341,6 +416,10 @@ msgstr "Show/hide password"
 msgid "Se souvenir de moi"
 msgstr "Remember me"
 
+#| msgid "Mot de passe"
+msgid "Mot de passe oublié ?"
+msgstr "Forgot your password?"
+
 msgid "ou"
 msgstr "or"
 
@@ -356,6 +435,83 @@ msgstr "Submit as a guest"
 msgid "Suivre une demande"
 msgstr "Track a request"
 
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe réinitialisé"
+msgstr "Password reset"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe mis à jour"
+msgstr "Password updated"
+
+#| msgid ""
+#| "Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+#| " les instructions a été envoyé."
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr "Your password has been reset successfully. You can now sign in."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Choisir un nouveau mot de passe"
+msgstr "Choose a new password"
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr "Enter your new password twice."
+
+msgid "Valider"
+msgstr "Validate"
+
+#| msgid "Lien invalide."
+msgid "Lien invalide"
+msgstr "Invalid link"
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+"This reset link is no longer valid (already used or expired). Please request"
+" a new one."
+
+#| msgid "Demandes à valider"
+msgid "Demander un nouveau lien"
+msgstr "Request a new link"
+
+#| msgid "Devis Envoyé"
+msgid "Lien envoyé"
+msgstr "Link sent"
+
+#| msgid "Vérifiez votre messagerie"
+msgid "Vérifiez votre boîte mail"
+msgstr "Check your inbox"
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+"If an account matches this address, an e-mail with reset instructions has "
+"just been sent. Remember to check your spam folder."
+
+#| msgid "Retour à l'accueil"
+msgid "Retour à la connexion"
+msgstr "Back to sign in"
+
+#| msgid "Réinitialiser le compte"
+msgid "Réinitialiser le mot de passe"
+msgstr "Reset password"
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+"Enter your e-mail address. If an account exists, you will receive a reset "
+"link."
+
+#| msgid "Envoyer au client"
+msgid "Envoyer le lien"
+msgstr "Send the link"
+
 msgid "Mon Profil"
 msgstr "My profile"
 
@@ -368,10 +524,9 @@ msgstr "Profile picture"
 msgid "Organisation / Université"
 msgstr "Organization / University"
 
-#, fuzzy
 #| msgid "Note Générée"
 msgid "Langue préférée"
-msgstr "Note Generated"
+msgstr "Preferred language"
 
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr "Leave blank to use the language detected by your browser."
@@ -381,6 +536,37 @@ msgstr "Mastered techniques"
 
 msgid "Mettre à jour"
 msgstr "Update"
+
+msgid "Sécurité — Double authentification"
+msgstr "Security — Two-factor authentication"
+
+#| msgid "Active"
+msgid "Activée"
+msgstr "Enabled"
+
+msgid ""
+"Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr "Your account is protected by a one-time code at every login."
+
+#| msgid "Désactiver cet utilisateur ?"
+msgid "Désactiver la double authentification ?"
+msgstr "Disable two-factor authentication?"
+
+#| msgid "Désactiver"
+msgid "Désactiver la 2FA"
+msgstr "Disable 2FA"
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+"Add a layer of security: a 6-digit code generated by your phone will be "
+"required at login. Recommended for staff accounts."
+
+#| msgid "Activer"
+msgid "Activer la 2FA"
+msgstr "Enable 2FA"
 
 msgid "Inscription"
 msgstr "Sign up"
@@ -404,10 +590,9 @@ msgstr "External client"
 msgid "Identifiant souhaité"
 msgstr "Desired username"
 
-#, fuzzy
 #| msgid "Votre organisation"
 msgid "Précisez le type d'organisation"
-msgstr "Your organization"
+msgstr "Specify the organization type"
 
 msgid "Sélectionner"
 msgstr "Select"
@@ -429,16 +614,62 @@ msgstr "optional"
 msgid "Wilaya"
 msgstr "Wilaya"
 
-#, fuzzy
 #| msgid "Sélectionner"
 msgid "Sélectionnez votre wilaya"
-msgstr "Select"
+msgstr "Select your wilaya"
 
 msgid "Sexe"
 msgstr "Gender"
 
 msgid "Vous avez déjà un compte ?"
 msgstr "Already have an account?"
+
+#| msgid "Aucune notification"
+msgid "Activer la double authentification"
+msgstr "Enable two-factor authentication"
+
+msgid "Double authentification (2FA)"
+msgstr "Two-factor authentication (2FA)"
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+"Scan this QR code with an authenticator app (Google Authenticator, Authy, "
+"Microsoft Authenticator…), then enter the 6-digit code to confirm."
+
+msgid "QR code de configuration 2FA"
+msgstr "2FA setup QR code"
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr "Manual key (if you cannot scan):"
+
+#| msgid "Modèle de tarification"
+msgid "Code de vérification"
+msgstr "Verification code"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+#| msgid "Vérification de votre adresse email"
+msgid "Vérification en deux étapes"
+msgstr "Two-step verification"
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr "Enter the 6-digit code shown in your authenticator app."
+
+msgid "Vérifier"
+msgstr "Verify"
+
+msgid "Aller au contenu principal"
+msgstr "Skip to main content"
+
+#| msgid "Validation Finance"
+msgid "Navigation principale"
+msgstr "Main navigation"
 
 msgid "Accueil"
 msgstr "Home"
@@ -464,13 +695,16 @@ msgstr "Dashboard"
 msgid "Liens rapides"
 msgstr "Quick links"
 
-#, fuzzy
 #| msgid "Entrées d'audit"
 msgid "Centre d'aide"
-msgstr "Audit entries"
+msgstr "Help Center"
 
 msgid "Suivi de demande"
 msgstr "Request tracking"
+
+#| msgid "Disponibilité"
+msgid "Confidentialité"
+msgstr "Privacy"
 
 msgid "Administration"
 msgstr "Administration"
@@ -863,9 +1097,6 @@ msgstr "Reports awaiting review"
 msgid "Notes..."
 msgstr "Notes..."
 
-msgid "Valider"
-msgstr "Validate"
-
 msgid "Raison du renvoi..."
 msgstr "Reason for return..."
 
@@ -1071,15 +1302,13 @@ msgstr "Price validated by admin"
 msgid "Aucune information financière."
 msgstr "No financial information."
 
-#, fuzzy
 #| msgid "Télécharger Note"
 msgid "Télécharger le devis"
-msgstr "Download Note"
+msgstr "Download the quote"
 
-#, fuzzy
 #| msgid "Factures"
 msgid "Facture"
-msgstr "Invoices"
+msgstr "Invoice"
 
 msgid "Détail du devis"
 msgstr "Quote details"
@@ -1105,9 +1334,6 @@ msgstr "Appointment date"
 msgid "RDV confirmé"
 msgstr "Appointment confirmed"
 
-msgid "Annuler"
-msgstr "Cancel"
-
 msgid "Réassigner à un autre analyste"
 msgstr "Reassign to another analyst"
 
@@ -1118,10 +1344,9 @@ msgstr ""
 "Use this option when the current analyst is delayed, absent or overloaded. "
 "Both the previous and the new analyst will be notified."
 
-#, fuzzy
 #| msgid "Espace analyste"
 msgid "Nouvel analyste"
-msgstr "Analyst workspace"
+msgstr "New analyst"
 
 msgid "Choisir un membre…"
 msgstr "Choose a member…"
@@ -1129,15 +1354,13 @@ msgstr "Choose a member…"
 msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
 msgstr "E.g.: current analyst delayed by other priority cases"
 
-#, fuzzy
 #| msgid "Cette action est enregistrée dans le journal d'audit."
 msgid "Cette raison est consignée dans l'historique de la demande."
-msgstr "This action is logged in the audit log."
+msgstr "This reason is recorded in the request history."
 
-#, fuzzy
 #| msgid "Confirmer la réinitialisation"
 msgid "Confirmer la réassignation"
-msgstr "Confirm reset"
+msgstr "Confirm reassignment"
 
 msgid "Non encore assigné."
 msgstr "Not yet assigned."
@@ -1151,10 +1374,9 @@ msgstr ""
 "base price, multiplier, number of samples, total). To be shared manually "
 "with the requester."
 
-#, fuzzy
 #| msgid "Télécharger Note"
 msgid "Télécharger la note (.docx)"
-msgstr "Download Note"
+msgstr "Download the note (.docx)"
 
 msgid ""
 "Accès limité : administrateurs des opérations, analyste assigné, "
@@ -1172,10 +1394,9 @@ msgstr ""
 "Members allowed to view this request in read-only mode (useful if the "
 "assigned analyst is delayed or absent)."
 
-#, fuzzy
 #| msgid "Restaurer une sauvegarde"
 msgid "Retirer ce suiveur"
-msgstr "Restore a backup"
+msgstr "Remove this follower"
 
 msgid "Retirer"
 msgstr "Remove"
@@ -1183,10 +1404,9 @@ msgstr "Remove"
 msgid "Aucun observateur pour l'instant."
 msgstr "No observers yet."
 
-#, fuzzy
 #| msgid "Ajouter un service"
 msgid "Ajouter un observateur"
-msgstr "Add a service"
+msgstr "Add an observer"
 
 msgid "Ajouter"
 msgstr "Add"
@@ -1314,10 +1534,9 @@ msgstr "Assigned"
 msgid "Productivité %%"
 msgstr "Productivity %%"
 
-#, fuzzy
 #| msgid "Opérations"
 msgid "Observations"
-msgstr "Operations"
+msgstr "Observations"
 
 msgid "Historique"
 msgstr "History"
@@ -1401,28 +1620,24 @@ msgstr "Reply"
 msgid "Aucun travail en cours."
 msgstr "No work in progress."
 
-#, fuzzy
 #| msgid "Demandes à assigner"
 msgid "Demandes que vous suivez"
-msgstr "Requests to assign"
+msgstr "Requests you follow"
 
 msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
 msgstr "Read-only access. You cannot act on these requests."
 
-#, fuzzy
 #| msgid "Profil mis à jour."
 msgid "Dernière mise à jour"
-msgstr "Profile updated."
+msgstr "Last updated"
 
-#, fuzzy
 #| msgid "Toutes les demandes"
 msgid "Consulter cette demande"
-msgstr "All requests"
+msgstr "View this request"
 
-#, fuzzy
 #| msgid "Aucune demande en cours de traitement."
 msgid "Aucune demande à observer pour l'instant."
-msgstr "No request currently being processed."
+msgstr "No request to observe yet."
 
 msgid ""
 "L'administrateur des opérations peut vous ajouter en suivi sur une demande "
@@ -1699,15 +1914,13 @@ msgstr "Excl. VAT"
 msgid "TTC"
 msgstr "Incl. VAT"
 
-#, fuzzy
 #| msgid "Documents"
 msgid "Document"
-msgstr "Documents"
+msgstr "Document"
 
-#, fuzzy
 #| msgid "Générer la facture"
 msgid "Télécharger la facture"
-msgstr "Generate the invoice"
+msgstr "Download the invoice"
 
 msgid "Aucune facture."
 msgstr "No invoices."
@@ -1715,10 +1928,9 @@ msgstr "No invoices."
 msgid "Aucune archive."
 msgstr "No archives."
 
-#, fuzzy
 #| msgid "Télécharger le Bon de Commande"
 msgid "Télécharger le devis officiel (.docx)"
-msgstr "Upload the Purchase Order"
+msgstr "Download the official quote (.docx)"
 
 msgid "Quantité"
 msgstr "Quantity"
@@ -1866,10 +2078,9 @@ msgid ""
 "disponibles."
 msgstr "Widgets and statistics specific to your role will be available soon."
 
-#, fuzzy
 #| msgid "Continuer vers l'évaluation"
 msgid "Continuer vers l\\'évaluation"
-msgstr "Continue to the review"
+msgstr "Continue to the rating"
 
 msgid "Erreur réseau, veuillez réessayer."
 msgstr "Network error, please try again."
@@ -1986,10 +2197,9 @@ msgstr "IBTIKAR Requester"
 msgid "Espace IBTIKAR"
 msgstr "IBTIKAR Workspace"
 
-#, fuzzy
 #| msgid "Saisissez votre code IBTIKAR"
 msgid "Déclarez votre solde IBTIKAR"
-msgstr "Enter your IBTIKAR code"
+msgstr "Declare your IBTIKAR balance"
 
 #, python-format
 msgid ""
@@ -2004,26 +2214,24 @@ msgstr ""
 "estimating and validating your request. You can adjust it before each new "
 "request to reflect the actual state of your DGRSDT account."
 
-#, fuzzy
 #| msgid "Solde IBTIKAR déclaré (DA)"
 msgid "Solde IBTIKAR résiduel (DA)"
-msgstr "Declared IBTIKAR balance (DZD)"
+msgstr "Remaining IBTIKAR balance (DA)"
 
 msgid "Valider mon solde"
 msgstr "Validate my balance"
 
-#, fuzzy, python-format
+#, python-format
 #| msgid "Mis à jour le"
 msgid "Mis à jour le %(dt)s."
-msgstr "Updated on"
+msgstr "Updated on %(dt)s."
 
 msgid "Vous pouvez ajuster ce montant à tout moment."
 msgstr "You can adjust this amount at any time."
 
-#, fuzzy
 #| msgid "Solde déclaré"
 msgid "Solde déclaré disponible"
-msgstr "Declared balance"
+msgstr "Declared balance available"
 
 msgid ""
 "Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
@@ -2034,30 +2242,26 @@ msgstr ""
 "submitting a new request. The IBTIKAR budget may be consumed by other "
 "platforms — update this amount below if necessary."
 
-#, fuzzy
 #| msgid "Mettre à jour"
 msgid "Mettre à jour mon solde"
-msgstr "Update"
+msgstr "Update my balance"
 
-#, fuzzy
 #| msgid "Budget IBTIKAR (DA)"
 msgid "Nouveau solde IBTIKAR (DA)"
-msgstr "IBTIKAR Budget (DZD)"
+msgstr "New IBTIKAR balance (DA)"
 
-#, fuzzy, python-format
+#, python-format
 #| msgid ""
 #| "Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
-msgstr ""
-"Virtual budget governed by the DGRSDT — individual limit %(cap)s DA / year."
+msgstr "Annual cap set by DGRSDT: %(cap)s DA."
 
 msgid "Enregistrer"
 msgstr "Save"
 
-#, fuzzy
 #| msgid "Solde IBTIKAR déclaré"
 msgid "Solde IBTIKAR non déclaré"
-msgstr "Declared IBTIKAR balance"
+msgstr "IBTIKAR balance not declared"
 
 msgid ""
 "Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
@@ -2082,10 +2286,9 @@ msgstr ""
 "balance). Update this balance in the card above if you have checked your "
 "DGRSDT account."
 
-#, fuzzy
 #| msgid "dépasse votre solde déclaré"
 msgid "supérieur à votre solde déclaré"
-msgstr "exceeds your declared balance"
+msgstr "higher than your declared balance"
 
 msgid "RDV"
 msgstr "Appointment"
@@ -2105,28 +2308,24 @@ msgstr "Awaiting assignment."
 msgid "Statistiques"
 msgstr "Statistics"
 
-#, fuzzy
 #| msgid "Statistiques"
 msgid "Statistiques & métriques"
-msgstr "Statistics"
+msgstr "Statistics & metrics"
 
 msgid "Vue institutionnelle complète"
 msgstr "Full institutional view"
 
-#, fuzzy
 #| msgid "Historique financier"
 msgid "Vue financière"
-msgstr "Financial history"
+msgstr "Financial view"
 
-#, fuzzy
 #| msgid "Assignation"
 msgid "Mes assignations"
-msgstr "Assignment"
+msgstr "My assignments"
 
-#, fuzzy
 #| msgid "Productivité"
 msgid "Mon activité"
-msgstr "Productivity"
+msgstr "My activity"
 
 msgid "Du"
 msgstr "From"
@@ -2137,20 +2336,17 @@ msgstr "To"
 msgid "Tous"
 msgstr "All"
 
-#, fuzzy
 #| msgid "Ajouter"
 msgid "Toutes"
-msgstr "Add"
+msgstr "All"
 
-#, fuzzy
 #| msgid "Paiement"
 msgid "Établissement"
-msgstr "Payment"
+msgstr "Institution"
 
-#, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Cadre d'analyse"
-msgstr "Analysis report"
+msgstr "Analysis framework"
 
 msgid "Appliquer"
 msgstr "Apply"
@@ -2182,61 +2378,51 @@ msgstr "Monthly"
 msgid "Trimestrielle"
 msgstr "Quarterly"
 
-#, fuzzy
 #| msgid "Annuler"
 msgid "Annuelle"
-msgstr "Cancel"
+msgstr "Yearly"
 
 msgid "Dimensions à inclure"
 msgstr "Dimensions to include"
 
-#, fuzzy
 #| msgid "Télécharger le rapport"
 msgid "Télécharger le bilan Excel"
-msgstr "Download the report"
+msgstr "Download the Excel report"
 
-#, fuzzy
 #| msgid "Retour aux opérations"
 msgid "Taux complétion"
-msgstr "Back to operations"
+msgstr "Completion rate"
 
-#, fuzzy
 #| msgid "Demandeur IBTIKAR"
 msgid "Revenu virtuel IBTIKAR"
-msgstr "IBTIKAR Requester"
+msgstr "IBTIKAR virtual revenue"
 
-#, fuzzy
 #| msgid "Revenue GENOCLAB (DA)"
 msgid "Revenu GENOCLAB"
-msgstr "GENOCLAB Revenue (DZD)"
+msgstr "GENOCLAB revenue"
 
-#, fuzzy
 #| msgid "Ajouter service"
 msgid "Par service"
-msgstr "Add service"
+msgstr "By service"
 
-#, fuzzy
 #| msgid "Aucune demande"
 msgid "Aucune donnée"
-msgstr "No requests"
+msgstr "No data"
 
-#, fuzzy
 #| msgid "Statut"
 msgid "Par statut"
-msgstr "Status"
+msgstr "By status"
 
 msgid "Par wilaya"
 msgstr "By wilaya"
 
-#, fuzzy
 #| msgid "Paiement"
 msgid "Par établissement"
-msgstr "Payment"
+msgstr "By institution"
 
-#, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Par cadre d'analyse"
-msgstr "Analysis report"
+msgstr "By analysis framework"
 
 msgid "Cadre"
 msgstr "Frame"
@@ -2244,10 +2430,9 @@ msgstr "Frame"
 msgid "Par sexe"
 msgstr "By gender"
 
-#, fuzzy
 #| msgid "Archives mensuelles"
 msgid "Tendance mensuelle"
-msgstr "Monthly archives"
+msgstr "Monthly trend"
 
 msgid "Journal d'audit"
 msgstr "Audit log"
@@ -2429,6 +2614,15 @@ msgstr "Activate"
 msgid "Réinitialiser / Reset Account"
 msgstr "Reset / Reset Account"
 
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr "Reset 2FA (lost phone)"
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr "Reset two-factor authentication for this user?"
+
+msgid "Reset 2FA"
+msgstr "Reset 2FA"
+
 msgid "Analystes / Opérateurs"
 msgstr "Analysts / Operators"
 
@@ -2498,36 +2692,41 @@ msgstr "No techniques."
 msgid "Gestion du contenu"
 msgstr "Content management"
 
+#| msgid "Nouvelle demande"
+msgid "Nouvelle entrée"
+msgstr "New entry"
+
 msgid ""
-"Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
-"Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
-"ci-dessous pour créer une nouvelle entrée."
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur"
+" le texte du gabarit."
 msgstr ""
-"Edit the text shown on the site (titles, buttons, descriptions). Click Edit "
-"on a row to modify it, or use the form below to create a new entry."
+"Edit the text shown on the site in all three languages (Français, English, "
+"العربية). An empty value falls back to the default language, then to the "
+"template text."
 
 msgid "Clé"
 msgstr "Key"
 
-msgid "Langue"
-msgstr "Language"
-
-msgid "Valeur"
-msgstr "Value"
-
-#, fuzzy
 #| msgid "Techniques existantes"
 msgid "Contenu existant"
-msgstr "Existing techniques"
+msgstr "Existing content"
 
-msgid "Filtrer par clé, langue, ou valeur..."
-msgstr "Filter by key, language, or value..."
+msgid "clés"
+msgstr "keys"
 
-msgid "Modifié"
-msgstr "Modified"
+#| msgid "Filtrer par clé, langue, ou valeur..."
+msgid "Filtrer par clé ou texte…"
+msgstr "Filter by key or text…"
 
-msgid "Supprimer cette entrée ?"
-msgstr "Delete this entry?"
+msgid "Français"
+msgstr "French"
+
+msgid "Langues manquantes"
+msgstr "Missing languages"
+
+msgid "Supprimer cette clé dans toutes les langues ?"
+msgstr "Delete this key in all languages?"
 
 msgid "Supprimer"
 msgstr "Delete"
@@ -2624,10 +2823,9 @@ msgstr "Updated"
 msgid "Aucun rapport disponible."
 msgstr "No report available."
 
-#, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Blocs de contenu personnalisés"
-msgstr "Custom fields"
+msgstr "Custom content blocks"
 
 msgid ""
 "Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
@@ -2639,20 +2837,17 @@ msgstr ""
 "generated documents — globally or for a specific service. Placeholders "
 "{{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} etc. are resolved on the fly."
 
-#, fuzzy
 #| msgid "Gestion du contenu"
 msgid "Gérer les blocs de contenu"
-msgstr "Content management"
+msgstr "Manage content blocks"
 
-#, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Modèles DOCX personnalisés"
-msgstr "Custom fields"
+msgstr "Custom DOCX templates"
 
-#, fuzzy
 #| msgid "Templates DOCX"
 msgid "Templates DOCX globaux"
-msgstr "DOCX Templates"
+msgstr "Global DOCX templates"
 
 msgid ""
 "Mettez à jour les templates DOCX utilisés pour la génération automatique des"
@@ -2678,6 +2873,21 @@ msgstr "Required"
 
 msgid "Aucun champ personnalisé."
 msgstr "No custom fields."
+
+#| msgid "Informations plateforme"
+msgid "Annonces plateforme"
+msgstr "Platform announcements"
+
+#| msgid "Audit"
+msgid "Audience"
+msgstr "Audience"
+
+msgid "Publier l'annonce"
+msgstr "Publish announcement"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer cette annonce ?"
+msgstr "Delete this announcement?"
 
 msgid ""
 "Consultez l'historique complet de toutes les transitions, actions et "
@@ -2844,28 +3054,25 @@ msgstr "Edit service"
 msgid "Modifier le service"
 msgstr "Edit the service"
 
-#, fuzzy
 #| msgid "Prix IBTIKAR (DA)"
 msgid "Prix IBTIKAR (DZD)"
-msgstr "IBTIKAR Price (DZD)"
+msgstr "IBTIKAR price (DZD)"
 
 msgid ""
 "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
 "ci-dessous)"
 msgstr "Flat price (used if no detailed pricing rule is defined below)"
 
-#, fuzzy
 #| msgid "Prix GENOCLAB (DA)"
 msgid "Prix GENOCLAB (DZD)"
-msgstr "GENOCLAB Price (DZD)"
+msgstr "GENOCLAB price (DZD)"
 
 msgid "Image actuelle"
 msgstr "Current image"
 
-#, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Prix de base & multiplicateurs"
-msgstr "Recent users"
+msgstr "Base price & multipliers"
 
 msgid ""
 "Formule : <strong>Prix de base × Multiplicateur × Nombre "
@@ -2883,15 +3090,13 @@ msgid ""
 msgstr ""
 "Default YAML values shown — the first save will copy them to the database."
 
-#, fuzzy
 #| msgid "non pathogène"
 msgid "Prix non pathogène (DA)"
-msgstr "non-pathogenic"
+msgstr "Non-pathogenic price (DA)"
 
-#, fuzzy
 #| msgid "pathogène"
 msgid "Prix pathogène (DA)"
-msgstr "pathogenic"
+msgstr "Pathogenic price (DA)"
 
 msgid "idem si vide"
 msgstr "same if empty"
@@ -2899,36 +3104,31 @@ msgstr "same if empty"
 msgid "Paramètre porteur du multiplicateur"
 msgstr "Parameter carrying the multiplier"
 
-#, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Table de multiplicateurs"
-msgstr "Recent users"
+msgstr "Multiplier table"
 
-#, fuzzy
 #| msgid "Ajouter une ligne"
 msgid "Ajouter une option"
-msgstr "Add a line"
+msgstr "Add an option"
 
 msgid "ex. Simple, Duplicate, Triplicate"
 msgstr "e.g. Simple, Duplicate, Triplicate"
 
-#, fuzzy
 #| msgid "Aucun utilisateur récent."
 msgid "Aucun multiplicateur défini (×1 partout)."
-msgstr "No recent users."
+msgstr "No multiplier defined (×1 everywhere)."
 
 msgid "ex. Simple, Duplicate"
 msgstr "e.g. Simple, Duplicate"
 
-#, fuzzy
 #| msgid "Configuration des formulaires par service"
 msgid "Configurations tarifaires détaillées"
-msgstr "Form configuration by service"
+msgstr "Detailed pricing configurations"
 
-#, fuzzy
 #| msgid "Ajouter un service"
 msgid "Ajouter un tarif"
-msgstr "Add a service"
+msgstr "Add a rate"
 
 msgid ""
 "Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
@@ -2949,20 +3149,17 @@ msgstr "Custom form fields"
 msgid "Ajouter un champ"
 msgstr "Add a field"
 
-#, fuzzy
 #| msgid "Factures"
 msgid "Nature"
-msgstr "Invoices"
+msgstr "Nature"
 
-#, fuzzy
 #| msgid "Description"
 msgid "Question"
-msgstr "Description"
+msgstr "Question"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "Colonne échantillon"
-msgstr "per sample"
+msgstr "Sample column"
 
 msgid "Texte"
 msgstr "Text"
@@ -2982,10 +3179,9 @@ msgstr "Conditional pricing & display logic"
 msgid "Ce champ modifie le prix"
 msgstr "This field affects the price"
 
-#, fuzzy
 #| msgid "Type de document"
 msgid "Type de modificateur"
-msgstr "Document type"
+msgstr "Modifier type"
 
 msgid "Surcharge (+)"
 msgstr "Surcharge (+)"
@@ -2993,10 +3189,12 @@ msgstr "Surcharge (+)"
 msgid "Forfait (=)"
 msgstr "Flat (=)"
 
-#, fuzzy
 #| msgid "Utilisateur"
 msgid "Multiplicateur (×)"
-msgstr "User"
+msgstr "Multiplier (×)"
+
+msgid "Valeur"
+msgstr "Value"
 
 msgid "Note condition (FR)"
 msgstr "Condition note (FR)"
@@ -3023,10 +3221,9 @@ msgstr ""
 msgid "Enregistrer toutes les modifications"
 msgstr "Save all changes"
 
-#, fuzzy
 #| msgid "Nom du laboratoire"
 msgid "Nom du tarif"
-msgstr "Laboratory name"
+msgstr "Rate name"
 
 msgid "ex : Prix de base, Majoration urgence, Remise volume"
 msgstr "e.g.: Base price, Urgency surcharge, Volume discount"
@@ -3034,10 +3231,9 @@ msgstr "e.g.: Base price, Urgency surcharge, Volume discount"
 msgid "Prix de base"
 msgstr "Base price"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "Par échantillon"
-msgstr "per sample"
+msgstr "Per sample"
 
 msgid "Par paramètre"
 msgstr "Per parameter"
@@ -3057,10 +3253,9 @@ msgstr "Amount (DZD)"
 msgid "Unité"
 msgstr "Unit"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "forfait, par échantillon"
-msgstr "per sample"
+msgstr "flat rate, per sample"
 
 msgid "Priorité"
 msgstr "Priority"
@@ -3074,46 +3269,39 @@ msgstr "Min qty"
 msgid "Qté max"
 msgstr "Max qty"
 
-#, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant min applicable"
-msgstr "Amount due"
+msgstr "Minimum applicable amount"
 
-#, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant max applicable"
-msgstr "Amount due"
+msgstr "Maximum applicable amount"
 
-#, fuzzy
 #| msgid "Description"
 msgid "Description (optionnel)"
-msgstr "Description"
+msgstr "Description (optional)"
 
 msgid "ex : Tarif appliqué pour les analyses urgentes"
 msgstr "e.g.: Rate applied for urgent analyses"
 
-#, fuzzy
 #| msgid "Tarification"
 msgid "Tarif actif"
-msgstr "Pricing"
+msgstr "Active rate"
 
-#, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le tarif"
-msgstr "Edit the service"
+msgstr "Edit the rate"
 
-#, fuzzy
 #| msgid "Changement de mot de passe obligatoire"
 msgid "Le nom du tarif est obligatoire."
-msgstr "Password change required"
+msgstr "The rate name is required."
 
 msgid "Erreur"
 msgstr "Error"
 
-#, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce tarif ?"
-msgstr "Delete this entry?"
+msgstr "Delete this rate?"
 
 msgid "Modifier utilisateur"
 msgstr "Edit user"
@@ -3130,55 +3318,48 @@ msgstr "Student level"
 msgid "laisser vide pour ne pas changer"
 msgstr "leave blank to keep unchanged"
 
-#, fuzzy
 #| msgid "Supprimer le Modèle"
 msgid "Supprimer le bloc"
-msgstr "Delete the Template"
+msgstr "Delete the block"
 
-#, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce bloc ?"
-msgstr "Delete this entry?"
+msgstr "Delete this block?"
 
-#, fuzzy
 #| msgid "Services existants"
 msgid "Services concernés"
-msgstr "Existing services"
+msgstr "Services concerned"
 
-#, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous les services)"
-msgstr "All services"
+msgstr "Global (all services)"
 
-#, fuzzy
 #| msgid "Inscription"
 msgid "Position"
-msgstr "Sign up"
+msgstr "Position"
 
-#, fuzzy
+msgid "Langue"
+msgstr "Language"
+
 #| msgid "Supprimer"
 msgid "Oui, supprimer"
-msgstr "Delete"
+msgstr "Yes, delete"
 
-#, fuzzy
 #| msgid "Modifier"
 msgid "Modifier bloc"
-msgstr "Edit"
+msgstr "Edit block"
 
-#, fuzzy
 #| msgid "Nouveau modèle"
 msgid "Nouveau bloc"
-msgstr "New template"
+msgstr "New block"
 
-#, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le bloc"
-msgstr "Edit the service"
+msgstr "Edit the block"
 
-#, fuzzy
 #| msgid "Nouveau mot de passe"
 msgid "Nouveau bloc de contenu"
-msgstr "New password"
+msgstr "New content block"
 
 msgid ""
 "Le contenu de ce bloc sera injecté dans le document généré à la position "
@@ -3200,10 +3381,9 @@ msgstr ""
 msgid "Plus bas = inséré en premier"
 msgstr "Lower = inserted first"
 
-#, fuzzy
 #| msgid "Commentaire (optionnel)..."
 msgid "Titre (optionnel)"
-msgstr "Comment (optional)..."
+msgstr "Title (optional)"
 
 msgid "Affiché en gras au-dessus du texte"
 msgstr "Shown in bold above the text"
@@ -3221,15 +3401,13 @@ msgstr ""
 "Tip: placeholders like {{FULL_NAME}}, {{DISPLAY_ID}}, {{SERVICE_NAME}}, "
 "{{DATE}} are resolved at generation time."
 
-#, fuzzy
 #| msgid "Modifier contenu"
 msgid "Blocs de contenu"
-msgstr "Edit content"
+msgstr "Content blocks"
 
-#, fuzzy
 #| msgid "Placeholders documentés"
 msgid "Blocs de contenu des documents"
-msgstr "Documented placeholders"
+msgstr "Document content blocks"
 
 msgid ""
 "Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
@@ -3238,15 +3416,13 @@ msgstr ""
 "Add or edit paragraphs injected into generated documents (IBTIKAR form, "
 "platform note, quote, reception form)."
 
-#, fuzzy
 #| msgid "Modèle de"
 msgid "Modèles DOCX"
-msgstr "Template for"
+msgstr "DOCX templates"
 
-#, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous services)"
-msgstr "All services"
+msgstr "Global (all services)"
 
 msgid "Aperçu"
 msgstr "Preview"
@@ -3453,24 +3629,21 @@ msgstr "Keep it up!"
 msgid "Rendez-vous proposé — en attente de votre confirmation"
 msgstr "Appointment proposed — awaiting your confirmation"
 
-#, fuzzy
 #| msgid "Rendez-vous proposé"
 msgid "Rendez-vous confirmé"
-msgstr "Appointment proposed"
+msgstr "Appointment confirmed"
 
 #, python-format
 msgid "Vous avez proposé une date alternative : %(alt)s."
 msgstr "You proposed an alternative date: %(alt)s."
 
-#, fuzzy
 #| msgid "Confirmer le refus"
 msgid "Confirmer ce rendez-vous"
-msgstr "Confirm refusal"
+msgstr "Confirm this appointment"
 
-#, fuzzy
 #| msgid "Commentaire (optionnel)..."
 msgid "Note (optionnelle)"
-msgstr "Comment (optional)..."
+msgstr "Note (optional)"
 
 msgid "Votre demande a été acceptée"
 msgstr "Your request has been accepted"
@@ -3633,10 +3806,9 @@ msgstr ""
 "Submit an analysis request without creating an account. You will receive a "
 "tracking code."
 
-#, fuzzy
 #| msgid "Créer un compte"
 msgid "Conseil : créez un compte gratuit"
-msgstr "Create an account"
+msgstr "Tip: create a free account"
 
 msgid ""
 "En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
@@ -3649,7 +3821,6 @@ msgid ""
 "Tableau de bord unique pour toutes vos demandes et leur historique complet"
 msgstr "A single dashboard for all your requests and their full history"
 
-#, fuzzy
 #| msgid ""
 #| "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
 #| "assignation, rendez-vous, rapport prêt)."
@@ -3657,8 +3828,8 @@ msgid ""
 "Notifications en temps réel à chaque étape (validation, rendez-vous, rapport"
 " prêt)"
 msgstr ""
-"You receive an <strong>e-mail at each step</strong> (validation, assignment,"
-" appointment, report ready)."
+"Real-time notifications at every step (validation, appointment, report "
+"ready)"
 
 msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
 msgstr "Appointment confirmation and secure report download"
@@ -3681,18 +3852,16 @@ msgstr "Phone number"
 msgid "Votre organisation"
 msgstr "Your organization"
 
-#, fuzzy
 #| msgid "académique"
 msgid "Académique"
-msgstr "academic"
+msgstr "Academic"
 
 msgid "Entreprise"
 msgstr "Company"
 
-#, fuzzy
 #| msgid "Partiel"
 msgid "Particulier"
-msgstr "Partial"
+msgstr "Individual"
 
 msgid "Autre"
 msgstr "Other"
@@ -3728,10 +3897,9 @@ msgid ""
 "Conservez votre code de suivi pour suivre l'avancement de votre demande."
 msgstr "Keep your tracking code to follow the progress of your request."
 
-#, fuzzy
 #| msgid "Créer un compte pour gérer vos demandes"
 msgid "Créez un compte pour aller plus loin"
-msgstr "Create an account to manage your requests"
+msgstr "Create an account to go further"
 
 msgid ""
 "Suivez cette demande et les suivantes depuis un tableau de bord unique, "
@@ -3766,10 +3934,9 @@ msgctxt "help"
 msgid "Démarrer"
 msgstr "Get started"
 
-#, fuzzy
 #| msgid "Soumission invité"
 msgid "Compte ou invité"
-msgstr "Guest submission"
+msgstr "Account or guest"
 
 msgctxt "help"
 msgid "Suivi & rapports"
@@ -3818,10 +3985,9 @@ msgstr ""
 "You can also submit <strong>without an account</strong> via « Guest "
 "submission » and track your request with the code received by e-mail."
 
-#, fuzzy
 #| msgid "Soumission invité"
 msgid "Compte ou soumission invité ?"
-msgstr "Guest submission"
+msgstr "Account or guest submission?"
 
 msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
 msgstr "Both work — but an account gives you full control."
@@ -4109,6 +4275,32 @@ msgctxt "help"
 msgid "Contactez-nous"
 msgstr "Contact us"
 
+msgid "Données collectées"
+msgstr "Data collected"
+
+#| msgid "Disponibilité"
+msgid "Finalité"
+msgstr "Purpose"
+
+#| msgid "Opérations"
+msgid "Conservation"
+msgstr "Retention"
+
+msgid "Vos droits"
+msgstr "Your rights"
+
+#| msgid "Exporter tous les emails (CSV)"
+msgid "Exporter mes données (JSON)"
+msgstr "Export my data (JSON)"
+
+#| msgctxt "help"
+#| msgid "Contactez-nous"
+msgid "Connectez-vous"
+msgstr "Sign in"
+
+msgid "pour exporter vos données."
+msgstr "to export your data."
+
 msgid "Retour aux services"
 msgstr "Back to services"
 
@@ -4189,6 +4381,17 @@ msgstr "No results"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "No request found with this ID. Please check and try again."
+
+#~ msgid ""
+#~ "Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
+#~ "Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
+#~ "ci-dessous pour créer une nouvelle entrée."
+#~ msgstr ""
+#~ "Edit the text shown on the site (titles, buttons, descriptions). Click Edit "
+#~ "on a row to modify it, or use the form below to create a new entry."
+
+#~ msgid "Modifié"
+#~ msgstr "Modified"
 
 #~ msgid "Pipeline"
 #~ msgstr "Pipeline"

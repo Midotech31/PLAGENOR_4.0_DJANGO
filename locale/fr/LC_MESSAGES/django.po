@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-27 00:34+0100\n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,6 +78,12 @@ msgstr ""
 msgid "Veuillez préciser le type d'organisation."
 msgstr ""
 
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+
 msgid "Profil mis à jour."
 msgstr ""
 
@@ -117,6 +123,21 @@ msgid "Les deux mots de passe ne correspondent pas."
 msgstr ""
 
 msgid "Votre mot de passe a été mis à jour avec succès."
+msgstr ""
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr ""
+
+msgid "La double authentification est déjà activée."
+msgstr ""
+
+msgid "Double authentification activée."
+msgstr ""
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr ""
+
+msgid "Double authentification désactivée."
 msgstr ""
 
 msgid "Formulaire IBTIKAR"
@@ -284,6 +305,46 @@ msgid ""
 "Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :"
 msgstr ""
 
+msgid "Réinitialisation du mot de passe"
+msgstr ""
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+
+msgid "Réinitialiser mon mot de passe"
+msgstr ""
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+
+msgid "L'équipe PLAGENOR"
+msgstr ""
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez simplement cet e-mail : votre mot de "
+"passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr ""
+
 msgid "Changement de mot de passe obligatoire"
 msgstr ""
 
@@ -319,6 +380,9 @@ msgstr ""
 msgid "Se souvenir de moi"
 msgstr ""
 
+msgid "Mot de passe oublié ?"
+msgstr ""
+
 msgid "ou"
 msgstr ""
 
@@ -332,6 +396,63 @@ msgid "Soumettre en tant qu'invité"
 msgstr ""
 
 msgid "Suivre une demande"
+msgstr ""
+
+msgid "Mot de passe réinitialisé"
+msgstr ""
+
+msgid "Mot de passe mis à jour"
+msgstr ""
+
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr ""
+
+msgid "Choisir un nouveau mot de passe"
+msgstr ""
+
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr ""
+
+msgid "Valider"
+msgstr ""
+
+msgid "Lien invalide"
+msgstr ""
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+
+msgid "Demander un nouveau lien"
+msgstr ""
+
+msgid "Lien envoyé"
+msgstr ""
+
+msgid "Vérifiez votre boîte mail"
+msgstr ""
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+
+msgid "Retour à la connexion"
+msgstr ""
+
+msgid "Réinitialiser le mot de passe"
+msgstr ""
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+
+msgid "Envoyer le lien"
 msgstr ""
 
 msgid "Mon Profil"
@@ -356,6 +477,30 @@ msgid "Techniques maîtrisées"
 msgstr ""
 
 msgid "Mettre à jour"
+msgstr ""
+
+msgid "Sécurité — Double authentification"
+msgstr ""
+
+msgid "Activée"
+msgstr ""
+
+msgid "Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr ""
+
+msgid "Désactiver la double authentification ?"
+msgstr ""
+
+msgid "Désactiver la 2FA"
+msgstr ""
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+
+msgid "Activer la 2FA"
 msgstr ""
 
 msgid "Inscription"
@@ -410,6 +555,47 @@ msgstr ""
 msgid "Vous avez déjà un compte ?"
 msgstr ""
 
+msgid "Activer la double authentification"
+msgstr ""
+
+msgid "Double authentification (2FA)"
+msgstr ""
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+
+msgid "QR code de configuration 2FA"
+msgstr ""
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr ""
+
+msgid "Code de vérification"
+msgstr ""
+
+msgid "Annuler"
+msgstr ""
+
+msgid "Vérification en deux étapes"
+msgstr ""
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr ""
+
+msgid "Vérifier"
+msgstr ""
+
+msgid "Aller au contenu principal"
+msgstr ""
+
+msgid "Navigation principale"
+msgstr ""
+
 msgid "Accueil"
 msgstr ""
 
@@ -438,6 +624,9 @@ msgid "Centre d'aide"
 msgstr ""
 
 msgid "Suivi de demande"
+msgstr ""
+
+msgid "Confidentialité"
 msgstr ""
 
 msgid "Administration"
@@ -830,9 +1019,6 @@ msgstr ""
 msgid "Notes..."
 msgstr ""
 
-msgid "Valider"
-msgstr ""
-
 msgid "Raison du renvoi..."
 msgstr ""
 
@@ -1066,9 +1252,6 @@ msgid "Date de RDV"
 msgstr ""
 
 msgid "RDV confirmé"
-msgstr ""
-
-msgid "Annuler"
 msgstr ""
 
 msgid "Réassigner à un autre analyste"
@@ -2258,6 +2441,15 @@ msgstr ""
 msgid "Réinitialiser / Reset Account"
 msgstr ""
 
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr ""
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr ""
+
+msgid "Reset 2FA"
+msgstr ""
+
 msgid "Analystes / Opérateurs"
 msgstr ""
 
@@ -2327,31 +2519,34 @@ msgstr ""
 msgid "Gestion du contenu"
 msgstr ""
 
+msgid "Nouvelle entrée"
+msgstr ""
+
 msgid ""
-"Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
-"Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
-"ci-dessous pour créer une nouvelle entrée."
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur "
+"le texte du gabarit."
 msgstr ""
 
 msgid "Clé"
 msgstr ""
 
-msgid "Langue"
-msgstr ""
-
-msgid "Valeur"
-msgstr ""
-
 msgid "Contenu existant"
 msgstr ""
 
-msgid "Filtrer par clé, langue, ou valeur..."
+msgid "clés"
 msgstr ""
 
-msgid "Modifié"
+msgid "Filtrer par clé ou texte…"
 msgstr ""
 
-msgid "Supprimer cette entrée ?"
+msgid "Français"
+msgstr ""
+
+msgid "Langues manquantes"
+msgstr ""
+
+msgid "Supprimer cette clé dans toutes les langues ?"
 msgstr ""
 
 msgid "Supprimer"
@@ -2485,6 +2680,18 @@ msgid "Requis"
 msgstr ""
 
 msgid "Aucun champ personnalisé."
+msgstr ""
+
+msgid "Annonces plateforme"
+msgstr ""
+
+msgid "Audience"
+msgstr ""
+
+msgid "Publier l'annonce"
+msgstr ""
+
+msgid "Supprimer cette annonce ?"
 msgstr ""
 
 msgid ""
@@ -2755,6 +2962,9 @@ msgstr ""
 msgid "Multiplicateur (×)"
 msgstr ""
 
+msgid "Valeur"
+msgstr ""
+
 msgid "Note condition (FR)"
 msgstr ""
 
@@ -2878,6 +3088,9 @@ msgid "Global (tous les services)"
 msgstr ""
 
 msgid "Position"
+msgstr ""
+
+msgid "Langue"
 msgstr ""
 
 msgid "Oui, supprimer"
@@ -3677,6 +3890,27 @@ msgstr ""
 
 msgctxt "help"
 msgid "Contactez-nous"
+msgstr ""
+
+msgid "Données collectées"
+msgstr ""
+
+msgid "Finalité"
+msgstr ""
+
+msgid "Conservation"
+msgstr ""
+
+msgid "Vos droits"
+msgstr ""
+
+msgid "Exporter mes données (JSON)"
+msgstr ""
+
+msgid "Connectez-vous"
+msgstr ""
+
+msgid "pour exporter vos données."
 msgstr ""
 
 msgid "Retour aux services"

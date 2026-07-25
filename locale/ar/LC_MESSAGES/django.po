@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-27 00:34+0100\n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,10 +35,9 @@ msgstr "الجامعة / المؤسسة"
 msgid "— Sélectionner —"
 msgstr "— اختر —"
 
-#, fuzzy
 #| msgid "Votre organisation"
 msgid "Type d'organisation"
-msgstr "مؤسستك"
+msgstr "نوع المؤسسة"
 
 msgid "Préciser (autre)"
 msgstr "تحديد (أخرى)"
@@ -78,6 +77,14 @@ msgstr "هذا البريد الإلكتروني مسجَّل مسبقاً"
 
 msgid "Veuillez préciser le type d'organisation."
 msgstr "يرجى تحديد نوع المؤسسة."
+
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+"تم قفل الحساب مؤقتًا بعد محاولات فاشلة. أعد المحاولة خلال %(minutes)d "
+"دقيقة/دقائق."
 
 msgid "Profil mis à jour."
 msgstr "تم تحديث الملف الشخصي."
@@ -119,6 +126,21 @@ msgstr "كلمتا المرور غير متطابقتين."
 
 msgid "Votre mot de passe a été mis à jour avec succès."
 msgstr "تم تحديث كلمة المرور بنجاح."
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr "رمز غير صالح أو منتهي الصلاحية. أعد المحاولة."
+
+msgid "La double authentification est déjà activée."
+msgstr "المصادقة الثنائية مفعّلة بالفعل."
+
+msgid "Double authentification activée."
+msgstr "تم تفعيل المصادقة الثنائية."
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr "رمز غير صالح. تحقّق من ساعة جهازك وأعد المحاولة."
+
+msgid "Double authentification désactivée."
+msgstr "تم تعطيل المصادقة الثنائية."
 
 msgid "Formulaire IBTIKAR"
 msgstr "نموذج IBTIKAR"
@@ -295,6 +317,59 @@ msgid ""
 ":"
 msgstr "إذا لم يعمل الزر، انسخ الرابط التالي والصقه في متصفحك:"
 
+#| msgid "Réinitialisation de votre compte"
+msgid "Réinitialisation du mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+"لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR. انقر على الزر أدناه "
+"لاختيار كلمة مرور جديدة."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Réinitialiser mon mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+"هذا الرابط صالح لمرة واحدة وينتهي قريبًا. إذا لم تكن أنت من طلب ذلك، تجاهل "
+"هذا البريد: ستبقى كلمة المرور دون تغيير."
+
+#| msgid "Centre d'aide PLAGENOR"
+msgid "L'équipe PLAGENOR"
+msgstr "فريق PLAGENOR"
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+"مرحبًا،\n"
+"\n"
+"لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR.\n"
+"\n"
+"انقر على الرابط أدناه لاختيار كلمة مرور جديدة:"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+"هذا الرابط صالح لمرة واحدة وينتهي قريبًا. إذا لم تكن أنت من طلب ذلك، تجاهل هذا البريد: ستبقى كلمة المرور دون تغيير.\n"
+"\n"
+"— فريق PLAGENOR"
+
+#| msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr "إعادة تعيين كلمة مرور PLAGENOR"
+
 msgid "Changement de mot de passe obligatoire"
 msgstr "تغيير كلمة المرور إلزامي"
 
@@ -330,6 +405,10 @@ msgstr "إظهار/إخفاء كلمة المرور"
 msgid "Se souvenir de moi"
 msgstr "تذكَّرني"
 
+#| msgid "Mot de passe"
+msgid "Mot de passe oublié ?"
+msgstr "هل نسيت كلمة المرور؟"
+
 msgid "ou"
 msgstr "أو"
 
@@ -345,6 +424,82 @@ msgstr "الإرسال كزائر"
 msgid "Suivre une demande"
 msgstr "تتبُّع طلب"
 
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe réinitialisé"
+msgstr "تمت إعادة تعيين كلمة المرور"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe mis à jour"
+msgstr "تم تحديث كلمة المرور"
+
+#| msgid ""
+#| "Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+#| " les instructions a été envoyé."
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr "تمت إعادة تعيين كلمة مرورك بنجاح. يمكنك الآن تسجيل الدخول."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Choisir un nouveau mot de passe"
+msgstr "اختر كلمة مرور جديدة"
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr "أدخل كلمة المرور الجديدة مرتين."
+
+msgid "Valider"
+msgstr "تأكيد"
+
+#| msgid "Lien invalide."
+msgid "Lien invalide"
+msgstr "رابط غير صالح"
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+"لم يعد رابط إعادة التعيين صالحًا (استُخدم أو انتهت صلاحيته). يرجى طلب رابط "
+"جديد."
+
+#| msgid "Demandes à valider"
+msgid "Demander un nouveau lien"
+msgstr "طلب رابط جديد"
+
+#| msgid "Devis Envoyé"
+msgid "Lien envoyé"
+msgstr "تم إرسال الرابط"
+
+#| msgid "Vérifiez votre messagerie"
+msgid "Vérifiez votre boîte mail"
+msgstr "تحقّق من بريدك الإلكتروني"
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+"إذا كان هناك حساب مطابق لهذا العنوان، فقد أُرسل بريد يحتوي على تعليمات إعادة"
+" التعيين. تحقّق من مجلد الرسائل غير المرغوب فيها."
+
+#| msgid "Retour à l'accueil"
+msgid "Retour à la connexion"
+msgstr "العودة إلى تسجيل الدخول"
+
+#| msgid "Réinitialiser le compte"
+msgid "Réinitialiser le mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+"أدخل عنوان بريدك الإلكتروني. إذا كان هناك حساب، ستتلقّى رابط إعادة التعيين."
+
+#| msgid "Envoyer au client"
+msgid "Envoyer le lien"
+msgstr "إرسال الرابط"
+
 msgid "Mon Profil"
 msgstr "ملفي الشخصي"
 
@@ -357,10 +512,9 @@ msgstr "الصورة الشخصية"
 msgid "Organisation / Université"
 msgstr "المؤسسة / الجامعة"
 
-#, fuzzy
 #| msgid "Note Générée"
 msgid "Langue préférée"
-msgstr "تم إصدار المذكرة"
+msgstr "اللغة المفضّلة"
 
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr "اتركه فارغًا لاستخدام اللغة التي يكتشفها متصفحك."
@@ -370,6 +524,37 @@ msgstr "التقنيات المُتقَنة"
 
 msgid "Mettre à jour"
 msgstr "تحديث"
+
+msgid "Sécurité — Double authentification"
+msgstr "الأمان — المصادقة الثنائية"
+
+#| msgid "Active"
+msgid "Activée"
+msgstr "مفعّلة"
+
+msgid ""
+"Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr "حسابك محمي برمز يُستخدم مرة واحدة عند كل تسجيل دخول."
+
+#| msgid "Désactiver cet utilisateur ?"
+msgid "Désactiver la double authentification ?"
+msgstr "تعطيل المصادقة الثنائية؟"
+
+#| msgid "Désactiver"
+msgid "Désactiver la 2FA"
+msgstr "تعطيل 2FA"
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+"أضِف طبقة أمان: سيُطلب رمز من 6 أرقام يولّده هاتفك عند تسجيل الدخول. موصى به"
+" لحسابات الموظفين."
+
+#| msgid "Activer"
+msgid "Activer la 2FA"
+msgstr "تفعيل 2FA"
 
 msgid "Inscription"
 msgstr "إنشاء حساب"
@@ -391,10 +576,9 @@ msgstr "عميل خارجي"
 msgid "Identifiant souhaité"
 msgstr "اسم المستخدم المرغوب"
 
-#, fuzzy
 #| msgid "Votre organisation"
 msgid "Précisez le type d'organisation"
-msgstr "مؤسستك"
+msgstr "حدّد نوع المؤسسة"
 
 msgid "Sélectionner"
 msgstr "اختر"
@@ -416,16 +600,62 @@ msgstr "اختياري"
 msgid "Wilaya"
 msgstr "الولاية"
 
-#, fuzzy
 #| msgid "Sélectionner"
 msgid "Sélectionnez votre wilaya"
-msgstr "اختر"
+msgstr "اختر ولايتك"
 
 msgid "Sexe"
 msgstr "الجنس"
 
 msgid "Vous avez déjà un compte ?"
 msgstr "هل لديك حساب بالفعل؟"
+
+#| msgid "Aucune notification"
+msgid "Activer la double authentification"
+msgstr "تفعيل المصادقة الثنائية"
+
+msgid "Double authentification (2FA)"
+msgstr "المصادقة الثنائية (2FA)"
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+"امسح رمز QR بتطبيق مصادقة (Google Authenticator أو Authy أو Microsoft "
+"Authenticator…)، ثم أدخل الرمز المكوّن من 6 أرقام للتأكيد."
+
+msgid "QR code de configuration 2FA"
+msgstr "رمز QR لإعداد المصادقة الثنائية"
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr "المفتاح اليدوي (إذا تعذّر المسح):"
+
+#| msgid "Modèle de tarification"
+msgid "Code de vérification"
+msgstr "رمز التحقق"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+#| msgid "Vérification de votre adresse email"
+msgid "Vérification en deux étapes"
+msgstr "التحقق بخطوتين"
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr "أدخل الرمز المكوّن من 6 أرقام الظاهر في تطبيق المصادقة."
+
+msgid "Vérifier"
+msgstr "تحقّق"
+
+msgid "Aller au contenu principal"
+msgstr "الانتقال إلى المحتوى الرئيسي"
+
+#| msgid "Validation Finance"
+msgid "Navigation principale"
+msgstr "التنقّل الرئيسي"
 
 msgid "Accueil"
 msgstr "الرئيسية"
@@ -451,13 +681,16 @@ msgstr "لوحة التحكم"
 msgid "Liens rapides"
 msgstr "روابط سريعة"
 
-#, fuzzy
 #| msgid "Entrées d'audit"
 msgid "Centre d'aide"
-msgstr "إدخالات التدقيق"
+msgstr "مركز المساعدة"
 
 msgid "Suivi de demande"
 msgstr "تتبُّع الطلب"
+
+#| msgid "Disponibilité"
+msgid "Confidentialité"
+msgstr "الخصوصية"
 
 msgid "Administration"
 msgstr "الإدارة"
@@ -850,9 +1083,6 @@ msgstr "تقارير بانتظار المراجعة"
 msgid "Notes..."
 msgstr "ملاحظات..."
 
-msgid "Valider"
-msgstr "تأكيد"
-
 msgid "Raison du renvoi..."
 msgstr "سبب الإرجاع..."
 
@@ -1058,15 +1288,13 @@ msgstr "السعر المُعتمَد من المسؤول"
 msgid "Aucune information financière."
 msgstr "لا توجد معلومات مالية."
 
-#, fuzzy
 #| msgid "Télécharger Note"
 msgid "Télécharger le devis"
-msgstr "تنزيل المذكرة"
+msgstr "تنزيل عرض السعر"
 
-#, fuzzy
 #| msgid "Factures"
 msgid "Facture"
-msgstr "الفواتير"
+msgstr "فاتورة"
 
 msgid "Détail du devis"
 msgstr "تفاصيل عرض الأسعار"
@@ -1092,9 +1320,6 @@ msgstr "تاريخ الموعد"
 msgid "RDV confirmé"
 msgstr "تم تأكيد الموعد"
 
-msgid "Annuler"
-msgstr "إلغاء"
-
 msgid "Réassigner à un autre analyste"
 msgstr "إعادة الإسناد إلى محلل آخر"
 
@@ -1105,10 +1330,9 @@ msgstr ""
 "استخدم هذا الخيار في حال تأخّر المحلل الحالي أو غيابه أو زيادة أعبائه. سيتم "
 "إشعار المحلل السابق والجديد معًا."
 
-#, fuzzy
 #| msgid "Espace analyste"
 msgid "Nouvel analyste"
-msgstr "فضاء المحلِّل"
+msgstr "محلل جديد"
 
 msgid "Choisir un membre…"
 msgstr "اختر عضوًا…"
@@ -1116,15 +1340,13 @@ msgstr "اختر عضوًا…"
 msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
 msgstr "مثال: تأخّر المحلل الحالي بسبب ملفات أخرى ذات أولوية"
 
-#, fuzzy
 #| msgid "Cette action est enregistrée dans le journal d'audit."
 msgid "Cette raison est consignée dans l'historique de la demande."
-msgstr "يُسجَّل هذا الإجراء في سجل التدقيق."
+msgstr "يُسجَّل هذا السبب في سجل الطلب."
 
-#, fuzzy
 #| msgid "Confirmer la réinitialisation"
 msgid "Confirmer la réassignation"
-msgstr "تأكيد إعادة التعيين"
+msgstr "تأكيد إعادة الإسناد"
 
 msgid "Non encore assigné."
 msgstr "لم يُسنَد بعد."
@@ -1137,10 +1359,9 @@ msgstr ""
 "عرض سعر داخلي لـ IBTIKAR: تبرير مفصّل للسعر (نوع التحليل، الوضع، السعر "
 "الأساسي، المُعامِل، عدد العينات، الإجمالي). يُشارَك يدويًا مع مقدّم الطلب."
 
-#, fuzzy
 #| msgid "Télécharger Note"
 msgid "Télécharger la note (.docx)"
-msgstr "تنزيل المذكرة"
+msgstr "تنزيل المذكّرة (.docx)"
 
 msgid ""
 "Accès limité : administrateurs des opérations, analyste assigné, "
@@ -1157,10 +1378,9 @@ msgstr ""
 "الأعضاء المسموح لهم بالاطلاع على هذا الطلب للقراءة فقط (مفيد في حال تأخّر "
 "المحلل المُسنَد أو غيابه)."
 
-#, fuzzy
 #| msgid "Restaurer une sauvegarde"
 msgid "Retirer ce suiveur"
-msgstr "استعادة نسخة احتياطية"
+msgstr "إزالة هذا المتابع"
 
 msgid "Retirer"
 msgstr "إزالة"
@@ -1168,10 +1388,9 @@ msgstr "إزالة"
 msgid "Aucun observateur pour l'instant."
 msgstr "لا يوجد مراقبون حتى الآن."
 
-#, fuzzy
 #| msgid "Ajouter un service"
 msgid "Ajouter un observateur"
-msgstr "إضافة خدمة"
+msgstr "إضافة مراقب"
 
 msgid "Ajouter"
 msgstr "إضافة"
@@ -1297,10 +1516,9 @@ msgstr "المُسنَدة"
 msgid "Productivité %%"
 msgstr "الإنتاجية %%"
 
-#, fuzzy
 #| msgid "Opérations"
 msgid "Observations"
-msgstr "العمليات"
+msgstr "الملاحظات"
 
 msgid "Historique"
 msgstr "السجل"
@@ -1382,28 +1600,24 @@ msgstr "الرد"
 msgid "Aucun travail en cours."
 msgstr "لا توجد أعمال جارية."
 
-#, fuzzy
 #| msgid "Demandes à assigner"
 msgid "Demandes que vous suivez"
-msgstr "طلبات بانتظار الإسناد"
+msgstr "الطلبات التي تتابعها"
 
 msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
 msgstr "وصول للقراءة فقط. لا يمكنك التصرّف في هذه الطلبات."
 
-#, fuzzy
 #| msgid "Profil mis à jour."
 msgid "Dernière mise à jour"
-msgstr "تم تحديث الملف الشخصي."
+msgstr "آخر تحديث"
 
-#, fuzzy
 #| msgid "Toutes les demandes"
 msgid "Consulter cette demande"
-msgstr "جميع الطلبات"
+msgstr "عرض هذا الطلب"
 
-#, fuzzy
 #| msgid "Aucune demande en cours de traitement."
 msgid "Aucune demande à observer pour l'instant."
-msgstr "لا توجد طلبات قيد المعالجة."
+msgstr "لا يوجد طلب للمراقبة حاليًا."
 
 msgid ""
 "L'administrateur des opérations peut vous ajouter en suivi sur une demande "
@@ -1679,15 +1893,13 @@ msgstr "قبل الضريبة"
 msgid "TTC"
 msgstr "شامل الضريبة"
 
-#, fuzzy
 #| msgid "Documents"
 msgid "Document"
-msgstr "الوثائق"
+msgstr "مستند"
 
-#, fuzzy
 #| msgid "Générer la facture"
 msgid "Télécharger la facture"
-msgstr "إصدار الفاتورة"
+msgstr "تنزيل الفاتورة"
 
 msgid "Aucune facture."
 msgstr "لا توجد فواتير."
@@ -1695,10 +1907,9 @@ msgstr "لا توجد فواتير."
 msgid "Aucune archive."
 msgstr "لا يوجد أرشيف."
 
-#, fuzzy
 #| msgid "Télécharger le Bon de Commande"
 msgid "Télécharger le devis officiel (.docx)"
-msgstr "رفع أمر الشراء"
+msgstr "تنزيل عرض السعر الرسمي (.docx)"
 
 msgid "Quantité"
 msgstr "الكمية"
@@ -1845,7 +2056,6 @@ msgid ""
 "disponibles."
 msgstr "ستتوفر قريباً الأدوات والإحصاءات الخاصة بدورك."
 
-#, fuzzy
 #| msgid "Continuer vers l'évaluation"
 msgid "Continuer vers l\\'évaluation"
 msgstr "المتابعة إلى التقييم"
@@ -1960,10 +2170,9 @@ msgstr "مُقدِّم طلب IBTIKAR"
 msgid "Espace IBTIKAR"
 msgstr "فضاء IBTIKAR"
 
-#, fuzzy
 #| msgid "Saisissez votre code IBTIKAR"
 msgid "Déclarez votre solde IBTIKAR"
-msgstr "أدخل رمز IBTIKAR"
+msgstr "أعلن عن رصيد IBTIKAR الخاص بك"
 
 #, python-format
 msgid ""
@@ -1977,26 +2186,24 @@ msgstr ""
 " %(cap)s دج). سيُستخدَم هذا المبلغ كحد أقصى لتقدير طلبك والتحقق منه. يمكنك "
 "تعديله قبل كل طلب جديد ليعكس الحالة الفعلية لحساب DGRSDT الخاص بك."
 
-#, fuzzy
 #| msgid "Solde IBTIKAR déclaré (DA)"
 msgid "Solde IBTIKAR résiduel (DA)"
-msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
+msgstr "رصيد IBTIKAR المتبقي (دج)"
 
 msgid "Valider mon solde"
 msgstr "تأكيد رصيدي"
 
-#, fuzzy, python-format
+#, python-format
 #| msgid "Mis à jour le"
 msgid "Mis à jour le %(dt)s."
-msgstr "تاريخ التحديث"
+msgstr "تم التحديث في %(dt)s."
 
 msgid "Vous pouvez ajuster ce montant à tout moment."
 msgstr "يمكنك تعديل هذا المبلغ في أي وقت."
 
-#, fuzzy
 #| msgid "Solde déclaré"
 msgid "Solde déclaré disponible"
-msgstr "الرصيد المُصرَّح به"
+msgstr "الرصيد المعلن المتاح"
 
 msgid ""
 "Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
@@ -2006,31 +2213,26 @@ msgstr ""
 "تذكير: تحقّق من الرصيد المعروض في حساب IBTIKAR (DGRSDT) قبل تقديم طلب جديد. "
 "قد تستهلك منصّات أخرى ميزانية IBTIKAR — حدِّث هذا المبلغ أدناه عند الحاجة."
 
-#, fuzzy
 #| msgid "Mettre à jour"
 msgid "Mettre à jour mon solde"
-msgstr "تحديث"
+msgstr "تحديث رصيدي"
 
-#, fuzzy
 #| msgid "Budget IBTIKAR (DA)"
 msgid "Nouveau solde IBTIKAR (DA)"
-msgstr "ميزانية IBTIKAR (دج)"
+msgstr "رصيد IBTIKAR الجديد (دج)"
 
-#, fuzzy, python-format
+#, python-format
 #| msgid ""
 #| "Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
-msgstr ""
-"ميزانية افتراضية تؤطّرها المديرية العامة للبحث العلمي (DGRSDT) — الحد الفردي"
-" %(cap)s دج / سنة."
+msgstr "الحد الأقصى السنوي المحدّد من DGRSDT: %(cap)s دج."
 
 msgid "Enregistrer"
 msgstr "حفظ"
 
-#, fuzzy
 #| msgid "Solde IBTIKAR déclaré"
 msgid "Solde IBTIKAR non déclaré"
-msgstr "الرصيد المُصرَّح به في IBTIKAR"
+msgstr "رصيد IBTIKAR غير معلن"
 
 msgid ""
 "Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
@@ -2052,10 +2254,9 @@ msgstr ""
 "الحد الأقصى لهذا الطلب: <strong>%(rem)s دج</strong> (رصيد IBTIKAR المُعلَن)."
 " حدِّث هذا الرصيد في البطاقة أعلاه إذا تحقّقت من حساب DGRSDT الخاص بك."
 
-#, fuzzy
 #| msgid "dépasse votre solde déclaré"
 msgid "supérieur à votre solde déclaré"
-msgstr "تتجاوز الرصيد المُصرَّح به"
+msgstr "أعلى من رصيدك المعلن"
 
 msgid "RDV"
 msgstr "الموعد"
@@ -2075,28 +2276,24 @@ msgstr "بانتظار الإسناد."
 msgid "Statistiques"
 msgstr "الإحصاءات"
 
-#, fuzzy
 #| msgid "Statistiques"
 msgid "Statistiques & métriques"
-msgstr "الإحصاءات"
+msgstr "الإحصائيات والمؤشرات"
 
 msgid "Vue institutionnelle complète"
 msgstr "عرض مؤسساتي كامل"
 
-#, fuzzy
 #| msgid "Historique financier"
 msgid "Vue financière"
-msgstr "السجل المالي"
+msgstr "العرض المالي"
 
-#, fuzzy
 #| msgid "Assignation"
 msgid "Mes assignations"
-msgstr "الإسناد"
+msgstr "إسناداتي"
 
-#, fuzzy
 #| msgid "Productivité"
 msgid "Mon activité"
-msgstr "الإنتاجية"
+msgstr "نشاطي"
 
 msgid "Du"
 msgstr "من"
@@ -2107,20 +2304,17 @@ msgstr "إلى"
 msgid "Tous"
 msgstr "الكل"
 
-#, fuzzy
 #| msgid "Ajouter"
 msgid "Toutes"
-msgstr "إضافة"
+msgstr "الكل"
 
-#, fuzzy
 #| msgid "Paiement"
 msgid "Établissement"
-msgstr "الدفع"
+msgstr "المؤسسة"
 
-#, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Cadre d'analyse"
-msgstr "تقرير التحليل"
+msgstr "إطار التحليل"
 
 msgid "Appliquer"
 msgstr "تطبيق"
@@ -2152,61 +2346,51 @@ msgstr "شهرية"
 msgid "Trimestrielle"
 msgstr "فصلية"
 
-#, fuzzy
 #| msgid "Annuler"
 msgid "Annuelle"
-msgstr "إلغاء"
+msgstr "سنوية"
 
 msgid "Dimensions à inclure"
 msgstr "الأبعاد المراد تضمينها"
 
-#, fuzzy
 #| msgid "Télécharger le rapport"
 msgid "Télécharger le bilan Excel"
-msgstr "تنزيل التقرير"
+msgstr "تنزيل التقرير (Excel)"
 
-#, fuzzy
 #| msgid "Retour aux opérations"
 msgid "Taux complétion"
-msgstr "العودة إلى العمليات"
+msgstr "معدل الإنجاز"
 
-#, fuzzy
 #| msgid "Demandeur IBTIKAR"
 msgid "Revenu virtuel IBTIKAR"
-msgstr "مُقدِّم طلب IBTIKAR"
+msgstr "الإيراد الافتراضي IBTIKAR"
 
-#, fuzzy
 #| msgid "Revenue GENOCLAB (DA)"
 msgid "Revenu GENOCLAB"
-msgstr "إيرادات GENOCLAB (دج)"
+msgstr "إيراد GENOCLAB"
 
-#, fuzzy
 #| msgid "Ajouter service"
 msgid "Par service"
-msgstr "إضافة خدمة"
+msgstr "حسب الخدمة"
 
-#, fuzzy
 #| msgid "Aucune demande"
 msgid "Aucune donnée"
-msgstr "لا توجد طلبات"
+msgstr "لا توجد بيانات"
 
-#, fuzzy
 #| msgid "Statut"
 msgid "Par statut"
-msgstr "الحالة"
+msgstr "حسب الحالة"
 
 msgid "Par wilaya"
 msgstr "حسب الولاية"
 
-#, fuzzy
 #| msgid "Paiement"
 msgid "Par établissement"
-msgstr "الدفع"
+msgstr "حسب المؤسسة"
 
-#, fuzzy
 #| msgid "Rapport d'analyse"
 msgid "Par cadre d'analyse"
-msgstr "تقرير التحليل"
+msgstr "حسب إطار التحليل"
 
 msgid "Cadre"
 msgstr "الإطار"
@@ -2214,10 +2398,9 @@ msgstr "الإطار"
 msgid "Par sexe"
 msgstr "حسب الجنس"
 
-#, fuzzy
 #| msgid "Archives mensuelles"
 msgid "Tendance mensuelle"
-msgstr "الأرشيف الشهري"
+msgstr "الاتجاه الشهري"
 
 msgid "Journal d'audit"
 msgstr "سجل التدقيق"
@@ -2399,6 +2582,15 @@ msgstr "تفعيل"
 msgid "Réinitialiser / Reset Account"
 msgstr "إعادة تعيين / Reset Account"
 
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr "إعادة تعيين المصادقة الثنائية (فقدان الهاتف)"
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr "إعادة تعيين المصادقة الثنائية لهذا المستخدم؟"
+
+msgid "Reset 2FA"
+msgstr "إعادة تعيين 2FA"
+
 msgid "Analystes / Opérateurs"
 msgstr "المحلِّلون / المُشغِّلون"
 
@@ -2468,36 +2660,40 @@ msgstr "لا توجد تقنيات."
 msgid "Gestion du contenu"
 msgstr "إدارة المحتوى"
 
+#| msgid "Nouvelle demande"
+msgid "Nouvelle entrée"
+msgstr "إدخال جديد"
+
 msgid ""
-"Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
-"Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
-"ci-dessous pour créer une nouvelle entrée."
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur"
+" le texte du gabarit."
 msgstr ""
-"عدّل النص المعروض على الموقع (العناوين، الأزرار، الأوصاف). انقر على «تعديل» "
-"في أي سطر لتحريره، أو استخدم النموذج أدناه لإنشاء مدخل جديد."
+"عدّل النص المعروض في الموقع باللغات الثلاث (الفرنسية، الإنجليزية، العربية). "
+"القيمة الفارغة ترجع إلى اللغة الافتراضية ثم إلى نص القالب."
 
 msgid "Clé"
 msgstr "المفتاح"
 
-msgid "Langue"
-msgstr "اللغة"
-
-msgid "Valeur"
-msgstr "القيمة"
-
-#, fuzzy
 #| msgid "Techniques existantes"
 msgid "Contenu existant"
-msgstr "التقنيات الموجودة"
+msgstr "المحتوى الحالي"
 
-msgid "Filtrer par clé, langue, ou valeur..."
-msgstr "تصفية حسب المفتاح أو اللغة أو القيمة..."
+msgid "clés"
+msgstr "مفاتيح"
 
-msgid "Modifié"
-msgstr "آخر تعديل"
+#| msgid "Filtrer par clé, langue, ou valeur..."
+msgid "Filtrer par clé ou texte…"
+msgstr "تصفية حسب المفتاح أو النص…"
 
-msgid "Supprimer cette entrée ?"
-msgstr "هل تريد حذف هذا الإدخال؟"
+msgid "Français"
+msgstr "الفرنسية"
+
+msgid "Langues manquantes"
+msgstr "اللغات الناقصة"
+
+msgid "Supprimer cette clé dans toutes les langues ?"
+msgstr "حذف هذا المفتاح بجميع اللغات؟"
 
 msgid "Supprimer"
 msgstr "حذف"
@@ -2592,10 +2788,9 @@ msgstr "آخر تحديث"
 msgid "Aucun rapport disponible."
 msgstr "لا توجد تقارير متاحة."
 
-#, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Blocs de contenu personnalisés"
-msgstr "الحقول المخصَّصة"
+msgstr "كتل محتوى مخصّصة"
 
 msgid ""
 "Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
@@ -2607,20 +2802,17 @@ msgstr ""
 "المُولَّدة — بشكل عام أو لخدمة محددة. يتم حلّ العناصر النائبة {{FULL_NAME}} "
 "و{{DISPLAY_ID}} و{{DATE}} وغيرها تلقائيًا."
 
-#, fuzzy
 #| msgid "Gestion du contenu"
 msgid "Gérer les blocs de contenu"
-msgstr "إدارة المحتوى"
+msgstr "إدارة كتل المحتوى"
 
-#, fuzzy
 #| msgid "Champs personnalisés"
 msgid "Modèles DOCX personnalisés"
-msgstr "الحقول المخصَّصة"
+msgstr "قوالب DOCX مخصّصة"
 
-#, fuzzy
 #| msgid "Templates DOCX"
 msgid "Templates DOCX globaux"
-msgstr "قوالب DOCX"
+msgstr "قوالب DOCX عامة"
 
 msgid ""
 "Mettez à jour les templates DOCX utilisés pour la génération automatique des"
@@ -2646,6 +2838,21 @@ msgstr "إلزامي"
 
 msgid "Aucun champ personnalisé."
 msgstr "لا توجد حقول مخصَّصة."
+
+#| msgid "Informations plateforme"
+msgid "Annonces plateforme"
+msgstr "إعلانات المنصة"
+
+#| msgid "Audit"
+msgid "Audience"
+msgstr "الجمهور"
+
+msgid "Publier l'annonce"
+msgstr "نشر الإعلان"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer cette annonce ?"
+msgstr "حذف هذا الإعلان؟"
 
 msgid ""
 "Consultez l'historique complet de toutes les transitions, actions et "
@@ -2808,7 +3015,6 @@ msgstr "تعديل الخدمة"
 msgid "Modifier le service"
 msgstr "تعديل الخدمة"
 
-#, fuzzy
 #| msgid "Prix IBTIKAR (DA)"
 msgid "Prix IBTIKAR (DZD)"
 msgstr "سعر IBTIKAR (دج)"
@@ -2818,7 +3024,6 @@ msgid ""
 "ci-dessous)"
 msgstr "سعر إجمالي (يُستخدَم إذا لم تُحدَّد أي قاعدة تسعير مفصّلة أدناه)"
 
-#, fuzzy
 #| msgid "Prix GENOCLAB (DA)"
 msgid "Prix GENOCLAB (DZD)"
 msgstr "سعر GENOCLAB (دج)"
@@ -2826,10 +3031,9 @@ msgstr "سعر GENOCLAB (دج)"
 msgid "Image actuelle"
 msgstr "الصورة الحالية"
 
-#, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Prix de base & multiplicateurs"
-msgstr "أحدث المستخدمين"
+msgstr "السعر الأساسي والمُعامِلات"
 
 msgid ""
 "Formule : <strong>Prix de base × Multiplicateur × Nombre "
@@ -2846,15 +3050,13 @@ msgid ""
 "base."
 msgstr "القيم الافتراضية من YAML معروضة — أول حفظ سينسخها إلى قاعدة البيانات."
 
-#, fuzzy
 #| msgid "non pathogène"
 msgid "Prix non pathogène (DA)"
-msgstr "غير مُمرِض"
+msgstr "سعر غير ممرض (دج)"
 
-#, fuzzy
 #| msgid "pathogène"
 msgid "Prix pathogène (DA)"
-msgstr "مُمرِض"
+msgstr "سعر ممرض (دج)"
 
 msgid "idem si vide"
 msgstr "نفسه إذا كان فارغًا"
@@ -2862,36 +3064,31 @@ msgstr "نفسه إذا كان فارغًا"
 msgid "Paramètre porteur du multiplicateur"
 msgstr "الحقل الذي يحمل المُعامِل"
 
-#, fuzzy
 #| msgid "Derniers utilisateurs"
 msgid "Table de multiplicateurs"
-msgstr "أحدث المستخدمين"
+msgstr "جدول المُعامِلات"
 
-#, fuzzy
 #| msgid "Ajouter une ligne"
 msgid "Ajouter une option"
-msgstr "إضافة بند"
+msgstr "إضافة خيار"
 
 msgid "ex. Simple, Duplicate, Triplicate"
 msgstr "مثال: Simple، Duplicate، Triplicate"
 
-#, fuzzy
 #| msgid "Aucun utilisateur récent."
 msgid "Aucun multiplicateur défini (×1 partout)."
-msgstr "لا يوجد مستخدمون مؤخراً."
+msgstr "لا يوجد مُعامِل محدّد (×1 في كل الحالات)."
 
 msgid "ex. Simple, Duplicate"
 msgstr "مثال: Simple، Duplicate"
 
-#, fuzzy
 #| msgid "Configuration des formulaires par service"
 msgid "Configurations tarifaires détaillées"
-msgstr "تكوين النماذج حسب الخدمة"
+msgstr "إعدادات التسعير المفصّلة"
 
-#, fuzzy
 #| msgid "Ajouter un service"
 msgid "Ajouter un tarif"
-msgstr "إضافة خدمة"
+msgstr "إضافة تعريفة"
 
 msgid ""
 "Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
@@ -2912,20 +3109,17 @@ msgstr "الحقول المخصَّصة للنموذج"
 msgid "Ajouter un champ"
 msgstr "إضافة حقل"
 
-#, fuzzy
 #| msgid "Factures"
 msgid "Nature"
-msgstr "الفواتير"
+msgstr "الطبيعة"
 
-#, fuzzy
 #| msgid "Description"
 msgid "Question"
-msgstr "الوصف"
+msgstr "سؤال"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "Colonne échantillon"
-msgstr "لكل عيِّنة"
+msgstr "عمود العيّنة"
 
 msgid "Texte"
 msgstr "نص"
@@ -2945,10 +3139,9 @@ msgstr "التسعير الشرطي ومنطق العرض"
 msgid "Ce champ modifie le prix"
 msgstr "هذا الحقل يؤثّر على السعر"
 
-#, fuzzy
 #| msgid "Type de document"
 msgid "Type de modificateur"
-msgstr "نوع الوثيقة"
+msgstr "نوع المُعدِّل"
 
 msgid "Surcharge (+)"
 msgstr "رسم إضافي (+)"
@@ -2956,10 +3149,12 @@ msgstr "رسم إضافي (+)"
 msgid "Forfait (=)"
 msgstr "سعر ثابت (=)"
 
-#, fuzzy
 #| msgid "Utilisateur"
 msgid "Multiplicateur (×)"
-msgstr "المستخدم"
+msgstr "المُعامِل (×)"
+
+msgid "Valeur"
+msgstr "القيمة"
 
 msgid "Note condition (FR)"
 msgstr "ملاحظة الشرط (FR)"
@@ -2986,10 +3181,9 @@ msgstr ""
 msgid "Enregistrer toutes les modifications"
 msgstr "حفظ كل التعديلات"
 
-#, fuzzy
 #| msgid "Nom du laboratoire"
 msgid "Nom du tarif"
-msgstr "اسم المختبر"
+msgstr "اسم التعريفة"
 
 msgid "ex : Prix de base, Majoration urgence, Remise volume"
 msgstr "مثال: السعر الأساسي، رسم الاستعجال، خصم الكمية"
@@ -2997,10 +3191,9 @@ msgstr "مثال: السعر الأساسي، رسم الاستعجال، خصم
 msgid "Prix de base"
 msgstr "السعر الأساسي"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "Par échantillon"
-msgstr "لكل عيِّنة"
+msgstr "لكل عيّنة"
 
 msgid "Par paramètre"
 msgstr "حسب الحقل"
@@ -3020,10 +3213,9 @@ msgstr "المبلغ (دج)"
 msgid "Unité"
 msgstr "الوحدة"
 
-#, fuzzy
 #| msgid "par échantillon"
 msgid "forfait, par échantillon"
-msgstr "لكل عيِّنة"
+msgstr "سعر ثابت، لكل عيّنة"
 
 msgid "Priorité"
 msgstr "الأولوية"
@@ -3037,46 +3229,39 @@ msgstr "الكمية الدنيا"
 msgid "Qté max"
 msgstr "الكمية القصوى"
 
-#, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant min applicable"
-msgstr "المبلغ المستحَق"
+msgstr "الحد الأدنى للمبلغ"
 
-#, fuzzy
 #| msgid "Montant à payer"
 msgid "Montant max applicable"
-msgstr "المبلغ المستحَق"
+msgstr "الحد الأقصى للمبلغ"
 
-#, fuzzy
 #| msgid "Description"
 msgid "Description (optionnel)"
-msgstr "الوصف"
+msgstr "الوصف (اختياري)"
 
 msgid "ex : Tarif appliqué pour les analyses urgentes"
 msgstr "مثال: التعريفة المطبَّقة على التحاليل المستعجلة"
 
-#, fuzzy
 #| msgid "Tarification"
 msgid "Tarif actif"
-msgstr "التسعير"
+msgstr "تعريفة نشطة"
 
-#, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le tarif"
-msgstr "تعديل الخدمة"
+msgstr "تعديل التعريفة"
 
-#, fuzzy
 #| msgid "Changement de mot de passe obligatoire"
 msgid "Le nom du tarif est obligatoire."
-msgstr "تغيير كلمة المرور إلزامي"
+msgstr "اسم التعريفة إلزامي."
 
 msgid "Erreur"
 msgstr "خطأ"
 
-#, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce tarif ?"
-msgstr "هل تريد حذف هذا الإدخال؟"
+msgstr "حذف هذه التعريفة؟"
 
 msgid "Modifier utilisateur"
 msgstr "تعديل المستخدم"
@@ -3093,55 +3278,48 @@ msgstr "المستوى الدراسي"
 msgid "laisser vide pour ne pas changer"
 msgstr "اتركه فارغاً للإبقاء عليه كما هو"
 
-#, fuzzy
 #| msgid "Supprimer le Modèle"
 msgid "Supprimer le bloc"
-msgstr "حذف القالب"
+msgstr "حذف الكتلة"
 
-#, fuzzy
 #| msgid "Supprimer cette entrée ?"
 msgid "Supprimer ce bloc ?"
-msgstr "هل تريد حذف هذا الإدخال؟"
+msgstr "حذف هذه الكتلة؟"
 
-#, fuzzy
 #| msgid "Services existants"
 msgid "Services concernés"
-msgstr "الخدمات الموجودة"
+msgstr "الخدمات المعنية"
 
-#, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous les services)"
-msgstr "جميع الخدمات"
+msgstr "عام (كل الخدمات)"
 
-#, fuzzy
 #| msgid "Inscription"
 msgid "Position"
-msgstr "إنشاء حساب"
+msgstr "الموضع"
 
-#, fuzzy
+msgid "Langue"
+msgstr "اللغة"
+
 #| msgid "Supprimer"
 msgid "Oui, supprimer"
-msgstr "حذف"
+msgstr "نعم، احذف"
 
-#, fuzzy
 #| msgid "Modifier"
 msgid "Modifier bloc"
-msgstr "تعديل"
+msgstr "تعديل الكتلة"
 
-#, fuzzy
 #| msgid "Nouveau modèle"
 msgid "Nouveau bloc"
-msgstr "قالب جديد"
+msgstr "كتلة جديدة"
 
-#, fuzzy
 #| msgid "Modifier le service"
 msgid "Modifier le bloc"
-msgstr "تعديل الخدمة"
+msgstr "تعديل الكتلة"
 
-#, fuzzy
 #| msgid "Nouveau mot de passe"
 msgid "Nouveau bloc de contenu"
-msgstr "كلمة المرور الجديدة"
+msgstr "كتلة محتوى جديدة"
 
 msgid ""
 "Le contenu de ce bloc sera injecté dans le document généré à la position "
@@ -3161,10 +3339,9 @@ msgstr ""
 msgid "Plus bas = inséré en premier"
 msgstr "الأدنى = يُدرَج أولًا"
 
-#, fuzzy
 #| msgid "Commentaire (optionnel)..."
 msgid "Titre (optionnel)"
-msgstr "تعليق (اختياري)..."
+msgstr "العنوان (اختياري)"
 
 msgid "Affiché en gras au-dessus du texte"
 msgstr "يُعرَض بخط عريض فوق النص"
@@ -3181,15 +3358,13 @@ msgstr ""
 "نصيحة: تُحلّ العناصر النائبة مثل {{FULL_NAME}} و{{DISPLAY_ID}} "
 "و{{SERVICE_NAME}} و{{DATE}} عند التوليد."
 
-#, fuzzy
 #| msgid "Modifier contenu"
 msgid "Blocs de contenu"
-msgstr "تعديل المحتوى"
+msgstr "كتل المحتوى"
 
-#, fuzzy
 #| msgid "Placeholders documentés"
 msgid "Blocs de contenu des documents"
-msgstr "العناصر النائبة الموثَّقة"
+msgstr "كتل محتوى المستندات"
 
 msgid ""
 "Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
@@ -3198,15 +3373,13 @@ msgstr ""
 "أضف أو عدّل الفقرات المُدرَجة في الوثائق المُولَّدة (استمارة IBTIKAR، مذكرة "
 "المنصة، عرض السعر، استمارة الاستلام)."
 
-#, fuzzy
 #| msgid "Modèle de"
 msgid "Modèles DOCX"
-msgstr "قالب لـ"
+msgstr "قوالب DOCX"
 
-#, fuzzy
 #| msgid "Tous les services"
 msgid "Global (tous services)"
-msgstr "جميع الخدمات"
+msgstr "عام (كل الخدمات)"
 
 msgid "Aperçu"
 msgstr "معاينة"
@@ -3405,24 +3578,21 @@ msgstr "واصل على هذا المنوال!"
 msgid "Rendez-vous proposé — en attente de votre confirmation"
 msgstr "موعد مقترح — في انتظار تأكيدك"
 
-#, fuzzy
 #| msgid "Rendez-vous proposé"
 msgid "Rendez-vous confirmé"
-msgstr "تم اقتراح موعد"
+msgstr "تم تأكيد الموعد"
 
 #, python-format
 msgid "Vous avez proposé une date alternative : %(alt)s."
 msgstr "لقد اقترحت تاريخًا بديلًا: %(alt)s."
 
-#, fuzzy
 #| msgid "Confirmer le refus"
 msgid "Confirmer ce rendez-vous"
-msgstr "تأكيد الرفض"
+msgstr "تأكيد هذا الموعد"
 
-#, fuzzy
 #| msgid "Commentaire (optionnel)..."
 msgid "Note (optionnelle)"
-msgstr "تعليق (اختياري)..."
+msgstr "ملاحظة (اختيارية)"
 
 msgid "Votre demande a été acceptée"
 msgstr "تم قبول طلبك"
@@ -3577,10 +3747,9 @@ msgid ""
 "de suivi."
 msgstr "أرسل طلب تحليل دون إنشاء حساب. ستتلقى رمز تتبُّع."
 
-#, fuzzy
 #| msgid "Créer un compte"
 msgid "Conseil : créez un compte gratuit"
-msgstr "إنشاء حساب"
+msgstr "نصيحة: أنشئ حسابًا مجانيًا"
 
 msgid ""
 "En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
@@ -3593,16 +3762,13 @@ msgid ""
 "Tableau de bord unique pour toutes vos demandes et leur historique complet"
 msgstr "لوحة تحكّم واحدة لجميع طلباتك وسجلّها الكامل"
 
-#, fuzzy
 #| msgid ""
 #| "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
 #| "assignation, rendez-vous, rapport prêt)."
 msgid ""
 "Notifications en temps réel à chaque étape (validation, rendez-vous, rapport"
 " prêt)"
-msgstr ""
-"تتلقّى <strong>بريدًا إلكترونيًا في كل خطوة</strong> (المصادقة، التعيين، "
-"الموعد، جاهزية التقرير)."
+msgstr "إشعارات فورية في كل مرحلة (التحقق، الموعد، جاهزية التقرير)"
 
 msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
 msgstr "تأكيد المواعيد والتنزيل الآمن للتقارير"
@@ -3625,7 +3791,6 @@ msgstr "رقم الهاتف"
 msgid "Votre organisation"
 msgstr "مؤسستك"
 
-#, fuzzy
 #| msgid "académique"
 msgid "Académique"
 msgstr "أكاديمي"
@@ -3633,10 +3798,9 @@ msgstr "أكاديمي"
 msgid "Entreprise"
 msgstr "شركة"
 
-#, fuzzy
 #| msgid "Partiel"
 msgid "Particulier"
-msgstr "جزئي"
+msgstr "فرد"
 
 msgid "Autre"
 msgstr "أخرى"
@@ -3672,10 +3836,9 @@ msgid ""
 "Conservez votre code de suivi pour suivre l'avancement de votre demande."
 msgstr "احتفظ برمز التتبُّع لمتابعة تقدُّم طلبك."
 
-#, fuzzy
 #| msgid "Créer un compte pour gérer vos demandes"
 msgid "Créez un compte pour aller plus loin"
-msgstr "أنشئ حساباً لإدارة طلباتك"
+msgstr "أنشئ حسابًا للمضي أبعد"
 
 msgid ""
 "Suivez cette demande et les suivantes depuis un tableau de bord unique, "
@@ -3707,10 +3870,9 @@ msgctxt "help"
 msgid "Démarrer"
 msgstr "البدء"
 
-#, fuzzy
 #| msgid "Soumission invité"
 msgid "Compte ou invité"
-msgstr "الإرسال كزائر"
+msgstr "حساب أم زائر"
 
 msgctxt "help"
 msgid "Suivi & rapports"
@@ -3758,10 +3920,9 @@ msgstr ""
 "يمكنك أيضًا التقديم <strong>دون حساب</strong> عبر «تقديم كضيف» وتتبّع طلبك "
 "بالرمز المُستلَم عبر البريد الإلكتروني."
 
-#, fuzzy
 #| msgid "Soumission invité"
 msgid "Compte ou soumission invité ?"
-msgstr "الإرسال كزائر"
+msgstr "حساب أم تقديم كزائر؟"
 
 msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
 msgstr "كلاهما يعمل — لكن الحساب يمنحك التحكم الكامل."
@@ -4041,6 +4202,32 @@ msgctxt "help"
 msgid "Contactez-nous"
 msgstr "اتصل بنا"
 
+msgid "Données collectées"
+msgstr "البيانات المجمّعة"
+
+#| msgid "Disponibilité"
+msgid "Finalité"
+msgstr "الغرض"
+
+#| msgid "Opérations"
+msgid "Conservation"
+msgstr "مدة الحفظ"
+
+msgid "Vos droits"
+msgstr "حقوقك"
+
+#| msgid "Exporter tous les emails (CSV)"
+msgid "Exporter mes données (JSON)"
+msgstr "تصدير بياناتي (JSON)"
+
+#| msgctxt "help"
+#| msgid "Contactez-nous"
+msgid "Connectez-vous"
+msgstr "سجّل الدخول"
+
+msgid "pour exporter vos données."
+msgstr "لتصدير بياناتك."
+
 msgid "Retour aux services"
 msgstr "العودة إلى الخدمات"
 
@@ -4117,6 +4304,17 @@ msgstr "لا توجد نتائج"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التحقُّق والمحاولة مجدداً."
+
+#~ msgid ""
+#~ "Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
+#~ "Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
+#~ "ci-dessous pour créer une nouvelle entrée."
+#~ msgstr ""
+#~ "عدّل النص المعروض على الموقع (العناوين، الأزرار، الأوصاف). انقر على «تعديل» "
+#~ "في أي سطر لتحريره، أو استخدم النموذج أدناه لإنشاء مدخل جديد."
+
+#~ msgid "Modifié"
+#~ msgstr "آخر تعديل"
 
 #~ msgid "Pipeline"
 #~ msgstr "المسار"

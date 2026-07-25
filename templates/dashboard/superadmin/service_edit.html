@@ -30,12 +30,12 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>{% trans "Prix IBTIKAR (DZD)" %}</label>
+                    <label>{% trans "Prix IBTIKAR (DA)" %}</label>
                     <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
                     <small class="text-muted">{% trans "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie ci-dessous)" %}</small>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Prix GENOCLAB (DZD)" %}</label>
+                    <label>{% trans "Prix GENOCLAB (DA)" %}</label>
                     <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
                 </div>
                 <div class="form-group">
@@ -297,7 +297,7 @@
 
         <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px;">
             <div class="form-group">
-                <label>{% trans "Montant (DZD)" %}</label>
+                <label>{% trans "Montant (DA)" %}</label>
                 <input type="number" id="pricing-amount" class="form-control" step="0.01" value="0">
             </div>
             <div class="form-group">
@@ -457,7 +457,7 @@ function renderPricingConfigs(configs) {
                     '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;background:#fff;color:#475569;">' + chanLbl + '</span>' +
                     inactive +
                 '</div>' +
-                '<div style="margin-top:6px;font-size:0.95rem;color:#059669;font-weight:700;">' + amount + ' DZD' + unit + '</div>' +
+                '<div style="margin-top:6px;font-size:0.95rem;color:#059669;font-weight:700;">' + amount + ' DA' + unit + '</div>' +
                 qty + desc +
             '</div>' +
             '<div style="display:flex; gap:6px;">' +
