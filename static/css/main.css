@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* --- Reset & Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -103,7 +103,10 @@
 
     /* Typography */
     --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-rtl: 'Cairo', 'Noto Sans Arabic', 'Segoe UI', -apple-system, sans-serif;
+    /* Arabic UI font. Tajawal: geometric and warm, the style used by Gulf
+       institutional apps — noticeably friendlier on screen than Cairo, which
+       stays as the first fallback. */
+    --font-rtl: 'Tajawal', 'Cairo', 'Noto Sans Arabic', 'Segoe UI', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* Transition */
