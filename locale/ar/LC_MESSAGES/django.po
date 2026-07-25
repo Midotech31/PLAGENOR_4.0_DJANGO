@@ -1,0 +1,4372 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "Demandeur IBTIKAR (étudiant/chercheur)"
+msgstr "مُقدِّم طلب IBTIKAR (طالب/باحث)"
+
+msgid "Client GENOCLAB (externe)"
+msgstr "عميل GENOCLAB (خارجي)"
+
+msgid "Rôle"
+msgstr "الدور"
+
+msgid "Université / Organisation"
+msgstr "الجامعة / المؤسسة"
+
+msgid "— Sélectionner —"
+msgstr "— اختر —"
+
+#| msgid "Votre organisation"
+msgid "Type d'organisation"
+msgstr "نوع المؤسسة"
+
+msgid "Préciser (autre)"
+msgstr "تحديد (أخرى)"
+
+msgid "Pays"
+msgstr "البلد"
+
+msgid "Master (fin de cycle)"
+msgstr "ماستر (سنة التخرج)"
+
+msgid "Ingéniorat (fin de cycle)"
+msgstr "مهندس دولة (سنة التخرج)"
+
+msgid "Doctorat"
+msgstr "دكتوراه"
+
+msgid "Niveau"
+msgstr "المستوى"
+
+msgid "Laboratoire"
+msgstr "المختبر"
+
+msgid "Directeur de recherche"
+msgstr "المشرف العلمي"
+
+msgid "Identifiant IBTIKAR-DGRSDT"
+msgstr "معرّف IBTIKAR-DGRSDT"
+
+msgid "Format: IDGRSTDXXXXX"
+msgstr "الصيغة: IDGRSTDXXXXX"
+
+msgid "Téléphone"
+msgstr "الهاتف"
+
+msgid "Cet email est déjà enregistré"
+msgstr "هذا البريد الإلكتروني مسجَّل مسبقاً"
+
+msgid "Veuillez préciser le type d'organisation."
+msgstr "يرجى تحديد نوع المؤسسة."
+
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+"تم قفل الحساب مؤقتًا بعد محاولات فاشلة. أعد المحاولة خلال %(minutes)d "
+"دقيقة/دقائق."
+
+msgid "Profil mis à jour."
+msgstr "تم تحديث الملف الشخصي."
+
+msgid "Email requis."
+msgstr "البريد الإلكتروني مطلوب."
+
+msgid "Un compte avec cet email existe déjà."
+msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً."
+
+msgid "Vérification de votre adresse — PLAGENOR 4.0"
+msgstr "التحقُّق من بريدك الإلكتروني — PLAGENOR 4.0"
+
+#, python-format
+msgid "Pour finaliser la création de votre compte, ouvrez ce lien : %(url)s"
+msgstr "لإكمال إنشاء حسابك، افتح هذا الرابط: %(url)s"
+
+msgid "Lien expiré. Veuillez recommencer."
+msgstr "انتهت صلاحية الرابط. يرجى المحاولة مجدداً."
+
+msgid "Lien invalide."
+msgstr "رابط غير صالح."
+
+msgid "Un compte avec cet email existe déjà — veuillez vous connecter."
+msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً — يرجى تسجيل الدخول."
+
+#, python-format
+msgid "Compte créé ! %(count)d demande(s) liée(s) à votre compte."
+msgstr "تم إنشاء الحساب! تم ربط %(count)d طلب بحسابك."
+
+msgid "Nouveau mot de passe"
+msgstr "كلمة المرور الجديدة"
+
+msgid "Confirmer le mot de passe"
+msgstr "تأكيد كلمة المرور"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "كلمتا المرور غير متطابقتين."
+
+msgid "Votre mot de passe a été mis à jour avec succès."
+msgstr "تم تحديث كلمة المرور بنجاح."
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr "رمز غير صالح أو منتهي الصلاحية. أعد المحاولة."
+
+msgid "La double authentification est déjà activée."
+msgstr "المصادقة الثنائية مفعّلة بالفعل."
+
+msgid "Double authentification activée."
+msgstr "تم تفعيل المصادقة الثنائية."
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr "رمز غير صالح. تحقّق من ساعة جهازك وأعد المحاولة."
+
+msgid "Double authentification désactivée."
+msgstr "تم تعطيل المصادقة الثنائية."
+
+msgid "Formulaire IBTIKAR"
+msgstr "نموذج IBTIKAR"
+
+msgid "Note de plateforme"
+msgstr "مذكرة المنصة"
+
+msgid "Fiche de réception"
+msgstr "وثيقة الاستلام"
+
+msgid "Devis"
+msgstr "عرض الأسعار"
+
+msgid "Vous ne pouvez pas réinitialiser votre propre compte."
+msgstr "لا يمكنك إعادة تعيين حسابك الخاص."
+
+msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgstr "إعادة تعيين حسابك على PLAGENOR 4.0"
+
+#, python-format
+msgid ""
+"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+" les instructions a été envoyé."
+msgstr ""
+"تمت إعادة تعيين حساب %(username)s بنجاح. تم إرسال بريد إلكتروني يحتوي على "
+"التعليمات."
+
+msgid "Créer un compte"
+msgstr "إنشاء حساب"
+
+msgid "Créer votre compte"
+msgstr "إنشاء حسابك"
+
+msgid ""
+"Convertissez votre soumission invité en un compte permanent. Pour des "
+"raisons de sécurité nous vérifions d'abord votre adresse email."
+msgstr ""
+"حوِّل طلبك المُرسَل كزائر إلى حساب دائم. لدواعٍ أمنية، نتحقّق أولاً من بريدك"
+" الإلكتروني."
+
+msgid "Vérifiez votre messagerie"
+msgstr "تحقَّق من بريدك"
+
+#, python-format
+msgid ""
+"Si l'adresse <strong>%(email)s</strong> correspond à des soumissions invité,"
+" un lien de vérification vient d'y être envoyé. Cliquez sur le lien pour "
+"finaliser la création de votre compte."
+msgstr ""
+"إذا كان العنوان <strong>%(email)s</strong> مرتبطاً بطلبات أُرسِلت كزائر، فقد"
+" أُرسِل إليه للتو رابط تحقُّق. انقر الرابط لإكمال إنشاء حسابك."
+
+msgid "Le lien expire après 24 heures."
+msgstr "تنتهي صلاحية الرابط بعد 24 ساعة."
+
+msgid "Email utilisé lors de votre soumission invité"
+msgstr "البريد الإلكتروني المستخدم في طلبك كزائر"
+
+msgid "Envoyer le lien de vérification"
+msgstr "إرسال رابط التحقُّق"
+
+msgid "Vous avez déjà un compte?"
+msgstr "هل لديك حساب بالفعل؟"
+
+msgid "Connexion"
+msgstr "تسجيل الدخول"
+
+msgid "Finaliser la création de compte"
+msgstr "إكمال إنشاء الحساب"
+
+msgid "Finaliser votre compte"
+msgstr "إكمال حسابك"
+
+msgid ""
+"Votre adresse email a été vérifiée. Complétez vos informations et choisissez"
+" un mot de passe."
+msgstr "تم التحقُّق من بريدك الإلكتروني. أكمل معلوماتك واختر كلمة مرور."
+
+msgid "Email vérifié"
+msgstr "تم التحقُّق من البريد الإلكتروني"
+
+msgid "Prénom"
+msgstr "الاسم"
+
+msgid "Nom"
+msgstr "اللقب"
+
+msgid "Mot de passe"
+msgstr "كلمة المرور"
+
+msgid "8 caractères minimum, non purement numérique."
+msgstr "8 أحرف على الأقل، وألا تكون أرقاماً فقط."
+
+msgid "Créer mon compte"
+msgstr "إنشاء حسابي"
+
+msgid "Réinitialisation de compte PLAGENOR 4.0"
+msgstr "إعادة تعيين حساب PLAGENOR 4.0"
+
+msgid "Plateforme de Gestion des Opérations Scientifiques"
+msgstr "منصة إدارة العمليات العلمية"
+
+msgid "Réinitialisation de votre compte"
+msgstr "إعادة تعيين حسابك"
+
+#, python-format
+msgid "Bonjour %(name)s,"
+msgstr "مرحباً %(name)s،"
+
+#, python-format
+msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
+msgstr "تمت إعادة تعيين حسابك على %(platform)s من قِبل %(admin)s."
+
+msgid "Mot de passe temporaire"
+msgstr "كلمة مرور مؤقتة"
+
+msgid ""
+"Ce mot de passe temporaire expire après 24 heures ou dès la première "
+"utilisation."
+msgstr "تنتهي صلاحية كلمة المرور المؤقتة بعد 24 ساعة أو عند أول استخدام."
+
+msgid ""
+"Vous serez immédiatement invité à définir un nouveau mot de passe après "
+"connexion."
+msgstr "سيُطلب منك فور تسجيل الدخول تعيين كلمة مرور جديدة."
+
+msgid "Ne partagez jamais votre mot de passe avec quiconque."
+msgstr "لا تُشارك كلمة المرور مع أي شخص أبداً."
+
+msgid "Se connecter"
+msgstr "تسجيل الدخول"
+
+msgid ""
+"Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter"
+" immédiatement l'administrateur de la plateforme."
+msgstr ""
+"إذا لم تكن على علم بإعادة التعيين هذه، يرجى التواصل مع مسؤول المنصة فوراً."
+
+msgid "Vérification de votre adresse email"
+msgstr "التحقُّق من بريدك الإلكتروني"
+
+msgid "Bonjour,"
+msgstr "مرحباً،"
+
+#, python-format
+msgid ""
+"Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur "
+"PLAGENOR&nbsp;4.0 en utilisant l'adresse <strong>%(email)s</strong>."
+msgstr ""
+"طلب شخص ما — على الأرجح أنت — إنشاء حساب على PLAGENOR&nbsp;4.0 باستخدام "
+"العنوان <strong>%(email)s</strong>."
+
+msgid ""
+"Pour finaliser la création de votre compte et lier vos demandes invité, "
+"cliquez sur le bouton ci-dessous :"
+msgstr "لإكمال إنشاء حسابك وربط طلباتك كزائر، انقر الزر أدناه:"
+
+msgid "Vérifier mon adresse et créer mon compte"
+msgstr "تحقَّق من عنواني وأنشئ حسابي"
+
+msgid "Ce lien expire après 24 heures."
+msgstr "تنتهي صلاحية هذا الرابط بعد 24 ساعة."
+
+msgid ""
+"Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
+"message — aucun compte ne sera créé."
+msgstr "إذا لم تطلب إنشاء حساب، فتجاهل هذه الرسالة — لن يُنشأ أي حساب."
+
+msgid "Ne partagez jamais ce lien."
+msgstr "لا تُشارك هذا الرابط مع أي شخص."
+
+msgid ""
+"Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur "
+":"
+msgstr "إذا لم يعمل الزر، انسخ الرابط التالي والصقه في متصفحك:"
+
+#| msgid "Réinitialisation de votre compte"
+msgid "Réinitialisation du mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+"لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR. انقر على الزر أدناه "
+"لاختيار كلمة مرور جديدة."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Réinitialiser mon mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+"هذا الرابط صالح لمرة واحدة وينتهي قريبًا. إذا لم تكن أنت من طلب ذلك، تجاهل "
+"هذا البريد: ستبقى كلمة المرور دون تغيير."
+
+#| msgid "Centre d'aide PLAGENOR"
+msgid "L'équipe PLAGENOR"
+msgstr "فريق PLAGENOR"
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+"مرحبًا،\n"
+"\n"
+"لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR.\n"
+"\n"
+"انقر على الرابط أدناه لاختيار كلمة مرور جديدة:"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+"هذا الرابط صالح لمرة واحدة وينتهي قريبًا. إذا لم تكن أنت من طلب ذلك، تجاهل هذا البريد: ستبقى كلمة المرور دون تغيير.\n"
+"\n"
+"— فريق PLAGENOR"
+
+#| msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr "إعادة تعيين كلمة مرور PLAGENOR"
+
+msgid "Changement de mot de passe obligatoire"
+msgstr "تغيير كلمة المرور إلزامي"
+
+msgid ""
+"Votre compte a été réinitialisé. Vous devez définir un nouveau mot de passe "
+"avant de continuer."
+msgstr "تمت إعادة تعيين حسابك. يجب عليك تعيين كلمة مرور جديدة قبل المتابعة."
+
+msgid "Veuillez corriger les erreurs ci-dessous."
+msgstr "يرجى تصحيح الأخطاء أدناه."
+
+msgid "Minimum 8 caractères."
+msgstr "8 أحرف على الأقل."
+
+msgid "Définir le nouveau mot de passe"
+msgstr "تعيين كلمة المرور الجديدة"
+
+msgid "Identifiant ou mot de passe incorrect."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
+
+msgid "Identifiant"
+msgstr "اسم المستخدم"
+
+msgid "Entrez votre identifiant"
+msgstr "أدخل اسم المستخدم"
+
+msgid "Entrez votre mot de passe"
+msgstr "أدخل كلمة المرور"
+
+msgid "Afficher/masquer le mot de passe"
+msgstr "إظهار/إخفاء كلمة المرور"
+
+msgid "Se souvenir de moi"
+msgstr "تذكَّرني"
+
+#| msgid "Mot de passe"
+msgid "Mot de passe oublié ?"
+msgstr "هل نسيت كلمة المرور؟"
+
+msgid "ou"
+msgstr "أو"
+
+msgid "Pas encore de compte ?"
+msgstr "ليس لديك حساب بعد؟"
+
+msgid "Demande sans compte ?"
+msgstr "طلب بدون حساب؟"
+
+msgid "Soumettre en tant qu'invité"
+msgstr "الإرسال كزائر"
+
+msgid "Suivre une demande"
+msgstr "تتبُّع طلب"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe réinitialisé"
+msgstr "تمت إعادة تعيين كلمة المرور"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe mis à jour"
+msgstr "تم تحديث كلمة المرور"
+
+#| msgid ""
+#| "Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+#| " les instructions a été envoyé."
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr "تمت إعادة تعيين كلمة مرورك بنجاح. يمكنك الآن تسجيل الدخول."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Choisir un nouveau mot de passe"
+msgstr "اختر كلمة مرور جديدة"
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr "أدخل كلمة المرور الجديدة مرتين."
+
+msgid "Valider"
+msgstr "تأكيد"
+
+#| msgid "Lien invalide."
+msgid "Lien invalide"
+msgstr "رابط غير صالح"
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+"لم يعد رابط إعادة التعيين صالحًا (استُخدم أو انتهت صلاحيته). يرجى طلب رابط "
+"جديد."
+
+#| msgid "Demandes à valider"
+msgid "Demander un nouveau lien"
+msgstr "طلب رابط جديد"
+
+#| msgid "Devis Envoyé"
+msgid "Lien envoyé"
+msgstr "تم إرسال الرابط"
+
+#| msgid "Vérifiez votre messagerie"
+msgid "Vérifiez votre boîte mail"
+msgstr "تحقّق من بريدك الإلكتروني"
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+"إذا كان هناك حساب مطابق لهذا العنوان، فقد أُرسل بريد يحتوي على تعليمات إعادة"
+" التعيين. تحقّق من مجلد الرسائل غير المرغوب فيها."
+
+#| msgid "Retour à l'accueil"
+msgid "Retour à la connexion"
+msgstr "العودة إلى تسجيل الدخول"
+
+#| msgid "Réinitialiser le compte"
+msgid "Réinitialiser le mot de passe"
+msgstr "إعادة تعيين كلمة المرور"
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+"أدخل عنوان بريدك الإلكتروني. إذا كان هناك حساب، ستتلقّى رابط إعادة التعيين."
+
+#| msgid "Envoyer au client"
+msgid "Envoyer le lien"
+msgstr "إرسال الرابط"
+
+msgid "Mon Profil"
+msgstr "ملفي الشخصي"
+
+msgid "Informations personnelles"
+msgstr "المعلومات الشخصية"
+
+msgid "Photo de profil"
+msgstr "الصورة الشخصية"
+
+msgid "Organisation / Université"
+msgstr "المؤسسة / الجامعة"
+
+#| msgid "Note Générée"
+msgid "Langue préférée"
+msgstr "اللغة المفضّلة"
+
+msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
+msgstr "اتركه فارغًا لاستخدام اللغة التي يكتشفها متصفحك."
+
+msgid "Techniques maîtrisées"
+msgstr "التقنيات المُتقَنة"
+
+msgid "Mettre à jour"
+msgstr "تحديث"
+
+msgid "Sécurité — Double authentification"
+msgstr "الأمان — المصادقة الثنائية"
+
+#| msgid "Active"
+msgid "Activée"
+msgstr "مفعّلة"
+
+msgid ""
+"Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr "حسابك محمي برمز يُستخدم مرة واحدة عند كل تسجيل دخول."
+
+#| msgid "Désactiver cet utilisateur ?"
+msgid "Désactiver la double authentification ?"
+msgstr "تعطيل المصادقة الثنائية؟"
+
+#| msgid "Désactiver"
+msgid "Désactiver la 2FA"
+msgstr "تعطيل 2FA"
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+"أضِف طبقة أمان: سيُطلب رمز من 6 أرقام يولّده هاتفك عند تسجيل الدخول. موصى به"
+" لحسابات الموظفين."
+
+#| msgid "Activer"
+msgid "Activer la 2FA"
+msgstr "تفعيل 2FA"
+
+msgid "Inscription"
+msgstr "إنشاء حساب"
+
+msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
+msgstr "أنشئ حساباً لتقديم طلبات التحاليل"
+
+msgid ""
+"Après inscription, vous serez redirigé vers le formulaire de soumission pour"
+" le service"
+msgstr "بعد إنشاء الحساب، ستُوجَّه إلى نموذج تقديم طلب للخدمة"
+
+msgid "Étudiant / Chercheur"
+msgstr "طالب / باحث"
+
+msgid "Client externe"
+msgstr "عميل خارجي"
+
+msgid "Identifiant souhaité"
+msgstr "اسم المستخدم المرغوب"
+
+#| msgid "Votre organisation"
+msgid "Précisez le type d'organisation"
+msgstr "حدّد نوع المؤسسة"
+
+msgid "Sélectionner"
+msgstr "اختر"
+
+msgid ""
+"Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
+"algériennes"
+msgstr "ماستر، مهندس دولة (سنة التخرج) أو دكتوراه — جميع الجامعات الجزائرية"
+
+msgid "Nom du laboratoire"
+msgstr "اسم المختبر"
+
+msgid "Nom du directeur de recherche"
+msgstr "اسم المشرف العلمي"
+
+msgid "optionnel"
+msgstr "اختياري"
+
+msgid "Wilaya"
+msgstr "الولاية"
+
+#| msgid "Sélectionner"
+msgid "Sélectionnez votre wilaya"
+msgstr "اختر ولايتك"
+
+msgid "Sexe"
+msgstr "الجنس"
+
+msgid "Vous avez déjà un compte ?"
+msgstr "هل لديك حساب بالفعل؟"
+
+#| msgid "Aucune notification"
+msgid "Activer la double authentification"
+msgstr "تفعيل المصادقة الثنائية"
+
+msgid "Double authentification (2FA)"
+msgstr "المصادقة الثنائية (2FA)"
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+"امسح رمز QR بتطبيق مصادقة (Google Authenticator أو Authy أو Microsoft "
+"Authenticator…)، ثم أدخل الرمز المكوّن من 6 أرقام للتأكيد."
+
+msgid "QR code de configuration 2FA"
+msgstr "رمز QR لإعداد المصادقة الثنائية"
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr "المفتاح اليدوي (إذا تعذّر المسح):"
+
+#| msgid "Modèle de tarification"
+msgid "Code de vérification"
+msgstr "رمز التحقق"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+#| msgid "Vérification de votre adresse email"
+msgid "Vérification en deux étapes"
+msgstr "التحقق بخطوتين"
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr "أدخل الرمز المكوّن من 6 أرقام الظاهر في تطبيق المصادقة."
+
+msgid "Vérifier"
+msgstr "تحقّق"
+
+msgid "Aller au contenu principal"
+msgstr "الانتقال إلى المحتوى الرئيسي"
+
+#| msgid "Validation Finance"
+msgid "Navigation principale"
+msgstr "التنقّل الرئيسي"
+
+msgid "Accueil"
+msgstr "الرئيسية"
+
+msgid "Services"
+msgstr "الخدمات"
+
+msgid "À propos"
+msgstr "حول"
+
+msgid "Contact"
+msgstr "تواصل معنا"
+
+msgid "Aide"
+msgstr "مساعدة"
+
+msgid "Suivi"
+msgstr "التتبُّع"
+
+msgid "Tableau de bord"
+msgstr "لوحة التحكم"
+
+msgid "Liens rapides"
+msgstr "روابط سريعة"
+
+#| msgid "Entrées d'audit"
+msgid "Centre d'aide"
+msgstr "مركز المساعدة"
+
+msgid "Suivi de demande"
+msgstr "تتبُّع الطلب"
+
+#| msgid "Disponibilité"
+msgid "Confidentialité"
+msgstr "الخصوصية"
+
+msgid "Administration"
+msgstr "الإدارة"
+
+msgid "Bonjour"
+msgstr "مرحباً"
+
+msgid "Gestion des demandes et assignations"
+msgstr "إدارة الطلبات والإسنادات"
+
+msgid "Total demandes"
+msgstr "إجمالي الطلبات"
+
+msgid "En attente"
+msgstr "قيد الانتظار"
+
+msgid "Complétées"
+msgstr "المكتملة"
+
+msgid "Toutes les demandes"
+msgstr "جميع الطلبات"
+
+msgid "Assignation"
+msgstr "الإسناد"
+
+msgid "Budget"
+msgstr "الميزانية"
+
+msgid "Performance"
+msgstr "الأداء"
+
+msgid "Avis"
+msgstr "التقييمات"
+
+msgid "Rapports"
+msgstr "التقارير"
+
+msgid "Demandes à valider"
+msgstr "طلبات بانتظار التحقُّق"
+
+msgid "Voir"
+msgstr "عرض"
+
+msgid "Invité"
+msgstr "زائر"
+
+msgid "Validation Pédagogique"
+msgstr "التحقُّق البيداغوجي"
+
+msgid "Rejeter"
+msgstr "رفض"
+
+msgid "Validation Finance"
+msgstr "التحقُّق المالي"
+
+msgid "Coût de la prestation"
+msgstr "تكلفة الخدمة"
+
+msgid "Coût estimé"
+msgstr "التكلفة التقديرية"
+
+msgid "Coût validé"
+msgstr "التكلفة المُعتمَدة"
+
+msgid "Solde IBTIKAR déclaré"
+msgstr "الرصيد المُصرَّح به في IBTIKAR"
+
+msgid "Ajuster le coût (DA)"
+msgstr "تعديل التكلفة (دج)"
+
+msgid "Justification"
+msgstr "المُبرِّر"
+
+msgid "Raison du changement..."
+msgstr "سبب التغيير..."
+
+msgid "Ajuster"
+msgstr "تعديل"
+
+msgid "Valider & Générer Note"
+msgstr "تأكيد وإصدار المذكرة"
+
+msgid "Préparer devis"
+msgstr "إعداد عرض الأسعار"
+
+msgid "Envoyer devis"
+msgstr "إرسال عرض الأسعار"
+
+msgid "En attente de réponse du client"
+msgstr "بانتظار رد العميل"
+
+msgid "Générer facture"
+msgstr "إصدار الفاتورة"
+
+msgid "Confirmer paiement"
+msgstr "تأكيد الدفع"
+
+msgid "Contacter par email"
+msgstr "التواصل عبر البريد الإلكتروني"
+
+msgid "Contacter"
+msgstr "تواصل"
+
+msgid "Aucune demande en attente de validation."
+msgstr "لا توجد طلبات بانتظار التحقُّق."
+
+msgid "Demandes à assigner"
+msgstr "طلبات بانتظار الإسناد"
+
+msgid "Télécharger la Note de Plateforme"
+msgstr "تنزيل مذكرة المنصة"
+
+msgid "Assigner à"
+msgstr "إسناد إلى"
+
+msgid "Assigner"
+msgstr "إسناد"
+
+msgid ""
+"Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer"
+" par la validation."
+msgstr ""
+"لا توجد طلبات جاهزة للإسناد. يجب أن تمر الطلبات أولاً بمرحلة التحقُّق."
+
+msgid "Rapports à réviser"
+msgstr "تقارير بانتظار المراجعة"
+
+msgid "Analyste"
+msgstr "المحلِّل"
+
+msgid "Réviser rapport"
+msgstr "مراجعة التقرير"
+
+msgid "Télécharger"
+msgstr "تنزيل"
+
+msgid "Aucun rapport en attente de révision."
+msgstr "لا توجد تقارير بانتظار المراجعة."
+
+msgid "Complétions et clôtures"
+msgstr "الإتمام والإغلاق"
+
+msgid "Transmettre au demandeur"
+msgstr "إرسال إلى المُقدِّم"
+
+msgid "Transmettre au client"
+msgstr "إرسال إلى العميل"
+
+msgid "Clôturer"
+msgstr "إغلاق"
+
+msgid "Archiver"
+msgstr "أرشفة"
+
+msgid "Aucune demande en attente de complétion."
+msgstr "لا توجد طلبات بانتظار الإتمام."
+
+msgid "En cours de traitement"
+msgstr "قيد المعالجة"
+
+msgid "RDV proposé"
+msgstr "تم اقتراح موعد"
+
+msgid "En attente de confirmation du demandeur"
+msgstr "بانتظار تأكيد المُقدِّم"
+
+msgid "Modifier RDV"
+msgstr "تعديل الموعد"
+
+msgid "Marquer échantillon reçu"
+msgstr "تعليم العيِّنة كمستلَمة"
+
+msgid "En cours"
+msgstr "قيد التنفيذ"
+
+msgid "Envoyer message"
+msgstr "إرسال رسالة"
+
+msgid "Message..."
+msgstr "الرسالة..."
+
+msgid "Envoyer"
+msgstr "إرسال"
+
+msgid "Aucune demande en cours de traitement."
+msgstr "لا توجد طلبات قيد المعالجة."
+
+msgid "Tous les canaux"
+msgstr "جميع القنوات"
+
+msgid "Tous les statuts"
+msgstr "جميع الحالات"
+
+msgid "Commun"
+msgstr "مشترك"
+
+msgid "Assigné"
+msgstr "مُسنَد"
+
+msgid "RDV Proposé"
+msgstr "تم اقتراح موعد"
+
+msgid "RDV Confirmé"
+msgstr "تم تأكيد الموعد"
+
+msgid "Échantillon Reçu"
+msgstr "تم استلام العيِّنة"
+
+msgid "Analyse Démarrée"
+msgstr "بدأ التحليل"
+
+msgid "Analyse Terminée"
+msgstr "اكتمل التحليل"
+
+msgid "Rapport Uploadé"
+msgstr "تم رفع التقرير"
+
+msgid "Rapport Validé"
+msgstr "تم اعتماد التقرير"
+
+msgid "Complété"
+msgstr "مكتمل"
+
+msgid "Rejeté"
+msgstr "مرفوض"
+
+msgid "Soumis"
+msgstr "تم الإرسال"
+
+msgid "Note Générée"
+msgstr "تم إصدار المذكرة"
+
+msgid "En attente soumission IBTIKAR"
+msgstr "بانتظار الإرسال إلى IBTIKAR"
+
+msgid "Code IBTIKAR soumis"
+msgstr "تم إرسال رمز IBTIKAR"
+
+msgid "Transmis au Demandeur"
+msgstr "تم الإرسال إلى المُقدِّم"
+
+msgid "Clôturé"
+msgstr "مُغلَق"
+
+msgid "Demande Créée"
+msgstr "تم إنشاء الطلب"
+
+msgid "Devis En Cours"
+msgstr "عرض الأسعار قيد الإعداد"
+
+msgid "Devis Envoyé"
+msgstr "تم إرسال عرض الأسعار"
+
+msgid "Devis Accepté"
+msgstr "تم قبول عرض الأسعار"
+
+msgid "Devis Refusé"
+msgstr "تم رفض عرض الأسعار"
+
+msgid "Facture Émise"
+msgstr "تم إصدار الفاتورة"
+
+msgid "Paiement Confirmé"
+msgstr "تم تأكيد الدفع"
+
+msgid "Transmis au Client"
+msgstr "تم الإرسال إلى العميل"
+
+msgid "Archivé"
+msgstr "مُؤرشَف"
+
+msgid "Rechercher..."
+msgstr "بحث..."
+
+msgid "Filtrer"
+msgstr "تصفية"
+
+msgid "Réinitialiser"
+msgstr "إعادة تعيين"
+
+msgid "ID"
+msgstr "المعرّف"
+
+msgid "Titre"
+msgstr "العنوان"
+
+msgid "Canal"
+msgstr "القناة"
+
+msgid "Statut"
+msgstr "الحالة"
+
+msgid "Demandeur"
+msgstr "المُقدِّم"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Aucune demande trouvée."
+msgstr "لم يُعثر على أي طلب."
+
+msgid "Panneau d'assignation"
+msgstr "لوحة الإسناد"
+
+msgid "Analystes disponibles"
+msgstr "المحلِّلون المتاحون"
+
+msgid ""
+"Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet"
+msgstr "لمنح النقاط أو إرسال التشجيع، استخدم علامة التبويب"
+
+msgid "Charge"
+msgstr "العبء"
+
+msgid "Productivité"
+msgstr "الإنتاجية"
+
+msgid "Points"
+msgstr "النقاط"
+
+msgid "Disponible"
+msgstr "متاح"
+
+msgid "Oui"
+msgstr "نعم"
+
+msgid "Non"
+msgstr "لا"
+
+msgid "Budget IBTIKAR (virtuel)"
+msgstr "ميزانية IBTIKAR (افتراضية)"
+
+msgid "Revenus GENOCLAB (réel)"
+msgstr "إيرادات GENOCLAB (فعلية)"
+
+msgid "Performance & Points"
+msgstr "الأداء والنقاط"
+
+msgid "analystes"
+msgstr "محلِّلون"
+
+msgid "pts"
+msgstr "نقطة"
+
+msgid "prod."
+msgstr "إنتاجية"
+
+msgid "Raison"
+msgstr "السبب"
+
+msgid "Attribuer points"
+msgstr "منح النقاط"
+
+msgid "Pts"
+msgstr "نقاط"
+
+msgid "Message encourageant..."
+msgstr "رسالة تشجيعية..."
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Envoyer un encouragement"
+msgstr "إرسال تشجيع"
+
+msgid "Cadeau récupéré"
+msgstr "تم استلام الهدية"
+
+msgid "En attente de récupération"
+msgstr "بانتظار الاستلام"
+
+msgid "Boîte débloquée — ajoutez une récompense"
+msgstr "تم فتح الصندوق — أضف مكافأة"
+
+msgid "Image récompense"
+msgstr "صورة المكافأة"
+
+msgid "Déposer la récompense"
+msgstr "إيداع المكافأة"
+
+msgid "Déposer"
+msgstr "إيداع"
+
+msgid "Aucun analyste enregistré."
+msgstr "لا يوجد محلِّلون مسجَّلون."
+
+msgid "Rapports en attente de révision"
+msgstr "تقارير بانتظار المراجعة"
+
+msgid "Notes..."
+msgstr "ملاحظات..."
+
+msgid "Raison du renvoi..."
+msgstr "سبب الإرجاع..."
+
+msgid "Renvoyer"
+msgstr "إرجاع"
+
+msgid "Aucun rapport en attente."
+msgstr "لا توجد تقارير قيد الانتظار."
+
+msgid "Note moyenne"
+msgstr "متوسط التقييم"
+
+msgid "Total avis"
+msgstr "إجمالي التقييمات"
+
+msgid "Répartition des notes"
+msgstr "توزيع التقييمات"
+
+msgid "Avis récents"
+msgstr "أحدث التقييمات"
+
+msgid "Par"
+msgstr "بواسطة"
+
+msgid "Aucun avis pour le moment."
+msgstr "لا توجد تقييمات حتى الآن."
+
+msgid "Préparer le devis"
+msgstr "إعداد عرض الأسعار"
+
+msgid "Retour au détail"
+msgstr "العودة إلى التفاصيل"
+
+msgid "Estimation automatique (YAML)"
+msgstr "تقدير تلقائي (YAML)"
+
+msgid "Modèle de tarification"
+msgstr "نموذج التسعير"
+
+msgid "Nombre d'unités"
+msgstr "عدد الوحدات"
+
+msgid "Prix unitaire"
+msgstr "سعر الوحدة"
+
+msgid "Total estimé"
+msgstr "الإجمالي التقديري"
+
+msgid "Paramètres du service"
+msgstr "إعدادات الخدمة"
+
+msgid "Tableau des échantillons"
+msgstr "جدول العيِّنات"
+
+msgid "Service"
+msgstr "الخدمة"
+
+msgid "Code"
+msgstr "الرمز"
+
+msgid "Prix GENOCLAB"
+msgstr "سعر GENOCLAB"
+
+msgid "Lignes du devis"
+msgstr "بنود عرض الأسعار"
+
+msgid "Ajouter une ligne"
+msgstr "إضافة بند"
+
+msgid "Frais et TVA"
+msgstr "الرسوم والضريبة على القيمة المُضافة"
+
+msgid "Frais administratifs (DA)"
+msgstr "الرسوم الإدارية (دج)"
+
+msgid "Frais de rapport (DA)"
+msgstr "رسوم التقرير (دج)"
+
+#, python-format
+msgid "Taux TVA (%%)"
+msgstr "معدل الضريبة على القيمة المُضافة (%%)"
+
+msgid "Récapitulatif"
+msgstr "الملخَّص"
+
+msgid "Sous-total HT"
+msgstr "المجموع الفرعي قبل الضريبة"
+
+msgid "Frais administratifs"
+msgstr "الرسوم الإدارية"
+
+msgid "Frais de rapport"
+msgstr "رسوم التقرير"
+
+msgid "Sous-total avant TVA"
+msgstr "المجموع الفرعي قبل الضريبة"
+
+msgid "TVA"
+msgstr "الضريبة على القيمة المُضافة"
+
+msgid "Total TTC"
+msgstr "الإجمالي شامل الضريبة"
+
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgid "Notes internes ou commentaires pour le client..."
+msgstr "ملاحظات داخلية أو تعليقات للعميل..."
+
+msgid "Enregistrer brouillon"
+msgstr "حفظ كمسودة"
+
+msgid "Envoyer au client"
+msgstr "إرسال إلى العميل"
+
+msgid "Révision rapport"
+msgstr "مراجعة التقرير"
+
+msgid "Révision du rapport"
+msgstr "مراجعة التقرير"
+
+msgid "Rapport"
+msgstr "التقرير"
+
+msgid "Valider le rapport"
+msgstr "اعتماد التقرير"
+
+msgid "Notes de révision"
+msgstr "ملاحظات المراجعة"
+
+msgid "Indiquez les corrections nécessaires..."
+msgstr "بيِّن التعديلات المطلوبة..."
+
+msgid "Renvoyer pour révision"
+msgstr "الإرجاع للمراجعة"
+
+msgid "Retour"
+msgstr "رجوع"
+
+msgid "Détail demande"
+msgstr "تفاصيل الطلب"
+
+msgid "Créée le"
+msgstr "تاريخ الإنشاء"
+
+msgid "Mise à jour"
+msgstr "آخر تحديث"
+
+msgid "Retour aux opérations"
+msgstr "العودة إلى العمليات"
+
+msgid "Informations du demandeur"
+msgstr "بيانات المُقدِّم"
+
+msgid "Nom complet"
+msgstr "الاسم الكامل"
+
+msgid "Organisation"
+msgstr "المؤسسة"
+
+msgid "ID IBTIKAR"
+msgstr "معرّف IBTIKAR"
+
+msgid "Code IBTIKAR-DGRSDT"
+msgstr "رمز IBTIKAR-DGRSDT"
+
+msgid "Aucun demandeur associé."
+msgstr "لا يوجد مُقدِّم مرتبط."
+
+msgid "Détails du service"
+msgstr "تفاصيل الخدمة"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Disponibilité"
+msgstr "التوفُّر"
+
+msgid "Délai estimé"
+msgstr "المدة التقديرية"
+
+msgid "jours"
+msgstr "أيام"
+
+msgid "Détails de la demande"
+msgstr "تفاصيل الطلب"
+
+msgid "Urgence"
+msgstr "الأولوية"
+
+msgid "Informations financières"
+msgstr "المعلومات المالية"
+
+msgid "Budget estimé"
+msgstr "الميزانية التقديرية"
+
+msgid "Montant du devis"
+msgstr "قيمة عرض الأسعار"
+
+msgid "Prix validé par admin"
+msgstr "السعر المُعتمَد من المسؤول"
+
+msgid "Aucune information financière."
+msgstr "لا توجد معلومات مالية."
+
+#| msgid "Télécharger Note"
+msgid "Télécharger le devis"
+msgstr "تنزيل عرض السعر"
+
+#| msgid "Factures"
+msgid "Facture"
+msgstr "فاتورة"
+
+msgid "Détail du devis"
+msgstr "تفاصيل عرض الأسعار"
+
+msgid "P.U."
+msgstr "سعر الوحدة"
+
+msgid "Qté"
+msgstr "الكمية"
+
+msgid "Total"
+msgstr "الإجمالي"
+
+msgid "Analyste assigné"
+msgstr "المحلِّل المُسنَد"
+
+msgid "Acceptée"
+msgstr "مقبول"
+
+msgid "Date de RDV"
+msgstr "تاريخ الموعد"
+
+msgid "RDV confirmé"
+msgstr "تم تأكيد الموعد"
+
+msgid "Réassigner à un autre analyste"
+msgstr "إعادة الإسناد إلى محلل آخر"
+
+msgid ""
+"Utilisez cette option en cas de retard, d'absence ou de surcharge de "
+"l'analyste actuel. L'ancien et le nouvel analyste seront notifiés."
+msgstr ""
+"استخدم هذا الخيار في حال تأخّر المحلل الحالي أو غيابه أو زيادة أعبائه. سيتم "
+"إشعار المحلل السابق والجديد معًا."
+
+#| msgid "Espace analyste"
+msgid "Nouvel analyste"
+msgstr "محلل جديد"
+
+msgid "Choisir un membre…"
+msgstr "اختر عضوًا…"
+
+msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
+msgstr "مثال: تأخّر المحلل الحالي بسبب ملفات أخرى ذات أولوية"
+
+#| msgid "Cette action est enregistrée dans le journal d'audit."
+msgid "Cette raison est consignée dans l'historique de la demande."
+msgstr "يُسجَّل هذا السبب في سجل الطلب."
+
+#| msgid "Confirmer la réinitialisation"
+msgid "Confirmer la réassignation"
+msgstr "تأكيد إعادة الإسناد"
+
+msgid "Non encore assigné."
+msgstr "لم يُسنَد بعد."
+
+msgid ""
+"Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, "
+"mode, prix de base, multiplicateur, nombre d'échantillons, total). À "
+"partager manuellement avec le demandeur."
+msgstr ""
+"عرض سعر داخلي لـ IBTIKAR: تبرير مفصّل للسعر (نوع التحليل، الوضع، السعر "
+"الأساسي، المُعامِل، عدد العينات، الإجمالي). يُشارَك يدويًا مع مقدّم الطلب."
+
+#| msgid "Télécharger Note"
+msgid "Télécharger la note (.docx)"
+msgstr "تنزيل المذكّرة (.docx)"
+
+msgid ""
+"Accès limité : administrateurs des opérations, analyste assigné, "
+"observateurs."
+msgstr "وصول محدود: مديرو العمليات، المحلل المُسنَد، المراقبون."
+
+msgid "Observateurs"
+msgstr "المراقبون"
+
+msgid ""
+"Membres autorisés à consulter cette demande en lecture seule (utile en cas "
+"de retard ou d'absence de l'analyste assigné)."
+msgstr ""
+"الأعضاء المسموح لهم بالاطلاع على هذا الطلب للقراءة فقط (مفيد في حال تأخّر "
+"المحلل المُسنَد أو غيابه)."
+
+#| msgid "Restaurer une sauvegarde"
+msgid "Retirer ce suiveur"
+msgstr "إزالة هذا المتابع"
+
+msgid "Retirer"
+msgstr "إزالة"
+
+msgid "Aucun observateur pour l'instant."
+msgstr "لا يوجد مراقبون حتى الآن."
+
+#| msgid "Ajouter un service"
+msgid "Ajouter un observateur"
+msgstr "إضافة مراقب"
+
+msgid "Ajouter"
+msgstr "إضافة"
+
+msgid "Commande & Paiement"
+msgstr "أمر الشراء والدفع"
+
+msgid "Bon de Commande Uploadé"
+msgstr "تم رفع أمر الشراء"
+
+msgid "En attente du Bon de Commande"
+msgstr "بانتظار أمر الشراء"
+
+msgid "Voir le Bon de Commande"
+msgstr "عرض أمر الشراء"
+
+msgid "Uploadé le"
+msgstr "تاريخ الرفع"
+
+msgid ""
+"Le client doit uploader le Bon de Commande (pièce obligatoire selon le Code "
+"de Commerce Algérien) après validation du devis."
+msgstr ""
+"يجب على العميل رفع أمر الشراء (وثيقة إلزامية وفقاً للقانون التجاري الجزائري)"
+" بعد اعتماد عرض الأسعار."
+
+msgid "Reçu de Paiement Uploadé"
+msgstr "تم رفع إيصال الدفع"
+
+msgid "En attente du Paiement"
+msgstr "بانتظار الدفع"
+
+msgid "Voir le Reçu de Paiement"
+msgstr "عرض إيصال الدفع"
+
+msgid ""
+"Le client doit payer et uploader le reçu de paiement pour recevoir son "
+"rapport."
+msgstr "يجب على العميل الدفع ورفع إيصال الدفع لاستلام تقريره."
+
+msgid "Le paiement sera requis après la fin de l'analyse."
+msgstr "سيُطلب الدفع بعد انتهاء التحليل."
+
+msgid "Paiement confirmé"
+msgstr "تم تأكيد الدفع"
+
+msgid "Le rapport peut être délivré au client"
+msgstr "يمكن تسليم التقرير إلى العميل"
+
+msgid "Documents"
+msgstr "الوثائق"
+
+msgid "Note de Plateforme"
+msgstr "مذكرة المنصة"
+
+msgid "Rapport d'analyse"
+msgstr "تقرير التحليل"
+
+msgid "Avis client"
+msgstr "تقييم العميل"
+
+msgid "Évalué le"
+msgstr "تاريخ التقييم"
+
+msgid "QR Code Rapport"
+msgstr "رمز QR للتقرير"
+
+msgid "Scannez pour accéder à la page du rapport"
+msgstr "امسح الرمز للوصول إلى صفحة التقرير"
+
+msgid "Messages"
+msgstr "الرسائل"
+
+msgid "Commentaires"
+msgstr "التعليقات"
+
+msgid "Historique du workflow"
+msgstr "سجل سير العمل"
+
+msgid "Aucun historique."
+msgstr "لا يوجد سجل."
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "Notifier le demandeur (soumission IBTIKAR)"
+msgstr "إشعار المُقدِّم (الإرسال إلى IBTIKAR)"
+
+msgid "Transmettre le rapport au demandeur"
+msgstr "إرسال التقرير إلى المُقدِّم"
+
+msgid "Transmettre le rapport au client"
+msgstr "إرسال التقرير إلى العميل"
+
+msgid "Préparer / Modifier le devis"
+msgstr "إعداد / تعديل عرض الأسعار"
+
+msgid "Générer la facture"
+msgstr "إصدار الفاتورة"
+
+msgid "Confirmer le paiement"
+msgstr "تأكيد الدفع"
+
+msgid "Coût DA"
+msgstr "التكلفة (دج)"
+
+msgid "Ajuster coût"
+msgstr "تعديل التكلفة"
+
+msgid "Télécharger Note"
+msgstr "تنزيل المذكرة"
+
+msgid "Aucune action disponible pour ce statut."
+msgstr "لا توجد إجراءات متاحة لهذه الحالة."
+
+msgid "Espace analyste"
+msgstr "فضاء المحلِّل"
+
+msgid "Assignées"
+msgstr "المُسنَدة"
+
+#, python-format
+msgid "Productivité %%"
+msgstr "الإنتاجية %%"
+
+#| msgid "Opérations"
+msgid "Observations"
+msgstr "الملاحظات"
+
+msgid "Historique"
+msgstr "السجل"
+
+msgid "Profil"
+msgstr "الملف الشخصي"
+
+msgid "Notifications"
+msgstr "الإشعارات"
+
+msgid "Tâches en attente"
+msgstr "المهام قيد الانتظار"
+
+msgid "Accepter"
+msgstr "قبول"
+
+msgid "Décliner"
+msgstr "رفض"
+
+msgid "Raison..."
+msgstr "السبب..."
+
+msgid "Confirmer"
+msgstr "تأكيد"
+
+msgid "Aucune tâche en attente."
+msgstr "لا توجد مهام قيد الانتظار."
+
+msgid "Travaux en cours"
+msgstr "الأعمال الجارية"
+
+msgid "Voir détails"
+msgstr "عرض التفاصيل"
+
+msgid "Échantillon reçu"
+msgstr "تم استلام العيِّنة"
+
+msgid "Démarrer analyse"
+msgstr "بدء التحليل"
+
+msgid "Terminer analyse"
+msgstr "إنهاء التحليل"
+
+msgid "Uploader rapport"
+msgstr "رفع التقرير"
+
+msgid "Proposer un rendez-vous"
+msgstr "اقتراح موعد"
+
+msgid "Date proposée"
+msgstr "التاريخ المقترح"
+
+msgid "Heure"
+msgstr "الوقت"
+
+msgid "Message au demandeur"
+msgstr "رسالة إلى المُقدِّم"
+
+msgid "Ex: Apportez vos échantillons frais"
+msgstr "مثال: أحضر العيِّنات طازجة"
+
+msgid "Proposer ce RDV"
+msgstr "اقتراح هذا الموعد"
+
+msgid ""
+"Le demandeur recevra une notification pour confirmer ou demander un "
+"changement de date."
+msgstr "سيتلقى المُقدِّم إشعاراً لتأكيد الموعد أو طلب تغييره."
+
+msgid "Date alternative proposée"
+msgstr "تم اقتراح تاريخ بديل"
+
+msgid "Refuser"
+msgstr "رفض"
+
+msgid "Répondre"
+msgstr "الرد"
+
+msgid "Aucun travail en cours."
+msgstr "لا توجد أعمال جارية."
+
+#| msgid "Demandes à assigner"
+msgid "Demandes que vous suivez"
+msgstr "الطلبات التي تتابعها"
+
+msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
+msgstr "وصول للقراءة فقط. لا يمكنك التصرّف في هذه الطلبات."
+
+#| msgid "Profil mis à jour."
+msgid "Dernière mise à jour"
+msgstr "آخر تحديث"
+
+#| msgid "Toutes les demandes"
+msgid "Consulter cette demande"
+msgstr "عرض هذا الطلب"
+
+#| msgid "Aucune demande en cours de traitement."
+msgid "Aucune demande à observer pour l'instant."
+msgstr "لا يوجد طلب للمراقبة حاليًا."
+
+msgid ""
+"L'administrateur des opérations peut vous ajouter en suivi sur une demande "
+"pour que vous puissiez en surveiller l'avancement (par exemple en cas de "
+"retard d'un collègue)."
+msgstr ""
+"يمكن لمدير العمليات إضافتك كمتابع على طلب لتتمكّن من مراقبة تقدّمه (على سبيل"
+" المثال في حال تأخّر أحد الزملاء)."
+
+msgid "Mon profil"
+msgstr "ملفي الشخصي"
+
+msgid "Mes techniques"
+msgstr "تقنياتي"
+
+msgid "sur"
+msgstr "من"
+
+msgid "Score de productivité"
+msgstr "درجة الإنتاجية"
+
+msgid "Cadeau récupéré !"
+msgstr "تم استلام الهدية!"
+
+msgid "Merci pour votre excellent travail. Continuez comme ça !"
+msgstr "شكراً على عملك الممتاز. واصل على هذا المنوال!"
+
+msgid "Boîte surprise débloquée !"
+msgstr "تم فتح صندوق المفاجآت!"
+
+msgid ""
+"Vous avez cumulé 100 points ! Une récompense vous attend chez "
+"l'administrateur."
+msgstr "لقد جمعت 100 نقطة! تنتظرك مكافأة لدى المسؤول."
+
+msgid "Récompense"
+msgstr "المكافأة"
+
+msgid "Voici votre récompense — allez la récupérer !"
+msgstr "ها هي مكافأتك — اذهب لاستلامها!"
+
+msgid "L'administrateur prépare votre récompense..."
+msgstr "يقوم المسؤول بإعداد مكافأتك..."
+
+msgid "Marquer comme récupéré"
+msgstr "تعليم كمستلَمة"
+
+msgid "Boîte surprise presque débloquée !"
+msgstr "صندوق المفاجآت على وشك أن يُفتح!"
+
+msgid "Objectif : 100 points"
+msgstr "الهدف: 100 نقطة"
+
+msgid "Activité & Points"
+msgstr "النشاط والنقاط"
+
+msgid "événements"
+msgstr "حدث"
+
+msgid "Complétez des demandes pour gagner vos premiers points !"
+msgstr "أكمل الطلبات لكسب أولى نقاطك!"
+
+msgid "Encouragements"
+msgstr "رسائل التشجيع"
+
+msgid "Vos encouragements apparaîtront ici."
+msgstr "ستظهر رسائل التشجيع هنا."
+
+msgid "Badges & Objectifs"
+msgstr "الأوسمة والأهداف"
+
+msgid "Première analyse"
+msgstr "أول تحليل"
+
+msgid "Débloqué"
+msgstr "مفتوح"
+
+msgid "5 Analyses"
+msgstr "5 تحاليل"
+
+msgid "Points — Expert"
+msgstr "النقاط — خبير"
+
+msgid "Analyses"
+msgstr "التحاليل"
+
+msgid "Aucune notification."
+msgstr "لا توجد إشعارات."
+
+msgid "Retour au tableau de bord"
+msgstr "العودة إلى لوحة التحكم"
+
+msgid "Pipeline GENOCLAB"
+msgstr "مسار GENOCLAB"
+
+msgid "Créée"
+msgstr "تم الإنشاء"
+
+msgid "BC"
+msgstr "أمر الشراء"
+
+msgid "Analyse"
+msgstr "التحليل"
+
+msgid "Paiement"
+msgstr "الدفع"
+
+msgid "Terminé"
+msgstr "مُنتهٍ"
+
+msgid "Devis interne avec la justification détaillée du tarif."
+msgstr "عرض سعر داخلي مع تبرير مفصّل للسعر."
+
+msgid "(Vous y avez accès en lecture en tant qu'observateur.)"
+msgstr "(لديك حق الوصول للقراءة بصفتك مراقبًا.)"
+
+msgid "Rendez-vous"
+msgstr "الموعد"
+
+msgid "Confirmé"
+msgstr "مؤكَّد"
+
+msgid "Date alternative proposée par le demandeur"
+msgstr "تاريخ بديل اقترحه المُقدِّم"
+
+msgid "Accepter cette date"
+msgstr "قبول هذا التاريخ"
+
+msgid "Raison du refus"
+msgstr "سبب الرفض"
+
+msgid "Ex: Je ne suis pas disponible ce jour-là..."
+msgstr "مثال: لست متاحاً في ذلك اليوم..."
+
+msgid "Confirmer le refus"
+msgstr "تأكيد الرفض"
+
+msgid "Note"
+msgstr "ملاحظة"
+
+msgid "Proposer"
+msgstr "اقتراح"
+
+msgid "Aucun message."
+msgstr "لا توجد رسائل."
+
+msgid "Répondre..."
+msgstr "الرد..."
+
+msgid "Voir rapport"
+msgstr "عرض التقرير"
+
+msgid "Client GENOCLAB"
+msgstr "عميل GENOCLAB"
+
+msgid "Espace GENOCLAB"
+msgstr "فضاء GENOCLAB"
+
+msgid "Rejetées"
+msgstr "المرفوضة"
+
+msgid "Nouvelle demande"
+msgstr "طلب جديد"
+
+msgid "Mes demandes"
+msgstr "طلباتي"
+
+msgid "Factures"
+msgstr "الفواتير"
+
+msgid "Archives"
+msgstr "الأرشيف"
+
+msgid "Soumettre une nouvelle demande GENOCLAB"
+msgstr "إرسال طلب GENOCLAB جديد"
+
+msgid "Sélectionner un service..."
+msgstr "اختر خدمة..."
+
+msgid "Titre de la demande"
+msgstr "عنوان الطلب"
+
+msgid "Ex: Analyse complète..."
+msgstr "مثال: تحليل شامل..."
+
+msgid "Décrivez votre demande..."
+msgstr "صف طلبك..."
+
+msgid "Normal"
+msgstr "عادي"
+
+msgid "Urgent"
+msgstr "عاجل"
+
+msgid "Très urgent"
+msgstr "عاجل جداً"
+
+msgid "Vérifier et soumettre"
+msgstr "المراجعة والإرسال"
+
+msgid "Mes demandes actives"
+msgstr "طلباتي النشطة"
+
+msgid "Rendez-vous proposé"
+msgstr "تم اقتراح موعد"
+
+msgid "Confirmer ce RDV"
+msgstr "تأكيد هذا الموعد"
+
+msgid "Proposer une autre date"
+msgstr "اقتراح تاريخ آخر"
+
+msgid "Date souhaitée"
+msgstr "التاريخ المرغوب"
+
+msgid "Confirmer RDV"
+msgstr "تأكيد الموعد"
+
+msgid "Devis reçu"
+msgstr "تم استلام عرض الأسعار"
+
+msgid "Frais admin."
+msgstr "الرسوم الإدارية"
+
+msgid "Frais rapport"
+msgstr "رسوم التقرير"
+
+msgid "Accepter le devis"
+msgstr "قبول عرض الأسعار"
+
+msgid "Refuser le devis"
+msgstr "رفض عرض الأسعار"
+
+msgid "Voir détail"
+msgstr "عرض التفاصيل"
+
+msgid "Votre rapport est prêt"
+msgstr "تقريرك جاهز"
+
+msgid "Télécharger le rapport"
+msgstr "تنزيل التقرير"
+
+msgid "Confirmer la réception"
+msgstr "تأكيد الاستلام"
+
+msgid "Confirmer la réception du rapport"
+msgstr "تأكيد استلام التقرير"
+
+msgid "Évaluez le service"
+msgstr "قيِّم الخدمة"
+
+msgid "Votre avis nous aide à améliorer nos services."
+msgstr "يساعدنا تقييمك على تحسين خدماتنا."
+
+msgid "Commentaire (optionnel)..."
+msgstr "تعليق (اختياري)..."
+
+msgid "Aucune demande active. Soumettez votre première demande!"
+msgstr "لا توجد طلبات نشطة. أرسل طلبك الأول!"
+
+msgid "Mes factures"
+msgstr "فواتيري"
+
+msgid "N° Facture"
+msgstr "رقم الفاتورة"
+
+msgid "Demande"
+msgstr "الطلب"
+
+msgid "HT"
+msgstr "قبل الضريبة"
+
+msgid "TTC"
+msgstr "شامل الضريبة"
+
+#| msgid "Documents"
+msgid "Document"
+msgstr "مستند"
+
+#| msgid "Générer la facture"
+msgid "Télécharger la facture"
+msgstr "تنزيل الفاتورة"
+
+msgid "Aucune facture."
+msgstr "لا توجد فواتير."
+
+msgid "Aucune archive."
+msgstr "لا يوجد أرشيف."
+
+#| msgid "Télécharger le Bon de Commande"
+msgid "Télécharger le devis officiel (.docx)"
+msgstr "تنزيل عرض السعر الرسمي (.docx)"
+
+msgid "Quantité"
+msgstr "الكمية"
+
+msgid "Bon de Commande Obligatoire"
+msgstr "أمر الشراء إلزامي"
+
+msgid ""
+"Selon le Code de Commerce Algérien, vous devez fournir un Bon de Commande "
+"(BC) pour toute transaction commerciale. Veuillez télécharger votre BC ci-"
+"dessous."
+msgstr ""
+"وفقاً للقانون التجاري الجزائري، يجب عليك تقديم أمر شراء لكل معاملة تجارية. "
+"يرجى رفع أمر الشراء أدناه."
+
+msgid "Bon de Commande déjà téléchargé"
+msgstr "تم رفع أمر الشراء مسبقاً"
+
+msgid "Télécharger le Bon de Commande"
+msgstr "رفع أمر الشراء"
+
+msgid "Paiement Requis pour Recevoir Votre Rapport"
+msgstr "الدفع مطلوب لاستلام تقريرك"
+
+msgid ""
+"Votre analyse est terminée. Pour recevoir votre rapport, veuillez effectuer "
+"le paiement et télécharger le reçu ci-dessous."
+msgstr ""
+"اكتمل التحليل. لاستلام تقريرك، يرجى إتمام عملية الدفع ورفع الإيصال أدناه."
+
+msgid "Montant à payer"
+msgstr "المبلغ المستحَق"
+
+msgid "Reçu de paiement déjà téléchargé"
+msgstr "تم رفع إيصال الدفع مسبقاً"
+
+msgid "Télécharger votre reçu de paiement:"
+msgstr "ارفع إيصال الدفع:"
+
+msgid "Confirmer le Paiement"
+msgstr "تأكيد الدفع"
+
+msgid "Tâche acceptée"
+msgstr "تم قبول المهمة"
+
+msgid "En attente de traitement."
+msgstr "بانتظار المعالجة."
+
+msgid "Votre rapport d'analyse est prêt"
+msgstr "تقرير التحليل الخاص بك جاهز"
+
+msgid "Téléchargez-le et confirmez la réception pour finaliser votre demande."
+msgstr "قم بتنزيله وأكِّد الاستلام لإنهاء طلبك."
+
+msgid "Envoyer mon évaluation"
+msgstr "إرسال تقييمي"
+
+msgid "Votre évaluation"
+msgstr "تقييمك"
+
+msgid "Finance"
+msgstr "المالية"
+
+msgid "Gestion financière IBTIKAR & GENOCLAB"
+msgstr "الإدارة المالية لـ IBTIKAR و GENOCLAB"
+
+msgid "Étudiants IBTIKAR"
+msgstr "طلاب IBTIKAR"
+
+msgid "Validation IBTIKAR"
+msgstr "التحقُّق من IBTIKAR"
+
+msgid "Factures GENOCLAB"
+msgstr "فواتير GENOCLAB"
+
+msgid "Demandes IBTIKAR — Validation financière"
+msgstr "طلبات IBTIKAR — التحقُّق المالي"
+
+msgid "Solde déclaré"
+msgstr "الرصيد المُصرَّح به"
+
+msgid "Approuver"
+msgstr "اعتماد"
+
+msgid "Raison du rejet..."
+msgstr "سبب الرفض..."
+
+msgid "Aucune demande en attente de validation financière."
+msgstr "لا توجد طلبات بانتظار التحقُّق المالي."
+
+msgid "Budget IBTIKAR par statut"
+msgstr "ميزانية IBTIKAR حسب الحالة"
+
+msgid "Budget total"
+msgstr "الميزانية الإجمالية"
+
+msgid "Aucune donnée budgétaire."
+msgstr "لا توجد بيانات للميزانية."
+
+msgid "Client"
+msgstr "العميل"
+
+msgid "Partiel"
+msgstr "جزئي"
+
+msgid "Payé"
+msgstr "مدفوع"
+
+msgid "Archives des revenus"
+msgstr "أرشيف الإيرادات"
+
+msgid "IBTIKAR complétés"
+msgstr "IBTIKAR المكتملة"
+
+msgid "GENOCLAB complétés"
+msgstr "GENOCLAB المكتملة"
+
+msgid "Historique financier"
+msgstr "السجل المالي"
+
+msgid "Total IBTIKAR (virtuel)"
+msgstr "إجمالي IBTIKAR (افتراضي)"
+
+msgid "Total GENOCLAB (réel)"
+msgstr "إجمالي GENOCLAB (فعلي)"
+
+msgid "Factures émises"
+msgstr "الفواتير الصادرة"
+
+msgid "Étudiants uniques"
+msgstr "الطلاب الفريدون"
+
+msgid "Bienvenue"
+msgstr "أهلاً بك"
+
+msgid "Demandes"
+msgstr "الطلبات"
+
+msgid "Tableau de bord en construction"
+msgstr "لوحة التحكم قيد الإنشاء"
+
+msgid ""
+"Les widgets et statistiques spécifiques à votre rôle seront bientôt "
+"disponibles."
+msgstr "ستتوفر قريباً الأدوات والإحصاءات الخاصة بدورك."
+
+#| msgid "Continuer vers l'évaluation"
+msgid "Continuer vers l\\'évaluation"
+msgstr "المتابعة إلى التقييم"
+
+msgid "Erreur réseau, veuillez réessayer."
+msgstr "خطأ في الشبكة، يرجى المحاولة مرة أخرى."
+
+msgid "Copié !"
+msgstr "تم النسخ!"
+
+msgid ""
+"Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer."
+msgstr "نعتذر بصدق — أخبرنا بما يمكننا تحسينه."
+
+msgid "Nous voulons vraiment faire mieux pour vous."
+msgstr "نريد حقًا أن نقدّم لك ما هو أفضل."
+
+msgid "Merci — nous prenons note de vos remarques."
+msgstr "شكرًا — لقد سجّلنا ملاحظاتك."
+
+msgid "Super, merci beaucoup !"
+msgstr "رائع، شكرًا جزيلًا!"
+
+msgid "Excellent — un immense merci, cela compte vraiment pour notre équipe !"
+msgstr "ممتاز — شكرًا جزيلًا، هذا يعني الكثير لفريقنا!"
+
+msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
+msgstr "منصة إدارة العمليات العلمية — ESSBO"
+
+msgid "Merci pour votre confiance"
+msgstr "شكراً لثقتك"
+
+msgid ""
+"Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous."
+msgstr "تقرير التحليل جاهز. يمكنك تنزيله أدناه."
+
+msgid "Référence"
+msgstr "المرجع"
+
+msgid "Date de soumission"
+msgstr "تاريخ الإرسال"
+
+msgid "Remerciements et Clause de Citation"
+msgstr "الشكر والاستشهاد"
+
+msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
+msgstr "شكراً لاستخدامك PLAGENOR 4.0! تقريرك جاهز."
+
+msgid ""
+"Pour reconnaître le soutien et les contributions de notre Plateforme de "
+"Technologie Génomique, veuillez inclure la citation suivante dans toute "
+"publication ou présentation issue des données ou analyses réalisées :"
+msgstr ""
+"تقديراً لدعم ومساهمات منصة التكنولوجيا الجينومية لدينا، يرجى تضمين الاستشهاد"
+" التالي في أي نشر أو عرض يستند إلى البيانات أو التحاليل المُنجزة:"
+
+msgid "Copier"
+msgstr "نسخ"
+
+msgid ""
+"Cette recherche a été réalisée au sein de la Plateforme de Technologie "
+"Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). "
+"Nous remercions chaleureusement le personnel de la plateforme pour son aide "
+"dans l'analyse et l'interprétation des données."
+msgstr ""
+"أُجريَ هذا البحث في منصة التكنولوجيا الجينومية بالمدرسة العليا لعلوم الأحياء"
+" بوهران (ESSBO). نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات "
+"وتفسيرها."
+
+msgid ""
+"Veuillez également vous assurer que toute contribution substantielle du "
+"personnel de la plateforme est reconnue conformément aux directives standard"
+" en matière d'auteurs scientifiques."
+msgstr ""
+"يرجى أيضاً التأكد من الاعتراف بأي مساهمة جوهرية لطاقم المنصة وفقاً للمعايير "
+"المعتمدة في التأليف العلمي."
+
+msgid ""
+"Toute production scientifique incluant des analyses réalisées sur PLAGENOR "
+"implique l'inclusion des membres ayant contribué. Contactez le responsable "
+"via l'adresse email de la plateforme pour convenir des modalités."
+msgstr ""
+"أي إنتاج علمي يتضمن تحاليل أُنجزَت على PLAGENOR يستوجب إدراج الأعضاء "
+"المساهمين فيه. تواصل مع المسؤول عبر البريد الإلكتروني للمنصة للاتفاق على "
+"الشروط."
+
+msgid "Continuer vers l'évaluation"
+msgstr "المتابعة إلى التقييم"
+
+msgid "Merci pour votre évaluation"
+msgstr "شكراً على تقييمك"
+
+msgid "Comment s'est passée votre expérience ?"
+msgstr "كيف كانت تجربتك؟"
+
+msgid ""
+"Votre analyse a mobilisé notre équipe et nos plateformes. Votre retour "
+"compte énormément pour nous."
+msgstr "لقد استدعى تحليلك جهد فريقنا ومنصّاتنا. ملاحظاتك تعني لنا الكثير."
+
+msgid ""
+"Ce qui vous a marqué : réactivité de l’équipe, clarté des résultats, qualité"
+" de l’accompagnement…"
+msgstr "ما لفت انتباهك: سرعة استجابة الفريق، وضوح النتائج، جودة المرافقة…"
+
+msgid "Partager mon avis"
+msgstr "شارك رأيي"
+
+msgid "Demandeur IBTIKAR"
+msgstr "مُقدِّم طلب IBTIKAR"
+
+msgid "Espace IBTIKAR"
+msgstr "فضاء IBTIKAR"
+
+#| msgid "Saisissez votre code IBTIKAR"
+msgid "Déclarez votre solde IBTIKAR"
+msgstr "أعلن عن رصيد IBTIKAR الخاص بك"
+
+#, python-format
+msgid ""
+"Avant toute soumission, indiquez le montant résiduel disponible sur votre "
+"compte IBTIKAR (entre 0 et %(cap)s DA). C'est ce montant qui servira de "
+"plafond pour l'estimation et la validation de votre demande. Vous pourrez "
+"l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre "
+"compte DGRSDT."
+msgstr ""
+"قبل أي تقديم، أدخِل المبلغ المتبقّي المتاح في حساب IBTIKAR الخاص بك (بين 0 و"
+" %(cap)s دج). سيُستخدَم هذا المبلغ كحد أقصى لتقدير طلبك والتحقق منه. يمكنك "
+"تعديله قبل كل طلب جديد ليعكس الحالة الفعلية لحساب DGRSDT الخاص بك."
+
+#| msgid "Solde IBTIKAR déclaré (DA)"
+msgid "Solde IBTIKAR résiduel (DA)"
+msgstr "رصيد IBTIKAR المتبقي (دج)"
+
+msgid "Valider mon solde"
+msgstr "تأكيد رصيدي"
+
+#, python-format
+#| msgid "Mis à jour le"
+msgid "Mis à jour le %(dt)s."
+msgstr "تم التحديث في %(dt)s."
+
+msgid "Vous pouvez ajuster ce montant à tout moment."
+msgstr "يمكنك تعديل هذا المبلغ في أي وقت."
+
+#| msgid "Solde déclaré"
+msgid "Solde déclaré disponible"
+msgstr "الرصيد المعلن المتاح"
+
+msgid ""
+"Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
+"de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par "
+"d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire."
+msgstr ""
+"تذكير: تحقّق من الرصيد المعروض في حساب IBTIKAR (DGRSDT) قبل تقديم طلب جديد. "
+"قد تستهلك منصّات أخرى ميزانية IBTIKAR — حدِّث هذا المبلغ أدناه عند الحاجة."
+
+#| msgid "Mettre à jour"
+msgid "Mettre à jour mon solde"
+msgstr "تحديث رصيدي"
+
+#| msgid "Budget IBTIKAR (DA)"
+msgid "Nouveau solde IBTIKAR (DA)"
+msgstr "رصيد IBTIKAR الجديد (دج)"
+
+#, python-format
+#| msgid ""
+#| "Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
+msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
+msgstr "الحد الأقصى السنوي المحدّد من DGRSDT: %(cap)s دج."
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+#| msgid "Solde IBTIKAR déclaré"
+msgid "Solde IBTIKAR non déclaré"
+msgstr "رصيد IBTIKAR غير معلن"
+
+msgid ""
+"Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
+"soumettre une demande."
+msgstr "أعلِن أولًا عن رصيد IBTIKAR المتبقّي أعلاه لتتمكّن من تقديم طلب."
+
+msgid "Soumettre une nouvelle demande IBTIKAR"
+msgstr "إرسال طلب IBTIKAR جديد"
+
+msgid "Ex: Analyse DRX échantillon..."
+msgstr "مثال: تحليل DRX لعيِّنة..."
+
+#, python-format
+msgid ""
+"Plafond pour cette demande : <strong>%(rem)s DA</strong> (votre solde "
+"IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous "
+"avez vérifié votre compte DGRSDT."
+msgstr ""
+"الحد الأقصى لهذا الطلب: <strong>%(rem)s دج</strong> (رصيد IBTIKAR المُعلَن)."
+" حدِّث هذا الرصيد في البطاقة أعلاه إذا تحقّقت من حساب DGRSDT الخاص بك."
+
+#| msgid "dépasse votre solde déclaré"
+msgid "supérieur à votre solde déclaré"
+msgstr "أعلى من رصيدك المعلن"
+
+msgid "RDV"
+msgstr "الموعد"
+
+msgid "confirmé"
+msgstr "مؤكَّد"
+
+msgid "Validation"
+msgstr "التحقُّق"
+
+msgid "Télécharger le rapport et confirmer la réception"
+msgstr "تنزيل التقرير وتأكيد الاستلام"
+
+msgid "En attente d'assignation."
+msgstr "بانتظار الإسناد."
+
+msgid "Statistiques"
+msgstr "الإحصاءات"
+
+#| msgid "Statistiques"
+msgid "Statistiques & métriques"
+msgstr "الإحصائيات والمؤشرات"
+
+msgid "Vue institutionnelle complète"
+msgstr "عرض مؤسساتي كامل"
+
+#| msgid "Historique financier"
+msgid "Vue financière"
+msgstr "العرض المالي"
+
+#| msgid "Assignation"
+msgid "Mes assignations"
+msgstr "إسناداتي"
+
+#| msgid "Productivité"
+msgid "Mon activité"
+msgstr "نشاطي"
+
+msgid "Du"
+msgstr "من"
+
+msgid "Au"
+msgstr "إلى"
+
+msgid "Tous"
+msgstr "الكل"
+
+#| msgid "Ajouter"
+msgid "Toutes"
+msgstr "الكل"
+
+#| msgid "Paiement"
+msgid "Établissement"
+msgstr "المؤسسة"
+
+#| msgid "Rapport d'analyse"
+msgid "Cadre d'analyse"
+msgstr "إطار التحليل"
+
+msgid "Appliquer"
+msgstr "تطبيق"
+
+msgid "Document de synthèse Word/PDF"
+msgstr "مستند ملخّص Word/PDF"
+
+msgid "Synthèse Word"
+msgstr "ملخّص Word"
+
+msgid "Générer un bilan d'activité (Excel)"
+msgstr "إنشاء تقرير نشاط (Excel)"
+
+#, python-format
+msgid ""
+"Choisissez les dimensions, la granularité de la période et la portée "
+"(filtres ci-dessus). Le bilan inclut effectifs, parts (%%) et montants par "
+"canal."
+msgstr ""
+"اختر الأبعاد ودقة الفترة والنطاق (المرشّحات أعلاه). يتضمّن التقرير الأعداد "
+"والنِّسب (%%) والمبالغ حسب القناة."
+
+msgid "Granularité de la période"
+msgstr "دقة الفترة"
+
+msgid "Mensuelle"
+msgstr "شهرية"
+
+msgid "Trimestrielle"
+msgstr "فصلية"
+
+#| msgid "Annuler"
+msgid "Annuelle"
+msgstr "سنوية"
+
+msgid "Dimensions à inclure"
+msgstr "الأبعاد المراد تضمينها"
+
+#| msgid "Télécharger le rapport"
+msgid "Télécharger le bilan Excel"
+msgstr "تنزيل التقرير (Excel)"
+
+#| msgid "Retour aux opérations"
+msgid "Taux complétion"
+msgstr "معدل الإنجاز"
+
+#| msgid "Demandeur IBTIKAR"
+msgid "Revenu virtuel IBTIKAR"
+msgstr "الإيراد الافتراضي IBTIKAR"
+
+#| msgid "Revenue GENOCLAB (DA)"
+msgid "Revenu GENOCLAB"
+msgstr "إيراد GENOCLAB"
+
+#| msgid "Ajouter service"
+msgid "Par service"
+msgstr "حسب الخدمة"
+
+#| msgid "Aucune demande"
+msgid "Aucune donnée"
+msgstr "لا توجد بيانات"
+
+#| msgid "Statut"
+msgid "Par statut"
+msgstr "حسب الحالة"
+
+msgid "Par wilaya"
+msgstr "حسب الولاية"
+
+#| msgid "Paiement"
+msgid "Par établissement"
+msgstr "حسب المؤسسة"
+
+#| msgid "Rapport d'analyse"
+msgid "Par cadre d'analyse"
+msgstr "حسب إطار التحليل"
+
+msgid "Cadre"
+msgstr "الإطار"
+
+msgid "Par sexe"
+msgstr "حسب الجنس"
+
+#| msgid "Archives mensuelles"
+msgid "Tendance mensuelle"
+msgstr "الاتجاه الشهري"
+
+msgid "Journal d'audit"
+msgstr "سجل التدقيق"
+
+msgid "Historique des actions sur la plateforme"
+msgstr "سجل الإجراءات على المنصة"
+
+msgid "Date début"
+msgstr "تاريخ البداية"
+
+msgid "Date fin"
+msgstr "تاريخ النهاية"
+
+msgid "Action/Statut"
+msgstr "الإجراء/الحالة"
+
+msgid "Ex: ASSIGNED..."
+msgstr "مثال: ASSIGNED..."
+
+msgid "Utilisateur"
+msgstr "المستخدم"
+
+msgid "Nom..."
+msgstr "الاسم..."
+
+msgid "Entrées d'audit"
+msgstr "إدخالات التدقيق"
+
+msgid "De"
+msgstr "من"
+
+msgid "Vers"
+msgstr "إلى"
+
+msgid "Acteur"
+msgstr "المنفِّذ"
+
+msgid "Forcé"
+msgstr "إجباري"
+
+msgid "Aucune entrée d'audit."
+msgstr "لا توجد إدخالات تدقيق."
+
+msgid "Précédent"
+msgstr "السابق"
+
+msgid "Page"
+msgstr "الصفحة"
+
+msgid "Suivant"
+msgstr "التالي"
+
+msgid "Super Admin"
+msgstr "المسؤول الأعلى"
+
+msgid "Vue d'ensemble de la plateforme"
+msgstr "نظرة عامة على المنصة"
+
+msgid "Utilisateurs"
+msgstr "المستخدمون"
+
+msgid "Analystes"
+msgstr "المحلِّلون"
+
+msgid "Demandes actives"
+msgstr "الطلبات النشطة"
+
+msgid "Services actifs"
+msgstr "الخدمات النشطة"
+
+msgid "Techniques"
+msgstr "التقنيات"
+
+msgid "Budget IBTIKAR (DA)"
+msgstr "ميزانية IBTIKAR (دج)"
+
+msgid "Revenue GENOCLAB (DA)"
+msgstr "إيرادات GENOCLAB (دج)"
+
+msgid "Note moyenne / 5"
+msgstr "متوسط التقييم / 5"
+
+msgid "Actions rapides"
+msgstr "إجراءات سريعة"
+
+msgid "Gérer utilisateurs"
+msgstr "إدارة المستخدمين"
+
+msgid "Ajouter service"
+msgstr "إضافة خدمة"
+
+msgid "Ajouter technique"
+msgstr "إضافة تقنية"
+
+msgid "Modifier contenu"
+msgstr "تعديل المحتوى"
+
+msgid "Derniers utilisateurs"
+msgstr "أحدث المستخدمين"
+
+msgid "Aucun utilisateur récent."
+msgstr "لا يوجد مستخدمون مؤخراً."
+
+msgid "Vue d'ensemble"
+msgstr "نظرة عامة"
+
+msgid "Paiements"
+msgstr "المدفوعات"
+
+msgid "Formulaires"
+msgstr "النماذج"
+
+msgid "Contenu"
+msgstr "المحتوى"
+
+msgid "Système"
+msgstr "النظام"
+
+msgid "Répartition par statut"
+msgstr "التوزيع حسب الحالة"
+
+msgid "Nombre"
+msgstr "العدد"
+
+msgid "Aucune demande"
+msgstr "لا توجد طلبات"
+
+msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
+msgstr "لا توجد طلبات حتى الآن. ستظهر الإحصاءات هنا."
+
+msgid "Créer un utilisateur"
+msgstr "إنشاء مستخدم"
+
+msgid "Masquer"
+msgstr "إخفاء"
+
+msgid "Afficher"
+msgstr "إظهار"
+
+msgid "Nom d'utilisateur"
+msgstr "اسم المستخدم"
+
+msgid "Créer"
+msgstr "إنشاء"
+
+msgid "Recherche"
+msgstr "بحث"
+
+msgid "Nom, email, username..."
+msgstr "الاسم، البريد الإلكتروني، اسم المستخدم..."
+
+msgid "Tous les rôles"
+msgstr "جميع الأدوار"
+
+msgid "Effacer les filtres"
+msgstr "مسح عوامل التصفية"
+
+msgid "Actif"
+msgstr "نشط"
+
+msgid "Inactif"
+msgstr "غير نشط"
+
+msgid "Modifier"
+msgstr "تعديل"
+
+msgid "Désactiver cet utilisateur ?"
+msgstr "هل تريد تعطيل هذا المستخدم؟"
+
+msgid "Activer cet utilisateur ?"
+msgstr "هل تريد تفعيل هذا المستخدم؟"
+
+msgid "Désactiver"
+msgstr "تعطيل"
+
+msgid "Activer"
+msgstr "تفعيل"
+
+msgid "Réinitialiser / Reset Account"
+msgstr "إعادة تعيين / Reset Account"
+
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr "إعادة تعيين المصادقة الثنائية (فقدان الهاتف)"
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr "إعادة تعيين المصادقة الثنائية لهذا المستخدم؟"
+
+msgid "Reset 2FA"
+msgstr "إعادة تعيين 2FA"
+
+msgid "Analystes / Opérateurs"
+msgstr "المحلِّلون / المُشغِّلون"
+
+msgid "tech."
+msgstr "تقنية"
+
+msgid "Sauvegarder"
+msgstr "حفظ"
+
+msgid "Rendre indisponible"
+msgstr "جعله غير متاح"
+
+msgid "Rendre disponible"
+msgstr "جعله متاحاً"
+
+msgid "Ajouter un service"
+msgstr "إضافة خدمة"
+
+msgid "Prix IBTIKAR"
+msgstr "سعر IBTIKAR"
+
+msgid "Délai (jours)"
+msgstr "المدة (بالأيام)"
+
+msgid "Image"
+msgstr "الصورة"
+
+msgid "Créer le service"
+msgstr "إنشاء الخدمة"
+
+msgid "Services existants"
+msgstr "الخدمات الموجودة"
+
+msgid "IBTIKAR"
+msgstr "IBTIKAR"
+
+msgid "GENOCLAB"
+msgstr "GENOCLAB"
+
+msgid "Réactiver"
+msgstr "إعادة التفعيل"
+
+msgid "Aucun service."
+msgstr "لا توجد خدمات."
+
+msgid "Ajouter une technique"
+msgstr "إضافة تقنية"
+
+msgid "Catégorie"
+msgstr "الفئة"
+
+msgid "Techniques existantes"
+msgstr "التقنيات الموجودة"
+
+msgid "OK"
+msgstr "موافق"
+
+msgid "Active"
+msgstr "نشطة"
+
+msgid "Inactive"
+msgstr "غير نشطة"
+
+msgid "Aucune technique."
+msgstr "لا توجد تقنيات."
+
+msgid "Gestion du contenu"
+msgstr "إدارة المحتوى"
+
+#| msgid "Nouvelle demande"
+msgid "Nouvelle entrée"
+msgstr "إدخال جديد"
+
+msgid ""
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur"
+" le texte du gabarit."
+msgstr ""
+"عدّل النص المعروض في الموقع باللغات الثلاث (الفرنسية، الإنجليزية، العربية). "
+"القيمة الفارغة ترجع إلى اللغة الافتراضية ثم إلى نص القالب."
+
+msgid "Clé"
+msgstr "المفتاح"
+
+#| msgid "Techniques existantes"
+msgid "Contenu existant"
+msgstr "المحتوى الحالي"
+
+msgid "clés"
+msgstr "مفاتيح"
+
+#| msgid "Filtrer par clé, langue, ou valeur..."
+msgid "Filtrer par clé ou texte…"
+msgstr "تصفية حسب المفتاح أو النص…"
+
+msgid "Français"
+msgstr "الفرنسية"
+
+msgid "Langues manquantes"
+msgstr "اللغات الناقصة"
+
+msgid "Supprimer cette clé dans toutes les langues ?"
+msgstr "حذف هذا المفتاح بجميع اللغات؟"
+
+msgid "Supprimer"
+msgstr "حذف"
+
+msgid "ID ou titre..."
+msgstr "المعرّف أو العنوان..."
+
+msgid "CSV"
+msgstr "CSV"
+
+msgid "Assigné à"
+msgstr "مُسنَد إلى"
+
+msgid "Forcer une transition"
+msgstr "فرض انتقال"
+
+msgid "Sélectionner le statut cible"
+msgstr "اختر الحالة المستهدفة"
+
+msgid "Justification (min. 10 caractères)"
+msgstr "المُبرِّر (10 أحرف على الأقل)"
+
+msgid "Forcer la transition"
+msgstr "فرض الانتقال"
+
+msgid "Override budgétaire"
+msgstr "تجاوز الميزانية"
+
+msgid "Montant budget"
+msgstr "قيمة الميزانية"
+
+msgid "Justification pour l override..."
+msgstr "مُبرِّر التجاوز..."
+
+msgid "Approuver override"
+msgstr "اعتماد التجاوز"
+
+msgid "Verrouillé"
+msgstr "مُقفَل"
+
+msgid "Méthodes de paiement"
+msgstr "طرق الدفع"
+
+msgid "Nom de la méthode"
+msgstr "اسم الطريقة"
+
+msgid "Réinitialiser les compteurs"
+msgstr "إعادة تعيين العدّادات"
+
+msgid ""
+"Archive les données de revenus actuelles et réinitialise les compteurs du "
+"tableau de bord. Cette action est irréversible."
+msgstr ""
+"تتم أرشفة بيانات الإيرادات الحالية وإعادة تعيين عدّادات لوحة التحكم. هذا "
+"الإجراء غير قابل للتراجع."
+
+msgid ""
+"Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
+"données seront archivées."
+msgstr "هل أنت متأكد من إعادة تعيين عدّادات الإيرادات؟ ستتم أرشفة البيانات."
+
+msgid "Productivité des analystes"
+msgstr "إنتاجية المحلِّلين"
+
+msgid "assignées"
+msgstr "المُسنَدة"
+
+msgid "complétées"
+msgstr "المكتملة"
+
+msgid "Score"
+msgstr "النتيجة"
+
+msgid "Fire"
+msgstr "ممتاز"
+
+msgid "Very Good"
+msgstr "جيد جداً"
+
+msgid "Good"
+msgstr "جيد"
+
+msgid "Aucune donnée de productivité."
+msgstr "لا توجد بيانات للإنتاجية."
+
+msgid "Rapports générés"
+msgstr "التقارير الصادرة"
+
+msgid "Mis à jour"
+msgstr "آخر تحديث"
+
+msgid "Aucun rapport disponible."
+msgstr "لا توجد تقارير متاحة."
+
+#| msgid "Champs personnalisés"
+msgid "Blocs de contenu personnalisés"
+msgstr "كتل محتوى مخصّصة"
+
+msgid ""
+"Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
+"remarques) injectés dans les documents générés — globalement ou pour un "
+"service précis. Les placeholders {{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} "
+"etc. sont résolus à la volée."
+msgstr ""
+"أضف أو عدّل فقرات (إشعارات قانونية، تعليمات، ملاحظات) تُدرَج في الوثائق "
+"المُولَّدة — بشكل عام أو لخدمة محددة. يتم حلّ العناصر النائبة {{FULL_NAME}} "
+"و{{DISPLAY_ID}} و{{DATE}} وغيرها تلقائيًا."
+
+#| msgid "Gestion du contenu"
+msgid "Gérer les blocs de contenu"
+msgstr "إدارة كتل المحتوى"
+
+#| msgid "Champs personnalisés"
+msgid "Modèles DOCX personnalisés"
+msgstr "قوالب DOCX مخصّصة"
+
+#| msgid "Templates DOCX"
+msgid "Templates DOCX globaux"
+msgstr "قوالب DOCX عامة"
+
+msgid ""
+"Mettez à jour les templates DOCX utilisés pour la génération automatique des"
+" documents. Un backup est créé automatiquement avant chaque mise à jour."
+msgstr ""
+"حدِّث قوالب DOCX المستخدمة في توليد الوثائق تلقائياً. تُنشأ نسخة احتياطية "
+"تلقائياً قبل كل تحديث."
+
+msgid "Configuration des formulaires par service"
+msgstr "تكوين النماذج حسب الخدمة"
+
+msgid "Champs personnalisés"
+msgstr "الحقول المخصَّصة"
+
+msgid "Label"
+msgstr "التسمية"
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "Requis"
+msgstr "إلزامي"
+
+msgid "Aucun champ personnalisé."
+msgstr "لا توجد حقول مخصَّصة."
+
+#| msgid "Informations plateforme"
+msgid "Annonces plateforme"
+msgstr "إعلانات المنصة"
+
+#| msgid "Audit"
+msgid "Audience"
+msgstr "الجمهور"
+
+msgid "Publier l'annonce"
+msgstr "نشر الإعلان"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer cette annonce ?"
+msgstr "حذف هذا الإعلان؟"
+
+msgid ""
+"Consultez l'historique complet de toutes les transitions, actions et "
+"modifications effectuées sur la plateforme."
+msgstr ""
+"اطّلع على السجل الكامل لجميع الانتقالات والإجراءات والتعديلات على المنصة."
+
+msgid "Voir le journal d'audit"
+msgstr "عرض سجل التدقيق"
+
+msgid ""
+"Consultez les archives mensuelles des revenus GENOCLAB et des budgets "
+"IBTIKAR."
+msgstr "اطّلع على الأرشيف الشهري لإيرادات GENOCLAB وميزانيات IBTIKAR."
+
+msgid "Voir les archives"
+msgstr "عرض الأرشيف"
+
+msgid "Contacts & Newsletter"
+msgstr "جهات الاتصال والنشرة الإخبارية"
+
+msgid "Exporter tous les emails (CSV)"
+msgstr "تصدير جميع رسائل البريد (CSV)"
+
+msgid ""
+"Exporte tous les emails des utilisateurs enregistrés et des invités pour "
+"envoi de newsletters."
+msgstr ""
+"يتم تصدير جميع رسائل البريد للمستخدمين المسجَّلين والزوار لإرسال النشرات "
+"الإخبارية."
+
+msgid "Sauvegarde"
+msgstr "النسخ الاحتياطي"
+
+msgid "Télécharger une sauvegarde"
+msgstr "تنزيل نسخة احتياطية"
+
+msgid "Télécharge une copie de la base de données SQLite."
+msgstr "يتم تنزيل نسخة من قاعدة بيانات SQLite."
+
+msgid "Restaurer une sauvegarde"
+msgstr "استعادة نسخة احتياطية"
+
+msgid ""
+"Attention : cette opération remplace la base de données actuelle. Un backup "
+"automatique sera créé avant la restauration. Le serveur devra être redémarré"
+" après la restauration."
+msgstr ""
+"تنبيه: تستبدل هذه العملية قاعدة البيانات الحالية. سيتم إنشاء نسخة احتياطية "
+"تلقائية قبل الاستعادة. ويجب إعادة تشغيل الخادم بعدها."
+
+msgid ""
+"Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base"
+" actuelle sera créé automatiquement."
+msgstr ""
+"هل أنت متأكد من استعادة قاعدة البيانات؟ ستُنشأ نسخة احتياطية تلقائية للقاعدة"
+" الحالية."
+
+msgid "Restaurer"
+msgstr "استعادة"
+
+msgid "Informations plateforme"
+msgstr "معلومات المنصة"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Auteur"
+msgstr "المؤلف"
+
+msgid "Institution"
+msgstr "المؤسسة"
+
+msgid "Base de données"
+msgstr "قاعدة البيانات"
+
+msgid "Framework"
+msgstr "إطار العمل"
+
+msgid "Utilisateurs totaux"
+msgstr "إجمالي المستخدمين"
+
+msgid "Demandes totales"
+msgstr "إجمالي الطلبات"
+
+msgid "Réinitialiser le compte"
+msgstr "إعادة تعيين الحساب"
+
+msgid "Confirmer la réinitialisation"
+msgstr "تأكيد إعادة التعيين"
+
+msgid "Attention"
+msgstr "تنبيه"
+
+#, python-format
+msgid ""
+"\n"
+"            Êtes-vous sûr de vouloir réinitialiser le compte de <strong>%(username)s</strong> ?\n"
+"            Toutes les données associées (demandes, rapports, historique) seront conservées.\n"
+"            "
+msgstr ""
+"\n"
+"            هل أنت متأكد من إعادة تعيين حساب <strong>%(username)s</strong>؟\n"
+"            ستُحفظ جميع البيانات المرتبطة (الطلبات، التقارير، السجل).\n"
+"            "
+
+msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+msgstr "سيتم توليد كلمة مرور مؤقتة آمنة (16 حرفاً)."
+
+msgid ""
+"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+msgstr "سيُطلب من المستخدم تغيير كلمة المرور عند تسجيل الدخول التالي."
+
+#, python-format
+msgid ""
+"Un email avec le mot de passe temporaire sera envoyé à "
+"<strong>%(email)s</strong>."
+msgstr ""
+"سيتم إرسال بريد إلكتروني يتضمن كلمة المرور المؤقتة إلى "
+"<strong>%(email)s</strong>."
+
+msgid ""
+"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
+"notification."
+msgstr "لا يوجد بريد إلكتروني مُكوَّن — ستظهر كلمة المرور المؤقتة في الإشعار."
+
+msgid "Cette action est enregistrée dans le journal d'audit."
+msgstr "يُسجَّل هذا الإجراء في سجل التدقيق."
+
+msgid "Archives de revenus"
+msgstr "أرشيف الإيرادات"
+
+msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
+msgstr "الأرشيف الشهري لإيرادات IBTIKAR و GENOCLAB"
+
+msgid "Archives mensuelles"
+msgstr "الأرشيف الشهري"
+
+msgid "Période"
+msgstr "الفترة"
+
+msgid "Revenu total"
+msgstr "إجمالي الإيرادات"
+
+msgid "Nombre demandes"
+msgstr "عدد الطلبات"
+
+msgid "Archivé le"
+msgstr "تاريخ الأرشفة"
+
+msgid "Aucune archive. Exécutez"
+msgstr "لا يوجد أرشيف. شغِّل"
+
+msgid "pour générer les archives."
+msgstr "لتوليد الأرشيف."
+
+msgid "Modifier service"
+msgstr "تعديل الخدمة"
+
+msgid "Modifier le service"
+msgstr "تعديل الخدمة"
+
+#| msgid "Prix IBTIKAR (DA)"
+msgid "Prix IBTIKAR (DZD)"
+msgstr "سعر IBTIKAR (دج)"
+
+msgid ""
+"Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
+"ci-dessous)"
+msgstr "سعر إجمالي (يُستخدَم إذا لم تُحدَّد أي قاعدة تسعير مفصّلة أدناه)"
+
+#| msgid "Prix GENOCLAB (DA)"
+msgid "Prix GENOCLAB (DZD)"
+msgstr "سعر GENOCLAB (دج)"
+
+msgid "Image actuelle"
+msgstr "الصورة الحالية"
+
+#| msgid "Derniers utilisateurs"
+msgid "Prix de base & multiplicateurs"
+msgstr "السعر الأساسي والمُعامِلات"
+
+msgid ""
+"Formule : <strong>Prix de base × Multiplicateur × Nombre "
+"d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des "
+"consommables change — les nouvelles valeurs s'appliquent immédiatement aux "
+"estimations et aux devis."
+msgstr ""
+"الصيغة: <strong>السعر الأساسي × المُعامِل × عدد العينات</strong>. عدّل هنا "
+"عند تغيّر أسعار الكواشف أو المستهلكات — تُطبَّق القيم الجديدة فورًا على "
+"التقديرات وعروض الأسعار."
+
+msgid ""
+"Valeurs YAML par défaut affichées — premier enregistrement les copiera en "
+"base."
+msgstr "القيم الافتراضية من YAML معروضة — أول حفظ سينسخها إلى قاعدة البيانات."
+
+#| msgid "non pathogène"
+msgid "Prix non pathogène (DA)"
+msgstr "سعر غير ممرض (دج)"
+
+#| msgid "pathogène"
+msgid "Prix pathogène (DA)"
+msgstr "سعر ممرض (دج)"
+
+msgid "idem si vide"
+msgstr "نفسه إذا كان فارغًا"
+
+msgid "Paramètre porteur du multiplicateur"
+msgstr "الحقل الذي يحمل المُعامِل"
+
+#| msgid "Derniers utilisateurs"
+msgid "Table de multiplicateurs"
+msgstr "جدول المُعامِلات"
+
+#| msgid "Ajouter une ligne"
+msgid "Ajouter une option"
+msgstr "إضافة خيار"
+
+msgid "ex. Simple, Duplicate, Triplicate"
+msgstr "مثال: Simple، Duplicate، Triplicate"
+
+#| msgid "Aucun utilisateur récent."
+msgid "Aucun multiplicateur défini (×1 partout)."
+msgstr "لا يوجد مُعامِل محدّد (×1 في كل الحالات)."
+
+msgid "ex. Simple, Duplicate"
+msgstr "مثال: Simple، Duplicate"
+
+#| msgid "Configuration des formulaires par service"
+msgid "Configurations tarifaires détaillées"
+msgstr "إعدادات التسعير المفصّلة"
+
+#| msgid "Ajouter un service"
+msgid "Ajouter un tarif"
+msgstr "إضافة تعريفة"
+
+msgid ""
+"Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
+"coexister (priorité plus basse = appliquée en premier). Chaque modification "
+"est enregistrée immédiatement."
+msgstr ""
+"اضبط الأسعار الأساسية والرسوم الإضافية. يمكن أن تتعايش عدة قواعد (الأولوية "
+"الأدنى = تُطبَّق أولًا). يُحفَظ كل تعديل فورًا."
+
+msgid ""
+"Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les "
+"nouvelles demandes."
+msgstr "لا يوجد تسعير مفصّل. يُستخدَم السعر الإجمالي أعلاه للطلبات الجديدة."
+
+msgid "Champs personnalisés du formulaire"
+msgstr "الحقول المخصَّصة للنموذج"
+
+msgid "Ajouter un champ"
+msgstr "إضافة حقل"
+
+#| msgid "Factures"
+msgid "Nature"
+msgstr "الطبيعة"
+
+#| msgid "Description"
+msgid "Question"
+msgstr "سؤال"
+
+#| msgid "par échantillon"
+msgid "Colonne échantillon"
+msgstr "عمود العيّنة"
+
+msgid "Texte"
+msgstr "نص"
+
+msgid "Liste"
+msgstr "قائمة"
+
+msgid "Oui/Non"
+msgstr "نعم/لا"
+
+msgid "Options (virgules)"
+msgstr "الخيارات (مفصولة بفواصل)"
+
+msgid "Tarification conditionnelle & logique d'affichage"
+msgstr "التسعير الشرطي ومنطق العرض"
+
+msgid "Ce champ modifie le prix"
+msgstr "هذا الحقل يؤثّر على السعر"
+
+#| msgid "Type de document"
+msgid "Type de modificateur"
+msgstr "نوع المُعدِّل"
+
+msgid "Surcharge (+)"
+msgstr "رسم إضافي (+)"
+
+msgid "Forfait (=)"
+msgstr "سعر ثابت (=)"
+
+#| msgid "Utilisateur"
+msgid "Multiplicateur (×)"
+msgstr "المُعامِل (×)"
+
+msgid "Valeur"
+msgstr "القيمة"
+
+msgid "Note condition (FR)"
+msgstr "ملاحظة الشرط (FR)"
+
+msgid "Note condition (EN)"
+msgstr "ملاحظة الشرط (EN)"
+
+msgid "Prix par option (JSON)"
+msgstr "السعر لكل خيار (JSON)"
+
+msgid "ex : {\"Duplicata\": 2, \"Triplicata\": 2.6}"
+msgstr "مثال: {\"Duplicata\": 2, \"Triplicata\": 2.6}"
+
+msgid "Logique conditionnelle (JSON)"
+msgstr "المنطق الشرطي (JSON)"
+
+msgid ""
+"ex : "
+"[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
+msgstr ""
+"مثال: "
+"[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
+
+msgid "Enregistrer toutes les modifications"
+msgstr "حفظ كل التعديلات"
+
+#| msgid "Nom du laboratoire"
+msgid "Nom du tarif"
+msgstr "اسم التعريفة"
+
+msgid "ex : Prix de base, Majoration urgence, Remise volume"
+msgstr "مثال: السعر الأساسي، رسم الاستعجال، خصم الكمية"
+
+msgid "Prix de base"
+msgstr "السعر الأساسي"
+
+#| msgid "par échantillon"
+msgid "Par échantillon"
+msgstr "لكل عيّنة"
+
+msgid "Par paramètre"
+msgstr "حسب الحقل"
+
+msgid "Majoration urgence"
+msgstr "رسم الاستعجال"
+
+msgid "Remise"
+msgstr "خصم"
+
+msgid "Les deux"
+msgstr "كلاهما"
+
+msgid "Montant (DZD)"
+msgstr "المبلغ (دج)"
+
+msgid "Unité"
+msgstr "الوحدة"
+
+#| msgid "par échantillon"
+msgid "forfait, par échantillon"
+msgstr "سعر ثابت، لكل عيّنة"
+
+msgid "Priorité"
+msgstr "الأولوية"
+
+msgid "Conditions avancées (quantité, seuils)"
+msgstr "شروط متقدمة (الكمية، العتبات)"
+
+msgid "Qté min"
+msgstr "الكمية الدنيا"
+
+msgid "Qté max"
+msgstr "الكمية القصوى"
+
+#| msgid "Montant à payer"
+msgid "Montant min applicable"
+msgstr "الحد الأدنى للمبلغ"
+
+#| msgid "Montant à payer"
+msgid "Montant max applicable"
+msgstr "الحد الأقصى للمبلغ"
+
+#| msgid "Description"
+msgid "Description (optionnel)"
+msgstr "الوصف (اختياري)"
+
+msgid "ex : Tarif appliqué pour les analyses urgentes"
+msgstr "مثال: التعريفة المطبَّقة على التحاليل المستعجلة"
+
+#| msgid "Tarification"
+msgid "Tarif actif"
+msgstr "تعريفة نشطة"
+
+#| msgid "Modifier le service"
+msgid "Modifier le tarif"
+msgstr "تعديل التعريفة"
+
+#| msgid "Changement de mot de passe obligatoire"
+msgid "Le nom du tarif est obligatoire."
+msgstr "اسم التعريفة إلزامي."
+
+msgid "Erreur"
+msgstr "خطأ"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer ce tarif ?"
+msgstr "حذف هذه التعريفة؟"
+
+msgid "Modifier utilisateur"
+msgstr "تعديل المستخدم"
+
+msgid "Informations de l'utilisateur"
+msgstr "بيانات المستخدم"
+
+msgid "Directeur de thèse"
+msgstr "المشرف على الأطروحة"
+
+msgid "Niveau étudiant"
+msgstr "المستوى الدراسي"
+
+msgid "laisser vide pour ne pas changer"
+msgstr "اتركه فارغاً للإبقاء عليه كما هو"
+
+#| msgid "Supprimer le Modèle"
+msgid "Supprimer le bloc"
+msgstr "حذف الكتلة"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer ce bloc ?"
+msgstr "حذف هذه الكتلة؟"
+
+#| msgid "Services existants"
+msgid "Services concernés"
+msgstr "الخدمات المعنية"
+
+#| msgid "Tous les services"
+msgid "Global (tous les services)"
+msgstr "عام (كل الخدمات)"
+
+#| msgid "Inscription"
+msgid "Position"
+msgstr "الموضع"
+
+msgid "Langue"
+msgstr "اللغة"
+
+#| msgid "Supprimer"
+msgid "Oui, supprimer"
+msgstr "نعم، احذف"
+
+#| msgid "Modifier"
+msgid "Modifier bloc"
+msgstr "تعديل الكتلة"
+
+#| msgid "Nouveau modèle"
+msgid "Nouveau bloc"
+msgstr "كتلة جديدة"
+
+#| msgid "Modifier le service"
+msgid "Modifier le bloc"
+msgstr "تعديل الكتلة"
+
+#| msgid "Nouveau mot de passe"
+msgid "Nouveau bloc de contenu"
+msgstr "كتلة محتوى جديدة"
+
+msgid ""
+"Le contenu de ce bloc sera injecté dans le document généré à la position "
+"choisie."
+msgstr "سيُدرَج محتوى هذه الكتلة في الوثيقة المُولَّدة في الموضع المختار."
+
+msgid "Type de document"
+msgstr "نوع الوثيقة"
+
+msgid ""
+"Aucune case cochée = bloc global (s'applique à tous les services). Cochez un"
+" sous-ensemble pour cibler ces services uniquement."
+msgstr ""
+"عدم تحديد أي خانة = كتلة عامة (تنطبق على جميع الخدمات). حدّد مجموعة فرعية "
+"لاستهداف تلك الخدمات فقط."
+
+msgid "Plus bas = inséré en premier"
+msgstr "الأدنى = يُدرَج أولًا"
+
+#| msgid "Commentaire (optionnel)..."
+msgid "Titre (optionnel)"
+msgstr "العنوان (اختياري)"
+
+msgid "Affiché en gras au-dessus du texte"
+msgstr "يُعرَض بخط عريض فوق النص"
+
+msgid ""
+"Texte à injecter dans le document. Séparez les paragraphes avec une ligne "
+"vide."
+msgstr "النص المراد إدراجه في الوثيقة. افصل بين الفقرات بسطر فارغ."
+
+msgid ""
+"Astuce : les placeholders comme {{FULL_NAME}}, {{DISPLAY_ID}}, "
+"{{SERVICE_NAME}}, {{DATE}} sont résolus lors de la génération."
+msgstr ""
+"نصيحة: تُحلّ العناصر النائبة مثل {{FULL_NAME}} و{{DISPLAY_ID}} "
+"و{{SERVICE_NAME}} و{{DATE}} عند التوليد."
+
+#| msgid "Modifier contenu"
+msgid "Blocs de contenu"
+msgstr "كتل المحتوى"
+
+#| msgid "Placeholders documentés"
+msgid "Blocs de contenu des documents"
+msgstr "كتل محتوى المستندات"
+
+msgid ""
+"Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
+"(formulaire IBTIKAR, note de plateforme, devis, fiche de réception)."
+msgstr ""
+"أضف أو عدّل الفقرات المُدرَجة في الوثائق المُولَّدة (استمارة IBTIKAR، مذكرة "
+"المنصة، عرض السعر، استمارة الاستلام)."
+
+#| msgid "Modèle de"
+msgid "Modèles DOCX"
+msgstr "قوالب DOCX"
+
+#| msgid "Tous les services"
+msgid "Global (tous services)"
+msgstr "عام (كل الخدمات)"
+
+msgid "Aperçu"
+msgstr "معاينة"
+
+msgid "Global"
+msgstr "عام"
+
+msgid "Aucun bloc défini. Cliquez sur « Nouveau bloc » pour en créer un."
+msgstr "لا توجد كتلة مُعرَّفة. انقر على «كتلة جديدة» لإنشاء واحدة."
+
+msgid "Supprimer le Modèle"
+msgstr "حذف القالب"
+
+msgid "Confirmer la suppression"
+msgstr "تأكيد الحذف"
+
+msgid "Attention !"
+msgstr "تنبيه!"
+
+msgid "Êtes-vous sûr de vouloir supprimer le modèle"
+msgstr "هل أنت متأكد من حذف القالب"
+
+msgid ""
+"Cette action est irréversible. Le fichier sera définitivement supprimé."
+msgstr "هذا الإجراء غير قابل للتراجع. سيُحذف الملف نهائياً."
+
+msgid "Fichier"
+msgstr "الملف"
+
+msgid "Oui, supprimer définitivement"
+msgstr "نعم، احذف نهائياً"
+
+msgid "Retour à la liste"
+msgstr "العودة إلى القائمة"
+
+msgid "Modèle de"
+msgstr "قالب لـ"
+
+msgid "Informations"
+msgstr "المعلومات"
+
+msgid "Aucun fichier"
+msgstr "لا يوجد ملف"
+
+msgid "Créé par"
+msgstr "أنشأه"
+
+msgid "Créé le"
+msgstr "تاريخ الإنشاء"
+
+msgid "Mis à jour le"
+msgstr "تاريخ التحديث"
+
+msgid "Placeholders documentés"
+msgstr "العناصر النائبة الموثَّقة"
+
+msgid "Placeholder"
+msgstr "العنصر النائب"
+
+msgid "Exemple"
+msgstr "مثال"
+
+msgid ""
+"Ce modèle sera utilisé pour générer automatiquement des documents lorsqu'un "
+"utilisateur demande un document de type"
+msgstr ""
+"سيُستخدم هذا القالب لتوليد الوثائق تلقائياً عند طلب المستخدم وثيقة من نوع"
+
+msgid "pour le service"
+msgstr "للخدمة"
+
+msgid ""
+"Seul un modèle actif par service/type sera utilisé. Les autres seront "
+"désactivés automatiquement."
+msgstr ""
+"سيُستخدم قالب نشط واحد فقط لكل خدمة/نوع. وستُعطَّل القوالب الأخرى تلقائياً."
+
+msgid "Modifier le Modèle"
+msgstr "تعديل القالب"
+
+msgid "Créer un Modèle"
+msgstr "إنشاء قالب"
+
+msgid "Créer un Nouveau Modèle"
+msgstr "إنشاء قالب جديد"
+
+msgid "Sélectionner un service"
+msgstr "اختر خدمة"
+
+msgid "Sélectionner un type"
+msgstr "اختر نوعاً"
+
+msgid "Nom du modèle"
+msgstr "اسم القالب"
+
+msgid "ex: Formulaire IBTIKAR CAN 2024"
+msgstr "مثال: نموذج IBTIKAR CAN 2024"
+
+msgid "Décrivez ce modèle et son utilisation..."
+msgstr "صف هذا القالب وطريقة استخدامه..."
+
+msgid "Fichier DOCX"
+msgstr "ملف DOCX"
+
+msgid "Actuel"
+msgstr "الحالي"
+
+msgid "Choisir un fichier DOCX..."
+msgstr "اختر ملف DOCX..."
+
+msgid ""
+"Le fichier doit être un document DOCX avec des placeholders (ex: "
+"{{FULL_NAME}}, {{PROJECT_TITLE}})"
+msgstr ""
+"يجب أن يكون الملف وثيقة DOCX تحتوي على عناصر نائبة (مثال: {{FULL_NAME}}، "
+"{{PROJECT_TITLE}})"
+
+msgid "Modèle actif"
+msgstr "قالب نشط"
+
+msgid ""
+"Un seul modèle actif par service et type sera utilisé pour la génération des"
+" documents."
+msgstr "سيُستخدم قالب نشط واحد لكل خدمة ونوع في توليد الوثائق."
+
+msgid "Créer le modèle"
+msgstr "إنشاء القالب"
+
+msgid "Placeholders disponibles"
+msgstr "العناصر النائبة المتاحة"
+
+msgid ""
+"Utilisez ces placeholders dans votre document Word (entourés de doubles "
+"accolades) :"
+msgstr "استخدم هذه العناصر النائبة في وثيقة Word (محاطة بأقواس مزدوجة):"
+
+msgid "Informations client"
+msgstr "بيانات العميل"
+
+msgid "Informations demande"
+msgstr "بيانات الطلب"
+
+msgid "Titre du projet"
+msgstr "عنوان المشروع"
+
+msgid "ID de la demande"
+msgstr "معرّف الطلب"
+
+msgid ""
+"Les placeholders seront remplacés par les valeurs correspondantes lors de la"
+" génération du document."
+msgstr "ستُستبدَل العناصر النائبة بالقيم المقابلة عند توليد الوثيقة."
+
+msgid "Gestion des Modèles"
+msgstr "إدارة القوالب"
+
+msgid "Gestion des Modèles de Documents"
+msgstr "إدارة قوالب الوثائق"
+
+msgid "Gérez les modèles DOCX pour la génération automatique des documents"
+msgstr "أدِر قوالب DOCX لتوليد الوثائق تلقائياً"
+
+msgid "Nouveau modèle"
+msgstr "قالب جديد"
+
+msgid "Tous les types"
+msgstr "جميع الأنواع"
+
+msgid "Tous les services"
+msgstr "جميع الخدمات"
+
+msgid "Actifs"
+msgstr "النشطة"
+
+msgid "Inactifs"
+msgstr "غير النشطة"
+
+msgid "Aucun modèle trouvé."
+msgstr "لم يُعثر على أي قالب."
+
+msgid "Créer le premier modèle"
+msgstr "إنشاء أول قالب"
+
+msgid "Prochain palier"
+msgstr "المرحلة التالية"
+
+msgid "Niveau atteint !"
+msgstr "تم بلوغ المستوى!"
+
+msgid "Objectif"
+msgstr "الهدف"
+
+msgid "Continuez comme ça !"
+msgstr "واصل على هذا المنوال!"
+
+msgid "Rendez-vous proposé — en attente de votre confirmation"
+msgstr "موعد مقترح — في انتظار تأكيدك"
+
+#| msgid "Rendez-vous proposé"
+msgid "Rendez-vous confirmé"
+msgstr "تم تأكيد الموعد"
+
+#, python-format
+msgid "Vous avez proposé une date alternative : %(alt)s."
+msgstr "لقد اقترحت تاريخًا بديلًا: %(alt)s."
+
+#| msgid "Confirmer le refus"
+msgid "Confirmer ce rendez-vous"
+msgstr "تأكيد هذا الموعد"
+
+#| msgid "Commentaire (optionnel)..."
+msgid "Note (optionnelle)"
+msgstr "ملاحظة (اختيارية)"
+
+msgid "Votre demande a été acceptée"
+msgstr "تم قبول طلبك"
+
+msgid "Cher(e) étudiant(e) / doctorant(e),"
+msgstr "عزيزي الطالب / طالب الدكتوراه،"
+
+msgid "Veuillez suivre les étapes ci-dessous :"
+msgstr "يرجى اتباع الخطوات أدناه:"
+
+msgid "Téléchargez le formulaire IBTIKAR"
+msgstr "نزِّل نموذج IBTIKAR"
+
+msgid "Soumettez votre demande sur IBTIKAR-DGRSDT"
+msgstr "أرسل طلبك على IBTIKAR-DGRSDT"
+
+msgid "Accéder à IBTIKAR-DGRSDT"
+msgstr "الوصول إلى IBTIKAR-DGRSDT"
+
+msgid "Revenez ici et saisissez votre code IBTIKAR"
+msgstr "عُد إلى هنا وأدخل رمز IBTIKAR"
+
+msgid ""
+"Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on "
+"vous fixe un rendez-vous."
+msgstr "بمجرد إرسال طلبك على IBTIKAR، أدخل الرمز ليتم تحديد موعد لك."
+
+msgid "Saisissez votre code IBTIKAR"
+msgstr "أدخل رمز IBTIKAR"
+
+msgid "Code de votre demande IBTIKAR"
+msgstr "رمز طلب IBTIKAR"
+
+msgid "Ex: IBK-DGRSDT-2026-XXXX"
+msgstr "مثال: IBK-DGRSDT-2026-XXXX"
+
+msgid "Soumettre le code"
+msgstr "إرسال الرمز"
+
+msgid "Revoir les instructions"
+msgstr "مراجعة التعليمات"
+
+msgid ""
+"Votre code a été transmis au responsable de la plateforme. Une proposition "
+"de date pour la réception de vos échantillons vous sera communiquée "
+"prochainement."
+msgstr ""
+"تم إرسال رمزك إلى مسؤول المنصة. سيتم تبليغك قريباً بتاريخ مقترح لاستلام "
+"عيِّناتك."
+
+msgid "Tout marquer comme lu"
+msgstr "تعليم الكل كمقروء"
+
+msgid "ago"
+msgstr "منذ"
+
+msgid "Choisir"
+msgstr "اختر"
+
+msgid "Tarification"
+msgstr "التسعير"
+
+msgid "par échantillon"
+msgstr "لكل عيِّنة"
+
+msgid "non pathogène"
+msgstr "غير مُمرِض"
+
+msgid "pathogène"
+msgstr "مُمرِض"
+
+msgid "Standard"
+msgstr "قياسي"
+
+msgid ""
+"Ce montant peut varier selon le nombre d'échantillons et le type d'analyse."
+msgstr "قد يختلف هذا المبلغ حسب عدد العيِّنات ونوع التحليل."
+
+msgid "Suppléments actifs:"
+msgstr "الرسوم الإضافية الفعّالة:"
+
+msgid "Cette option inclut des frais supplémentaires."
+msgstr "يتضمّن هذا الخيار رسومًا إضافية."
+
+msgid "(sera ajouté au coût final)."
+msgstr "(سيُضاف إلى التكلفة النهائية)."
+
+msgid ""
+"Des frais supplémentaires s\\'appliquent. Le montant exact sera communiqué "
+"lors de la validation."
+msgstr "تُطبَّق رسوم إضافية. سيُبلَّغ عن المبلغ الدقيق عند المصادقة."
+
+msgid "Plateforme de Gestion des Opérations"
+msgstr "منصة إدارة العمليات"
+
+msgid "Audit"
+msgstr "التدقيق"
+
+msgid "Archives revenus"
+msgstr "أرشيف الإيرادات"
+
+msgid "Opérations"
+msgstr "العمليات"
+
+msgid "Gestion des demandes"
+msgstr "إدارة الطلبات"
+
+msgid "Validation & Assignation"
+msgstr "التحقُّق والإسناد"
+
+msgid "Déconnexion"
+msgstr "تسجيل الخروج"
+
+msgid "non lues"
+msgstr "غير مقروءة"
+
+msgid "Aucune notification"
+msgstr "لا توجد إشعارات"
+
+msgid "Suivi du workflow"
+msgstr "تتبُّع سير العمل"
+
+msgid "Prochaine étape"
+msgstr "الخطوة التالية"
+
+msgid "Demande rejetée"
+msgstr "تم رفض الطلب"
+
+msgid "Workflow terminé avec succès"
+msgstr "اكتمل سير العمل بنجاح"
+
+msgid "Adresse"
+msgstr "العنوان"
+
+msgid "Responsable"
+msgstr "المسؤول"
+
+msgid "Plateforme"
+msgstr "المنصة"
+
+msgid "Retour à l'accueil"
+msgstr "العودة إلى الرئيسية"
+
+msgid "Soumission invité"
+msgstr "الإرسال كزائر"
+
+msgid "Soumettre une demande (invité)"
+msgstr "إرسال طلب (كزائر)"
+
+msgid ""
+"Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code "
+"de suivi."
+msgstr "أرسل طلب تحليل دون إنشاء حساب. ستتلقى رمز تتبُّع."
+
+#| msgid "Créer un compte"
+msgid "Conseil : créez un compte gratuit"
+msgstr "نصيحة: أنشئ حسابًا مجانيًا"
+
+msgid ""
+"En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
+"pilotez vos demandes de bout en bout :"
+msgstr ""
+"كزائر، لا تتلقّى سوى رمز تتبّع بسيط. أما بحساب، فتدير طلباتك من البداية إلى "
+"النهاية:"
+
+msgid ""
+"Tableau de bord unique pour toutes vos demandes et leur historique complet"
+msgstr "لوحة تحكّم واحدة لجميع طلباتك وسجلّها الكامل"
+
+#| msgid ""
+#| "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+#| "assignation, rendez-vous, rapport prêt)."
+msgid ""
+"Notifications en temps réel à chaque étape (validation, rendez-vous, rapport"
+" prêt)"
+msgstr "إشعارات فورية في كل مرحلة (التحقق، الموعد، جاهزية التقرير)"
+
+msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
+msgstr "تأكيد المواعيد والتنزيل الآمن للتقارير"
+
+msgid "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant"
+msgstr "مقدّم طلب IBTIKAR: تتبّع ميزانية DGRSDT المتبقية"
+
+msgid "Vos informations"
+msgstr "بياناتك"
+
+msgid "Votre nom complet"
+msgstr "اسمك الكامل"
+
+msgid "votre@email.com"
+msgstr "your@email.com"
+
+msgid "Numéro de téléphone"
+msgstr "رقم الهاتف"
+
+msgid "Votre organisation"
+msgstr "مؤسستك"
+
+#| msgid "académique"
+msgid "Académique"
+msgstr "أكاديمي"
+
+msgid "Entreprise"
+msgstr "شركة"
+
+#| msgid "Partiel"
+msgid "Particulier"
+msgstr "فرد"
+
+msgid "Autre"
+msgstr "أخرى"
+
+msgid "externe"
+msgstr "خارجي"
+
+msgid "académique"
+msgstr "أكاديمي"
+
+msgid "Solde IBTIKAR déclaré (DA)"
+msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
+
+msgid "Ex: Analyse DRX..."
+msgstr "مثال: تحليل DRX..."
+
+msgid "Soumettre la demande"
+msgstr "إرسال الطلب"
+
+msgid "Demande soumise"
+msgstr "تم إرسال الطلب"
+
+msgid "Demande soumise avec succès!"
+msgstr "تم إرسال الطلب بنجاح!"
+
+msgid "Code de suivi"
+msgstr "رمز التتبُّع"
+
+msgid "Token de suivi"
+msgstr "رمز التتبُّع"
+
+msgid ""
+"Conservez votre code de suivi pour suivre l'avancement de votre demande."
+msgstr "احتفظ برمز التتبُّع لمتابعة تقدُّم طلبك."
+
+#| msgid "Créer un compte pour gérer vos demandes"
+msgid "Créez un compte pour aller plus loin"
+msgstr "أنشئ حسابًا للمضي أبعد"
+
+msgid ""
+"Suivez cette demande et les suivantes depuis un tableau de bord unique, "
+"recevez les notifications à chaque étape et confirmez vos rendez-vous. Votre"
+" demande actuelle sera automatiquement rattachée à votre compte."
+msgstr ""
+"تابِع هذا الطلب والطلبات التالية من لوحة تحكّم واحدة، واستلِم الإشعارات في "
+"كل مرحلة وأكِّد مواعيدك. سيُربَط طلبك الحالي تلقائيًا بحسابك."
+
+msgid "Suivre ma demande"
+msgstr "تتبُّع طلبي"
+
+msgctxt "help"
+msgid "Centre d'aide"
+msgstr "مركز المساعدة"
+
+msgid "Centre d'aide PLAGENOR"
+msgstr "مركز مساعدة PLAGENOR"
+
+msgid ""
+"Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — "
+"étape par étape."
+msgstr "كل ما تحتاج معرفته لتقديم تحاليلك وتتبّعها وإدارتها — خطوة بخطوة."
+
+msgid "Rechercher dans l’aide…"
+msgstr "البحث في المساعدة…"
+
+msgctxt "help"
+msgid "Démarrer"
+msgstr "البدء"
+
+#| msgid "Soumission invité"
+msgid "Compte ou invité"
+msgstr "حساب أم زائر"
+
+msgctxt "help"
+msgid "Suivi & rapports"
+msgstr "التتبّع والتقارير"
+
+msgid "FAQ"
+msgstr "الأسئلة الشائعة"
+
+#, python-format
+msgid ""
+"Connecté en tant que <strong>%(user_role)s</strong> — les sections qui vous "
+"concernent sont mises en avant ci-dessous."
+msgstr ""
+"مُسجَّل الدخول بصفة <strong>%(user_role)s</strong> — الأقسام التي تهمّك "
+"مميَّزة أدناه."
+
+msgid "Bien démarrer"
+msgstr "البدء"
+
+msgid "Créer un compte et comprendre les deux canaux."
+msgstr "أنشئ حسابًا وافهم القناتَين."
+
+msgid ""
+"Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos "
+"informations (nom, établissement, wilaya, e-mail)."
+msgstr ""
+"انقر على <strong>التسجيل</strong> أعلى اليمين واملأ معلوماتك (الاسم، "
+"المؤسسة، الولاية، البريد الإلكتروني)."
+
+msgid ""
+"Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> "
+"(étudiant/chercheur, budget annuel encadré) ou <strong>Client "
+"GENOCLAB</strong> (prestation commerciale avec devis)."
+msgstr ""
+"اختر ملفك: <strong>مقدِّم طلب IBTIKAR</strong> (طالب/باحث، ميزانية سنوية "
+"مؤطَّرة) أو <strong>عميل GENOCLAB</strong> (خدمة تجارية مع عرض سعر)."
+
+msgid "Connectez-vous : vous arrivez sur votre tableau de bord personnel."
+msgstr "سجّل الدخول: ستصل إلى لوحة التحكم الخاصة بك."
+
+msgid ""
+"Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission "
+"invité » et suivre votre demande avec le code reçu par e-mail."
+msgstr ""
+"يمكنك أيضًا التقديم <strong>دون حساب</strong> عبر «تقديم كضيف» وتتبّع طلبك "
+"بالرمز المُستلَم عبر البريد الإلكتروني."
+
+#| msgid "Soumission invité"
+msgid "Compte ou soumission invité ?"
+msgstr "حساب أم تقديم كزائر؟"
+
+msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
+msgstr "كلاهما يعمل — لكن الحساب يمنحك التحكم الكامل."
+
+msgid ""
+"<strong>En invité</strong>, vous soumettez sans créer de compte et recevez "
+"un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se"
+" fait demande par demande, via ce code uniquement."
+msgstr ""
+"<strong>كزائر</strong>، تقدّم دون إنشاء حساب وتتلقّى <strong>رمز "
+"تتبّع</strong> عبر البريد الإلكتروني. إنه سريع، لكن التتبّع يتم طلبًا بطلب، "
+"عبر هذا الرمز فقط."
+
+msgid ""
+"<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un "
+"<strong>tableau de bord unique</strong> avec leur <strong>historique "
+"complet</strong> et la timeline détaillée de chaque étape."
+msgstr ""
+"<strong>بحساب</strong>، تُجمَع كل طلباتك في <strong>لوحة تحكّم "
+"واحدة</strong> مع <strong>سجلّها الكامل</strong> والمخطّط الزمني المفصّل لكل"
+" مرحلة."
+
+msgid ""
+"Vous recevez des <strong>notifications en temps réel</strong> dans "
+"l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos "
+"rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon "
+"sécurisée."
+msgstr ""
+"تتلقّى <strong>إشعارات فورية</strong> داخل التطبيق (وعبر البريد الإلكتروني "
+"في المراحل الرئيسية)، و<strong>تؤكّد مواعيدك</strong> وتنزّل "
+"<strong>تقاريرك</strong> بطريقة آمنة."
+
+msgid ""
+"<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT "
+"restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : "
+"retrouvez devis, bons de commande, factures et paiements au même endroit."
+msgstr ""
+"<strong>مقدّم طلب IBTIKAR</strong>: تتبّع <strong>ميزانية DGRSDT "
+"المتبقية</strong> قبل التقديم. <strong>عميل GENOCLAB</strong>: اعثر على عروض"
+" الأسعار وأوامر الشراء والفواتير والمدفوعات في مكان واحد."
+
+msgid ""
+"Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : "
+"vos demandes existantes sont automatiquement rattachées à votre nouveau "
+"compte."
+msgstr ""
+"سبق أن قدّمت كزائر؟ استخدم <strong>«التحويل إلى حساب»</strong>: تُربَط "
+"طلباتك الحالية تلقائيًا بحسابك الجديد."
+
+msgctxt "help"
+msgid "Soumettre une demande IBTIKAR"
+msgstr "تقديم طلب IBTIKAR"
+
+msgid "Vous"
+msgstr "أنت"
+
+msgid "Pour les étudiants et chercheurs de l'ESSBO."
+msgstr "لطلبة وباحثي ESSBO."
+
+msgid ""
+"Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle "
+"demande</strong>."
+msgstr "في لوحة التحكم، افتح علامة التبويب <strong>طلب جديد</strong>."
+
+msgid ""
+"Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, "
+"Séquençage…)."
+msgstr "اختر <strong>الخدمة</strong> المطلوبة (مثل PCR، MALDI-TOF، التسلسل…)."
+
+msgid ""
+"Remplissez les <strong>questions du service</strong> (type de kit, contrôle "
+"qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût "
+"estimé se met à jour en direct</strong>."
+msgstr ""
+"املأ <strong>أسئلة الخدمة</strong> (نوع العدّة، مراقبة الجودة…) "
+"و<strong>جدول العينات</strong>. تتحدّث <strong>التكلفة التقديرية "
+"مباشرةً</strong>."
+
+msgid ""
+"Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en "
+"haut — la demande est bloquée si elle dépasse le plafond."
+msgstr ""
+"تحقّق من <strong>ميزانية IBTIKAR السنوية المتبقية</strong> المعروضة في "
+"الأعلى — يُحظَر الطلب إذا تجاوز السقف."
+
+msgid ""
+"Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une "
+"confirmation par e-mail avec votre identifiant de demande."
+msgstr ""
+"انقر على <strong>المراجعة والإرسال</strong>. ستتلقّى تأكيدًا عبر البريد "
+"الإلكتروني مع معرّف طلبك."
+
+msgctxt "help"
+msgid "Demande GENOCLAB (commercial)"
+msgstr "طلب GENOCLAB (تجاري)"
+
+msgid "Pour les entreprises, laboratoires et institutions externes."
+msgstr "للشركات والمخابر والمؤسسات الخارجية."
+
+msgid ""
+"Soumettez votre demande avec les détails de l'analyse et vos échantillons."
+msgstr "قدّم طلبك مع تفاصيل التحليل وعيّناتك."
+
+msgid ""
+"La plateforme prépare un <strong>devis détaillé</strong> que vous recevez "
+"par e-mail."
+msgstr ""
+"تُعِدّ المنصة <strong>عرض سعر مفصّلًا</strong> تتلقّاه عبر البريد "
+"الإلكتروني."
+
+msgid ""
+"<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe "
+"peut vous en proposer un nouveau."
+msgstr ""
+"<strong>اقبل أو ارفض</strong> عرض السعر. في حال الرفض، يمكن للفريق اقتراح "
+"عرض جديد."
+
+msgid ""
+"Téléversez votre <strong>bon de commande</strong>, puis réglez selon la "
+"<strong>facture</strong> émise."
+msgstr ""
+"حمّل <strong>سند الطلب</strong> الخاص بك، ثم ادفع وفق "
+"<strong>الفاتورة</strong> الصادرة."
+
+msgid ""
+"L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la "
+"facture."
+msgstr "يبدأ التحليل؛ وتتلقّى <strong>التقرير النهائي</strong> مع الفاتورة."
+
+msgid "Suivre une demande & récupérer un rapport"
+msgstr "تتبّع طلب واسترجاع تقرير"
+
+msgid "Où en est votre analyse, à tout moment."
+msgstr "وضع تحليلك في أي وقت."
+
+msgid ""
+"Connecté : chaque demande affiche son <strong>statut en temps réel</strong> "
+"et son historique complet sur votre tableau de bord."
+msgstr ""
+"مُسجَّل الدخول: يعرض كل طلب <strong>حالته في الوقت الفعلي</strong> وسجلّه "
+"الكامل على لوحة التحكم."
+
+msgid ""
+"Invité : utilisez la page <strong>Suivi</strong> avec le "
+"<strong>code</strong> reçu par e-mail à la soumission."
+msgstr ""
+"ضيف: استخدم صفحة <strong>التتبّع</strong> بالـ<strong>رمز</strong> المُستلَم"
+" عبر البريد الإلكتروني عند التقديم."
+
+msgid ""
+"Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+"assignation, rendez-vous, rapport prêt)."
+msgstr ""
+"تتلقّى <strong>بريدًا إلكترونيًا في كل خطوة</strong> (المصادقة، التعيين، "
+"الموعد، جاهزية التقرير)."
+
+msgid ""
+"Quand le rapport est validé, un <strong>lien de téléchargement</strong> "
+"sécurisé vous est envoyé."
+msgstr ""
+"عند المصادقة على التقرير، يُرسَل إليك <strong>رابط تحميل</strong> آمن."
+
+msgctxt "help"
+msgid "Documents générés"
+msgstr "الوثائق المُولَّدة"
+
+msgid "Formulaires officiels remplis automatiquement."
+msgstr "استمارات رسمية تُملأ تلقائيًا."
+
+msgid ""
+"Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-"
+"rempli avec vos informations et vos échantillons."
+msgstr ""
+"تُولَّد <strong>استمارة IBTIKAR</strong> تلقائيًا، معبّأة مسبقًا بمعلوماتك "
+"وعيّناتك."
+
+msgid ""
+"La <strong>note de plateforme</strong>, le <strong>devis</strong> et la "
+"<strong>fiche de réception</strong> sont disponibles au téléchargement "
+"(PDF)."
+msgstr ""
+"تتوفّر <strong>مذكرة المنصة</strong> و<strong>عرض السعر</strong> "
+"و<strong>استمارة الاستلام</strong> للتحميل (PDF)."
+
+msgid ""
+"Tous portent l'<strong>en-tête institutionnel officiel</strong> (République "
+"algérienne, Ministère, ESSBO, PLAGENOR)."
+msgstr ""
+"تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية "
+"الجزائرية، الوزارة، ESSBO، PLAGENOR)."
+
+msgid "Questions fréquentes"
+msgstr "الأسئلة الشائعة"
+
+msgid "Réponses rapides aux questions courantes."
+msgstr "إجابات سريعة عن الأسئلة الشائعة."
+
+msgid "Comment changer la langue de l'interface ?"
+msgstr "كيف أغيّر لغة الواجهة؟"
+
+msgid ""
+"Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. "
+"L'interface bascule immédiatement, y compris en arabe avec mise en page de "
+"droite à gauche."
+msgstr ""
+"استخدم محدِّد FR / EN / ع أعلى يمين كل صفحة. تتبدّل الواجهة فورًا، بما في "
+"ذلك العربية بتخطيط من اليمين إلى اليسار."
+
+msgid "Qu'est-ce que le budget IBTIKAR ?"
+msgstr "ما هي ميزانية IBTIKAR؟"
+
+msgid ""
+"C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque "
+"étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord "
+"; une demande qui le dépasse est bloquée automatiquement."
+msgstr ""
+"هي ميزانية افتراضية سنوية تؤطّرها DGRSDT، تُمنَح لكل طالب/باحث. يظهر رصيدك "
+"المتبقي على لوحة التحكم؛ ويُحظَر تلقائيًا أي طلب يتجاوزه."
+
+msgid "Comment est calculé le coût d'une analyse ?"
+msgstr "كيف تُحسَب تكلفة التحليل؟"
+
+msgid ""
+"Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de "
+"base dépend du caractère pathogène, le multiplicateur du mode d'analyse "
+"(simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant "
+"la saisie."
+msgstr ""
+"التكلفة = السعر الأساسي × المُعامِل × عدد العينات. يعتمد السعر الأساسي على "
+"الطابع المُمرِض، والمُعامِل على نمط التحليل (مفرد، مُكرَّر، ثلاثي…). يظهر "
+"التقدير مباشرةً أثناء الإدخال."
+
+msgctxt "help"
+msgid "Puis-je soumettre sans créer de compte ?"
+msgstr "هل يمكنني التقديم دون إنشاء حساب؟"
+
+msgid ""
+"Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par "
+"e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos "
+"demandes sur un tableau de bord, ajoute les notifications en temps réel, la "
+"confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez "
+"convertir une soumission invité en compte à tout moment, et vos demandes "
+"existantes y seront rattachées."
+msgstr ""
+"نعم. استخدم «التقديم كزائر»: تتلقّى رمز تتبّع عبر البريد الإلكتروني. ومع "
+"ذلك، يبقى الحساب المجاني موصى به — فهو يجمع كل طلباتك في لوحة تحكّم واحدة "
+"ويضيف الإشعارات الفورية وتأكيد المواعيد وتتبّع ميزانية IBTIKAR. يمكنك تحويل "
+"تقديم الزائر إلى حساب في أي وقت، وستُربَط طلباتك الحالية به."
+
+msgid "Je ne reçois pas les e-mails de notification ?"
+msgstr "لا أتلقّى رسائل الإشعارات؟"
+
+msgid ""
+"Vérifiez votre dossier spam. Les notifications restent toujours consultables"
+" dans la cloche en haut de votre tableau de bord, même sans e-mail."
+msgstr ""
+"تحقّق من مجلد الرسائل غير المرغوبة. تبقى الإشعارات متاحة دائمًا في الجرس "
+"أعلى لوحة التحكم، حتى بدون بريد إلكتروني."
+
+msgctxt "help"
+msgid "J'ai oublié mon mot de passe."
+msgstr "نسيت كلمة المرور."
+
+msgid ""
+"Contactez l'administrateur de la plateforme via la page Contact ; il pourra "
+"réinitialiser votre accès en toute sécurité."
+msgstr ""
+"تواصل مع مسؤول المنصة عبر صفحة الاتصال؛ يمكنه إعادة تعيين وصولك بأمان."
+
+msgid "Aucun résultat. Essayez d'autres mots-clés ou consultez la page"
+msgstr "لا توجد نتائج. جرّب كلمات مفتاحية أخرى أو زر صفحة"
+
+msgid "Vous n'avez pas trouvé votre réponse ?"
+msgstr "لم تجد إجابتك؟"
+
+msgctxt "help"
+msgid "Contactez-nous"
+msgstr "اتصل بنا"
+
+msgid "Données collectées"
+msgstr "البيانات المجمّعة"
+
+#| msgid "Disponibilité"
+msgid "Finalité"
+msgstr "الغرض"
+
+#| msgid "Opérations"
+msgid "Conservation"
+msgstr "مدة الحفظ"
+
+msgid "Vos droits"
+msgstr "حقوقك"
+
+#| msgid "Exporter tous les emails (CSV)"
+msgid "Exporter mes données (JSON)"
+msgstr "تصدير بياناتي (JSON)"
+
+#| msgctxt "help"
+#| msgid "Contactez-nous"
+msgid "Connectez-vous"
+msgstr "سجّل الدخول"
+
+msgid "pour exporter vos données."
+msgstr "لتصدير بياناتك."
+
+msgid "Retour aux services"
+msgstr "العودة إلى الخدمات"
+
+msgid "Délai de traitement"
+msgstr "مدة المعالجة"
+
+msgid "Exigences & conformité"
+msgstr "المتطلبات والالتزام"
+
+msgid "Demander ce service"
+msgstr "اطلب هذه الخدمة"
+
+msgid "Recommandé"
+msgstr "مُوصى به"
+
+msgid ""
+"Suivez l'état de votre demande, recevez des notifications et accédez à votre"
+" historique."
+msgstr "تابع حالة طلبك، تلقَّ الإشعارات، واطلع على سجلك."
+
+msgid "S'inscrire"
+msgstr "إنشاء حساب"
+
+msgid "Continuer en tant qu'invité"
+msgstr "المتابعة كزائر"
+
+msgid ""
+"Soumettez votre demande sans compte. Vous recevrez un code de suivi unique."
+msgstr "أرسل طلبك دون حساب. ستتلقى رمز تتبُّع فريداً."
+
+msgid "Soumettre sans compte"
+msgstr "الإرسال دون حساب"
+
+msgid "Canal IBTIKAR: votre identifiant IBTIKAR-DGRSDT sera requis."
+msgstr "قناة IBTIKAR: سيكون معرّف IBTIKAR-DGRSDT مطلوباً."
+
+msgid "Nos Services"
+msgstr "خدماتنا"
+
+msgid "Catalogue des analyses et prestations proposées"
+msgstr "كتالوج التحاليل والخدمات المُقدَّمة"
+
+msgid "En savoir plus"
+msgstr "اعرف المزيد"
+
+msgid "Demander"
+msgstr "طلب"
+
+msgid "Aucun service disponible"
+msgstr "لا توجد خدمات متاحة"
+
+msgid "Les services seront bientôt publiés. Revenez plus tard."
+msgstr "ستُنشر الخدمات قريباً. يرجى العودة لاحقاً."
+
+msgid "Suivi de votre demande"
+msgstr "تتبُّع طلبك"
+
+msgid ""
+"Entrez votre identifiant de demande ou votre token de suivi pour consulter "
+"l'état d'avancement."
+msgstr "أدخل معرّف طلبك أو رمز التتبُّع لعرض حالة التقدُّم."
+
+msgid "Ex: IBT-2026-0042 ou votre token..."
+msgstr "مثال: IBT-2026-0042 أو رمزك..."
+
+msgid "Rechercher"
+msgstr "بحث"
+
+msgid "Créer un compte pour gérer vos demandes"
+msgstr "أنشئ حساباً لإدارة طلباتك"
+
+msgid "Aucun résultat"
+msgstr "لا توجد نتائج"
+
+msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
+msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التحقُّق والمحاولة مجدداً."
+
+#~ msgid ""
+#~ "Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
+#~ "Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
+#~ "ci-dessous pour créer une nouvelle entrée."
+#~ msgstr ""
+#~ "عدّل النص المعروض على الموقع (العناوين، الأزرار، الأوصاف). انقر على «تعديل» "
+#~ "في أي سطر لتحريره، أو استخدم النموذج أدناه لإنشاء مدخل جديد."
+
+#~ msgid "Modifié"
+#~ msgstr "آخر تعديل"
+
+#~ msgid "Pipeline"
+#~ msgstr "المسار"
+
+#~ msgid "Évaluez notre service"
+#~ msgstr "قيِّم خدمتنا"
+
+#, fuzzy
+#~ msgid "Budget IBTIKAR annuel"
+#~ msgstr "ميزانية IBTIKAR (افتراضية)"
+
+#~ msgid "Solde restant"
+#~ msgstr "الرصيد المتبقي"
+
+#~ msgid "utilisés"
+#~ msgstr "مُستخدَم"
+
+#~ msgid "Cap"
+#~ msgstr "السقف"
+
+#, python-format
+#~ msgid ""
+#~ "Vous avez atteint plus de 90 %% de votre budget annuel. Les nouvelles "
+#~ "demandes seront vérifiées strictement."
+#~ msgstr ""
+#~ "لقد بلغت أكثر من 90 %% من ميزانيتك السنوية. ستخضع الطلبات الجديدة لمراجعة "
+#~ "دقيقة."
+
+#, python-format
+#~ msgid ""
+#~ "Plus de 70 %% de votre budget est consommé. Pensez à prioriser vos "
+#~ "prochaines analyses."
+#~ msgstr ""
+#~ "تم استهلاك أكثر من 70 %% من ميزانيتك. يُنصح بترتيب أولويات تحاليلك القادمة."
+
+#, python-format
+#~ msgid "Solde annuel restant : %(rem)s DA"
+#~ msgstr "الرصيد السنوي المتبقي: %(rem)s دج"
+
+#, fuzzy, python-format
+#~ msgid "Le solde déclaré doit être entre 0 et %(cap)s DA."
+#~ msgstr "يجب أن يتراوح الرصيد المُصرَّح به بين 0 و200 000 دج."
+
+#~ msgid "Attention: le coût estimé"
+#~ msgstr "تنبيه: التكلفة التقديرية"
+
+#~ msgid "Exporter"
+#~ msgstr "تصدير"
+
+#~ msgid ""
+#~ "Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par "
+#~ "e-mail et pouvez convertir votre soumission en compte complet plus tard."
+#~ msgstr ""
+#~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
+#~ "تحويل تقديمك إلى حساب كامل لاحقًا."

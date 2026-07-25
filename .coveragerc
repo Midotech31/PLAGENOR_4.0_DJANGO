@@ -1,0 +1,18 @@
+[run]
+source = accounts,core,dashboard,documents,notifications,plagenor
+omit =
+    */migrations/*
+    */tests.py
+    */__init__.py
+    manage.py
+    */wsgi.py
+    */asgi.py
+    */apps.py
+    plagenor/settings.py
+
+[report]
+show_missing = False
+skip_covered = False
+# Floor set just below current coverage (~34% of non-test code). Ratchet UP
+# as tests grow — never down. Guards against large coverage regressions in CI.
+fail_under = 34

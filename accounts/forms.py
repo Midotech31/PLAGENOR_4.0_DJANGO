@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _
+from .countries import COUNTRY_CHOICES
 from .models import User
 
 _email_validator = EmailValidator()
@@ -22,6 +23,23 @@ class RegistrationForm(UserCreationForm):
         max_length=200,
         required=True,
         label=_('Université / Organisation'),
+    )
+    organization_type = forms.ChoiceField(
+        choices=[('', _('— Sélectionner —'))] + [
+            (code, _(label)) for code, label in User.ORGANIZATION_TYPE_CHOICES
+        ],
+        required=True,
+        label=_("Type d'organisation"),
+    )
+    organization_type_other = forms.CharField(
+        max_length=200, required=False,
+        label=_('Préciser (autre)'),
+    )
+    country = forms.ChoiceField(
+        choices=COUNTRY_CHOICES,
+        required=True,
+        initial='DZ',
+        label=_('Pays'),
     )
     student_level = forms.ChoiceField(
         choices=[
@@ -51,7 +69,9 @@ class RegistrationForm(UserCreationForm):
         model = User
         fields = (
             'username', 'first_name', 'last_name', 'email',
-            'role', 'organization', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
+            'role', 'organization', 'organization_type', 'organization_type_other',
+            'country', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
+            'wilaya', 'gender',
             'password1', 'password2',
         )
 
@@ -60,3 +80,13 @@ class RegistrationForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError(_('Cet email est déjà enregistré'))
         return email
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('organization_type') == 'autre' and not (
+                cleaned.get('organization_type_other') or '').strip():
+            self.add_error(
+                'organization_type_other',
+                _('Veuillez préciser le type d\'organisation.'),
+            )
+        return cleaned

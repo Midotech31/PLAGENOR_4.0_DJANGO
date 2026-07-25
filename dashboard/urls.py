@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view
+from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view, pricing_api, stats
 from . import views
 
 app_name = 'dashboard'
@@ -20,8 +20,14 @@ urlpatterns = [
     path('home/technique/<int:pk>/delete/', superadmin.technique_delete, name='superadmin_technique_delete'),
     path('home/technique/<int:pk>/edit/', superadmin.technique_edit, name='superadmin_technique_edit'),
     path('home/technique/<int:pk>/reactivate/', superadmin.technique_reactivate, name='superadmin_technique_reactivate'),
+    path('home/user/<int:pk>/reset-2fa/', superadmin.reset_2fa, name='superadmin_reset_2fa'),
+    path('home/announcement/create/', superadmin.announcement_create, name='superadmin_announcement_create'),
+    path('home/announcement/<int:pk>/toggle/', superadmin.announcement_toggle, name='superadmin_announcement_toggle'),
+    path('home/announcement/<int:pk>/delete/', superadmin.announcement_delete, name='superadmin_announcement_delete'),
     path('home/content/update/', superadmin.content_update, name='superadmin_content_update'),
-    path('home/content/<str:pk>/delete/', superadmin.content_delete, name='superadmin_content_delete'),
+    path('home/content/save/', superadmin.content_save, name='superadmin_content_save'),
+    path('home/content/delete-key/', superadmin.content_delete_key, name='superadmin_content_delete_key'),
+    path('home/content/<int:pk>/delete/', superadmin.content_delete, name='superadmin_content_delete'),
     path('home/service/<uuid:pk>/edit/', superadmin.service_edit, name='superadmin_service_edit'),
     path('home/template/<str:template_type>/download/', superadmin.download_template, name='superadmin_template_download'),
     path('home/backup/', superadmin.backup_now, name='superadmin_backup'),
@@ -41,6 +47,10 @@ urlpatterns = [
     path('ops/request/<uuid:pk>/', admin_ops.request_detail, name='admin_request_detail'),
     path('ops/transition/<uuid:pk>/', admin_ops.transition_request, name='admin_transition'),
     path('ops/assign/<uuid:pk>/', admin_ops.assign_request, name='admin_assign'),
+    path('ops/observers/<uuid:pk>/', admin_ops.manage_observers, name='admin_manage_observers'),
+    path('ops/platform-note/<uuid:pk>/', admin_ops.platform_note_view, name='admin_platform_note'),
+    path('ops/quote/<uuid:pk>/download/', admin_ops.download_quote, name='download_quote'),
+    path('ops/invoice/<uuid:pk>/download/', admin_ops.download_invoice, name='download_invoice'),
     path('ops/points/<int:member_pk>/', admin_ops.award_points, name='admin_award_points'),
     path('ops/cheer/<int:member_pk>/', admin_ops.send_cheer, name='admin_send_cheer'),
     path('ops/gift/<int:member_pk>/', admin_ops.upload_gift, name='admin_upload_gift'),
@@ -76,6 +86,7 @@ urlpatterns = [
     path('requester/rate/<uuid:pk>/', requester.rate_service, name='requester_rate'),
     path('requester/appointment/<uuid:pk>/confirm/', requester.confirm_appointment, name='requester_confirm_appointment'),
     path('requester/ibtikar-code/<uuid:pk>/', requester.submit_ibtikar_code, name='requester_ibtikar_code'),
+    path('requester/declare-balance/', requester.declare_ibtikar_balance, name='requester_declare_balance'),
     path('requester/alt-date/<uuid:pk>/', requester.suggest_alternative_date, name='requester_alt_date'),
 
     # Client (GENOCLAB)
@@ -94,6 +105,12 @@ urlpatterns = [
     # Service form API
     path('api/service-form/<str:service_code>/', service_form_api.service_form_fragment, name='service_form_fragment'),
 
+    # Pricing-tier modal API (Phase 3.8 — drives the modal in service_edit.html)
+    path('api/service/<uuid:service_pk>/pricing/', pricing_api.pricing_list, name='pricing_list_api'),
+    path('api/service/<uuid:service_pk>/pricing/add/', pricing_api.pricing_add, name='pricing_add_api'),
+    path('api/pricing/<int:pricing_pk>/', pricing_api.pricing_update, name='pricing_update_api'),
+    path('api/pricing/<int:pricing_pk>/delete/', pricing_api.pricing_delete, name='pricing_delete_api'),
+
     # QR Code
     path('qr/<uuid:pk>/', qrcode_view.report_qr, name='report_qr'),
 
@@ -105,4 +122,9 @@ urlpatterns = [
 
     # Revenue Archives (SUPER_ADMIN)
     path('revenue-archives/', superadmin.revenue_archives, name='revenue_archives'),
+
+    # Stats & métriques (role-aware: REQUESTER/CLIENT/MEMBER personal, FINANCE
+    # finance, PLATFORM_ADMIN/SUPER_ADMIN full + officiel export DOCX/PDF).
+    path('stats/', stats.stats_view, name='stats'),
+    path('stats/export/', stats.stats_export, name='stats_export'),
 ]

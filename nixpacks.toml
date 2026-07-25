@@ -1,0 +1,17 @@
+# Nixpacks build config for Railway.
+# Python version comes from runtime.txt (3.11.9). Static files are collected
+# at BUILD time so WhiteNoise's manifest storage has them in the image;
+# migrations + seeds run in railway.json's preDeployCommand (they touch the
+# DB, not the filesystem).
+#
+# NOTE: collectstatic imports settings, so SECRET_KEY and DATABASE_URL must be
+# present as Railway variables before the build succeeds (see deploy_railway.md).
+
+[phases.install]
+cmds = [
+  "python -m pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = ["python manage.py collectstatic --no-input"]

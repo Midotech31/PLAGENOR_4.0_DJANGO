@@ -2,29 +2,44 @@ name: Django CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "claude/**" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    env:
+      # Settings require a SECRET_KEY unless DEBUG; DATABASE_URL is left unset
+      # so the suite runs on the SQLite fallback.
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "true"
     strategy:
-      max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-
+        python-version: [ "3.11" ]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
+    - name: Install gettext (for i18n)
+      run: sudo apt-get update && sudo apt-get install -y gettext
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run Tests
+    - name: System check
+      run: python manage.py check
+    - name: Run tests with coverage
       run: |
-        python manage.py test
+        pip install coverage
+        coverage run manage.py test
+        coverage report
+    - name: Dependency vulnerability audit (informational)
+      # Non-blocking: surfaces known CVEs in dependencies without failing the
+      # build, so a vulnerable transitive package never silently blocks merges.
+      continue-on-error: true
+      run: |
+        pip install pip-audit
+        pip-audit || true

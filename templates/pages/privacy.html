@@ -1,0 +1,31 @@
+{% extends 'base_public.html' %}
+{% load i18n %}
+{% load cms %}
+{% block title %}PLAGENOR 4.0 — {% trans "Confidentialité" %}{% endblock %}
+{% block content %}
+<section class="container" style="max-width:820px;margin:0 auto;padding:40px 20px;">
+    <h1>{% cms 'privacy_title' 'Politique de confidentialité' %}</h1>
+    <p class="text-muted">{% cms 'privacy_intro' "Cette page décrit comment PLAGENOR (ESSBO) collecte et traite vos données personnelles." %}</p>
+
+    <h2>{% trans "Données collectées" %}</h2>
+    <p>{% cms 'privacy_data_collected' "Nous collectons les informations que vous fournissez à l'inscription (nom, e-mail, organisation, pays, téléphone) et les données liées à vos demandes d'analyse (service, échantillons, statut, rapports)." %}</p>
+
+    <h2>{% trans "Finalité" %}</h2>
+    <p>{% cms 'privacy_purpose' "Ces données servent exclusivement à traiter vos demandes, générer devis/factures/rapports, et vous tenir informé de l'avancement. Elles ne sont ni vendues ni cédées à des tiers." %}</p>
+
+    <h2>{% trans "Conservation" %}</h2>
+    <p>{% cms 'privacy_retention' "Vos données sont conservées le temps nécessaire au suivi de vos demandes et aux obligations légales (facturation)." %}</p>
+
+    <h2>{% trans "Vos droits" %}</h2>
+    <p>{% cms 'privacy_rights' "Vous pouvez accéder à vos données et en demander l'export ou la suppression." %}</p>
+    {% if user.is_authenticated %}
+    <p><a href="{% url 'export_my_data' %}" class="btn btn-primary">{% trans "Exporter mes données (JSON)" %}</a></p>
+    {% else %}
+    <p><a href="{% url 'accounts:login' %}">{% trans "Connectez-vous" %}</a> {% trans "pour exporter vos données." %}</p>
+    {% endif %}
+    <p class="text-muted">{% cms 'privacy_deletion_note' "Pour toute demande de suppression, contactez l'administrateur de la plateforme." %}</p>
+
+    <h2>{% trans "Contact" %}</h2>
+    <p>{% cms 'privacy_contact' "École Supérieure en Sciences Biologiques d'Oran (ESSBO)." %}</p>
+</section>
+{% endblock %}

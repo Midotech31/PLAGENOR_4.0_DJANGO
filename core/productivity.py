@@ -14,19 +14,13 @@ SCORE_EXCELLENT = 85
 SCORE_GOOD = 70
 SCORE_NORMAL = 50
 
+# `icon` values map to icon names in core/templatetags/icons.py
 PERFORMANCE_LEVELS = [
-    {'key': 'fire', 'emoji': '\U0001f525', 'label_fr': 'Le plus rapide', 'label_en': 'Fastest', 'min_score': 90},
-    {'key': 'very_good', 'emoji': '\u2b50', 'label_fr': 'Très bien', 'label_en': 'Very Good', 'min_score': 75},
-    {'key': 'good', 'emoji': '\U0001f44d', 'label_fr': 'Bien', 'label_en': 'Good', 'min_score': 60},
-    {'key': 'not_bad', 'emoji': '\U0001f642', 'label_fr': 'Pas mal', 'label_en': 'Not Bad', 'min_score': 0},
+    {'key': 'fire', 'icon': 'flame', 'label_fr': 'Le plus rapide', 'label_en': 'Fastest', 'min_score': 90},
+    {'key': 'very_good', 'icon': 'star', 'label_fr': 'Très bien', 'label_en': 'Very Good', 'min_score': 75},
+    {'key': 'good', 'icon': 'thumbs-up', 'label_fr': 'Bien', 'label_en': 'Good', 'min_score': 60},
+    {'key': 'not_bad', 'icon': 'smile', 'label_fr': 'Pas mal', 'label_en': 'Not Bad', 'min_score': 0},
 ]
-
-PRODUCTIVITY_EMOJI = {
-    'EXCELLENT': '\U0001f525',
-    'GOOD': '\u2b50',
-    'NORMAL': '\U0001f44d',
-    'LOW': '\U0001f642',
-}
 
 
 def get_performance_level(score: float) -> dict:
@@ -83,7 +77,6 @@ def compute_member_productivity(member_profile: MemberProfile) -> dict:
         'score': score,
         'status': status,
         'level': get_performance_level(score),
-        'emoji': PRODUCTIVITY_EMOJI.get(status, '\u26aa'),
     }
 
 

@@ -4,7 +4,196 @@
    ============================================================ */
 
 /* --- Reset & Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Self-hosted fonts (no external CDN).
+   Files live in static/fonts/ and are served by WhiteNoise, so the UI
+   renders identically on networks that block Google Fonts and no request
+   ever leaves the site. Subsets: Latin for Inter/JetBrains Mono, Arabic +
+   Latin for Tajawal. Tajawal has no 600 weight; a 600 request resolves to
+   its real 700 per CSS font matching. */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('../fonts/inter-latin-300-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/inter-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/inter-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/inter-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/inter-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('../fonts/inter-latin-800-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('../fonts/inter-latin-900-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-300-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-300-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-400-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-500-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-700-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-800-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-800-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('../fonts/tajawal-arabic-900-normal.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('../fonts/tajawal-latin-900-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -94,10 +283,19 @@
     /* Layout */
     --sidebar-width: 260px;
     --topbar-height: 64px;
-    --content-max: 1400px;
+    /* The shell / grids / tables now stretch to the viewport — only long
+       running text (descriptions, paragraphs) is capped at --readable-max
+       to keep line length comfortable (~75ch per typography best practice).
+       See .content-area below and the .readable scoped rule further down. */
+    --content-max: 100%;
+    --readable-max: 75ch;
 
     /* Typography */
     --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Arabic UI font. Tajawal: geometric and warm, the style used by Gulf
+       institutional apps — noticeably friendlier on screen than Cairo, which
+       stays as the first fallback. */
+    --font-rtl: 'Tajawal', 'Cairo', 'Noto Sans Arabic', 'Segoe UI', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* Transition */
@@ -105,33 +303,61 @@
     --transition-spring: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html {
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Smoother strokes for body copy; OS default is "auto" which is
+       slightly thinner on macOS/iOS. */
+    text-rendering: optimizeLegibility;
+}
 body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
     min-height: 100vh;
+    /* Inter ships contextual alternates + true tabular figures; turn them
+       on globally so prices/dates align in columns. */
+    font-feature-settings: 'cv11', 'ss01', 'ss03', 'kern', 'liga';
+    font-optical-sizing: auto;
 }
 a { color: var(--primary); text-decoration: none; transition: color var(--transition); }
 a:hover { color: var(--primary-dark); }
 img { max-width: 100%; display: block; }
+
+/* Safety net against page-wide horizontal scroll on phones: a single
+   oversized child (a long unbroken string, a wide inline-styled row)
+   must not drag the whole document sideways. `clip` (unlike `hidden`)
+   does NOT create a scroll container, so the sticky topbar keeps working. */
+html, body { overflow-x: clip; max-width: 100%; }
+/* Long words / URLs / IDs wrap instead of forcing the viewport wider. */
+p, h1, h2, h3, h4, td, th, li, span, div { overflow-wrap: break-word; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
+
+/* Tabular figures wherever we line numbers up in columns (KPIs, money,
+   tables) — prevents the 1-3-7 width wobble that makes rows look ragged. */
+.kpi-value, .kpi-number, .stat-value, .money, .price,
+.table td, .table th,
+[data-tabular-nums] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'kern' 1, 'liga' 1;
+}
 
 /* ============================================================
    Sidebar — Premium Dark Design
    ============================================================ */
 .sidebar {
     position: fixed;
-    left: 0; top: 0; bottom: 0;
+    inset-inline-start: 0; top: 0; bottom: 0;
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
     z-index: 100;
     overflow-y: auto;
-    border-right: 1px solid rgba(255,255,255,0.06);
+    border-inline-end: 1px solid rgba(255,255,255,0.06);
     transition: transform var(--transition-spring);
 }
 
@@ -195,7 +421,7 @@ input, select, textarea { font-family: inherit; }
     border: none;
     background: transparent;
     width: 100%;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
 }
 .sidebar-nav a svg,
@@ -228,7 +454,7 @@ input, select, textarea { font-family: inherit; }
 
 /* Sidebar nav badge */
 .nav-badge {
-    margin-left: auto;
+    margin-inline-start: auto;
     min-width: 20px; height: 20px;
     background: var(--primary);
     color: #fff;
@@ -316,14 +542,48 @@ input, select, textarea { font-family: inherit; }
    Main Content Area
    ============================================================ */
 .main-content {
-    margin-left: var(--sidebar-width);
+    margin-inline-start: var(--sidebar-width);
     min-height: 100vh;
     background: var(--bg);
+    /* Cap the working width to the viewport minus the sidebar so children
+       cannot push the page wider than what's actually visible. Without
+       this an oversized child (long URL, wide table) creates horizontal
+       scroll on the whole page. */
+    max-width: calc(100vw - var(--sidebar-width));
+    min-width: 0;
 }
 
 .content-area {
     padding: 32px;
     max-width: var(--content-max);
+    /* Same reason: keep the area inside its container instead of letting
+       a single wide row drag the layout out. */
+    min-width: 0;
+}
+
+/* ============================================================
+   Readability cap for long-form prose
+   The shell + grids stretch to the viewport (option 2: fluid width with
+   readable scope), but long running text — service descriptions, request
+   notes, justifications, comments, free-text remarks — would become hard
+   to read at 1800px+ if it spanned edge to edge. The 75ch cap matches the
+   typography rule of thumb (45–75 characters per line). Applied to plain
+   paragraphs inside cards, free-text fields in the detail pages, the
+   service description body and the help-center step content.
+   ============================================================ */
+.card-body > p,
+.card-body p.text-block,
+.readable,
+.help-section p,
+.help-steps li,
+.faq-a p,
+.report-card .citation-block p,
+.report-card .thank-you-message,
+.report-card .citation-intro,
+.report-card .authorship-clause,
+.report-card .collaboration-notice,
+.data-card-row .description-text {
+    max-width: var(--readable-max);
 }
 
 /* ============================================================
@@ -383,7 +643,7 @@ input, select, textarea { font-family: inherit; }
 .topbar-search input::placeholder { color: var(--text-muted); }
 .topbar-search svg {
     position: absolute;
-    left: 12px;
+    inset-inline-start: 12px;
     top: 50%;
     transform: translateY(-50%);
     width: 16px; height: 16px;
@@ -410,7 +670,7 @@ input, select, textarea { font-family: inherit; }
 }
 .topbar-bell .badge {
     position: absolute;
-    top: 4px; right: 4px;
+    top: 4px; inset-inline-end: 4px;
     min-width: 18px; height: 18px;
     background: var(--danger);
     color: #fff;
@@ -433,7 +693,7 @@ input, select, textarea { font-family: inherit; }
 /* Notification dropdown */
 .notif-dropdown {
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: calc(100% + 8px);
     width: 320px;
     background: #fff;
@@ -571,7 +831,7 @@ input, select, textarea { font-family: inherit; }
 .kpi-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0; inset-inline-start: 0; inset-inline-end: 0;
     height: 3px;
     background: var(--primary);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -778,6 +1038,18 @@ input, select, textarea { font-family: inherit; }
     gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border-light);
+    /* Let children shrink past their intrinsic content width and let long
+       service names / IDs / descriptions wrap inside the card instead of
+       spilling out to the right. */
+    min-width: 0;
+}
+.data-card-row > * {
+    min-width: 0;
+    /* anywhere: break inside a word as a last resort. break-word would
+       keep the word whole until forced; anywhere starts breaking earlier,
+       which is what we want for IDs / long URLs / no-space strings. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 .data-card-row:last-child { border-bottom: none; }
 .data-card-title {
@@ -881,7 +1153,7 @@ select.form-control {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
-    padding-right: 40px;
+    padding-inline-end: 40px;
 }
 textarea.form-control {
     resize: vertical;
@@ -1011,6 +1283,8 @@ textarea.form-control {
    ============================================================ */
 .table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;   /* momentum scroll on iOS */
+    overscroll-behavior-x: contain;      /* don't bounce the page when the table reaches its edge */
     border-radius: var(--radius);
     border: 1px solid var(--border-light);
     background: var(--surface);
@@ -1021,7 +1295,7 @@ table {
 }
 thead th {
     padding: 12px 16px;
-    text-align: left;
+    text-align: start;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -1108,9 +1382,17 @@ tbody tr:hover { background: var(--primary-50); }
 /* ============================================================
    Grid Utilities
    ============================================================ */
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+/* Grid utilities. Default grid items have min-width:auto, which sizes them
+   to their content and prevents shrinking — so long values (a service
+   title, a long ID, a description without spaces) push the column wider
+   than its fr-share and the whole page scrolls horizontally. min-width:0
+   on the children lets them respect the fraction. Paired with
+   overflow-wrap:anywhere on text cells (see .data-card-row strong) so
+   unbreakable strings still wrap inside their column. */
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
 
 /* ============================================================
    Spacing / Text Utilities
@@ -1257,7 +1539,43 @@ tbody tr:hover { background: var(--primary-50); }
     transition: color var(--transition);
 }
 .public-nav .nav-links a:hover { color: var(--primary); }
-.public-nav .nav-links .btn { margin-left: 8px; }
+.public-nav .nav-links .btn { margin-inline-start: 8px; }
+
+/* Auth CTAs in the public nav — Connexion (ghost) + Inscription (solid),
+   both always visible at the top. Selectors are scoped through
+   `.public-nav .nav-links a` so they out-rank that rule's grey link
+   colour (otherwise the solid button would render grey-on-indigo). */
+.public-nav .nav-links a.nav-cta {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 8px;
+    line-height: 1;
+    white-space: nowrap;
+    transition: all var(--transition);
+}
+.public-nav .nav-links a.nav-cta-ghost {
+    color: var(--primary);
+    border: 1.5px solid var(--primary-300, #c7d2fe);
+    background: transparent;
+}
+.public-nav .nav-links a.nav-cta-ghost:hover {
+    background: var(--primary-50, #eef2ff);
+    color: var(--primary-dark);
+}
+.public-nav .nav-links a.nav-cta-solid {
+    color: #fff;
+    background: var(--primary, #4F46E5);
+    border: 1.5px solid var(--primary, #4F46E5);
+    box-shadow: 0 2px 6px rgba(79,70,229,0.25);
+}
+.public-nav .nav-links a.nav-cta-solid:hover {
+    background: var(--primary-dark, #4338ca);
+    color: #fff;
+    transform: translateY(-1px);
+}
 
 .public-footer {
     background: var(--slate-900);
@@ -1322,7 +1640,7 @@ tbody tr:hover { background: var(--primary-50); }
 .hero::before {
     content: '';
     position: absolute;
-    top: -50%; left: -50%;
+    top: -50%; inset-inline-start: -50%;
     width: 200%; height: 200%;
     background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.06) 0%, transparent 50%);
 }
@@ -1485,7 +1803,7 @@ a:has(.service-card):hover .service-card,
 .auth-container::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; inset-inline-start: 0; inset-inline-end: 0; bottom: 0;
     background: radial-gradient(ellipse at top left, rgba(79,70,229,0.05) 0%, transparent 50%),
                 radial-gradient(ellipse at bottom right, rgba(79,70,229,0.08) 0%, transparent 50%);
 }
@@ -1701,6 +2019,21 @@ a:has(.service-card):hover .service-card,
 }
 
 /* ============================================================
+   Tablet / small-laptop adjustments
+   Sidebar (260px) + 2-column grids are too cramped under ~1100px of
+   viewport — the right column gets clipped and the page scrolls
+   horizontally. Collapse 2/3/4-col grids to 1 column before that
+   happens, while keeping the sidebar visible (mobile collapse only
+   kicks in at 768px).
+   ============================================================ */
+@media (max-width: 1100px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .content-area { padding: 24px; }
+}
+
+/* ============================================================
    Sidebar Mobile Overlay
    ============================================================ */
 .sidebar-overlay {
@@ -1732,7 +2065,11 @@ a:has(.service-card):hover .service-card,
         display: block;
     }
     .main-content {
-        margin-left: 0;
+        margin-inline-start: 0;
+        /* On phones the sidebar is an overlay, so the content must use the
+           FULL viewport. The desktop cap (100vw - sidebar) would otherwise
+           squeeze the page into ~500px with a dead gap on the side. */
+        max-width: 100%;
     }
     .topbar-hamburger {
         display: flex;
@@ -1741,11 +2078,42 @@ a:has(.service-card):hover .service-card,
         padding: 20px 16px;
     }
     .topbar {
-        padding: 0 16px;
+        padding: 0 14px;
+        gap: 8px;
     }
-    .topbar-search input {
-        width: 160px;
+    .topbar-right { gap: 6px; }
+    /* Let the title shrink/ellipsis instead of shoving the actions off-screen. */
+    .topbar-left { min-width: 0; flex: 1; }
+    .topbar-title {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
+    /* Search + the standalone logout button are redundant on mobile
+       (logout also lives in the profile dropdown) — hide to save space. */
+    .topbar-search { display: none; }
+    .topbar-logout { display: none; }
+    /* Keep dropdowns inside the viewport. */
+    .notif-dropdown,
+    .profile-dropdown { width: min(320px, calc(100vw - 24px)); }
+
+    /* No-zoom inputs: iOS Safari zooms when a focused field is < 16px.
+       Bump form controls to 16px on touch widths. */
+    .form-control,
+    input, select, textarea { font-size: 16px; }
+
+    /* Comfortable tap targets (WCAG 2.5.5 / ~44px) for primary controls. */
+    .btn, .sidebar-nav a, .dropdown-item, .topbar-bell,
+    .topbar-hamburger, .topbar-avatar-btn { min-height: 44px; }
+
+    /* Action rows wrap instead of overflowing. */
+    .card-header, .page-header, .btn-group, .form-actions, .filter-bar {
+        flex-wrap: wrap;
+    }
+    /* Full-width primary buttons read better on narrow screens. */
+    .form-actions .btn, .card-body > form > .btn-primary { width: 100%; }
+
     .kpi-grid {
         grid-template-columns: 1fr 1fr;
         gap: 12px;
@@ -1760,11 +2128,25 @@ a:has(.service-card):hover .service-card,
     .channel-cards { grid-template-columns: 1fr; margin: -28px 16px 32px; }
     .services-grid { grid-template-columns: 1fr 1fr; padding: 0 16px; }
     .footer-grid { grid-template-columns: 1fr; gap: 32px; }
-    .public-nav { padding: 0 16px; }
-    .public-nav .nav-links { gap: 16px; }
+    .public-nav { padding: 0 12px; gap: 10px; }
+    .nav-brand { flex-shrink: 0; }
+    /* Keep every link reachable: scroll the bar horizontally instead of
+       hiding items behind a menu the user can't open. */
+    .public-nav .nav-links {
+        gap: 16px;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;            /* Firefox */
+        flex-wrap: nowrap;
+    }
+    .public-nav .nav-links::-webkit-scrollbar { display: none; }
+    .public-nav .nav-links a { white-space: nowrap; flex-shrink: 0; }
     .auth-card { padding: 28px; }
     .role-selector { grid-template-columns: 1fr; }
-    .tab-list { overflow-x: auto; }
+    .tab-list { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Modal dialogs: never wider than the screen. */
+    .modal, .modal-content { width: auto; max-width: calc(100vw - 24px); }
 }
 
 @media (max-width: 480px) {
@@ -1775,7 +2157,9 @@ a:has(.service-card):hover .service-card,
     .hero-logos img { height: 40px; }
     .hero h1 { font-size: 1.6rem; }
     .track-form { flex-direction: column; }
-    .public-nav .nav-links a:not(.btn) { display: none; }
+    /* Keep the brand + primary CTA prominent; secondary links stay
+       reachable via the horizontal scroll set up at the 768 breakpoint. */
+    .nav-brand { font-size: 1rem; }
     .auth-card { padding: 24px 20px; }
 }
 
@@ -1836,7 +2220,7 @@ a:has(.service-card):hover .service-card,
     height: 10px;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 4px;
+    margin-inline-end: 4px;
     vertical-align: middle;
 }
 .online-dot.green {
@@ -1851,7 +2235,7 @@ a:has(.service-card):hover .service-card,
 .toast-container {
     position: fixed;
     top: 20px;
-    right: 20px;
+    inset-inline-end: 20px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -1896,8 +2280,13 @@ a:has(.service-card):hover .service-card,
     gap: 4px;
 }
 .form-error::before {
-    content: '⚠';
-    font-size: 0.75rem;
+    content: '';
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10.29%203.86%201.82%2018a2%202%200%200%200%201.71%203h16.94a2%202%200%200%200%201.71-3L13.71%203.86a2%202%200%200%200-3.42%200z'/%3E%3Cline%20x1='12'%20y1='9'%20x2='12'%20y2='13'/%3E%3Cline%20x1='12'%20y1='17'%20x2='12.01'%20y2='17'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10.29%203.86%201.82%2018a2%202%200%200%200%201.71%203h16.94a2%202%200%200%200%201.71-3L13.71%203.86a2%202%200%200%200-3.42%200z'/%3E%3Cline%20x1='12'%20y1='9'%20x2='12'%20y2='13'/%3E%3Cline%20x1='12'%20y1='17'%20x2='12.01'%20y2='17'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .is-invalid {
     border-color: #dc2626 !important;
@@ -1910,7 +2299,7 @@ a:has(.service-card):hover .service-card,
 .required-asterisk {
     color: #dc2626;
     font-weight: bold;
-    margin-left: 2px;
+    margin-inline-start: 2px;
 }
 button[disabled], input[type="submit"][disabled] {
     opacity: 0.5;
@@ -1940,11 +2329,11 @@ tr.clickable-row:hover td {
 }
 .msg-bubble.msg-from-analyst {
     background: #f0f9ff;
-    border-left: 3px solid #38bdf8;
+    border-inline-start: 3px solid #38bdf8;
 }
 .msg-bubble.msg-from-admin {
     background: #f8fafc;
-    border-left: 3px solid #94a3b8;
+    border-inline-start: 3px solid #94a3b8;
 }
 .msg-bubble .msg-header {
     display: flex;
@@ -1961,7 +2350,7 @@ tr.clickable-row:hover td {
     content: attr(data-tooltip);
     position: absolute;
     bottom: calc(100% + 8px);
-    left: 50%;
+    inset-inline-start: 50%;
     transform: translateX(-50%);
     background: #1e293b;
     color: #fff;
@@ -1976,7 +2365,7 @@ tr.clickable-row:hover td {
     content: '';
     position: absolute;
     bottom: calc(100% + 2px);
-    left: 50%;
+    inset-inline-start: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: #1e293b;
@@ -1987,7 +2376,7 @@ tr.clickable-row:hover td {
 .plagenor-toast {
     position: fixed;
     top: 20px;
-    right: 20px;
+    inset-inline-end: 20px;
     z-index: 10000;
     padding: 16px 24px;
     border-radius: 8px;
@@ -2025,9 +2414,101 @@ tr.clickable-row:hover td {
     gap: 10px;
 }
 .toast-icon {
-    font-size: 1.2rem;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
 }
 .toast-message {
     flex: 1;
+}
+
+/* ============================================================
+   RTL / Arabic support  (Phase 3.3)
+   ------------------------------------------------------------
+   The codebase uses logical properties (margin-inline-start, etc.)
+   so the same stylesheet auto-flips when <html dir="rtl">. This
+   block only adds the bits that DON'T flip automatically:
+     - Arabic font stack
+     - SVG icons explicitly marked direction-aware (data-flip-rtl)
+     - A small set of escape-hatch utility classes
+   ============================================================ */
+/* Arabic font: bind to the LANGUAGE (lang="ar"), not the direction.
+   Direction handles layout; language determines which script we render.
+   We have to target body / inputs / buttons explicitly because the body
+   rule above sets font-family on body, which would otherwise win over an
+   inherited value from <html>. The Latin fallback cascade preserves
+   Latin glyphs in their Latin font when an Arabic page mixes both
+   (e.g. "PCR" inside an Arabic sentence). */
+html[lang="ar"],
+html[lang^="ar-"],
+html[lang="ar"] body, html[lang^="ar-"] body,
+html[lang="ar"] input, html[lang^="ar-"] input,
+html[lang="ar"] select, html[lang^="ar-"] select,
+html[lang="ar"] textarea, html[lang^="ar-"] textarea,
+html[lang="ar"] button, html[lang^="ar-"] button {
+    font-family: var(--font-rtl);
+    /* Cairo + Noto Arabic want their own kashida/contextual shaping. */
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+html[lang="ar"] body, html[lang^="ar-"] body {
+    /* Arabic glyphs sit on a slightly different baseline; nudge line-height
+       up a hair so descenders aren't clipped under tables/inputs. */
+    line-height: 1.7;
+}
+
+/* Even when the page is set to RTL via dir, only Arabic content needs the
+   Arabic font — a French RTL page (theoretical) should stay in Inter. */
+html[dir="rtl"]:not([lang="ar"]):not([lang^="ar-"]),
+html[dir="rtl"]:not([lang="ar"]):not([lang^="ar-"]) body {
+    font-family: var(--font);
+}
+
+/* Direction-aware icons (arrows etc.) — opt in via {% icon ... flip_rtl=True %},
+   which adds the data-flip-rtl attribute. */
+html[dir="rtl"] .app-icon[data-flip-rtl="true"] {
+    transform: scaleX(-1);
+}
+
+/* Escape hatches for the rare case a rule MUST stay direction-specific. */
+html[dir="ltr"] .rtl-only,
+html[dir="rtl"] .ltr-only {
+    display: none !important;
+}
+
+/* Twemoji: render replaced emoji images inline at text size. */
+img.emoji {
+    height: 1em;
+    width: 1em;
+    margin: 0 .05em 0 .1em;
+    vertical-align: -0.1em;
+    display: inline-block;
+}
+
+/* ── Accessibility (WCAG 2.1) ─────────────────────────────────────────────
+   Additive only: keyboard-focus visibility + a skip link. Mouse users are
+   unaffected (:focus-visible targets keyboard/AT focus, not pointer clicks). */
+:focus-visible {
+    outline: 3px solid var(--primary, #4F46E5);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+/* Screen-reader-only, becomes visible when focused (the skip link). */
+.skip-link {
+    position: absolute;
+    left: 8px;
+    top: -48px;
+    z-index: 1000;
+    background: var(--primary, #4F46E5);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top .15s ease;
+}
+.skip-link:focus { top: 0; }
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
 }

@@ -1,0 +1,53 @@
+{% load i18n %}
+{# Bandeau de rendez-vous. ``confirm_url`` / ``alt_url`` et ``appointment_pending`` #}
+{# sont fournis par le template incluant (demandeur ou client). #}
+{% if req.appointment_date %}
+<div style="margin:18px 0; padding:18px 22px; border-radius:14px;
+            {% if appointment_pending %}
+            background:linear-gradient(135deg,#fef3c7,#fffbeb); border:1px solid #fcd34d;
+            {% else %}
+            background:linear-gradient(135deg,#dcfce7,#f0fdf4); border:1px solid #86efac;
+            {% endif %}
+            display:flex; gap:18px; flex-wrap:wrap; align-items:center;">
+    <div style="font-size:2.4rem; line-height:1;">📅</div>
+    <div style="flex:1; min-width:220px;">
+        <div style="font-size:0.85rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+                    color:{% if appointment_pending %}#92400e{% else %}#15803d{% endif %};">
+            {% if appointment_pending %}
+                {% trans "Rendez-vous proposé — en attente de votre confirmation" %}
+            {% else %}
+                {% trans "Rendez-vous confirmé" %}
+            {% endif %}
+        </div>
+        <div style="font-size:1.4rem; font-weight:700; color:#1e293b; margin-top:4px;">
+            {{ req.appointment_date|date:"l d F Y" }}
+        </div>
+        {% if req.alt_date_proposed %}
+        <div class="text-sm text-muted" style="margin-top:4px;">
+            {% blocktrans with alt=req.alt_date_proposed|date:"d/m/Y" %}Vous avez proposé une date alternative : {{ alt }}.{% endblocktrans %}
+        </div>
+        {% endif %}
+    </div>
+    {% if appointment_pending and confirm_url %}
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <form method="post" action="{{ confirm_url }}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                ✓ {% trans "Confirmer ce rendez-vous" %}
+            </button>
+        </form>
+        {% if alt_url %}
+        <form method="post" action="{{ alt_url }}" style="display:inline;" x-data="{ show:false }">
+            {% csrf_token %}
+            <button type="button" class="btn btn-outline" @click="show = !show">{% trans "Proposer une autre date" %}</button>
+            <div x-show="show" x-transition style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <input type="date" name="alt_date" class="form-control" required style="font-size:0.9rem;">
+                <input type="text" name="alt_note" class="form-control" placeholder="{% trans 'Note (optionnelle)' %}" style="font-size:0.9rem;">
+                <button type="submit" class="btn btn-sm btn-primary">{% trans "Envoyer" %}</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

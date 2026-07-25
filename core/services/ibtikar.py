@@ -5,24 +5,23 @@ from __future__ import annotations
 from datetime import datetime
 
 from core.models import Request, RequestHistory
-from core.financial import check_ibtikar_budget
+from core.sequences import next_display_id
 
 
 def submit_ibtikar_request(data: dict, user) -> Request:
-    """Submit a new IBTIKAR request with budget check."""
-    # Generate display_id
+    """Submit a new IBTIKAR request. Budget enforcement happens at the view
+    layer (see dashboard.views.requester.create_request)."""
+    # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
-    count = Request.objects.filter(channel='IBTIKAR', created_at__year=year).count() + 1
-    display_id = f"IBK-{year}-{count:04d}"
+    display_id = next_display_id(
+        'IBK', year,
+        initial_value_fn=lambda: Request.objects.filter(
+            channel='IBTIKAR', created_at__year=year,
+            display_id__startswith=f'IBK-{year}-',
+        ).count(),
+    )
 
-    # Optional budget check
     budget_amount = data.get('budget_amount', 0)
-    if budget_amount:
-        budget_check = check_ibtikar_budget(amount=budget_amount, requester=user)
-        if budget_check['exceeded']:
-            # Store warning but don't block — SUPER_ADMIN can override
-            data.setdefault('_budget_warning', budget_check)
-
     service_id = data.get('service_id')
 
     request_obj = Request.objects.create(
@@ -64,19 +63,55 @@ def submit_ibtikar_request(data: dict, user) -> Request:
     except Exception:
         pass
 
+    # Email the requester their submission confirmation. The guest path
+    # already did this; authenticated requesters were missing it.
+    try:
+        from notifications.emails import notify_submission_confirmation
+        notify_submission_confirmation(request_obj)
+    except Exception:
+        pass
+
     return request_obj
 
 
 def get_ibtikar_request_context(user) -> dict:
-    """Get context data for the IBTIKAR request form."""
-    from core.financial import get_ibtikar_budget_used_by_requester
+    """Build the budget panel context for the requester dashboard.
+
+    Returns the *declared* residual balance (what the candidate self-
+    reports as their current IBTIKAR pot at DGRSDT) — not a flat
+    200 000 DA. The hard ceiling stays available as `budget_cap` so the
+    UI can validate the declaration input.
+
+    Key flags:
+      needs_declaration  True iff the requester has never declared a
+                         balance yet → the form must be hidden behind a
+                         declaration prompt.
+      last_declared_at   When the declaration was last touched, so the
+                         template can nudge the requester to refresh it.
+    """
     from django.conf import settings
 
-    used = get_ibtikar_budget_used_by_requester(user.id)
-    cap = settings.IBTIKAR_BUDGET_CAP
+    declared = user.ibtikar_declared_balance
+    hard_cap = settings.IBTIKAR_BUDGET_CAP
+
+    if declared is None:
+        return {
+            'budget_declared': None,
+            'budget_remaining': None,
+            'budget_cap': hard_cap,
+            'budget_pct': 0,
+            'needs_declaration': True,
+            'last_declared_at': None,
+        }
+
+    declared_f = float(declared)
     return {
-        'budget_used': used,
-        'budget_cap': cap,
-        'budget_remaining': max(0, cap - used),
-        'budget_pct': round(used / cap * 100, 1) if cap > 0 else 0,
+        'budget_declared': declared_f,
+        'budget_remaining': declared_f,
+        'budget_cap': hard_cap,
+        # Percentage of the *hard ceiling* used — gives a visual sense of
+        # how much of the annual envelope is left. 0 % when no ceiling.
+        'budget_pct': round((hard_cap - declared_f) / hard_cap * 100, 1) if hard_cap > 0 else 0,
+        'needs_declaration': False,
+        'last_declared_at': user.ibtikar_balance_declared_at,
     }

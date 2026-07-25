@@ -1,5 +1,9 @@
 /* PLAGENOR 4.0 — Main JS */
 
+// =============================================================================
+// PAGE TRANSITIONS & ANIMATIONS
+// =============================================================================
+
 // Clickable table rows — navigate to data-href on click
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('tr.clickable-row[data-href]').forEach(function (row) {
@@ -7,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = row.dataset.href;
         });
     });
+    
+    // Page ready animation
+    document.body.classList.add('page-ready');
 });
 
 // HTMX: include CSRF token in all requests
@@ -17,8 +24,41 @@ document.body.addEventListener('htmx:configRequest', (e) => {
         || '';
 });
 
-// Notification count is injected server-side via context processor (unread_count).
-// No client-side polling needed.
+// HTMX: Enhanced page transitions
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    const loadingBar = document.getElementById('loading-bar');
+    if (loadingBar) {
+        loadingBar.classList.add('active');
+        loadingBar.style.transform = 'scaleX(0)';
+        loadingBar.offsetHeight; // Trigger reflow
+        loadingBar.style.transform = 'scaleX(0.5)';
+    }
+});
+
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    const loadingBar = document.getElementById('loading-bar');
+    if (loadingBar) {
+        loadingBar.classList.remove('active');
+        loadingBar.style.transform = 'scaleX(1)';
+    }
+    
+    // Re-trigger animations for newly loaded content
+    const newContent = evt.detail.target;
+    if (newContent) {
+        const animatedElements = newContent.querySelectorAll('.card, .kpi-card');
+        animatedElements.forEach((el, index) => {
+            el.style.animation = 'none';
+            el.offsetHeight; // Trigger reflow
+            el.style.animation = null;
+            el.style.animationDelay = (index * 0.05) + 's';
+        });
+    }
+});
+
+document.body.addEventListener('htmx:afterSettle', function() {
+    // Smooth scroll to top after content swap
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 // Language toggle
 function toggleLanguage() {
@@ -47,31 +87,48 @@ document.addEventListener('DOMContentLoaded', function() {
             var serviceId = this.value;
             var container = document.getElementById('dynamic-service-form');
             if (!container) return;
-            if (!serviceId) { container.innerHTML = ''; return; }
+            if (!serviceId) { 
+                container.innerHTML = ''; 
+                return; 
+            }
             var option = this.options[this.selectedIndex];
             var code = option.getAttribute('data-code') || '';
+            var channel = this.getAttribute('data-channel') || 'IBTIKAR';
             if (code) {
-                fetch('/dashboard/api/service-form/' + code + '/')
+                fetch('/dashboard/api/service-form/' + code + '/?channel=' + channel)
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
                         container.innerHTML = html;
-                        // Re-initialize cost estimation for dynamically loaded form
-                        var costObserverTbody = document.getElementById('sample-table-body');
-                        if (costObserverTbody) {
-                            var costObserver = new MutationObserver(updateCostEstimate);
-                            costObserver.observe(costObserverTbody, { childList: true });
-                            updateCostEstimate();
-                        }
-                        // Re-wrap addSampleRow if table exists
-                        if (document.getElementById('sample-table-body') && typeof addSampleRow === 'function') {
-                            var _orig = addSampleRow;
-                            window.addSampleRow = function() {
-                                _orig();
-                                updateCostEstimate();
-                            };
-                        }
+                        
+                        // Dispatch event to notify that form is loaded
+                        document.dispatchEvent(new CustomEvent('serviceFormLoaded', {
+                            detail: { serviceCode: code, serviceId: serviceId }
+                        }));
+                        
+                        // Trigger cost calculation after multiple delays to ensure DOM is ready
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                console.log('Initial cost calculation (100ms)');
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            }
+                        }, 100);
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                console.log('Delayed cost calculation (500ms)');
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            }
+                        }, 500);
+                        setTimeout(function() {
+                            if (window.PlagenorCostCalculator) {
+                                console.log('Final cost calculation (1000ms)');
+                                window.PlagenorCostCalculator.updateCostEstimate();
+                            }
+                        }, 1000);
                     })
-                    .catch(function() { container.innerHTML = ''; });
+                    .catch(function(err) { 
+                        console.error('Failed to load service form:', err);
+                        container.innerHTML = ''; 
+                    });
             }
         });
     });
@@ -95,20 +152,24 @@ function addSampleRow() {
     var tbody = document.getElementById('sample-table-body');
     if (!tbody) { console.error('sample-table-body not found'); return; }
 
-    // Get columns from table header data attributes
     var headerCells = tbody.closest('table').querySelectorAll('thead th[data-col]');
     var columns = [];
     headerCells.forEach(function(th) {
-        columns.push(th.getAttribute('data-col'));
+        columns.push({
+            name: th.getAttribute('data-col'),
+            type: th.getAttribute('data-type') || 'text',
+        });
     });
 
     if (columns.length === 0) {
-        // Fallback: parse from first row input names
-        var firstInputs = tbody.querySelectorAll('tr:first-child input[name^="sample_"]');
-        firstInputs.forEach(function(input) {
-            var parts = input.name.split('_');
+        var firstInputs = tbody.querySelectorAll('tr:first-child [name^="sample_"]');
+        firstInputs.forEach(function(el) {
+            var parts = el.name.split('_');
             if (parts.length >= 3) {
-                columns.push(parts.slice(2).join('_'));
+                columns.push({
+                    name: parts.slice(2).join('_'),
+                    type: el.tagName === 'SELECT' ? 'select' : 'text',
+                });
             }
         });
     }
@@ -116,102 +177,94 @@ function addSampleRow() {
     if (columns.length === 0) { console.error('No columns found'); return; }
 
     sampleRowCount++;
+    var rowIndex = tbody.querySelectorAll('tr').length;
     var tr = document.createElement('tr');
     columns.forEach(function(col) {
         var td = document.createElement('td');
         td.style.cssText = 'padding:4px; border:1px solid #e2e8f0;';
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.name = 'sample_' + sampleRowCount + '_' + col;
-        input.className = 'form-control';
-        input.style.fontSize = '0.85rem';
-        td.appendChild(input);
+
+        var colNameLower = col.name.toLowerCase();
+        if (colNameLower === 'n°' || colNameLower === 'no' || colNameLower === 'num' || colNameLower === 'n°') {
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'sample_' + sampleRowCount + '_' + col.name;
+            input.className = 'form-control';
+            input.style.cssText = 'font-size:0.85rem; background:#f8fafc;';
+            input.value = rowIndex + 1;
+            input.readOnly = true;
+            td.appendChild(input);
+        } else if (col.type === 'select' || col.type === 'enum' || col.type === 'dropdown') {
+            var th = tbody.closest('table').querySelector('thead th[data-col="' + col.name + '"]');
+            var select = document.createElement('select');
+            select.name = 'sample_' + sampleRowCount + '_' + col.name;
+            select.className = 'form-control';
+            select.style.fontSize = '0.85rem';
+            select.innerHTML = '<option value="">Choisir</option>';
+            if (th) {
+                var firstSelect = tbody.querySelector('tr:first-child select[name*="' + col.name + '"]');
+                if (firstSelect) {
+                    select.innerHTML = firstSelect.innerHTML;
+                }
+            }
+            td.appendChild(select);
+        } else if (col.type === 'number' || col.type === 'integer' || col.type === 'float') {
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.name = 'sample_' + sampleRowCount + '_' + col.name;
+            input.className = 'form-control';
+            input.style.fontSize = '0.85rem';
+            if (col.type === 'float') input.step = '0.01';
+            td.appendChild(input);
+        } else {
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'sample_' + sampleRowCount + '_' + col.name;
+            input.className = 'form-control';
+            input.style.cssText = 'font-size:0.85rem; min-width: 120px;';
+            if (colNameLower === 'code') {
+                input.maxLength = 50;
+            }
+            td.appendChild(input);
+        }
         tr.appendChild(td);
     });
     var tdBtn = document.createElement('td');
     tdBtn.style.cssText = 'padding:4px; border:1px solid #e2e8f0; text-align:center;';
-    tdBtn.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="this.closest(\'tr\').remove()" style="padding:2px 8px;">&times;</button>';
+    tdBtn.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="deleteSampleRow(this)" style="padding:2px 8px;">&times;</button>';
     tr.appendChild(tdBtn);
     tbody.appendChild(tr);
+    
+    // Trigger cost update via event (form will handle it)
+    document.dispatchEvent(new Event('sampleRowAdded'));
 }
 
-// Cost estimation - update when samples change
-function updateCostEstimate() {
-    var box = document.getElementById('cost-estimate-box');
-    if (!box) return;
-    var pricingStr = box.getAttribute('data-pricing');
-    if (!pricingStr) return;
-
-    try {
-        var pricing = JSON.parse(pricingStr);
-        var rows = document.querySelectorAll('#sample-table-body tr').length || 1;
-        var total = 0;
-
-        if (pricing.model === 'per_sample_table_row_with_multiplier') {
-            var basePrices = pricing.base_price || {};
-            // Check if pathogenic checkbox is checked
-            var pathCheckbox = document.querySelector('[name="param_pathogenic"]');
-            var isPathogenic = false;
-            if (pathCheckbox) {
-                isPathogenic = pathCheckbox.type === 'checkbox' ? pathCheckbox.checked : (pathCheckbox.value === 'true' || pathCheckbox.value === 'True');
-            }
-            var basePrice = isPathogenic ? (basePrices.pathogenic || basePrices.non_pathogenic || 0) : (basePrices.non_pathogenic || basePrices.pathogenic || 0);
-
-            // Get multiplier from analysis_mode or similar selects
-            var multipliers = pricing.multipliers || {};
-            var multiplier = 1;
-            var multFields = ['param_analysis_mode', 'param_qc_level', 'param_sequencing_mode', 'param_drying_level', 'param_primer_type'];
-            for (var i = 0; i < multFields.length; i++) {
-                var el = document.querySelector('[name="' + multFields[i] + '"]');
-                if (el && el.value && multipliers[el.value] !== undefined) {
-                    multiplier = parseFloat(multipliers[el.value]);
-                    break;
-                }
-            }
-
-            total = Math.round(basePrice * multiplier * rows);
-        } else if (pricing.model === 'per_sample_fixed') {
-            var unitPrice = pricing.unit_price || pricing.price || 0;
-            total = unitPrice * rows;
-        }
-
-        var display = document.getElementById('cost-estimate');
-        if (display) display.textContent = total.toLocaleString('fr-FR') + ' DA';
-        // Trigger budget recheck
-        document.dispatchEvent(new Event('costUpdated'));
-    } catch(e) { console.log('Cost calc error:', e); }
-}
-
-// Hook cost estimation into sample row management
-var _origAddSampleRow = window.addSampleRow;
-if (typeof _origAddSampleRow === 'function') {
-    window.addSampleRow = function() {
-        _origAddSampleRow();
-        updateCostEstimate();
-    };
-}
-
-// Observe DOM changes in sample table for cost updates
-document.addEventListener('DOMContentLoaded', function() {
-    var costObserverTbody = document.getElementById('sample-table-body');
-    if (costObserverTbody) {
-        var costObserver = new MutationObserver(updateCostEstimate);
-        costObserver.observe(costObserverTbody, { childList: true });
-        updateCostEstimate();
+function deleteSampleRow(btn) {
+    var tr = btn.closest('tr');
+    if (tr) {
+        tr.remove();
+        reindexSampleRows();
+        document.dispatchEvent(new Event('sampleRowDeleted'));
     }
-});
+}
 
-// Update cost when pricing-related parameters change
+function reindexSampleRows() {
+    var tbody = document.getElementById('sample-table-body');
+    if (!tbody) return;
+    
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function(row, index) {
+        var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"]');
+        if (numInput) {
+            numInput.value = index + 1;
+        }
+    });
+}
+
+// Event delegation for cost estimation - listens to all changes on the form
 document.addEventListener('change', function(e) {
-    if (e.target.name && (
-        e.target.name === 'param_pathogenic' ||
-        e.target.name === 'param_analysis_mode' ||
-        e.target.name === 'param_qc_level' ||
-        e.target.name === 'param_sequencing_mode' ||
-        e.target.name === 'param_drying_level' ||
-        e.target.name === 'param_primer_type'
-    )) {
-        updateCostEstimate();
+    // Trigger cost update for pricing-related fields
+    if (e.target.name && e.target.name.startsWith('param_')) {
+        document.dispatchEvent(new CustomEvent('costUpdateRequested', { detail: { field: e.target.name } }));
     }
 });
 
@@ -224,19 +277,22 @@ document.addEventListener('change', function(e) {
         var isPathogenic = e.target.type === 'checkbox' ? e.target.checked : (e.target.value === 'true' || e.target.value === 'True');
 
         if (isPathogenic) {
+            // Store the original value before changing
+            if (!targetSelect.dataset.originalValue) {
+                targetSelect.dataset.originalValue = targetSelect.value;
+            }
             targetSelect.value = 'Disposable';
             targetSelect.disabled = true;
-            // Add hidden input to ensure value is submitted (disabled fields don't submit)
-            var hidden = document.getElementById('pathogen_target_hidden');
-            if (!hidden) {
-                hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.id = 'pathogen_target_hidden';
-                hidden.name = 'param_maldi_target_type';
-                hidden.value = 'Disposable';
-                targetSelect.parentElement.appendChild(hidden);
-            }
-            // Show safety notice
+            // Remove any existing hidden input first to avoid duplicates
+            var existingHidden = document.getElementById('pathogen_target_hidden');
+            if (existingHidden) existingHidden.remove();
+            // Create hidden input to ensure Disposable is submitted
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.id = 'pathogen_target_hidden';
+            hidden.name = 'param_maldi_target_type';
+            hidden.value = 'Disposable';
+            targetSelect.parentElement.appendChild(hidden);
             var hint = document.getElementById('pathogen-safety-hint');
             if (!hint) {
                 hint = document.createElement('div');
@@ -250,9 +306,23 @@ document.addEventListener('change', function(e) {
             targetSelect.disabled = false;
             var hidden = document.getElementById('pathogen_target_hidden');
             if (hidden) hidden.remove();
+            // Restore original value if available
+            if (targetSelect.dataset.originalValue) {
+                targetSelect.value = targetSelect.dataset.originalValue;
+            }
             var hint = document.getElementById('pathogen-safety-hint');
             if (hint) hint.style.display = 'none';
         }
+    }
+});
+
+// Initialize pathogenic checkbox state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var pathogenCheckbox = document.querySelector('input[name="param_pathogenic"]');
+    var targetSelect = document.querySelector('select[name="param_maldi_target_type"]');
+    if (pathogenCheckbox && targetSelect) {
+        // Trigger the logic to set initial state
+        pathogenCheckbox.dispatchEvent(new Event('change'));
     }
 });
 
@@ -260,28 +330,23 @@ document.addEventListener('change', function(e) {
 function showFormPreview(formEl) {
     if (!formEl) return;
 
-    // Remove any existing preview
     var existing = document.getElementById('form-preview-overlay');
     if (existing) existing.remove();
 
-    // Collect service name
     var serviceSelect = formEl.querySelector('select[name="service_id"]');
     var serviceName = serviceSelect ? (serviceSelect.options[serviceSelect.selectedIndex].text || '—') : '—';
 
-    // Collect title, description, urgency
     var title = (formEl.querySelector('[name="title"]') || {}).value || '—';
     var description = (formEl.querySelector('[name="description"]') || {}).value || '—';
     var urgencySelect = formEl.querySelector('[name="urgency"]');
     var urgency = urgencySelect ? (urgencySelect.options[urgencySelect.selectedIndex].text || 'Normal') : 'Normal';
 
-    // Collect declared balance (IBTIKAR)
     var balanceInput = formEl.querySelector('[name="declared_balance"]');
     var balanceHtml = '';
     if (balanceInput) {
         balanceHtml = '<div class="preview-row"><span class="preview-label">Solde IBTIKAR déclaré</span><span class="preview-value">' + parseFloat(balanceInput.value || 0).toLocaleString('fr-FR') + ' DA</span></div>';
     }
 
-    // Collect service parameters
     var paramsHtml = '';
     var paramInputs = formEl.querySelectorAll('[name^="param_"]');
     paramInputs.forEach(function(input) {
@@ -289,7 +354,6 @@ function showFormPreview(formEl) {
         var value = '';
         var name = input.name.replace('param_', '');
 
-        // Find label
         var formGroup = input.closest('.form-group');
         if (formGroup) {
             var lbl = formGroup.querySelector('label');
@@ -302,7 +366,7 @@ function showFormPreview(formEl) {
         } else if (input.tagName === 'SELECT') {
             value = input.options[input.selectedIndex] ? input.options[input.selectedIndex].text : input.value;
         } else if (input.type === 'hidden') {
-            return; // Skip hidden inputs (like CSRF, hidden duplicates)
+            return;
         } else {
             value = input.value || '—';
         }
@@ -312,23 +376,63 @@ function showFormPreview(formEl) {
         }
     });
 
-    // Collect sample table
     var sampleHtml = '';
     var sampleTable = document.getElementById('sample-table');
     if (sampleTable) {
-        var headers = [];
+        // Collect (col_name, label) pairs from the header — th[data-col]
+        // carries the YAML column name in data-col, the label is the text.
+        // We use both: data-col to match each input/select/textarea by
+        // name="sample_<idx>_<col>", label for the preview heading.
+        var headerCols = [];
         sampleTable.querySelectorAll('thead th[data-col]').forEach(function(th) {
-            headers.push(th.textContent.trim());
+            headerCols.push({ name: th.getAttribute('data-col'), label: th.textContent.trim() });
         });
+        // Fallback when the template didn't tag headers with data-col: use
+        // whatever the first row's fields are named, in document order.
+        if (headerCols.length === 0) {
+            var firstRow = document.querySelector('#sample-table-body tr');
+            if (firstRow) {
+                var seen = {};
+                firstRow.querySelectorAll('[name^="sample_"]').forEach(function(el) {
+                    var m = el.name.match(/^sample_\d+_(.+)$/);
+                    if (m && !seen[m[1]]) {
+                        seen[m[1]] = true;
+                        headerCols.push({ name: m[1], label: m[1].replace(/_/g, ' ') });
+                    }
+                });
+            }
+        }
+
+        function readFieldValue(el) {
+            if (!el) return '';
+            if (el.tagName === 'SELECT') {
+                var o = el.options[el.selectedIndex];
+                return o ? (o.text || o.value || '') : '';
+            }
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                return el.checked ? 'Oui' : '';
+            }
+            return el.value || '';
+        }
+
+        // Read every body row, collecting one cell per declared column
+        // (text input, select, number — all types — matched by name suffix).
+        // Rows where every column is empty are skipped so we don't pad the
+        // preview with five empty lines when the user added rows by mistake.
         var rows = [];
         document.querySelectorAll('#sample-table-body tr').forEach(function(tr) {
             var cells = [];
-            tr.querySelectorAll('input[type="text"]').forEach(function(input) {
-                cells.push(input.value || '—');
+            var hasValue = false;
+            headerCols.forEach(function(col) {
+                var field = tr.querySelector('[name$="_' + col.name + '"]');
+                var v = readFieldValue(field).trim();
+                if (v) hasValue = true;
+                cells.push(v || '—');
             });
-            if (cells.length > 0) rows.push(cells);
+            if (hasValue) rows.push(cells);
         });
 
+        var headers = headerCols.map(function(c) { return c.label; });
         if (headers.length > 0 && rows.length > 0) {
             sampleHtml = '<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">';
             sampleHtml += '<thead><tr>';
@@ -349,30 +453,24 @@ function showFormPreview(formEl) {
         }
     }
 
-    // Cost estimate
     var costEl = document.getElementById('cost-estimate');
     var costText = costEl ? costEl.textContent : '—';
 
-    // Build preview HTML
     var html = '<div id="form-preview-overlay" style="position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); animation:fadeIn 0.2s ease;">';
     html += '<div style="background:#fff; border-radius:16px; max-width:700px; width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.15); animation:slideUp 0.3s ease;">';
 
-    // Header
     html += '<div style="padding:24px 28px 16px; border-bottom:1px solid #e2e8f0;">';
     html += '<h2 style="margin:0; font-size:1.25rem; color:#1e293b;">Vérification de la demande</h2>';
     html += '<p style="margin:6px 0 0; font-size:0.85rem; color:#64748b;">Veuillez vérifier les informations avant de soumettre.</p>';
     html += '</div>';
 
-    // Body
     html += '<div style="padding:20px 28px;">';
 
-    // Service
     html += '<div class="preview-section">';
     html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Service</h4>';
     html += '<div style="padding:10px 14px; background:#f8fafc; border-radius:8px; font-weight:600;">' + serviceName + '</div>';
     html += '</div>';
 
-    // Parameters
     if (paramsHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Paramètres du service</h4>';
@@ -380,7 +478,6 @@ function showFormPreview(formEl) {
         html += '</div>';
     }
 
-    // Sample table
     if (sampleHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Tableau des échantillons</h4>';
@@ -388,14 +485,12 @@ function showFormPreview(formEl) {
         html += '</div>';
     }
 
-    // Cost
     if (costText && costText !== '—') {
         html += '<div class="preview-section" style="margin-top:18px;">';
         html += '<div style="padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-weight:600;">Coût estimé: ' + costText + '</div>';
         html += '</div>';
     }
 
-    // Request details
     html += '<div class="preview-section" style="margin-top:18px;">';
     html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Détails de la demande</h4>';
     html += '<div style="background:#f8fafc; border-radius:8px; padding:8px 14px;">';
@@ -406,9 +501,8 @@ function showFormPreview(formEl) {
     html += '</div>';
     html += '</div>';
 
-    html += '</div>'; // end body
+    html += '</div>';
 
-    // Footer buttons
     html += '<div style="padding:16px 28px 24px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid #e2e8f0;">';
     html += '<button type="button" onclick="closeFormPreview()" style="padding:10px 24px; border:1px solid #d1d5db; background:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; color:#475569; transition:all 0.15s;">Modifier</button>';
     html += '<button type="button" onclick="confirmFormSubmit()" style="padding:10px 24px; border:none; background:#2563eb; color:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.15s;">Confirmer et soumettre</button>';
@@ -416,15 +510,12 @@ function showFormPreview(formEl) {
 
     html += '</div></div>';
 
-    // Add CSS for preview rows and animations
     var style = document.createElement('style');
     style.id = 'preview-modal-styles';
     style.textContent = '.preview-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;}.preview-row:last-child{border-bottom:none;}.preview-label{color:#64748b;font-size:0.85rem;}.preview-value{font-weight:500;color:#1e293b;font-size:0.85rem;max-width:60%;text-align:right;}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}';
     if (!document.getElementById('preview-modal-styles')) document.head.appendChild(style);
 
     document.body.insertAdjacentHTML('beforeend', html);
-
-    // Store form reference for confirm
     window._previewFormEl = formEl;
 }
 

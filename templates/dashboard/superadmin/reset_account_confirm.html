@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load icons %}
 
 {% block title %}{% trans "Réinitialiser le compte" %} — {{ target_user.username }} | PLAGENOR{% endblock %}
 
@@ -24,7 +25,7 @@
         </div>
 
         <div class="alert alert-warning" style="margin-bottom:20px;">
-            <strong>⚠ {% trans "Attention" %}</strong><br>
+            <strong style="display:inline-flex; align-items:center; gap:5px;">{% icon 'alert-triangle' size=15 %} {% trans "Attention" %}</strong><br>
             {% blocktrans with username=target_user.username %}
             Êtes-vous sûr de vouloir réinitialiser le compte de <strong>{{ username }}</strong> ?
             Toutes les données associées (demandes, rapports, historique) seront conservées.
@@ -44,13 +45,13 @@
             </dl>
         </div>
 
-        <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-left:20px;margin-bottom:24px;">
+        <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-inline-start:20px;margin-bottom:24px;">
             <li>{% trans "Un mot de passe temporaire sécurisé (16 caractères) sera généré." %}</li>
             <li>{% trans "L'utilisateur devra changer son mot de passe dès la prochaine connexion." %}</li>
             {% if target_user.email %}
             <li>{% blocktrans with email=target_user.email %}Un email avec le mot de passe temporaire sera envoyé à <strong>{{ email }}</strong>.{% endblocktrans %}</li>
             {% else %}
-            <li style="color:#dc2626;">{% trans "⚠ Aucun email configuré — le mot de passe temporaire sera affiché dans la notification." %}</li>
+            <li style="color:#dc2626;">{% icon 'alert-triangle' size=14 %} {% trans "Aucun email configuré — le mot de passe temporaire sera affiché dans la notification." %}</li>
             {% endif %}
             <li>{% trans "Cette action est enregistrée dans le journal d'audit." %}</li>
         </ul>
@@ -59,7 +60,7 @@
             {% csrf_token %}
             <div style="display:flex;gap:12px;">
                 <button type="submit" class="btn btn-danger" style="flex:1;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end:6px;">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                     {% trans "Réinitialiser le compte" %}

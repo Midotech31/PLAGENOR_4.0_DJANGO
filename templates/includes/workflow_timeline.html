@@ -1,0 +1,35 @@
+{% load i18n %}
+{# Timeline d'historique du workflow, partagée analyste / demandeur / client. #}
+{# show_actor=True uniquement pour l'analyste : le demandeur / client ne #}
+{# doit jamais voir l'identité de l'analyste (anonymat). #}
+<div class="card mb-4" style="margin-top:24px;">
+    <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
+    <div class="card-body">
+        {% for h in history %}
+        <div style="display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--slate-100, #f1f5f9);">
+            <div style="min-width:120px;">
+                <span class="text-xs text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div style="flex:1;">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    {% if h.from_status %}
+                    <span class="badge-status {{ h.from_status|lower }}" style="font-size:0.7rem;">{{ h.from_status }}</span>
+                    <span>&rarr;</span>
+                    {% endif %}
+                    <span class="badge-status {{ h.to_status|lower }}" style="font-size:0.7rem;">{{ h.to_status }}</span>
+                </div>
+                {% if h.notes %}
+                <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
+                {% endif %}
+            </div>
+            {% if show_actor %}
+            <div style="min-width:100px; text-align:end;">
+                <span class="text-sm">{{ h.actor.first_name|default:"Système" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-muted">{% trans "Aucun historique." %}</div>
+        {% endfor %}
+    </div>
+</div>

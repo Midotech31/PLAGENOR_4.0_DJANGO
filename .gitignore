@@ -4,6 +4,8 @@ __pycache__/
 *.db-wal
 *.db-shm
 .env
+.env.*
+!.env.example
 data/
 media/
 staticfiles/
@@ -15,3 +17,18 @@ build/
 .pytest_cache/
 .vscode/
 .idea/
+
+# Compiled translation catalogs (.mo) are committed intentionally so that
+# Windows operators — who don't ship GNU gettext / msgfmt and can't easily
+# run `compilemessages` — get working translations straight from `git pull`.
+# Regenerate with `python manage.py compilemessages` after editing any .po.
+
+# Auto-backups produced by documents/build_default_templates.py
+documents/docx_templates/*.bak.docx
+
+# Operator-local data dumps produced by ad-hoc Supabase / inspection scripts
+plagenor_data*.json
+plagenor_data_clean.json
+
+.coverage
+htmlcov/

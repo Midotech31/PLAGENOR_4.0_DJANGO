@@ -4,6 +4,9 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% url 'dashboard:client_confirm_appointment' req.pk as appt_confirm_url %}
+{% url 'dashboard:client_alt_date' req.pk as appt_alt_url %}
+{% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -23,6 +26,9 @@
         &larr; {% trans "Retour au tableau de bord" %}
     </a>
 </div>
+
+{# Suivi visuel du workflow (même style que les opérations). #}
+{% include 'includes/workflow_pipeline.html' %}
 
 <div class="grid-2" style="gap:24px; margin-top:24px;">
     <!-- LEFT COLUMN -->
@@ -126,56 +132,62 @@
         <!-- Detailed Quote Display -->
         {% if req.quote_detail and req.quote_detail.items %}
         <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Détail du devis" %}</h3></div>
+            <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <h3 style="margin:0;">{% trans "Détail du devis" %}</h3>
+                <a href="{% url 'dashboard:download_quote' req.pk %}" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:6px;" title="{% trans 'Télécharger le devis officiel (.docx)' %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    {% trans "Télécharger le devis" %}
+                </a>
+            </div>
             <div class="card-body">
                 <div class="table-wrapper">
                     <table style="font-size:0.85rem;">
                         <thead>
                             <tr>
                                 <th>{% trans "Description" %}</th>
-                                <th style="text-align:right;">{% trans "Prix unitaire" %}</th>
-                                <th style="text-align:right;">{% trans "Quantité" %}</th>
-                                <th style="text-align:right;">{% trans "Total" %}</th>
+                                <th style="text-align:end;">{% trans "Prix unitaire" %}</th>
+                                <th style="text-align:end;">{% trans "Quantité" %}</th>
+                                <th style="text-align:end;">{% trans "Total" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in req.quote_detail.items %}
                             <tr>
                                 <td>{{ item.label }}</td>
-                                <td style="text-align:right;">{{ item.unit_price|floatformat:2 }} DA</td>
-                                <td style="text-align:right;">{{ item.quantity }}</td>
-                                <td style="text-align:right;">{{ item.total|floatformat:2 }} DA</td>
+                                <td style="text-align:end;">{{ item.unit_price|floatformat:2 }} DA</td>
+                                <td style="text-align:end;">{{ item.quantity }}</td>
+                                <td style="text-align:end;">{{ item.total|floatformat:2 }} DA</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3" style="text-align:right;"><strong>{% trans "Sous-total HT" %}</strong></td>
-                                <td style="text-align:right;">{{ req.quote_detail.subtotal_ht|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;"><strong>{% trans "Sous-total HT" %}</strong></td>
+                                <td style="text-align:end;">{{ req.quote_detail.subtotal_ht|floatformat:2 }} DA</td>
                             </tr>
                             {% if req.quote_detail.admin_fees %}
                             <tr>
-                                <td colspan="3" style="text-align:right;">{% trans "Frais administratifs" %}</td>
-                                <td style="text-align:right;">{{ req.quote_detail.admin_fees|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;">{% trans "Frais administratifs" %}</td>
+                                <td style="text-align:end;">{{ req.quote_detail.admin_fees|floatformat:2 }} DA</td>
                             </tr>
                             {% endif %}
                             {% if req.quote_detail.report_fees %}
                             <tr>
-                                <td colspan="3" style="text-align:right;">{% trans "Frais de rapport" %}</td>
-                                <td style="text-align:right;">{{ req.quote_detail.report_fees|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;">{% trans "Frais de rapport" %}</td>
+                                <td style="text-align:end;">{{ req.quote_detail.report_fees|floatformat:2 }} DA</td>
                             </tr>
                             {% endif %}
                             <tr>
-                                <td colspan="3" style="text-align:right;"><strong>{% trans "Sous-total avant TVA" %}</strong></td>
-                                <td style="text-align:right;">{{ req.quote_detail.subtotal_before_tax|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;"><strong>{% trans "Sous-total avant TVA" %}</strong></td>
+                                <td style="text-align:end;">{{ req.quote_detail.subtotal_before_tax|floatformat:2 }} DA</td>
                             </tr>
                             <tr>
-                                <td colspan="3" style="text-align:right;">{% trans "TVA" %} ({% widthratio req.quote_detail.vat_rate 1 100 %}%)</td>
-                                <td style="text-align:right;">{{ req.quote_detail.vat_amount|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;">{% trans "TVA" %} ({% widthratio req.quote_detail.vat_rate 1 100 %}%)</td>
+                                <td style="text-align:end;">{{ req.quote_detail.vat_amount|floatformat:2 }} DA</td>
                             </tr>
                             <tr style="font-weight:700; font-size:1.05rem;">
-                                <td colspan="3" style="text-align:right;">{% trans "Total TTC" %}</td>
-                                <td style="text-align:right; color:#059669;">{{ req.quote_detail.total_ttc|floatformat:2 }} DA</td>
+                                <td colspan="3" style="text-align:end;">{% trans "Total TTC" %}</td>
+                                <td style="text-align:end; color:#059669;">{{ req.quote_detail.total_ttc|floatformat:2 }} DA</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -192,14 +204,14 @@
                     <form method="post" action="{% url 'dashboard:client_accept_quote' req.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" style="background:#059669;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:4px;"><polyline points="20 6 9 17 4 12"/></svg>
                             {% trans "Accepter le devis" %}
                         </button>
                     </form>
                     <form method="post" action="{% url 'dashboard:client_reject_quote' req.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             {% trans "Refuser le devis" %}
                         </button>
                     </form>
@@ -226,7 +238,7 @@
                 <div style="padding:12px; background:#dcfce7; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span style="color:#16a34a; font-weight:600;">{% trans "Bon de Commande déjà téléchargé" %}</span>
-                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
+                    <a href="{{ req.order_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-inline-start:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
                 <form method="post" action="{% url 'dashboard:client_upload_order' req.pk %}" enctype="multipart/form-data">
@@ -236,7 +248,7 @@
                     </div>
                     <div style="display:flex; gap:8px;">
                         <button type="submit" class="btn btn-primary" style="background:#f59e0b; border-color:#f59e0b;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             {% trans "Télécharger le Bon de Commande" %}
                         </button>
                     </div>
@@ -269,7 +281,7 @@
                 <div style="padding:12px; background:#dcfce7; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span style="color:#16a34a; font-weight:600;">{% trans "Reçu de paiement déjà téléchargé" %}</span>
-                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-left:auto;">{% trans "Voir" %}</a>
+                    <a href="{{ req.payment_receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline" style="margin-inline-start:auto;">{% trans "Voir" %}</a>
                 </div>
                 {% else %}
                 <form method="post" action="{% url 'dashboard:client_upload_payment' req.pk %}" enctype="multipart/form-data">
@@ -280,7 +292,7 @@
                     </div>
                     <div style="display:flex; gap:8px;">
                         <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             {% trans "Confirmer le Paiement" %}
                         </button>
                     </div>
@@ -309,50 +321,6 @@
             </div>
         </div>
 
-        <!-- Pipeline visualization -->
-        <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Pipeline" %}</h3></div>
-            <div class="card-body">
-                <div class="pipeline">
-                    {% with s=req.status %}
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot done"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Créée" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'QUOTE_SENT' %}active{% elif s in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Devis" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'ORDER_UPLOADED,ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ORDER_UPLOADED' %}active{% elif s in 'ASSIGNED,PENDING_ACCEPTANCE,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "BC" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'ASSIGNED,APPOINTMENT_PROPOSED,APPOINTMENT_CONFIRMED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ASSIGNED' or s == 'APPOINTMENT_PROPOSED' or s == 'APPOINTMENT_CONFIRMED' %}active{% elif s in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Analyse" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'ANALYSIS_FINISHED' or s == 'PAYMENT_PENDING' %}active{% elif s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Paiement" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'PAYMENT_CONFIRMED,REPORT_UPLOADED,ADMIN_REVIEW,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'PAYMENT_CONFIRMED' or s == 'REPORT_UPLOADED' %}active{% elif s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Rapport" %}</div>
-                    </div>
-                    <div class="pipeline-line{% if s in 'REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED' %} done{% endif %}"></div>
-                    <div class="pipeline-step">
-                        <div class="pipeline-node"><div class="pipeline-dot {% if s == 'SENT_TO_CLIENT' %}active{% elif s == 'COMPLETED' %}done{% endif %}"></div></div>
-                        <div class="pipeline-label text-xs">{% trans "Terminé" %}</div>
-                    </div>
-                    {% endwith %}
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -371,8 +339,8 @@
         </div>
         {% if req.report_file %}
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            {# Download button - separate from form to avoid redirect #}
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem; text-decoration:none;">
+            {# Toujours passer par report_view (clause de citation + backfill du token). #}
+            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:10px; padding:14px 28px; font-size:1rem; text-decoration:none;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -412,7 +380,7 @@
         </div>
         {% if req.report_file %}
         <div style="margin-bottom:16px;">
-            <a href="{{ req.report_file.url }}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+            <a href="{% url 'report_view' req.report_token %}" target="_blank" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% trans "Télécharger le rapport" %}
             </a>
@@ -440,7 +408,7 @@
     <div class="card-body" style="padding:20px; display:flex; align-items:center; gap:12px;">
         <span style="font-size:0.9rem; color:#64748b;">{% trans "Votre évaluation" %}:</span>
         {% for i in "12345" %}{% if forloop.counter <= req.service_rating %}<span style="color:#f59e0b; font-size:24px;">&#9733;</span>{% else %}<span style="color:#d1d5db; font-size:24px;">&#9733;</span>{% endif %}{% endfor %}
-        {% if req.rating_comment %}<span class="text-muted" style="margin-left:8px;">"{{ req.rating_comment }}"</span>{% endif %}
+        {% if req.rating_comment %}<span class="text-muted" style="margin-inline-start:8px;">"{{ req.rating_comment }}"</span>{% endif %}
     </div>
 </div>
 {% endif %}
@@ -461,4 +429,7 @@
     </div>
 </div>
 {% endif %}
+
+{# Même timeline pas-à-pas que l'analyste, pour le suivi du client. #}
+{% include 'includes/workflow_timeline.html' %}
 {% endblock %}

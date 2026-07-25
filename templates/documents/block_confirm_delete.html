@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Supprimer le bloc" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Supprimer ce bloc ?" %}</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p><strong>{% trans "Type" %} :</strong> {{ block.get_template_type_display }}</p>
+        <p><strong>{% trans "Services concernés" %} :</strong>
+            {% if block.services.all %}
+                {% for s in block.services.all %}<span class="font-mono">{{ s.code }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}
+                <em>{% trans "Global (tous les services)" %}</em>
+            {% endif %}
+        </p>
+        <p><strong>{% trans "Position" %} :</strong> {{ block.get_position_display }}</p>
+        <p><strong>{% trans "Langue" %} :</strong> {{ block.get_language_display }}</p>
+        {% if block.title %}<p><strong>{% trans "Titre" %} :</strong> {{ block.title }}</p>{% endif %}
+        <pre style="background:#f5f5f5;padding:12px;white-space:pre-wrap;">{{ block.body }}</pre>
+
+        <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">{% trans "Oui, supprimer" %}</button>
+            <a href="{% url 'documents:block_list' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -59,8 +59,3 @@ class InvoiceLockError(PlagenorError):
 class AuthorizationError(PlagenorError):
     """Raised when a user lacks permission for an action."""
     pass
-
-
-class ValidationError(PlagenorError):
-    """Raised when input validation fails."""
-    pass

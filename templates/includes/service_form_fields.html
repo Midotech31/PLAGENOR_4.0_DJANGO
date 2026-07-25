@@ -1,45 +1,79 @@
 {% load i18n %}
+{% load dashboard_extras %}
 {% if parameters or db_fields %}
 <div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
-    <h4 style="margin-bottom:12px;">{% trans "Paramètres du service" %}</h4>
     {% for param in parameters %}
-    <div class="form-group">
-        <label>{{ param.label|default:param.name }}{% if param.required %} *{% endif %}</label>
-        {% if param.type == 'string' or param.type == 'text' %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.placeholder|default:'' }}">
-        {% elif param.type == 'enum' %}
-        <select name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
-            <option value="">-- {% trans "Choisir" %} --</option>
+    {% if not sample_table.enabled or param.name not in sample_table.column_names %}
+    <div class="form-group"
+         {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if param.option_pricing %}data-option-pricing='{{ param.option_pricing|as_json }}'{% endif %}
+         {% if param.conditional_logic %}data-conditional-logic='{{ param.conditional_logic|as_json }}'{% endif %}>
+        {% if param.type == 'boolean' %}
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
+            <label for="param_{{ param.name }}" style="margin:0; font-weight:500;">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+            {% if param.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">💰</span>{% endif %}
+        </div>
+        {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% else %}
+        <label>{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+            {% if param.type == 'select' or param.type == 'enum' or param.type == 'dropdown' %}
+        <select name="param_{{ param.name }}" id="select_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} onchange="handlePricingChange(this)">
+            <option value="">{% trans "Choisir" %}{% if param.required %} *{% endif %}</option>
             {% for opt in param.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
+            <option value="{{ opt }}" {% if param.option_pricing and opt in param.option_pricing %}data-option-price="{{ param.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
             {% endfor %}
         </select>
-        {% elif param.type == 'boolean' %}
-        <div><input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}"> <label for="param_{{ param.name }}" style="display:inline;">{{ param.label|default:param.name }}</label></div>
         {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
-        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %}>
+        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
         {% else %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %}>
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
+        {% endif %}
+        {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% endif %}
     </div>
+    {% endif %}
     {% endfor %}
 
     {% for field in db_fields %}
-    <div class="form-group">
-        <label>{{ field.label }}{% if field.required %} *{% endif %}</label>
-        {% if field.field_type == 'string' %}
-        <input type="text" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
-        {% elif field.field_type == 'enum' %}
-        <select name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
-            <option value="">-- {% trans "Choisir" %} --</option>
+    <div class="form-group"
+         {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if field.option_pricing %}data-option-pricing='{{ field.option_pricing|as_json }}'{% endif %}
+         {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|as_json }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
+        {% if field.field_type == 'boolean' %}
+        <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
+            <label for="param_{{ field.name }}" style="margin:0; font-weight:500;">{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+            {% if field.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">💰</span>{% endif %}
+        </div>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% elif field.field_type == 'select' or field.field_type == 'dropdown' or field.field_type == 'enum' %}
+        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <select name="param_{{ field.name }}" id="select_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} onchange="handlePricingChange(this)">
+            <option value="">{% trans "Choisir" %}{% if field.required %} *{% endif %}</option>
             {% for opt in field.options %}
-            <option value="{{ opt }}">{{ opt }}</option>
+            <option value="{{ opt }}" {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
             {% endfor %}
         </select>
-        {% elif field.field_type == 'boolean' %}
-        <div><input type="checkbox" name="param_{{ field.name }}" value="true"> <label style="display:inline;">{{ field.label }}</label></div>
-        {% elif field.field_type == 'number' %}
-        <input type="number" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %}>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% elif field.field_type == 'multiselect' %}
+        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+            {% for opt in field.options %}
+            <label style="display:flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="param_{{ field.name }}" value="{{ opt }}" style="width:18px; height:18px;" 
+                       onchange="handlePricingChange(this)"
+                       {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>
+                <span>{{ opt }}</span>
+                {% if field.option_pricing and opt in field.option_pricing %}
+                <span style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:2px 6px; border-radius:4px;">+{{ field.option_pricing|get_item:opt }} DA</span>
+                {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
+        {% else %}
+        <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label }}{% if field.required %} *{% endif %}">
         {% endif %}
     </div>
     {% endfor %}
@@ -48,12 +82,15 @@
 
 {% if sample_table.enabled %}
 <div class="sample-table-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
-    <h4 style="margin-bottom:12px;">{% trans "Tableau des échantillons" %}</h4>
-    <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse;">
+    <div style="max-height: 400px; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <table class="sample-dynamic-table" id="sample-table" style="width:100%; border-collapse:collapse; min-width: 600px;">
         <thead>
             <tr>
                 {% for col in sample_table.columns %}
-                <th data-col="{{ col.name }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">{{ col.label|default:col.name }}</th>
+                <th data-col="{{ col.name }}" data-type="{{ col.type }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">
+                    {{ col.label|default:col.name }}
+                    {% if col.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 4px; border-radius:3px; font-size:0.65rem; margin-left:4px;">💰</span>{% endif %}
+                </th>
                 {% endfor %}
                 <th style="padding:8px; border:1px solid #e2e8f0; background:#fff; width:40px;"></th>
             </tr>
@@ -62,23 +99,49 @@
             <tr>
                 {% for col in sample_table.columns %}
                 <td style="padding:4px; border:1px solid #e2e8f0;">
-                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;">
+                    {% if col.name|lower == 'n°' or col.name|lower == 'no' or col.name|lower == 'num' %}
+                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem; background:#f8fafc;" value="1" readonly>
+                    {% elif col.type == 'select' or col.type == 'enum' or col.type == 'dropdown' %}
+                    <select name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
+                        <option value="">{% trans "Choisir" %}</option>
+                        {% for opt in col.options %}
+                        <option value="{{ opt }}">{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                    {% elif col.type == 'number' or col.type == 'integer' or col.type == 'float' %}
+                    <input type="number" name="sample_0_{{ col.name }}" class="form-control" step="{% if col.type == 'float' %}0.01{% else %}1{% endif %}" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
+                    {% else %}
+                    <input type="text" name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem; min-width: 120px;" {% if col.name|lower == 'code' %}maxlength="50"{% endif %}>
+                    {% endif %}
                 </td>
                 {% endfor %}
                 <td style="padding:4px; border:1px solid #e2e8f0; text-align:center;">
-                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()" style="padding:2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); if(window.reindexSampleRows) reindexSampleRows(); if(window.PlagenorCostCalculator) window.PlagenorCostCalculator.updateCostEstimate();" style="padding:2px 8px;">&times;</button>
                 </td>
             </tr>
         </tbody>
     </table>
-    <button type="button" class="btn btn-sm btn-outline" onclick="addSampleRow()" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
+    </div>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="addSampleRow(); setTimeout(function(){ if(window.PlagenorCostCalculator) window.PlagenorCostCalculator.updateCostEstimate(); }, 100);" style="margin-top:8px;">+ {% trans "Ajouter une ligne" %}</button>
 </div>
 {% endif %}
+
+<!-- Pricing Configuration Data -->
+<div id="pricing-config"
+     data-pricing-config='{{ pricing_json|safe }}'
+     data-service-code="{{ service_code|default:'' }}"
+     style="display:none;"></div>
 
 {% if pricing %}
 <div class="pricing-info" style="margin-top:12px; padding:12px; background:var(--blue-50, #eff6ff); border-radius:8px; font-size:0.9rem;">
     <strong>{% trans "Tarification" %}:</strong>
-    {% if pricing.model == 'per_sample_table_row_with_multiplier' %}
+    {% if pricing.configs %}
+        {% for cfg in pricing.configs %}
+            {% if cfg.pricing_type == 'BASE' %}
+                {{ cfg.amount|floatformat:0 }} DA {% trans "par échantillon" %}
+            {% endif %}
+        {% endfor %}
+    {% elif pricing.model == 'per_sample_table_row_with_multiplier' %}
         {% if pricing.base_price.non_pathogenic and pricing.base_price.pathogenic and pricing.base_price.non_pathogenic != pricing.base_price.pathogenic %}
             {{ pricing.base_price.non_pathogenic|floatformat:0 }} DA ({% trans "non pathogène" %}) / {{ pricing.base_price.pathogenic|floatformat:0 }} DA ({% trans "pathogène" %}) {% trans "par échantillon" %}
         {% elif pricing.base_price.non_pathogenic %}
@@ -92,9 +155,395 @@
         {% trans "Standard" %}
     {% endif %}
 </div>
+{% endif %}
+
 <div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
-     data-pricing='{{ pricing_json }}'>
+     data-pricing='{{ pricing_json|safe }}'>
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
     <div class="text-muted text-xs" style="margin-top:4px;">{% trans "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse." %}</div>
+    <div id="pricing-modifiers-summary" style="margin-top:8px; display:none;">
+        <div style="font-size:0.8rem; color:#059669; margin-bottom:4px;">{% trans "Suppléments actifs:" %}</div>
+        <div id="active-modifiers-list" style="font-size:0.8rem;"></div>
+    </div>
 </div>
-{% endif %}
+
+<script>
+(function() {
+    // Read pricing data from DOM - fresh read every time
+    function getPricingData() {
+        var pricingBox = document.getElementById('cost-estimate-box');
+        var pricingConfig = document.getElementById('pricing-config');
+        
+        if (!pricingBox) {
+            console.error('cost-estimate-box not found');
+            return {};
+        }
+        
+        // Try pricing-config first (new format), then cost-estimate-box
+        var pricingAttr = null;
+        if (pricingConfig) {
+            pricingAttr = pricingConfig.getAttribute('data-pricing-config');
+        }
+        if (!pricingAttr) {
+            pricingAttr = pricingBox.getAttribute('data-pricing') || '{}';
+        }
+        
+        try {
+            var data = JSON.parse(pricingAttr);
+            console.log('Parsed pricing data:', data);
+            return data;
+        } catch(e) {
+            console.error('Failed to parse pricing data:', e, 'Raw:', pricingAttr);
+            return {};
+        }
+    }
+
+    window.handlePricingChange = function(element) {
+        var formGroup = element.closest('.form-group');
+        if (!formGroup) return;
+        
+        var fieldName = formGroup.getAttribute('data-pricing-field');
+        var pricingType = formGroup.getAttribute('data-pricing-type');
+        var pricingValue = parseFloat(formGroup.getAttribute('data-pricing-value')) || 0;
+        var warningDiv = document.querySelector('.pricing-warning-' + fieldName);
+        
+        if (!fieldName || !pricingType) {
+            // Still update cost even if no pricing field attributes (for per-option pricing)
+            updateCostEstimateWithFallback();
+            return;
+        }
+        
+        var isChecked = element.type === 'checkbox' ? element.checked : element.value !== '';
+        var isSelected = element.tagName === 'SELECT' && element.value !== '';
+        
+        if (warningDiv) {
+            if ((isChecked || isSelected) && pricingValue > 0) {
+                warningDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+                    '{% trans "Cette option inclut des frais supplémentaires." %} ' +
+                    '<strong>' + pricingValue.toLocaleString() + ' DA</strong> ' +
+                    '{% trans "(sera ajouté au coût final)." %}';
+                warningDiv.style.display = 'block';
+            } else if ((isChecked || isSelected) && pricingValue === 0) {
+                warningDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' +
+                    '{% trans "Des frais supplémentaires s\'appliquent. Le montant exact sera communiqué lors de la validation." %}';
+                warningDiv.style.display = 'block';
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+        
+        updateCostEstimateWithFallback();
+    };
+
+    window.updateCostEstimate = function() {
+        console.log('updateCostEstimate called');
+        
+        var costEl = document.getElementById('cost-estimate');
+        var summaryEl = document.getElementById('pricing-modifiers-summary');
+        var modifiersListEl = document.getElementById('active-modifiers-list');
+
+        if (!costEl) {
+            console.error('cost-estimate element not found');
+            return;
+        }
+
+        var pricingData = getPricingData();
+        console.log('Pricing data:', pricingData);
+
+        var baseCost = 0;
+        var surcharges = [];
+        var multipliers = [];
+
+        console.log('Calculating cost, pricingData:', JSON.stringify(pricingData));
+
+        // Handle pricing.configs format (from ServicePricing DB)
+        if (pricingData.configs && pricingData.configs.length > 0) {
+            console.log('Using pricing.configs format with', pricingData.configs.length, 'configs');
+            pricingData.configs.forEach(function(cfg) {
+                console.log('Processing config:', cfg);
+                // BASE or PER_SAMPLE both set the base per-sample cost
+                if (cfg.pricing_type === 'BASE' || cfg.pricing_type === 'PER_SAMPLE') {
+                    if (cfg.pricing_type === 'BASE' || baseCost === 0) {
+                        baseCost = parseFloat(cfg.amount) || 0;
+                        console.log('Base cost from', cfg.pricing_type, ':', baseCost);
+                    }
+                } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
+                    surcharges.push(parseFloat(cfg.amount) || 0);
+                } else if (cfg.pricing_type === 'DISCOUNT') {
+                    surcharges.push(-(parseFloat(cfg.amount) || 0));
+                }
+            });
+        }
+        
+        // Fallback to base_price if no configs found
+        if (baseCost === 0 && pricingData.base_price) {
+            console.log('Using base_price format');
+            var bp = pricingData.base_price;
+            if (typeof bp === 'number') {
+                baseCost = bp;
+            } else if (typeof bp === 'object') {
+                baseCost = bp.non_pathogenic || bp.default || bp.pathogenic || 0;
+            }
+        }
+        
+        // Fallback to unit_price for per_sample_fixed model
+        if (baseCost === 0 && pricingData.unit_price) {
+            console.log('Using unit_price:', pricingData.unit_price);
+            baseCost = parseFloat(pricingData.unit_price) || 0;
+        }
+        
+        if (baseCost === 0) {
+            console.error('WARNING: Base cost is 0 - pricing may not be configured correctly');
+        } else {
+            console.log('Final base cost:', baseCost);
+        }
+
+        // Process pricing field modifiers from field-level pricing
+        document.querySelectorAll('[data-pricing-field]').forEach(function(group) {
+            if (group.style.display === 'none' || group.offsetParent === null) return;
+
+            var input = group.querySelector('input, select');
+            if (!input) return;
+
+            var fieldName = group.getAttribute('data-pricing-field');
+            var pricingValue = parseFloat(group.getAttribute('data-pricing-value')) || 0;
+            var pricingType = group.getAttribute('data-pricing-type');
+            
+            var isActive = false;
+            var effectiveValue = pricingValue;
+
+            if (input.type === 'checkbox') {
+                isActive = input.checked;
+            } else if (input.tagName === 'SELECT' && input.selectedOptions.length > 0) {
+                var selectedOption = input.selectedOptions[0];
+                var optionPrice = parseFloat(selectedOption.getAttribute('data-option-price')) || 0;
+                
+                // Check if this field has option_pricing data attribute with option-specific multipliers
+                var optionPricingAttr = group.getAttribute('data-option-pricing');
+                var optionPricing = {};
+                if (optionPricingAttr) {
+                    try {
+                        optionPricing = JSON.parse(optionPricingAttr);
+                    } catch(e) {}
+                }
+                
+                // If option_pricing dict exists and selected value has a multiplier, use it
+                var selectedValue = selectedOption.value;
+                if (optionPricing && optionPricing[selectedValue] !== undefined) {
+                    var multValue = parseFloat(optionPricing[selectedValue]);
+                    if (multValue > 0 && multValue !== 1) {
+                        // This is a multiplier (e.g., Duplicata ×2, Triplicata ×3)
+                        // Apply multiplier to base cost
+                        console.log('Option pricing multiplier for', fieldName, ':', selectedValue, '×', multValue);
+                        multipliers.push(multValue);
+                        isActive = true;
+                    } else if (multValue === 1) {
+                        // ×1 multiplier means no change, but field is active
+                        isActive = true;
+                    }
+                } else if (optionPrice > 0) {
+                    // Legacy: option price treated as surcharge/addition
+                    effectiveValue = optionPrice;
+                    isActive = true;
+                    console.log('Per-option pricing for', fieldName, ':', optionPrice);
+                } else if (input.value !== '') {
+                    isActive = true;
+                }
+            } else if (input.value !== '') {
+                isActive = true;
+            }
+            
+            // For checkbox fields with price_modifier_type=multiply
+            if (input.type === 'checkbox' && isActive && pricingType === 'multiply' && pricingValue > 0) {
+                multipliers.push(pricingValue);
+            } else if (isActive && effectiveValue > 0) {
+                console.log('Applying modifier:', fieldName, pricingType, effectiveValue);
+                if (pricingType === 'multiply') {
+                    multipliers.push(effectiveValue);
+                } else if (pricingType === 'set') {
+                    baseCost = effectiveValue;
+                } else {
+                    surcharges.push(effectiveValue);
+                }
+            }
+        });
+        
+        var sampleRows = document.querySelectorAll('#sample-table-body tr');
+        var sampleCount = sampleRows.length || 1;
+        console.log('Sample count:', sampleCount);
+        
+        var total = baseCost * sampleCount;
+        console.log('Base total:', total);
+        
+        surcharges.forEach(function(val) {
+            total += val * sampleCount;
+        });
+        console.log('After surcharges:', total, surcharges);
+        
+        multipliers.forEach(function(mult) {
+            total = total * mult;
+        });
+        console.log('After multipliers:', total, multipliers);
+        
+        costEl.textContent = total.toLocaleString('fr-FR') + ' DA';
+        
+        if (surcharges.length > 0 || multipliers.length > 0) {
+            if (summaryEl) summaryEl.style.display = 'block';
+            var summaryItems = [];
+            surcharges.forEach(function(val) {
+                if (val > 0) summaryItems.push('+' + val.toLocaleString() + ' DA');
+                else if (val < 0) summaryItems.push(val.toLocaleString() + ' DA (remise)');
+            });
+            multipliers.forEach(function(mult) {
+                summaryItems.push('×' + mult + ' (multiplicateur)');
+            });
+            if (modifiersListEl) modifiersListEl.innerHTML = summaryItems.map(function(m) {
+                return '<div style="color:#059669;">' + m + '</div>';
+            }).join('');
+        } else {
+            if (summaryEl) summaryEl.style.display = 'none';
+        }
+        
+        // Trigger budget recheck
+        document.dispatchEvent(new Event('costUpdated'));
+    };
+
+    // Delegate to new cost calculator if available
+    function updateCostEstimateWithFallback() {
+        if (window.PlagenorCostCalculator && window.PlagenorCostCalculator.updateCostEstimate) {
+            // Use the new universal cost calculator
+            window.PlagenorCostCalculator.updateCostEstimate();
+        } else {
+            // Fall back to legacy calculation
+            updateCostEstimate();
+        }
+    }
+
+    // Conditional Logic Handler
+    window.evaluateConditionalLogic = function() {
+        var maxIterations = 10;
+        var hasChanges = true;
+        var iteration = 0;
+
+        while (hasChanges && iteration < maxIterations) {
+            hasChanges = false;
+            iteration++;
+
+            document.querySelectorAll('[data-conditional-logic]').forEach(function(targetGroup) {
+                var conditions = JSON.parse(targetGroup.getAttribute('data-conditional-logic') || '[]');
+                if (!conditions || conditions.length === 0) return;
+
+                var shouldShow = false;
+                var shouldRequire = targetGroup.getAttribute('data-original-required') === 'true';
+                var wasHidden = targetGroup.style.display === 'none';
+
+                conditions.forEach(function(condition) {
+                    var triggerField = document.querySelector('[name="param_' + condition.trigger_field + '"]');
+                    if (!triggerField) {
+                        triggerField = document.querySelector('input[type="checkbox"][name="param_' + condition.trigger_field + '"]');
+                    }
+                    if (!triggerField) return;
+
+                    var triggerValue;
+                    if (triggerField.type === 'checkbox') {
+                        var checkboxes = document.querySelectorAll('input[type="checkbox"][name="param_' + condition.trigger_field + '"]:checked');
+                        var values = Array.from(checkboxes).map(function(cb) { return cb.value; });
+                        triggerValue = values.length > 0 ? values : (triggerField.checked ? ['true'] : ['false']);
+                    } else {
+                        triggerValue = [triggerField.value];
+                    }
+
+                    var conditionMet = triggerValue.some(function(val) {
+                        return val === condition.trigger_value;
+                    });
+
+                    if (conditionMet && condition.actions) {
+                        condition.actions.forEach(function(action) {
+                            if (action === 'show') shouldShow = true;
+                            if (action === 'hide') shouldShow = false;
+                            if (action === 'make_required') shouldRequire = true;
+                            if (action === 'make_optional') shouldRequire = false;
+                        });
+                    }
+                });
+
+                var isNowHidden = !shouldShow;
+                if (wasHidden !== isNowHidden) {
+                    hasChanges = true;
+                }
+
+                if (shouldShow) {
+                    targetGroup.style.display = '';
+                } else {
+                    targetGroup.style.display = 'none';
+                    var inputs = targetGroup.querySelectorAll('input, select, textarea');
+                    inputs.forEach(function(input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = false;
+                        } else if (input.tagName === 'SELECT') {
+                            input.selectedIndex = 0;
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                }
+
+                var input = targetGroup.querySelector('input, select, textarea');
+                if (input) {
+                    if (shouldShow && shouldRequire) {
+                        input.required = true;
+                    } else {
+                        input.required = false;
+                        input.removeAttribute('required');
+                    }
+                }
+            });
+        }
+    };
+
+    // Attach listeners
+    document.querySelectorAll('[name^="param_"]').forEach(function(field) {
+        field.addEventListener('change', function() {
+            evaluateConditionalLogic();
+            updateCostEstimateWithFallback();
+        });
+    });
+
+    // Listen for row changes from app.js
+    document.addEventListener('sampleRowAdded', updateCostEstimateWithFallback);
+    document.addEventListener('sampleRowDeleted', updateCostEstimateWithFallback);
+    document.addEventListener('costUpdateRequested', updateCostEstimateWithFallback);
+
+    // Reindex rows
+    window.reindexSampleRows = function() {
+        var tbody = document.getElementById('sample-table-body');
+        if (!tbody) return;
+        
+        var rows = tbody.querySelectorAll('tr');
+        rows.forEach(function(row, index) {
+            var numInput = row.querySelector('input[name*="n°"], input[name*="N°"], input[name*="no"], input[name*="num"], input[name*="Num"]');
+            if (numInput) {
+                numInput.value = index + 1;
+            }
+        });
+        // Update cost after reindexing
+        updateCostEstimateWithFallback();
+    };
+
+    // Initialize
+    evaluateConditionalLogic();
+    // Use new cost calculator if available, otherwise fallback
+    function doInitialCalculation() {
+        if (window.PlagenorCostCalculator) {
+            window.PlagenorCostCalculator.updateCostEstimate();
+        } else {
+            updateCostEstimate();
+        }
+    }
+    // Run immediately
+    doInitialCalculation();
+    // And again after a short delay to ensure DOM is fully ready
+    setTimeout(doInitialCalculation, 200);
+    setTimeout(doInitialCalculation, 500);
+})();
+</script>

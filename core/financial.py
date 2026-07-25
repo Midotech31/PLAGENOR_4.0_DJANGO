@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Optional
 
 from django.conf import settings
@@ -13,6 +14,52 @@ from django.db.models import Count, Sum
 from core.exceptions import BudgetExceededError
 
 logger = logging.getLogger('plagenor.financial')
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GENOCLAB — Invoice / quote totals (HT → VAT → TTC)
+# ═══════════════════════════════════════════════════════════════════════════
+def _money(value) -> Decimal:
+    """Coerce a value to Decimal via str() so float artefacts don't leak in."""
+    try:
+        return Decimal(str(value if value not in (None, '') else 0))
+    except (InvalidOperation, ValueError, TypeError):
+        return Decimal('0')
+
+
+def _q2(amount: Decimal) -> Decimal:
+    """Round to 2 decimals using ROUND_HALF_UP (the conventional invoice rule)."""
+    return amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
+def compute_invoice_totals(line_items, admin_fees=0, report_fees=0, vat_rate=0.19):
+    """Compute HT / VAT / TTC for a GENOCLAB quote or invoice.
+
+    ``line_items``: iterable of dicts each carrying a numeric ``total`` (the
+    per-line subtotal). ``vat_rate`` is a fraction (0.19 = 19%).
+
+    Arithmetic is done in ``Decimal`` to avoid binary-float drift on money, and
+    VAT / total are rounded to 2 decimals with ROUND_HALF_UP (standard invoice
+    rounding — not Python's banker's rounding). Values are returned as ``float``
+    so the result stays JSON-serialisable for ``Request.quote_detail`` and
+    assignable to the ``DecimalField`` invoice columns, exactly as before.
+    """
+    admin_fees = _money(admin_fees)
+    report_fees = _money(report_fees)
+    vat_rate = _money(vat_rate)
+    subtotal_ht = sum((_money(i.get('total', 0)) for i in line_items), Decimal('0'))
+    subtotal_before_tax = subtotal_ht + admin_fees + report_fees
+    vat_amount = _q2(subtotal_before_tax * vat_rate)
+    total_ttc = _q2(subtotal_before_tax + vat_amount)
+    return {
+        'subtotal_ht': float(subtotal_ht),
+        'admin_fees': float(admin_fees),
+        'report_fees': float(report_fees),
+        'subtotal_before_tax': float(subtotal_before_tax),
+        'vat_rate': float(vat_rate),
+        'vat_amount': float(vat_amount),
+        'total_ttc': float(total_ttc),
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -63,28 +110,98 @@ def get_ibtikar_budget_used(year: Optional[int] = None) -> float:
 
 
 def check_ibtikar_budget(amount, requester=None, request_obj=None) -> dict:
-    """Check if THIS STUDENT's budget allows the amount. Cap = 200K per student."""
-    used = get_ibtikar_budget_used_by_requester(requester.id) if requester else 0.0
-    cap = settings.IBTIKAR_BUDGET_CAP
-    projected = used + float(amount)
+    """Check if THIS STUDENT's *declared* balance allows the amount.
 
+    The cap is the requester's self-declared residual IBTIKAR balance
+    (`User.ibtikar_declared_balance`) — NOT a flat 200K — because the
+    DGRSDT IBTIKAR budget is shared across multiple platforms, so the
+    candidate is the only one who knows their true residual at any given
+    moment. The hard ceiling (settings.IBTIKAR_BUDGET_CAP, 200 000 DA)
+    is only used to validate the upper bound of what they can *declare*.
+
+    Returns `declared=None` when the requester has not yet declared a
+    balance — callers must surface a declaration prompt before letting
+    the requester submit.
+    """
+    declared = (
+        float(requester.ibtikar_declared_balance)
+        if requester and requester.ibtikar_declared_balance is not None
+        else None
+    )
+    hard_cap = settings.IBTIKAR_BUDGET_CAP
+    amount_f = float(amount)
+
+    if declared is None:
+        # Not declared yet — exceeded=True so the view refuses to submit
+        # until the requester declares a balance.
+        return {
+            'declared': None,
+            'cap': hard_cap,
+            'amount': amount_f,
+            'projected': amount_f,
+            'exceeded': True,
+            'remaining': 0.0,
+            'pct_used': 0.0,
+            'needs_declaration': True,
+        }
+
+    projected = amount_f
     result = {
-        'used': used,
-        'cap': cap,
-        'amount': float(amount),
+        'declared': declared,
+        'cap': hard_cap,
+        'amount': amount_f,
         'projected': projected,
-        'exceeded': projected > cap,
-        'remaining': max(0, cap - used),
-        'pct_used': round(used / cap * 100, 1) if cap > 0 else 0,
+        'exceeded': projected > declared,
+        'remaining': max(0, declared - projected),
+        'pct_used': round((amount_f / declared) * 100, 1) if declared > 0 else 0.0,
+        'needs_declaration': False,
     }
 
     if result['exceeded']:
         logger.warning(
-            "Budget IBTIKAR exceeded: requester=%s projected=%s cap=%s",
-            getattr(requester, 'id', '?'), projected, cap,
+            "Budget IBTIKAR exceeded: requester=%s amount=%s declared=%s",
+            getattr(requester, 'id', '?'), amount_f, declared,
         )
 
     return result
+
+
+def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
+    """Deduct a resolved request cost from the requester's declared
+    IBTIKAR balance. Called when an IBTIKAR request reaches COMPLETED
+    (report delivered + receipt confirmed).
+
+    NOT idempotent on its own: every call debits. `reason` is only
+    recorded in the log. The once-per-request guarantee lives in the
+    caller, which claims ``Request.budget_deducted`` under
+    ``SELECT … FOR UPDATE`` before calling this
+    (see core.workflow._deduct_ibtikar_on_complete). Any new caller must
+    provide its own guard.
+
+    No-op if the requester never declared a balance — log a warning so
+    operators can investigate. Refuses to go negative; floors at 0.
+    """
+    from django.utils import timezone
+
+    if requester is None or requester.ibtikar_declared_balance is None:
+        logger.warning(
+            "deduct_ibtikar_balance skipped: requester=%s has no declared balance (amount=%s)",
+            getattr(requester, 'id', '?'), amount,
+        )
+        return {'deducted': 0.0, 'remaining': None, 'skipped': True}
+
+    before = float(requester.ibtikar_declared_balance)
+    after = max(0.0, before - float(amount))
+    requester.ibtikar_declared_balance = after
+    requester.ibtikar_balance_declared_at = timezone.now()
+    requester.save(update_fields=[
+        'ibtikar_declared_balance', 'ibtikar_balance_declared_at',
+    ])
+    logger.info(
+        "IBTIKAR deduction: requester=%s amount=%s before=%s after=%s reason=%s",
+        requester.id, amount, before, after, reason,
+    )
+    return {'deducted': float(amount), 'remaining': after, 'skipped': False}
 
 
 def approve_with_budget_override(request_obj, actor, amount: float, justification: str) -> dict:
@@ -107,43 +224,10 @@ def approve_with_budget_override(request_obj, actor, amount: float, justificatio
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GENOCLAB — Real Revenue (invoicing)
+# Invoice rows are created from the admin operations view
+# (dashboard.views.admin_ops.generate_invoice), which composes the line items
+# from the request's accepted quote.
 # ═══════════════════════════════════════════════════════════════════════════
-
-def generate_invoice(request_obj, actor, line_items=None):
-    """Generate a GENOCLAB invoice from a request."""
-    from core.models import Invoice
-
-    year = datetime.now().year
-    last = Invoice.objects.count() + 1
-    inv_number = f"{settings.INVOICE_PREFIX}-{year}-{last:04d}"
-
-    items = line_items or []
-    if not items and request_obj.quote_amount:
-        items = [{
-            'description': request_obj.title,
-            'quantity': 1,
-            'unit_price': float(request_obj.quote_amount),
-        }]
-
-    subtotal = sum(i.get('quantity', 1) * i.get('unit_price', 0) for i in items)
-    vat = round(subtotal * float(settings.VAT_RATE), 2)
-    total = round(subtotal + vat, 2)
-
-    invoice = Invoice.objects.create(
-        invoice_number=inv_number,
-        request=request_obj,
-        client=request_obj.requester,
-        line_items=items,
-        subtotal_ht=subtotal,
-        vat_rate=settings.VAT_RATE,
-        vat_amount=vat,
-        total_ttc=total,
-        created_by=actor,
-    )
-
-    logger.info("Invoice %s generated: total_ttc=%s", inv_number, total)
-    return invoice
-
 
 def get_revenue_summary() -> dict:
     """GENOCLAB real revenue from invoices."""

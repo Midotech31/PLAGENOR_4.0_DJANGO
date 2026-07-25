@@ -22,96 +22,69 @@ def generate_qr_data_url(data: str) -> str:
 
 def generate_request_tracking_qr(request_obj, base_url=None) -> str:
     """
-    Generate QR code for request tracking.
-    
-    Args:
-        request_obj: Request model instance
-        base_url: Base URL for the tracking link (optional)
-    
-    Returns:
-        Data URL for embedding in HTML
+    Generate QR code for request tracking. Encodes the canonical query-string
+    URL (``/track/?q=<guest_token>``) that ``views_public.track()`` actually
+    serves — a path-style ``/track/<uuid>/`` route does not exist.
     """
     if not request_obj.guest_token:
         return None
-    
-    if base_url:
-        tracking_url = f"{base_url}/track/{request_obj.guest_token}/"
-    else:
-        tracking_url = f"/track/{request_obj.guest_token}/"
-    
+
+    path = f"/track/?q={request_obj.guest_token}"
+    tracking_url = f"{base_url}{path}" if base_url else path
     return generate_qr_data_url(tracking_url)
 
 
 def generate_ibtikar_id_qr(request_obj, base_url=None) -> str:
     """
-    Generate QR code for IBTIKAR ID tracking.
-    
-    Args:
-        request_obj: Request model instance
-        base_url: Base URL for the tracking link (optional)
-    
-    Returns:
-        Data URL for embedding in HTML
+    Generate QR code linking to the tracking page for an IBTIKAR request.
+    Same canonical URL contract as ``generate_request_tracking_qr``.
     """
     if not request_obj.guest_token:
         return None
-    
-    if base_url:
-        tracking_url = f"{base_url}/ibtikar/{request_obj.guest_token}/"
-    else:
-        tracking_url = f"/ibtikar/{request_obj.guest_token}/"
-    
+
+    path = f"/track/?q={request_obj.guest_token}"
+    tracking_url = f"{base_url}{path}" if base_url else path
     return generate_qr_data_url(tracking_url)
 
 
 def generate_report_qr(request_obj, base_url=None) -> str:
     """
     Generate QR code for report access.
-    
+
     Args:
         request_obj: Request model instance
         base_url: Base URL for the report link (optional)
-    
+
     Returns:
         Data URL for embedding in HTML
     """
     if not request_obj.report_token:
         return None
-    
+
     if base_url:
         report_url = f"{base_url}/report/{request_obj.report_token}/"
     else:
         report_url = f"/report/{request_obj.report_token}/"
-    
+
     return generate_qr_data_url(report_url)
 
 
 def generate_reception_qr(request_obj, base_url=None) -> str:
     """
-    Generate QR code for sample reception tracking.
-    
-    Args:
-        request_obj: Request model instance
-        base_url: Base URL for the tracking link (optional)
-    
-    Returns:
-        Data URL for embedding in HTML
+    Generate QR code for sample reception tracking. Same query-string contract.
     """
     if not request_obj.guest_token:
         return None
-    
-    if base_url:
-        reception_url = f"{base_url}/reception/{request_obj.guest_token}/"
-    else:
-        reception_url = f"/reception/{request_obj.guest_token}/"
-    
+
+    path = f"/track/?q={request_obj.guest_token}"
+    reception_url = f"{base_url}{path}" if base_url else path
     return generate_qr_data_url(reception_url)
 
 
 def get_tracking_info(request_obj) -> dict:
     """
     Get all tracking information for a request.
-    
+
     Returns:
         Dict with all QR code data URLs and tracking IDs
     """
@@ -122,15 +95,15 @@ def get_tracking_info(request_obj) -> dict:
         'has_tracking_qr': False,
         'has_report_qr': False,
     }
-    
+
     if request_obj.guest_token:
         info['has_tracking_qr'] = True
-        info['tracking_url'] = f"/track/{request_obj.guest_token}/"
+        info['tracking_url'] = f"/track/?q={request_obj.guest_token}"
         info['tracking_qr'] = generate_qr_data_url(info['tracking_url'])
-    
+
     if request_obj.report_token:
         info['has_report_qr'] = True
         info['report_url'] = f"/report/{request_obj.report_token}/"
         info['report_qr'] = generate_qr_data_url(info['report_url'])
-    
+
     return info

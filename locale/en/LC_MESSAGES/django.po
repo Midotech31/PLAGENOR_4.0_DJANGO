@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-28 16:19+0100\n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,2401 +17,42 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: templates/accounts/convert_guest.html:4 templates/accounts/login.html:47
-#: templates/accounts/register.html:10
-#: templates/pages/guest_submit_success.html:36
-msgid "Créer un compte"
-msgstr "Create an Account"
-
-#: templates/accounts/convert_guest.html:8
-msgid "Créer votre compte"
-msgstr "Create Your Account"
-
-#: templates/accounts/convert_guest.html:9
-msgid ""
-"Convertissez votre soumission invité en un compte permanent pour suivre et "
-"gérer vos demandes."
-msgstr "Convert your guest submission into a permanent account to track and manage your requests."
-
-#: templates/accounts/convert_guest.html:17 templates/accounts/profile.html:19
-#: templates/accounts/register.html:42
-#: templates/dashboard/superadmin/index.html:157
-#: templates/dashboard/superadmin/user_edit.html:23
-msgid "Prénom"
-msgstr "First Name"
-
-#: templates/accounts/convert_guest.html:21 templates/accounts/profile.html:23
-#: templates/accounts/register.html:47
-#: templates/dashboard/analyst/index.html:198
-#: templates/dashboard/superadmin/index.html:161
-#: templates/dashboard/superadmin/index.html:209
-#: templates/dashboard/superadmin/index.html:258
-#: templates/dashboard/superadmin/index.html:321
-#: templates/dashboard/superadmin/index.html:367
-#: templates/dashboard/superadmin/index.html:413
-#: templates/dashboard/superadmin/index.html:432
-#: templates/dashboard/superadmin/index.html:868
-#: templates/dashboard/superadmin/service_edit.html:18
-#: templates/dashboard/superadmin/service_edit.html:60
-#: templates/dashboard/superadmin/user_edit.html:27
-msgid "Nom"
-msgstr "Last Name"
-
-#: templates/accounts/convert_guest.html:26 templates/accounts/profile.html:28
-#: templates/accounts/register.html:60
-#: templates/dashboard/analyst/index.html:199
-#: templates/dashboard/superadmin/index.html:167
-#: templates/dashboard/superadmin/index.html:210
-#: templates/dashboard/superadmin/user_edit.html:33
-#: templates/pages/about.html:52 templates/pages/contact.html:23
-#: templates/pages/guest_submit.html:23
 msgid "Email"
 msgstr "Email"
 
-#: templates/accounts/convert_guest.html:30 templates/accounts/profile.html:32
-#: templates/accounts/register.html:98
-#: templates/dashboard/analyst/index.html:201
-#: templates/dashboard/superadmin/index.html:185
-#: templates/dashboard/superadmin/user_edit.html:45
-#: templates/pages/about.html:53 templates/pages/contact.html:27
-#: templates/pages/guest_submit.html:27
-msgid "Téléphone"
-msgstr "Phone"
-
-#: templates/accounts/convert_guest.html:34 templates/accounts/login.html:32
-#: templates/accounts/register.html:105
-#: templates/dashboard/superadmin/index.html:189
-msgid "Mot de passe"
-msgstr "Password"
-
-#: templates/accounts/convert_guest.html:37
-#: templates/accounts/register.html:116
-msgid "Créer mon compte"
-msgstr "Create My Account"
-
-#: templates/accounts/convert_guest.html:43
-#: templates/pages/guest_submit.html:76
-msgid "Vous avez déjà un compte?"
-msgstr "Already have an account?"
-
-#: templates/accounts/convert_guest.html:43 templates/accounts/login.html:5
-#: templates/accounts/login.html:15 templates/base_public.html:28
-#: templates/base_public.html:69 templates/pages/guest_submit.html:76
-msgid "Connexion"
-msgstr "Login"
-
-#: templates/accounts/login.html:12 templates/includes/sidebar.html:11
-msgid "Plateforme de Gestion des Opérations"
-msgstr "Operations Management Platform"
-
-#: templates/accounts/login.html:16
-msgid "Accédez à votre espace PLAGENOR"
-msgstr "Access your PLAGENOR dashboard"
-
-#: templates/accounts/login.html:20
-msgid "Identifiant ou mot de passe incorrect."
-msgstr "Incorrect username or password."
-
-#: templates/accounts/login.html:28
-msgid "Identifiant"
-msgstr "Username"
-
-#: templates/accounts/login.html:29
-msgid "Entrez votre identifiant"
-msgstr "Enter your username"
-
-#: templates/accounts/login.html:33
-msgid "Entrez votre mot de passe"
-msgstr "Enter your password"
-
-#: templates/accounts/login.html:38
-msgid "Se souvenir de moi"
-msgstr "Remember me"
-
-#: templates/accounts/login.html:41 templates/accounts/register.html:120
-msgid "Se connecter"
-msgstr "Sign In"
-
-#: templates/accounts/login.html:44
-msgid "ou"
-msgstr "or"
-
-#: templates/accounts/login.html:47
-msgid "Pas encore de compte ?"
-msgstr "No account yet?"
-
-#: templates/accounts/login.html:48
-msgid "Demande sans compte ?"
-msgstr "Request without an account?"
-
-#: templates/accounts/login.html:48
-msgid "Soumettre en tant qu'invité"
-msgstr "Submit as Guest"
-
-#: templates/accounts/login.html:49
-msgid "Suivre une demande"
-msgstr "Track a Request"
-
-#: templates/accounts/login.html:53 templates/base_public.html:67
-msgid "Université d'Oran"
-msgstr "University of Oran"
-
-#: templates/accounts/login.html:54 templates/base_public.html:74
-msgid "Conçu par"
-msgstr "Designed by"
-
-#: templates/accounts/profile.html:4 templates/accounts/profile.html:8
-#: templates/includes/sidebar.html:204
-msgid "Mon Profil"
-msgstr "My Profile"
-
-#: templates/accounts/profile.html:13
-msgid "Informations personnelles"
-msgstr "Personal Information"
-
-#: templates/accounts/profile.html:36
-msgid "Organisation / Université"
-msgstr "Organization / University"
-
-#: templates/accounts/profile.html:40 templates/accounts/register.html:85
-#: templates/dashboard/superadmin/user_edit.html:55
-msgid "Laboratoire"
-msgstr "Laboratory"
-
-#: templates/accounts/profile.html:44 templates/accounts/register.html:91
-msgid "Directeur de recherche"
-msgstr "Research Supervisor"
-
-#: templates/accounts/profile.html:50
-msgid "Techniques maîtrisées"
-msgstr "Mastered Techniques"
-
-#: templates/accounts/profile.html:63
-#: templates/dashboard/superadmin/index.html:472
-#: templates/dashboard/superadmin/index.html:802
-#: templates/dashboard/superadmin/index.html:811
-#: templates/dashboard/superadmin/index.html:820
-#: templates/dashboard/superadmin/index.html:829
-msgid "Mettre à jour"
-msgstr "Update"
-
-#: templates/accounts/register.html:5 templates/base_public.html:70
-msgid "Inscription"
-msgstr "Register"
-
-#: templates/accounts/register.html:11
-msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
-msgstr "Register to submit analysis requests"
-
-#: templates/accounts/register.html:15
-msgid "Veuillez corriger les erreurs ci-dessous."
-msgstr "Please correct the errors below."
-
-#: templates/accounts/register.html:29
-msgid "Étudiant / Chercheur"
-msgstr "Student / Researcher"
-
-#: templates/accounts/register.html:35
-msgid "Client externe"
-msgstr "External Client"
-
-#: templates/accounts/register.html:54
-msgid "Identifiant souhaité"
-msgstr "Desired Username"
-
-#: templates/accounts/register.html:66
-msgid "Université / Organisation"
-msgstr "University / Organization"
-
-#: templates/accounts/register.html:73
-#: templates/dashboard/superadmin/index.html:721
-msgid "Niveau"
-msgstr "Level"
-
-#: templates/accounts/register.html:75
-msgid "Sélectionner"
-msgstr "Select"
-
-#: templates/accounts/register.html:80
-msgid ""
-"Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
-"algériennes"
-msgstr "Master, Engineering (final year) or Doctorate — all eligible Algerian universities"
-
-#: templates/accounts/register.html:86
-#, fuzzy
-#| msgid "Laboratoire"
-msgid "Nom du laboratoire"
-msgstr "Laboratory"
-
-#: templates/accounts/register.html:92
-msgid "Nom du directeur de recherche"
-msgstr "Research Supervisor Name"
-
-#: templates/accounts/register.html:98
-msgid "optionnel"
-msgstr "optional"
-
-#: templates/accounts/register.html:110
-msgid "Confirmer le mot de passe"
-msgstr "Confirm Password"
-
-#: templates/accounts/register.html:120
-msgid "Vous avez déjà un compte ?"
-msgstr "Already have an account?"
-
-#: templates/base_public.html:20 templates/base_public.html:59
-#: templates/pages/home.html:5
-msgid "Accueil"
-msgstr "Home"
-
-#: templates/base_public.html:21 templates/base_public.html:60
-#: templates/dashboard/superadmin/index.html:103
-#: templates/includes/sidebar.html:32 templates/pages/about.html:40
-#: templates/pages/services.html:4
-msgid "Services"
-msgstr "Services"
-
-#: templates/base_public.html:22 templates/base_public.html:61
-#: templates/pages/about.html:4
-msgid "À propos"
-msgstr "About"
-
-#: templates/base_public.html:23 templates/base_public.html:62
-#: templates/base_public.html:66 templates/pages/about.html:49
-#: templates/pages/contact.html:4
-msgid "Contact"
-msgstr "Contact"
-
-#: templates/base_public.html:24 templates/pages/track.html:4
-msgid "Suivi"
-msgstr "Tracking"
-
-#: templates/base_public.html:26 templates/dashboard/placeholder.html:4
-#: templates/dashboard/placeholder.html:9 templates/includes/sidebar.html:20
-#: templates/includes/sidebar.html:67 templates/includes/sidebar.html:94
-#: templates/includes/sidebar.html:125 templates/includes/sidebar.html:152
-#: templates/includes/sidebar.html:175 templates/includes/topbar.html:9
-msgid "Tableau de bord"
-msgstr "Dashboard"
-
-#: templates/base_public.html:51
-msgid ""
-"Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée "
-"pour la gestion des canaux IBTIKAR et GENOCLAB."
-msgstr "Scientific Operations Management Platform of ESSBO. Developed for IBTIKAR and GENOCLAB channel management."
-
-#: templates/base_public.html:54
-msgid "Tous droits réservés"
-msgstr "All Rights Reserved"
-
-#: templates/base_public.html:58
-msgid "Liens rapides"
-msgstr "Quick Links"
-
-#: templates/base_public.html:63 templates/pages/home.html:24
-msgid "Suivi de demande"
-msgstr "Track Request"
-
-#: templates/base_public.html:68
-msgid "Prof. Mohamed Merzoug"
-msgstr "Prof. Mohamed Merzoug"
-
-#: templates/dashboard/admin_ops/index.html:4
-#: templates/includes/sidebar.html:17
-msgid "Administration"
-msgstr "Administration"
-
-#: templates/dashboard/admin_ops/index.html:8
-#: templates/dashboard/analyst/index.html:8
-#: templates/dashboard/client/index.html:8
-#: templates/dashboard/finance/index.html:8
-#: templates/dashboard/requester/index.html:8
-#: templates/dashboard/superadmin/index.html:9
-msgid "Bonjour"
-msgstr "Hello"
-
-#: templates/dashboard/admin_ops/index.html:9
-msgid "Gestion des demandes et assignations"
-msgstr "Request and Assignment Management"
-
-#: templates/dashboard/admin_ops/index.html:14
-#: templates/dashboard/client/index.html:14
-#: templates/dashboard/requester/index.html:14
-msgid "Total demandes"
-msgstr "Total Requests"
-
-#: templates/dashboard/admin_ops/index.html:15
-#: templates/dashboard/admin_ops/index.html:26
-#: templates/dashboard/analyst/index.html:27
-#: templates/dashboard/finance/index.html:131
-#: templates/includes/sidebar.html:71 templates/includes/sidebar.html:98
-msgid "En attente"
-msgstr "Pending"
-
-#: templates/dashboard/admin_ops/index.html:16
-#: templates/dashboard/analyst/index.html:16
-#: templates/dashboard/client/index.html:16
-#: templates/dashboard/placeholder.html:29
-#: templates/dashboard/requester/index.html:16
-#: templates/dashboard/superadmin/index.html:18
-#: templates/dashboard/superadmin/index.html:719
-msgid "Complétées"
-msgstr "Completed"
-
-#: templates/dashboard/admin_ops/index.html:27
-#: templates/dashboard/admin_ops/index.html:125
-#: templates/dashboard/superadmin/index.html:498
-#: templates/includes/sidebar.html:75
-msgid "Toutes les demandes"
-msgstr "All Requests"
-
-#: templates/dashboard/admin_ops/index.html:28
-#: templates/includes/sidebar.html:79
-msgid "Assignation"
-msgstr "Assignment"
-
-#: templates/dashboard/admin_ops/index.html:29
-#: templates/dashboard/finance/index.html:28
-#: templates/dashboard/finance/index.html:47 templates/includes/sidebar.html:83
-#: templates/includes/sidebar.html:133
-msgid "Budget"
-msgstr "Budget"
-
-#: templates/dashboard/admin_ops/index.html:30
-msgid "Rapports"
-msgstr "Reports"
-
-#: templates/dashboard/admin_ops/index.html:36
-msgid "Demandes en attente d'action"
-msgstr "Requests Pending Action"
-
-#: templates/dashboard/admin_ops/index.html:53
-#, fuzzy
-#| msgid "Validation"
-msgid "Validation Pédagogique"
-msgstr "Validation"
-
-#: templates/dashboard/admin_ops/index.html:54
-#: templates/dashboard/admin_ops/index.html:57
-#: templates/dashboard/admin_ops/index.html:65
-#: templates/dashboard/finance/index.html:58
-msgid "Rejeter"
-msgstr "Reject"
-
-#: templates/dashboard/admin_ops/index.html:56
-#, fuzzy
-#| msgid "Validation"
-msgid "Validation Finance"
-msgstr "Validation"
-
-#: templates/dashboard/admin_ops/index.html:59
-#: templates/dashboard/admin_ops/index.html:243
-msgid "Assigner"
-msgstr "Assign"
-
-#: templates/dashboard/admin_ops/index.html:61
-#, fuzzy
-#| msgid "Valider"
-msgid "Valider rapport"
-msgstr "Validate"
-
-#: templates/dashboard/admin_ops/index.html:62
-#: templates/dashboard/admin_ops/report_review.html:44
-msgid "Renvoyer pour révision"
-msgstr "Return for Revision"
-
-#: templates/dashboard/admin_ops/index.html:64
-msgid "Préparer devis"
-msgstr "Prepare Quote"
-
-#: templates/dashboard/admin_ops/index.html:67
-#, fuzzy
-#| msgid "Envoyer"
-msgid "Envoyer devis"
-msgstr "Send"
-
-#: templates/dashboard/admin_ops/index.html:70
-#: templates/dashboard/admin_ops/index.html:317
-msgid "Notes..."
-msgstr "Notes..."
-
-#: templates/dashboard/admin_ops/index.html:71
-msgid "Appliquer"
-msgstr "Apply"
-
-#: templates/dashboard/admin_ops/index.html:77
-#: templates/dashboard/client/index.html:122
-msgid "RDV proposé"
-msgstr "Proposed Appointment"
-
-#: templates/dashboard/admin_ops/index.html:81
-msgid "Modifier RDV"
-msgstr "Modify Appointment"
-
-#: templates/dashboard/admin_ops/index.html:88
-msgid "Note plateforme"
-msgstr "Platform Note"
-
-#: templates/dashboard/admin_ops/index.html:89
-#: templates/dashboard/admin_ops/index.html:92
-msgid "Fiche réception"
-msgstr "Reception Form"
-
-#: templates/dashboard/admin_ops/index.html:91
-#: templates/dashboard/client/index.html:99
-#: templates/dashboard/superadmin/index.html:824
-msgid "Devis"
-msgstr "Quote"
-
-#: templates/dashboard/admin_ops/index.html:98
-msgid "Envoyer message"
-msgstr "Send Message"
-
-#: templates/dashboard/admin_ops/index.html:101
-#: templates/dashboard/analyst/index.html:137
-msgid "Message..."
-msgstr "Message..."
-
-#: templates/dashboard/admin_ops/index.html:102
-#: templates/dashboard/analyst/index.html:138
-#: templates/dashboard/report_viewer.html:245
-msgid "Envoyer"
-msgstr "Send"
-
-#: templates/dashboard/admin_ops/index.html:115
-msgid "Aucune demande en attente."
-msgstr "No pending requests."
-
-#: templates/dashboard/admin_ops/index.html:130
-msgid "Tous les canaux"
-msgstr "All Channels"
-
-#: templates/dashboard/admin_ops/index.html:135
-msgid "Tous les statuts"
-msgstr "All Statuses"
-
-#: templates/dashboard/admin_ops/index.html:140
-#: templates/includes/topbar.html:14
-msgid "Rechercher..."
-msgstr "Search..."
-
-#: templates/dashboard/admin_ops/index.html:141
-#: templates/dashboard/superadmin/audit_log.html:32
-#: templates/dashboard/superadmin/index.html:526
-msgid "Filtrer"
-msgstr "Filter"
-
-#: templates/dashboard/admin_ops/index.html:147
-#: templates/dashboard/analyst/index.html:165
-#: templates/dashboard/client/index.html:231
-#: templates/dashboard/requester/index.html:192
-#: templates/dashboard/superadmin/index.html:534
-#: templates/dashboard/superadmin/index.html:765
-msgid "ID"
-msgstr "ID"
-
-#: templates/dashboard/admin_ops/index.html:148
-#: templates/dashboard/analyst/index.html:166
-#: templates/dashboard/client/index.html:232
-#: templates/dashboard/requester/index.html:193
-#: templates/dashboard/superadmin/index.html:535
-#: templates/dashboard/superadmin/index.html:766
-msgid "Titre"
-msgstr "Title"
-
-#: templates/dashboard/admin_ops/index.html:149
-#: templates/dashboard/admin_ops/report_review.html:16
-#: templates/dashboard/report_viewer.html:192
-#: templates/dashboard/superadmin/index.html:325
-#: templates/dashboard/superadmin/index.html:368
-#: templates/dashboard/superadmin/index.html:505
-#: templates/dashboard/superadmin/index.html:536
-#: templates/dashboard/superadmin/index.html:767
-#: templates/dashboard/superadmin/revenue_archives.html:20
-#: templates/dashboard/superadmin/service_edit.html:22
-#: templates/pages/guest_submit.html:37 templates/pages/track.html:26
-msgid "Canal"
-msgstr "Channel"
-
-#: templates/dashboard/admin_ops/index.html:150
-#: templates/dashboard/admin_ops/report_review.html:19
-#: templates/dashboard/analyst/index.html:168
-#: templates/dashboard/client/index.html:234
-#: templates/dashboard/finance/index.html:81
-#: templates/dashboard/requester/index.html:195
-#: templates/dashboard/superadmin/index.html:121
-#: templates/dashboard/superadmin/index.html:212
-#: templates/dashboard/superadmin/index.html:513
-#: templates/dashboard/superadmin/index.html:537 templates/pages/track.html:22
-msgid "Statut"
-msgstr "Status"
-
-#: templates/dashboard/admin_ops/index.html:151
-#: templates/dashboard/superadmin/index.html:539
-msgid "Demandeur"
-msgstr "Requester"
-
-#: templates/dashboard/admin_ops/index.html:152
-#: templates/dashboard/requester/index.html:132
-#: templates/includes/request_card.html:13
-msgid "Assigné"
-msgstr "Assigned"
-
-#: templates/dashboard/admin_ops/index.html:153
-#: templates/dashboard/analyst/index.html:169
-#: templates/dashboard/client/index.html:199
-#: templates/dashboard/client/index.html:236
-#: templates/dashboard/finance/index.html:115
-#: templates/dashboard/requester/index.html:197
-#: templates/dashboard/superadmin/audit_log.html:48
-#: templates/dashboard/superadmin/index.html:541
-#: templates/dashboard/superadmin/index.html:645 templates/pages/track.html:30
-msgid "Date"
-msgstr "Date"
-
-#: templates/dashboard/admin_ops/index.html:168
-#: templates/dashboard/superadmin/index.html:602
-msgid "Aucune demande trouvée."
-msgstr "No requests found."
-
-#: templates/dashboard/admin_ops/index.html:180
-msgid "Panneau d'assignation"
-msgstr "Assignment Panel"
-
-#: templates/dashboard/admin_ops/index.html:182
-msgid "Analystes disponibles"
-msgstr "Available Analysts"
-
-#: templates/dashboard/admin_ops/index.html:187
-#: templates/dashboard/admin_ops/index.html:269
-#: templates/dashboard/admin_ops/index.html:308
-#: templates/dashboard/admin_ops/report_review.html:18
-#: templates/dashboard/analyst/index.html:4
-#: templates/dashboard/superadmin/index.html:717
-msgid "Analyste"
-msgstr "Analyst"
-
-#: templates/dashboard/admin_ops/index.html:188
-#: templates/dashboard/admin_ops/index.html:270
-#: templates/dashboard/analyst/index.html:204
-#: templates/dashboard/superadmin/index.html:259
-msgid "Charge"
-msgstr "Load"
-
-#: templates/dashboard/admin_ops/index.html:189
-#: templates/dashboard/admin_ops/index.html:271
-#: templates/dashboard/analyst/index.html:205
-#: templates/dashboard/superadmin/index.html:106
-#: templates/dashboard/superadmin/index.html:260
-#: templates/includes/sidebar.html:44
-msgid "Productivité"
-msgstr "Productivity"
-
-#: templates/dashboard/admin_ops/index.html:190
-#: templates/dashboard/admin_ops/index.html:205
-#: templates/dashboard/admin_ops/index.html:272
-#: templates/dashboard/analyst/index.html:31
-#: templates/dashboard/analyst/index.html:206
-#: templates/dashboard/superadmin/index.html:261
-#: templates/dashboard/superadmin/index.html:289
-#: templates/includes/sidebar.html:114
-msgid "Points"
-msgstr "Points"
-
-#: templates/dashboard/admin_ops/index.html:191
-#: templates/dashboard/superadmin/index.html:213
-#: templates/dashboard/superadmin/index.html:263
-#: templates/dashboard/superadmin/index.html:372
-#: templates/dashboard/superadmin/index.html:432
-#: templates/dashboard/superadmin/index.html:542
-#: templates/dashboard/superadmin/index.html:557
-msgid "Actions"
-msgstr "Actions"
-
-#: templates/dashboard/admin_ops/index.html:208
-#: templates/dashboard/superadmin/index.html:292
-msgid "Raison"
-msgstr "Reason"
-
-#: templates/dashboard/admin_ops/index.html:214
-msgid "Encourager"
-msgstr "Encourage"
-
-#: templates/dashboard/admin_ops/index.html:216
-msgid "Message"
-msgstr "Message"
-
-#: templates/dashboard/admin_ops/index.html:228
-msgid "Demandes à assigner"
-msgstr "Requests to Assign"
-
-#: templates/dashboard/admin_ops/index.html:255
-#: templates/dashboard/finance/index.html:14
-#: templates/dashboard/superadmin/index.html:617
-msgid "Budget IBTIKAR (virtuel)"
-msgstr "IBTIKAR Budget (Virtual)"
-
-#: templates/dashboard/admin_ops/index.html:256
-#: templates/dashboard/finance/index.html:15
-#: templates/dashboard/superadmin/index.html:623
-msgid "Revenus GENOCLAB (réel)"
-msgstr "GENOCLAB Revenue (Real)"
-
-#: templates/dashboard/admin_ops/index.html:263
-msgid "Comparaison performance analystes"
-msgstr "Analyst Performance Comparison"
-
-#: templates/dashboard/admin_ops/index.html:273
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/index.html:262
-msgid "Disponible"
-msgstr "Available"
-
-#: templates/dashboard/admin_ops/index.html:283
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/audit_log.html:66
-#: templates/dashboard/superadmin/index.html:275
-#: templates/dashboard/superadmin/index.html:383
-#: templates/dashboard/superadmin/index.html:658
-#: templates/dashboard/superadmin/index.html:881
-msgid "Oui"
-msgstr "Yes"
-
-#: templates/dashboard/admin_ops/index.html:283
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/index.html:277
-#: templates/dashboard/superadmin/index.html:383
-#: templates/dashboard/superadmin/index.html:658
-#: templates/dashboard/superadmin/index.html:881
-msgid "Non"
-msgstr "No"
-
-#: templates/dashboard/admin_ops/index.html:286
-msgid "Aucun analyste."
-msgstr "No analysts."
-
-#: templates/dashboard/admin_ops/index.html:298
-msgid "Rapports en attente de révision"
-msgstr "Reports Pending Review"
-
-#: templates/dashboard/admin_ops/index.html:310
-#: templates/dashboard/admin_ops/report_review.html:25
-#: templates/dashboard/superadmin/index.html:778
-msgid "Télécharger"
-msgstr "Download"
-
-#: templates/dashboard/admin_ops/index.html:318
-msgid "Valider"
-msgstr "Validate"
-
-#: templates/dashboard/admin_ops/index.html:323
-msgid "Raison du renvoi..."
-msgstr "Reason for return..."
-
-#: templates/dashboard/admin_ops/index.html:324
-msgid "Renvoyer"
-msgstr "Return"
-
-#: templates/dashboard/admin_ops/index.html:330
-msgid "Aucun rapport en attente."
-msgstr "No reports pending."
-
-#: templates/dashboard/admin_ops/report_review.html:4
-msgid "Révision rapport"
-msgstr "Report Review"
-
-#: templates/dashboard/admin_ops/report_review.html:8
-msgid "Révision du rapport"
-msgstr "Report Review"
-
-#: templates/dashboard/admin_ops/report_review.html:17
-#: templates/dashboard/analyst/index.html:167
-#: templates/dashboard/client/index.html:42
-#: templates/dashboard/client/index.html:233
-#: templates/dashboard/report_viewer.html:188
-#: templates/dashboard/requester/index.html:41
-#: templates/dashboard/requester/index.html:194
-#: templates/dashboard/superadmin/index.html:538
-#: templates/dashboard/superadmin/index.html:867
-#: templates/pages/guest_submit.html:44
-#: templates/pages/guest_submit_success.html:25
-msgid "Service"
-msgstr "Service"
-
-#: templates/dashboard/admin_ops/report_review.html:24
-#: templates/dashboard/superadmin/index.html:768
-msgid "Rapport"
-msgstr "Report"
-
-#: templates/dashboard/admin_ops/report_review.html:35
-msgid "Valider le rapport"
-msgstr "Validate Report"
-
-#: templates/dashboard/admin_ops/report_review.html:41
-#: templates/dashboard/analyst/index.html:89
-msgid "Notes de révision"
-msgstr "Revision Notes"
-
-#: templates/dashboard/admin_ops/report_review.html:42
-msgid "Indiquez les corrections nécessaires..."
-msgstr "Indicate necessary corrections..."
-
-#: templates/dashboard/admin_ops/report_review.html:50
-msgid "Retour"
-msgstr "Back"
-
-#: templates/dashboard/analyst/index.html:9
-msgid "Espace analyste"
-msgstr "Analyst Dashboard"
-
-#: templates/dashboard/analyst/index.html:14
-#: templates/dashboard/superadmin/index.html:718
-#, fuzzy
-#| msgid "Assigné"
-msgid "Assignées"
-msgstr "Assigned"
-
-#: templates/dashboard/analyst/index.html:15
-#: templates/dashboard/analyst/index.html:28
-#: templates/dashboard/client/index.html:15
-#: templates/dashboard/placeholder.html:38
-#: templates/dashboard/requester/index.html:15
-#: templates/includes/sidebar.html:102
-msgid "En cours"
-msgstr "In Progress"
-
-#: templates/dashboard/analyst/index.html:17
-#, fuzzy, python-format
-#| msgid "Productivité"
-msgid "Productivité %%"
-msgstr "Productivity"
-
-#: templates/dashboard/analyst/index.html:29
-#: templates/dashboard/analyst/index.html:159
-#: templates/dashboard/finance/index.html:31
-#: templates/includes/sidebar.html:106 templates/includes/sidebar.html:145
-msgid "Historique"
-msgstr "History"
-
-#: templates/dashboard/analyst/index.html:30
-#: templates/includes/sidebar.html:110
-msgid "Profil"
-msgstr "Profile"
-
-#: templates/dashboard/analyst/index.html:32
-#: templates/dashboard/client/index.html:31
-#: templates/dashboard/requester/index.html:30
-#: templates/includes/notification_list.html:5
-#: templates/includes/sidebar.html:118 templates/includes/sidebar.html:168
-#: templates/includes/sidebar.html:195
-msgid "Notifications"
-msgstr "Notifications"
-
-#: templates/dashboard/analyst/index.html:38
-msgid "Tâches en attente"
-msgstr "Pending Tasks"
-
-#: templates/dashboard/analyst/index.html:53
-msgid "Accepter"
-msgstr "Accept"
-
-#: templates/dashboard/analyst/index.html:57
-msgid "Décliner"
-msgstr "Decline"
-
-#: templates/dashboard/analyst/index.html:59
-msgid "Raison..."
-msgstr "Reason..."
-
-#: templates/dashboard/analyst/index.html:60
-#: templates/dashboard/finance/index.html:61
-msgid "Confirmer"
-msgstr "Confirm"
-
-#: templates/dashboard/analyst/index.html:66
-msgid "Aucune tâche en attente."
-msgstr "No pending tasks."
-
-#: templates/dashboard/analyst/index.html:75
-msgid "Travaux en cours"
-msgstr "Work in Progress"
-
-#: templates/dashboard/analyst/index.html:98
-msgid "Échantillon reçu"
-msgstr "Sample Received"
-
-#: templates/dashboard/analyst/index.html:104
-msgid "Démarrer analyse"
-msgstr "Start Analysis"
-
-#: templates/dashboard/analyst/index.html:110
-msgid "Terminer analyse"
-msgstr "Finish Analysis"
-
-#: templates/dashboard/analyst/index.html:116
-msgid "Uploader rapport"
-msgstr "Upload Report"
-
-#: templates/dashboard/analyst/index.html:124
-msgid "Proposer RDV"
-msgstr "Propose Appointment"
-
-#: templates/dashboard/analyst/index.html:134
-msgid "Répondre"
-msgstr "Reply"
-
-#: templates/dashboard/analyst/index.html:150
-msgid "Aucun travail en cours."
-msgstr "No work in progress."
-
-#: templates/dashboard/analyst/index.html:182
-msgid "Aucun historique."
-msgstr "No history."
-
-#: templates/dashboard/analyst/index.html:194
-msgid "Mon profil"
-msgstr "My Profile"
-
-#: templates/dashboard/analyst/index.html:200
-#: templates/dashboard/superadmin/index.html:179
-#: templates/dashboard/superadmin/user_edit.html:51
-#: templates/pages/guest_submit.html:31 templates/pages/home.html:68
-msgid "Organisation"
-msgstr "Organization"
-
-#: templates/dashboard/analyst/index.html:212
-msgid "Mes techniques"
-msgstr "My Techniques"
-
-#: templates/dashboard/analyst/index.html:228
-msgid "Historique des points"
-msgstr "Points History"
-
-#: templates/dashboard/analyst/index.html:236
-msgid "Aucun point pour le moment."
-msgstr "No points yet."
-
-#: templates/dashboard/analyst/index.html:241
-msgid "Encouragements reçus"
-msgstr "Cheers Received"
-
-#: templates/dashboard/analyst/index.html:249
-msgid "Aucun encouragement pour le moment."
-msgstr "No cheers yet."
-
-#: templates/dashboard/analyst/index.html:260
-#: templates/dashboard/client/index.html:263
-#: templates/dashboard/requester/index.html:224
-msgid "Aucune notification."
-msgstr "No notifications."
-
-#: templates/dashboard/client/index.html:4
-msgid "Client GENOCLAB"
-msgstr "GENOCLAB Client"
-
-#: templates/dashboard/client/index.html:9
-msgid "Espace GENOCLAB"
-msgstr "GENOCLAB Dashboard"
-
-#: templates/dashboard/client/index.html:17
-#: templates/dashboard/requester/index.html:17
-#, fuzzy
-#| msgid "Rejeter"
-msgid "Rejetées"
-msgstr "Reject"
-
-#: templates/dashboard/client/index.html:27
-#: templates/dashboard/requester/index.html:27
-#: templates/includes/sidebar.html:156 templates/includes/sidebar.html:179
-msgid "Nouvelle demande"
-msgstr "New Request"
-
-#: templates/dashboard/client/index.html:28
-#: templates/dashboard/requester/index.html:28
-#: templates/includes/sidebar.html:160 templates/includes/sidebar.html:183
-msgid "Mes demandes"
-msgstr "My Requests"
-
-#: templates/dashboard/client/index.html:29
-#: templates/dashboard/finance/index.html:16
-#: templates/dashboard/superadmin/index.html:631
-#: templates/includes/sidebar.html:137 templates/includes/sidebar.html:187
-msgid "Factures"
-msgstr "Invoices"
-
-#: templates/dashboard/client/index.html:30
-#: templates/dashboard/client/index.html:225
-#: templates/dashboard/finance/index.html:30
-#: templates/dashboard/requester/index.html:29
-#: templates/dashboard/requester/index.html:186
-#: templates/includes/sidebar.html:141 templates/includes/sidebar.html:164
-#: templates/includes/sidebar.html:191
-msgid "Archives"
-msgstr "Archives"
-
-#: templates/dashboard/client/index.html:37
-msgid "Soumettre une nouvelle demande GENOCLAB"
-msgstr "Submit a New GENOCLAB Request"
-
-#: templates/dashboard/client/index.html:44
-#: templates/dashboard/requester/index.html:43
-#: templates/pages/guest_submit.html:46
-msgid "Sélectionner un service..."
-msgstr "Select a service..."
-
-#: templates/dashboard/client/index.html:52
-#: templates/dashboard/requester/index.html:51
-#: templates/pages/guest_submit.html:54
-msgid "Titre de la demande"
-msgstr "Request Title"
-
-#: templates/dashboard/client/index.html:53
-msgid "Ex: Analyse complète..."
-msgstr "E.g.: Complete analysis..."
-
-#: templates/dashboard/client/index.html:56
-#: templates/dashboard/requester/index.html:55
-#: templates/dashboard/superadmin/index.html:348
-#: templates/dashboard/superadmin/service_edit.html:45
-#: templates/pages/guest_submit.html:58
-msgid "Description"
-msgstr "Description"
-
-#: templates/dashboard/client/index.html:57
-#: templates/dashboard/requester/index.html:56
-#: templates/pages/guest_submit.html:59
-msgid "Décrivez votre demande..."
-msgstr "Describe your request..."
-
-#: templates/dashboard/client/index.html:60
-#: templates/dashboard/requester/index.html:60
-#: templates/pages/guest_submit.html:62
-msgid "Urgence"
-msgstr "Urgency"
-
-#: templates/dashboard/client/index.html:62
-#: templates/dashboard/requester/index.html:62
-#: templates/pages/guest_submit.html:64
-msgid "Normal"
-msgstr "Normal"
-
-#: templates/dashboard/client/index.html:63
-#: templates/dashboard/requester/index.html:63
-#: templates/pages/guest_submit.html:65
-msgid "Urgent"
-msgstr "Urgent"
-
-#: templates/dashboard/client/index.html:64
-#: templates/dashboard/requester/index.html:64
-#: templates/pages/guest_submit.html:66
-msgid "Très urgent"
-msgstr "Very Urgent"
-
-#: templates/dashboard/client/index.html:67
-#: templates/dashboard/requester/index.html:72
-#: templates/pages/guest_submit.html:70
-msgid "Soumettre la demande"
-msgstr "Submit Request"
-
-#: templates/dashboard/client/index.html:76
-#: templates/dashboard/requester/index.html:81
-msgid "Mes demandes actives"
-msgstr "My Active Requests"
-
-#: templates/dashboard/client/index.html:94
-msgid "Créée"
-msgstr "Created"
-
-#: templates/dashboard/client/index.html:104
-#: templates/dashboard/finance/index.html:114
-#: templates/dashboard/superadmin/index.html:643
-msgid "Paiement"
-msgstr "Payment"
-
-#: templates/dashboard/client/index.html:109
-#: templates/dashboard/requester/index.html:137
-#: templates/includes/sidebar.html:91
-msgid "Analyse"
-msgstr "Analysis"
-
-#: templates/dashboard/client/index.html:114
-#: templates/dashboard/requester/index.html:142
-msgid "Terminé"
-msgstr "Completed"
-
-#: templates/dashboard/client/index.html:125
-#: templates/dashboard/requester/index.html:112
-msgid "Confirmer RDV"
-msgstr "Confirm Appointment"
-
-#: templates/dashboard/client/index.html:133
-msgid "Montant devis:"
-msgstr "Quote Amount:"
-
-#: templates/dashboard/client/index.html:137
-msgid "Accepter le devis"
-msgstr "Accept Quote"
-
-#: templates/dashboard/client/index.html:141
-msgid "Refuser le devis"
-msgstr "Reject Quote"
-
-#: templates/dashboard/client/index.html:152
-#: templates/dashboard/requester/index.html:152
-msgid "Confirmer réception"
-msgstr "Confirm Receipt"
-
-#: templates/dashboard/client/index.html:168
-#: templates/dashboard/requester/index.html:166
-msgid "Commentaire..."
-msgstr "Comment..."
-
-#: templates/dashboard/client/index.html:169
-#: templates/dashboard/requester/index.html:167
-msgid "Évaluer"
-msgstr "Rate"
-
-#: templates/dashboard/client/index.html:174
-#: templates/dashboard/client/index.html:235
-#: templates/dashboard/requester/index.html:172
-#: templates/dashboard/requester/index.html:196
-msgid "Note"
-msgstr "Rating"
-
-#: templates/dashboard/client/index.html:179
-#: templates/dashboard/requester/index.html:177
-msgid "Aucune demande active. Soumettez votre première demande!"
-msgstr "No active requests. Submit your first request!"
-
-#: templates/dashboard/client/index.html:188
-msgid "Mes factures"
-msgstr "My Invoices"
-
-#: templates/dashboard/client/index.html:194
-#: templates/dashboard/finance/index.html:108
-#: templates/dashboard/superadmin/index.html:637
-msgid "N° Facture"
-msgstr "Invoice #"
-
-#: templates/dashboard/client/index.html:195
-#: templates/dashboard/finance/index.html:110
-#: templates/dashboard/superadmin/audit_log.html:49
-#: templates/dashboard/superadmin/index.html:638
-msgid "Demande"
-msgstr "Request"
-
-#: templates/dashboard/client/index.html:196
-#: templates/dashboard/finance/index.html:111
-msgid "HT"
-msgstr "Excl. VAT"
-
-#: templates/dashboard/client/index.html:197
-#: templates/dashboard/finance/index.html:112
-#: templates/dashboard/superadmin/index.html:641
-msgid "TVA"
-msgstr "VAT"
-
-#: templates/dashboard/client/index.html:198
-#: templates/dashboard/finance/index.html:113
-msgid "TTC"
-msgstr "Incl. VAT"
-
-#: templates/dashboard/client/index.html:213
-#: templates/dashboard/finance/index.html:140
-#: templates/dashboard/superadmin/index.html:662
-msgid "Aucune facture."
-msgstr "No invoices."
-
-#: templates/dashboard/client/index.html:250
-#: templates/dashboard/requester/index.html:211
-msgid "Aucune archive."
-msgstr "No archives."
-
-#: templates/dashboard/finance/index.html:4 templates/includes/sidebar.html:122
-msgid "Finance"
-msgstr "Finance"
-
-#: templates/dashboard/finance/index.html:9
-msgid "Gestion financière IBTIKAR & GENOCLAB"
-msgstr "Financial Management IBTIKAR & GENOCLAB"
-
-#: templates/dashboard/finance/index.html:17
-msgid "Étudiants IBTIKAR"
-msgstr "IBTIKAR Students"
-
-#: templates/dashboard/finance/index.html:27
-#: templates/includes/sidebar.html:129
-msgid "Validation IBTIKAR"
-msgstr "IBTIKAR Validation"
-
-#: templates/dashboard/finance/index.html:29
-#: templates/dashboard/finance/index.html:102
-msgid "Factures GENOCLAB"
-msgstr "GENOCLAB Invoices"
-
-#: templates/dashboard/finance/index.html:37
-msgid "Demandes IBTIKAR — Validation financière"
-msgstr "IBTIKAR Requests — Financial Validation"
-
-#: templates/dashboard/finance/index.html:47
-msgid "Solde déclaré"
-msgstr "Declared Balance"
-
-#: templates/dashboard/finance/index.html:53
-msgid "Approuver"
-msgstr "Approve"
-
-#: templates/dashboard/finance/index.html:60
-msgid "Raison du rejet..."
-msgstr "Reason for rejection..."
-
-#: templates/dashboard/finance/index.html:67
-msgid "Aucune demande en attente de validation financière."
-msgstr "No requests pending financial validation."
-
-#: templates/dashboard/finance/index.html:76
-msgid "Budget IBTIKAR par statut"
-msgstr "IBTIKAR Budget by Status"
-
-#: templates/dashboard/finance/index.html:81
-msgid "Budget total"
-msgstr "Total Budget"
-
-#: templates/dashboard/finance/index.html:93
-msgid "Aucune donnée budgétaire."
-msgstr "No budget data."
-
-#: templates/dashboard/finance/index.html:109
-#: templates/dashboard/superadmin/index.html:639
-msgid "Client"
-msgstr "Client"
-
-#: templates/dashboard/finance/index.html:132
-msgid "Partiel"
-msgstr "Partial"
-
-#: templates/dashboard/finance/index.html:133
-msgid "Payé"
-msgstr "Paid"
-
-#: templates/dashboard/finance/index.html:152
-msgid "Archives des revenus"
-msgstr "Revenue Archives"
-
-#: templates/dashboard/finance/index.html:156
-msgid "IBTIKAR complétés"
-msgstr "IBTIKAR Completed"
-
-#: templates/dashboard/finance/index.html:159
-msgid "GENOCLAB complétés"
-msgstr "GENOCLAB Completed"
-
-#: templates/dashboard/finance/index.html:169
-msgid "Historique financier"
-msgstr "Financial History"
-
-#: templates/dashboard/finance/index.html:172
-msgid "Total IBTIKAR (virtuel)"
-msgstr "Total IBTIKAR (Virtual)"
-
-#: templates/dashboard/finance/index.html:173
-msgid "Total GENOCLAB (réel)"
-msgstr "Total GENOCLAB (Real)"
-
-#: templates/dashboard/finance/index.html:174
-msgid "Factures émises"
-msgstr "Invoices Issued"
-
-#: templates/dashboard/finance/index.html:175
-msgid "Étudiants uniques"
-msgstr "Unique Students"
-
-#: templates/dashboard/placeholder.html:10
-msgid "Bienvenue"
-msgstr "Welcome"
-
-#: templates/dashboard/placeholder.html:20
-#: templates/dashboard/superadmin/index.html:102
-msgid "Demandes"
-msgstr "Requests"
-
-#: templates/dashboard/placeholder.html:48
-msgid "Tableau de bord en construction"
-msgstr "Dashboard Under Construction"
-
-#: templates/dashboard/placeholder.html:49
-msgid ""
-"Les widgets et statistiques spécifiques à votre rôle seront bientôt "
-"disponibles."
-msgstr "Widgets and statistics specific to your role will be available soon."
-
-#: templates/dashboard/report_viewer.html:174
-msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
-msgstr "Scientific Operations Management Platform — ESSBO"
-
-#: templates/dashboard/report_viewer.html:178
-msgid "Merci pour votre confiance"
-msgstr "Thank you for your trust"
-
-#: templates/dashboard/report_viewer.html:179
-msgid ""
-"Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous."
-msgstr "Your analysis report is ready. You can download it below."
-
-#: templates/dashboard/report_viewer.html:184
-msgid "Référence"
-msgstr "Reference"
-
-#: templates/dashboard/report_viewer.html:196
-msgid "Date de soumission"
-msgstr "Submission Date"
-
-#: templates/dashboard/report_viewer.html:207
-msgid "Télécharger le rapport"
-msgstr "Download Report"
-
-#: templates/dashboard/report_viewer.html:214
-msgid "Votre évaluation"
-msgstr "Your Rating"
-
-#: templates/dashboard/report_viewer.html:231
-msgid "Merci pour votre évaluation"
-msgstr "Thank you for your rating"
-
-#: templates/dashboard/report_viewer.html:234
-msgid "Évaluez notre service"
-msgstr "Rate Our Service"
-
-#: templates/dashboard/report_viewer.html:243
-msgid "Commentaire (optionnel)..."
-msgstr "Comment (optional)..."
-
-#: templates/dashboard/requester/index.html:4
-msgid "Demandeur IBTIKAR"
-msgstr "IBTIKAR Requester"
-
-#: templates/dashboard/requester/index.html:9
-msgid "Espace IBTIKAR"
-msgstr "IBTIKAR Dashboard"
-
-#: templates/dashboard/requester/index.html:36
-msgid "Soumettre une nouvelle demande IBTIKAR"
-msgstr "Submit a New IBTIKAR Request"
-
-#: templates/dashboard/requester/index.html:52
-msgid "Ex: Analyse DRX échantillon..."
-msgstr "E.g.: DRX sample analysis..."
-
-#: templates/dashboard/requester/index.html:68
-msgid "Solde IBTIKAR déclaré (DA)"
-msgstr "Declared IBTIKAR Balance (DZD)"
-
-#: templates/dashboard/requester/index.html:95
-#: templates/dashboard/superadmin/index.html:540
-msgid "Assigné à"
-msgstr "Assigned to"
-
-#: templates/dashboard/requester/index.html:96
-msgid "RDV"
-msgstr "Appointment"
-
-#: templates/dashboard/requester/index.html:96
-msgid "confirmé"
-msgstr "confirmed"
-
-#: templates/dashboard/requester/index.html:103
-#: templates/dashboard/superadmin/index.html:797
-msgid "Formulaire IBTIKAR"
-msgstr "IBTIKAR Form"
-
-#: templates/dashboard/requester/index.html:122
-msgid "Soumis"
-msgstr "Submitted"
-
-#: templates/dashboard/requester/index.html:127
-msgid "Validation"
-msgstr "Validation"
-
-#: templates/dashboard/superadmin/audit_log.html:4
-#: templates/dashboard/superadmin/audit_log.html:8
-msgid "Journal d'audit"
-msgstr "Audit Log"
-
-#: templates/dashboard/superadmin/audit_log.html:9
-msgid "Historique des actions sur la plateforme"
-msgstr "Platform Action History"
-
-#: templates/dashboard/superadmin/audit_log.html:17
-msgid "Date début"
-msgstr "Start Date"
-
-#: templates/dashboard/superadmin/audit_log.html:21
-msgid "Date fin"
-msgstr "End Date"
-
-#: templates/dashboard/superadmin/audit_log.html:25
-msgid "Action/Statut"
-msgstr "Action/Status"
-
-#: templates/dashboard/superadmin/audit_log.html:26
-msgid "Ex: ASSIGNED..."
-msgstr "E.g.: ASSIGNED..."
-
-#: templates/dashboard/superadmin/audit_log.html:29
-msgid "Utilisateur"
-msgstr "User"
-
-#: templates/dashboard/superadmin/audit_log.html:30
-msgid "Nom..."
-msgstr "Name..."
-
-#: templates/dashboard/superadmin/audit_log.html:33
-msgid "Réinitialiser"
-msgstr "Reset"
-
-#: templates/dashboard/superadmin/audit_log.html:41
-msgid "Entrées d'audit"
-msgstr "Audit Entries"
-
-#: templates/dashboard/superadmin/audit_log.html:50
-msgid "De"
-msgstr "From"
-
-#: templates/dashboard/superadmin/audit_log.html:51
-msgid "Vers"
-msgstr "To"
-
-#: templates/dashboard/superadmin/audit_log.html:52
-msgid "Acteur"
-msgstr "Actor"
-
-#: templates/dashboard/superadmin/audit_log.html:53
-msgid "Notes"
-msgstr "Notes"
-
-#: templates/dashboard/superadmin/audit_log.html:54
-msgid "Forcé"
-msgstr "Forced"
-
-#: templates/dashboard/superadmin/audit_log.html:69
-msgid "Aucune entrée d'audit."
-msgstr "No audit entries."
-
-#: templates/dashboard/superadmin/audit_log.html:81
-msgid "Précédent"
-msgstr "Previous"
-
-#: templates/dashboard/superadmin/audit_log.html:83
-msgid "Page"
-msgstr "Page"
-
-#: templates/dashboard/superadmin/audit_log.html:85
-msgid "Suivant"
-msgstr "Next"
-
-#: templates/dashboard/superadmin/index.html:4
-msgid "Super Admin"
-msgstr "Super Admin"
-
-#: templates/dashboard/superadmin/index.html:10
-msgid "Vue d'ensemble de la plateforme"
-msgstr "Platform Overview"
-
-#: templates/dashboard/superadmin/index.html:15
-#: templates/dashboard/superadmin/index.html:100
-#: templates/dashboard/superadmin/index.html:202
-#: templates/includes/sidebar.html:24
-msgid "Utilisateurs"
-msgstr "Users"
-
-#: templates/dashboard/superadmin/index.html:16
-#: templates/dashboard/superadmin/index.html:101
-#: templates/dashboard/superadmin/index.html:943
-#: templates/includes/sidebar.html:28
-msgid "Analystes"
-msgstr "Analysts"
-
-#: templates/dashboard/superadmin/index.html:17
-msgid "Demandes actives"
-msgstr "Active Requests"
-
-#: templates/dashboard/superadmin/index.html:27
-#: templates/dashboard/superadmin/index.html:941
-msgid "Services actifs"
-msgstr "Active Services"
-
-#: templates/dashboard/superadmin/index.html:28
-#: templates/dashboard/superadmin/index.html:104
-#: templates/dashboard/superadmin/index.html:942
-msgid "Techniques"
-msgstr "Techniques"
-
-#: templates/dashboard/superadmin/index.html:37
-msgid "Budget IBTIKAR (DA)"
-msgstr "IBTIKAR Budget (DZD)"
-
-#: templates/dashboard/superadmin/index.html:38
-msgid "Revenue GENOCLAB (DA)"
-msgstr "GENOCLAB Revenue (DZD)"
-
-#: templates/dashboard/superadmin/index.html:39
-msgid "Note moyenne / 5"
-msgstr "Average Rating / 5"
-
-#: templates/dashboard/superadmin/index.html:52
-msgid "Actions rapides"
-msgstr "Quick Actions"
-
-#: templates/dashboard/superadmin/index.html:57
-msgid "Gérer utilisateurs"
-msgstr "Manage Users"
-
-#: templates/dashboard/superadmin/index.html:61
-msgid "Ajouter service"
-msgstr "Add Service"
-
-#: templates/dashboard/superadmin/index.html:65
-msgid "Ajouter technique"
-msgstr "Add Technique"
-
-#: templates/dashboard/superadmin/index.html:69
-msgid "Modifier contenu"
-msgstr "Edit Content"
-
-#: templates/dashboard/superadmin/index.html:75
-msgid "Derniers utilisateurs"
-msgstr "Recent Users"
-
-#: templates/dashboard/superadmin/index.html:90
-msgid "Aucun utilisateur récent."
-msgstr "No recent users."
-
-#: templates/dashboard/superadmin/index.html:99
-msgid "Vue d'ensemble"
-msgstr "Overview"
-
-#: templates/dashboard/superadmin/index.html:105
-#: templates/includes/sidebar.html:40
-msgid "Paiements"
-msgstr "Payments"
-
-#: templates/dashboard/superadmin/index.html:107
-#: templates/includes/sidebar.html:48 templates/includes/sidebar.html:87
-msgid "Documents"
-msgstr "Documents"
-
-#: templates/dashboard/superadmin/index.html:108
-#: templates/includes/sidebar.html:36
-msgid "Formulaires"
-msgstr "Forms"
-
-#: templates/dashboard/superadmin/index.html:109
-msgid "Contenu"
-msgstr "Content"
-
-#: templates/dashboard/superadmin/index.html:110
-#: templates/includes/sidebar.html:60
-msgid "Système"
-msgstr "System"
-
-#: templates/dashboard/superadmin/index.html:116
-msgid "Répartition par statut"
-msgstr "Distribution by Status"
-
-#: templates/dashboard/superadmin/index.html:121
-#: templates/dashboard/superadmin/service_edit.html:73
-msgid "Nombre"
-msgstr "Count"
-
-#: templates/dashboard/superadmin/index.html:132
-msgid "Aucune demande"
-msgstr "No Requests"
-
-#: templates/dashboard/superadmin/index.html:133
-msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
-msgstr "No requests yet. Statistics will appear here."
-
-#: templates/dashboard/superadmin/index.html:145
-#, fuzzy
-#| msgid "Utilisateurs"
-msgid "Créer un utilisateur"
-msgstr "Users"
-
-#: templates/dashboard/superadmin/index.html:146
-msgid "Masquer"
-msgstr "Hide"
-
-#: templates/dashboard/superadmin/index.html:146
-msgid "Afficher"
-msgstr "Show"
-
-#: templates/dashboard/superadmin/index.html:153
-#: templates/dashboard/superadmin/user_edit.html:19
-msgid "Nom d'utilisateur"
-msgstr "Username"
-
-#: templates/dashboard/superadmin/index.html:171
-#: templates/dashboard/superadmin/index.html:211
-#: templates/dashboard/superadmin/user_edit.html:37
-msgid "Rôle"
-msgstr "Role"
-
-#: templates/dashboard/superadmin/index.html:193
-msgid "Créer"
-msgstr "Create"
-
-#: templates/dashboard/superadmin/index.html:224
-#: templates/dashboard/superadmin/index.html:371
-msgid "Actif"
-msgstr "Active"
-
-#: templates/dashboard/superadmin/index.html:226
-#: templates/dashboard/superadmin/index.html:678
-msgid "Inactif"
-msgstr "Inactive"
-
-#: templates/dashboard/superadmin/index.html:230
-#: templates/dashboard/superadmin/index.html:385
-#: templates/dashboard/superadmin/index.html:852
-msgid "Modifier"
-msgstr "Edit"
-
-#: templates/dashboard/superadmin/index.html:234
-#: templates/dashboard/superadmin/index.html:389
-msgid "Désactiver"
-msgstr "Deactivate"
-
-#: templates/dashboard/superadmin/index.html:234
-msgid "Activer"
-msgstr "Activate"
-
-#: templates/dashboard/superadmin/index.html:251
-msgid "Analystes / Opérateurs"
-msgstr "Analysts / Operators"
-
-#: templates/dashboard/superadmin/index.html:284
-msgid "Rendre indisponible"
-msgstr "Set Unavailable"
-
-#: templates/dashboard/superadmin/index.html:284
-msgid "Rendre disponible"
-msgstr "Set Available"
-
-#: templates/dashboard/superadmin/index.html:299
-msgid "Aucun analyste enregistré."
-msgstr "No registered analysts."
-
-#: templates/dashboard/superadmin/index.html:311
-msgid "Ajouter un service"
-msgstr "Add a Service"
-
-#: templates/dashboard/superadmin/index.html:317
-#: templates/dashboard/superadmin/index.html:366
-msgid "Code"
-msgstr "Code"
-
-#: templates/dashboard/superadmin/index.html:335
-msgid "Prix IBTIKAR"
-msgstr "IBTIKAR Price"
-
-#: templates/dashboard/superadmin/index.html:339
-msgid "Prix GENOCLAB"
-msgstr "GENOCLAB Price"
-
-#: templates/dashboard/superadmin/index.html:343
-#: templates/dashboard/superadmin/service_edit.html:40
-msgid "Délai (jours)"
-msgstr "Turnaround (days)"
-
-#: templates/dashboard/superadmin/index.html:352
-#: templates/dashboard/superadmin/service_edit.html:49
-msgid "Image"
-msgstr "Image"
-
-#: templates/dashboard/superadmin/index.html:355
-msgid "Créer le service"
-msgstr "Create Service"
-
-#: templates/dashboard/superadmin/index.html:360
-msgid "Services existants"
-msgstr "Existing Services"
-
-#: templates/dashboard/superadmin/index.html:369
-#: templates/includes/sidebar.html:149
-msgid "IBTIKAR"
-msgstr "IBTIKAR"
-
-#: templates/dashboard/superadmin/index.html:370
-#: templates/includes/sidebar.html:172
-msgid "GENOCLAB"
-msgstr "GENOCLAB"
-
-#: templates/dashboard/superadmin/index.html:395
-msgid "Aucun service."
-msgstr "No services."
-
-#: templates/dashboard/superadmin/index.html:407
-msgid "Ajouter une technique"
-msgstr "Add a Technique"
-
-#: templates/dashboard/superadmin/index.html:417
-#: templates/dashboard/superadmin/index.html:432
-msgid "Catégorie"
-msgstr "Category"
-
-#: templates/dashboard/superadmin/index.html:421
-#: templates/dashboard/superadmin/index.html:689
-msgid "Ajouter"
-msgstr "Add"
-
-#: templates/dashboard/superadmin/index.html:428
-msgid "Techniques existantes"
-msgstr "Existing Techniques"
-
-#: templates/dashboard/superadmin/index.html:442
-msgid "Supprimer"
-msgstr "Delete"
-
-#: templates/dashboard/superadmin/index.html:448
-msgid "Aucune technique."
-msgstr "No techniques."
-
-#: templates/dashboard/superadmin/index.html:460
-msgid "Gestion du contenu"
-msgstr "Content Management"
-
-#: templates/dashboard/superadmin/index.html:465
-#: templates/dashboard/superadmin/index.html:478
-msgid "Clé"
-msgstr "Key"
-
-#: templates/dashboard/superadmin/index.html:469
-#: templates/dashboard/superadmin/index.html:478
-msgid "Valeur"
-msgstr "Value"
-
-#: templates/dashboard/superadmin/index.html:478
-msgid "Modifié"
-msgstr "Modified"
-
-#: templates/dashboard/superadmin/index.html:507
-#: templates/dashboard/superadmin/index.html:515
-msgid "Tous"
-msgstr "All"
-
-#: templates/dashboard/superadmin/index.html:522
-#, fuzzy
-#| msgid "Rechercher"
-msgid "Recherche"
-msgstr "Search"
-
-#: templates/dashboard/superadmin/index.html:523
-msgid "ID ou titre..."
-msgstr "ID or title..."
-
-#: templates/dashboard/superadmin/index.html:565
-msgid "Forcer une transition"
-msgstr "Force Transition"
-
-#: templates/dashboard/superadmin/index.html:570
-msgid "Sélectionner le statut cible"
-msgstr "Select target status"
-
-#: templates/dashboard/superadmin/index.html:577
-msgid "Justification (min. 10 caractères)"
-msgstr "Justification (min. 10 characters)"
-
-#: templates/dashboard/superadmin/index.html:579
-msgid "Forcer la transition"
-msgstr "Force Transition"
-
-#: templates/dashboard/superadmin/index.html:585
-msgid "Override budgétaire"
-msgstr "Budget Override"
-
-#: templates/dashboard/superadmin/index.html:589
-msgid "Montant budget"
-msgstr "Budget Amount"
-
-#: templates/dashboard/superadmin/index.html:592
-msgid "Justification pour l override..."
-msgstr "Justification for override..."
-
-#: templates/dashboard/superadmin/index.html:594
-#, fuzzy
-#| msgid "Approuver"
-msgid "Approuver override"
-msgstr "Approve"
-
-#: templates/dashboard/superadmin/index.html:640
-msgid "Sous-total HT"
-msgstr "Subtotal (excl. VAT)"
-
-#: templates/dashboard/superadmin/index.html:642
-msgid "Total TTC"
-msgstr "Total (incl. VAT)"
-
-#: templates/dashboard/superadmin/index.html:644
-msgid "Verrouillé"
-msgstr "Locked"
-
-#: templates/dashboard/superadmin/index.html:673
-msgid "Méthodes de paiement"
-msgstr "Payment Methods"
-
-#: templates/dashboard/superadmin/index.html:686
-msgid "Nom de la méthode"
-msgstr "Method Name"
-
-#: templates/dashboard/superadmin/index.html:696
-#: templates/dashboard/superadmin/index.html:701
-msgid "Réinitialiser les compteurs"
-msgstr "Reset Counters"
-
-#: templates/dashboard/superadmin/index.html:698
-msgid ""
-"Archive les données de revenus actuelles et réinitialise les compteurs du "
-"tableau de bord. Cette action est irréversible."
-msgstr "Archives current revenue data and resets dashboard counters. This action is irreversible."
-
-#: templates/dashboard/superadmin/index.html:699
-msgid ""
-"Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
-"données seront archivées."
-msgstr "Are you sure you want to reset revenue counters? Data will be archived."
-
-#: templates/dashboard/superadmin/index.html:711
-#, fuzzy
-#| msgid "Productivité"
-msgid "Productivité des analystes"
-msgstr "Productivity"
-
-#: templates/dashboard/superadmin/index.html:720
-msgid "Score"
-msgstr "Score"
-
-#: templates/dashboard/superadmin/index.html:734
-msgid "Fire"
-msgstr "Fire"
-
-#: templates/dashboard/superadmin/index.html:736
-msgid "Very Good"
-msgstr "Very Good"
-
-#: templates/dashboard/superadmin/index.html:738
-msgid "Good"
-msgstr "Good"
-
-#: templates/dashboard/superadmin/index.html:746
-msgid "Aucune donnée de productivité."
-msgstr "No productivity data."
-
-#: templates/dashboard/superadmin/index.html:759
-msgid "Rapports générés"
-msgstr "Generated Reports"
-
-#: templates/dashboard/superadmin/index.html:769
-msgid "Mis à jour"
-msgstr "Updated"
-
-#: templates/dashboard/superadmin/index.html:782
-msgid "Aucun rapport disponible."
-msgstr "No reports available."
-
-#: templates/dashboard/superadmin/index.html:792
-msgid "Templates DOCX"
-msgstr "DOCX Templates"
-
-#: templates/dashboard/superadmin/index.html:794
-msgid ""
-"Mettez à jour les templates DOCX utilisés pour la génération automatique des "
-"documents. Un backup est créé automatiquement avant chaque mise à jour."
-msgstr "Update the DOCX templates used for automatic document generation. A backup is created automatically before each update."
-
-#: templates/dashboard/superadmin/index.html:806
-msgid "Note de plateforme"
-msgstr "Platform Note"
-
-#: templates/dashboard/superadmin/index.html:815
-msgid "Fiche de réception"
-msgstr "Reception Form"
-
-#: templates/dashboard/superadmin/index.html:840
-msgid "Configuration des formulaires par service"
-msgstr "Form Configuration per Service"
-
-#: templates/dashboard/superadmin/index.html:861
-msgid "Champs personnalisés"
-msgstr "Custom Fields"
-
-#: templates/dashboard/superadmin/index.html:869
-#: templates/dashboard/superadmin/service_edit.html:64
-msgid "Label"
-msgstr "Label"
-
-#: templates/dashboard/superadmin/index.html:870
-#: templates/dashboard/superadmin/service_edit.html:68
-msgid "Type"
-msgstr "Type"
-
-#: templates/dashboard/superadmin/index.html:871
-#: templates/dashboard/superadmin/service_edit.html:81
-msgid "Requis"
-msgstr "Required"
-
-#: templates/dashboard/superadmin/index.html:884
-msgid "Aucun champ personnalisé."
-msgstr "No custom fields."
-
-#: templates/dashboard/superadmin/index.html:896
-msgid "Sauvegarde"
-msgstr "Backup"
-
-#: templates/dashboard/superadmin/index.html:900
-msgid "Télécharger une sauvegarde"
-msgstr "Download a Backup"
-
-#: templates/dashboard/superadmin/index.html:902
-msgid "Télécharge une copie de la base de données SQLite."
-msgstr "Downloads a copy of the SQLite database."
-
-#: templates/dashboard/superadmin/index.html:906
-msgid "Restaurer une sauvegarde"
-msgstr "Restore a Backup"
-
-#: templates/dashboard/superadmin/index.html:908
-msgid ""
-"Attention : cette opération remplace la base de données actuelle. Un backup "
-"automatique sera créé avant la restauration. Le serveur devra être redémarré "
-"après la restauration."
-msgstr "Warning: this operation replaces the current database. An automatic backup will be created before restoration. The server will need to be restarted after restoration."
-
-#: templates/dashboard/superadmin/index.html:909
-msgid ""
-"Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base "
-"actuelle sera créé automatiquement."
-msgstr "Are you sure you want to restore the database? A backup of the current database will be created automatically."
-
-#: templates/dashboard/superadmin/index.html:916
-msgid "Restaurer"
-msgstr "Restore"
-
-#: templates/dashboard/superadmin/index.html:924
-msgid "Informations plateforme"
-msgstr "Platform Information"
-
-#: templates/dashboard/superadmin/index.html:927
-msgid "Version"
-msgstr "Version"
-
-#: templates/dashboard/superadmin/index.html:928
-msgid "Auteur"
-msgstr "Author"
-
-#: templates/dashboard/superadmin/index.html:929
-#: templates/pages/contact.html:15
-msgid "Institution"
-msgstr "Institution"
-
-#: templates/dashboard/superadmin/index.html:930
-msgid "Base de données"
-msgstr "Database"
-
-#: templates/dashboard/superadmin/index.html:931
-msgid "Framework"
-msgstr "Framework"
-
-#: templates/dashboard/superadmin/index.html:936
-msgid "Statistiques"
-msgstr "Statistics"
-
-#: templates/dashboard/superadmin/index.html:939
-msgid "Utilisateurs totaux"
-msgstr "Total Users"
-
-#: templates/dashboard/superadmin/index.html:940
-msgid "Demandes totales"
-msgstr "Total Requests"
-
-#: templates/dashboard/superadmin/revenue_archives.html:4
-#: templates/dashboard/superadmin/revenue_archives.html:8
-msgid "Archives de revenus"
-msgstr "Revenue Archives"
-
-#: templates/dashboard/superadmin/revenue_archives.html:9
-msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
-msgstr "Monthly Revenue Archives IBTIKAR & GENOCLAB"
-
-#: templates/dashboard/superadmin/revenue_archives.html:13
-msgid "Archives mensuelles"
-msgstr "Monthly Archives"
-
-#: templates/dashboard/superadmin/revenue_archives.html:19
-msgid "Période"
-msgstr "Period"
-
-#: templates/dashboard/superadmin/revenue_archives.html:21
-msgid "Revenu total"
-msgstr "Total Revenue"
-
-#: templates/dashboard/superadmin/revenue_archives.html:22
-msgid "Nombre demandes"
-msgstr "Request Count"
-
-#: templates/dashboard/superadmin/revenue_archives.html:23
-msgid "Archivé le"
-msgstr "Archived On"
-
-#: templates/dashboard/superadmin/revenue_archives.html:36
-msgid "Aucune archive. Exécutez"
-msgstr "No archives. Run"
-
-#: templates/dashboard/superadmin/revenue_archives.html:36
-msgid "pour générer les archives."
-msgstr "to generate archives."
-
-#: templates/dashboard/superadmin/service_edit.html:4
-msgid "Modifier service"
-msgstr "Edit Service"
-
-#: templates/dashboard/superadmin/service_edit.html:8
-msgid "Modifier le service"
-msgstr "Edit Service"
-
-#: templates/dashboard/superadmin/service_edit.html:32
-msgid "Prix IBTIKAR (DA)"
-msgstr "IBTIKAR Price (DZD)"
-
-#: templates/dashboard/superadmin/service_edit.html:36
-msgid "Prix GENOCLAB (DA)"
-msgstr "GENOCLAB Price (DZD)"
-
-#: templates/dashboard/superadmin/service_edit.html:51
-msgid "Image actuelle"
-msgstr "Current Image"
-
-#: templates/dashboard/superadmin/service_edit.html:55
-msgid "Champs personnalisés du formulaire"
-msgstr "Custom Form Fields"
-
-#: templates/dashboard/superadmin/service_edit.html:70
-msgid "Texte"
-msgstr "Text"
-
-#: templates/dashboard/superadmin/service_edit.html:71
-msgid "Liste"
-msgstr "List"
-
-#: templates/dashboard/superadmin/service_edit.html:72
-msgid "Oui/Non"
-msgstr "Yes/No"
-
-#: templates/dashboard/superadmin/service_edit.html:77
-msgid "Options (virgules)"
-msgstr "Options (comma-separated)"
-
-#: templates/dashboard/superadmin/service_edit.html:86
-msgid "Ajouter un champ"
-msgstr "Add a Field"
-
-#: templates/dashboard/superadmin/service_edit.html:89
-#: templates/dashboard/superadmin/user_edit.html:74
-msgid "Enregistrer"
-msgstr "Save"
-
-#: templates/dashboard/superadmin/service_edit.html:90
-#: templates/dashboard/superadmin/user_edit.html:75
-msgid "Annuler"
-msgstr "Cancel"
-
-#: templates/dashboard/superadmin/user_edit.html:4
-#: templates/dashboard/superadmin/user_edit.html:8
-#, fuzzy
-#| msgid "Utilisateurs"
-msgid "Modifier utilisateur"
-msgstr "Users"
-
-#: templates/dashboard/superadmin/user_edit.html:9
-msgid "Retour au tableau de bord"
-msgstr "Back to Dashboard"
-
-#: templates/dashboard/superadmin/user_edit.html:13
-msgid "Informations de l'utilisateur"
-msgstr "User Information"
-
-#: templates/dashboard/superadmin/user_edit.html:59
-msgid "Directeur de thèse"
-msgstr "Thesis Supervisor"
-
-#: templates/dashboard/superadmin/user_edit.html:65
-msgid "Niveau étudiant"
-msgstr "Student Level"
-
-#: templates/dashboard/superadmin/user_edit.html:69
-msgid "Nouveau mot de passe"
-msgstr "New Password"
-
-#: templates/dashboard/superadmin/user_edit.html:69
-msgid "laisser vide pour ne pas changer"
-msgstr "leave empty to keep unchanged"
-
-#: templates/includes/notification_list.html:12
-#, python-format
-msgid "il y a %(time)s"
-msgstr "%(time)s ago"
-
-#: templates/includes/service_form_fields.html:4
-msgid "Paramètres du service"
-msgstr "Service Parameters"
-
-#: templates/includes/service_form_fields.html:12
-#: templates/includes/service_form_fields.html:34
-msgid "Choisir"
-msgstr "Choose"
-
-#: templates/includes/service_form_fields.html:51
-msgid "Tableau des échantillons"
-msgstr "Sample Table"
-
-#: templates/includes/service_form_fields.html:74
-msgid "Ajouter une ligne"
-msgstr "Add a Row"
-
-#: templates/includes/service_form_fields.html:106
-msgid "Tarification"
-msgstr "Pricing"
-
-#: templates/includes/service_form_fields.html:108
-#: templates/includes/service_form_fields.html:111
-msgid "par échantillon"
-msgstr "per sample"
-
-#: templates/includes/sidebar.html:52
-msgid "Audit"
-msgstr "Audit"
-
-#: templates/includes/sidebar.html:56
-msgid "Archives revenus"
-msgstr "Revenue Archives"
-
-#: templates/includes/sidebar.html:64
-msgid "Opérations"
-msgstr "Operations"
-
-#: templates/includes/sidebar.html:231
-#, fuzzy
-#| msgid "Connexion"
-msgid "Déconnexion"
-msgstr "Login"
-
-#: templates/pages/about.html:8
-msgid "À propos de PLAGENOR"
-msgstr "About PLAGENOR"
-
-#: templates/pages/about.html:15
-msgid ""
-"L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, "
-"un service commun de recherche financé par la DGRSDT (Direction Générale de "
-"la Recherche Scientifique et du Développement Technologique)."
-msgstr "ESSBO (Higher School of Biological Sciences of Oran) hosts PLAGENOR, a shared research facility funded by DGRSDT (General Directorate of Scientific Research and Technological Development)."
-
-#: templates/pages/about.html:18
-msgid ""
-"PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie "
-"par le code de commerce algérien."
-msgstr "PLAGENOR hosts GENOCLAB, the commercial subsidiary (SPA) of ESSBO, governed by Algerian commercial law."
-
-#: templates/pages/about.html:21
-msgid ""
-"PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités "
-"de PLAGENOR — agissant comme un ERP interne pour organiser les flux de "
-"travail, gérer les demandes IBTIKAR et les clients GENOCLAB."
-msgstr "PLAGENOR 4.0 is the digital management platform for all PLAGENOR activities — acting as an internal ERP to organize workflows, manage IBTIKAR requests and GENOCLAB clients."
-
-#: templates/pages/about.html:28
-msgid "Deux missions"
-msgstr "Two Missions"
-
-#: templates/pages/about.html:30
-msgid ""
-"Canal académique : réaliser des analyses génomiques pour les étudiants de "
-"fin de cycle (Master, Ingéniorat) et les doctorants de toutes les "
-"universités algériennes, afin de promouvoir la recherche scientifique en "
-"Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 "
-"000 DA géré par la DGRSDT."
-msgstr "Academic channel: perform genomic analyses for final-year students (Master, Engineering) and doctoral students from all Algerian universities, to promote scientific research in Algeria. Each eligible student has a virtual annual budget of 200,000 DZD managed by DGRSDT."
-
-#: templates/pages/about.html:33
-#, python-format
-msgid ""
-"Canal commercial : fournir les mêmes analyses génomiques aux clients "
-"externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une "
-"base commerciale avec facturation, TVA 19%%%%, et paiement réel."
-msgstr "Commercial channel: provide the same genomic analyses to external clients (companies, hospitals, private laboratories, individuals) on a commercial basis with invoicing, 19%% VAT, and real payment."
-
-#: templates/pages/about.html:42
-msgid ""
-"Identification microbienne (MALDI-TOF), séquençage Sanger & Illumina, PCR, "
-"contrôle qualité des acides nucléiques, lyophilisation, synthèse d'amorces."
-msgstr "Microbial identification (MALDI-TOF), Sanger & Illumina sequencing, PCR, nucleic acid quality control, lyophilization, primer synthesis."
-
-#: templates/pages/about.html:54 templates/pages/contact.html:19
-msgid "Adresse"
-msgstr "Address"
-
-#: templates/pages/contact.html:8
-msgid "Contactez-nous"
-msgstr "Contact Us"
-
-#: templates/pages/contact.html:9
-msgid "Pour toute question, n'hésitez pas à nous contacter."
-msgstr "For any questions, don't hesitate to contact us."
-
-#: templates/pages/contact.html:31
-msgid "Responsable"
-msgstr "Manager"
-
-#: templates/pages/contact.html:35
-msgid "Plateforme"
-msgstr "Platform"
-
-#: templates/pages/contact.html:43 templates/pages/guest_submit_success.html:37
-msgid "Retour à l'accueil"
-msgstr "Back to Home"
-
-#: templates/pages/guest_submit.html:5 templates/pages/home.html:22
-msgid "Soumission invité"
-msgstr "Guest Submission"
-
-#: templates/pages/guest_submit.html:9
-msgid "Soumettre une demande (invité)"
-msgstr "Submit a Request (Guest)"
-
-#: templates/pages/guest_submit.html:10
-msgid ""
-"Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code "
-"de suivi."
-msgstr "Submit an analysis request without creating an account. You will receive a tracking code."
-
-#: templates/pages/guest_submit.html:17
-msgid "Vos informations"
-msgstr "Your Information"
-
-#: templates/pages/guest_submit.html:19
-msgid "Nom complet"
-msgstr "Full Name"
-
-#: templates/pages/guest_submit.html:20
-msgid "Votre nom complet"
-msgstr "Your Full Name"
-
-#: templates/pages/guest_submit.html:24
-msgid "votre@email.com"
-msgstr "your@email.com"
-
-#: templates/pages/guest_submit.html:28
-msgid "Numéro de téléphone"
-msgstr "Phone Number"
-
-#: templates/pages/guest_submit.html:32
-#, fuzzy
-#| msgid "Organisation"
-msgid "Votre organisation"
-msgstr "Organization"
-
-#: templates/pages/guest_submit.html:35
-msgid "Détails de la demande"
-msgstr "Request Details"
-
-#: templates/pages/guest_submit.html:39
-msgid "externe"
-msgstr "external"
-
-#: templates/pages/guest_submit.html:40
-msgid "académique"
-msgstr "academic"
-
-#: templates/pages/guest_submit.html:55
-msgid "Ex: Analyse DRX..."
-msgstr "E.g.: DRX Analysis..."
-
-#: templates/pages/guest_submit_success.html:5
-msgid "Demande soumise"
-msgstr "Request Submitted"
-
-#: templates/pages/guest_submit_success.html:13
-msgid "Demande soumise avec succès!"
-msgstr "Request submitted successfully!"
-
-#: templates/pages/guest_submit_success.html:17
-msgid "Code de suivi"
-msgstr "Tracking Code"
-
-#: templates/pages/guest_submit_success.html:21
-msgid "Token de suivi"
-msgstr "Tracking Token"
-
-#: templates/pages/guest_submit_success.html:31
-msgid ""
-"Conservez votre code de suivi pour suivre l'avancement de votre demande."
-msgstr "Keep your tracking code to follow the progress of your request."
-
-#: templates/pages/guest_submit_success.html:35
-msgid "Suivre ma demande"
-msgstr "Track My Request"
-
-#: templates/pages/home.html:15
-msgid "Plateforme Technologique de Génomique — ESSBO · ORAN"
-msgstr "Genomics Technology Platform — ESSBO · ORAN"
-
-#: templates/pages/home.html:19
-msgid ""
-"Solution intégrée pour la gestion des demandes d'analyses, le suivi des "
-"opérations et la facturation au sein de l'ESSBO."
-msgstr "Integrated solution for managing analysis requests, tracking operations and invoicing within ESSBO."
-
-#: templates/pages/home.html:21
-msgid "Soumettre une demande"
-msgstr "Submit a Request"
-
-#: templates/pages/home.html:23
-msgid "Voir les services"
-msgstr "View Services"
-
-#: templates/pages/home.html:32
-msgid ""
-"Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes "
-"d'analyses dans le cadre de vos projets de recherche avec un financement "
-"encadré par le budget IBTIKAR."
-msgstr "Channel dedicated to ESSBO students and researchers. Submit your analysis requests as part of your research projects with funding managed through the IBTIKAR budget."
-
-#: templates/pages/home.html:36
-msgid ""
-"Canal pour les clients externes — universités, entreprises, laboratoires. "
-"Demandez un devis, recevez une facture et bénéficiez de nos services "
-"d'analyses scientifiques."
-msgstr "Channel for external clients — universities, companies, laboratories. Request a quote, receive an invoice and benefit from our scientific analysis services."
-
-#: templates/pages/home.html:43 templates/pages/services.html:8
-msgid "Nos Services"
-msgstr "Our Services"
-
-#: templates/pages/home.html:44
-msgid "Analyses scientifiques et techniques proposées par le laboratoire ESSBO"
-msgstr "Scientific and technical analyses offered by the ESSBO laboratory"
-
-#: templates/pages/home.html:69
-msgid "ESSBO → PLAGENOR → GENOCLAB"
-msgstr "ESSBO → PLAGENOR → GENOCLAB"
-
-#: templates/pages/home.html:72
-msgid ""
-"L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la "
-"plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la "
-"communauté académique interne, et GENOCLAB pour les prestations externes."
-msgstr "The Higher School of Biological Sciences of Oran (ESSBO) hosts the PLAGENOR platform, which manages two service channels: IBTIKAR for the internal academic community, and GENOCLAB for external services."
-
-#: templates/pages/services.html:9
-msgid "Catalogue des analyses et prestations proposées"
-msgstr "Catalogue of analyses and services offered"
-
-#: templates/pages/services.html:27
-msgid "jours"
-msgstr "days"
-
-#: templates/pages/services.html:35
-msgid "Aucun service disponible"
-msgstr "No Services Available"
-
-#: templates/pages/services.html:36
-msgid "Les services seront bientôt publiés. Revenez plus tard."
-msgstr "Services will be published soon. Come back later."
-
-#: templates/pages/track.html:8
-msgid "Suivi de votre demande"
-msgstr "Track Your Request"
-
-#: templates/pages/track.html:9
-msgid ""
-"Entrez votre identifiant de demande ou votre token de suivi pour consulter "
-"l'état d'avancement."
-msgstr "Enter your request ID or tracking token to check the progress status."
-
-#: templates/pages/track.html:11
-msgid "Ex: IBT-2026-0042 ou votre token..."
-msgstr "E.g.: IBT-2026-0042 or your token..."
-
-#: templates/pages/track.html:12
-msgid "Rechercher"
-msgstr "Search"
-
-#: templates/pages/track.html:36
-msgid "Créer un compte pour gérer vos demandes"
-msgstr "Create an account to manage your requests"
-
-#: templates/pages/track.html:41
-msgid "Aucun résultat"
-msgstr "No Results"
-
-#: templates/pages/track.html:42
-msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
-msgstr "No request found with this ID. Please check and try again."
-
-#~ msgid "Quitter"
-#~ msgstr "Logout"
-
-# Form validation messages
-msgid "Cet email est déjà enregistré"
-msgstr "This email is already registered"
-
-msgid "Format d'email invalide"
-msgstr "Invalid email format"
-
-msgid "Format de date invalide (JJ/MM/AAAA attendu)"
-msgstr "Invalid date format (DD/MM/YYYY expected)"
-
-msgid "Veuillez remplir tous les champs obligatoires"
-msgstr "Please fill all required fields"
-
-msgid "Formulaire soumis avec succès"
-msgstr "Form submitted successfully"
-
-msgid "Ce champ est obligatoire"
-msgstr "This field is required"
-
-msgid "Profil mis à jour."
-msgstr "Profile updated."
-
-msgid "Email et mot de passe sont obligatoires."
-msgstr "Email and password are required."
-
-msgid "Un compte avec cet email existe déjà."
-msgstr "An account with this email already exists."
-
-msgid "Rôle"
-msgstr "Role"
-
 msgid "Demandeur IBTIKAR (étudiant/chercheur)"
-msgstr "IBTIKAR Applicant (student/researcher)"
+msgstr "IBTIKAR Requester (student/researcher)"
 
 msgid "Client GENOCLAB (externe)"
 msgstr "GENOCLAB Client (external)"
 
+msgid "Rôle"
+msgstr "Role"
+
+msgid "Université / Organisation"
+msgstr "University / Organization"
+
 msgid "— Sélectionner —"
 msgstr "— Select —"
 
+#| msgid "Votre organisation"
+msgid "Type d'organisation"
+msgstr "Organization type"
+
+msgid "Préciser (autre)"
+msgstr "Specify (other)"
+
+msgid "Pays"
+msgstr "Country"
+
 msgid "Master (fin de cycle)"
-msgstr "Master's (end of cycle)"
+msgstr "Master's (final year)"
 
 msgid "Ingéniorat (fin de cycle)"
-msgstr "Engineering (end of cycle)"
+msgstr "Engineering degree (final year)"
 
 msgid "Doctorat"
-msgstr "Doctorate"
-
-msgid "Université / Organisation"
-msgstr "University / Organisation"
+msgstr "PhD"
 
 msgid "Niveau"
 msgstr "Level"
@@ -2421,13 +61,4390 @@ msgid "Laboratoire"
 msgstr "Laboratory"
 
 msgid "Directeur de recherche"
-msgstr "Research Supervisor"
+msgstr "Research supervisor"
 
 msgid "Identifiant IBTIKAR-DGRSDT"
-msgstr "IBTIKAR-DGRSDT Identifier"
+msgstr "IBTIKAR-DGRSDT ID"
 
 msgid "Format: IDGRSTDXXXXX"
 msgstr "Format: IDGRSTDXXXXX"
 
 msgid "Téléphone"
 msgstr "Phone"
+
+msgid "Cet email est déjà enregistré"
+msgstr "This email is already registered"
+
+msgid "Veuillez préciser le type d'organisation."
+msgstr "Please specify the organization type."
+
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+"Account temporarily locked after failed attempts. Try again in %(minutes)d "
+"minute(s)."
+
+msgid "Profil mis à jour."
+msgstr "Profile updated."
+
+msgid "Email requis."
+msgstr "Email required."
+
+msgid "Un compte avec cet email existe déjà."
+msgstr "An account with this email already exists."
+
+msgid "Vérification de votre adresse — PLAGENOR 4.0"
+msgstr "Verify your email address — PLAGENOR 4.0"
+
+#, python-format
+msgid "Pour finaliser la création de votre compte, ouvrez ce lien : %(url)s"
+msgstr "To finalize the creation of your account, open this link: %(url)s"
+
+msgid "Lien expiré. Veuillez recommencer."
+msgstr "Link expired. Please try again."
+
+msgid "Lien invalide."
+msgstr "Invalid link."
+
+msgid "Un compte avec cet email existe déjà — veuillez vous connecter."
+msgstr "An account with this email already exists — please sign in."
+
+#, python-format
+msgid "Compte créé ! %(count)d demande(s) liée(s) à votre compte."
+msgstr "Account created! %(count)d request(s) linked to your account."
+
+msgid "Nouveau mot de passe"
+msgstr "New password"
+
+msgid "Confirmer le mot de passe"
+msgstr "Confirm password"
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr "The two passwords do not match."
+
+msgid "Votre mot de passe a été mis à jour avec succès."
+msgstr "Your password has been updated successfully."
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr "Invalid or expired code. Please try again."
+
+msgid "La double authentification est déjà activée."
+msgstr "Two-factor authentication is already enabled."
+
+msgid "Double authentification activée."
+msgstr "Two-factor authentication enabled."
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr "Invalid code. Check your device's clock and try again."
+
+msgid "Double authentification désactivée."
+msgstr "Two-factor authentication disabled."
+
+msgid "Formulaire IBTIKAR"
+msgstr "IBTIKAR Form"
+
+msgid "Note de plateforme"
+msgstr "Platform Note"
+
+msgid "Fiche de réception"
+msgstr "Reception Form"
+
+msgid "Devis"
+msgstr "Quote"
+
+msgid "Vous ne pouvez pas réinitialiser votre propre compte."
+msgstr "You cannot reset your own account."
+
+msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgstr "Reset of your PLAGENOR 4.0 account"
+
+#, python-format
+msgid ""
+"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+" les instructions a été envoyé."
+msgstr ""
+"The account of %(username)s has been reset successfully. An email with "
+"instructions has been sent."
+
+msgid "Créer un compte"
+msgstr "Create an account"
+
+msgid "Créer votre compte"
+msgstr "Create your account"
+
+msgid ""
+"Convertissez votre soumission invité en un compte permanent. Pour des "
+"raisons de sécurité nous vérifions d'abord votre adresse email."
+msgstr ""
+"Convert your guest submission into a permanent account. For security reasons"
+" we will first verify your email address."
+
+msgid "Vérifiez votre messagerie"
+msgstr "Check your inbox"
+
+#, python-format
+msgid ""
+"Si l'adresse <strong>%(email)s</strong> correspond à des soumissions invité,"
+" un lien de vérification vient d'y être envoyé. Cliquez sur le lien pour "
+"finaliser la création de votre compte."
+msgstr ""
+"If the address <strong>%(email)s</strong> matches guest submissions, a "
+"verification link has just been sent to it. Click the link to finalize the "
+"creation of your account."
+
+msgid "Le lien expire après 24 heures."
+msgstr "The link expires after 24 hours."
+
+msgid "Email utilisé lors de votre soumission invité"
+msgstr "Email used in your guest submission"
+
+msgid "Envoyer le lien de vérification"
+msgstr "Send verification link"
+
+msgid "Vous avez déjà un compte?"
+msgstr "Already have an account?"
+
+msgid "Connexion"
+msgstr "Sign in"
+
+msgid "Finaliser la création de compte"
+msgstr "Finalize account creation"
+
+msgid "Finaliser votre compte"
+msgstr "Finalize your account"
+
+msgid ""
+"Votre adresse email a été vérifiée. Complétez vos informations et choisissez"
+" un mot de passe."
+msgstr ""
+"Your email address has been verified. Complete your information and choose a"
+" password."
+
+msgid "Email vérifié"
+msgstr "Email verified"
+
+msgid "Prénom"
+msgstr "First name"
+
+msgid "Nom"
+msgstr "Last name"
+
+msgid "Mot de passe"
+msgstr "Password"
+
+msgid "8 caractères minimum, non purement numérique."
+msgstr "8 characters minimum, not entirely numeric."
+
+msgid "Créer mon compte"
+msgstr "Create my account"
+
+msgid "Réinitialisation de compte PLAGENOR 4.0"
+msgstr "PLAGENOR 4.0 account reset"
+
+msgid "Plateforme de Gestion des Opérations Scientifiques"
+msgstr "Scientific Operations Management Platform"
+
+msgid "Réinitialisation de votre compte"
+msgstr "Your account has been reset"
+
+#, python-format
+msgid "Bonjour %(name)s,"
+msgstr "Hello %(name)s,"
+
+#, python-format
+msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
+msgstr "Your account on %(platform)s has been reset by %(admin)s."
+
+msgid "Mot de passe temporaire"
+msgstr "Temporary password"
+
+msgid ""
+"Ce mot de passe temporaire expire après 24 heures ou dès la première "
+"utilisation."
+msgstr "This temporary password expires after 24 hours or upon first use."
+
+msgid ""
+"Vous serez immédiatement invité à définir un nouveau mot de passe après "
+"connexion."
+msgstr ""
+"You will be prompted to set a new password immediately after signing in."
+
+msgid "Ne partagez jamais votre mot de passe avec quiconque."
+msgstr "Never share your password with anyone."
+
+msgid "Se connecter"
+msgstr "Sign in"
+
+msgid ""
+"Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter"
+" immédiatement l'administrateur de la plateforme."
+msgstr ""
+"If you were not aware of this reset, please contact the platform "
+"administrator immediately."
+
+msgid "Vérification de votre adresse email"
+msgstr "Verify your email address"
+
+msgid "Bonjour,"
+msgstr "Hello,"
+
+#, python-format
+msgid ""
+"Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur "
+"PLAGENOR&nbsp;4.0 en utilisant l'adresse <strong>%(email)s</strong>."
+msgstr ""
+"Someone — likely you — requested the creation of an account on "
+"PLAGENOR&nbsp;4.0 using the address <strong>%(email)s</strong>."
+
+msgid ""
+"Pour finaliser la création de votre compte et lier vos demandes invité, "
+"cliquez sur le bouton ci-dessous :"
+msgstr ""
+"To finalize the creation of your account and link your guest requests, click"
+" the button below:"
+
+msgid "Vérifier mon adresse et créer mon compte"
+msgstr "Verify my address and create my account"
+
+msgid "Ce lien expire après 24 heures."
+msgstr "This link expires after 24 hours."
+
+msgid ""
+"Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
+"message — aucun compte ne sera créé."
+msgstr ""
+"If you did not request an account, simply ignore this message — no account "
+"will be created."
+
+msgid "Ne partagez jamais ce lien."
+msgstr "Never share this link."
+
+msgid ""
+"Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur "
+":"
+msgstr ""
+"If the button does not work, copy and paste this link into your browser:"
+
+#| msgid "Réinitialisation de votre compte"
+msgid "Réinitialisation du mot de passe"
+msgstr "Password reset"
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+"You requested a password reset for your PLAGENOR account. Click the button "
+"below to choose a new one."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Réinitialiser mon mot de passe"
+msgstr "Reset my password"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+"This link works only once and expires shortly. If you did not request it, "
+"simply ignore this e-mail: your password will remain unchanged."
+
+#| msgid "Centre d'aide PLAGENOR"
+msgid "L'équipe PLAGENOR"
+msgstr "The PLAGENOR team"
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+"Hello,\n"
+"\n"
+"You requested a password reset for your PLAGENOR account.\n"
+"\n"
+"Click the link below to choose a new password:"
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+"This link works only once and expires shortly. If you did not request it, simply ignore this e-mail: your password will remain unchanged.\n"
+"\n"
+"— The PLAGENOR team"
+
+#| msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr "Reset your PLAGENOR password"
+
+msgid "Changement de mot de passe obligatoire"
+msgstr "Password change required"
+
+msgid ""
+"Votre compte a été réinitialisé. Vous devez définir un nouveau mot de passe "
+"avant de continuer."
+msgstr ""
+"Your account has been reset. You must set a new password before continuing."
+
+msgid "Veuillez corriger les erreurs ci-dessous."
+msgstr "Please correct the errors below."
+
+msgid "Minimum 8 caractères."
+msgstr "Minimum 8 characters."
+
+msgid "Définir le nouveau mot de passe"
+msgstr "Set new password"
+
+msgid "Identifiant ou mot de passe incorrect."
+msgstr "Incorrect username or password."
+
+msgid "Identifiant"
+msgstr "Username"
+
+msgid "Entrez votre identifiant"
+msgstr "Enter your username"
+
+msgid "Entrez votre mot de passe"
+msgstr "Enter your password"
+
+msgid "Afficher/masquer le mot de passe"
+msgstr "Show/hide password"
+
+msgid "Se souvenir de moi"
+msgstr "Remember me"
+
+#| msgid "Mot de passe"
+msgid "Mot de passe oublié ?"
+msgstr "Forgot your password?"
+
+msgid "ou"
+msgstr "or"
+
+msgid "Pas encore de compte ?"
+msgstr "No account yet?"
+
+msgid "Demande sans compte ?"
+msgstr "Request without an account?"
+
+msgid "Soumettre en tant qu'invité"
+msgstr "Submit as a guest"
+
+msgid "Suivre une demande"
+msgstr "Track a request"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe réinitialisé"
+msgstr "Password reset"
+
+#| msgid "Mot de passe temporaire"
+msgid "Mot de passe mis à jour"
+msgstr "Password updated"
+
+#| msgid ""
+#| "Le compte de %(username)s a été réinitialisé avec succès. Un email contenant"
+#| " les instructions a été envoyé."
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr "Your password has been reset successfully. You can now sign in."
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Choisir un nouveau mot de passe"
+msgstr "Choose a new password"
+
+#| msgid "Définir le nouveau mot de passe"
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr "Enter your new password twice."
+
+msgid "Valider"
+msgstr "Validate"
+
+#| msgid "Lien invalide."
+msgid "Lien invalide"
+msgstr "Invalid link"
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+"This reset link is no longer valid (already used or expired). Please request"
+" a new one."
+
+#| msgid "Demandes à valider"
+msgid "Demander un nouveau lien"
+msgstr "Request a new link"
+
+#| msgid "Devis Envoyé"
+msgid "Lien envoyé"
+msgstr "Link sent"
+
+#| msgid "Vérifiez votre messagerie"
+msgid "Vérifiez votre boîte mail"
+msgstr "Check your inbox"
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+"If an account matches this address, an e-mail with reset instructions has "
+"just been sent. Remember to check your spam folder."
+
+#| msgid "Retour à l'accueil"
+msgid "Retour à la connexion"
+msgstr "Back to sign in"
+
+#| msgid "Réinitialiser le compte"
+msgid "Réinitialiser le mot de passe"
+msgstr "Reset password"
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+"Enter your e-mail address. If an account exists, you will receive a reset "
+"link."
+
+#| msgid "Envoyer au client"
+msgid "Envoyer le lien"
+msgstr "Send the link"
+
+msgid "Mon Profil"
+msgstr "My profile"
+
+msgid "Informations personnelles"
+msgstr "Personal information"
+
+msgid "Photo de profil"
+msgstr "Profile picture"
+
+msgid "Organisation / Université"
+msgstr "Organization / University"
+
+#| msgid "Note Générée"
+msgid "Langue préférée"
+msgstr "Preferred language"
+
+msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
+msgstr "Leave blank to use the language detected by your browser."
+
+msgid "Techniques maîtrisées"
+msgstr "Mastered techniques"
+
+msgid "Mettre à jour"
+msgstr "Update"
+
+msgid "Sécurité — Double authentification"
+msgstr "Security — Two-factor authentication"
+
+#| msgid "Active"
+msgid "Activée"
+msgstr "Enabled"
+
+msgid ""
+"Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr "Your account is protected by a one-time code at every login."
+
+#| msgid "Désactiver cet utilisateur ?"
+msgid "Désactiver la double authentification ?"
+msgstr "Disable two-factor authentication?"
+
+#| msgid "Désactiver"
+msgid "Désactiver la 2FA"
+msgstr "Disable 2FA"
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+"Add a layer of security: a 6-digit code generated by your phone will be "
+"required at login. Recommended for staff accounts."
+
+#| msgid "Activer"
+msgid "Activer la 2FA"
+msgstr "Enable 2FA"
+
+msgid "Inscription"
+msgstr "Sign up"
+
+msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
+msgstr "Sign up to submit analysis requests"
+
+msgid ""
+"Après inscription, vous serez redirigé vers le formulaire de soumission pour"
+" le service"
+msgstr ""
+"After signing up, you will be redirected to the submission form for the "
+"service"
+
+msgid "Étudiant / Chercheur"
+msgstr "Student / Researcher"
+
+msgid "Client externe"
+msgstr "External client"
+
+msgid "Identifiant souhaité"
+msgstr "Desired username"
+
+#| msgid "Votre organisation"
+msgid "Précisez le type d'organisation"
+msgstr "Specify the organization type"
+
+msgid "Sélectionner"
+msgstr "Select"
+
+msgid ""
+"Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
+"algériennes"
+msgstr "Master's, Engineering (final year) or PhD — all Algerian universities"
+
+msgid "Nom du laboratoire"
+msgstr "Laboratory name"
+
+msgid "Nom du directeur de recherche"
+msgstr "Research supervisor's name"
+
+msgid "optionnel"
+msgstr "optional"
+
+msgid "Wilaya"
+msgstr "Wilaya"
+
+#| msgid "Sélectionner"
+msgid "Sélectionnez votre wilaya"
+msgstr "Select your wilaya"
+
+msgid "Sexe"
+msgstr "Gender"
+
+msgid "Vous avez déjà un compte ?"
+msgstr "Already have an account?"
+
+#| msgid "Aucune notification"
+msgid "Activer la double authentification"
+msgstr "Enable two-factor authentication"
+
+msgid "Double authentification (2FA)"
+msgstr "Two-factor authentication (2FA)"
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+"Scan this QR code with an authenticator app (Google Authenticator, Authy, "
+"Microsoft Authenticator…), then enter the 6-digit code to confirm."
+
+msgid "QR code de configuration 2FA"
+msgstr "2FA setup QR code"
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr "Manual key (if you cannot scan):"
+
+#| msgid "Modèle de tarification"
+msgid "Code de vérification"
+msgstr "Verification code"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+#| msgid "Vérification de votre adresse email"
+msgid "Vérification en deux étapes"
+msgstr "Two-step verification"
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr "Enter the 6-digit code shown in your authenticator app."
+
+msgid "Vérifier"
+msgstr "Verify"
+
+msgid "Aller au contenu principal"
+msgstr "Skip to main content"
+
+#| msgid "Validation Finance"
+msgid "Navigation principale"
+msgstr "Main navigation"
+
+msgid "Accueil"
+msgstr "Home"
+
+msgid "Services"
+msgstr "Services"
+
+msgid "À propos"
+msgstr "About"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Aide"
+msgstr "Help"
+
+msgid "Suivi"
+msgstr "Tracking"
+
+msgid "Tableau de bord"
+msgstr "Dashboard"
+
+msgid "Liens rapides"
+msgstr "Quick links"
+
+#| msgid "Entrées d'audit"
+msgid "Centre d'aide"
+msgstr "Help Center"
+
+msgid "Suivi de demande"
+msgstr "Request tracking"
+
+#| msgid "Disponibilité"
+msgid "Confidentialité"
+msgstr "Privacy"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "Bonjour"
+msgstr "Hello"
+
+msgid "Gestion des demandes et assignations"
+msgstr "Manage requests and assignments"
+
+msgid "Total demandes"
+msgstr "Total requests"
+
+msgid "En attente"
+msgstr "Pending"
+
+msgid "Complétées"
+msgstr "Completed"
+
+msgid "Toutes les demandes"
+msgstr "All requests"
+
+msgid "Assignation"
+msgstr "Assignment"
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Avis"
+msgstr "Reviews"
+
+msgid "Rapports"
+msgstr "Reports"
+
+msgid "Demandes à valider"
+msgstr "Requests to validate"
+
+msgid "Voir"
+msgstr "View"
+
+msgid "Invité"
+msgstr "Guest"
+
+msgid "Validation Pédagogique"
+msgstr "Academic Validation"
+
+msgid "Rejeter"
+msgstr "Reject"
+
+msgid "Validation Finance"
+msgstr "Finance Validation"
+
+msgid "Coût de la prestation"
+msgstr "Service cost"
+
+msgid "Coût estimé"
+msgstr "Estimated cost"
+
+msgid "Coût validé"
+msgstr "Validated cost"
+
+msgid "Solde IBTIKAR déclaré"
+msgstr "Declared IBTIKAR balance"
+
+msgid "Ajuster le coût (DA)"
+msgstr "Adjust cost (DA)"
+
+msgid "Justification"
+msgstr "Justification"
+
+msgid "Raison du changement..."
+msgstr "Reason for the change..."
+
+msgid "Ajuster"
+msgstr "Adjust"
+
+msgid "Valider & Générer Note"
+msgstr "Validate & Generate Note"
+
+msgid "Préparer devis"
+msgstr "Prepare quote"
+
+msgid "Envoyer devis"
+msgstr "Send quote"
+
+msgid "En attente de réponse du client"
+msgstr "Awaiting client response"
+
+msgid "Générer facture"
+msgstr "Generate invoice"
+
+msgid "Confirmer paiement"
+msgstr "Confirm payment"
+
+msgid "Contacter par email"
+msgstr "Contact by email"
+
+msgid "Contacter"
+msgstr "Contact"
+
+msgid "Aucune demande en attente de validation."
+msgstr "No request awaiting validation."
+
+msgid "Demandes à assigner"
+msgstr "Requests to assign"
+
+msgid "Télécharger la Note de Plateforme"
+msgstr "Download the Platform Note"
+
+msgid "Assigner à"
+msgstr "Assign to"
+
+msgid "Assigner"
+msgstr "Assign"
+
+msgid ""
+"Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer"
+" par la validation."
+msgstr ""
+"No request ready for assignment. Requests must first go through validation."
+
+msgid "Rapports à réviser"
+msgstr "Reports to review"
+
+msgid "Analyste"
+msgstr "Analyst"
+
+msgid "Réviser rapport"
+msgstr "Review report"
+
+msgid "Télécharger"
+msgstr "Download"
+
+msgid "Aucun rapport en attente de révision."
+msgstr "No report awaiting review."
+
+msgid "Complétions et clôtures"
+msgstr "Completions and closures"
+
+msgid "Transmettre au demandeur"
+msgstr "Forward to requester"
+
+msgid "Transmettre au client"
+msgstr "Forward to client"
+
+msgid "Clôturer"
+msgstr "Close"
+
+msgid "Archiver"
+msgstr "Archive"
+
+msgid "Aucune demande en attente de complétion."
+msgstr "No request awaiting completion."
+
+msgid "En cours de traitement"
+msgstr "In progress"
+
+msgid "RDV proposé"
+msgstr "Appointment proposed"
+
+msgid "En attente de confirmation du demandeur"
+msgstr "Awaiting requester confirmation"
+
+msgid "Modifier RDV"
+msgstr "Edit appointment"
+
+msgid "Marquer échantillon reçu"
+msgstr "Mark sample as received"
+
+msgid "En cours"
+msgstr "In progress"
+
+msgid "Envoyer message"
+msgstr "Send message"
+
+msgid "Message..."
+msgstr "Message..."
+
+msgid "Envoyer"
+msgstr "Send"
+
+msgid "Aucune demande en cours de traitement."
+msgstr "No request currently being processed."
+
+msgid "Tous les canaux"
+msgstr "All channels"
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Commun"
+msgstr "Common"
+
+msgid "Assigné"
+msgstr "Assigned"
+
+msgid "RDV Proposé"
+msgstr "Appointment Proposed"
+
+msgid "RDV Confirmé"
+msgstr "Appointment Confirmed"
+
+msgid "Échantillon Reçu"
+msgstr "Sample Received"
+
+msgid "Analyse Démarrée"
+msgstr "Analysis Started"
+
+msgid "Analyse Terminée"
+msgstr "Analysis Completed"
+
+msgid "Rapport Uploadé"
+msgstr "Report Uploaded"
+
+msgid "Rapport Validé"
+msgstr "Report Validated"
+
+msgid "Complété"
+msgstr "Completed"
+
+msgid "Rejeté"
+msgstr "Rejected"
+
+msgid "Soumis"
+msgstr "Submitted"
+
+msgid "Note Générée"
+msgstr "Note Generated"
+
+msgid "En attente soumission IBTIKAR"
+msgstr "Awaiting IBTIKAR submission"
+
+msgid "Code IBTIKAR soumis"
+msgstr "IBTIKAR code submitted"
+
+msgid "Transmis au Demandeur"
+msgstr "Forwarded to Requester"
+
+msgid "Clôturé"
+msgstr "Closed"
+
+msgid "Demande Créée"
+msgstr "Request Created"
+
+msgid "Devis En Cours"
+msgstr "Quote In Progress"
+
+msgid "Devis Envoyé"
+msgstr "Quote Sent"
+
+msgid "Devis Accepté"
+msgstr "Quote Accepted"
+
+msgid "Devis Refusé"
+msgstr "Quote Declined"
+
+msgid "Facture Émise"
+msgstr "Invoice Issued"
+
+msgid "Paiement Confirmé"
+msgstr "Payment Confirmed"
+
+msgid "Transmis au Client"
+msgstr "Forwarded to Client"
+
+msgid "Archivé"
+msgstr "Archived"
+
+msgid "Rechercher..."
+msgstr "Search..."
+
+msgid "Filtrer"
+msgstr "Filter"
+
+msgid "Réinitialiser"
+msgstr "Reset"
+
+msgid "ID"
+msgstr "ID"
+
+msgid "Titre"
+msgstr "Title"
+
+msgid "Canal"
+msgstr "Channel"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Demandeur"
+msgstr "Requester"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Aucune demande trouvée."
+msgstr "No request found."
+
+msgid "Panneau d'assignation"
+msgstr "Assignment panel"
+
+msgid "Analystes disponibles"
+msgstr "Available analysts"
+
+msgid ""
+"Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet"
+msgstr "To award points or send encouragement, use the tab"
+
+msgid "Charge"
+msgstr "Workload"
+
+msgid "Productivité"
+msgstr "Productivity"
+
+msgid "Points"
+msgstr "Points"
+
+msgid "Disponible"
+msgstr "Available"
+
+msgid "Oui"
+msgstr "Yes"
+
+msgid "Non"
+msgstr "No"
+
+msgid "Budget IBTIKAR (virtuel)"
+msgstr "IBTIKAR Budget (virtual)"
+
+msgid "Revenus GENOCLAB (réel)"
+msgstr "GENOCLAB Revenue (actual)"
+
+msgid "Performance & Points"
+msgstr "Performance & Points"
+
+msgid "analystes"
+msgstr "analysts"
+
+msgid "pts"
+msgstr "pts"
+
+msgid "prod."
+msgstr "prod."
+
+msgid "Raison"
+msgstr "Reason"
+
+msgid "Attribuer points"
+msgstr "Award points"
+
+msgid "Pts"
+msgstr "Pts"
+
+msgid "Message encourageant..."
+msgstr "Encouraging message..."
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Envoyer un encouragement"
+msgstr "Send encouragement"
+
+msgid "Cadeau récupéré"
+msgstr "Gift claimed"
+
+msgid "En attente de récupération"
+msgstr "Awaiting pickup"
+
+msgid "Boîte débloquée — ajoutez une récompense"
+msgstr "Box unlocked — add a reward"
+
+msgid "Image récompense"
+msgstr "Reward image"
+
+msgid "Déposer la récompense"
+msgstr "Deposit the reward"
+
+msgid "Déposer"
+msgstr "Deposit"
+
+msgid "Aucun analyste enregistré."
+msgstr "No analyst registered."
+
+msgid "Rapports en attente de révision"
+msgstr "Reports awaiting review"
+
+msgid "Notes..."
+msgstr "Notes..."
+
+msgid "Raison du renvoi..."
+msgstr "Reason for return..."
+
+msgid "Renvoyer"
+msgstr "Return"
+
+msgid "Aucun rapport en attente."
+msgstr "No report pending."
+
+msgid "Note moyenne"
+msgstr "Average rating"
+
+msgid "Total avis"
+msgstr "Total reviews"
+
+msgid "Répartition des notes"
+msgstr "Rating distribution"
+
+msgid "Avis récents"
+msgstr "Recent reviews"
+
+msgid "Par"
+msgstr "By"
+
+msgid "Aucun avis pour le moment."
+msgstr "No reviews yet."
+
+msgid "Préparer le devis"
+msgstr "Prepare the quote"
+
+msgid "Retour au détail"
+msgstr "Back to details"
+
+msgid "Estimation automatique (YAML)"
+msgstr "Automatic estimation (YAML)"
+
+msgid "Modèle de tarification"
+msgstr "Pricing model"
+
+msgid "Nombre d'unités"
+msgstr "Number of units"
+
+msgid "Prix unitaire"
+msgstr "Unit price"
+
+msgid "Total estimé"
+msgstr "Estimated total"
+
+msgid "Paramètres du service"
+msgstr "Service parameters"
+
+msgid "Tableau des échantillons"
+msgstr "Samples table"
+
+msgid "Service"
+msgstr "Service"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "Prix GENOCLAB"
+msgstr "GENOCLAB Price"
+
+msgid "Lignes du devis"
+msgstr "Quote line items"
+
+msgid "Ajouter une ligne"
+msgstr "Add a line"
+
+msgid "Frais et TVA"
+msgstr "Fees and VAT"
+
+msgid "Frais administratifs (DA)"
+msgstr "Administrative fees (DA)"
+
+msgid "Frais de rapport (DA)"
+msgstr "Report fees (DA)"
+
+#, python-format
+msgid "Taux TVA (%%)"
+msgstr "VAT rate (%%)"
+
+msgid "Récapitulatif"
+msgstr "Summary"
+
+msgid "Sous-total HT"
+msgstr "Subtotal excl. VAT"
+
+msgid "Frais administratifs"
+msgstr "Administrative fees"
+
+msgid "Frais de rapport"
+msgstr "Report fees"
+
+msgid "Sous-total avant TVA"
+msgstr "Subtotal before VAT"
+
+msgid "TVA"
+msgstr "VAT"
+
+msgid "Total TTC"
+msgstr "Total incl. VAT"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Notes internes ou commentaires pour le client..."
+msgstr "Internal notes or comments for the client..."
+
+msgid "Enregistrer brouillon"
+msgstr "Save draft"
+
+msgid "Envoyer au client"
+msgstr "Send to client"
+
+msgid "Révision rapport"
+msgstr "Report review"
+
+msgid "Révision du rapport"
+msgstr "Report review"
+
+msgid "Rapport"
+msgstr "Report"
+
+msgid "Valider le rapport"
+msgstr "Validate the report"
+
+msgid "Notes de révision"
+msgstr "Review notes"
+
+msgid "Indiquez les corrections nécessaires..."
+msgstr "Indicate the corrections required..."
+
+msgid "Renvoyer pour révision"
+msgstr "Return for review"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "Détail demande"
+msgstr "Request details"
+
+msgid "Créée le"
+msgstr "Created on"
+
+msgid "Mise à jour"
+msgstr "Updated"
+
+msgid "Retour aux opérations"
+msgstr "Back to operations"
+
+msgid "Informations du demandeur"
+msgstr "Requester information"
+
+msgid "Nom complet"
+msgstr "Full name"
+
+msgid "Organisation"
+msgstr "Organization"
+
+msgid "ID IBTIKAR"
+msgstr "IBTIKAR ID"
+
+msgid "Code IBTIKAR-DGRSDT"
+msgstr "IBTIKAR-DGRSDT code"
+
+msgid "Aucun demandeur associé."
+msgstr "No requester associated."
+
+msgid "Détails du service"
+msgstr "Service details"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Disponibilité"
+msgstr "Availability"
+
+msgid "Délai estimé"
+msgstr "Estimated turnaround"
+
+msgid "jours"
+msgstr "days"
+
+msgid "Détails de la demande"
+msgstr "Request details"
+
+msgid "Urgence"
+msgstr "Priority"
+
+msgid "Informations financières"
+msgstr "Financial information"
+
+msgid "Budget estimé"
+msgstr "Estimated budget"
+
+msgid "Montant du devis"
+msgstr "Quote amount"
+
+msgid "Prix validé par admin"
+msgstr "Price validated by admin"
+
+msgid "Aucune information financière."
+msgstr "No financial information."
+
+#| msgid "Télécharger Note"
+msgid "Télécharger le devis"
+msgstr "Download the quote"
+
+#| msgid "Factures"
+msgid "Facture"
+msgstr "Invoice"
+
+msgid "Détail du devis"
+msgstr "Quote details"
+
+msgid "P.U."
+msgstr "Unit price"
+
+msgid "Qté"
+msgstr "Qty"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Analyste assigné"
+msgstr "Assigned analyst"
+
+msgid "Acceptée"
+msgstr "Accepted"
+
+msgid "Date de RDV"
+msgstr "Appointment date"
+
+msgid "RDV confirmé"
+msgstr "Appointment confirmed"
+
+msgid "Réassigner à un autre analyste"
+msgstr "Reassign to another analyst"
+
+msgid ""
+"Utilisez cette option en cas de retard, d'absence ou de surcharge de "
+"l'analyste actuel. L'ancien et le nouvel analyste seront notifiés."
+msgstr ""
+"Use this option when the current analyst is delayed, absent or overloaded. "
+"Both the previous and the new analyst will be notified."
+
+#| msgid "Espace analyste"
+msgid "Nouvel analyste"
+msgstr "New analyst"
+
+msgid "Choisir un membre…"
+msgstr "Choose a member…"
+
+msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
+msgstr "E.g.: current analyst delayed by other priority cases"
+
+#| msgid "Cette action est enregistrée dans le journal d'audit."
+msgid "Cette raison est consignée dans l'historique de la demande."
+msgstr "This reason is recorded in the request history."
+
+#| msgid "Confirmer la réinitialisation"
+msgid "Confirmer la réassignation"
+msgstr "Confirm reassignment"
+
+msgid "Non encore assigné."
+msgstr "Not yet assigned."
+
+msgid ""
+"Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, "
+"mode, prix de base, multiplicateur, nombre d'échantillons, total). À "
+"partager manuellement avec le demandeur."
+msgstr ""
+"Internal IBTIKAR quote: detailed price justification (analysis type, mode, "
+"base price, multiplier, number of samples, total). To be shared manually "
+"with the requester."
+
+#| msgid "Télécharger Note"
+msgid "Télécharger la note (.docx)"
+msgstr "Download the note (.docx)"
+
+msgid ""
+"Accès limité : administrateurs des opérations, analyste assigné, "
+"observateurs."
+msgstr ""
+"Restricted access: operations administrators, assigned analyst, observers."
+
+msgid "Observateurs"
+msgstr "Observers"
+
+msgid ""
+"Membres autorisés à consulter cette demande en lecture seule (utile en cas "
+"de retard ou d'absence de l'analyste assigné)."
+msgstr ""
+"Members allowed to view this request in read-only mode (useful if the "
+"assigned analyst is delayed or absent)."
+
+#| msgid "Restaurer une sauvegarde"
+msgid "Retirer ce suiveur"
+msgstr "Remove this follower"
+
+msgid "Retirer"
+msgstr "Remove"
+
+msgid "Aucun observateur pour l'instant."
+msgstr "No observers yet."
+
+#| msgid "Ajouter un service"
+msgid "Ajouter un observateur"
+msgstr "Add an observer"
+
+msgid "Ajouter"
+msgstr "Add"
+
+msgid "Commande & Paiement"
+msgstr "Order & Payment"
+
+msgid "Bon de Commande Uploadé"
+msgstr "Purchase Order Uploaded"
+
+msgid "En attente du Bon de Commande"
+msgstr "Awaiting Purchase Order"
+
+msgid "Voir le Bon de Commande"
+msgstr "View the Purchase Order"
+
+msgid "Uploadé le"
+msgstr "Uploaded on"
+
+msgid ""
+"Le client doit uploader le Bon de Commande (pièce obligatoire selon le Code "
+"de Commerce Algérien) après validation du devis."
+msgstr ""
+"The client must upload the Purchase Order (a mandatory document under the "
+"Algerian Commercial Code) after the quote is validated."
+
+msgid "Reçu de Paiement Uploadé"
+msgstr "Payment Receipt Uploaded"
+
+msgid "En attente du Paiement"
+msgstr "Awaiting Payment"
+
+msgid "Voir le Reçu de Paiement"
+msgstr "View the Payment Receipt"
+
+msgid ""
+"Le client doit payer et uploader le reçu de paiement pour recevoir son "
+"rapport."
+msgstr ""
+"The client must pay and upload the payment receipt in order to receive the "
+"report."
+
+msgid "Le paiement sera requis après la fin de l'analyse."
+msgstr "Payment will be required after the analysis is completed."
+
+msgid "Paiement confirmé"
+msgstr "Payment confirmed"
+
+msgid "Le rapport peut être délivré au client"
+msgstr "The report can be delivered to the client"
+
+msgid "Documents"
+msgstr "Documents"
+
+msgid "Note de Plateforme"
+msgstr "Platform Note"
+
+msgid "Rapport d'analyse"
+msgstr "Analysis report"
+
+msgid "Avis client"
+msgstr "Client review"
+
+msgid "Évalué le"
+msgstr "Reviewed on"
+
+msgid "QR Code Rapport"
+msgstr "Report QR Code"
+
+msgid "Scannez pour accéder à la page du rapport"
+msgstr "Scan to access the report page"
+
+msgid "Messages"
+msgstr "Messages"
+
+msgid "Commentaires"
+msgstr "Comments"
+
+msgid "Historique du workflow"
+msgstr "Workflow history"
+
+msgid "Aucun historique."
+msgstr "No history."
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Notifier le demandeur (soumission IBTIKAR)"
+msgstr "Notify the requester (IBTIKAR submission)"
+
+msgid "Transmettre le rapport au demandeur"
+msgstr "Forward the report to the requester"
+
+msgid "Transmettre le rapport au client"
+msgstr "Forward the report to the client"
+
+msgid "Préparer / Modifier le devis"
+msgstr "Prepare / Edit the quote"
+
+msgid "Générer la facture"
+msgstr "Generate the invoice"
+
+msgid "Confirmer le paiement"
+msgstr "Confirm payment"
+
+msgid "Coût DA"
+msgstr "Cost DA"
+
+msgid "Ajuster coût"
+msgstr "Adjust cost"
+
+msgid "Télécharger Note"
+msgstr "Download Note"
+
+msgid "Aucune action disponible pour ce statut."
+msgstr "No action available for this status."
+
+msgid "Espace analyste"
+msgstr "Analyst workspace"
+
+msgid "Assignées"
+msgstr "Assigned"
+
+#, python-format
+msgid "Productivité %%"
+msgstr "Productivity %%"
+
+#| msgid "Opérations"
+msgid "Observations"
+msgstr "Observations"
+
+msgid "Historique"
+msgstr "History"
+
+msgid "Profil"
+msgstr "Profile"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Tâches en attente"
+msgstr "Pending tasks"
+
+msgid "Accepter"
+msgstr "Accept"
+
+msgid "Décliner"
+msgstr "Decline"
+
+msgid "Raison..."
+msgstr "Reason..."
+
+msgid "Confirmer"
+msgstr "Confirm"
+
+msgid "Aucune tâche en attente."
+msgstr "No pending tasks."
+
+msgid "Travaux en cours"
+msgstr "Work in progress"
+
+msgid "Voir détails"
+msgstr "View details"
+
+msgid "Échantillon reçu"
+msgstr "Sample received"
+
+msgid "Démarrer analyse"
+msgstr "Start analysis"
+
+msgid "Terminer analyse"
+msgstr "Complete analysis"
+
+msgid "Uploader rapport"
+msgstr "Upload report"
+
+msgid "Proposer un rendez-vous"
+msgstr "Propose an appointment"
+
+msgid "Date proposée"
+msgstr "Proposed date"
+
+msgid "Heure"
+msgstr "Time"
+
+msgid "Message au demandeur"
+msgstr "Message to the requester"
+
+msgid "Ex: Apportez vos échantillons frais"
+msgstr "E.g.: Bring your samples fresh"
+
+msgid "Proposer ce RDV"
+msgstr "Propose this appointment"
+
+msgid ""
+"Le demandeur recevra une notification pour confirmer ou demander un "
+"changement de date."
+msgstr ""
+"The requester will receive a notification to confirm or request a date "
+"change."
+
+msgid "Date alternative proposée"
+msgstr "Alternative date proposed"
+
+msgid "Refuser"
+msgstr "Decline"
+
+msgid "Répondre"
+msgstr "Reply"
+
+msgid "Aucun travail en cours."
+msgstr "No work in progress."
+
+#| msgid "Demandes à assigner"
+msgid "Demandes que vous suivez"
+msgstr "Requests you follow"
+
+msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
+msgstr "Read-only access. You cannot act on these requests."
+
+#| msgid "Profil mis à jour."
+msgid "Dernière mise à jour"
+msgstr "Last updated"
+
+#| msgid "Toutes les demandes"
+msgid "Consulter cette demande"
+msgstr "View this request"
+
+#| msgid "Aucune demande en cours de traitement."
+msgid "Aucune demande à observer pour l'instant."
+msgstr "No request to observe yet."
+
+msgid ""
+"L'administrateur des opérations peut vous ajouter en suivi sur une demande "
+"pour que vous puissiez en surveiller l'avancement (par exemple en cas de "
+"retard d'un collègue)."
+msgstr ""
+"The operations administrator can add you as a follower on a request so you "
+"can monitor its progress (for example if a colleague is delayed)."
+
+msgid "Mon profil"
+msgstr "My profile"
+
+msgid "Mes techniques"
+msgstr "My techniques"
+
+msgid "sur"
+msgstr "of"
+
+msgid "Score de productivité"
+msgstr "Productivity score"
+
+msgid "Cadeau récupéré !"
+msgstr "Gift claimed!"
+
+msgid "Merci pour votre excellent travail. Continuez comme ça !"
+msgstr "Thank you for your excellent work. Keep it up!"
+
+msgid "Boîte surprise débloquée !"
+msgstr "Surprise box unlocked!"
+
+msgid ""
+"Vous avez cumulé 100 points ! Une récompense vous attend chez "
+"l'administrateur."
+msgstr ""
+"You have accumulated 100 points! A reward awaits you with the administrator."
+
+msgid "Récompense"
+msgstr "Reward"
+
+msgid "Voici votre récompense — allez la récupérer !"
+msgstr "Here is your reward — go claim it!"
+
+msgid "L'administrateur prépare votre récompense..."
+msgstr "The administrator is preparing your reward..."
+
+msgid "Marquer comme récupéré"
+msgstr "Mark as claimed"
+
+msgid "Boîte surprise presque débloquée !"
+msgstr "Surprise box almost unlocked!"
+
+msgid "Objectif : 100 points"
+msgstr "Goal: 100 points"
+
+msgid "Activité & Points"
+msgstr "Activity & Points"
+
+msgid "événements"
+msgstr "events"
+
+msgid "Complétez des demandes pour gagner vos premiers points !"
+msgstr "Complete requests to earn your first points!"
+
+msgid "Encouragements"
+msgstr "Encouragements"
+
+msgid "Vos encouragements apparaîtront ici."
+msgstr "Your encouragements will appear here."
+
+msgid "Badges & Objectifs"
+msgstr "Badges & Goals"
+
+msgid "Première analyse"
+msgstr "First analysis"
+
+msgid "Débloqué"
+msgstr "Unlocked"
+
+msgid "5 Analyses"
+msgstr "5 Analyses"
+
+msgid "Points — Expert"
+msgstr "Points — Expert"
+
+msgid "Analyses"
+msgstr "Analyses"
+
+msgid "Aucune notification."
+msgstr "No notifications."
+
+msgid "Retour au tableau de bord"
+msgstr "Back to dashboard"
+
+msgid "Pipeline GENOCLAB"
+msgstr "GENOCLAB Pipeline"
+
+msgid "Créée"
+msgstr "Created"
+
+msgid "BC"
+msgstr "PO"
+
+msgid "Analyse"
+msgstr "Analysis"
+
+msgid "Paiement"
+msgstr "Payment"
+
+msgid "Terminé"
+msgstr "Completed"
+
+msgid "Devis interne avec la justification détaillée du tarif."
+msgstr "Internal quote with detailed price justification."
+
+msgid "(Vous y avez accès en lecture en tant qu'observateur.)"
+msgstr "(You have read access as an observer.)"
+
+msgid "Rendez-vous"
+msgstr "Appointment"
+
+msgid "Confirmé"
+msgstr "Confirmed"
+
+msgid "Date alternative proposée par le demandeur"
+msgstr "Alternative date proposed by the requester"
+
+msgid "Accepter cette date"
+msgstr "Accept this date"
+
+msgid "Raison du refus"
+msgstr "Reason for refusal"
+
+msgid "Ex: Je ne suis pas disponible ce jour-là..."
+msgstr "E.g.: I am not available on that day..."
+
+msgid "Confirmer le refus"
+msgstr "Confirm refusal"
+
+msgid "Note"
+msgstr "Note"
+
+msgid "Proposer"
+msgstr "Propose"
+
+msgid "Aucun message."
+msgstr "No messages."
+
+msgid "Répondre..."
+msgstr "Reply..."
+
+msgid "Voir rapport"
+msgstr "View report"
+
+msgid "Client GENOCLAB"
+msgstr "GENOCLAB Client"
+
+msgid "Espace GENOCLAB"
+msgstr "GENOCLAB Workspace"
+
+msgid "Rejetées"
+msgstr "Rejected"
+
+msgid "Nouvelle demande"
+msgstr "New request"
+
+msgid "Mes demandes"
+msgstr "My requests"
+
+msgid "Factures"
+msgstr "Invoices"
+
+msgid "Archives"
+msgstr "Archives"
+
+msgid "Soumettre une nouvelle demande GENOCLAB"
+msgstr "Submit a new GENOCLAB request"
+
+msgid "Sélectionner un service..."
+msgstr "Select a service..."
+
+msgid "Titre de la demande"
+msgstr "Request title"
+
+msgid "Ex: Analyse complète..."
+msgstr "E.g.: Complete analysis..."
+
+msgid "Décrivez votre demande..."
+msgstr "Describe your request..."
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Urgent"
+msgstr "Urgent"
+
+msgid "Très urgent"
+msgstr "Very urgent"
+
+msgid "Vérifier et soumettre"
+msgstr "Review and submit"
+
+msgid "Mes demandes actives"
+msgstr "My active requests"
+
+msgid "Rendez-vous proposé"
+msgstr "Appointment proposed"
+
+msgid "Confirmer ce RDV"
+msgstr "Confirm this appointment"
+
+msgid "Proposer une autre date"
+msgstr "Propose another date"
+
+msgid "Date souhaitée"
+msgstr "Preferred date"
+
+msgid "Confirmer RDV"
+msgstr "Confirm appointment"
+
+msgid "Devis reçu"
+msgstr "Quote received"
+
+msgid "Frais admin."
+msgstr "Admin fees"
+
+msgid "Frais rapport"
+msgstr "Report fees"
+
+msgid "Accepter le devis"
+msgstr "Accept the quote"
+
+msgid "Refuser le devis"
+msgstr "Decline the quote"
+
+msgid "Voir détail"
+msgstr "View details"
+
+msgid "Votre rapport est prêt"
+msgstr "Your report is ready"
+
+msgid "Télécharger le rapport"
+msgstr "Download the report"
+
+msgid "Confirmer la réception"
+msgstr "Confirm receipt"
+
+msgid "Confirmer la réception du rapport"
+msgstr "Confirm receipt of the report"
+
+msgid "Évaluez le service"
+msgstr "Rate the service"
+
+msgid "Votre avis nous aide à améliorer nos services."
+msgstr "Your feedback helps us improve our services."
+
+msgid "Commentaire (optionnel)..."
+msgstr "Comment (optional)..."
+
+msgid "Aucune demande active. Soumettez votre première demande!"
+msgstr "No active request. Submit your first request!"
+
+msgid "Mes factures"
+msgstr "My invoices"
+
+msgid "N° Facture"
+msgstr "Invoice no."
+
+msgid "Demande"
+msgstr "Request"
+
+msgid "HT"
+msgstr "Excl. VAT"
+
+msgid "TTC"
+msgstr "Incl. VAT"
+
+#| msgid "Documents"
+msgid "Document"
+msgstr "Document"
+
+#| msgid "Générer la facture"
+msgid "Télécharger la facture"
+msgstr "Download the invoice"
+
+msgid "Aucune facture."
+msgstr "No invoices."
+
+msgid "Aucune archive."
+msgstr "No archives."
+
+#| msgid "Télécharger le Bon de Commande"
+msgid "Télécharger le devis officiel (.docx)"
+msgstr "Download the official quote (.docx)"
+
+msgid "Quantité"
+msgstr "Quantity"
+
+msgid "Bon de Commande Obligatoire"
+msgstr "Purchase Order Required"
+
+msgid ""
+"Selon le Code de Commerce Algérien, vous devez fournir un Bon de Commande "
+"(BC) pour toute transaction commerciale. Veuillez télécharger votre BC ci-"
+"dessous."
+msgstr ""
+"Under the Algerian Commercial Code, you must provide a Purchase Order (PO) "
+"for any commercial transaction. Please upload your PO below."
+
+msgid "Bon de Commande déjà téléchargé"
+msgstr "Purchase Order already uploaded"
+
+msgid "Télécharger le Bon de Commande"
+msgstr "Upload the Purchase Order"
+
+msgid "Paiement Requis pour Recevoir Votre Rapport"
+msgstr "Payment Required to Receive Your Report"
+
+msgid ""
+"Votre analyse est terminée. Pour recevoir votre rapport, veuillez effectuer "
+"le paiement et télécharger le reçu ci-dessous."
+msgstr ""
+"Your analysis is complete. To receive your report, please make the payment "
+"and upload the receipt below."
+
+msgid "Montant à payer"
+msgstr "Amount due"
+
+msgid "Reçu de paiement déjà téléchargé"
+msgstr "Payment receipt already uploaded"
+
+msgid "Télécharger votre reçu de paiement:"
+msgstr "Upload your payment receipt:"
+
+msgid "Confirmer le Paiement"
+msgstr "Confirm Payment"
+
+msgid "Tâche acceptée"
+msgstr "Task accepted"
+
+msgid "En attente de traitement."
+msgstr "Awaiting processing."
+
+msgid "Votre rapport d'analyse est prêt"
+msgstr "Your analysis report is ready"
+
+msgid "Téléchargez-le et confirmez la réception pour finaliser votre demande."
+msgstr "Download it and confirm receipt to finalize your request."
+
+msgid "Envoyer mon évaluation"
+msgstr "Submit my review"
+
+msgid "Votre évaluation"
+msgstr "Your review"
+
+msgid "Finance"
+msgstr "Finance"
+
+msgid "Gestion financière IBTIKAR & GENOCLAB"
+msgstr "IBTIKAR & GENOCLAB Financial Management"
+
+msgid "Étudiants IBTIKAR"
+msgstr "IBTIKAR Students"
+
+msgid "Validation IBTIKAR"
+msgstr "IBTIKAR Validation"
+
+msgid "Factures GENOCLAB"
+msgstr "GENOCLAB Invoices"
+
+msgid "Demandes IBTIKAR — Validation financière"
+msgstr "IBTIKAR Requests — Financial validation"
+
+msgid "Solde déclaré"
+msgstr "Declared balance"
+
+msgid "Approuver"
+msgstr "Approve"
+
+msgid "Raison du rejet..."
+msgstr "Reason for rejection..."
+
+msgid "Aucune demande en attente de validation financière."
+msgstr "No request awaiting financial validation."
+
+msgid "Budget IBTIKAR par statut"
+msgstr "IBTIKAR Budget by status"
+
+msgid "Budget total"
+msgstr "Total budget"
+
+msgid "Aucune donnée budgétaire."
+msgstr "No budget data."
+
+msgid "Client"
+msgstr "Client"
+
+msgid "Partiel"
+msgstr "Partial"
+
+msgid "Payé"
+msgstr "Paid"
+
+msgid "Archives des revenus"
+msgstr "Revenue archives"
+
+msgid "IBTIKAR complétés"
+msgstr "IBTIKAR completed"
+
+msgid "GENOCLAB complétés"
+msgstr "GENOCLAB completed"
+
+msgid "Historique financier"
+msgstr "Financial history"
+
+msgid "Total IBTIKAR (virtuel)"
+msgstr "Total IBTIKAR (virtual)"
+
+msgid "Total GENOCLAB (réel)"
+msgstr "Total GENOCLAB (actual)"
+
+msgid "Factures émises"
+msgstr "Invoices issued"
+
+msgid "Étudiants uniques"
+msgstr "Unique students"
+
+msgid "Bienvenue"
+msgstr "Welcome"
+
+msgid "Demandes"
+msgstr "Requests"
+
+msgid "Tableau de bord en construction"
+msgstr "Dashboard under construction"
+
+msgid ""
+"Les widgets et statistiques spécifiques à votre rôle seront bientôt "
+"disponibles."
+msgstr "Widgets and statistics specific to your role will be available soon."
+
+#| msgid "Continuer vers l'évaluation"
+msgid "Continuer vers l\\'évaluation"
+msgstr "Continue to the rating"
+
+msgid "Erreur réseau, veuillez réessayer."
+msgstr "Network error, please try again."
+
+msgid "Copié !"
+msgstr "Copied!"
+
+msgid ""
+"Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer."
+msgstr "We are sincerely sorry — tell us what we can improve."
+
+msgid "Nous voulons vraiment faire mieux pour vous."
+msgstr "We really want to do better for you."
+
+msgid "Merci — nous prenons note de vos remarques."
+msgstr "Thank you — we have noted your feedback."
+
+msgid "Super, merci beaucoup !"
+msgstr "Great, thank you very much!"
+
+msgid "Excellent — un immense merci, cela compte vraiment pour notre équipe !"
+msgstr "Excellent — a huge thank you, it really matters to our team!"
+
+msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
+msgstr "Scientific Operations Management Platform — ESSBO"
+
+msgid "Merci pour votre confiance"
+msgstr "Thank you for your trust"
+
+msgid ""
+"Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous."
+msgstr "Your analysis report is ready. You can download it below."
+
+msgid "Référence"
+msgstr "Reference"
+
+msgid "Date de soumission"
+msgstr "Submission date"
+
+msgid "Remerciements et Clause de Citation"
+msgstr "Acknowledgments and Citation Clause"
+
+msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
+msgstr "Thank you for using PLAGENOR 4.0! Your report is ready."
+
+msgid ""
+"Pour reconnaître le soutien et les contributions de notre Plateforme de "
+"Technologie Génomique, veuillez inclure la citation suivante dans toute "
+"publication ou présentation issue des données ou analyses réalisées :"
+msgstr ""
+"To acknowledge the support and contributions of our Genomic Technology "
+"Platform, please include the following citation in any publication or "
+"presentation arising from the data or analyses performed:"
+
+msgid "Copier"
+msgstr "Copy"
+
+msgid ""
+"Cette recherche a été réalisée au sein de la Plateforme de Technologie "
+"Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). "
+"Nous remercions chaleureusement le personnel de la plateforme pour son aide "
+"dans l'analyse et l'interprétation des données."
+msgstr ""
+"This research was carried out at the Genomic Technology Platform of the "
+"Higher School of Biological Sciences of Oran (ESSBO). We warmly thank the "
+"platform staff for their assistance in analyzing and interpreting the data."
+
+msgid ""
+"Veuillez également vous assurer que toute contribution substantielle du "
+"personnel de la plateforme est reconnue conformément aux directives standard"
+" en matière d'auteurs scientifiques."
+msgstr ""
+"Please also ensure that any substantial contribution by platform staff is "
+"acknowledged in accordance with standard scientific authorship guidelines."
+
+msgid ""
+"Toute production scientifique incluant des analyses réalisées sur PLAGENOR "
+"implique l'inclusion des membres ayant contribué. Contactez le responsable "
+"via l'adresse email de la plateforme pour convenir des modalités."
+msgstr ""
+"Any scientific output that includes analyses performed on PLAGENOR entails "
+"crediting the contributing members. Contact the platform lead via the "
+"platform's email to agree on the terms."
+
+msgid "Continuer vers l'évaluation"
+msgstr "Continue to the review"
+
+msgid "Merci pour votre évaluation"
+msgstr "Thank you for your review"
+
+msgid "Comment s'est passée votre expérience ?"
+msgstr "How was your experience?"
+
+msgid ""
+"Votre analyse a mobilisé notre équipe et nos plateformes. Votre retour "
+"compte énormément pour nous."
+msgstr ""
+"Your analysis engaged our team and our platforms. Your feedback matters a "
+"great deal to us."
+
+msgid ""
+"Ce qui vous a marqué : réactivité de l’équipe, clarté des résultats, qualité"
+" de l’accompagnement…"
+msgstr ""
+"What stood out to you: the team's responsiveness, the clarity of the "
+"results, the quality of the support…"
+
+msgid "Partager mon avis"
+msgstr "Share my feedback"
+
+msgid "Demandeur IBTIKAR"
+msgstr "IBTIKAR Requester"
+
+msgid "Espace IBTIKAR"
+msgstr "IBTIKAR Workspace"
+
+#| msgid "Saisissez votre code IBTIKAR"
+msgid "Déclarez votre solde IBTIKAR"
+msgstr "Declare your IBTIKAR balance"
+
+#, python-format
+msgid ""
+"Avant toute soumission, indiquez le montant résiduel disponible sur votre "
+"compte IBTIKAR (entre 0 et %(cap)s DA). C'est ce montant qui servira de "
+"plafond pour l'estimation et la validation de votre demande. Vous pourrez "
+"l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre "
+"compte DGRSDT."
+msgstr ""
+"Before any submission, enter the remaining amount available on your IBTIKAR "
+"account (between 0 and %(cap)s DA). This amount will be used as the cap for "
+"estimating and validating your request. You can adjust it before each new "
+"request to reflect the actual state of your DGRSDT account."
+
+#| msgid "Solde IBTIKAR déclaré (DA)"
+msgid "Solde IBTIKAR résiduel (DA)"
+msgstr "Remaining IBTIKAR balance (DA)"
+
+msgid "Valider mon solde"
+msgstr "Validate my balance"
+
+#, python-format
+#| msgid "Mis à jour le"
+msgid "Mis à jour le %(dt)s."
+msgstr "Updated on %(dt)s."
+
+msgid "Vous pouvez ajuster ce montant à tout moment."
+msgstr "You can adjust this amount at any time."
+
+#| msgid "Solde déclaré"
+msgid "Solde déclaré disponible"
+msgstr "Declared balance available"
+
+msgid ""
+"Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
+"de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par "
+"d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire."
+msgstr ""
+"Reminder: check the balance shown on your IBTIKAR (DGRSDT) account before "
+"submitting a new request. The IBTIKAR budget may be consumed by other "
+"platforms — update this amount below if necessary."
+
+#| msgid "Mettre à jour"
+msgid "Mettre à jour mon solde"
+msgstr "Update my balance"
+
+#| msgid "Budget IBTIKAR (DA)"
+msgid "Nouveau solde IBTIKAR (DA)"
+msgstr "New IBTIKAR balance (DA)"
+
+#, python-format
+#| msgid ""
+#| "Budget virtuel encadré par la DGRSDT — limite individuelle %(cap)s DA / an."
+msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
+msgstr "Annual cap set by DGRSDT: %(cap)s DA."
+
+msgid "Enregistrer"
+msgstr "Save"
+
+#| msgid "Solde IBTIKAR déclaré"
+msgid "Solde IBTIKAR non déclaré"
+msgstr "IBTIKAR balance not declared"
+
+msgid ""
+"Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
+"soumettre une demande."
+msgstr ""
+"First declare your remaining IBTIKAR balance above in order to submit a "
+"request."
+
+msgid "Soumettre une nouvelle demande IBTIKAR"
+msgstr "Submit a new IBTIKAR request"
+
+msgid "Ex: Analyse DRX échantillon..."
+msgstr "E.g.: XRD analysis sample..."
+
+#, python-format
+msgid ""
+"Plafond pour cette demande : <strong>%(rem)s DA</strong> (votre solde "
+"IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous "
+"avez vérifié votre compte DGRSDT."
+msgstr ""
+"Cap for this request: <strong>%(rem)s DA</strong> (your declared IBTIKAR "
+"balance). Update this balance in the card above if you have checked your "
+"DGRSDT account."
+
+#| msgid "dépasse votre solde déclaré"
+msgid "supérieur à votre solde déclaré"
+msgstr "higher than your declared balance"
+
+msgid "RDV"
+msgstr "Appointment"
+
+msgid "confirmé"
+msgstr "confirmed"
+
+msgid "Validation"
+msgstr "Validation"
+
+msgid "Télécharger le rapport et confirmer la réception"
+msgstr "Download the report and confirm receipt"
+
+msgid "En attente d'assignation."
+msgstr "Awaiting assignment."
+
+msgid "Statistiques"
+msgstr "Statistics"
+
+#| msgid "Statistiques"
+msgid "Statistiques & métriques"
+msgstr "Statistics & metrics"
+
+msgid "Vue institutionnelle complète"
+msgstr "Full institutional view"
+
+#| msgid "Historique financier"
+msgid "Vue financière"
+msgstr "Financial view"
+
+#| msgid "Assignation"
+msgid "Mes assignations"
+msgstr "My assignments"
+
+#| msgid "Productivité"
+msgid "Mon activité"
+msgstr "My activity"
+
+msgid "Du"
+msgstr "From"
+
+msgid "Au"
+msgstr "To"
+
+msgid "Tous"
+msgstr "All"
+
+#| msgid "Ajouter"
+msgid "Toutes"
+msgstr "All"
+
+#| msgid "Paiement"
+msgid "Établissement"
+msgstr "Institution"
+
+#| msgid "Rapport d'analyse"
+msgid "Cadre d'analyse"
+msgstr "Analysis framework"
+
+msgid "Appliquer"
+msgstr "Apply"
+
+msgid "Document de synthèse Word/PDF"
+msgstr "Word/PDF summary document"
+
+msgid "Synthèse Word"
+msgstr "Word summary"
+
+msgid "Générer un bilan d'activité (Excel)"
+msgstr "Generate an activity report (Excel)"
+
+#, python-format
+msgid ""
+"Choisissez les dimensions, la granularité de la période et la portée "
+"(filtres ci-dessus). Le bilan inclut effectifs, parts (%%) et montants par "
+"canal."
+msgstr ""
+"Choose the dimensions, the period granularity and the scope (filters above)."
+" The report includes counts, shares (%%) and amounts per channel."
+
+msgid "Granularité de la période"
+msgstr "Period granularity"
+
+msgid "Mensuelle"
+msgstr "Monthly"
+
+msgid "Trimestrielle"
+msgstr "Quarterly"
+
+#| msgid "Annuler"
+msgid "Annuelle"
+msgstr "Yearly"
+
+msgid "Dimensions à inclure"
+msgstr "Dimensions to include"
+
+#| msgid "Télécharger le rapport"
+msgid "Télécharger le bilan Excel"
+msgstr "Download the Excel report"
+
+#| msgid "Retour aux opérations"
+msgid "Taux complétion"
+msgstr "Completion rate"
+
+#| msgid "Demandeur IBTIKAR"
+msgid "Revenu virtuel IBTIKAR"
+msgstr "IBTIKAR virtual revenue"
+
+#| msgid "Revenue GENOCLAB (DA)"
+msgid "Revenu GENOCLAB"
+msgstr "GENOCLAB revenue"
+
+#| msgid "Ajouter service"
+msgid "Par service"
+msgstr "By service"
+
+#| msgid "Aucune demande"
+msgid "Aucune donnée"
+msgstr "No data"
+
+#| msgid "Statut"
+msgid "Par statut"
+msgstr "By status"
+
+msgid "Par wilaya"
+msgstr "By wilaya"
+
+#| msgid "Paiement"
+msgid "Par établissement"
+msgstr "By institution"
+
+#| msgid "Rapport d'analyse"
+msgid "Par cadre d'analyse"
+msgstr "By analysis framework"
+
+msgid "Cadre"
+msgstr "Frame"
+
+msgid "Par sexe"
+msgstr "By gender"
+
+#| msgid "Archives mensuelles"
+msgid "Tendance mensuelle"
+msgstr "Monthly trend"
+
+msgid "Journal d'audit"
+msgstr "Audit log"
+
+msgid "Historique des actions sur la plateforme"
+msgstr "History of actions on the platform"
+
+msgid "Date début"
+msgstr "Start date"
+
+msgid "Date fin"
+msgstr "End date"
+
+msgid "Action/Statut"
+msgstr "Action/Status"
+
+msgid "Ex: ASSIGNED..."
+msgstr "E.g.: ASSIGNED..."
+
+msgid "Utilisateur"
+msgstr "User"
+
+msgid "Nom..."
+msgstr "Name..."
+
+msgid "Entrées d'audit"
+msgstr "Audit entries"
+
+msgid "De"
+msgstr "From"
+
+msgid "Vers"
+msgstr "To"
+
+msgid "Acteur"
+msgstr "Actor"
+
+msgid "Forcé"
+msgstr "Forced"
+
+msgid "Aucune entrée d'audit."
+msgstr "No audit entries."
+
+msgid "Précédent"
+msgstr "Previous"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Suivant"
+msgstr "Next"
+
+msgid "Super Admin"
+msgstr "Super Admin"
+
+msgid "Vue d'ensemble de la plateforme"
+msgstr "Platform overview"
+
+msgid "Utilisateurs"
+msgstr "Users"
+
+msgid "Analystes"
+msgstr "Analysts"
+
+msgid "Demandes actives"
+msgstr "Active requests"
+
+msgid "Services actifs"
+msgstr "Active services"
+
+msgid "Techniques"
+msgstr "Techniques"
+
+msgid "Budget IBTIKAR (DA)"
+msgstr "IBTIKAR Budget (DA)"
+
+msgid "Revenue GENOCLAB (DA)"
+msgstr "GENOCLAB Revenue (DA)"
+
+msgid "Note moyenne / 5"
+msgstr "Average rating / 5"
+
+msgid "Actions rapides"
+msgstr "Quick actions"
+
+msgid "Gérer utilisateurs"
+msgstr "Manage users"
+
+msgid "Ajouter service"
+msgstr "Add service"
+
+msgid "Ajouter technique"
+msgstr "Add technique"
+
+msgid "Modifier contenu"
+msgstr "Edit content"
+
+msgid "Derniers utilisateurs"
+msgstr "Recent users"
+
+msgid "Aucun utilisateur récent."
+msgstr "No recent users."
+
+msgid "Vue d'ensemble"
+msgstr "Overview"
+
+msgid "Paiements"
+msgstr "Payments"
+
+msgid "Formulaires"
+msgstr "Forms"
+
+msgid "Contenu"
+msgstr "Content"
+
+msgid "Système"
+msgstr "System"
+
+msgid "Répartition par statut"
+msgstr "Breakdown by status"
+
+msgid "Nombre"
+msgstr "Count"
+
+msgid "Aucune demande"
+msgstr "No requests"
+
+msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
+msgstr "No requests yet. Statistics will appear here."
+
+msgid "Créer un utilisateur"
+msgstr "Create a user"
+
+msgid "Masquer"
+msgstr "Hide"
+
+msgid "Afficher"
+msgstr "Show"
+
+msgid "Nom d'utilisateur"
+msgstr "Username"
+
+msgid "Créer"
+msgstr "Create"
+
+msgid "Recherche"
+msgstr "Search"
+
+msgid "Nom, email, username..."
+msgstr "Name, email, username..."
+
+msgid "Tous les rôles"
+msgstr "All roles"
+
+msgid "Effacer les filtres"
+msgstr "Clear filters"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Inactif"
+msgstr "Inactive"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Désactiver cet utilisateur ?"
+msgstr "Deactivate this user?"
+
+msgid "Activer cet utilisateur ?"
+msgstr "Activate this user?"
+
+msgid "Désactiver"
+msgstr "Deactivate"
+
+msgid "Activer"
+msgstr "Activate"
+
+msgid "Réinitialiser / Reset Account"
+msgstr "Reset / Reset Account"
+
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr "Reset 2FA (lost phone)"
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr "Reset two-factor authentication for this user?"
+
+msgid "Reset 2FA"
+msgstr "Reset 2FA"
+
+msgid "Analystes / Opérateurs"
+msgstr "Analysts / Operators"
+
+msgid "tech."
+msgstr "tech."
+
+msgid "Sauvegarder"
+msgstr "Save"
+
+msgid "Rendre indisponible"
+msgstr "Make unavailable"
+
+msgid "Rendre disponible"
+msgstr "Make available"
+
+msgid "Ajouter un service"
+msgstr "Add a service"
+
+msgid "Prix IBTIKAR"
+msgstr "IBTIKAR Price"
+
+msgid "Délai (jours)"
+msgstr "Turnaround (days)"
+
+msgid "Image"
+msgstr "Image"
+
+msgid "Créer le service"
+msgstr "Create service"
+
+msgid "Services existants"
+msgstr "Existing services"
+
+msgid "IBTIKAR"
+msgstr "IBTIKAR"
+
+msgid "GENOCLAB"
+msgstr "GENOCLAB"
+
+msgid "Réactiver"
+msgstr "Reactivate"
+
+msgid "Aucun service."
+msgstr "No services."
+
+msgid "Ajouter une technique"
+msgstr "Add a technique"
+
+msgid "Catégorie"
+msgstr "Category"
+
+msgid "Techniques existantes"
+msgstr "Existing techniques"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Inactive"
+msgstr "Inactive"
+
+msgid "Aucune technique."
+msgstr "No techniques."
+
+msgid "Gestion du contenu"
+msgstr "Content management"
+
+#| msgid "Nouvelle demande"
+msgid "Nouvelle entrée"
+msgstr "New entry"
+
+msgid ""
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur"
+" le texte du gabarit."
+msgstr ""
+"Edit the text shown on the site in all three languages (Français, English, "
+"العربية). An empty value falls back to the default language, then to the "
+"template text."
+
+msgid "Clé"
+msgstr "Key"
+
+#| msgid "Techniques existantes"
+msgid "Contenu existant"
+msgstr "Existing content"
+
+msgid "clés"
+msgstr "keys"
+
+#| msgid "Filtrer par clé, langue, ou valeur..."
+msgid "Filtrer par clé ou texte…"
+msgstr "Filter by key or text…"
+
+msgid "Français"
+msgstr "French"
+
+msgid "Langues manquantes"
+msgstr "Missing languages"
+
+msgid "Supprimer cette clé dans toutes les langues ?"
+msgstr "Delete this key in all languages?"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "ID ou titre..."
+msgstr "ID or title..."
+
+msgid "CSV"
+msgstr "CSV"
+
+msgid "Assigné à"
+msgstr "Assigned to"
+
+msgid "Forcer une transition"
+msgstr "Force a transition"
+
+msgid "Sélectionner le statut cible"
+msgstr "Select the target status"
+
+msgid "Justification (min. 10 caractères)"
+msgstr "Justification (min. 10 characters)"
+
+msgid "Forcer la transition"
+msgstr "Force the transition"
+
+msgid "Override budgétaire"
+msgstr "Budget override"
+
+msgid "Montant budget"
+msgstr "Budget amount"
+
+msgid "Justification pour l override..."
+msgstr "Justification for the override..."
+
+msgid "Approuver override"
+msgstr "Approve override"
+
+msgid "Verrouillé"
+msgstr "Locked"
+
+msgid "Méthodes de paiement"
+msgstr "Payment methods"
+
+msgid "Nom de la méthode"
+msgstr "Method name"
+
+msgid "Réinitialiser les compteurs"
+msgstr "Reset counters"
+
+msgid ""
+"Archive les données de revenus actuelles et réinitialise les compteurs du "
+"tableau de bord. Cette action est irréversible."
+msgstr ""
+"Archives current revenue data and resets the dashboard counters. This action"
+" is irreversible."
+
+msgid ""
+"Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
+"données seront archivées."
+msgstr ""
+"Are you sure you want to reset the revenue counters? The data will be "
+"archived."
+
+msgid "Productivité des analystes"
+msgstr "Analyst productivity"
+
+msgid "assignées"
+msgstr "assigned"
+
+msgid "complétées"
+msgstr "completed"
+
+msgid "Score"
+msgstr "Score"
+
+msgid "Fire"
+msgstr "Fire"
+
+msgid "Very Good"
+msgstr "Very Good"
+
+msgid "Good"
+msgstr "Good"
+
+msgid "Aucune donnée de productivité."
+msgstr "No productivity data."
+
+msgid "Rapports générés"
+msgstr "Generated reports"
+
+msgid "Mis à jour"
+msgstr "Updated"
+
+msgid "Aucun rapport disponible."
+msgstr "No report available."
+
+#| msgid "Champs personnalisés"
+msgid "Blocs de contenu personnalisés"
+msgstr "Custom content blocks"
+
+msgid ""
+"Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
+"remarques) injectés dans les documents générés — globalement ou pour un "
+"service précis. Les placeholders {{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} "
+"etc. sont résolus à la volée."
+msgstr ""
+"Add or edit paragraphs (legal notices, instructions, remarks) injected into "
+"generated documents — globally or for a specific service. Placeholders "
+"{{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} etc. are resolved on the fly."
+
+#| msgid "Gestion du contenu"
+msgid "Gérer les blocs de contenu"
+msgstr "Manage content blocks"
+
+#| msgid "Champs personnalisés"
+msgid "Modèles DOCX personnalisés"
+msgstr "Custom DOCX templates"
+
+#| msgid "Templates DOCX"
+msgid "Templates DOCX globaux"
+msgstr "Global DOCX templates"
+
+msgid ""
+"Mettez à jour les templates DOCX utilisés pour la génération automatique des"
+" documents. Un backup est créé automatiquement avant chaque mise à jour."
+msgstr ""
+"Update the DOCX templates used for automatic document generation. A backup "
+"is automatically created before each update."
+
+msgid "Configuration des formulaires par service"
+msgstr "Form configuration by service"
+
+msgid "Champs personnalisés"
+msgstr "Custom fields"
+
+msgid "Label"
+msgstr "Label"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Requis"
+msgstr "Required"
+
+msgid "Aucun champ personnalisé."
+msgstr "No custom fields."
+
+#| msgid "Informations plateforme"
+msgid "Annonces plateforme"
+msgstr "Platform announcements"
+
+#| msgid "Audit"
+msgid "Audience"
+msgstr "Audience"
+
+msgid "Publier l'annonce"
+msgstr "Publish announcement"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer cette annonce ?"
+msgstr "Delete this announcement?"
+
+msgid ""
+"Consultez l'historique complet de toutes les transitions, actions et "
+"modifications effectuées sur la plateforme."
+msgstr ""
+"View the complete history of all transitions, actions and changes made on "
+"the platform."
+
+msgid "Voir le journal d'audit"
+msgstr "View the audit log"
+
+msgid ""
+"Consultez les archives mensuelles des revenus GENOCLAB et des budgets "
+"IBTIKAR."
+msgstr "Review the monthly archives of GENOCLAB revenue and IBTIKAR budgets."
+
+msgid "Voir les archives"
+msgstr "View the archives"
+
+msgid "Contacts & Newsletter"
+msgstr "Contacts & Newsletter"
+
+msgid "Exporter tous les emails (CSV)"
+msgstr "Export all emails (CSV)"
+
+msgid ""
+"Exporte tous les emails des utilisateurs enregistrés et des invités pour "
+"envoi de newsletters."
+msgstr ""
+"Exports all emails of registered users and guests for newsletter mailings."
+
+msgid "Sauvegarde"
+msgstr "Backup"
+
+msgid "Télécharger une sauvegarde"
+msgstr "Download a backup"
+
+msgid "Télécharge une copie de la base de données SQLite."
+msgstr "Downloads a copy of the SQLite database."
+
+msgid "Restaurer une sauvegarde"
+msgstr "Restore a backup"
+
+msgid ""
+"Attention : cette opération remplace la base de données actuelle. Un backup "
+"automatique sera créé avant la restauration. Le serveur devra être redémarré"
+" après la restauration."
+msgstr ""
+"Warning: this operation replaces the current database. An automatic backup "
+"will be created before the restore. The server will need to be restarted "
+"afterwards."
+
+msgid ""
+"Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base"
+" actuelle sera créé automatiquement."
+msgstr ""
+"Are you sure you want to restore the database? A backup of the current "
+"database will be created automatically."
+
+msgid "Restaurer"
+msgstr "Restore"
+
+msgid "Informations plateforme"
+msgstr "Platform information"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Auteur"
+msgstr "Author"
+
+msgid "Institution"
+msgstr "Institution"
+
+msgid "Base de données"
+msgstr "Database"
+
+msgid "Framework"
+msgstr "Framework"
+
+msgid "Utilisateurs totaux"
+msgstr "Total users"
+
+msgid "Demandes totales"
+msgstr "Total requests"
+
+msgid "Réinitialiser le compte"
+msgstr "Reset the account"
+
+msgid "Confirmer la réinitialisation"
+msgstr "Confirm reset"
+
+msgid "Attention"
+msgstr "Warning"
+
+#, python-format
+msgid ""
+"\n"
+"            Êtes-vous sûr de vouloir réinitialiser le compte de <strong>%(username)s</strong> ?\n"
+"            Toutes les données associées (demandes, rapports, historique) seront conservées.\n"
+"            "
+msgstr ""
+"\n"
+"            Are you sure you want to reset the account of <strong>%(username)s</strong>?\n"
+"            All associated data (requests, reports, history) will be preserved.\n"
+"            "
+
+msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+msgstr "A secure temporary password (16 characters) will be generated."
+
+msgid ""
+"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+msgstr ""
+"The user will be required to change their password at the next sign in."
+
+#, python-format
+msgid ""
+"Un email avec le mot de passe temporaire sera envoyé à "
+"<strong>%(email)s</strong>."
+msgstr ""
+"An email with the temporary password will be sent to "
+"<strong>%(email)s</strong>."
+
+msgid ""
+"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
+"notification."
+msgstr ""
+"No email configured — the temporary password will be shown in the "
+"notification."
+
+msgid "Cette action est enregistrée dans le journal d'audit."
+msgstr "This action is logged in the audit log."
+
+msgid "Archives de revenus"
+msgstr "Revenue archives"
+
+msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
+msgstr "Monthly archives of IBTIKAR & GENOCLAB revenue"
+
+msgid "Archives mensuelles"
+msgstr "Monthly archives"
+
+msgid "Période"
+msgstr "Period"
+
+msgid "Revenu total"
+msgstr "Total revenue"
+
+msgid "Nombre demandes"
+msgstr "Number of requests"
+
+msgid "Archivé le"
+msgstr "Archived on"
+
+msgid "Aucune archive. Exécutez"
+msgstr "No archive. Run"
+
+msgid "pour générer les archives."
+msgstr "to generate the archives."
+
+msgid "Modifier service"
+msgstr "Edit service"
+
+msgid "Modifier le service"
+msgstr "Edit the service"
+
+#| msgid "Prix IBTIKAR (DA)"
+msgid "Prix IBTIKAR (DZD)"
+msgstr "IBTIKAR price (DA)"
+
+msgid ""
+"Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
+"ci-dessous)"
+msgstr "Flat price (used if no detailed pricing rule is defined below)"
+
+#| msgid "Prix GENOCLAB (DA)"
+msgid "Prix GENOCLAB (DZD)"
+msgstr "GENOCLAB price (DA)"
+
+msgid "Image actuelle"
+msgstr "Current image"
+
+#| msgid "Derniers utilisateurs"
+msgid "Prix de base & multiplicateurs"
+msgstr "Base price & multipliers"
+
+msgid ""
+"Formule : <strong>Prix de base × Multiplicateur × Nombre "
+"d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des "
+"consommables change — les nouvelles valeurs s'appliquent immédiatement aux "
+"estimations et aux devis."
+msgstr ""
+"Formula: <strong>Base price × Multiplier × Number of samples</strong>. "
+"Adjust here when reagent or consumable prices change — the new values apply "
+"immediately to estimates and quotes."
+
+msgid ""
+"Valeurs YAML par défaut affichées — premier enregistrement les copiera en "
+"base."
+msgstr ""
+"Default YAML values shown — the first save will copy them to the database."
+
+#| msgid "non pathogène"
+msgid "Prix non pathogène (DA)"
+msgstr "Non-pathogenic price (DA)"
+
+#| msgid "pathogène"
+msgid "Prix pathogène (DA)"
+msgstr "Pathogenic price (DA)"
+
+msgid "idem si vide"
+msgstr "same if empty"
+
+msgid "Paramètre porteur du multiplicateur"
+msgstr "Parameter carrying the multiplier"
+
+#| msgid "Derniers utilisateurs"
+msgid "Table de multiplicateurs"
+msgstr "Multiplier table"
+
+#| msgid "Ajouter une ligne"
+msgid "Ajouter une option"
+msgstr "Add an option"
+
+msgid "ex. Simple, Duplicate, Triplicate"
+msgstr "e.g. Simple, Duplicate, Triplicate"
+
+#| msgid "Aucun utilisateur récent."
+msgid "Aucun multiplicateur défini (×1 partout)."
+msgstr "No multiplier defined (×1 everywhere)."
+
+msgid "ex. Simple, Duplicate"
+msgstr "e.g. Simple, Duplicate"
+
+#| msgid "Configuration des formulaires par service"
+msgid "Configurations tarifaires détaillées"
+msgstr "Detailed pricing configurations"
+
+#| msgid "Ajouter un service"
+msgid "Ajouter un tarif"
+msgstr "Add a rate"
+
+msgid ""
+"Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
+"coexister (priorité plus basse = appliquée en premier). Chaque modification "
+"est enregistrée immédiatement."
+msgstr ""
+"Configure base prices and surcharges. Several rules can coexist (lower "
+"priority = applied first). Each change is saved immediately."
+
+msgid ""
+"Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les "
+"nouvelles demandes."
+msgstr "No detailed pricing. The flat price above is used for new requests."
+
+msgid "Champs personnalisés du formulaire"
+msgstr "Custom form fields"
+
+msgid "Ajouter un champ"
+msgstr "Add a field"
+
+#| msgid "Factures"
+msgid "Nature"
+msgstr "Nature"
+
+#| msgid "Description"
+msgid "Question"
+msgstr "Question"
+
+#| msgid "par échantillon"
+msgid "Colonne échantillon"
+msgstr "Sample column"
+
+msgid "Texte"
+msgstr "Text"
+
+msgid "Liste"
+msgstr "List"
+
+msgid "Oui/Non"
+msgstr "Yes/No"
+
+msgid "Options (virgules)"
+msgstr "Options (commas)"
+
+msgid "Tarification conditionnelle & logique d'affichage"
+msgstr "Conditional pricing & display logic"
+
+msgid "Ce champ modifie le prix"
+msgstr "This field affects the price"
+
+#| msgid "Type de document"
+msgid "Type de modificateur"
+msgstr "Modifier type"
+
+msgid "Surcharge (+)"
+msgstr "Surcharge (+)"
+
+msgid "Forfait (=)"
+msgstr "Flat (=)"
+
+#| msgid "Utilisateur"
+msgid "Multiplicateur (×)"
+msgstr "Multiplier (×)"
+
+msgid "Valeur"
+msgstr "Value"
+
+msgid "Note condition (FR)"
+msgstr "Condition note (FR)"
+
+msgid "Note condition (EN)"
+msgstr "Condition note (EN)"
+
+msgid "Prix par option (JSON)"
+msgstr "Price per option (JSON)"
+
+msgid "ex : {\"Duplicata\": 2, \"Triplicata\": 2.6}"
+msgstr "e.g.: {\"Duplicata\": 2, \"Triplicata\": 2.6}"
+
+msgid "Logique conditionnelle (JSON)"
+msgstr "Conditional logic (JSON)"
+
+msgid ""
+"ex : "
+"[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
+msgstr ""
+"e.g.: "
+"[{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":[\"show\",\"make_required\"]}]"
+
+msgid "Enregistrer toutes les modifications"
+msgstr "Save all changes"
+
+#| msgid "Nom du laboratoire"
+msgid "Nom du tarif"
+msgstr "Rate name"
+
+msgid "ex : Prix de base, Majoration urgence, Remise volume"
+msgstr "e.g.: Base price, Urgency surcharge, Volume discount"
+
+msgid "Prix de base"
+msgstr "Base price"
+
+#| msgid "par échantillon"
+msgid "Par échantillon"
+msgstr "Per sample"
+
+msgid "Par paramètre"
+msgstr "Per parameter"
+
+msgid "Majoration urgence"
+msgstr "Urgency surcharge"
+
+msgid "Remise"
+msgstr "Discount"
+
+msgid "Les deux"
+msgstr "Both"
+
+msgid "Montant (DZD)"
+msgstr "Amount (DA)"
+
+msgid "Unité"
+msgstr "Unit"
+
+#| msgid "par échantillon"
+msgid "forfait, par échantillon"
+msgstr "flat rate, per sample"
+
+msgid "Priorité"
+msgstr "Priority"
+
+msgid "Conditions avancées (quantité, seuils)"
+msgstr "Advanced conditions (quantity, thresholds)"
+
+msgid "Qté min"
+msgstr "Min qty"
+
+msgid "Qté max"
+msgstr "Max qty"
+
+#| msgid "Montant à payer"
+msgid "Montant min applicable"
+msgstr "Minimum applicable amount"
+
+#| msgid "Montant à payer"
+msgid "Montant max applicable"
+msgstr "Maximum applicable amount"
+
+#| msgid "Description"
+msgid "Description (optionnel)"
+msgstr "Description (optional)"
+
+msgid "ex : Tarif appliqué pour les analyses urgentes"
+msgstr "e.g.: Rate applied for urgent analyses"
+
+#| msgid "Tarification"
+msgid "Tarif actif"
+msgstr "Active rate"
+
+#| msgid "Modifier le service"
+msgid "Modifier le tarif"
+msgstr "Edit the rate"
+
+#| msgid "Changement de mot de passe obligatoire"
+msgid "Le nom du tarif est obligatoire."
+msgstr "The rate name is required."
+
+msgid "Erreur"
+msgstr "Error"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer ce tarif ?"
+msgstr "Delete this rate?"
+
+msgid "Modifier utilisateur"
+msgstr "Edit user"
+
+msgid "Informations de l'utilisateur"
+msgstr "User information"
+
+msgid "Directeur de thèse"
+msgstr "Thesis supervisor"
+
+msgid "Niveau étudiant"
+msgstr "Student level"
+
+msgid "laisser vide pour ne pas changer"
+msgstr "leave blank to keep unchanged"
+
+#| msgid "Supprimer le Modèle"
+msgid "Supprimer le bloc"
+msgstr "Delete the block"
+
+#| msgid "Supprimer cette entrée ?"
+msgid "Supprimer ce bloc ?"
+msgstr "Delete this block?"
+
+#| msgid "Services existants"
+msgid "Services concernés"
+msgstr "Services concerned"
+
+#| msgid "Tous les services"
+msgid "Global (tous les services)"
+msgstr "Global (all services)"
+
+#| msgid "Inscription"
+msgid "Position"
+msgstr "Position"
+
+msgid "Langue"
+msgstr "Language"
+
+#| msgid "Supprimer"
+msgid "Oui, supprimer"
+msgstr "Yes, delete"
+
+#| msgid "Modifier"
+msgid "Modifier bloc"
+msgstr "Edit block"
+
+#| msgid "Nouveau modèle"
+msgid "Nouveau bloc"
+msgstr "New block"
+
+#| msgid "Modifier le service"
+msgid "Modifier le bloc"
+msgstr "Edit the block"
+
+#| msgid "Nouveau mot de passe"
+msgid "Nouveau bloc de contenu"
+msgstr "New content block"
+
+msgid ""
+"Le contenu de ce bloc sera injecté dans le document généré à la position "
+"choisie."
+msgstr ""
+"This block's content will be injected into the generated document at the "
+"chosen position."
+
+msgid "Type de document"
+msgstr "Document type"
+
+msgid ""
+"Aucune case cochée = bloc global (s'applique à tous les services). Cochez un"
+" sous-ensemble pour cibler ces services uniquement."
+msgstr ""
+"No box checked = global block (applies to all services). Check a subset to "
+"target those services only."
+
+msgid "Plus bas = inséré en premier"
+msgstr "Lower = inserted first"
+
+#| msgid "Commentaire (optionnel)..."
+msgid "Titre (optionnel)"
+msgstr "Title (optional)"
+
+msgid "Affiché en gras au-dessus du texte"
+msgstr "Shown in bold above the text"
+
+msgid ""
+"Texte à injecter dans le document. Séparez les paragraphes avec une ligne "
+"vide."
+msgstr ""
+"Text to inject into the document. Separate paragraphs with a blank line."
+
+msgid ""
+"Astuce : les placeholders comme {{FULL_NAME}}, {{DISPLAY_ID}}, "
+"{{SERVICE_NAME}}, {{DATE}} sont résolus lors de la génération."
+msgstr ""
+"Tip: placeholders like {{FULL_NAME}}, {{DISPLAY_ID}}, {{SERVICE_NAME}}, "
+"{{DATE}} are resolved at generation time."
+
+#| msgid "Modifier contenu"
+msgid "Blocs de contenu"
+msgstr "Content blocks"
+
+#| msgid "Placeholders documentés"
+msgid "Blocs de contenu des documents"
+msgstr "Document content blocks"
+
+msgid ""
+"Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
+"(formulaire IBTIKAR, note de plateforme, devis, fiche de réception)."
+msgstr ""
+"Add or edit paragraphs injected into generated documents (IBTIKAR form, "
+"platform note, quote, reception form)."
+
+#| msgid "Modèle de"
+msgid "Modèles DOCX"
+msgstr "DOCX templates"
+
+#| msgid "Tous les services"
+msgid "Global (tous services)"
+msgstr "Global (all services)"
+
+msgid "Aperçu"
+msgstr "Preview"
+
+msgid "Global"
+msgstr "Global"
+
+msgid "Aucun bloc défini. Cliquez sur « Nouveau bloc » pour en créer un."
+msgstr "No block defined. Click « New block » to create one."
+
+msgid "Supprimer le Modèle"
+msgstr "Delete the Template"
+
+msgid "Confirmer la suppression"
+msgstr "Confirm deletion"
+
+msgid "Attention !"
+msgstr "Warning!"
+
+msgid "Êtes-vous sûr de vouloir supprimer le modèle"
+msgstr "Are you sure you want to delete the template"
+
+msgid ""
+"Cette action est irréversible. Le fichier sera définitivement supprimé."
+msgstr "This action is irreversible. The file will be permanently deleted."
+
+msgid "Fichier"
+msgstr "File"
+
+msgid "Oui, supprimer définitivement"
+msgstr "Yes, delete permanently"
+
+msgid "Retour à la liste"
+msgstr "Back to the list"
+
+msgid "Modèle de"
+msgstr "Template for"
+
+msgid "Informations"
+msgstr "Information"
+
+msgid "Aucun fichier"
+msgstr "No file"
+
+msgid "Créé par"
+msgstr "Created by"
+
+msgid "Créé le"
+msgstr "Created on"
+
+msgid "Mis à jour le"
+msgstr "Updated on"
+
+msgid "Placeholders documentés"
+msgstr "Documented placeholders"
+
+msgid "Placeholder"
+msgstr "Placeholder"
+
+msgid "Exemple"
+msgstr "Example"
+
+msgid ""
+"Ce modèle sera utilisé pour générer automatiquement des documents lorsqu'un "
+"utilisateur demande un document de type"
+msgstr ""
+"This template will be used to automatically generate documents when a user "
+"requests a document of type"
+
+msgid "pour le service"
+msgstr "for the service"
+
+msgid ""
+"Seul un modèle actif par service/type sera utilisé. Les autres seront "
+"désactivés automatiquement."
+msgstr ""
+"Only one active template per service/type will be used. The others will be "
+"automatically deactivated."
+
+msgid "Modifier le Modèle"
+msgstr "Edit the Template"
+
+msgid "Créer un Modèle"
+msgstr "Create a Template"
+
+msgid "Créer un Nouveau Modèle"
+msgstr "Create a New Template"
+
+msgid "Sélectionner un service"
+msgstr "Select a service"
+
+msgid "Sélectionner un type"
+msgstr "Select a type"
+
+msgid "Nom du modèle"
+msgstr "Template name"
+
+msgid "ex: Formulaire IBTIKAR CAN 2024"
+msgstr "e.g.: IBTIKAR Form CAN 2024"
+
+msgid "Décrivez ce modèle et son utilisation..."
+msgstr "Describe this template and its usage..."
+
+msgid "Fichier DOCX"
+msgstr "DOCX File"
+
+msgid "Actuel"
+msgstr "Current"
+
+msgid "Choisir un fichier DOCX..."
+msgstr "Choose a DOCX file..."
+
+msgid ""
+"Le fichier doit être un document DOCX avec des placeholders (ex: "
+"{{FULL_NAME}}, {{PROJECT_TITLE}})"
+msgstr ""
+"The file must be a DOCX document with placeholders (e.g.: {{FULL_NAME}}, "
+"{{PROJECT_TITLE}})"
+
+msgid "Modèle actif"
+msgstr "Active template"
+
+msgid ""
+"Un seul modèle actif par service et type sera utilisé pour la génération des"
+" documents."
+msgstr ""
+"Only one active template per service and type will be used for document "
+"generation."
+
+msgid "Créer le modèle"
+msgstr "Create the template"
+
+msgid "Placeholders disponibles"
+msgstr "Available placeholders"
+
+msgid ""
+"Utilisez ces placeholders dans votre document Word (entourés de doubles "
+"accolades) :"
+msgstr ""
+"Use these placeholders in your Word document (surrounded by double curly "
+"braces):"
+
+msgid "Informations client"
+msgstr "Client information"
+
+msgid "Informations demande"
+msgstr "Request information"
+
+msgid "Titre du projet"
+msgstr "Project title"
+
+msgid "ID de la demande"
+msgstr "Request ID"
+
+msgid ""
+"Les placeholders seront remplacés par les valeurs correspondantes lors de la"
+" génération du document."
+msgstr ""
+"Placeholders will be replaced by the corresponding values when the document "
+"is generated."
+
+msgid "Gestion des Modèles"
+msgstr "Template Management"
+
+msgid "Gestion des Modèles de Documents"
+msgstr "Document Template Management"
+
+msgid "Gérez les modèles DOCX pour la génération automatique des documents"
+msgstr "Manage DOCX templates for automatic document generation"
+
+msgid "Nouveau modèle"
+msgstr "New template"
+
+msgid "Tous les types"
+msgstr "All types"
+
+msgid "Tous les services"
+msgstr "All services"
+
+msgid "Actifs"
+msgstr "Active"
+
+msgid "Inactifs"
+msgstr "Inactive"
+
+msgid "Aucun modèle trouvé."
+msgstr "No template found."
+
+msgid "Créer le premier modèle"
+msgstr "Create the first template"
+
+msgid "Prochain palier"
+msgstr "Next tier"
+
+msgid "Niveau atteint !"
+msgstr "Level reached!"
+
+msgid "Objectif"
+msgstr "Goal"
+
+msgid "Continuez comme ça !"
+msgstr "Keep it up!"
+
+msgid "Rendez-vous proposé — en attente de votre confirmation"
+msgstr "Appointment proposed — awaiting your confirmation"
+
+#| msgid "Rendez-vous proposé"
+msgid "Rendez-vous confirmé"
+msgstr "Appointment confirmed"
+
+#, python-format
+msgid "Vous avez proposé une date alternative : %(alt)s."
+msgstr "You proposed an alternative date: %(alt)s."
+
+#| msgid "Confirmer le refus"
+msgid "Confirmer ce rendez-vous"
+msgstr "Confirm this appointment"
+
+#| msgid "Commentaire (optionnel)..."
+msgid "Note (optionnelle)"
+msgstr "Note (optional)"
+
+msgid "Votre demande a été acceptée"
+msgstr "Your request has been accepted"
+
+msgid "Cher(e) étudiant(e) / doctorant(e),"
+msgstr "Dear student / PhD candidate,"
+
+msgid "Veuillez suivre les étapes ci-dessous :"
+msgstr "Please follow the steps below:"
+
+msgid "Téléchargez le formulaire IBTIKAR"
+msgstr "Download the IBTIKAR form"
+
+msgid "Soumettez votre demande sur IBTIKAR-DGRSDT"
+msgstr "Submit your request on IBTIKAR-DGRSDT"
+
+msgid "Accéder à IBTIKAR-DGRSDT"
+msgstr "Access IBTIKAR-DGRSDT"
+
+msgid "Revenez ici et saisissez votre code IBTIKAR"
+msgstr "Return here and enter your IBTIKAR code"
+
+msgid ""
+"Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on "
+"vous fixe un rendez-vous."
+msgstr ""
+"Once your request is submitted on IBTIKAR, enter the code so we can schedule"
+" an appointment for you."
+
+msgid "Saisissez votre code IBTIKAR"
+msgstr "Enter your IBTIKAR code"
+
+msgid "Code de votre demande IBTIKAR"
+msgstr "Your IBTIKAR request code"
+
+msgid "Ex: IBK-DGRSDT-2026-XXXX"
+msgstr "E.g.: IBK-DGRSDT-2026-XXXX"
+
+msgid "Soumettre le code"
+msgstr "Submit the code"
+
+msgid "Revoir les instructions"
+msgstr "Review instructions"
+
+msgid ""
+"Votre code a été transmis au responsable de la plateforme. Une proposition "
+"de date pour la réception de vos échantillons vous sera communiquée "
+"prochainement."
+msgstr ""
+"Your code has been forwarded to the platform manager. A proposed date for "
+"receiving your samples will be communicated to you soon."
+
+msgid "Tout marquer comme lu"
+msgstr "Mark all as read"
+
+msgid "ago"
+msgstr "ago"
+
+msgid "Choisir"
+msgstr "Choose"
+
+msgid "Tarification"
+msgstr "Pricing"
+
+msgid "par échantillon"
+msgstr "per sample"
+
+msgid "non pathogène"
+msgstr "non-pathogenic"
+
+msgid "pathogène"
+msgstr "pathogenic"
+
+msgid "Standard"
+msgstr "Standard"
+
+msgid ""
+"Ce montant peut varier selon le nombre d'échantillons et le type d'analyse."
+msgstr ""
+"This amount may vary depending on the number of samples and the type of "
+"analysis."
+
+msgid "Suppléments actifs:"
+msgstr "Active surcharges:"
+
+msgid "Cette option inclut des frais supplémentaires."
+msgstr "This option includes additional charges."
+
+msgid "(sera ajouté au coût final)."
+msgstr "(will be added to the final cost)."
+
+msgid ""
+"Des frais supplémentaires s\\'appliquent. Le montant exact sera communiqué "
+"lors de la validation."
+msgstr ""
+"Additional charges apply. The exact amount will be communicated upon "
+"validation."
+
+msgid "Plateforme de Gestion des Opérations"
+msgstr "Operations Management Platform"
+
+msgid "Audit"
+msgstr "Audit"
+
+msgid "Archives revenus"
+msgstr "Revenue archives"
+
+msgid "Opérations"
+msgstr "Operations"
+
+msgid "Gestion des demandes"
+msgstr "Request management"
+
+msgid "Validation & Assignation"
+msgstr "Validation & Assignment"
+
+msgid "Déconnexion"
+msgstr "Sign out"
+
+msgid "non lues"
+msgstr "unread"
+
+msgid "Aucune notification"
+msgstr "No notifications"
+
+msgid "Suivi du workflow"
+msgstr "Workflow tracking"
+
+msgid "Prochaine étape"
+msgstr "Next step"
+
+msgid "Demande rejetée"
+msgstr "Request rejected"
+
+msgid "Workflow terminé avec succès"
+msgstr "Workflow completed successfully"
+
+msgid "Adresse"
+msgstr "Address"
+
+msgid "Responsable"
+msgstr "Manager"
+
+msgid "Plateforme"
+msgstr "Platform"
+
+msgid "Retour à l'accueil"
+msgstr "Back to home"
+
+msgid "Soumission invité"
+msgstr "Guest submission"
+
+msgid "Soumettre une demande (invité)"
+msgstr "Submit a request (guest)"
+
+msgid ""
+"Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code "
+"de suivi."
+msgstr ""
+"Submit an analysis request without creating an account. You will receive a "
+"tracking code."
+
+#| msgid "Créer un compte"
+msgid "Conseil : créez un compte gratuit"
+msgstr "Tip: create a free account"
+
+msgid ""
+"En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
+"pilotez vos demandes de bout en bout :"
+msgstr ""
+"As a guest, you only receive a simple tracking code. With an account, you "
+"manage your requests end to end:"
+
+msgid ""
+"Tableau de bord unique pour toutes vos demandes et leur historique complet"
+msgstr "A single dashboard for all your requests and their full history"
+
+#| msgid ""
+#| "Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+#| "assignation, rendez-vous, rapport prêt)."
+msgid ""
+"Notifications en temps réel à chaque étape (validation, rendez-vous, rapport"
+" prêt)"
+msgstr ""
+"Real-time notifications at every step (validation, appointment, report "
+"ready)"
+
+msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
+msgstr "Appointment confirmation and secure report download"
+
+msgid "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant"
+msgstr "IBTIKAR requester: track your remaining DGRSDT budget"
+
+msgid "Vos informations"
+msgstr "Your information"
+
+msgid "Votre nom complet"
+msgstr "Your full name"
+
+msgid "votre@email.com"
+msgstr "your@email.com"
+
+msgid "Numéro de téléphone"
+msgstr "Phone number"
+
+msgid "Votre organisation"
+msgstr "Your organization"
+
+#| msgid "académique"
+msgid "Académique"
+msgstr "Academic"
+
+msgid "Entreprise"
+msgstr "Company"
+
+#| msgid "Partiel"
+msgid "Particulier"
+msgstr "Individual"
+
+msgid "Autre"
+msgstr "Other"
+
+msgid "externe"
+msgstr "external"
+
+msgid "académique"
+msgstr "academic"
+
+msgid "Solde IBTIKAR déclaré (DA)"
+msgstr "Declared IBTIKAR balance (DA)"
+
+msgid "Ex: Analyse DRX..."
+msgstr "E.g.: XRD analysis..."
+
+msgid "Soumettre la demande"
+msgstr "Submit the request"
+
+msgid "Demande soumise"
+msgstr "Request submitted"
+
+msgid "Demande soumise avec succès!"
+msgstr "Request submitted successfully!"
+
+msgid "Code de suivi"
+msgstr "Tracking code"
+
+msgid "Token de suivi"
+msgstr "Tracking token"
+
+msgid ""
+"Conservez votre code de suivi pour suivre l'avancement de votre demande."
+msgstr "Keep your tracking code to follow the progress of your request."
+
+#| msgid "Créer un compte pour gérer vos demandes"
+msgid "Créez un compte pour aller plus loin"
+msgstr "Create an account to go further"
+
+msgid ""
+"Suivez cette demande et les suivantes depuis un tableau de bord unique, "
+"recevez les notifications à chaque étape et confirmez vos rendez-vous. Votre"
+" demande actuelle sera automatiquement rattachée à votre compte."
+msgstr ""
+"Track this request and the next ones from a single dashboard, receive "
+"notifications at every step and confirm your appointments. Your current "
+"request will be automatically attached to your account."
+
+msgid "Suivre ma demande"
+msgstr "Track my request"
+
+msgctxt "help"
+msgid "Centre d'aide"
+msgstr "Help Center"
+
+msgid "Centre d'aide PLAGENOR"
+msgstr "PLAGENOR Help Center"
+
+msgid ""
+"Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — "
+"étape par étape."
+msgstr ""
+"Everything you need to submit, track and manage your analyses — step by "
+"step."
+
+msgid "Rechercher dans l’aide…"
+msgstr "Search the help…"
+
+msgctxt "help"
+msgid "Démarrer"
+msgstr "Get started"
+
+#| msgid "Soumission invité"
+msgid "Compte ou invité"
+msgstr "Account or guest"
+
+msgctxt "help"
+msgid "Suivi & rapports"
+msgstr "Tracking & reports"
+
+msgid "FAQ"
+msgstr "FAQ"
+
+#, python-format
+msgid ""
+"Connecté en tant que <strong>%(user_role)s</strong> — les sections qui vous "
+"concernent sont mises en avant ci-dessous."
+msgstr ""
+"Signed in as <strong>%(user_role)s</strong> — the sections relevant to you "
+"are highlighted below."
+
+msgid "Bien démarrer"
+msgstr "Getting started"
+
+msgid "Créer un compte et comprendre les deux canaux."
+msgstr "Create an account and understand the two channels."
+
+msgid ""
+"Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos "
+"informations (nom, établissement, wilaya, e-mail)."
+msgstr ""
+"Click <strong>Sign up</strong> at the top right and fill in your information"
+" (name, institution, wilaya, e-mail)."
+
+msgid ""
+"Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> "
+"(étudiant/chercheur, budget annuel encadré) ou <strong>Client "
+"GENOCLAB</strong> (prestation commerciale avec devis)."
+msgstr ""
+"Choose your profile: <strong>IBTIKAR Requester</strong> (student/researcher,"
+" governed annual budget) or <strong>GENOCLAB Client</strong> (commercial "
+"service with a quote)."
+
+msgid "Connectez-vous : vous arrivez sur votre tableau de bord personnel."
+msgstr "Sign in: you land on your personal dashboard."
+
+msgid ""
+"Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission "
+"invité » et suivre votre demande avec le code reçu par e-mail."
+msgstr ""
+"You can also submit <strong>without an account</strong> via « Guest "
+"submission » and track your request with the code received by e-mail."
+
+#| msgid "Soumission invité"
+msgid "Compte ou soumission invité ?"
+msgstr "Account or guest submission?"
+
+msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
+msgstr "Both work — but an account gives you full control."
+
+msgid ""
+"<strong>En invité</strong>, vous soumettez sans créer de compte et recevez "
+"un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se"
+" fait demande par demande, via ce code uniquement."
+msgstr ""
+"<strong>As a guest</strong>, you submit without creating an account and "
+"receive a <strong>tracking code</strong> by e-mail. It is quick, but "
+"tracking is done request by request, using this code only."
+
+msgid ""
+"<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un "
+"<strong>tableau de bord unique</strong> avec leur <strong>historique "
+"complet</strong> et la timeline détaillée de chaque étape."
+msgstr ""
+"<strong>With an account</strong>, all your requests are gathered on a "
+"<strong>single dashboard</strong> with their <strong>full history</strong> "
+"and the detailed timeline of each step."
+
+msgid ""
+"Vous recevez des <strong>notifications en temps réel</strong> dans "
+"l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos "
+"rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon "
+"sécurisée."
+msgstr ""
+"You receive <strong>real-time notifications</strong> in the app (and by "
+"e-mail at key steps), you <strong>confirm your appointments</strong> and "
+"download your <strong>reports</strong> securely."
+
+msgid ""
+"<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT "
+"restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : "
+"retrouvez devis, bons de commande, factures et paiements au même endroit."
+msgstr ""
+"<strong>IBTIKAR requester</strong>: track your <strong>remaining DGRSDT "
+"budget</strong> before submitting. <strong>GENOCLAB client</strong>: find "
+"quotes, purchase orders, invoices and payments all in one place."
+
+msgid ""
+"Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : "
+"vos demandes existantes sont automatiquement rattachées à votre nouveau "
+"compte."
+msgstr ""
+"Already submitted as a guest? Use <strong>“Convert to account”</strong>: "
+"your existing requests are automatically attached to your new account."
+
+msgctxt "help"
+msgid "Soumettre une demande IBTIKAR"
+msgstr "Submit an IBTIKAR request"
+
+msgid "Vous"
+msgstr "You"
+
+msgid "Pour les étudiants et chercheurs de l'ESSBO."
+msgstr "For ESSBO students and researchers."
+
+msgid ""
+"Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle "
+"demande</strong>."
+msgstr "In your dashboard, open the <strong>New request</strong> tab."
+
+msgid ""
+"Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, "
+"Séquençage…)."
+msgstr ""
+"Select the desired <strong>service</strong> (e.g. PCR, MALDI-TOF, "
+"Sequencing…)."
+
+msgid ""
+"Remplissez les <strong>questions du service</strong> (type de kit, contrôle "
+"qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût "
+"estimé se met à jour en direct</strong>."
+msgstr ""
+"Fill in the <strong>service questions</strong> (kit type, quality control…) "
+"and the <strong>sample table</strong>. The <strong>estimated cost updates "
+"live</strong>."
+
+msgid ""
+"Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en "
+"haut — la demande est bloquée si elle dépasse le plafond."
+msgstr ""
+"Check your <strong>remaining annual IBTIKAR budget</strong> shown at the top"
+" — the request is blocked if it exceeds the cap."
+
+msgid ""
+"Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une "
+"confirmation par e-mail avec votre identifiant de demande."
+msgstr ""
+"Click <strong>Review and submit</strong>. You receive an e-mail confirmation"
+" with your request ID."
+
+msgctxt "help"
+msgid "Demande GENOCLAB (commercial)"
+msgstr "GENOCLAB request (commercial)"
+
+msgid "Pour les entreprises, laboratoires et institutions externes."
+msgstr "For companies, laboratories and external institutions."
+
+msgid ""
+"Soumettez votre demande avec les détails de l'analyse et vos échantillons."
+msgstr "Submit your request with the analysis details and your samples."
+
+msgid ""
+"La plateforme prépare un <strong>devis détaillé</strong> que vous recevez "
+"par e-mail."
+msgstr ""
+"The platform prepares a <strong>detailed quote</strong> that you receive by "
+"e-mail."
+
+msgid ""
+"<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe "
+"peut vous en proposer un nouveau."
+msgstr ""
+"<strong>Accept or decline</strong> the quote. If declined, the team can "
+"propose a new one."
+
+msgid ""
+"Téléversez votre <strong>bon de commande</strong>, puis réglez selon la "
+"<strong>facture</strong> émise."
+msgstr ""
+"Upload your <strong>purchase order</strong>, then pay according to the "
+"issued <strong>invoice</strong>."
+
+msgid ""
+"L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la "
+"facture."
+msgstr ""
+"The analysis begins; you receive the <strong>final report</strong> with the "
+"invoice."
+
+msgid "Suivre une demande & récupérer un rapport"
+msgstr "Track a request & retrieve a report"
+
+msgid "Où en est votre analyse, à tout moment."
+msgstr "Where your analysis stands, at any time."
+
+msgid ""
+"Connecté : chaque demande affiche son <strong>statut en temps réel</strong> "
+"et son historique complet sur votre tableau de bord."
+msgstr ""
+"Signed in: each request shows its <strong>real-time status</strong> and full"
+" history on your dashboard."
+
+msgid ""
+"Invité : utilisez la page <strong>Suivi</strong> avec le "
+"<strong>code</strong> reçu par e-mail à la soumission."
+msgstr ""
+"Guest: use the <strong>Tracking</strong> page with the <strong>code</strong>"
+" received by e-mail at submission."
+
+msgid ""
+"Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+"assignation, rendez-vous, rapport prêt)."
+msgstr ""
+"You receive an <strong>e-mail at each step</strong> (validation, assignment,"
+" appointment, report ready)."
+
+msgid ""
+"Quand le rapport est validé, un <strong>lien de téléchargement</strong> "
+"sécurisé vous est envoyé."
+msgstr ""
+"When the report is approved, a secure <strong>download link</strong> is sent"
+" to you."
+
+msgctxt "help"
+msgid "Documents générés"
+msgstr "Generated documents"
+
+msgid "Formulaires officiels remplis automatiquement."
+msgstr "Official forms filled automatically."
+
+msgid ""
+"Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-"
+"rempli avec vos informations et vos échantillons."
+msgstr ""
+"The <strong>IBTIKAR form</strong> is generated automatically, pre-filled "
+"with your information and your samples."
+
+msgid ""
+"La <strong>note de plateforme</strong>, le <strong>devis</strong> et la "
+"<strong>fiche de réception</strong> sont disponibles au téléchargement "
+"(PDF)."
+msgstr ""
+"The <strong>platform note</strong>, the <strong>quote</strong> and the "
+"<strong>reception form</strong> are available for download (PDF)."
+
+msgid ""
+"Tous portent l'<strong>en-tête institutionnel officiel</strong> (République "
+"algérienne, Ministère, ESSBO, PLAGENOR)."
+msgstr ""
+"All bear the <strong>official institutional header</strong> (Algerian "
+"Republic, Ministry, ESSBO, PLAGENOR)."
+
+msgid "Questions fréquentes"
+msgstr "Frequently asked questions"
+
+msgid "Réponses rapides aux questions courantes."
+msgstr "Quick answers to common questions."
+
+msgid "Comment changer la langue de l'interface ?"
+msgstr "How do I change the interface language?"
+
+msgid ""
+"Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. "
+"L'interface bascule immédiatement, y compris en arabe avec mise en page de "
+"droite à gauche."
+msgstr ""
+"Use the FR / EN / ع selector at the top right of every page. The interface "
+"switches immediately, including Arabic with right-to-left layout."
+
+msgid "Qu'est-ce que le budget IBTIKAR ?"
+msgstr "What is the IBTIKAR budget?"
+
+msgid ""
+"C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque "
+"étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord "
+"; une demande qui le dépasse est bloquée automatiquement."
+msgstr ""
+"It is a virtual annual budget governed by the DGRSDT, allocated to each "
+"student/researcher. Your remaining balance is shown on your dashboard; a "
+"request that exceeds it is blocked automatically."
+
+msgid "Comment est calculé le coût d'une analyse ?"
+msgstr "How is the cost of an analysis calculated?"
+
+msgid ""
+"Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de "
+"base dépend du caractère pathogène, le multiplicateur du mode d'analyse "
+"(simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant "
+"la saisie."
+msgstr ""
+"Cost = Base price × Multiplier × Number of samples. The base price depends "
+"on the pathogenic nature, the multiplier on the analysis mode (single, "
+"duplicate, triplicate…). The estimate is shown live as you type."
+
+msgctxt "help"
+msgid "Puis-je soumettre sans créer de compte ?"
+msgstr "Can I submit without creating an account?"
+
+msgid ""
+"Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par "
+"e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos "
+"demandes sur un tableau de bord, ajoute les notifications en temps réel, la "
+"confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez "
+"convertir une soumission invité en compte à tout moment, et vos demandes "
+"existantes y seront rattachées."
+msgstr ""
+"Yes. Use “Guest submission”: you receive a tracking code by e-mail. A free "
+"account is still recommended, however — it gathers all your requests on one "
+"dashboard and adds real-time notifications, appointment confirmation and "
+"IBTIKAR budget tracking. You can convert a guest submission to an account at"
+" any time, and your existing requests will be attached to it."
+
+msgid "Je ne reçois pas les e-mails de notification ?"
+msgstr "I'm not receiving notification e-mails?"
+
+msgid ""
+"Vérifiez votre dossier spam. Les notifications restent toujours consultables"
+" dans la cloche en haut de votre tableau de bord, même sans e-mail."
+msgstr ""
+"Check your spam folder. Notifications are always available in the bell at "
+"the top of your dashboard, even without e-mail."
+
+msgctxt "help"
+msgid "J'ai oublié mon mot de passe."
+msgstr "I forgot my password."
+
+msgid ""
+"Contactez l'administrateur de la plateforme via la page Contact ; il pourra "
+"réinitialiser votre accès en toute sécurité."
+msgstr ""
+"Contact the platform administrator via the Contact page; they can reset your"
+" access securely."
+
+msgid "Aucun résultat. Essayez d'autres mots-clés ou consultez la page"
+msgstr "No results. Try other keywords or visit the page"
+
+msgid "Vous n'avez pas trouvé votre réponse ?"
+msgstr "Didn't find your answer?"
+
+msgctxt "help"
+msgid "Contactez-nous"
+msgstr "Contact us"
+
+msgid "Données collectées"
+msgstr "Data collected"
+
+#| msgid "Disponibilité"
+msgid "Finalité"
+msgstr "Purpose"
+
+#| msgid "Opérations"
+msgid "Conservation"
+msgstr "Retention"
+
+msgid "Vos droits"
+msgstr "Your rights"
+
+#| msgid "Exporter tous les emails (CSV)"
+msgid "Exporter mes données (JSON)"
+msgstr "Export my data (JSON)"
+
+#| msgctxt "help"
+#| msgid "Contactez-nous"
+msgid "Connectez-vous"
+msgstr "Sign in"
+
+msgid "pour exporter vos données."
+msgstr "to export your data."
+
+msgid "Retour aux services"
+msgstr "Back to services"
+
+msgid "Délai de traitement"
+msgstr "Processing time"
+
+msgid "Exigences & conformité"
+msgstr "Requirements & compliance"
+
+msgid "Demander ce service"
+msgstr "Request this service"
+
+msgid "Recommandé"
+msgstr "Recommended"
+
+msgid ""
+"Suivez l'état de votre demande, recevez des notifications et accédez à votre"
+" historique."
+msgstr ""
+"Track the status of your request, receive notifications and access your "
+"history."
+
+msgid "S'inscrire"
+msgstr "Sign up"
+
+msgid "Continuer en tant qu'invité"
+msgstr "Continue as a guest"
+
+msgid ""
+"Soumettez votre demande sans compte. Vous recevrez un code de suivi unique."
+msgstr ""
+"Submit your request without an account. You will receive a unique tracking "
+"code."
+
+msgid "Soumettre sans compte"
+msgstr "Submit without an account"
+
+msgid "Canal IBTIKAR: votre identifiant IBTIKAR-DGRSDT sera requis."
+msgstr "IBTIKAR channel: your IBTIKAR-DGRSDT ID will be required."
+
+msgid "Nos Services"
+msgstr "Our Services"
+
+msgid "Catalogue des analyses et prestations proposées"
+msgstr "Catalog of analyses and services offered"
+
+msgid "En savoir plus"
+msgstr "Learn more"
+
+msgid "Demander"
+msgstr "Request"
+
+msgid "Aucun service disponible"
+msgstr "No service available"
+
+msgid "Les services seront bientôt publiés. Revenez plus tard."
+msgstr "Services will be published soon. Check back later."
+
+msgid "Suivi de votre demande"
+msgstr "Track your request"
+
+msgid ""
+"Entrez votre identifiant de demande ou votre token de suivi pour consulter "
+"l'état d'avancement."
+msgstr "Enter your request ID or tracking token to view the progress."
+
+msgid "Ex: IBT-2026-0042 ou votre token..."
+msgstr "E.g.: IBT-2026-0042 or your token..."
+
+msgid "Rechercher"
+msgstr "Search"
+
+msgid "Créer un compte pour gérer vos demandes"
+msgstr "Create an account to manage your requests"
+
+msgid "Aucun résultat"
+msgstr "No results"
+
+msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
+msgstr "No request found with this ID. Please check and try again."
+
+#~ msgid ""
+#~ "Modifiez le texte affiché sur le site (titres, boutons, descriptions). "
+#~ "Cliquez sur Modifier sur une ligne pour l'éditer, ou utilisez le formulaire "
+#~ "ci-dessous pour créer une nouvelle entrée."
+#~ msgstr ""
+#~ "Edit the text shown on the site (titles, buttons, descriptions). Click Edit "
+#~ "on a row to modify it, or use the form below to create a new entry."
+
+#~ msgid "Modifié"
+#~ msgstr "Modified"
+
+#~ msgid "Pipeline"
+#~ msgstr "Pipeline"
+
+#~ msgid "Évaluez notre service"
+#~ msgstr "Rate our service"
+
+#, fuzzy
+#~ msgid "Budget IBTIKAR annuel"
+#~ msgstr "IBTIKAR Budget (virtual)"
+
+#~ msgid "Solde restant"
+#~ msgstr "Remaining balance"
+
+#~ msgid "utilisés"
+#~ msgstr "used"
+
+#~ msgid "Cap"
+#~ msgstr "Cap"
+
+#, python-format
+#~ msgid ""
+#~ "Vous avez atteint plus de 90 %% de votre budget annuel. Les nouvelles "
+#~ "demandes seront vérifiées strictement."
+#~ msgstr ""
+#~ "You have reached over 90 %% of your annual budget. New requests will be "
+#~ "reviewed strictly."
+
+#, python-format
+#~ msgid ""
+#~ "Plus de 70 %% de votre budget est consommé. Pensez à prioriser vos "
+#~ "prochaines analyses."
+#~ msgstr ""
+#~ "More than 70 %% of your budget is used. Consider prioritizing your upcoming "
+#~ "analyses."
+
+#, python-format
+#~ msgid "Solde annuel restant : %(rem)s DA"
+#~ msgstr "Remaining annual balance: %(rem)s DA"
+
+#, fuzzy, python-format
+#~ msgid "Le solde déclaré doit être entre 0 et %(cap)s DA."
+#~ msgstr "The declared balance must be between 0 and 200,000 DZD."
+
+#~ msgid "Attention: le coût estimé"
+#~ msgstr "Warning: the estimated cost"
+
+#~ msgid "Exporter"
+#~ msgstr "Export"
+
+#~ msgid ""
+#~ "Oui. Utilisez « Soumission invité ». Vous recevez un code de suivi par "
+#~ "e-mail et pouvez convertir votre soumission en compte complet plus tard."
+#~ msgstr ""
+#~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and can"
+#~ " convert your submission into a full account later."

@@ -74,6 +74,34 @@
                 {% if form.organization.errors %}<div class="form-error">{{ form.organization.errors.0 }}</div>{% endif %}
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_organization_type">{% trans "Type d'organisation" %} *</label>
+                    <select name="organization_type" id="id_organization_type" class="form-control" required>
+                        {% for code, label in form.fields.organization_type.choices %}
+                        <option value="{{ code }}" {% if form.organization_type.value == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.organization_type.errors %}<div class="form-error">{{ form.organization_type.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_country">{% trans "Pays" %} *</label>
+                    <select name="country" id="id_country" class="form-control" required>
+                        {% for code, label in form.fields.country.choices %}
+                        <option value="{{ code }}" {% if form.country.value == code or form.country.value == None and code == 'DZ' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.country.errors %}<div class="form-error">{{ form.country.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            {% trans "Précisez le type d'organisation" as ph_org_other %}
+            <div class="form-group" id="org-type-other-group" style="display:none;">
+                <label for="id_organization_type_other">{% trans "Préciser (autre)" %}</label>
+                <input type="text" name="organization_type_other" id="id_organization_type_other" class="form-control" value="{{ form.organization_type_other.value|default:'' }}" placeholder="{{ ph_org_other }}">
+                {% if form.organization_type_other.errors %}<div class="form-error">{{ form.organization_type_other.errors.0 }}</div>{% endif %}
+            </div>
+
             <div id="academic-fields" style="display:none;">
                 <div class="form-group">
                     <label for="id_student_level">{% trans "Niveau" %}</label>
@@ -113,6 +141,34 @@
                 {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
             </div>
 
+            {# Demographics — fuel the stats dashboard (wilaya + sexe). #}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_wilaya">{% trans "Wilaya" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="wilaya" id="id_wilaya" class="form-control">
+                        <option value="">— {% trans "Sélectionnez votre wilaya" %} —</option>
+                        {% for code, label in form.fields.wilaya.choices %}
+                            {% if code %}
+                            <option value="{{ code }}" {% if form.wilaya.value == code %}selected{% endif %}>{{ code }} — {{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.wilaya.errors %}<div class="form-error">{{ form.wilaya.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_gender">{% trans "Sexe" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="gender" id="id_gender" class="form-control">
+                        <option value="">—</option>
+                        {% for code, label in form.fields.gender.choices %}
+                            {% if code %}
+                            <option value="{{ code }}" {% if form.gender.value == code %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.gender.errors %}<div class="form-error">{{ form.gender.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_password1">{% trans "Mot de passe" %}</label>
@@ -138,25 +194,49 @@
 <script>
 (function() {
     var roleInputs = document.querySelectorAll('input[name="role"]');
+    var roleOptions = document.querySelectorAll('.role-option');
     var academicFields = document.getElementById('academic-fields');
     var studentLevel = document.getElementById('id_student_level');
     var supervisor = document.getElementById('id_supervisor');
 
     function toggleAcademic() {
         var selected = document.querySelector('input[name="role"]:checked');
-        if (selected && selected.value === 'REQUESTER') {
-            academicFields.style.display = '';
-            studentLevel.required = true;
-            supervisor.required = true;
-        } else {
-            academicFields.style.display = 'none';
-            studentLevel.required = false;
-            supervisor.required = false;
-        }
+        var isRequester = selected && selected.value === 'REQUESTER';
+        academicFields.style.display = isRequester ? '' : 'none';
+        // Required only applies to the academic channel — otherwise a GENOCLAB
+        // client is blocked by a hidden "Niveau" field they can't fill.
+        studentLevel.required = isRequester;
+        supervisor.required = isRequester;
     }
 
+    // The role radios are display:none (the card label is the visible control).
+    // Clicking such a label checks the radio but, in several browsers, does NOT
+    // fire `change` — so we drive the toggle from the label `click` directly and
+    // also force the radio + visual `selected` state. The `change` binding stays
+    // as a belt-and-suspenders for keyboard / programmatic selection.
     roleInputs.forEach(function(r) { r.addEventListener('change', toggleAcademic); });
+    roleOptions.forEach(function(label) {
+        label.addEventListener('click', function() {
+            var radio = this.querySelector('input[name="role"]');
+            if (radio) { radio.checked = true; }
+            roleOptions.forEach(function(o) { o.classList.remove('selected'); });
+            this.classList.add('selected');
+            toggleAcademic();
+        });
+    });
     toggleAcademic();
+
+    // Reveal the free-text box only when organisation type = "Autre".
+    var orgType = document.getElementById('id_organization_type');
+    var orgOtherGroup = document.getElementById('org-type-other-group');
+    var orgOther = document.getElementById('id_organization_type_other');
+    function toggleOrgOther() {
+        var isOther = orgType && orgType.value === 'autre';
+        if (orgOtherGroup) { orgOtherGroup.style.display = isOther ? '' : 'none'; }
+        if (orgOther) { orgOther.required = isOther; }
+    }
+    if (orgType) { orgType.addEventListener('change', toggleOrgOther); }
+    toggleOrgOther();
 
     // Validate ibtikar_id on form submit
     document.querySelector('form').addEventListener('submit', function(e) {

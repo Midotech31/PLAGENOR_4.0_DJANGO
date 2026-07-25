@@ -1,0 +1,35 @@
+# Render.com blueprint — free Django web service for PLAGENOR.
+# Database: use your existing Supabase Postgres (paste its URL into DATABASE_URL).
+services:
+  - type: web
+    name: plagenor
+    runtime: python
+    plan: free
+    region: frankfurt        # proche de la base Supabase (Irlande) -> moins de latence
+    branch: claude/great-newton-6Ce7v
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn plagenor.wsgi:application --workers 3 --bind 0.0.0.0:$PORT"
+    healthCheckPath: /
+    envVars:
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true            # Render generates a strong key
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATABASE_URL
+        sync: false                    # paste your Supabase connection string
+      - key: ALLOWED_HOSTS
+        sync: false                    # your domain(s); the *.onrender.com host is auto-added
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false                    # optional (auto-derived from ALLOWED_HOSTS)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false

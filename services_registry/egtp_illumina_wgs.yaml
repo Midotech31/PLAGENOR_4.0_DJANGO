@@ -20,6 +20,17 @@ description: >
 # PARAMETERS
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: organism_type
     label: Type of microorganism
     type: enum
@@ -60,24 +71,34 @@ sample_table:
 
   columns:
     - name: sample_code
+      label: "Code"
       type: string
       required: true
 
-    - name: organism_type
-      type: enum
-      required: true
-      options:
-        - Bacterium
-        - Yeast
-        - Mould
+    - name: type_de_microorganisme
+      label: "Type de microorganisme (Bactérie, levure, moisissure)"
+      type: string
+      required: false
 
-    - name: sample_origin
-      type: enum
-      required: true
-      options:
-        - Environmental
-        - Food
-        - Hospital / Clinical
+    - name: source_d_isolement
+      label: "Source d’isolement (environnementale, alimentaire, clinique, etc.)"
+      type: string
+      required: false
+
+    - name: milieu_de_culture_approprie
+      label: "Milieu de culture approprié"
+      type: string
+      required: false
+
+    - name: conditions_de_culture
+      label: "Conditions de culture (Température, type respiratoire, durée d’incubation)"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

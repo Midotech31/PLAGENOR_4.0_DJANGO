@@ -19,26 +19,26 @@ description: >
 # PARAMETERS
 # -----------------------------------------------------
 parameters:
-  - name: dna_origin
-    label: Origin of DNA
+  - name: analysis_frame
+    label: Cadre de l’analyse
     type: enum
     required: true
     options:
-      - Environmental
-      - Food
-      - Hospital / Clinical
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
 
-  - name: dna_type
-    label: Type of DNA
-    type: enum
-    required: true
-    options:
-      - Plasmidic
-      - Chromosomal
-      - Genomic
+  # NOTE: "Origine de l'ADN" and "Type de l'ADN" are PER-SAMPLE on the
+  # official IBTIKAR form (columns of the sample table), so they live in
+  # sample_table.columns below — not as global parameters. Keeping them as
+  # global params would force a double entry and leave the form's per-row
+  # columns blank.
 
   - name: pcr_kit
     label: PCR kit
+    label_fr: Type de kit PCR
     type: enum
     required: true
     options:
@@ -48,6 +48,7 @@ parameters:
 
   - name: qc_level
     label: Quality control level
+    label_fr: Techniques de contrôle qualité
     type: enum
     required: true
     options:
@@ -55,8 +56,29 @@ parameters:
       - Gel
       - ScanDrop + Gel
 
+  - name: size_marker
+    label: Size marker for agarose gel electrophoresis
+    label_fr: Marqueur de taille
+    type: enum
+    required: true
+    options:
+      - "100 bp ladder"
+      - "1 kb ladder"
+      - "GeneRuler 1 kb Plus"
+      - Autre
+
+  - name: product_volume_ul
+    label: PCR product volume to recover after amplification
+    label_fr: Volume du produit de PCR à récupérer après amplification
+    type: enum
+    required: false
+    options:
+      - 25 µL
+      - 50 µL
+
   - name: product_recovery
     label: PCR product recovery
+    label_fr: Récupération du produit de PCR
     type: boolean
     required: true
 
@@ -67,14 +89,56 @@ sample_table:
   enabled: true
   min_rows: 1
 
+  # One row = one PCR reaction. Columns mirror the official IBTIKAR form's
+  # sample grid so every box on the printed fiche is captured online.
   columns:
     - name: sample_code
+      label: Code
       type: string
       required: true
 
+    - name: dna_origin
+      label: Origine de l’ADN
+      type: enum
+      required: true
+      options:
+        - Environmental
+        - Food
+        - Hospital / Clinical
+
+    - name: dna_type
+      label: Type de l’ADN
+      type: enum
+      required: true
+      options:
+        - Plasmidic
+        - Chromosomal
+        - Genomic
+
+    - name: extraction_method
+      label: Méthode de l’extraction d’ADN
+      type: string
+      required: false
+
     - name: target_gene
+      label: Gène cible / Taille de l’amplicon
       type: string
       required: true
+
+    - name: primer_sequences
+      label: Séquences des amorces utilisées (5’-3’)
+      type: string
+      required: false
+
+    - name: tm
+      label: Tm (°C)
+      type: number
+      required: false
+
+    - name: remarks
+      label: Remarques particulières
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

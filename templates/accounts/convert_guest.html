@@ -6,36 +6,28 @@
 {% block content %}
 <section class="section" style="max-width:500px; margin:40px auto; padding:0 32px;">
     <h2 class="section-title">{% trans "Créer votre compte" %}</h2>
-    <p class="section-subtitle">{% trans "Convertissez votre soumission invité en un compte permanent pour suivre et gérer vos demandes." %}</p>
+    <p class="section-subtitle">{% trans "Convertissez votre soumission invité en un compte permanent. Pour des raisons de sécurité nous vérifions d'abord votre adresse email." %}</p>
 
     <div class="card" style="margin-top:24px;">
         <div class="card-body" style="padding:32px;">
-            <form method="post" action="{% url 'accounts:convert_guest' %}">
-                {% csrf_token %}
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>{% trans "Prénom" %}</label>
-                        <input type="text" name="first_name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Nom" %}</label>
-                        <input type="text" name="last_name" class="form-control" required>
+            {% if sent %}
+                <div class="alert alert-success" style="margin:0;">
+                    <strong>{% trans "Vérifiez votre messagerie" %}</strong><br>
+                    {% blocktrans %}Si l'adresse <strong>{{ email }}</strong> correspond à des soumissions invité, un lien de vérification vient d'y être envoyé. Cliquez sur le lien pour finaliser la création de votre compte.{% endblocktrans %}
+                    <div style="margin-top:12px; font-size:0.85rem;" class="text-muted">
+                        {% trans "Le lien expire après 24 heures." %}
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>{% trans "Email" %} *</label>
-                    <input type="email" name="email" class="form-control" value="{{ email }}" required>
-                </div>
-                <div class="form-group">
-                    <label>{% trans "Téléphone" %}</label>
-                    <input type="tel" name="phone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>{% trans "Mot de passe" %} *</label>
-                    <input type="password" name="password" class="form-control" required minlength="8">
-                </div>
-                <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Créer mon compte" %}</button>
-            </form>
+            {% else %}
+                <form method="post" action="{% url 'accounts:convert_guest' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>{% trans "Email utilisé lors de votre soumission invité" %} *</label>
+                        <input type="email" name="email" class="form-control" value="{{ email }}" required autocomplete="email">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Envoyer le lien de vérification" %}</button>
+                </form>
+            {% endif %}
         </div>
     </div>
 

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, redirect_to_detail
 from django.contrib import messages
 from django.utils import timezone
 
@@ -32,7 +32,7 @@ def index(request):
     assigned_count = Request.objects.filter(assigned_to=profile).count()
     in_progress_count = Request.objects.filter(
         assigned_to=profile,
-        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'PENDING_ACCEPTANCE']
+        status__in=['ANALYSIS_STARTED', 'SAMPLE_RECEIVED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED']
     ).count()
     completed_count = Request.objects.filter(
         assigned_to=profile, status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
@@ -41,7 +41,7 @@ def index(request):
     # Pending tasks: waiting for analyst action
     pending_tasks = Request.objects.filter(
         assigned_to=profile,
-        status__in=['PENDING_ACCEPTANCE', 'ASSIGNED']
+        status='ASSIGNED'
     ).select_related('service', 'requester').order_by('-created_at')
 
     # In-progress work
@@ -58,6 +58,19 @@ def index(request):
         assigned_to=profile,
         status__in=['COMPLETED', 'REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT']
     ).select_related('service', 'requester').order_by('-updated_at')[:30]
+
+    # Observations — read-only follow set by admin_ops. We exclude rows
+    # where the member is the assignee (those already appear in pending /
+    # in-progress / history) so the tab carries only the colleagues' work
+    # the analyst is keeping an eye on.
+    observed = Request.objects.filter(
+        informed_members=profile
+    ).exclude(
+        assigned_to=profile,
+    ).select_related(
+        'service', 'requester', 'assigned_to__user',
+    ).order_by('-updated_at')[:30]
+    observed_count = observed.count()
 
     # Points and cheers
     points_history = profile.points_history.order_by('-created_at')[:10]
@@ -80,15 +93,15 @@ def index(request):
     # Performance status label based on productivity_score
     score = profile.productivity_score
     if score >= 90:
-        perf_status = {'label': '🔥 On Fire', 'color': '#dc2626', 'bg': '#fee2e2'}
+        perf_status = {'label': 'On Fire', 'color': '#dc2626', 'bg': '#fee2e2'}
     elif score >= 75:
-        perf_status = {'label': '⭐ Very Good', 'color': '#d97706', 'bg': '#fef3c7'}
+        perf_status = {'label': 'Very Good', 'color': '#d97706', 'bg': '#fef3c7'}
     elif score >= 55:
-        perf_status = {'label': '✅ Good', 'color': '#059669', 'bg': '#d1fae5'}
+        perf_status = {'label': 'Good', 'color': '#059669', 'bg': '#d1fae5'}
     elif score >= 35:
-        perf_status = {'label': '👍 Not Bad', 'color': '#0284c7', 'bg': '#dbeafe'}
+        perf_status = {'label': 'Not Bad', 'color': '#0284c7', 'bg': '#dbeafe'}
     else:
-        perf_status = {'label': '⏰ Wake Up!', 'color': '#6b7280', 'bg': '#f3f4f6'}
+        perf_status = {'label': 'Wake Up!', 'color': '#6b7280', 'bg': '#f3f4f6'}
 
     context = {
         'profile': profile,
@@ -100,6 +113,8 @@ def index(request):
         'pending_tasks': pending_tasks,
         'in_progress': in_progress,
         'history': history,
+        'observed': observed,
+        'observed_count': observed_count,
         'points_history': points_history,
         'cheers': cheers,
         'notifications': notifications,
@@ -127,7 +142,7 @@ def accept_task(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError):
         pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -138,14 +153,30 @@ def decline_task(request, pk):
     profile = request.user.member_profile
     if req.assigned_to != profile:
         return HttpResponseForbidden()
+    reason = request.POST.get('reason', '')
+    # Status stays at ASSIGNED with no assignee — admin re-assigns from there.
+    # We do NOT call transition() here (ASSIGNED→ASSIGNED is not a graph edge);
+    # the decline is recorded explicitly in RequestHistory for the audit trail.
     req.assignment_declined = True
-    req.assignment_decline_reason = request.POST.get('reason', '')
+    req.assignment_decline_reason = reason
     req.assigned_to = None
     req.save(update_fields=['assignment_declined', 'assignment_decline_reason', 'assigned_to'])
-    try:
-        transition(req, 'ASSIGNED', request.user, notes=f'Déclinée: {req.assignment_decline_reason}')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
+    from core.models import RequestHistory
+    RequestHistory.objects.create(
+        request=req, from_status='ASSIGNED', to_status='ASSIGNED',
+        actor=request.user,
+        notes=f"Tâche déclinée par l'analyste. Raison: {reason}" if reason else "Tâche déclinée par l'analyste.",
+    )
+    # Notify admins so the task can be re-assigned.
+    from accounts.models import User
+    admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+    for admin in admins:
+        Notification.objects.create(
+            user=admin,
+            message=f"{req.display_id}: tâche déclinée par {request.user.get_full_name()} — à réassigner.",
+            request=req,
+            notification_type='WORKFLOW',
+        )
     messages.success(request, f"Tâche {req.display_id} déclinée.")
     return redirect_back(request, 'dashboard:analyst')
 
@@ -173,7 +204,7 @@ def workflow_action(request, pk):
             
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -209,7 +240,7 @@ def suggest_appointment(request, pk):
             messages.success(request, f"Date de RDV proposée: {req.appointment_date}" + (f" à {time_str}" if time_str else ""))
         except ValueError:
             messages.error(request, "Date invalide.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -217,10 +248,17 @@ def request_detail(request, pk):
     from core.models import RequestComment, Message
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    # Allow access to currently assigned requests AND historical ones (once completed/sent)
-    from core.models import RequestHistory
-    was_assigned = req.assigned_to == profile or req.history.filter(actor=request.user).exists()
-    if not was_assigned:
+    # Allow access in five cases. Observers (members the admin_ops added
+    # via ``manage_observers``) get the same read-only door — the
+    # template uses ``is_observer`` to hide action buttons.
+    from notifications.models import Notification
+    is_assignee = (req.assigned_to == profile)
+    is_observer = req.informed_members.filter(pk=profile.pk).exists()
+    had_history = req.history.filter(actor=request.user).exists()
+    has_notification = Notification.objects.filter(
+        user=request.user, request=req,
+    ).exists()
+    if not (is_assignee or is_observer or had_history or has_notification):
         return HttpResponseForbidden()
     history = req.history.select_related('actor').order_by('created_at')
     comments = req.comments.select_related('author').order_by('created_at')
@@ -228,6 +266,9 @@ def request_detail(request, pk):
     return render(request, 'dashboard/analyst/request_detail.html', {
         'req': req, 'history': history, 'comments': comments,
         'messages_list': messages_list, 'now': timezone.now(),
+        # is_observer = True AND NOT assignee → hide every action UI.
+        'is_observer': is_observer and not is_assignee,
+        'is_assignee': is_assignee,
     })
 
 
@@ -242,7 +283,7 @@ def accept_alt_date(request, pk):
         return HttpResponseForbidden()
     if not req.alt_date_proposed:
         messages.error(request, "Aucune date alternative à accepter.")
-        return redirect_back(request, 'dashboard:analyst')
+        return redirect_to_detail(request, req, 'dashboard:analyst')
 
     # Update appointment date to the proposed alternative
     import uuid as _uuid
@@ -279,7 +320,7 @@ def accept_alt_date(request, pk):
         )
 
     messages.success(request, f"Date alternative acceptée. RDV confirmé le {req.appointment_date.strftime('%d/%m/%Y')}.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -320,7 +361,7 @@ def decline_alt_date(request, pk):
         )
 
     messages.success(request, "Date alternative refusée. Le demandeur en sera notifié.")
-    return redirect_back(request, 'dashboard:analyst')
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -335,19 +376,38 @@ def upload_report(request, pk):
     # For GENOCLAB: Payment must be confirmed before report upload
     if req.channel == 'GENOCLAB' and req.status != 'PAYMENT_CONFIRMED':
         messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
-        return redirect_back(request, 'dashboard:analyst')
-    
-    if 'report_file' in request.FILES:
-        req.report_file = request.FILES['report_file']
-        req.save(update_fields=['report_file'])
-        try:
-            transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
-            messages.success(request, f"Rapport uploadé pour {req.display_id}.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
-    else:
+        return redirect_to_detail(request, req, 'dashboard:analyst')
+
+    if 'report_file' not in request.FILES:
         messages.error(request, "Veuillez sélectionner un fichier.")
-    return redirect_back(request, 'dashboard:analyst')
+        return redirect_to_detail(request, req, 'dashboard:analyst')
+    # Whitelist report formats — same policy as the client uploads. Without
+    # this, an arbitrary file (e.g. .html) would be stored and later streamed
+    # inline by protected_report_media, opening a stored-XSS vector.
+    import os as _os
+    _allowed = {'.pdf', '.doc', '.docx'}
+    _ext = _os.path.splitext(request.FILES['report_file'].name)[1].lower()
+    if _ext not in _allowed:
+        messages.error(
+            request,
+            f"Type de fichier non autorisé pour le rapport. Formats acceptés: "
+            f"{', '.join(sorted(_allowed))}")
+        return redirect_to_detail(request, req, 'dashboard:analyst')
+    # Stage the file and run the transition in a single DB transaction so a
+    # transition failure rolls back the report_file column (preventing a
+    # saved file path with an unchanged status). The file on disk may remain
+    # as an unreferenced orphan, which is acceptable; the DB row is consistent.
+    from django.db import transaction
+    req.report_file = request.FILES['report_file']
+    try:
+        with transaction.atomic():
+            req.save(update_fields=['report_file'])
+            transition(req, 'REPORT_UPLOADED', request.user, notes='Rapport uploadé')
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
+        return redirect_to_detail(request, req, 'dashboard:analyst')
+    messages.success(request, f"Rapport uploadé pour {req.display_id}.")
+    return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
 @analyst_required
@@ -359,7 +419,7 @@ def collect_gift(request):
     if profile.gift_unlocked and not profile.gift_collected:
         profile.gift_collected = True
         profile.save(update_fields=['gift_collected'])
-        messages.success(request, "🎁 Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
+        messages.success(request, "Cadeau marqué comme récupéré ! Rendez-vous chez l'administrateur.")
     else:
         messages.info(request, "Aucun cadeau disponible à récupérer.")
     return redirect_back(request, 'dashboard:analyst')

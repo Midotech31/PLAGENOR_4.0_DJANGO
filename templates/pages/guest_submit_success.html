@@ -12,7 +12,7 @@
 
             <h2 style="color: var(--primary-700);">{% trans "Demande soumise avec succès!" %}</h2>
 
-            <div class="data-card" style="margin: 24px auto; max-width: 400px; text-align: left;">
+            <div class="data-card" style="margin: 24px auto; max-width: 400px; text-align: start;">
                 <div class="data-card-row">
                     <strong>{% trans "Code de suivi" %}</strong>
                     <span class="font-mono" style="color: var(--primary-600); font-size: 1.1rem;">{{ req.display_id }}</span>
@@ -30,6 +30,15 @@
             <p class="text-muted" style="margin: 16px 0;">
                 {% trans "Conservez votre code de suivi pour suivre l'avancement de votre demande." %}
             </p>
+
+            {# Convertir le suivi invité en compte ; la demande est rattachée automatiquement. #}
+            <div style="background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1px solid #c7d2fe;
+                        border-radius:14px; padding:18px 20px; margin:20px auto; max-width:420px; text-align:start;">
+                <strong style="color:#3730a3;">{% trans "Créez un compte pour aller plus loin" %}</strong>
+                <p class="text-sm" style="margin:6px 0 0; color:#4338ca;">
+                    {% trans "Suivez cette demande et les suivantes depuis un tableau de bord unique, recevez les notifications à chaque étape et confirmez vos rendez-vous. Votre demande actuelle sera automatiquement rattachée à votre compte." %}
+                </p>
+            </div>
 
             <div class="btn-group" style="justify-content:center; gap:12px; margin-top:24px;">
                 <a href="{% url 'track' %}?q={{ req.display_id }}" class="btn btn-primary">{% trans "Suivre ma demande" %}</a>

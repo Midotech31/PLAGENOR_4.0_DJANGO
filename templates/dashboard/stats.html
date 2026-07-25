@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Statistiques" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="greeting">{% trans "Statistiques & métriques" %}</h1>
+    <p class="greeting-date">
+        {% if bundle.scope == 'admin' %}
+            {% trans "Vue institutionnelle complète" %}
+        {% elif bundle.scope == 'finance' %}
+            {% trans "Vue financière" %}
+        {% elif bundle.scope == 'analyst' %}
+            {% trans "Mes assignations" %}
+        {% else %}
+            {% trans "Mon activité" %}
+        {% endif %}
+    </p>
+</div>
+
+{% if is_admin %}
+{# === Filters bar — admin only ============================================ #}
+<form method="get" class="card" style="padding:14px 18px; margin-bottom:18px;">
+    <div class="form-row" style="align-items:flex-end;">
+        <div class="form-group" style="flex:1; min-width:140px;">
+            <label style="font-size:0.78rem;">{% trans "Du" %}</label>
+            <input type="date" name="date_from" class="form-control" value="{{ filters.date_from|default:'' }}">
+        </div>
+        <div class="form-group" style="flex:1; min-width:140px;">
+            <label style="font-size:0.78rem;">{% trans "Au" %}</label>
+            <input type="date" name="date_to" class="form-control" value="{{ filters.date_to|default:'' }}">
+        </div>
+        <div class="form-group" style="flex:1; min-width:140px;">
+            <label style="font-size:0.78rem;">{% trans "Canal" %}</label>
+            <select name="channel" class="form-control">
+                <option value="">— {% trans "Tous" %} —</option>
+                {% for c,l in channels %}
+                <option value="{{ c }}" {% if filters.channel == c %}selected{% endif %}>{{ l }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width:160px;">
+            <label style="font-size:0.78rem;">{% trans "Wilaya" %}</label>
+            <select name="wilaya" class="form-control">
+                <option value="">— {% trans "Toutes" %} —</option>
+                {% for code, label in wilaya_choices %}
+                <option value="{{ code }}" {% if filters.wilaya == code %}selected{% endif %}>{{ code }} — {{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width:130px;">
+            <label style="font-size:0.78rem;">{% trans "Sexe" %}</label>
+            <select name="gender" class="form-control">
+                <option value="">—</option>
+                {% for code, label in gender_choices %}
+                <option value="{{ code }}" {% if filters.gender == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="flex:1.5; min-width:180px;">
+            <label style="font-size:0.78rem;">{% trans "Établissement" %}</label>
+            <input type="text" name="organization" class="form-control" value="{{ filters.organization|default:'' }}" placeholder="USTO, USTHB…">
+        </div>
+        <div class="form-group" style="flex:1.5; min-width:180px;">
+            <label style="font-size:0.78rem;">{% trans "Cadre d'analyse" %}</label>
+            <input type="text" name="analysis_frame" class="form-control" value="{{ filters.analysis_frame|default:'' }}" placeholder="PFE, Doctorat…">
+        </div>
+        <div class="form-group" style="flex:0;">
+            <button type="submit" class="btn btn-primary">{% trans "Appliquer" %}</button>
+        </div>
+        <div class="form-group" style="flex:0;">
+            <a href="{% url 'dashboard:stats_export' %}?format=docx&{{ request.GET.urlencode }}" class="btn btn-secondary" title="{% trans 'Document de synthèse Word/PDF' %}">
+                📄 {% trans "Synthèse Word" %}
+            </a>
+        </div>
+    </div>
+</form>
+
+{# === Bilan configurator (Excel) ======================================== #}
+<form method="get" action="{% url 'dashboard:stats_export' %}" class="card" style="padding:16px 18px; margin-bottom:18px; border:1px solid var(--primary-light, #e0e7ff);">
+    {# Reprend les filtres courants pour que le bilan respecte la période/portée sélectionnée. #}
+    {% for key, val in filters.items %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endfor %}
+    <input type="hidden" name="format" value="xlsx">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <span style="font-size:1.6rem;">📊</span>
+        <div>
+            <h3 style="margin:0;">{% trans "Générer un bilan d'activité (Excel)" %}</h3>
+            <p class="text-sm text-muted" style="margin:2px 0 0;">{% trans "Choisissez les dimensions, la granularité de la période et la portée (filtres ci-dessus). Le bilan inclut effectifs, parts (%) et montants par canal." %}</p>
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:0.78rem;">{% trans "Granularité de la période" %}</label>
+        <select name="granularity" class="form-control" style="max-width:240px;">
+            <option value="month">{% trans "Mensuelle" %}</option>
+            <option value="quarter">{% trans "Trimestrielle" %}</option>
+            <option value="year">{% trans "Annuelle" %}</option>
+        </select>
+    </div>
+
+    <label style="font-size:0.78rem; display:block; margin-bottom:6px;">{% trans "Dimensions à inclure" %}</label>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:6px 18px; margin-bottom:14px;">
+        {% for key, title in bilan_sections %}
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:400; cursor:pointer;">
+            <input type="checkbox" name="sections" value="{{ key }}" {% if key in bilan_default_sections %}checked{% endif %}>
+            {{ title }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">⬇ {% trans "Télécharger le bilan Excel" %}</button>
+</form>
+{% endif %}
+
+{# === Headline KPIs ====================================================== #}
+<div class="kpi-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:24px;">
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.total }}</div><div class="kpi-label">{% trans "Demandes" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.completed }}</div><div class="kpi-label">{% trans "Complétées" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.in_progress }}</div><div class="kpi-label">{% trans "En cours" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.rejected }}</div><div class="kpi-label">{% trans "Rejetées" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.completion_rate }} %</div><div class="kpi-label">{% trans "Taux complétion" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.ibtikar_count }}</div><div class="kpi-label">IBTIKAR</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.genoclab_count }}</div><div class="kpi-label">GENOCLAB</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.ibtikar_virtual_revenue|floatformat:0 }} <span style="font-size:0.7rem;">DA</span></div><div class="kpi-label">{% trans "Revenu virtuel IBTIKAR" %}</div></div>
+    <div class="kpi-card"><div class="kpi-value">{{ bundle.kpis.genoclab_revenue|floatformat:0 }} <span style="font-size:0.7rem;">DA</span></div><div class="kpi-label">{% trans "Revenu GENOCLAB" %}</div></div>
+</div>
+
+{# === Breakdowns ========================================================== #}
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:18px;">
+    {# Par service — always shown #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par service" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Service" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_service %}
+                <tr><td>{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}
+                <tr><td colspan="2" style="text-align:center; color:#94a3b8;">{% trans "Aucune donnée" %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Par statut — always shown #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par statut" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Statut" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_status %}
+                <tr><td>{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center; color:#94a3b8;">—</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if is_admin %}
+    {# Par wilaya — admin only #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par wilaya" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Wilaya" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_wilaya %}
+                <tr><td>{% if r.key %}{{ r.key }} — {% endif %}{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center; color:#94a3b8;">—</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Par établissement — admin only #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par établissement" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Établissement" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_organization %}
+                <tr><td>{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center; color:#94a3b8;">—</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Par cadre d'analyse — admin only #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par cadre d'analyse" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Cadre" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_analysis_frame %}
+                <tr><td>{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center; color:#94a3b8;">—</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Par sexe — admin only #}
+    <div class="card">
+        <div class="card-header"><h3>{% trans "Par sexe" %}</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table class="table" style="margin:0;">
+                <thead><tr><th>{% trans "Sexe" %}</th><th style="text-align:end;">{% trans "Demandes" %}</th></tr></thead>
+                <tbody>
+                {% for r in bundle.by_gender %}
+                <tr><td>{{ r.label }}</td><td style="text-align:end;"><strong>{{ r.count }}</strong></td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center; color:#94a3b8;">—</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Trend — always shown #}
+    <div class="card" style="grid-column:1/-1;">
+        <div class="card-header"><h3>{% trans "Tendance mensuelle" %}</h3></div>
+        <div class="card-body">
+            <canvas id="trendChart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'vendor/chart-4.4.0.umd.min.js' %}"></script>
+<script>
+(function() {
+    const labels = [{% for r in bundle.trend %}"{{ r.month }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const data   = [{% for r in bundle.trend %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    if (labels.length === 0) return;
+    const ctx = document.getElementById('trendChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: '{% trans "Demandes" %}', data, borderColor: '#4F46E5',
+                backgroundColor: 'rgba(79, 70, 229, 0.12)', fill: true, tension: 0.3 }]},
+        options: { responsive: true, plugins: { legend: { display: false }},
+                   scales: { y: { beginAtZero: true, ticks: { precision: 0 }}}}
+    });
+})();
+</script>
+{% endblock %}

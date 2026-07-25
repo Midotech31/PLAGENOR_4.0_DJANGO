@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
@@ -21,6 +22,18 @@ class Service(models.Model):
     turnaround_days = models.IntegerField(default=7)
     image = models.ImageField(upload_to='service_images/', null=True, blank=True)
     active = models.BooleanField(default=True)
+    # Unified base-price + multipliers table the SuperAdmin edits to adjust
+    # tariffs when reagent/consumable costs vary. Shape, when present:
+    #   {
+    #     "base_price": {"non_pathogenic": 2500, "pathogenic": 4000},
+    #     "multipliers": {"Simple": 1, "Duplicate": 2, "Triplicate": 3},
+    #     "multiplier_param": "analysis_mode"
+    #   }
+    # Precedence at resolve_cost time is: ServicePricing tiers → THIS field →
+    # YAML registry → flat columns. Stays empty {} for the 9 legacy services
+    # until the SuperAdmin opens the editor (we then pre-fill from YAML so
+    # the visible values are the actual ones being applied).
+    pricing_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -33,15 +46,70 @@ class Service(models.Model):
 
 
 class ServiceFormField(models.Model):
+    PRICE_MODIFIER_CHOICES = [
+        ('add', 'Surcharge / Supplément'),
+        ('set', 'Forfait / Prix fixe'),
+        ('multiply', 'Multiplicateur'),
+    ]
+    CATEGORY_CHOICES = [
+        ('parameter', 'Question (paramètre du service)'),
+        ('sample_column', "Colonne du tableau d'échantillons"),
+    ]
+
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='custom_fields')
     name = models.CharField(max_length=100)
     label = models.CharField(max_length=200)
     field_type = models.CharField(max_length=20, choices=[
         ('string', 'Texte'), ('enum', 'Liste'), ('boolean', 'Oui/Non'), ('number', 'Nombre'),
     ], default='string')
+    # Whether this field is a single question (shown once) or a column of the
+    # per-sample table (shown once per sample row). Lets a SuperAdmin define a
+    # brand-new service's whole online form — questions AND sample columns —
+    # which then flow to both the request form and the generated document.
+    field_category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default='parameter',
+    )
     options = models.JSONField(default=list, blank=True, help_text='Options for enum type')
     required = models.BooleanField(default=False)
     sort_order = models.IntegerField(default=0)
+
+    # --- Variable pricing (restored from validated v4.0) -----------------
+    # When a field's value changes the price, the requester-side calculator
+    # reads these to update the live cost estimate and show a notice.
+    affects_pricing = models.BooleanField(
+        default=False,
+        help_text='Selecting / filling this field changes the price',
+    )
+    price_modifier_type = models.CharField(
+        max_length=20, choices=PRICE_MODIFIER_CHOICES, blank=True, default='',
+        help_text='How the field modifies the price (add / set / multiply)',
+    )
+    price_modifier_value = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Amount, fixed price, or multiplier value',
+    )
+    condition_note_fr = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='French notice shown to the user about the extra charge',
+    )
+    condition_note_en = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='English notice shown to the user about the extra charge',
+    )
+    # Per-option pricing for enum/multi-choice fields:
+    #   {"Duplicata": 2, "Triplicata": 2.6}  (multipliers)
+    #   or {"Express": 1500}                 (per-option surcharges)
+    option_pricing = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per-option pricing map: {"option_value": number}',
+    )
+    # Conditional visibility / requirement rules:
+    #   [{"trigger_field": "mode", "trigger_value": "PCR",
+    #     "actions": ["show", "make_required"]}]
+    conditional_logic = models.JSONField(
+        default=list, blank=True,
+        help_text='Show/hide & required rules driven by other fields',
+    )
 
     class Meta:
         db_table = 'service_form_fields'
@@ -49,6 +117,19 @@ class ServiceFormField(models.Model):
 
     def __str__(self):
         return f"{self.service.code} — {self.label}"
+
+    @property
+    def pricing_info(self):
+        """Nested dict the request-form template consumes (``field.pricing_info``)."""
+        if not self.affects_pricing or not self.price_modifier_type:
+            return None
+        return {
+            'affects_pricing': True,
+            'modifier_type': self.price_modifier_type,
+            'modifier_value': float(self.price_modifier_value) if self.price_modifier_value is not None else None,
+            'condition_note_fr': self.condition_note_fr or '',
+            'condition_note_en': self.condition_note_en or '',
+        }
 
 
 class ServicePricing(models.Model):
@@ -60,6 +141,10 @@ class ServicePricing(models.Model):
         ('PER_PARAMETER', 'Par paramètre'),
         ('URGENCY_SURCHARGE', 'Majoration urgence'),
         ('DISCOUNT', 'Remise'),
+        # OVERRIDE: forfait total — bypasses the (base × multiplier × N)
+        # computation entirely. Used when the platform agrees a flat
+        # all-inclusive price with a specific requester / client.
+        ('OVERRIDE', 'Forfait (override total)'),
     ]
     
     CHANNEL_CHOICES = [
@@ -92,8 +177,8 @@ class ServicePricing(models.Model):
         verbose_name='Montant (DZD)'
     )
     unit = models.CharField(
-        max_length=50, 
-        default='固定',
+        max_length=50,
+        default='forfait',
         blank=True,
         verbose_name='Unité (ex: par échantillon)'
     )
@@ -156,14 +241,12 @@ class Request(models.Model):
         ('IBTIKAR_SUBMISSION_PENDING', 'En attente soumission IBTIKAR'),
         ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
         ('ASSIGNED', 'Assigné'),
-        ('PENDING_ACCEPTANCE', 'En Attente Acceptation'),
         ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
         ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
         ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
         ('ANALYSIS_STARTED', 'Analyse Démarrée'),
         ('ANALYSIS_FINISHED', 'Analyse Terminée'),
         ('REPORT_UPLOADED', 'Rapport Uploadé'),
-        ('ADMIN_REVIEW', 'Révision Admin'),
         ('REPORT_VALIDATED', 'Rapport Validé'),
         ('SENT_TO_REQUESTER', 'Transmis Demandeur'),
         ('COMPLETED', 'Complété'),
@@ -176,6 +259,7 @@ class Request(models.Model):
         ('QUOTE_VALIDATED_BY_CLIENT', 'Devis Accepté'),
         ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
         ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
+        ('INVOICE_GENERATED', 'Facture Générée'),
         ('PAYMENT_PENDING', 'En Attente Paiement'),
         ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
         ('SENT_TO_CLIENT', 'Transmis Client'),
@@ -187,13 +271,25 @@ class Request(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(default='', blank=True)
     channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='SUBMITTED')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='DRAFT')
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='Normal')
 
     # Relationships
     service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True)
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='requests_made')
     assigned_to = models.ForeignKey('accounts.MemberProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_requests')
+    # Members granted read-only follow access on this request — typically a
+    # colleague the admin_ops added so they can monitor progress in case
+    # the assignee is delayed or absent. Observers see the request in
+    # their "Observations" tab and can open the detail page, but every
+    # action endpoint still checks assigned_to and refuses for them.
+    informed_members = models.ManyToManyField(
+        'accounts.MemberProfile',
+        blank=True,
+        related_name='observed_requests',
+        verbose_name='Membres observateurs',
+        help_text='Membres ayant un accès en lecture sur cette demande (suivi).',
+    )
 
     # Financial
     budget_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -232,7 +328,10 @@ class Request(models.Model):
     admin_revision_notes = models.TextField(default='', blank=True)
 
     # Rating
-    service_rating = models.IntegerField(null=True, blank=True)
+    service_rating = models.IntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
     rating_comment = models.TextField(default='', blank=True)
     rated_at = models.DateTimeField(null=True, blank=True)
     receipt_confirmed = models.BooleanField(default=False)
@@ -240,6 +339,11 @@ class Request(models.Model):
 
     # Citation acknowledgment (Prompt 10)
     citation_acknowledged = models.BooleanField(default=False, verbose_name='Citation acknowledgée')
+    # Set once the IBTIKAR budget has been debited for this request, so a
+    # replay of the COMPLETED transition (e.g. an admin forces the request
+    # back and the requester confirms again) can never debit twice.
+    budget_deducted = models.BooleanField(
+        default=False, verbose_name='Budget IBTIKAR déjà déduit')
 
     # Guest
     submitted_as_guest = models.BooleanField(default=False)
@@ -274,6 +378,12 @@ class Request(models.Model):
             models.Index(fields=['guest_token']),
             models.Index(fields=['report_token']),
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Snapshot of the assignee at load time so the load-balancing signal
+        # can detect re-assignment (old member must also be recalculated).
+        self._original_assigned_to_id = self.assigned_to_id
 
     def __str__(self):
         return f"{self.display_id} — {self.title}"
@@ -335,13 +445,66 @@ class Invoice(models.Model):
 
 
 class PlatformContent(models.Model):
-    key = models.CharField(max_length=100, primary_key=True)
+    LANGUAGE_CHOICES = [
+        ('fr', 'Français'),
+        ('en', 'English'),
+        ('ar', 'العربية'),
+    ]
+
+    key = models.CharField(max_length=100)
+    lang = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='fr')
     value = models.TextField(default='')
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'platform_content'
+        unique_together = [('key', 'lang')]
+
+    def __str__(self):
+        return f'{self.key} [{self.lang}]'
+
+
+class Announcement(models.Model):
+    """Platform-wide announcement shown as a banner on the dashboard to a
+    chosen audience (all / staff / requesters / clients). Managed by admins."""
+    LEVEL_CHOICES = [('info', 'Info'), ('warning', 'Avertissement'), ('success', 'Succès')]
+    AUDIENCE_CHOICES = [
+        ('ALL', 'Tout le monde'),
+        ('STAFF', 'Personnel (admins/analystes/finance)'),
+        ('REQUESTERS', 'Demandeurs IBTIKAR'),
+        ('CLIENTS', 'Clients GENOCLAB'),
+    ]
+    _STAFF_ROLES = ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'MEMBER', 'FINANCE')
+
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default='info')
+    audience = models.CharField(max_length=12, choices=AUDIENCE_CHOICES, default='ALL')
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'announcements'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} [{self.audience}]'
+
+    def visible_to(self, user) -> bool:
+        if not self.active or not getattr(user, 'is_authenticated', False):
+            return False
+        if self.audience == 'ALL':
+            return True
+        role = getattr(user, 'role', '')
+        if self.audience == 'STAFF':
+            return role in self._STAFF_ROLES
+        if self.audience == 'REQUESTERS':
+            return role == 'REQUESTER'
+        if self.audience == 'CLIENTS':
+            return role == 'CLIENT'
+        return False
 
 
 class PaymentMethod(models.Model):
@@ -373,6 +536,25 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message {self.from_user} -> {self.to_user} ({self.request.display_id})"
+
+
+class SequenceCounter(models.Model):
+    """Atomic row-locked sequence for generating display_id / invoice_number.
+
+    Drop-in replacement for the racy ``.count() + 1`` pattern. The scope is a
+    free-form string (e.g. ``'IBK-2026'``, ``'GCL-INV-2026'``); always
+    allocate via :func:`core.sequences.next_value`, never increment .value
+    directly.
+    """
+    scope = models.CharField(max_length=64, primary_key=True)
+    value = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'sequence_counters'
+
+    def __str__(self):
+        return f"{self.scope} = {self.value}"
 
 
 class RevenueArchive(models.Model):

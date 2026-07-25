@@ -20,6 +20,17 @@ description: >
 # PARAMETERS
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: primer_length_category
     label: Primer length category
     type: enum
@@ -52,20 +63,45 @@ sample_table:
   min_rows: 1
 
   columns:
-    - name: primer_set_code
-      label: Primer set identifier
+    - name: nom_de_l_amorces
+      label: "Nom de l’amorces"
       type: string
       required: true
 
-    - name: forward_sequence
-      label: Forward primer sequence (5’–3’)
+    - name: taille
+      label: "Taille (pb)"
       type: string
-      required: true
+      required: false
 
-    - name: reverse_sequence
-      label: Reverse primer sequence (5’–3’)
+    - name: sequence_nucleotidique
+      label: "Séquence nucléotidique (5’-3’)"
       type: string
-      required: true
+      required: false
+
+    - name: nom_du_gene_cible
+      label: "Nom du Géne ciblé"
+      type: string
+      required: false
+
+    - name: numero_d_accession_du_gene
+      label: "Numéro d’accession du Gene"
+      type: string
+      required: false
+
+    - name: gc
+      label: "% GC"
+      type: string
+      required: false
+
+    - name: tm
+      label: "Tm (°C)"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

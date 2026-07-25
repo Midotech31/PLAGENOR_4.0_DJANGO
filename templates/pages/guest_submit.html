@@ -9,6 +9,25 @@
     <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
     <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
 
+    {# Inciter à créer un compte plutôt que de soumettre en invité, sans bloquer l'invité. #}
+    <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+                background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+                border:1px solid #c7d2fe; border-radius:14px; padding:18px 20px; margin-top:20px;">
+        <div style="flex:1; min-width:260px;">
+            <strong style="color:#3730a3;">{% trans "Conseil : créez un compte gratuit" %}</strong>
+            <p class="text-sm" style="margin:6px 0 0; color:#4338ca;">
+                {% trans "En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous pilotez vos demandes de bout en bout :" %}
+            </p>
+            <ul class="text-sm" style="margin:8px 0 0; padding-inline-start:18px; color:#4338ca;">
+                <li>{% trans "Tableau de bord unique pour toutes vos demandes et leur historique complet" %}</li>
+                <li>{% trans "Notifications en temps réel à chaque étape (validation, rendez-vous, rapport prêt)" %}</li>
+                <li>{% trans "Confirmation des rendez-vous et téléchargement sécurisé des rapports" %}</li>
+                <li>{% trans "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant" %}</li>
+            </ul>
+        </div>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="white-space:nowrap;">{% trans "Créer un compte" %}</a>
+    </div>
+
     <div class="card" style="margin-top: 24px;">
         <div class="card-body" style="padding: 32px;">
             <form method="post" action="{% url 'guest_submit' %}">
@@ -30,6 +49,30 @@
                 <div class="form-group">
                     <label>{% trans "Organisation" %}</label>
                     <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Type d'organisation" %}</label>
+                    <select name="organization_type" id="id_guest_org_type" class="form-control">
+                        <option value="">— {% trans "Sélectionner" %} —</option>
+                        <option value="academique">{% trans "Académique" %}</option>
+                        <option value="entreprise">{% trans "Entreprise" %}</option>
+                        <option value="laboratoire">{% trans "Laboratoire" %}</option>
+                        <option value="particulier">{% trans "Particulier" %}</option>
+                        <option value="autre">{% trans "Autre" %}</option>
+                    </select>
+                </div>
+                {% trans "Précisez le type d'organisation" as ph_org_other %}
+                <div class="form-group" id="guest-org-other-group" style="display:none;">
+                    <label>{% trans "Préciser (autre)" %}</label>
+                    <input type="text" name="organization_type_other" class="form-control" placeholder="{{ ph_org_other }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Pays" %}</label>
+                    <select name="country" class="form-control">
+                        {% for code, label in country_choices %}
+                        <option value="{{ code }}" {% if code == 'DZ' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
@@ -53,10 +96,13 @@
                 </div>
                 <div class="form-group">
                     <label>{% trans "Service" %} *</label>
-                    <select name="service_id" class="form-control" required>
+                    <select name="service_id" id="id_service" class="form-control" required>
                         <option value="">{% trans "Sélectionner un service..." %}</option>
                         {% for s in services %}
-                        <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                        <option value="{{ s.pk }}" data-code="{{ s.code }}"
+                                data-channel-availability="{{ s.channel_availability }}"
+                                data-ibtikar-price="{{ s.ibtikar_price }}"
+                                data-genoclab-price="{{ s.genoclab_price }}">{{ s.code }} — {{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -94,6 +140,43 @@
     var ibtFields = document.getElementById('ibtikar-guest-fields');
     var ibtIdInput = document.getElementById('guest_ibtikar_id');
 
+    // Reveal the "other organisation type" box only when "Autre" is chosen.
+    var guestOrgType = document.getElementById('id_guest_org_type');
+    var guestOrgOther = document.getElementById('guest-org-other-group');
+    function toggleGuestOrgOther() {
+        if (guestOrgOther) {
+            guestOrgOther.style.display =
+                (guestOrgType && guestOrgType.value === 'autre') ? '' : 'none';
+        }
+    }
+    if (guestOrgType) { guestOrgType.addEventListener('change', toggleGuestOrgOther); }
+    toggleGuestOrgOther();
+
+    var serviceSelect = document.getElementById('id_service');
+
+    function filterServicesByChannel() {
+        if (!channelSelect || !serviceSelect) return;
+        var ch = channelSelect.value || 'GENOCLAB';
+        var matchedFirst = null;
+        var selectedStillVisible = false;
+        for (var i = 0; i < serviceSelect.options.length; i++) {
+            var opt = serviceSelect.options[i];
+            if (!opt.value) { opt.hidden = false; continue; }            // keep placeholder
+            var avail = opt.getAttribute('data-channel-availability') || 'BOTH';
+            var show = (avail === 'BOTH' || avail === ch);
+            opt.hidden = !show; opt.disabled = !show;
+            if (show) {
+                if (!matchedFirst) matchedFirst = opt;
+                if (opt.value === serviceSelect.value) selectedStillVisible = true;
+                // Refresh the price suffix to the active channel's price
+                var price = opt.getAttribute(ch === 'IBTIKAR' ? 'data-ibtikar-price' : 'data-genoclab-price') || '0';
+                var label = opt.textContent.replace(/\s*\([^)]*\)\s*$/, '');
+                opt.textContent = label + ' (' + price + ' DA)';
+            }
+        }
+        if (!selectedStillVisible) serviceSelect.value = '';
+    }
+
     function toggleIbtFields() {
         if (!channelSelect || !ibtFields) return;
         if (channelSelect.value === 'IBTIKAR') {
@@ -103,6 +186,7 @@
             ibtFields.style.display = 'none';
             ibtIdInput.required = false;
         }
+        filterServicesByChannel();
     }
 
     if (channelSelect) {

@@ -18,6 +18,17 @@ description: >
 # PARAMETERS
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: sample_type
     label: Type d’échantillon
     type: enum
@@ -76,12 +87,34 @@ sample_table:
 
   columns:
     - name: sample_code
+      label: "Code"
       type: string
       required: true
 
-    - name: volume_ml
-      type: float
-      required: true
+    - name: type_de_l_echantillon
+      label: "Type de L’échantillon (Bactérie, plantes)"
+      type: string
+      required: false
+
+    - name: volume_poids_initial
+      label: "Volume/poids initial (ml/g)"
+      type: string
+      required: false
+
+    - name: niveau_de_desiccation
+      label: "Niveau de desiccation (primaire/secondaire)"
+      type: string
+      required: false
+
+    - name: conditions_de_stockage_initiales
+      label: "Conditions de stockage initiales"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (SUPPORTED MODEL)

@@ -19,6 +19,17 @@ description: >
 # PARAMETERS (REGISTRY-DRIVEN UI)
 # -----------------------------------------------------
 parameters:
+  - name: analysis_frame
+    label: Cadre de l’analyse
+    type: enum
+    required: true
+    options:
+      - PFE Classique
+      - "1275"
+      - "008"
+      - Projet de doctorat
+      - Autre
+
   - name: nucleic_acid_type
     label: Type of nucleic acid
     type: enum
@@ -76,9 +87,34 @@ sample_table:
 
   columns:
     - name: sample_code
-      label: Sample code
+      label: "Code"
       type: string
       required: true
+
+    - name: origine_des_acides_nucleiques
+      label: "Origine des acides nucléiques"
+      type: string
+      required: false
+
+    - name: type_d_acides_nucleiques
+      label: "Type d’acides nucléiques (plasmidique, chromosomique)"
+      type: string
+      required: false
+
+    - name: methode_d_extraction_utilisee
+      label: "Méthode d’extraction utilisée"
+      type: string
+      required: false
+
+    - name: date_de_l_extraction
+      label: "Date de l’extraction"
+      type: string
+      required: false
+
+    - name: remarques_particulieres
+      label: "Remarques particulières"
+      type: string
+      required: false
 
 # -----------------------------------------------------
 # PRICING (ENGINE-COMPATIBLE)

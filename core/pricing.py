@@ -3,7 +3,37 @@
 
 from __future__ import annotations
 
+import logging
+
 from django.db import models
+
+logger = logging.getLogger('plagenor.pricing')
+
+
+def _coerce_int(value, default=0, key=''):
+    """Coerce a YAML registry value to int; log + fall back on failure."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        if value not in (None, ''):
+            logger.warning(
+                "pricing: cannot coerce %r to int at %s; using %s",
+                value, key or '?', default,
+            )
+        return default
+
+
+def _coerce_float(value, default=0.0, key=''):
+    """Coerce a YAML registry value to float; log + fall back on failure."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        if value not in (None, ''):
+            logger.warning(
+                "pricing: cannot coerce %r to float at %s; using %s",
+                value, key or '?', default,
+            )
+        return default
 
 MULTIPLIER_KEY_MAP = {
     'nombre_echantillons': 'nombre_echantillons',
@@ -69,10 +99,14 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     base_prices = pricing.get('base_price', {})
     multipliers = pricing.get('multipliers', {})
 
-    # Determine base price
+    # Determine base price — defensive coercion in case the registry value
+    # is mistyped (e.g. quoted "1000" with a thousand-separator).
     pathogenic = bool(params.get('pathogenic', False))
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
-    base_price = int(base_prices.get(base_key, base_prices.get('default', 0)))
+    base_price = _coerce_int(
+        base_prices.get(base_key, base_prices.get('default', 0)),
+        default=0, key=f"base_price/{base_key}",
+    )
 
     # Determine multiplier key
     mult_key = (
@@ -84,7 +118,13 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     if not mult_key and multipliers:
         mult_key = list(multipliers.keys())[0]
 
-    multiplier = float(multipliers.get(mult_key, 1)) if mult_key else 1.0
+    # Multiplier defaults to 1.0 (no effect) — never 0 — so a typo never
+    # silently zeroes out a quote.
+    multiplier = (
+        _coerce_float(multipliers.get(mult_key, 1), default=1.0,
+                      key=f"multiplier/{mult_key}")
+        if mult_key else 1.0
+    )
     unit_price = int(base_price * multiplier)
     total = unit_price * n
 
@@ -110,7 +150,7 @@ def _price_per_sample_fixed(pricing: dict, samples: list, currency: str) -> dict
     if n <= 0:
         raise ValueError("At least one sample is required")
 
-    unit_price = int(pricing.get('unit_price', 0))
+    unit_price = _coerce_int(pricing.get('unit_price', 0), default=0, key="unit_price")
     total = unit_price * n
 
     return {
@@ -128,32 +168,203 @@ def format_price(amount: float, currency: str = 'DZD') -> str:
     return f"{amount:,.0f} {currency}"
 
 
+# ============================================================================
+# CANONICAL COST RESOLVER  ===  the single source of truth for "how much?"
+# ============================================================================
+#
+# Three pricing sources coexist in the codebase:
+#
+#   1. ``ServicePricing`` tiers (DB, editable in the SuperAdmin service-edit
+#      page). These are what an operator authors when they configure
+#      per-sample prices, urgency surcharges, volume discounts, etc.
+#
+#   2. ``services_registry/<code>.yaml`` (the YAML registry consumed by
+#      ``calculate_price``). Older path. Defines per-multiplier pricing for
+#      9 IBTIKAR services. Still authoritative for those nine since their
+#      YAML descriptions encode logic that doesn't yet exist as tiers.
+#
+#   3. ``Service.ibtikar_price`` / ``Service.genoclab_price`` (flat columns).
+#      The last-resort fallback. Charges this amount per *sample* (not
+#      flat per request) so a GENOCLAB submission with 10 samples doesn't
+#      get billed the same as one with 1 sample.
+#
+# Precedence — fail UP, never silently DOWN:
+#
+#   * If any active ServicePricing tier exists for (service, channel), the
+#     DB tiers WIN. They reflect a deliberate operator decision and must
+#     not be silently overridden by older YAML or flat columns.
+#   * Otherwise, if a YAML registry definition exists for this service
+#     code, use ``calculate_price`` against it.
+#   * Otherwise, use the flat column × sample count.
+#
+# Every public submission path (IBTIKAR requester, GENOCLAB client, guest
+# submission) calls ``resolve_cost`` so the answer is identical regardless
+# of who's clicking.
+# ============================================================================
+
+def resolve_cost(
+    service,
+    channel: str,
+    sample_table=None,
+    service_params=None,
+    urgency: str = 'Normal',
+):
+    """Resolve the canonical cost for a request submission.
+
+    Returns ``{'total': float, 'source': str, 'breakdown': [...]}``.
+    ``source`` is one of ``'db_tiers'`` / ``'yaml_registry'`` / ``'flat'``
+    so the caller can surface which path was taken — useful when an admin
+    is debugging "why is my discount tier not firing?".
+
+    Never raises on bad input; falls back to the flat path and logs.
+    """
+    sample_table = sample_table or []
+    service_params = service_params or {}
+    if not service:
+        return {'total': 0.0, 'source': 'no_service', 'breakdown': []}
+    if channel not in ('IBTIKAR', 'GENOCLAB'):
+        channel = 'GENOCLAB' if channel.lower().startswith('g') else 'IBTIKAR'
+
+    # 1) DB tiers — what the SuperAdmin actually configured
+    try:
+        has_tiers = service.pricing_configs.filter(
+            is_active=True,
+        ).filter(
+            models.Q(channel=channel) | models.Q(channel='BOTH')
+        ).exists()
+    except Exception:
+        has_tiers = False
+
+    if has_tiers:
+        result = calculate_cost_from_db(
+            service, channel,
+            sample_table=sample_table,
+            service_params=service_params,
+            urgency=urgency,
+        )
+        result['source'] = 'db_tiers'
+        return result
+
+    # 2a) DB pricing_data — SuperAdmin-edited base price + multipliers
+    #     Same shape as a YAML ``pricing`` block, so the existing
+    #     ``calculate_price`` engine consumes it unchanged. This is the lever
+    #     for reagent/consumable cost variations: the SuperAdmin edits the
+    #     numbers in the UI and the next quote/estimate uses them, without
+    #     touching the YAML on disk.
+    pdata = getattr(service, 'pricing_data', None) or {}
+    db_pricing_block = None
+    if isinstance(pdata, dict) and pdata.get('base_price') and pdata.get('multipliers'):
+        db_pricing_block = {
+            'model': 'per_sample_table_row_with_multiplier',
+            'currency': pdata.get('currency', 'DZD'),
+            'base_price': pdata.get('base_price') or {},
+            'multipliers': pdata.get('multipliers') or {},
+        }
+
+    # 2b) YAML registry — for the legacy 9 IBTIKAR services (fallback when
+    #     pricing_data hasn't been authored yet).
+    try:
+        from core.registry import get_service_def
+        yaml_def = get_service_def(service.code)
+    except Exception:
+        yaml_def = None
+
+    # If the SuperAdmin has authored pricing_data, that overrides the YAML
+    # pricing block while keeping the rest of the YAML definition (so
+    # ``calculate_price`` still sees ``service_code`` etc.).
+    if db_pricing_block and sample_table:
+        synthetic_def = dict(yaml_def or {})
+        synthetic_def['pricing'] = db_pricing_block
+        try:
+            db_result = calculate_price(synthetic_def, service_params, sample_table)
+            return {
+                'total': float(db_result.get('total', 0)),
+                'source': 'service_pricing_data',
+                'breakdown': [{
+                    'name': 'DB-authored base × multiplier × samples',
+                    'type': db_result.get('pricing_model', 'db'),
+                    'amount': float(db_result.get('unit_price', 0)),
+                    'quantity': db_result.get('number_of_units', 0),
+                    'subtotal': float(db_result.get('total', 0)),
+                }],
+                'yaml_breakdown': db_result.get('breakdown', {}),
+                'currency': db_result.get('currency', 'DZD'),
+            }
+        except (ValueError, KeyError, TypeError) as exc:
+            logger.warning(
+                "resolve_cost: pricing_data calculate_price failed for %s (%s); "
+                "falling through to YAML/flat",
+                service.code, exc,
+            )
+
+    if yaml_def and yaml_def.get('pricing') and sample_table:
+        try:
+            yaml_result = calculate_price(yaml_def, service_params, sample_table)
+            return {
+                'total': float(yaml_result.get('total', 0)),
+                'source': 'yaml_registry',
+                'breakdown': [{
+                    'name': 'YAML pricing',
+                    'type': yaml_result.get('pricing_model', 'yaml'),
+                    'amount': float(yaml_result.get('unit_price', 0)),
+                    'quantity': yaml_result.get('number_of_units', 0),
+                    'subtotal': float(yaml_result.get('total', 0)),
+                }],
+                'yaml_breakdown': yaml_result.get('breakdown', {}),
+                'currency': yaml_result.get('currency', 'DZD'),
+            }
+        except (ValueError, KeyError, TypeError) as exc:
+            logger.warning(
+                "resolve_cost: YAML calculate_price failed for %s (%s); "
+                "falling through to flat",
+                service.code, exc,
+            )
+
+    # 3) Flat per-sample fallback — never per-request, so GENOCLAB billing
+    #    actually scales with sample count.
+    flat = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
+    flat = float(flat or 0)
+    sample_count = max(1, len([s for s in sample_table if s]))
+    total = flat * sample_count
+    return {
+        'total': total,
+        'source': 'flat',
+        'breakdown': [{
+            'name': 'Prix forfaitaire (par échantillon)',
+            'type': 'FLAT',
+            'amount': flat,
+            'quantity': sample_count,
+            'subtotal': total,
+        }],
+    }
+
+
 def calculate_cost_from_db(service, channel, sample_table=None, service_params=None, urgency='Normal'):
     """
     Calculate cost based on ServicePricing configurations from database.
-    
+
     Args:
         service: Service model instance
         channel: 'IBTIKAR' or 'GENOCLAB'
         sample_table: List of sample dicts (optional)
         service_params: Dict of service parameters (optional)
         urgency: Urgency level for surcharge calculation
-    
+
     Returns:
         dict with cost breakdown and total
     """
     from decimal import Decimal
-    
+
     if not service:
         return {'error': 'Service is required', 'total': 0}
-    
+
     # Get active pricing configs for this service
     pricing_configs = service.pricing_configs.filter(
         is_active=True
     ).filter(
         models.Q(channel=channel) | models.Q(channel='BOTH')
     ).order_by('priority', 'pk')
-    
+
     if not pricing_configs.exists():
         # Fall back to service's base price
         base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
@@ -172,15 +383,20 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 'subtotal': total,
             }],
         }
-    
+
     breakdown = []
     total = Decimal('0')
     sample_count = len([s for s in sample_table if s]) if sample_table else 0
-    
+    # OVERRIDE short-circuit state — set inside the loop when an
+    # OVERRIDE-typed rule fires. Picked up after the loop to clamp the
+    # final total and stamp the source.
+    override = False
+    override_total = Decimal('0')
+
     for config in pricing_configs:
         config_total = Decimal('0')
         quantity = 1
-        
+
         if config.pricing_type == 'BASE':
             quantity = sample_count if sample_count > 0 else 1
             config_total = config.amount * quantity
@@ -193,13 +409,27 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 quantity = len([v for v in service_params.values() if v])
             config_total = config.amount * quantity
         elif config.pricing_type == 'URGENCY_SURCHARGE':
-            if urgency in ['Urgent', 'Très urgent']:
+            if urgency in ('Urgent', 'Très urgent'):
                 quantity = 1
                 config_total = config.amount
         elif config.pricing_type == 'DISCOUNT':
             quantity = 1
-            config_total = -config.amount  # Negative for discount
-        
+            # DISCOUNT amount is conventionally stored NEGATIVE in the DB
+            # (matches the "Remise volume −500" pattern in the seed fixtures);
+            # but if an operator typed a positive number we treat it as a
+            # subtraction so the math is intuitive either way.
+            config_total = -abs(config.amount)
+        elif config.pricing_type == 'OVERRIDE':
+            # Forfait total — short-circuit the whole computation. The
+            # admin set a flat all-inclusive price; any other tier on this
+            # service is ignored, and the resulting breakdown reports a
+            # single line. We still build the rest of the loop so the audit
+            # trail records *which* rule fired.
+            quantity = 1
+            config_total = config.amount
+            override = True
+            override_total = config.amount
+
         total += config_total
         breakdown.append({
             'name': config.name,
@@ -208,7 +438,23 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
             'quantity': quantity,
             'subtotal': float(config_total),
         })
-    
+
+    # OVERRIDE short-circuit — if any rule was OVERRIDE, the flat amount
+    # replaces every other line and the total clamps to it.
+    if override:
+        total = override_total
+        return {
+            'source': 'service_pricing_db_override',
+            'pricing_configs_used': pricing_configs.count(),
+            'sample_count': sample_count,
+            'total': float(total),
+            'breakdown': breakdown,
+        }
+
+    # Clamp at zero — a stack of discounts can't produce a negative bill.
+    if total < 0:
+        total = Decimal('0')
+
     return {
         'source': 'service_pricing_db',
         'pricing_configs_used': pricing_configs.count(),

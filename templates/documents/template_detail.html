@@ -81,6 +81,7 @@
                 <h5 class="mb-0">{% trans "Placeholders documentés" %}</h5>
             </div>
             <div class="card-body">
+                <div class="table-wrapper">
                 <table class="table">
                     <thead>
                         <tr>
@@ -92,13 +93,14 @@
                     <tbody>
                         {% for placeholder in template.placeholders.all %}
                         <tr>
-                            <td><code>{{'{'}}{'{'}}{{{ placeholder.placeholder }}}}</code></td>
+                            <td><code>{% templatetag openvariable %} {{ placeholder.placeholder }} {% templatetag closevariable %}</code></td>
                             <td>{{ placeholder.description }}</td>
                             <td><small class="text-muted">{{ placeholder.example_value|default:"—" }}</small></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
         {% endif %}

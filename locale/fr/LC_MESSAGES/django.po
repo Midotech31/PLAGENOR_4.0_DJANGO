@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-28 16:19+0100\n"
+"POT-Creation-Date: 2026-07-25 10:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,2314 +18,3974 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: templates/accounts/convert_guest.html:4 templates/accounts/login.html:47
-#: templates/accounts/register.html:10
-#: templates/pages/guest_submit_success.html:36
-msgid "Créer un compte"
-msgstr ""
-
-#: templates/accounts/convert_guest.html:8
-msgid "Créer votre compte"
-msgstr ""
-
-#: templates/accounts/convert_guest.html:9
-msgid ""
-"Convertissez votre soumission invité en un compte permanent pour suivre et "
-"gérer vos demandes."
-msgstr ""
-
-#: templates/accounts/convert_guest.html:17 templates/accounts/profile.html:19
-#: templates/accounts/register.html:42
-#: templates/dashboard/superadmin/index.html:157
-#: templates/dashboard/superadmin/user_edit.html:23
-msgid "Prénom"
-msgstr ""
-
-#: templates/accounts/convert_guest.html:21 templates/accounts/profile.html:23
-#: templates/accounts/register.html:47
-#: templates/dashboard/analyst/index.html:198
-#: templates/dashboard/superadmin/index.html:161
-#: templates/dashboard/superadmin/index.html:209
-#: templates/dashboard/superadmin/index.html:258
-#: templates/dashboard/superadmin/index.html:321
-#: templates/dashboard/superadmin/index.html:367
-#: templates/dashboard/superadmin/index.html:413
-#: templates/dashboard/superadmin/index.html:432
-#: templates/dashboard/superadmin/index.html:868
-#: templates/dashboard/superadmin/service_edit.html:18
-#: templates/dashboard/superadmin/service_edit.html:60
-#: templates/dashboard/superadmin/user_edit.html:27
-msgid "Nom"
-msgstr ""
-
-#: templates/accounts/convert_guest.html:26 templates/accounts/profile.html:28
-#: templates/accounts/register.html:60
-#: templates/dashboard/analyst/index.html:199
-#: templates/dashboard/superadmin/index.html:167
-#: templates/dashboard/superadmin/index.html:210
-#: templates/dashboard/superadmin/user_edit.html:33
-#: templates/pages/about.html:52 templates/pages/contact.html:23
-#: templates/pages/guest_submit.html:23
 msgid "Email"
 msgstr ""
 
-#: templates/accounts/convert_guest.html:30 templates/accounts/profile.html:32
-#: templates/accounts/register.html:98
-#: templates/dashboard/analyst/index.html:201
-#: templates/dashboard/superadmin/index.html:185
-#: templates/dashboard/superadmin/user_edit.html:45
-#: templates/pages/about.html:53 templates/pages/contact.html:27
-#: templates/pages/guest_submit.html:27
-msgid "Téléphone"
+msgid "Demandeur IBTIKAR (étudiant/chercheur)"
 msgstr ""
 
-#: templates/accounts/convert_guest.html:34 templates/accounts/login.html:32
-#: templates/accounts/register.html:105
-#: templates/dashboard/superadmin/index.html:189
-msgid "Mot de passe"
+msgid "Client GENOCLAB (externe)"
 msgstr ""
 
-#: templates/accounts/convert_guest.html:37
-#: templates/accounts/register.html:116
-msgid "Créer mon compte"
+msgid "Rôle"
 msgstr ""
 
-#: templates/accounts/convert_guest.html:43
-#: templates/pages/guest_submit.html:76
-msgid "Vous avez déjà un compte?"
-msgstr ""
-
-#: templates/accounts/convert_guest.html:43 templates/accounts/login.html:5
-#: templates/accounts/login.html:15 templates/base_public.html:28
-#: templates/base_public.html:69 templates/pages/guest_submit.html:76
-msgid "Connexion"
-msgstr ""
-
-#: templates/accounts/login.html:12 templates/includes/sidebar.html:11
-msgid "Plateforme de Gestion des Opérations"
-msgstr ""
-
-#: templates/accounts/login.html:16
-msgid "Accédez à votre espace PLAGENOR"
-msgstr ""
-
-#: templates/accounts/login.html:20
-msgid "Identifiant ou mot de passe incorrect."
-msgstr ""
-
-#: templates/accounts/login.html:28
-msgid "Identifiant"
-msgstr ""
-
-#: templates/accounts/login.html:29
-msgid "Entrez votre identifiant"
-msgstr ""
-
-#: templates/accounts/login.html:33
-msgid "Entrez votre mot de passe"
-msgstr ""
-
-#: templates/accounts/login.html:38
-msgid "Se souvenir de moi"
-msgstr ""
-
-#: templates/accounts/login.html:41 templates/accounts/register.html:120
-msgid "Se connecter"
-msgstr ""
-
-#: templates/accounts/login.html:44
-msgid "ou"
-msgstr ""
-
-#: templates/accounts/login.html:47
-msgid "Pas encore de compte ?"
-msgstr ""
-
-#: templates/accounts/login.html:48
-msgid "Demande sans compte ?"
-msgstr ""
-
-#: templates/accounts/login.html:48
-msgid "Soumettre en tant qu'invité"
-msgstr ""
-
-#: templates/accounts/login.html:49
-msgid "Suivre une demande"
-msgstr ""
-
-#: templates/accounts/login.html:53 templates/base_public.html:67
-msgid "Université d'Oran"
-msgstr ""
-
-#: templates/accounts/login.html:54 templates/base_public.html:74
-msgid "Conçu par"
-msgstr ""
-
-#: templates/accounts/profile.html:4 templates/accounts/profile.html:8
-#: templates/includes/sidebar.html:204
-msgid "Mon Profil"
-msgstr ""
-
-#: templates/accounts/profile.html:13
-msgid "Informations personnelles"
-msgstr ""
-
-#: templates/accounts/profile.html:36
-msgid "Organisation / Université"
-msgstr ""
-
-#: templates/accounts/profile.html:40 templates/accounts/register.html:85
-#: templates/dashboard/superadmin/user_edit.html:55
-msgid "Laboratoire"
-msgstr ""
-
-#: templates/accounts/profile.html:44 templates/accounts/register.html:91
-msgid "Directeur de recherche"
-msgstr ""
-
-#: templates/accounts/profile.html:50
-msgid "Techniques maîtrisées"
-msgstr ""
-
-#: templates/accounts/profile.html:63
-#: templates/dashboard/superadmin/index.html:472
-#: templates/dashboard/superadmin/index.html:802
-#: templates/dashboard/superadmin/index.html:811
-#: templates/dashboard/superadmin/index.html:820
-#: templates/dashboard/superadmin/index.html:829
-msgid "Mettre à jour"
-msgstr ""
-
-#: templates/accounts/register.html:5 templates/base_public.html:70
-msgid "Inscription"
-msgstr ""
-
-#: templates/accounts/register.html:11
-msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
-msgstr ""
-
-#: templates/accounts/register.html:15
-msgid "Veuillez corriger les erreurs ci-dessous."
-msgstr ""
-
-#: templates/accounts/register.html:29
-msgid "Étudiant / Chercheur"
-msgstr ""
-
-#: templates/accounts/register.html:35
-msgid "Client externe"
-msgstr ""
-
-#: templates/accounts/register.html:54
-msgid "Identifiant souhaité"
-msgstr ""
-
-#: templates/accounts/register.html:66
 msgid "Université / Organisation"
 msgstr ""
 
-#: templates/accounts/register.html:73
-#: templates/dashboard/superadmin/index.html:721
+msgid "— Sélectionner —"
+msgstr ""
+
+msgid "Type d'organisation"
+msgstr ""
+
+msgid "Préciser (autre)"
+msgstr ""
+
+msgid "Pays"
+msgstr ""
+
+msgid "Master (fin de cycle)"
+msgstr ""
+
+msgid "Ingéniorat (fin de cycle)"
+msgstr ""
+
+msgid "Doctorat"
+msgstr ""
+
 msgid "Niveau"
 msgstr ""
 
-#: templates/accounts/register.html:75
+msgid "Laboratoire"
+msgstr ""
+
+msgid "Directeur de recherche"
+msgstr ""
+
+msgid "Identifiant IBTIKAR-DGRSDT"
+msgstr ""
+
+msgid "Format: IDGRSTDXXXXX"
+msgstr ""
+
+msgid "Téléphone"
+msgstr ""
+
+msgid "Cet email est déjà enregistré"
+msgstr ""
+
+msgid "Veuillez préciser le type d'organisation."
+msgstr ""
+
+#, python-format
+msgid ""
+"Compte temporairement verrouillé suite à des tentatives échouées. Réessayez "
+"dans %(minutes)d minute(s)."
+msgstr ""
+
+msgid "Profil mis à jour."
+msgstr ""
+
+msgid "Email requis."
+msgstr ""
+
+msgid "Un compte avec cet email existe déjà."
+msgstr ""
+
+msgid "Vérification de votre adresse — PLAGENOR 4.0"
+msgstr ""
+
+#, python-format
+msgid "Pour finaliser la création de votre compte, ouvrez ce lien : %(url)s"
+msgstr ""
+
+msgid "Lien expiré. Veuillez recommencer."
+msgstr ""
+
+msgid "Lien invalide."
+msgstr ""
+
+msgid "Un compte avec cet email existe déjà — veuillez vous connecter."
+msgstr ""
+
+#, python-format
+msgid "Compte créé ! %(count)d demande(s) liée(s) à votre compte."
+msgstr ""
+
+msgid "Nouveau mot de passe"
+msgstr ""
+
+msgid "Confirmer le mot de passe"
+msgstr ""
+
+msgid "Les deux mots de passe ne correspondent pas."
+msgstr ""
+
+msgid "Votre mot de passe a été mis à jour avec succès."
+msgstr ""
+
+msgid "Code invalide ou expiré. Réessayez."
+msgstr ""
+
+msgid "La double authentification est déjà activée."
+msgstr ""
+
+msgid "Double authentification activée."
+msgstr ""
+
+msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr ""
+
+msgid "Double authentification désactivée."
+msgstr ""
+
+msgid "Formulaire IBTIKAR"
+msgstr ""
+
+msgid "Note de plateforme"
+msgstr ""
+
+msgid "Fiche de réception"
+msgstr ""
+
+msgid "Devis"
+msgstr ""
+
+msgid "Vous ne pouvez pas réinitialiser votre propre compte."
+msgstr ""
+
+msgid "Réinitialisation de votre compte PLAGENOR 4.0"
+msgstr ""
+
+#, python-format
+msgid ""
+"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant "
+"les instructions a été envoyé."
+msgstr ""
+
+msgid "Créer un compte"
+msgstr ""
+
+msgid "Créer votre compte"
+msgstr ""
+
+msgid ""
+"Convertissez votre soumission invité en un compte permanent. Pour des "
+"raisons de sécurité nous vérifions d'abord votre adresse email."
+msgstr ""
+
+msgid "Vérifiez votre messagerie"
+msgstr ""
+
+#, python-format
+msgid ""
+"Si l'adresse <strong>%(email)s</strong> correspond à des soumissions invité, "
+"un lien de vérification vient d'y être envoyé. Cliquez sur le lien pour "
+"finaliser la création de votre compte."
+msgstr ""
+
+msgid "Le lien expire après 24 heures."
+msgstr ""
+
+msgid "Email utilisé lors de votre soumission invité"
+msgstr ""
+
+msgid "Envoyer le lien de vérification"
+msgstr ""
+
+msgid "Vous avez déjà un compte?"
+msgstr ""
+
+msgid "Connexion"
+msgstr ""
+
+msgid "Finaliser la création de compte"
+msgstr ""
+
+msgid "Finaliser votre compte"
+msgstr ""
+
+msgid ""
+"Votre adresse email a été vérifiée. Complétez vos informations et choisissez "
+"un mot de passe."
+msgstr ""
+
+msgid "Email vérifié"
+msgstr ""
+
+msgid "Prénom"
+msgstr ""
+
+msgid "Nom"
+msgstr ""
+
+msgid "Mot de passe"
+msgstr ""
+
+msgid "8 caractères minimum, non purement numérique."
+msgstr ""
+
+msgid "Créer mon compte"
+msgstr ""
+
+msgid "Réinitialisation de compte PLAGENOR 4.0"
+msgstr ""
+
+msgid "Plateforme de Gestion des Opérations Scientifiques"
+msgstr ""
+
+msgid "Réinitialisation de votre compte"
+msgstr ""
+
+#, python-format
+msgid "Bonjour %(name)s,"
+msgstr ""
+
+#, python-format
+msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
+msgstr ""
+
+msgid "Mot de passe temporaire"
+msgstr ""
+
+msgid ""
+"Ce mot de passe temporaire expire après 24 heures ou dès la première "
+"utilisation."
+msgstr ""
+
+msgid ""
+"Vous serez immédiatement invité à définir un nouveau mot de passe après "
+"connexion."
+msgstr ""
+
+msgid "Ne partagez jamais votre mot de passe avec quiconque."
+msgstr ""
+
+msgid "Se connecter"
+msgstr ""
+
+msgid ""
+"Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter "
+"immédiatement l'administrateur de la plateforme."
+msgstr ""
+
+msgid "Vérification de votre adresse email"
+msgstr ""
+
+msgid "Bonjour,"
+msgstr ""
+
+#, python-format
+msgid ""
+"Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur "
+"PLAGENOR&nbsp;4.0 en utilisant l'adresse <strong>%(email)s</strong>."
+msgstr ""
+
+msgid ""
+"Pour finaliser la création de votre compte et lier vos demandes invité, "
+"cliquez sur le bouton ci-dessous :"
+msgstr ""
+
+msgid "Vérifier mon adresse et créer mon compte"
+msgstr ""
+
+msgid "Ce lien expire après 24 heures."
+msgstr ""
+
+msgid ""
+"Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
+"message — aucun compte ne sera créé."
+msgstr ""
+
+msgid "Ne partagez jamais ce lien."
+msgstr ""
+
+msgid ""
+"Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :"
+msgstr ""
+
+msgid "Réinitialisation du mot de passe"
+msgstr ""
+
+msgid ""
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
+msgstr ""
+
+msgid "Réinitialiser mon mot de passe"
+msgstr ""
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera "
+"inchangé."
+msgstr ""
+
+msgid "L'équipe PLAGENOR"
+msgstr ""
+
+msgid ""
+"Bonjour,\n"
+"\n"
+"Vous avez demandé la réinitialisation du mot de passe de votre compte "
+"PLAGENOR.\n"
+"\n"
+"Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :"
+msgstr ""
+
+msgid ""
+"Ce lien est valable une seule fois et expire sous peu. Si vous n'êtes pas à "
+"l'origine de cette demande, ignorez simplement cet e-mail : votre mot de "
+"passe restera inchangé.\n"
+"\n"
+"— L'équipe PLAGENOR"
+msgstr ""
+
+msgid "Réinitialisation de votre mot de passe PLAGENOR"
+msgstr ""
+
+msgid "Changement de mot de passe obligatoire"
+msgstr ""
+
+msgid ""
+"Votre compte a été réinitialisé. Vous devez définir un nouveau mot de passe "
+"avant de continuer."
+msgstr ""
+
+msgid "Veuillez corriger les erreurs ci-dessous."
+msgstr ""
+
+msgid "Minimum 8 caractères."
+msgstr ""
+
+msgid "Définir le nouveau mot de passe"
+msgstr ""
+
+msgid "Identifiant ou mot de passe incorrect."
+msgstr ""
+
+msgid "Identifiant"
+msgstr ""
+
+msgid "Entrez votre identifiant"
+msgstr ""
+
+msgid "Entrez votre mot de passe"
+msgstr ""
+
+msgid "Afficher/masquer le mot de passe"
+msgstr ""
+
+msgid "Se souvenir de moi"
+msgstr ""
+
+msgid "Mot de passe oublié ?"
+msgstr ""
+
+msgid "ou"
+msgstr ""
+
+msgid "Pas encore de compte ?"
+msgstr ""
+
+msgid "Demande sans compte ?"
+msgstr ""
+
+msgid "Soumettre en tant qu'invité"
+msgstr ""
+
+msgid "Suivre une demande"
+msgstr ""
+
+msgid "Mot de passe réinitialisé"
+msgstr ""
+
+msgid "Mot de passe mis à jour"
+msgstr ""
+
+msgid ""
+"Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant "
+"vous connecter."
+msgstr ""
+
+msgid "Choisir un nouveau mot de passe"
+msgstr ""
+
+msgid "Saisissez votre nouveau mot de passe deux fois."
+msgstr ""
+
+msgid "Valider"
+msgstr ""
+
+msgid "Lien invalide"
+msgstr ""
+
+msgid ""
+"Ce lien de réinitialisation n'est plus valide (déjà utilisé ou expiré). "
+"Veuillez en demander un nouveau."
+msgstr ""
+
+msgid "Demander un nouveau lien"
+msgstr ""
+
+msgid "Lien envoyé"
+msgstr ""
+
+msgid "Vérifiez votre boîte mail"
+msgstr ""
+
+msgid ""
+"Si un compte correspond à cette adresse, un e-mail contenant les "
+"instructions de réinitialisation vient d'être envoyé. Pensez à vérifier vos "
+"courriers indésirables."
+msgstr ""
+
+msgid "Retour à la connexion"
+msgstr ""
+
+msgid "Réinitialiser le mot de passe"
+msgstr ""
+
+msgid ""
+"Saisissez votre adresse e-mail. Si un compte existe, vous recevrez un lien "
+"de réinitialisation."
+msgstr ""
+
+msgid "Envoyer le lien"
+msgstr ""
+
+msgid "Mon Profil"
+msgstr ""
+
+msgid "Informations personnelles"
+msgstr ""
+
+msgid "Photo de profil"
+msgstr ""
+
+msgid "Organisation / Université"
+msgstr ""
+
+msgid "Langue préférée"
+msgstr ""
+
+msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
+msgstr ""
+
+msgid "Techniques maîtrisées"
+msgstr ""
+
+msgid "Mettre à jour"
+msgstr ""
+
+msgid "Sécurité — Double authentification"
+msgstr ""
+
+msgid "Activée"
+msgstr ""
+
+msgid "Votre compte est protégé par un code à usage unique à chaque connexion."
+msgstr ""
+
+msgid "Désactiver la double authentification ?"
+msgstr ""
+
+msgid "Désactiver la 2FA"
+msgstr ""
+
+msgid ""
+"Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre "
+"téléphone sera demandé à la connexion. Recommandé pour les comptes du "
+"personnel."
+msgstr ""
+
+msgid "Activer la 2FA"
+msgstr ""
+
+msgid "Inscription"
+msgstr ""
+
+msgid "Inscrivez-vous pour soumettre des demandes d'analyses"
+msgstr ""
+
+msgid ""
+"Après inscription, vous serez redirigé vers le formulaire de soumission pour "
+"le service"
+msgstr ""
+
+msgid "Étudiant / Chercheur"
+msgstr ""
+
+msgid "Client externe"
+msgstr ""
+
+msgid "Identifiant souhaité"
+msgstr ""
+
+msgid "Précisez le type d'organisation"
+msgstr ""
+
 msgid "Sélectionner"
 msgstr ""
 
-#: templates/accounts/register.html:80
 msgid ""
 "Master, Ingéniorat (fin de cycle) ou Doctorat — toutes universités "
 "algériennes"
 msgstr ""
 
-#: templates/accounts/register.html:86
 msgid "Nom du laboratoire"
 msgstr ""
 
-#: templates/accounts/register.html:92
 msgid "Nom du directeur de recherche"
 msgstr ""
 
-#: templates/accounts/register.html:98
 msgid "optionnel"
 msgstr ""
 
-#: templates/accounts/register.html:110
-msgid "Confirmer le mot de passe"
+msgid "Wilaya"
 msgstr ""
 
-#: templates/accounts/register.html:120
+msgid "Sélectionnez votre wilaya"
+msgstr ""
+
+msgid "Sexe"
+msgstr ""
+
 msgid "Vous avez déjà un compte ?"
 msgstr ""
 
-#: templates/base_public.html:20 templates/base_public.html:59
-#: templates/pages/home.html:5
+msgid "Activer la double authentification"
+msgstr ""
+
+msgid "Double authentification (2FA)"
+msgstr ""
+
+msgid ""
+"Scannez ce QR code avec une application d'authentification (Google "
+"Authenticator, Authy, Microsoft Authenticator…), puis saisissez le code à 6 "
+"chiffres pour confirmer."
+msgstr ""
+
+msgid "QR code de configuration 2FA"
+msgstr ""
+
+msgid "Clé manuelle (si vous ne pouvez pas scanner) :"
+msgstr ""
+
+msgid "Code de vérification"
+msgstr ""
+
+msgid "Annuler"
+msgstr ""
+
+msgid "Vérification en deux étapes"
+msgstr ""
+
+msgid ""
+"Saisissez le code à 6 chiffres affiché dans votre application "
+"d'authentification."
+msgstr ""
+
+msgid "Vérifier"
+msgstr ""
+
+msgid "Aller au contenu principal"
+msgstr ""
+
+msgid "Navigation principale"
+msgstr ""
+
 msgid "Accueil"
 msgstr ""
 
-#: templates/base_public.html:21 templates/base_public.html:60
-#: templates/dashboard/superadmin/index.html:103
-#: templates/includes/sidebar.html:32 templates/pages/about.html:40
-#: templates/pages/services.html:4
 msgid "Services"
 msgstr ""
 
-#: templates/base_public.html:22 templates/base_public.html:61
-#: templates/pages/about.html:4
 msgid "À propos"
 msgstr ""
 
-#: templates/base_public.html:23 templates/base_public.html:62
-#: templates/base_public.html:66 templates/pages/about.html:49
-#: templates/pages/contact.html:4
 msgid "Contact"
 msgstr ""
 
-#: templates/base_public.html:24 templates/pages/track.html:4
+msgid "Aide"
+msgstr ""
+
 msgid "Suivi"
 msgstr ""
 
-#: templates/base_public.html:26 templates/dashboard/placeholder.html:4
-#: templates/dashboard/placeholder.html:9 templates/includes/sidebar.html:20
-#: templates/includes/sidebar.html:67 templates/includes/sidebar.html:94
-#: templates/includes/sidebar.html:125 templates/includes/sidebar.html:152
-#: templates/includes/sidebar.html:175 templates/includes/topbar.html:9
 msgid "Tableau de bord"
 msgstr ""
 
-#: templates/base_public.html:51
-msgid ""
-"Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée "
-"pour la gestion des canaux IBTIKAR et GENOCLAB."
-msgstr ""
-
-#: templates/base_public.html:54
-msgid "Tous droits réservés"
-msgstr ""
-
-#: templates/base_public.html:58
 msgid "Liens rapides"
 msgstr ""
 
-#: templates/base_public.html:63 templates/pages/home.html:24
+msgid "Centre d'aide"
+msgstr ""
+
 msgid "Suivi de demande"
 msgstr ""
 
-#: templates/base_public.html:68
-msgid "Prof. Mohamed Merzoug"
+msgid "Confidentialité"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:4
-#: templates/includes/sidebar.html:17
 msgid "Administration"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:8
-#: templates/dashboard/analyst/index.html:8
-#: templates/dashboard/client/index.html:8
-#: templates/dashboard/finance/index.html:8
-#: templates/dashboard/requester/index.html:8
-#: templates/dashboard/superadmin/index.html:9
 msgid "Bonjour"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:9
 msgid "Gestion des demandes et assignations"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:14
-#: templates/dashboard/client/index.html:14
-#: templates/dashboard/requester/index.html:14
 msgid "Total demandes"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:15
-#: templates/dashboard/admin_ops/index.html:26
-#: templates/dashboard/analyst/index.html:27
-#: templates/dashboard/finance/index.html:131
-#: templates/includes/sidebar.html:71 templates/includes/sidebar.html:98
 msgid "En attente"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:16
-#: templates/dashboard/analyst/index.html:16
-#: templates/dashboard/client/index.html:16
-#: templates/dashboard/placeholder.html:29
-#: templates/dashboard/requester/index.html:16
-#: templates/dashboard/superadmin/index.html:18
-#: templates/dashboard/superadmin/index.html:719
 msgid "Complétées"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:27
-#: templates/dashboard/admin_ops/index.html:125
-#: templates/dashboard/superadmin/index.html:498
-#: templates/includes/sidebar.html:75
 msgid "Toutes les demandes"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:28
-#: templates/includes/sidebar.html:79
 msgid "Assignation"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:29
-#: templates/dashboard/finance/index.html:28
-#: templates/dashboard/finance/index.html:47 templates/includes/sidebar.html:83
-#: templates/includes/sidebar.html:133
 msgid "Budget"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:30
+msgid "Performance"
+msgstr ""
+
+msgid "Avis"
+msgstr ""
+
 msgid "Rapports"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:36
-msgid "Demandes en attente d'action"
+msgid "Demandes à valider"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:53
+msgid "Voir"
+msgstr ""
+
+msgid "Invité"
+msgstr ""
+
 msgid "Validation Pédagogique"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:54
-#: templates/dashboard/admin_ops/index.html:57
-#: templates/dashboard/admin_ops/index.html:65
-#: templates/dashboard/finance/index.html:58
 msgid "Rejeter"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:56
 msgid "Validation Finance"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:59
-#: templates/dashboard/admin_ops/index.html:243
-msgid "Assigner"
+msgid "Coût de la prestation"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:61
-msgid "Valider rapport"
+msgid "Coût estimé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:62
-#: templates/dashboard/admin_ops/report_review.html:44
-msgid "Renvoyer pour révision"
+msgid "Coût validé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:64
+msgid "Solde IBTIKAR déclaré"
+msgstr ""
+
+msgid "Ajuster le coût (DA)"
+msgstr ""
+
+msgid "Justification"
+msgstr ""
+
+msgid "Raison du changement..."
+msgstr ""
+
+msgid "Ajuster"
+msgstr ""
+
+msgid "Valider & Générer Note"
+msgstr ""
+
 msgid "Préparer devis"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:67
 msgid "Envoyer devis"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:70
-#: templates/dashboard/admin_ops/index.html:317
-msgid "Notes..."
+msgid "En attente de réponse du client"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:71
-msgid "Appliquer"
+msgid "Générer facture"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:77
-#: templates/dashboard/client/index.html:122
-msgid "RDV proposé"
+msgid "Confirmer paiement"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:81
-msgid "Modifier RDV"
+msgid "Contacter par email"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:88
-msgid "Note plateforme"
+msgid "Contacter"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:89
-#: templates/dashboard/admin_ops/index.html:92
-msgid "Fiche réception"
+msgid "Aucune demande en attente de validation."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:91
-#: templates/dashboard/client/index.html:99
-#: templates/dashboard/superadmin/index.html:824
-msgid "Devis"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:98
-msgid "Envoyer message"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:101
-#: templates/dashboard/analyst/index.html:137
-msgid "Message..."
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:102
-#: templates/dashboard/analyst/index.html:138
-#: templates/dashboard/report_viewer.html:245
-msgid "Envoyer"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:115
-msgid "Aucune demande en attente."
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:130
-msgid "Tous les canaux"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:135
-msgid "Tous les statuts"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:140
-#: templates/includes/topbar.html:14
-msgid "Rechercher..."
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:141
-#: templates/dashboard/superadmin/audit_log.html:32
-#: templates/dashboard/superadmin/index.html:526
-msgid "Filtrer"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:147
-#: templates/dashboard/analyst/index.html:165
-#: templates/dashboard/client/index.html:231
-#: templates/dashboard/requester/index.html:192
-#: templates/dashboard/superadmin/index.html:534
-#: templates/dashboard/superadmin/index.html:765
-msgid "ID"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:148
-#: templates/dashboard/analyst/index.html:166
-#: templates/dashboard/client/index.html:232
-#: templates/dashboard/requester/index.html:193
-#: templates/dashboard/superadmin/index.html:535
-#: templates/dashboard/superadmin/index.html:766
-msgid "Titre"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:149
-#: templates/dashboard/admin_ops/report_review.html:16
-#: templates/dashboard/report_viewer.html:192
-#: templates/dashboard/superadmin/index.html:325
-#: templates/dashboard/superadmin/index.html:368
-#: templates/dashboard/superadmin/index.html:505
-#: templates/dashboard/superadmin/index.html:536
-#: templates/dashboard/superadmin/index.html:767
-#: templates/dashboard/superadmin/revenue_archives.html:20
-#: templates/dashboard/superadmin/service_edit.html:22
-#: templates/pages/guest_submit.html:37 templates/pages/track.html:26
-msgid "Canal"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:150
-#: templates/dashboard/admin_ops/report_review.html:19
-#: templates/dashboard/analyst/index.html:168
-#: templates/dashboard/client/index.html:234
-#: templates/dashboard/finance/index.html:81
-#: templates/dashboard/requester/index.html:195
-#: templates/dashboard/superadmin/index.html:121
-#: templates/dashboard/superadmin/index.html:212
-#: templates/dashboard/superadmin/index.html:513
-#: templates/dashboard/superadmin/index.html:537 templates/pages/track.html:22
-msgid "Statut"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:151
-#: templates/dashboard/superadmin/index.html:539
-msgid "Demandeur"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:152
-#: templates/dashboard/requester/index.html:132
-#: templates/includes/request_card.html:13
-msgid "Assigné"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:153
-#: templates/dashboard/analyst/index.html:169
-#: templates/dashboard/client/index.html:199
-#: templates/dashboard/client/index.html:236
-#: templates/dashboard/finance/index.html:115
-#: templates/dashboard/requester/index.html:197
-#: templates/dashboard/superadmin/audit_log.html:48
-#: templates/dashboard/superadmin/index.html:541
-#: templates/dashboard/superadmin/index.html:645 templates/pages/track.html:30
-msgid "Date"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:168
-#: templates/dashboard/superadmin/index.html:602
-msgid "Aucune demande trouvée."
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:180
-msgid "Panneau d'assignation"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:182
-msgid "Analystes disponibles"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:187
-#: templates/dashboard/admin_ops/index.html:269
-#: templates/dashboard/admin_ops/index.html:308
-#: templates/dashboard/admin_ops/report_review.html:18
-#: templates/dashboard/analyst/index.html:4
-#: templates/dashboard/superadmin/index.html:717
-msgid "Analyste"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:188
-#: templates/dashboard/admin_ops/index.html:270
-#: templates/dashboard/analyst/index.html:204
-#: templates/dashboard/superadmin/index.html:259
-msgid "Charge"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:189
-#: templates/dashboard/admin_ops/index.html:271
-#: templates/dashboard/analyst/index.html:205
-#: templates/dashboard/superadmin/index.html:106
-#: templates/dashboard/superadmin/index.html:260
-#: templates/includes/sidebar.html:44
-msgid "Productivité"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:190
-#: templates/dashboard/admin_ops/index.html:205
-#: templates/dashboard/admin_ops/index.html:272
-#: templates/dashboard/analyst/index.html:31
-#: templates/dashboard/analyst/index.html:206
-#: templates/dashboard/superadmin/index.html:261
-#: templates/dashboard/superadmin/index.html:289
-#: templates/includes/sidebar.html:114
-msgid "Points"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:191
-#: templates/dashboard/superadmin/index.html:213
-#: templates/dashboard/superadmin/index.html:263
-#: templates/dashboard/superadmin/index.html:372
-#: templates/dashboard/superadmin/index.html:432
-#: templates/dashboard/superadmin/index.html:542
-#: templates/dashboard/superadmin/index.html:557
-msgid "Actions"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:208
-#: templates/dashboard/superadmin/index.html:292
-msgid "Raison"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:214
-msgid "Encourager"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:216
-msgid "Message"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:228
 msgid "Demandes à assigner"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:255
-#: templates/dashboard/finance/index.html:14
-#: templates/dashboard/superadmin/index.html:617
-msgid "Budget IBTIKAR (virtuel)"
+msgid "Télécharger la Note de Plateforme"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:256
-#: templates/dashboard/finance/index.html:15
-#: templates/dashboard/superadmin/index.html:623
-msgid "Revenus GENOCLAB (réel)"
+msgid "Assigner à"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:263
-msgid "Comparaison performance analystes"
+msgid "Assigner"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:273
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/index.html:262
-msgid "Disponible"
+msgid ""
+"Aucune demande prête pour l'assignation. Les demandes doivent d'abord passer "
+"par la validation."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:283
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/audit_log.html:66
-#: templates/dashboard/superadmin/index.html:275
-#: templates/dashboard/superadmin/index.html:383
-#: templates/dashboard/superadmin/index.html:658
-#: templates/dashboard/superadmin/index.html:881
-msgid "Oui"
+msgid "Rapports à réviser"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:283
-#: templates/dashboard/analyst/index.html:207
-#: templates/dashboard/superadmin/index.html:277
-#: templates/dashboard/superadmin/index.html:383
-#: templates/dashboard/superadmin/index.html:658
-#: templates/dashboard/superadmin/index.html:881
-msgid "Non"
+msgid "Analyste"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:286
-msgid "Aucun analyste."
+msgid "Réviser rapport"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:298
-msgid "Rapports en attente de révision"
-msgstr ""
-
-#: templates/dashboard/admin_ops/index.html:310
-#: templates/dashboard/admin_ops/report_review.html:25
-#: templates/dashboard/superadmin/index.html:778
 msgid "Télécharger"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:318
-msgid "Valider"
+msgid "Aucun rapport en attente de révision."
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:323
-msgid "Raison du renvoi..."
+msgid "Complétions et clôtures"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:324
-msgid "Renvoyer"
+msgid "Transmettre au demandeur"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:330
-msgid "Aucun rapport en attente."
+msgid "Transmettre au client"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:4
-msgid "Révision rapport"
+msgid "Clôturer"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:8
-msgid "Révision du rapport"
+msgid "Archiver"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:17
-#: templates/dashboard/analyst/index.html:167
-#: templates/dashboard/client/index.html:42
-#: templates/dashboard/client/index.html:233
-#: templates/dashboard/report_viewer.html:188
-#: templates/dashboard/requester/index.html:41
-#: templates/dashboard/requester/index.html:194
-#: templates/dashboard/superadmin/index.html:538
-#: templates/dashboard/superadmin/index.html:867
-#: templates/pages/guest_submit.html:44
-#: templates/pages/guest_submit_success.html:25
-msgid "Service"
+msgid "Aucune demande en attente de complétion."
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:24
-#: templates/dashboard/superadmin/index.html:768
-msgid "Rapport"
+msgid "En cours de traitement"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:35
-msgid "Valider le rapport"
+msgid "RDV proposé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:41
-#: templates/dashboard/analyst/index.html:89
-msgid "Notes de révision"
+msgid "En attente de confirmation du demandeur"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:42
-msgid "Indiquez les corrections nécessaires..."
+msgid "Modifier RDV"
 msgstr ""
 
-#: templates/dashboard/admin_ops/report_review.html:50
-msgid "Retour"
+msgid "Marquer échantillon reçu"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:9
-msgid "Espace analyste"
-msgstr ""
-
-#: templates/dashboard/analyst/index.html:14
-#: templates/dashboard/superadmin/index.html:718
-msgid "Assignées"
-msgstr ""
-
-#: templates/dashboard/analyst/index.html:15
-#: templates/dashboard/analyst/index.html:28
-#: templates/dashboard/client/index.html:15
-#: templates/dashboard/placeholder.html:38
-#: templates/dashboard/requester/index.html:15
-#: templates/includes/sidebar.html:102
 msgid "En cours"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:17
+msgid "Envoyer message"
+msgstr ""
+
+msgid "Message..."
+msgstr ""
+
+msgid "Envoyer"
+msgstr ""
+
+msgid "Aucune demande en cours de traitement."
+msgstr ""
+
+msgid "Tous les canaux"
+msgstr ""
+
+msgid "Tous les statuts"
+msgstr ""
+
+msgid "Commun"
+msgstr ""
+
+msgid "Assigné"
+msgstr ""
+
+msgid "RDV Proposé"
+msgstr ""
+
+msgid "RDV Confirmé"
+msgstr ""
+
+msgid "Échantillon Reçu"
+msgstr ""
+
+msgid "Analyse Démarrée"
+msgstr ""
+
+msgid "Analyse Terminée"
+msgstr ""
+
+msgid "Rapport Uploadé"
+msgstr ""
+
+msgid "Rapport Validé"
+msgstr ""
+
+msgid "Complété"
+msgstr ""
+
+msgid "Rejeté"
+msgstr ""
+
+msgid "Soumis"
+msgstr ""
+
+msgid "Note Générée"
+msgstr ""
+
+msgid "En attente soumission IBTIKAR"
+msgstr ""
+
+msgid "Code IBTIKAR soumis"
+msgstr ""
+
+msgid "Transmis au Demandeur"
+msgstr ""
+
+msgid "Clôturé"
+msgstr ""
+
+msgid "Demande Créée"
+msgstr ""
+
+msgid "Devis En Cours"
+msgstr ""
+
+msgid "Devis Envoyé"
+msgstr ""
+
+msgid "Devis Accepté"
+msgstr ""
+
+msgid "Devis Refusé"
+msgstr ""
+
+msgid "Facture Émise"
+msgstr ""
+
+msgid "Paiement Confirmé"
+msgstr ""
+
+msgid "Transmis au Client"
+msgstr ""
+
+msgid "Archivé"
+msgstr ""
+
+msgid "Rechercher..."
+msgstr ""
+
+msgid "Filtrer"
+msgstr ""
+
+msgid "Réinitialiser"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Titre"
+msgstr ""
+
+msgid "Canal"
+msgstr ""
+
+msgid "Statut"
+msgstr ""
+
+msgid "Demandeur"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Aucune demande trouvée."
+msgstr ""
+
+msgid "Panneau d'assignation"
+msgstr ""
+
+msgid "Analystes disponibles"
+msgstr ""
+
+msgid ""
+"Pour attribuer des points ou envoyer des encouragements, utilisez l'onglet"
+msgstr ""
+
+msgid "Charge"
+msgstr ""
+
+msgid "Productivité"
+msgstr ""
+
+msgid "Points"
+msgstr ""
+
+msgid "Disponible"
+msgstr ""
+
+msgid "Oui"
+msgstr ""
+
+msgid "Non"
+msgstr ""
+
+msgid "Budget IBTIKAR (virtuel)"
+msgstr ""
+
+msgid "Revenus GENOCLAB (réel)"
+msgstr ""
+
+msgid "Performance & Points"
+msgstr ""
+
+msgid "analystes"
+msgstr ""
+
+msgid "pts"
+msgstr ""
+
+msgid "prod."
+msgstr ""
+
+msgid "Raison"
+msgstr ""
+
+msgid "Attribuer points"
+msgstr ""
+
+msgid "Pts"
+msgstr ""
+
+msgid "Message encourageant..."
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Envoyer un encouragement"
+msgstr ""
+
+msgid "Cadeau récupéré"
+msgstr ""
+
+msgid "En attente de récupération"
+msgstr ""
+
+msgid "Boîte débloquée — ajoutez une récompense"
+msgstr ""
+
+msgid "Image récompense"
+msgstr ""
+
+msgid "Déposer la récompense"
+msgstr ""
+
+msgid "Déposer"
+msgstr ""
+
+msgid "Aucun analyste enregistré."
+msgstr ""
+
+msgid "Rapports en attente de révision"
+msgstr ""
+
+msgid "Notes..."
+msgstr ""
+
+msgid "Raison du renvoi..."
+msgstr ""
+
+msgid "Renvoyer"
+msgstr ""
+
+msgid "Aucun rapport en attente."
+msgstr ""
+
+msgid "Note moyenne"
+msgstr ""
+
+msgid "Total avis"
+msgstr ""
+
+msgid "Répartition des notes"
+msgstr ""
+
+msgid "Avis récents"
+msgstr ""
+
+msgid "Par"
+msgstr ""
+
+msgid "Aucun avis pour le moment."
+msgstr ""
+
+msgid "Préparer le devis"
+msgstr ""
+
+msgid "Retour au détail"
+msgstr ""
+
+msgid "Estimation automatique (YAML)"
+msgstr ""
+
+msgid "Modèle de tarification"
+msgstr ""
+
+msgid "Nombre d'unités"
+msgstr ""
+
+msgid "Prix unitaire"
+msgstr ""
+
+msgid "Total estimé"
+msgstr ""
+
+msgid "Paramètres du service"
+msgstr ""
+
+msgid "Tableau des échantillons"
+msgstr ""
+
+msgid "Service"
+msgstr ""
+
+msgid "Code"
+msgstr ""
+
+msgid "Prix GENOCLAB"
+msgstr ""
+
+msgid "Lignes du devis"
+msgstr ""
+
+msgid "Ajouter une ligne"
+msgstr ""
+
+msgid "Frais et TVA"
+msgstr ""
+
+msgid "Frais administratifs (DA)"
+msgstr ""
+
+msgid "Frais de rapport (DA)"
+msgstr ""
+
+#, python-format
+msgid "Taux TVA (%%)"
+msgstr ""
+
+msgid "Récapitulatif"
+msgstr ""
+
+msgid "Sous-total HT"
+msgstr ""
+
+msgid "Frais administratifs"
+msgstr ""
+
+msgid "Frais de rapport"
+msgstr ""
+
+msgid "Sous-total avant TVA"
+msgstr ""
+
+msgid "TVA"
+msgstr ""
+
+msgid "Total TTC"
+msgstr ""
+
+msgid "Notes"
+msgstr ""
+
+msgid "Notes internes ou commentaires pour le client..."
+msgstr ""
+
+msgid "Enregistrer brouillon"
+msgstr ""
+
+msgid "Envoyer au client"
+msgstr ""
+
+msgid "Révision rapport"
+msgstr ""
+
+msgid "Révision du rapport"
+msgstr ""
+
+msgid "Rapport"
+msgstr ""
+
+msgid "Valider le rapport"
+msgstr ""
+
+msgid "Notes de révision"
+msgstr ""
+
+msgid "Indiquez les corrections nécessaires..."
+msgstr ""
+
+msgid "Renvoyer pour révision"
+msgstr ""
+
+msgid "Retour"
+msgstr ""
+
+msgid "Détail demande"
+msgstr ""
+
+msgid "Créée le"
+msgstr ""
+
+msgid "Mise à jour"
+msgstr ""
+
+msgid "Retour aux opérations"
+msgstr ""
+
+msgid "Informations du demandeur"
+msgstr ""
+
+msgid "Nom complet"
+msgstr ""
+
+msgid "Organisation"
+msgstr ""
+
+msgid "ID IBTIKAR"
+msgstr ""
+
+msgid "Code IBTIKAR-DGRSDT"
+msgstr ""
+
+msgid "Aucun demandeur associé."
+msgstr ""
+
+msgid "Détails du service"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Disponibilité"
+msgstr ""
+
+msgid "Délai estimé"
+msgstr ""
+
+msgid "jours"
+msgstr ""
+
+msgid "Détails de la demande"
+msgstr ""
+
+msgid "Urgence"
+msgstr ""
+
+msgid "Informations financières"
+msgstr ""
+
+msgid "Budget estimé"
+msgstr ""
+
+msgid "Montant du devis"
+msgstr ""
+
+msgid "Prix validé par admin"
+msgstr ""
+
+msgid "Aucune information financière."
+msgstr ""
+
+msgid "Télécharger le devis"
+msgstr ""
+
+msgid "Facture"
+msgstr ""
+
+msgid "Détail du devis"
+msgstr ""
+
+msgid "P.U."
+msgstr ""
+
+msgid "Qté"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Analyste assigné"
+msgstr ""
+
+msgid "Acceptée"
+msgstr ""
+
+msgid "Date de RDV"
+msgstr ""
+
+msgid "RDV confirmé"
+msgstr ""
+
+msgid "Réassigner à un autre analyste"
+msgstr ""
+
+msgid ""
+"Utilisez cette option en cas de retard, d'absence ou de surcharge de "
+"l'analyste actuel. L'ancien et le nouvel analyste seront notifiés."
+msgstr ""
+
+msgid "Nouvel analyste"
+msgstr ""
+
+msgid "Choisir un membre…"
+msgstr ""
+
+msgid "Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires"
+msgstr ""
+
+msgid "Cette raison est consignée dans l'historique de la demande."
+msgstr ""
+
+msgid "Confirmer la réassignation"
+msgstr ""
+
+msgid "Non encore assigné."
+msgstr ""
+
+msgid ""
+"Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, "
+"mode, prix de base, multiplicateur, nombre d'échantillons, total). À "
+"partager manuellement avec le demandeur."
+msgstr ""
+
+msgid "Télécharger la note (.docx)"
+msgstr ""
+
+msgid ""
+"Accès limité : administrateurs des opérations, analyste assigné, "
+"observateurs."
+msgstr ""
+
+msgid "Observateurs"
+msgstr ""
+
+msgid ""
+"Membres autorisés à consulter cette demande en lecture seule (utile en cas "
+"de retard ou d'absence de l'analyste assigné)."
+msgstr ""
+
+msgid "Retirer ce suiveur"
+msgstr ""
+
+msgid "Retirer"
+msgstr ""
+
+msgid "Aucun observateur pour l'instant."
+msgstr ""
+
+msgid "Ajouter un observateur"
+msgstr ""
+
+msgid "Ajouter"
+msgstr ""
+
+msgid "Commande & Paiement"
+msgstr ""
+
+msgid "Bon de Commande Uploadé"
+msgstr ""
+
+msgid "En attente du Bon de Commande"
+msgstr ""
+
+msgid "Voir le Bon de Commande"
+msgstr ""
+
+msgid "Uploadé le"
+msgstr ""
+
+msgid ""
+"Le client doit uploader le Bon de Commande (pièce obligatoire selon le Code "
+"de Commerce Algérien) après validation du devis."
+msgstr ""
+
+msgid "Reçu de Paiement Uploadé"
+msgstr ""
+
+msgid "En attente du Paiement"
+msgstr ""
+
+msgid "Voir le Reçu de Paiement"
+msgstr ""
+
+msgid ""
+"Le client doit payer et uploader le reçu de paiement pour recevoir son "
+"rapport."
+msgstr ""
+
+msgid "Le paiement sera requis après la fin de l'analyse."
+msgstr ""
+
+msgid "Paiement confirmé"
+msgstr ""
+
+msgid "Le rapport peut être délivré au client"
+msgstr ""
+
+msgid "Documents"
+msgstr ""
+
+msgid "Note de Plateforme"
+msgstr ""
+
+msgid "Rapport d'analyse"
+msgstr ""
+
+msgid "Avis client"
+msgstr ""
+
+msgid "Évalué le"
+msgstr ""
+
+msgid "QR Code Rapport"
+msgstr ""
+
+msgid "Scannez pour accéder à la page du rapport"
+msgstr ""
+
+msgid "Messages"
+msgstr ""
+
+msgid "Commentaires"
+msgstr ""
+
+msgid "Historique du workflow"
+msgstr ""
+
+msgid "Aucun historique."
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Notifier le demandeur (soumission IBTIKAR)"
+msgstr ""
+
+msgid "Transmettre le rapport au demandeur"
+msgstr ""
+
+msgid "Transmettre le rapport au client"
+msgstr ""
+
+msgid "Préparer / Modifier le devis"
+msgstr ""
+
+msgid "Générer la facture"
+msgstr ""
+
+msgid "Confirmer le paiement"
+msgstr ""
+
+msgid "Coût DA"
+msgstr ""
+
+msgid "Ajuster coût"
+msgstr ""
+
+msgid "Télécharger Note"
+msgstr ""
+
+msgid "Aucune action disponible pour ce statut."
+msgstr ""
+
+msgid "Espace analyste"
+msgstr ""
+
+msgid "Assignées"
+msgstr ""
+
 #, python-format
 msgid "Productivité %%"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:29
-#: templates/dashboard/analyst/index.html:159
-#: templates/dashboard/finance/index.html:31
-#: templates/includes/sidebar.html:106 templates/includes/sidebar.html:145
+msgid "Observations"
+msgstr ""
+
 msgid "Historique"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:30
-#: templates/includes/sidebar.html:110
 msgid "Profil"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:32
-#: templates/dashboard/client/index.html:31
-#: templates/dashboard/requester/index.html:30
-#: templates/includes/notification_list.html:5
-#: templates/includes/sidebar.html:118 templates/includes/sidebar.html:168
-#: templates/includes/sidebar.html:195
 msgid "Notifications"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:38
 msgid "Tâches en attente"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:53
 msgid "Accepter"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:57
 msgid "Décliner"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:59
 msgid "Raison..."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:60
-#: templates/dashboard/finance/index.html:61
 msgid "Confirmer"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:66
 msgid "Aucune tâche en attente."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:75
 msgid "Travaux en cours"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:98
+msgid "Voir détails"
+msgstr ""
+
 msgid "Échantillon reçu"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:104
 msgid "Démarrer analyse"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:110
 msgid "Terminer analyse"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:116
 msgid "Uploader rapport"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:124
-msgid "Proposer RDV"
+msgid "Proposer un rendez-vous"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:134
+msgid "Date proposée"
+msgstr ""
+
+msgid "Heure"
+msgstr ""
+
+msgid "Message au demandeur"
+msgstr ""
+
+msgid "Ex: Apportez vos échantillons frais"
+msgstr ""
+
+msgid "Proposer ce RDV"
+msgstr ""
+
+msgid ""
+"Le demandeur recevra une notification pour confirmer ou demander un "
+"changement de date."
+msgstr ""
+
+msgid "Date alternative proposée"
+msgstr ""
+
+msgid "Refuser"
+msgstr ""
+
 msgid "Répondre"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:150
 msgid "Aucun travail en cours."
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:182
-msgid "Aucun historique."
+msgid "Demandes que vous suivez"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:194
+msgid "Accès lecture seule. Vous ne pouvez pas agir sur ces demandes."
+msgstr ""
+
+msgid "Dernière mise à jour"
+msgstr ""
+
+msgid "Consulter cette demande"
+msgstr ""
+
+msgid "Aucune demande à observer pour l'instant."
+msgstr ""
+
+msgid ""
+"L'administrateur des opérations peut vous ajouter en suivi sur une demande "
+"pour que vous puissiez en surveiller l'avancement (par exemple en cas de "
+"retard d'un collègue)."
+msgstr ""
+
 msgid "Mon profil"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:200
-#: templates/dashboard/superadmin/index.html:179
-#: templates/dashboard/superadmin/user_edit.html:51
-#: templates/pages/guest_submit.html:31 templates/pages/home.html:68
-msgid "Organisation"
-msgstr ""
-
-#: templates/dashboard/analyst/index.html:212
 msgid "Mes techniques"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:228
-msgid "Historique des points"
+msgid "sur"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:236
-msgid "Aucun point pour le moment."
+msgid "Score de productivité"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:241
-msgid "Encouragements reçus"
+msgid "Cadeau récupéré !"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:249
-msgid "Aucun encouragement pour le moment."
+msgid "Merci pour votre excellent travail. Continuez comme ça !"
 msgstr ""
 
-#: templates/dashboard/analyst/index.html:260
-#: templates/dashboard/client/index.html:263
-#: templates/dashboard/requester/index.html:224
+msgid "Boîte surprise débloquée !"
+msgstr ""
+
+msgid ""
+"Vous avez cumulé 100 points ! Une récompense vous attend chez "
+"l'administrateur."
+msgstr ""
+
+msgid "Récompense"
+msgstr ""
+
+msgid "Voici votre récompense — allez la récupérer !"
+msgstr ""
+
+msgid "L'administrateur prépare votre récompense..."
+msgstr ""
+
+msgid "Marquer comme récupéré"
+msgstr ""
+
+msgid "Boîte surprise presque débloquée !"
+msgstr ""
+
+msgid "Objectif : 100 points"
+msgstr ""
+
+msgid "Activité & Points"
+msgstr ""
+
+msgid "événements"
+msgstr ""
+
+msgid "Complétez des demandes pour gagner vos premiers points !"
+msgstr ""
+
+msgid "Encouragements"
+msgstr ""
+
+msgid "Vos encouragements apparaîtront ici."
+msgstr ""
+
+msgid "Badges & Objectifs"
+msgstr ""
+
+msgid "Première analyse"
+msgstr ""
+
+msgid "Débloqué"
+msgstr ""
+
+msgid "5 Analyses"
+msgstr ""
+
+msgid "Points — Expert"
+msgstr ""
+
+msgid "Analyses"
+msgstr ""
+
 msgid "Aucune notification."
 msgstr ""
 
-#: templates/dashboard/client/index.html:4
-msgid "Client GENOCLAB"
+msgid "Retour au tableau de bord"
 msgstr ""
 
-#: templates/dashboard/client/index.html:9
-msgid "Espace GENOCLAB"
+msgid "Pipeline GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/client/index.html:17
-#: templates/dashboard/requester/index.html:17
-msgid "Rejetées"
-msgstr ""
-
-#: templates/dashboard/client/index.html:27
-#: templates/dashboard/requester/index.html:27
-#: templates/includes/sidebar.html:156 templates/includes/sidebar.html:179
-msgid "Nouvelle demande"
-msgstr ""
-
-#: templates/dashboard/client/index.html:28
-#: templates/dashboard/requester/index.html:28
-#: templates/includes/sidebar.html:160 templates/includes/sidebar.html:183
-msgid "Mes demandes"
-msgstr ""
-
-#: templates/dashboard/client/index.html:29
-#: templates/dashboard/finance/index.html:16
-#: templates/dashboard/superadmin/index.html:631
-#: templates/includes/sidebar.html:137 templates/includes/sidebar.html:187
-msgid "Factures"
-msgstr ""
-
-#: templates/dashboard/client/index.html:30
-#: templates/dashboard/client/index.html:225
-#: templates/dashboard/finance/index.html:30
-#: templates/dashboard/requester/index.html:29
-#: templates/dashboard/requester/index.html:186
-#: templates/includes/sidebar.html:141 templates/includes/sidebar.html:164
-#: templates/includes/sidebar.html:191
-msgid "Archives"
-msgstr ""
-
-#: templates/dashboard/client/index.html:37
-msgid "Soumettre une nouvelle demande GENOCLAB"
-msgstr ""
-
-#: templates/dashboard/client/index.html:44
-#: templates/dashboard/requester/index.html:43
-#: templates/pages/guest_submit.html:46
-msgid "Sélectionner un service..."
-msgstr ""
-
-#: templates/dashboard/client/index.html:52
-#: templates/dashboard/requester/index.html:51
-#: templates/pages/guest_submit.html:54
-msgid "Titre de la demande"
-msgstr ""
-
-#: templates/dashboard/client/index.html:53
-msgid "Ex: Analyse complète..."
-msgstr ""
-
-#: templates/dashboard/client/index.html:56
-#: templates/dashboard/requester/index.html:55
-#: templates/dashboard/superadmin/index.html:348
-#: templates/dashboard/superadmin/service_edit.html:45
-#: templates/pages/guest_submit.html:58
-msgid "Description"
-msgstr ""
-
-#: templates/dashboard/client/index.html:57
-#: templates/dashboard/requester/index.html:56
-#: templates/pages/guest_submit.html:59
-msgid "Décrivez votre demande..."
-msgstr ""
-
-#: templates/dashboard/client/index.html:60
-#: templates/dashboard/requester/index.html:60
-#: templates/pages/guest_submit.html:62
-msgid "Urgence"
-msgstr ""
-
-#: templates/dashboard/client/index.html:62
-#: templates/dashboard/requester/index.html:62
-#: templates/pages/guest_submit.html:64
-msgid "Normal"
-msgstr ""
-
-#: templates/dashboard/client/index.html:63
-#: templates/dashboard/requester/index.html:63
-#: templates/pages/guest_submit.html:65
-msgid "Urgent"
-msgstr ""
-
-#: templates/dashboard/client/index.html:64
-#: templates/dashboard/requester/index.html:64
-#: templates/pages/guest_submit.html:66
-msgid "Très urgent"
-msgstr ""
-
-#: templates/dashboard/client/index.html:67
-#: templates/dashboard/requester/index.html:72
-#: templates/pages/guest_submit.html:70
-msgid "Soumettre la demande"
-msgstr ""
-
-#: templates/dashboard/client/index.html:76
-#: templates/dashboard/requester/index.html:81
-msgid "Mes demandes actives"
-msgstr ""
-
-#: templates/dashboard/client/index.html:94
 msgid "Créée"
 msgstr ""
 
-#: templates/dashboard/client/index.html:104
-#: templates/dashboard/finance/index.html:114
-#: templates/dashboard/superadmin/index.html:643
-msgid "Paiement"
+msgid "BC"
 msgstr ""
 
-#: templates/dashboard/client/index.html:109
-#: templates/dashboard/requester/index.html:137
-#: templates/includes/sidebar.html:91
 msgid "Analyse"
 msgstr ""
 
-#: templates/dashboard/client/index.html:114
-#: templates/dashboard/requester/index.html:142
+msgid "Paiement"
+msgstr ""
+
 msgid "Terminé"
 msgstr ""
 
-#: templates/dashboard/client/index.html:125
-#: templates/dashboard/requester/index.html:112
-msgid "Confirmer RDV"
+msgid "Devis interne avec la justification détaillée du tarif."
 msgstr ""
 
-#: templates/dashboard/client/index.html:133
-msgid "Montant devis:"
+msgid "(Vous y avez accès en lecture en tant qu'observateur.)"
 msgstr ""
 
-#: templates/dashboard/client/index.html:137
-msgid "Accepter le devis"
+msgid "Rendez-vous"
 msgstr ""
 
-#: templates/dashboard/client/index.html:141
-msgid "Refuser le devis"
+msgid "Confirmé"
 msgstr ""
 
-#: templates/dashboard/client/index.html:152
-#: templates/dashboard/requester/index.html:152
-msgid "Confirmer réception"
+msgid "Date alternative proposée par le demandeur"
 msgstr ""
 
-#: templates/dashboard/client/index.html:168
-#: templates/dashboard/requester/index.html:166
-msgid "Commentaire..."
+msgid "Accepter cette date"
 msgstr ""
 
-#: templates/dashboard/client/index.html:169
-#: templates/dashboard/requester/index.html:167
-msgid "Évaluer"
+msgid "Raison du refus"
 msgstr ""
 
-#: templates/dashboard/client/index.html:174
-#: templates/dashboard/client/index.html:235
-#: templates/dashboard/requester/index.html:172
-#: templates/dashboard/requester/index.html:196
+msgid "Ex: Je ne suis pas disponible ce jour-là..."
+msgstr ""
+
+msgid "Confirmer le refus"
+msgstr ""
+
 msgid "Note"
 msgstr ""
 
-#: templates/dashboard/client/index.html:179
-#: templates/dashboard/requester/index.html:177
+msgid "Proposer"
+msgstr ""
+
+msgid "Aucun message."
+msgstr ""
+
+msgid "Répondre..."
+msgstr ""
+
+msgid "Voir rapport"
+msgstr ""
+
+msgid "Client GENOCLAB"
+msgstr ""
+
+msgid "Espace GENOCLAB"
+msgstr ""
+
+msgid "Rejetées"
+msgstr ""
+
+msgid "Nouvelle demande"
+msgstr ""
+
+msgid "Mes demandes"
+msgstr ""
+
+msgid "Factures"
+msgstr ""
+
+msgid "Archives"
+msgstr ""
+
+msgid "Soumettre une nouvelle demande GENOCLAB"
+msgstr ""
+
+msgid "Sélectionner un service..."
+msgstr ""
+
+msgid "Titre de la demande"
+msgstr ""
+
+msgid "Ex: Analyse complète..."
+msgstr ""
+
+msgid "Décrivez votre demande..."
+msgstr ""
+
+msgid "Normal"
+msgstr ""
+
+msgid "Urgent"
+msgstr ""
+
+msgid "Très urgent"
+msgstr ""
+
+msgid "Vérifier et soumettre"
+msgstr ""
+
+msgid "Mes demandes actives"
+msgstr ""
+
+msgid "Rendez-vous proposé"
+msgstr ""
+
+msgid "Confirmer ce RDV"
+msgstr ""
+
+msgid "Proposer une autre date"
+msgstr ""
+
+msgid "Date souhaitée"
+msgstr ""
+
+msgid "Confirmer RDV"
+msgstr ""
+
+msgid "Devis reçu"
+msgstr ""
+
+msgid "Frais admin."
+msgstr ""
+
+msgid "Frais rapport"
+msgstr ""
+
+msgid "Accepter le devis"
+msgstr ""
+
+msgid "Refuser le devis"
+msgstr ""
+
+msgid "Voir détail"
+msgstr ""
+
+msgid "Votre rapport est prêt"
+msgstr ""
+
+msgid "Télécharger le rapport"
+msgstr ""
+
+msgid "Confirmer la réception"
+msgstr ""
+
+msgid "Confirmer la réception du rapport"
+msgstr ""
+
+msgid "Évaluez le service"
+msgstr ""
+
+msgid "Votre avis nous aide à améliorer nos services."
+msgstr ""
+
+msgid "Commentaire (optionnel)..."
+msgstr ""
+
 msgid "Aucune demande active. Soumettez votre première demande!"
 msgstr ""
 
-#: templates/dashboard/client/index.html:188
 msgid "Mes factures"
 msgstr ""
 
-#: templates/dashboard/client/index.html:194
-#: templates/dashboard/finance/index.html:108
-#: templates/dashboard/superadmin/index.html:637
 msgid "N° Facture"
 msgstr ""
 
-#: templates/dashboard/client/index.html:195
-#: templates/dashboard/finance/index.html:110
-#: templates/dashboard/superadmin/audit_log.html:49
-#: templates/dashboard/superadmin/index.html:638
 msgid "Demande"
 msgstr ""
 
-#: templates/dashboard/client/index.html:196
-#: templates/dashboard/finance/index.html:111
 msgid "HT"
 msgstr ""
 
-#: templates/dashboard/client/index.html:197
-#: templates/dashboard/finance/index.html:112
-#: templates/dashboard/superadmin/index.html:641
-msgid "TVA"
-msgstr ""
-
-#: templates/dashboard/client/index.html:198
-#: templates/dashboard/finance/index.html:113
 msgid "TTC"
 msgstr ""
 
-#: templates/dashboard/client/index.html:213
-#: templates/dashboard/finance/index.html:140
-#: templates/dashboard/superadmin/index.html:662
+msgid "Document"
+msgstr ""
+
+msgid "Télécharger la facture"
+msgstr ""
+
 msgid "Aucune facture."
 msgstr ""
 
-#: templates/dashboard/client/index.html:250
-#: templates/dashboard/requester/index.html:211
 msgid "Aucune archive."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:4 templates/includes/sidebar.html:122
+msgid "Télécharger le devis officiel (.docx)"
+msgstr ""
+
+msgid "Quantité"
+msgstr ""
+
+msgid "Bon de Commande Obligatoire"
+msgstr ""
+
+msgid ""
+"Selon le Code de Commerce Algérien, vous devez fournir un Bon de Commande "
+"(BC) pour toute transaction commerciale. Veuillez télécharger votre BC ci-"
+"dessous."
+msgstr ""
+
+msgid "Bon de Commande déjà téléchargé"
+msgstr ""
+
+msgid "Télécharger le Bon de Commande"
+msgstr ""
+
+msgid "Paiement Requis pour Recevoir Votre Rapport"
+msgstr ""
+
+msgid ""
+"Votre analyse est terminée. Pour recevoir votre rapport, veuillez effectuer "
+"le paiement et télécharger le reçu ci-dessous."
+msgstr ""
+
+msgid "Montant à payer"
+msgstr ""
+
+msgid "Reçu de paiement déjà téléchargé"
+msgstr ""
+
+msgid "Télécharger votre reçu de paiement:"
+msgstr ""
+
+msgid "Confirmer le Paiement"
+msgstr ""
+
+msgid "Tâche acceptée"
+msgstr ""
+
+msgid "En attente de traitement."
+msgstr ""
+
+msgid "Votre rapport d'analyse est prêt"
+msgstr ""
+
+msgid "Téléchargez-le et confirmez la réception pour finaliser votre demande."
+msgstr ""
+
+msgid "Envoyer mon évaluation"
+msgstr ""
+
+msgid "Votre évaluation"
+msgstr ""
+
 msgid "Finance"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:9
 msgid "Gestion financière IBTIKAR & GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:17
 msgid "Étudiants IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:27
-#: templates/includes/sidebar.html:129
 msgid "Validation IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:29
-#: templates/dashboard/finance/index.html:102
 msgid "Factures GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:37
 msgid "Demandes IBTIKAR — Validation financière"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:47
 msgid "Solde déclaré"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:53
 msgid "Approuver"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:60
 msgid "Raison du rejet..."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:67
 msgid "Aucune demande en attente de validation financière."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:76
 msgid "Budget IBTIKAR par statut"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:81
 msgid "Budget total"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:93
 msgid "Aucune donnée budgétaire."
 msgstr ""
 
-#: templates/dashboard/finance/index.html:109
-#: templates/dashboard/superadmin/index.html:639
 msgid "Client"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:132
 msgid "Partiel"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:133
 msgid "Payé"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:152
 msgid "Archives des revenus"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:156
 msgid "IBTIKAR complétés"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:159
 msgid "GENOCLAB complétés"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:169
 msgid "Historique financier"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:172
 msgid "Total IBTIKAR (virtuel)"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:173
 msgid "Total GENOCLAB (réel)"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:174
 msgid "Factures émises"
 msgstr ""
 
-#: templates/dashboard/finance/index.html:175
 msgid "Étudiants uniques"
 msgstr ""
 
-#: templates/dashboard/placeholder.html:10
 msgid "Bienvenue"
 msgstr ""
 
-#: templates/dashboard/placeholder.html:20
-#: templates/dashboard/superadmin/index.html:102
 msgid "Demandes"
 msgstr ""
 
-#: templates/dashboard/placeholder.html:48
 msgid "Tableau de bord en construction"
 msgstr ""
 
-#: templates/dashboard/placeholder.html:49
 msgid ""
 "Les widgets et statistiques spécifiques à votre rôle seront bientôt "
 "disponibles."
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:174
+msgid "Continuer vers l\\'évaluation"
+msgstr ""
+
+msgid "Erreur réseau, veuillez réessayer."
+msgstr ""
+
+msgid "Copié !"
+msgstr ""
+
+msgid ""
+"Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer."
+msgstr ""
+
+msgid "Nous voulons vraiment faire mieux pour vous."
+msgstr ""
+
+msgid "Merci — nous prenons note de vos remarques."
+msgstr ""
+
+msgid "Super, merci beaucoup !"
+msgstr ""
+
+msgid "Excellent — un immense merci, cela compte vraiment pour notre équipe !"
+msgstr ""
+
 msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:178
 msgid "Merci pour votre confiance"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:179
 msgid ""
 "Votre rapport d'analyse est prêt. Vous pouvez le télécharger ci-dessous."
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:184
 msgid "Référence"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:196
 msgid "Date de soumission"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:207
-msgid "Télécharger le rapport"
+msgid "Remerciements et Clause de Citation"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:214
-msgid "Votre évaluation"
+msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:231
+msgid ""
+"Pour reconnaître le soutien et les contributions de notre Plateforme de "
+"Technologie Génomique, veuillez inclure la citation suivante dans toute "
+"publication ou présentation issue des données ou analyses réalisées :"
+msgstr ""
+
+msgid "Copier"
+msgstr ""
+
+msgid ""
+"Cette recherche a été réalisée au sein de la Plateforme de Technologie "
+"Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). "
+"Nous remercions chaleureusement le personnel de la plateforme pour son aide "
+"dans l'analyse et l'interprétation des données."
+msgstr ""
+
+msgid ""
+"Veuillez également vous assurer que toute contribution substantielle du "
+"personnel de la plateforme est reconnue conformément aux directives standard "
+"en matière d'auteurs scientifiques."
+msgstr ""
+
+msgid ""
+"Toute production scientifique incluant des analyses réalisées sur PLAGENOR "
+"implique l'inclusion des membres ayant contribué. Contactez le responsable "
+"via l'adresse email de la plateforme pour convenir des modalités."
+msgstr ""
+
+msgid "Continuer vers l'évaluation"
+msgstr ""
+
 msgid "Merci pour votre évaluation"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:234
-msgid "Évaluez notre service"
+msgid "Comment s'est passée votre expérience ?"
 msgstr ""
 
-#: templates/dashboard/report_viewer.html:243
-msgid "Commentaire (optionnel)..."
+msgid ""
+"Votre analyse a mobilisé notre équipe et nos plateformes. Votre retour "
+"compte énormément pour nous."
 msgstr ""
 
-#: templates/dashboard/requester/index.html:4
+msgid ""
+"Ce qui vous a marqué : réactivité de l’équipe, clarté des résultats, qualité "
+"de l’accompagnement…"
+msgstr ""
+
+msgid "Partager mon avis"
+msgstr ""
+
 msgid "Demandeur IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:9
 msgid "Espace IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:36
+msgid "Déclarez votre solde IBTIKAR"
+msgstr ""
+
+#, python-format
+msgid ""
+"Avant toute soumission, indiquez le montant résiduel disponible sur votre "
+"compte IBTIKAR (entre 0 et %(cap)s DA). C'est ce montant qui servira de "
+"plafond pour l'estimation et la validation de votre demande. Vous pourrez "
+"l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre "
+"compte DGRSDT."
+msgstr ""
+
+msgid "Solde IBTIKAR résiduel (DA)"
+msgstr ""
+
+msgid "Valider mon solde"
+msgstr ""
+
+#, python-format
+msgid "Mis à jour le %(dt)s."
+msgstr ""
+
+msgid "Vous pouvez ajuster ce montant à tout moment."
+msgstr ""
+
+msgid "Solde déclaré disponible"
+msgstr ""
+
+msgid ""
+"Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant "
+"de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par "
+"d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire."
+msgstr ""
+
+msgid "Mettre à jour mon solde"
+msgstr ""
+
+msgid "Nouveau solde IBTIKAR (DA)"
+msgstr ""
+
+#, python-format
+msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
+msgstr ""
+
+msgid "Enregistrer"
+msgstr ""
+
+msgid "Solde IBTIKAR non déclaré"
+msgstr ""
+
+msgid ""
+"Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir "
+"soumettre une demande."
+msgstr ""
+
 msgid "Soumettre une nouvelle demande IBTIKAR"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:52
 msgid "Ex: Analyse DRX échantillon..."
 msgstr ""
 
-#: templates/dashboard/requester/index.html:68
-msgid "Solde IBTIKAR déclaré (DA)"
+#, python-format
+msgid ""
+"Plafond pour cette demande : <strong>%(rem)s DA</strong> (votre solde "
+"IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous "
+"avez vérifié votre compte DGRSDT."
 msgstr ""
 
-#: templates/dashboard/requester/index.html:95
-#: templates/dashboard/superadmin/index.html:540
-msgid "Assigné à"
+msgid "supérieur à votre solde déclaré"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:96
 msgid "RDV"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:96
 msgid "confirmé"
 msgstr ""
 
-#: templates/dashboard/requester/index.html:103
-#: templates/dashboard/superadmin/index.html:797
-msgid "Formulaire IBTIKAR"
-msgstr ""
-
-#: templates/dashboard/requester/index.html:122
-msgid "Soumis"
-msgstr ""
-
-#: templates/dashboard/requester/index.html:127
 msgid "Validation"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:4
-#: templates/dashboard/superadmin/audit_log.html:8
-msgid "Journal d'audit"
+msgid "Télécharger le rapport et confirmer la réception"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:9
-msgid "Historique des actions sur la plateforme"
+msgid "En attente d'assignation."
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:17
-msgid "Date début"
+msgid "Statistiques"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:21
-msgid "Date fin"
+msgid "Statistiques & métriques"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:25
-msgid "Action/Statut"
+msgid "Vue institutionnelle complète"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:26
-msgid "Ex: ASSIGNED..."
+msgid "Vue financière"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:29
-msgid "Utilisateur"
+msgid "Mes assignations"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:30
-msgid "Nom..."
+msgid "Mon activité"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:33
-msgid "Réinitialiser"
+msgid "Du"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:41
-msgid "Entrées d'audit"
+msgid "Au"
 msgstr ""
 
-#: templates/dashboard/superadmin/audit_log.html:50
-msgid "De"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:51
-msgid "Vers"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:52
-msgid "Acteur"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:53
-msgid "Notes"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:54
-msgid "Forcé"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:69
-msgid "Aucune entrée d'audit."
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:81
-msgid "Précédent"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:83
-msgid "Page"
-msgstr ""
-
-#: templates/dashboard/superadmin/audit_log.html:85
-msgid "Suivant"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:4
-msgid "Super Admin"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:10
-msgid "Vue d'ensemble de la plateforme"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:15
-#: templates/dashboard/superadmin/index.html:100
-#: templates/dashboard/superadmin/index.html:202
-#: templates/includes/sidebar.html:24
-msgid "Utilisateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:16
-#: templates/dashboard/superadmin/index.html:101
-#: templates/dashboard/superadmin/index.html:943
-#: templates/includes/sidebar.html:28
-msgid "Analystes"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:17
-msgid "Demandes actives"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:27
-#: templates/dashboard/superadmin/index.html:941
-msgid "Services actifs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:28
-#: templates/dashboard/superadmin/index.html:104
-#: templates/dashboard/superadmin/index.html:942
-msgid "Techniques"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:37
-msgid "Budget IBTIKAR (DA)"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:38
-msgid "Revenue GENOCLAB (DA)"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:39
-msgid "Note moyenne / 5"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:52
-msgid "Actions rapides"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:57
-msgid "Gérer utilisateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:61
-msgid "Ajouter service"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:65
-msgid "Ajouter technique"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:69
-msgid "Modifier contenu"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:75
-msgid "Derniers utilisateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:90
-msgid "Aucun utilisateur récent."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:99
-msgid "Vue d'ensemble"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:105
-#: templates/includes/sidebar.html:40
-msgid "Paiements"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:107
-#: templates/includes/sidebar.html:48 templates/includes/sidebar.html:87
-msgid "Documents"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:108
-#: templates/includes/sidebar.html:36
-msgid "Formulaires"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:109
-msgid "Contenu"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:110
-#: templates/includes/sidebar.html:60
-msgid "Système"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:116
-msgid "Répartition par statut"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:121
-#: templates/dashboard/superadmin/service_edit.html:73
-msgid "Nombre"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:132
-msgid "Aucune demande"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:133
-msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:145
-msgid "Créer un utilisateur"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:146
-msgid "Masquer"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:146
-msgid "Afficher"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:153
-#: templates/dashboard/superadmin/user_edit.html:19
-msgid "Nom d'utilisateur"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:171
-#: templates/dashboard/superadmin/index.html:211
-#: templates/dashboard/superadmin/user_edit.html:37
-msgid "Rôle"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:193
-msgid "Créer"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:224
-#: templates/dashboard/superadmin/index.html:371
-msgid "Actif"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:226
-#: templates/dashboard/superadmin/index.html:678
-msgid "Inactif"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:230
-#: templates/dashboard/superadmin/index.html:385
-#: templates/dashboard/superadmin/index.html:852
-msgid "Modifier"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:234
-#: templates/dashboard/superadmin/index.html:389
-msgid "Désactiver"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:234
-msgid "Activer"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:251
-msgid "Analystes / Opérateurs"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:284
-msgid "Rendre indisponible"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:284
-msgid "Rendre disponible"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:299
-msgid "Aucun analyste enregistré."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:311
-msgid "Ajouter un service"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:317
-#: templates/dashboard/superadmin/index.html:366
-msgid "Code"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:335
-msgid "Prix IBTIKAR"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:339
-msgid "Prix GENOCLAB"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:343
-#: templates/dashboard/superadmin/service_edit.html:40
-msgid "Délai (jours)"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:352
-#: templates/dashboard/superadmin/service_edit.html:49
-msgid "Image"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:355
-msgid "Créer le service"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:360
-msgid "Services existants"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:369
-#: templates/includes/sidebar.html:149
-msgid "IBTIKAR"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:370
-#: templates/includes/sidebar.html:172
-msgid "GENOCLAB"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:395
-msgid "Aucun service."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:407
-msgid "Ajouter une technique"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:417
-#: templates/dashboard/superadmin/index.html:432
-msgid "Catégorie"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:421
-#: templates/dashboard/superadmin/index.html:689
-msgid "Ajouter"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:428
-msgid "Techniques existantes"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:442
-msgid "Supprimer"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:448
-msgid "Aucune technique."
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:460
-msgid "Gestion du contenu"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:465
-#: templates/dashboard/superadmin/index.html:478
-msgid "Clé"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:469
-#: templates/dashboard/superadmin/index.html:478
-msgid "Valeur"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:478
-msgid "Modifié"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:507
-#: templates/dashboard/superadmin/index.html:515
 msgid "Tous"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:522
+msgid "Toutes"
+msgstr ""
+
+msgid "Établissement"
+msgstr ""
+
+msgid "Cadre d'analyse"
+msgstr ""
+
+msgid "Appliquer"
+msgstr ""
+
+msgid "Document de synthèse Word/PDF"
+msgstr ""
+
+msgid "Synthèse Word"
+msgstr ""
+
+msgid "Générer un bilan d'activité (Excel)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Choisissez les dimensions, la granularité de la période et la portée "
+"(filtres ci-dessus). Le bilan inclut effectifs, parts (%%) et montants par "
+"canal."
+msgstr ""
+
+msgid "Granularité de la période"
+msgstr ""
+
+msgid "Mensuelle"
+msgstr ""
+
+msgid "Trimestrielle"
+msgstr ""
+
+msgid "Annuelle"
+msgstr ""
+
+msgid "Dimensions à inclure"
+msgstr ""
+
+msgid "Télécharger le bilan Excel"
+msgstr ""
+
+msgid "Taux complétion"
+msgstr ""
+
+msgid "Revenu virtuel IBTIKAR"
+msgstr ""
+
+msgid "Revenu GENOCLAB"
+msgstr ""
+
+msgid "Par service"
+msgstr ""
+
+msgid "Aucune donnée"
+msgstr ""
+
+msgid "Par statut"
+msgstr ""
+
+msgid "Par wilaya"
+msgstr ""
+
+msgid "Par établissement"
+msgstr ""
+
+msgid "Par cadre d'analyse"
+msgstr ""
+
+msgid "Cadre"
+msgstr ""
+
+msgid "Par sexe"
+msgstr ""
+
+msgid "Tendance mensuelle"
+msgstr ""
+
+msgid "Journal d'audit"
+msgstr ""
+
+msgid "Historique des actions sur la plateforme"
+msgstr ""
+
+msgid "Date début"
+msgstr ""
+
+msgid "Date fin"
+msgstr ""
+
+msgid "Action/Statut"
+msgstr ""
+
+msgid "Ex: ASSIGNED..."
+msgstr ""
+
+msgid "Utilisateur"
+msgstr ""
+
+msgid "Nom..."
+msgstr ""
+
+msgid "Entrées d'audit"
+msgstr ""
+
+msgid "De"
+msgstr ""
+
+msgid "Vers"
+msgstr ""
+
+msgid "Acteur"
+msgstr ""
+
+msgid "Forcé"
+msgstr ""
+
+msgid "Aucune entrée d'audit."
+msgstr ""
+
+msgid "Précédent"
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "Suivant"
+msgstr ""
+
+msgid "Super Admin"
+msgstr ""
+
+msgid "Vue d'ensemble de la plateforme"
+msgstr ""
+
+msgid "Utilisateurs"
+msgstr ""
+
+msgid "Analystes"
+msgstr ""
+
+msgid "Demandes actives"
+msgstr ""
+
+msgid "Services actifs"
+msgstr ""
+
+msgid "Techniques"
+msgstr ""
+
+msgid "Budget IBTIKAR (DA)"
+msgstr ""
+
+msgid "Revenue GENOCLAB (DA)"
+msgstr ""
+
+msgid "Note moyenne / 5"
+msgstr ""
+
+msgid "Actions rapides"
+msgstr ""
+
+msgid "Gérer utilisateurs"
+msgstr ""
+
+msgid "Ajouter service"
+msgstr ""
+
+msgid "Ajouter technique"
+msgstr ""
+
+msgid "Modifier contenu"
+msgstr ""
+
+msgid "Derniers utilisateurs"
+msgstr ""
+
+msgid "Aucun utilisateur récent."
+msgstr ""
+
+msgid "Vue d'ensemble"
+msgstr ""
+
+msgid "Paiements"
+msgstr ""
+
+msgid "Formulaires"
+msgstr ""
+
+msgid "Contenu"
+msgstr ""
+
+msgid "Système"
+msgstr ""
+
+msgid "Répartition par statut"
+msgstr ""
+
+msgid "Nombre"
+msgstr ""
+
+msgid "Aucune demande"
+msgstr ""
+
+msgid "Aucune demande pour le moment. Les statistiques apparaîtront ici."
+msgstr ""
+
+msgid "Créer un utilisateur"
+msgstr ""
+
+msgid "Masquer"
+msgstr ""
+
+msgid "Afficher"
+msgstr ""
+
+msgid "Nom d'utilisateur"
+msgstr ""
+
+msgid "Créer"
+msgstr ""
+
 msgid "Recherche"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:523
+msgid "Nom, email, username..."
+msgstr ""
+
+msgid "Tous les rôles"
+msgstr ""
+
+msgid "Effacer les filtres"
+msgstr ""
+
+msgid "Actif"
+msgstr ""
+
+msgid "Inactif"
+msgstr ""
+
+msgid "Modifier"
+msgstr ""
+
+msgid "Désactiver cet utilisateur ?"
+msgstr ""
+
+msgid "Activer cet utilisateur ?"
+msgstr ""
+
+msgid "Désactiver"
+msgstr ""
+
+msgid "Activer"
+msgstr ""
+
+msgid "Réinitialiser / Reset Account"
+msgstr ""
+
+msgid "Réinitialiser la 2FA (perte du téléphone)"
+msgstr ""
+
+msgid "Réinitialiser la double authentification de cet utilisateur ?"
+msgstr ""
+
+msgid "Reset 2FA"
+msgstr ""
+
+msgid "Analystes / Opérateurs"
+msgstr ""
+
+msgid "tech."
+msgstr ""
+
+msgid "Sauvegarder"
+msgstr ""
+
+msgid "Rendre indisponible"
+msgstr ""
+
+msgid "Rendre disponible"
+msgstr ""
+
+msgid "Ajouter un service"
+msgstr ""
+
+msgid "Prix IBTIKAR"
+msgstr ""
+
+msgid "Délai (jours)"
+msgstr ""
+
+msgid "Image"
+msgstr ""
+
+msgid "Créer le service"
+msgstr ""
+
+msgid "Services existants"
+msgstr ""
+
+msgid "IBTIKAR"
+msgstr ""
+
+msgid "GENOCLAB"
+msgstr ""
+
+msgid "Réactiver"
+msgstr ""
+
+msgid "Aucun service."
+msgstr ""
+
+msgid "Ajouter une technique"
+msgstr ""
+
+msgid "Catégorie"
+msgstr ""
+
+msgid "Techniques existantes"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Aucune technique."
+msgstr ""
+
+msgid "Gestion du contenu"
+msgstr ""
+
+msgid "Nouvelle entrée"
+msgstr ""
+
+msgid ""
+"Modifiez le texte affiché sur le site dans les trois langues (Français, "
+"English, العربية). Une valeur vide retombe sur la langue par défaut puis sur "
+"le texte du gabarit."
+msgstr ""
+
+msgid "Clé"
+msgstr ""
+
+msgid "Contenu existant"
+msgstr ""
+
+msgid "clés"
+msgstr ""
+
+msgid "Filtrer par clé ou texte…"
+msgstr ""
+
+msgid "Français"
+msgstr ""
+
+msgid "Langues manquantes"
+msgstr ""
+
+msgid "Supprimer cette clé dans toutes les langues ?"
+msgstr ""
+
+msgid "Supprimer"
+msgstr ""
+
 msgid "ID ou titre..."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:565
+msgid "CSV"
+msgstr ""
+
+msgid "Assigné à"
+msgstr ""
+
 msgid "Forcer une transition"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:570
 msgid "Sélectionner le statut cible"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:577
 msgid "Justification (min. 10 caractères)"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:579
 msgid "Forcer la transition"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:585
 msgid "Override budgétaire"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:589
 msgid "Montant budget"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:592
 msgid "Justification pour l override..."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:594
 msgid "Approuver override"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:640
-msgid "Sous-total HT"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:642
-msgid "Total TTC"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:644
 msgid "Verrouillé"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:673
 msgid "Méthodes de paiement"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:686
 msgid "Nom de la méthode"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:696
-#: templates/dashboard/superadmin/index.html:701
 msgid "Réinitialiser les compteurs"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:698
 msgid ""
 "Archive les données de revenus actuelles et réinitialise les compteurs du "
 "tableau de bord. Cette action est irréversible."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:699
 msgid ""
 "Êtes-vous sûr de vouloir réinitialiser les compteurs de revenus ? Les "
 "données seront archivées."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:711
 msgid "Productivité des analystes"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:720
+msgid "assignées"
+msgstr ""
+
+msgid "complétées"
+msgstr ""
+
 msgid "Score"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:734
 msgid "Fire"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:736
 msgid "Very Good"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:738
 msgid "Good"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:746
 msgid "Aucune donnée de productivité."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:759
 msgid "Rapports générés"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:769
 msgid "Mis à jour"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:782
 msgid "Aucun rapport disponible."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:792
-msgid "Templates DOCX"
+msgid "Blocs de contenu personnalisés"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:794
+msgid ""
+"Ajoutez ou modifiez des paragraphes (mentions légales, instructions, "
+"remarques) injectés dans les documents générés — globalement ou pour un "
+"service précis. Les placeholders {{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} "
+"etc. sont résolus à la volée."
+msgstr ""
+
+msgid "Gérer les blocs de contenu"
+msgstr ""
+
+msgid "Modèles DOCX personnalisés"
+msgstr ""
+
+msgid "Templates DOCX globaux"
+msgstr ""
+
 msgid ""
 "Mettez à jour les templates DOCX utilisés pour la génération automatique des "
 "documents. Un backup est créé automatiquement avant chaque mise à jour."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:806
-msgid "Note de plateforme"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:815
-msgid "Fiche de réception"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:840
 msgid "Configuration des formulaires par service"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:861
 msgid "Champs personnalisés"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:869
-#: templates/dashboard/superadmin/service_edit.html:64
 msgid "Label"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:870
-#: templates/dashboard/superadmin/service_edit.html:68
 msgid "Type"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:871
-#: templates/dashboard/superadmin/service_edit.html:81
 msgid "Requis"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:884
 msgid "Aucun champ personnalisé."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:896
+msgid "Annonces plateforme"
+msgstr ""
+
+msgid "Audience"
+msgstr ""
+
+msgid "Publier l'annonce"
+msgstr ""
+
+msgid "Supprimer cette annonce ?"
+msgstr ""
+
+msgid ""
+"Consultez l'historique complet de toutes les transitions, actions et "
+"modifications effectuées sur la plateforme."
+msgstr ""
+
+msgid "Voir le journal d'audit"
+msgstr ""
+
+msgid ""
+"Consultez les archives mensuelles des revenus GENOCLAB et des budgets "
+"IBTIKAR."
+msgstr ""
+
+msgid "Voir les archives"
+msgstr ""
+
+msgid "Contacts & Newsletter"
+msgstr ""
+
+msgid "Exporter tous les emails (CSV)"
+msgstr ""
+
+msgid ""
+"Exporte tous les emails des utilisateurs enregistrés et des invités pour "
+"envoi de newsletters."
+msgstr ""
+
 msgid "Sauvegarde"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:900
 msgid "Télécharger une sauvegarde"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:902
 msgid "Télécharge une copie de la base de données SQLite."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:906
 msgid "Restaurer une sauvegarde"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:908
 msgid ""
 "Attention : cette opération remplace la base de données actuelle. Un backup "
 "automatique sera créé avant la restauration. Le serveur devra être redémarré "
 "après la restauration."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:909
 msgid ""
 "Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base "
 "actuelle sera créé automatiquement."
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:916
 msgid "Restaurer"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:924
 msgid "Informations plateforme"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:927
 msgid "Version"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:928
 msgid "Auteur"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:929
-#: templates/pages/contact.html:15
 msgid "Institution"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:930
 msgid "Base de données"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:931
 msgid "Framework"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:936
-msgid "Statistiques"
-msgstr ""
-
-#: templates/dashboard/superadmin/index.html:939
 msgid "Utilisateurs totaux"
 msgstr ""
 
-#: templates/dashboard/superadmin/index.html:940
 msgid "Demandes totales"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:4
-#: templates/dashboard/superadmin/revenue_archives.html:8
+msgid "Réinitialiser le compte"
+msgstr ""
+
+msgid "Confirmer la réinitialisation"
+msgstr ""
+
+msgid "Attention"
+msgstr ""
+
+#, python-format
+msgid ""
+"\n"
+"            Êtes-vous sûr de vouloir réinitialiser le compte de "
+"<strong>%(username)s</strong> ?\n"
+"            Toutes les données associées (demandes, rapports, historique) "
+"seront conservées.\n"
+"            "
+msgstr ""
+
+msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+msgstr ""
+
+msgid ""
+"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+msgstr ""
+
+#, python-format
+msgid ""
+"Un email avec le mot de passe temporaire sera envoyé à <strong>%(email)s</"
+"strong>."
+msgstr ""
+
+msgid ""
+"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
+"notification."
+msgstr ""
+
+msgid "Cette action est enregistrée dans le journal d'audit."
+msgstr ""
+
 msgid "Archives de revenus"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:9
 msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:13
 msgid "Archives mensuelles"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:19
 msgid "Période"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:21
 msgid "Revenu total"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:22
 msgid "Nombre demandes"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:23
 msgid "Archivé le"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:36
 msgid "Aucune archive. Exécutez"
 msgstr ""
 
-#: templates/dashboard/superadmin/revenue_archives.html:36
 msgid "pour générer les archives."
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:4
 msgid "Modifier service"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:8
 msgid "Modifier le service"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:32
-msgid "Prix IBTIKAR (DA)"
+msgid "Prix IBTIKAR (DZD)"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:36
-msgid "Prix GENOCLAB (DA)"
+msgid ""
+"Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
+"ci-dessous)"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:51
+msgid "Prix GENOCLAB (DZD)"
+msgstr ""
+
 msgid "Image actuelle"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:55
+msgid "Prix de base & multiplicateurs"
+msgstr ""
+
+msgid ""
+"Formule : <strong>Prix de base × Multiplicateur × Nombre d'échantillons</"
+"strong>. Ajustez ici quand le prix des réactifs ou des consommables change — "
+"les nouvelles valeurs s'appliquent immédiatement aux estimations et aux "
+"devis."
+msgstr ""
+
+msgid ""
+"Valeurs YAML par défaut affichées — premier enregistrement les copiera en "
+"base."
+msgstr ""
+
+msgid "Prix non pathogène (DA)"
+msgstr ""
+
+msgid "Prix pathogène (DA)"
+msgstr ""
+
+msgid "idem si vide"
+msgstr ""
+
+msgid "Paramètre porteur du multiplicateur"
+msgstr ""
+
+msgid "Table de multiplicateurs"
+msgstr ""
+
+msgid "Ajouter une option"
+msgstr ""
+
+msgid "ex. Simple, Duplicate, Triplicate"
+msgstr ""
+
+msgid "Aucun multiplicateur défini (×1 partout)."
+msgstr ""
+
+msgid "ex. Simple, Duplicate"
+msgstr ""
+
+msgid "Configurations tarifaires détaillées"
+msgstr ""
+
+msgid "Ajouter un tarif"
+msgstr ""
+
+msgid ""
+"Configurez les prix de base et les suppléments. Plusieurs règles peuvent "
+"coexister (priorité plus basse = appliquée en premier). Chaque modification "
+"est enregistrée immédiatement."
+msgstr ""
+
+msgid ""
+"Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les "
+"nouvelles demandes."
+msgstr ""
+
 msgid "Champs personnalisés du formulaire"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:70
-msgid "Texte"
-msgstr ""
-
-#: templates/dashboard/superadmin/service_edit.html:71
-msgid "Liste"
-msgstr ""
-
-#: templates/dashboard/superadmin/service_edit.html:72
-msgid "Oui/Non"
-msgstr ""
-
-#: templates/dashboard/superadmin/service_edit.html:77
-msgid "Options (virgules)"
-msgstr ""
-
-#: templates/dashboard/superadmin/service_edit.html:86
 msgid "Ajouter un champ"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:89
-#: templates/dashboard/superadmin/user_edit.html:74
-msgid "Enregistrer"
+msgid "Nature"
 msgstr ""
 
-#: templates/dashboard/superadmin/service_edit.html:90
-#: templates/dashboard/superadmin/user_edit.html:75
-msgid "Annuler"
+msgid "Question"
 msgstr ""
 
-#: templates/dashboard/superadmin/user_edit.html:4
-#: templates/dashboard/superadmin/user_edit.html:8
+msgid "Colonne échantillon"
+msgstr ""
+
+msgid "Texte"
+msgstr ""
+
+msgid "Liste"
+msgstr ""
+
+msgid "Oui/Non"
+msgstr ""
+
+msgid "Options (virgules)"
+msgstr ""
+
+msgid "Tarification conditionnelle & logique d'affichage"
+msgstr ""
+
+msgid "Ce champ modifie le prix"
+msgstr ""
+
+msgid "Type de modificateur"
+msgstr ""
+
+msgid "Surcharge (+)"
+msgstr ""
+
+msgid "Forfait (=)"
+msgstr ""
+
+msgid "Multiplicateur (×)"
+msgstr ""
+
+msgid "Valeur"
+msgstr ""
+
+msgid "Note condition (FR)"
+msgstr ""
+
+msgid "Note condition (EN)"
+msgstr ""
+
+msgid "Prix par option (JSON)"
+msgstr ""
+
+msgid "ex : {\"Duplicata\": 2, \"Triplicata\": 2.6}"
+msgstr ""
+
+msgid "Logique conditionnelle (JSON)"
+msgstr ""
+
+msgid ""
+"ex : [{\"trigger_field\":\"mode\",\"trigger_value\":\"PCR\",\"actions\":"
+"[\"show\",\"make_required\"]}]"
+msgstr ""
+
+msgid "Enregistrer toutes les modifications"
+msgstr ""
+
+msgid "Nom du tarif"
+msgstr ""
+
+msgid "ex : Prix de base, Majoration urgence, Remise volume"
+msgstr ""
+
+msgid "Prix de base"
+msgstr ""
+
+msgid "Par échantillon"
+msgstr ""
+
+msgid "Par paramètre"
+msgstr ""
+
+msgid "Majoration urgence"
+msgstr ""
+
+msgid "Remise"
+msgstr ""
+
+msgid "Les deux"
+msgstr ""
+
+msgid "Montant (DZD)"
+msgstr ""
+
+msgid "Unité"
+msgstr ""
+
+msgid "forfait, par échantillon"
+msgstr ""
+
+msgid "Priorité"
+msgstr ""
+
+msgid "Conditions avancées (quantité, seuils)"
+msgstr ""
+
+msgid "Qté min"
+msgstr ""
+
+msgid "Qté max"
+msgstr ""
+
+msgid "Montant min applicable"
+msgstr ""
+
+msgid "Montant max applicable"
+msgstr ""
+
+msgid "Description (optionnel)"
+msgstr ""
+
+msgid "ex : Tarif appliqué pour les analyses urgentes"
+msgstr ""
+
+msgid "Tarif actif"
+msgstr ""
+
+msgid "Modifier le tarif"
+msgstr ""
+
+msgid "Le nom du tarif est obligatoire."
+msgstr ""
+
+msgid "Erreur"
+msgstr ""
+
+msgid "Supprimer ce tarif ?"
+msgstr ""
+
 msgid "Modifier utilisateur"
 msgstr ""
 
-#: templates/dashboard/superadmin/user_edit.html:9
-msgid "Retour au tableau de bord"
-msgstr ""
-
-#: templates/dashboard/superadmin/user_edit.html:13
 msgid "Informations de l'utilisateur"
 msgstr ""
 
-#: templates/dashboard/superadmin/user_edit.html:59
 msgid "Directeur de thèse"
 msgstr ""
 
-#: templates/dashboard/superadmin/user_edit.html:65
 msgid "Niveau étudiant"
 msgstr ""
 
-#: templates/dashboard/superadmin/user_edit.html:69
-msgid "Nouveau mot de passe"
-msgstr ""
-
-#: templates/dashboard/superadmin/user_edit.html:69
 msgid "laisser vide pour ne pas changer"
 msgstr ""
 
-#: templates/includes/notification_list.html:12
+msgid "Supprimer le bloc"
+msgstr ""
+
+msgid "Supprimer ce bloc ?"
+msgstr ""
+
+msgid "Services concernés"
+msgstr ""
+
+msgid "Global (tous les services)"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Langue"
+msgstr ""
+
+msgid "Oui, supprimer"
+msgstr ""
+
+msgid "Modifier bloc"
+msgstr ""
+
+msgid "Nouveau bloc"
+msgstr ""
+
+msgid "Modifier le bloc"
+msgstr ""
+
+msgid "Nouveau bloc de contenu"
+msgstr ""
+
+msgid ""
+"Le contenu de ce bloc sera injecté dans le document généré à la position "
+"choisie."
+msgstr ""
+
+msgid "Type de document"
+msgstr ""
+
+msgid ""
+"Aucune case cochée = bloc global (s'applique à tous les services). Cochez un "
+"sous-ensemble pour cibler ces services uniquement."
+msgstr ""
+
+msgid "Plus bas = inséré en premier"
+msgstr ""
+
+msgid "Titre (optionnel)"
+msgstr ""
+
+msgid "Affiché en gras au-dessus du texte"
+msgstr ""
+
+msgid ""
+"Texte à injecter dans le document. Séparez les paragraphes avec une ligne "
+"vide."
+msgstr ""
+
+msgid ""
+"Astuce : les placeholders comme {{FULL_NAME}}, {{DISPLAY_ID}}, "
+"{{SERVICE_NAME}}, {{DATE}} sont résolus lors de la génération."
+msgstr ""
+
+msgid "Blocs de contenu"
+msgstr ""
+
+msgid "Blocs de contenu des documents"
+msgstr ""
+
+msgid ""
+"Ajoutez ou modifiez des paragraphes injectés dans les documents générés "
+"(formulaire IBTIKAR, note de plateforme, devis, fiche de réception)."
+msgstr ""
+
+msgid "Modèles DOCX"
+msgstr ""
+
+msgid "Global (tous services)"
+msgstr ""
+
+msgid "Aperçu"
+msgstr ""
+
+msgid "Global"
+msgstr ""
+
+msgid "Aucun bloc défini. Cliquez sur « Nouveau bloc » pour en créer un."
+msgstr ""
+
+msgid "Supprimer le Modèle"
+msgstr ""
+
+msgid "Confirmer la suppression"
+msgstr ""
+
+msgid "Attention !"
+msgstr ""
+
+msgid "Êtes-vous sûr de vouloir supprimer le modèle"
+msgstr ""
+
+msgid "Cette action est irréversible. Le fichier sera définitivement supprimé."
+msgstr ""
+
+msgid "Fichier"
+msgstr ""
+
+msgid "Oui, supprimer définitivement"
+msgstr ""
+
+msgid "Retour à la liste"
+msgstr ""
+
+msgid "Modèle de"
+msgstr ""
+
+msgid "Informations"
+msgstr ""
+
+msgid "Aucun fichier"
+msgstr ""
+
+msgid "Créé par"
+msgstr ""
+
+msgid "Créé le"
+msgstr ""
+
+msgid "Mis à jour le"
+msgstr ""
+
+msgid "Placeholders documentés"
+msgstr ""
+
+msgid "Placeholder"
+msgstr ""
+
+msgid "Exemple"
+msgstr ""
+
+msgid ""
+"Ce modèle sera utilisé pour générer automatiquement des documents lorsqu'un "
+"utilisateur demande un document de type"
+msgstr ""
+
+msgid "pour le service"
+msgstr ""
+
+msgid ""
+"Seul un modèle actif par service/type sera utilisé. Les autres seront "
+"désactivés automatiquement."
+msgstr ""
+
+msgid "Modifier le Modèle"
+msgstr ""
+
+msgid "Créer un Modèle"
+msgstr ""
+
+msgid "Créer un Nouveau Modèle"
+msgstr ""
+
+msgid "Sélectionner un service"
+msgstr ""
+
+msgid "Sélectionner un type"
+msgstr ""
+
+msgid "Nom du modèle"
+msgstr ""
+
+msgid "ex: Formulaire IBTIKAR CAN 2024"
+msgstr ""
+
+msgid "Décrivez ce modèle et son utilisation..."
+msgstr ""
+
+msgid "Fichier DOCX"
+msgstr ""
+
+msgid "Actuel"
+msgstr ""
+
+msgid "Choisir un fichier DOCX..."
+msgstr ""
+
+msgid ""
+"Le fichier doit être un document DOCX avec des placeholders (ex: "
+"{{FULL_NAME}}, {{PROJECT_TITLE}})"
+msgstr ""
+
+msgid "Modèle actif"
+msgstr ""
+
+msgid ""
+"Un seul modèle actif par service et type sera utilisé pour la génération des "
+"documents."
+msgstr ""
+
+msgid "Créer le modèle"
+msgstr ""
+
+msgid "Placeholders disponibles"
+msgstr ""
+
+msgid ""
+"Utilisez ces placeholders dans votre document Word (entourés de doubles "
+"accolades) :"
+msgstr ""
+
+msgid "Informations client"
+msgstr ""
+
+msgid "Informations demande"
+msgstr ""
+
+msgid "Titre du projet"
+msgstr ""
+
+msgid "ID de la demande"
+msgstr ""
+
+msgid ""
+"Les placeholders seront remplacés par les valeurs correspondantes lors de la "
+"génération du document."
+msgstr ""
+
+msgid "Gestion des Modèles"
+msgstr ""
+
+msgid "Gestion des Modèles de Documents"
+msgstr ""
+
+msgid "Gérez les modèles DOCX pour la génération automatique des documents"
+msgstr ""
+
+msgid "Nouveau modèle"
+msgstr ""
+
+msgid "Tous les types"
+msgstr ""
+
+msgid "Tous les services"
+msgstr ""
+
+msgid "Actifs"
+msgstr ""
+
+msgid "Inactifs"
+msgstr ""
+
+msgid "Aucun modèle trouvé."
+msgstr ""
+
+msgid "Créer le premier modèle"
+msgstr ""
+
+msgid "Prochain palier"
+msgstr ""
+
+msgid "Niveau atteint !"
+msgstr ""
+
+msgid "Objectif"
+msgstr ""
+
+msgid "Continuez comme ça !"
+msgstr ""
+
+msgid "Rendez-vous proposé — en attente de votre confirmation"
+msgstr ""
+
+msgid "Rendez-vous confirmé"
+msgstr ""
+
 #, python-format
-msgid "il y a %(time)s"
+msgid "Vous avez proposé une date alternative : %(alt)s."
 msgstr ""
 
-#: templates/includes/service_form_fields.html:4
-msgid "Paramètres du service"
+msgid "Confirmer ce rendez-vous"
 msgstr ""
 
-#: templates/includes/service_form_fields.html:12
-#: templates/includes/service_form_fields.html:34
+msgid "Note (optionnelle)"
+msgstr ""
+
+msgid "Votre demande a été acceptée"
+msgstr ""
+
+msgid "Cher(e) étudiant(e) / doctorant(e),"
+msgstr ""
+
+msgid "Veuillez suivre les étapes ci-dessous :"
+msgstr ""
+
+msgid "Téléchargez le formulaire IBTIKAR"
+msgstr ""
+
+msgid "Soumettez votre demande sur IBTIKAR-DGRSDT"
+msgstr ""
+
+msgid "Accéder à IBTIKAR-DGRSDT"
+msgstr ""
+
+msgid "Revenez ici et saisissez votre code IBTIKAR"
+msgstr ""
+
+msgid ""
+"Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on "
+"vous fixe un rendez-vous."
+msgstr ""
+
+msgid "Saisissez votre code IBTIKAR"
+msgstr ""
+
+msgid "Code de votre demande IBTIKAR"
+msgstr ""
+
+msgid "Ex: IBK-DGRSDT-2026-XXXX"
+msgstr ""
+
+msgid "Soumettre le code"
+msgstr ""
+
+msgid "Revoir les instructions"
+msgstr ""
+
+msgid ""
+"Votre code a été transmis au responsable de la plateforme. Une proposition "
+"de date pour la réception de vos échantillons vous sera communiquée "
+"prochainement."
+msgstr ""
+
+msgid "Tout marquer comme lu"
+msgstr ""
+
+msgid "ago"
+msgstr ""
+
 msgid "Choisir"
 msgstr ""
 
-#: templates/includes/service_form_fields.html:51
-msgid "Tableau des échantillons"
-msgstr ""
-
-#: templates/includes/service_form_fields.html:74
-msgid "Ajouter une ligne"
-msgstr ""
-
-#: templates/includes/service_form_fields.html:106
 msgid "Tarification"
 msgstr ""
 
-#: templates/includes/service_form_fields.html:108
-#: templates/includes/service_form_fields.html:111
 msgid "par échantillon"
 msgstr ""
 
-#: templates/includes/sidebar.html:52
+msgid "non pathogène"
+msgstr ""
+
+msgid "pathogène"
+msgstr ""
+
+msgid "Standard"
+msgstr ""
+
+msgid ""
+"Ce montant peut varier selon le nombre d'échantillons et le type d'analyse."
+msgstr ""
+
+msgid "Suppléments actifs:"
+msgstr ""
+
+msgid "Cette option inclut des frais supplémentaires."
+msgstr ""
+
+msgid "(sera ajouté au coût final)."
+msgstr ""
+
+msgid ""
+"Des frais supplémentaires s\\'appliquent. Le montant exact sera communiqué "
+"lors de la validation."
+msgstr ""
+
+msgid "Plateforme de Gestion des Opérations"
+msgstr ""
+
 msgid "Audit"
 msgstr ""
 
-#: templates/includes/sidebar.html:56
 msgid "Archives revenus"
 msgstr ""
 
-#: templates/includes/sidebar.html:64
 msgid "Opérations"
 msgstr ""
 
-#: templates/includes/sidebar.html:231
+msgid "Gestion des demandes"
+msgstr ""
+
+msgid "Validation & Assignation"
+msgstr ""
+
 msgid "Déconnexion"
 msgstr ""
 
-#: templates/pages/about.html:8
-msgid "À propos de PLAGENOR"
+msgid "non lues"
 msgstr ""
 
-#: templates/pages/about.html:15
-msgid ""
-"L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, "
-"un service commun de recherche financé par la DGRSDT (Direction Générale de "
-"la Recherche Scientifique et du Développement Technologique)."
+msgid "Aucune notification"
 msgstr ""
 
-#: templates/pages/about.html:18
-msgid ""
-"PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie "
-"par le code de commerce algérien."
+msgid "Suivi du workflow"
 msgstr ""
 
-#: templates/pages/about.html:21
-msgid ""
-"PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités "
-"de PLAGENOR — agissant comme un ERP interne pour organiser les flux de "
-"travail, gérer les demandes IBTIKAR et les clients GENOCLAB."
+msgid "Prochaine étape"
 msgstr ""
 
-#: templates/pages/about.html:28
-msgid "Deux missions"
+msgid "Demande rejetée"
 msgstr ""
 
-#: templates/pages/about.html:30
-msgid ""
-"Canal académique : réaliser des analyses génomiques pour les étudiants de "
-"fin de cycle (Master, Ingéniorat) et les doctorants de toutes les "
-"universités algériennes, afin de promouvoir la recherche scientifique en "
-"Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 "
-"000 DA géré par la DGRSDT."
+msgid "Workflow terminé avec succès"
 msgstr ""
 
-#: templates/pages/about.html:33
-#, python-format
-msgid ""
-"Canal commercial : fournir les mêmes analyses génomiques aux clients "
-"externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une "
-"base commerciale avec facturation, TVA 19%%%%, et paiement réel."
-msgstr ""
-
-#: templates/pages/about.html:42
-msgid ""
-"Identification microbienne (MALDI-TOF), séquençage Sanger & Illumina, PCR, "
-"contrôle qualité des acides nucléiques, lyophilisation, synthèse d'amorces."
-msgstr ""
-
-#: templates/pages/about.html:54 templates/pages/contact.html:19
 msgid "Adresse"
 msgstr ""
 
-#: templates/pages/contact.html:8
-msgid "Contactez-nous"
-msgstr ""
-
-#: templates/pages/contact.html:9
-msgid "Pour toute question, n'hésitez pas à nous contacter."
-msgstr ""
-
-#: templates/pages/contact.html:31
 msgid "Responsable"
 msgstr ""
 
-#: templates/pages/contact.html:35
 msgid "Plateforme"
 msgstr ""
 
-#: templates/pages/contact.html:43 templates/pages/guest_submit_success.html:37
 msgid "Retour à l'accueil"
 msgstr ""
 
-#: templates/pages/guest_submit.html:5 templates/pages/home.html:22
 msgid "Soumission invité"
 msgstr ""
 
-#: templates/pages/guest_submit.html:9
 msgid "Soumettre une demande (invité)"
 msgstr ""
 
-#: templates/pages/guest_submit.html:10
 msgid ""
 "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code "
 "de suivi."
 msgstr ""
 
-#: templates/pages/guest_submit.html:17
+msgid "Conseil : créez un compte gratuit"
+msgstr ""
+
+msgid ""
+"En invité, vous ne recevez qu'un simple code de suivi. Avec un compte, vous "
+"pilotez vos demandes de bout en bout :"
+msgstr ""
+
+msgid ""
+"Tableau de bord unique pour toutes vos demandes et leur historique complet"
+msgstr ""
+
+msgid ""
+"Notifications en temps réel à chaque étape (validation, rendez-vous, rapport "
+"prêt)"
+msgstr ""
+
+msgid "Confirmation des rendez-vous et téléchargement sécurisé des rapports"
+msgstr ""
+
+msgid "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant"
+msgstr ""
+
 msgid "Vos informations"
 msgstr ""
 
-#: templates/pages/guest_submit.html:19
-msgid "Nom complet"
-msgstr ""
-
-#: templates/pages/guest_submit.html:20
 msgid "Votre nom complet"
 msgstr ""
 
-#: templates/pages/guest_submit.html:24
 msgid "votre@email.com"
 msgstr ""
 
-#: templates/pages/guest_submit.html:28
 msgid "Numéro de téléphone"
 msgstr ""
 
-#: templates/pages/guest_submit.html:32
 msgid "Votre organisation"
 msgstr ""
 
-#: templates/pages/guest_submit.html:35
-msgid "Détails de la demande"
+msgid "Académique"
 msgstr ""
 
-#: templates/pages/guest_submit.html:39
+msgid "Entreprise"
+msgstr ""
+
+msgid "Particulier"
+msgstr ""
+
+msgid "Autre"
+msgstr ""
+
 msgid "externe"
 msgstr ""
 
-#: templates/pages/guest_submit.html:40
 msgid "académique"
 msgstr ""
 
-#: templates/pages/guest_submit.html:55
+msgid "Solde IBTIKAR déclaré (DA)"
+msgstr ""
+
 msgid "Ex: Analyse DRX..."
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:5
+msgid "Soumettre la demande"
+msgstr ""
+
 msgid "Demande soumise"
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:13
 msgid "Demande soumise avec succès!"
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:17
 msgid "Code de suivi"
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:21
 msgid "Token de suivi"
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:31
 msgid ""
 "Conservez votre code de suivi pour suivre l'avancement de votre demande."
 msgstr ""
 
-#: templates/pages/guest_submit_success.html:35
+msgid "Créez un compte pour aller plus loin"
+msgstr ""
+
+msgid ""
+"Suivez cette demande et les suivantes depuis un tableau de bord unique, "
+"recevez les notifications à chaque étape et confirmez vos rendez-vous. Votre "
+"demande actuelle sera automatiquement rattachée à votre compte."
+msgstr ""
+
 msgid "Suivre ma demande"
 msgstr ""
 
-#: templates/pages/home.html:15
-msgid "Plateforme Technologique de Génomique — ESSBO · ORAN"
+msgctxt "help"
+msgid "Centre d'aide"
 msgstr ""
 
-#: templates/pages/home.html:19
+msgid "Centre d'aide PLAGENOR"
+msgstr ""
+
 msgid ""
-"Solution intégrée pour la gestion des demandes d'analyses, le suivi des "
-"opérations et la facturation au sein de l'ESSBO."
+"Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — "
+"étape par étape."
 msgstr ""
 
-#: templates/pages/home.html:21
-msgid "Soumettre une demande"
+msgid "Rechercher dans l’aide…"
 msgstr ""
 
-#: templates/pages/home.html:23
-msgid "Voir les services"
+msgctxt "help"
+msgid "Démarrer"
 msgstr ""
 
-#: templates/pages/home.html:32
+msgid "Compte ou invité"
+msgstr ""
+
+msgctxt "help"
+msgid "Suivi & rapports"
+msgstr ""
+
+msgid "FAQ"
+msgstr ""
+
+#, python-format
 msgid ""
-"Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes "
-"d'analyses dans le cadre de vos projets de recherche avec un financement "
-"encadré par le budget IBTIKAR."
+"Connecté en tant que <strong>%(user_role)s</strong> — les sections qui vous "
+"concernent sont mises en avant ci-dessous."
 msgstr ""
 
-#: templates/pages/home.html:36
+msgid "Bien démarrer"
+msgstr ""
+
+msgid "Créer un compte et comprendre les deux canaux."
+msgstr ""
+
 msgid ""
-"Canal pour les clients externes — universités, entreprises, laboratoires. "
-"Demandez un devis, recevez une facture et bénéficiez de nos services "
-"d'analyses scientifiques."
+"Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos "
+"informations (nom, établissement, wilaya, e-mail)."
 msgstr ""
 
-#: templates/pages/home.html:43 templates/pages/services.html:8
+msgid ""
+"Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> (étudiant/"
+"chercheur, budget annuel encadré) ou <strong>Client GENOCLAB</strong> "
+"(prestation commerciale avec devis)."
+msgstr ""
+
+msgid "Connectez-vous : vous arrivez sur votre tableau de bord personnel."
+msgstr ""
+
+msgid ""
+"Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission "
+"invité » et suivre votre demande avec le code reçu par e-mail."
+msgstr ""
+
+msgid "Compte ou soumission invité ?"
+msgstr ""
+
+msgid "Les deux fonctionnent — mais un compte vous donne le contrôle complet."
+msgstr ""
+
+msgid ""
+"<strong>En invité</strong>, vous soumettez sans créer de compte et recevez "
+"un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se "
+"fait demande par demande, via ce code uniquement."
+msgstr ""
+
+msgid ""
+"<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un "
+"<strong>tableau de bord unique</strong> avec leur <strong>historique "
+"complet</strong> et la timeline détaillée de chaque étape."
+msgstr ""
+
+msgid ""
+"Vous recevez des <strong>notifications en temps réel</strong> dans "
+"l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos "
+"rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon "
+"sécurisée."
+msgstr ""
+
+msgid ""
+"<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT "
+"restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : "
+"retrouvez devis, bons de commande, factures et paiements au même endroit."
+msgstr ""
+
+msgid ""
+"Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : "
+"vos demandes existantes sont automatiquement rattachées à votre nouveau "
+"compte."
+msgstr ""
+
+msgctxt "help"
+msgid "Soumettre une demande IBTIKAR"
+msgstr ""
+
+msgid "Vous"
+msgstr ""
+
+msgid "Pour les étudiants et chercheurs de l'ESSBO."
+msgstr ""
+
+msgid ""
+"Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle demande</"
+"strong>."
+msgstr ""
+
+msgid ""
+"Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, "
+"Séquençage…)."
+msgstr ""
+
+msgid ""
+"Remplissez les <strong>questions du service</strong> (type de kit, contrôle "
+"qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût "
+"estimé se met à jour en direct</strong>."
+msgstr ""
+
+msgid ""
+"Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en "
+"haut — la demande est bloquée si elle dépasse le plafond."
+msgstr ""
+
+msgid ""
+"Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une "
+"confirmation par e-mail avec votre identifiant de demande."
+msgstr ""
+
+msgctxt "help"
+msgid "Demande GENOCLAB (commercial)"
+msgstr ""
+
+msgid "Pour les entreprises, laboratoires et institutions externes."
+msgstr ""
+
+msgid ""
+"Soumettez votre demande avec les détails de l'analyse et vos échantillons."
+msgstr ""
+
+msgid ""
+"La plateforme prépare un <strong>devis détaillé</strong> que vous recevez "
+"par e-mail."
+msgstr ""
+
+msgid ""
+"<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe "
+"peut vous en proposer un nouveau."
+msgstr ""
+
+msgid ""
+"Téléversez votre <strong>bon de commande</strong>, puis réglez selon la "
+"<strong>facture</strong> émise."
+msgstr ""
+
+msgid ""
+"L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la "
+"facture."
+msgstr ""
+
+msgid "Suivre une demande & récupérer un rapport"
+msgstr ""
+
+msgid "Où en est votre analyse, à tout moment."
+msgstr ""
+
+msgid ""
+"Connecté : chaque demande affiche son <strong>statut en temps réel</strong> "
+"et son historique complet sur votre tableau de bord."
+msgstr ""
+
+msgid ""
+"Invité : utilisez la page <strong>Suivi</strong> avec le <strong>code</"
+"strong> reçu par e-mail à la soumission."
+msgstr ""
+
+msgid ""
+"Vous recevez un <strong>e-mail à chaque étape</strong> (validation, "
+"assignation, rendez-vous, rapport prêt)."
+msgstr ""
+
+msgid ""
+"Quand le rapport est validé, un <strong>lien de téléchargement</strong> "
+"sécurisé vous est envoyé."
+msgstr ""
+
+msgctxt "help"
+msgid "Documents générés"
+msgstr ""
+
+msgid "Formulaires officiels remplis automatiquement."
+msgstr ""
+
+msgid ""
+"Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-"
+"rempli avec vos informations et vos échantillons."
+msgstr ""
+
+msgid ""
+"La <strong>note de plateforme</strong>, le <strong>devis</strong> et la "
+"<strong>fiche de réception</strong> sont disponibles au téléchargement (PDF)."
+msgstr ""
+
+msgid ""
+"Tous portent l'<strong>en-tête institutionnel officiel</strong> (République "
+"algérienne, Ministère, ESSBO, PLAGENOR)."
+msgstr ""
+
+msgid "Questions fréquentes"
+msgstr ""
+
+msgid "Réponses rapides aux questions courantes."
+msgstr ""
+
+msgid "Comment changer la langue de l'interface ?"
+msgstr ""
+
+msgid ""
+"Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. "
+"L'interface bascule immédiatement, y compris en arabe avec mise en page de "
+"droite à gauche."
+msgstr ""
+
+msgid "Qu'est-ce que le budget IBTIKAR ?"
+msgstr ""
+
+msgid ""
+"C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque "
+"étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de "
+"bord ; une demande qui le dépasse est bloquée automatiquement."
+msgstr ""
+
+msgid "Comment est calculé le coût d'une analyse ?"
+msgstr ""
+
+msgid ""
+"Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de "
+"base dépend du caractère pathogène, le multiplicateur du mode d'analyse "
+"(simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant "
+"la saisie."
+msgstr ""
+
+msgctxt "help"
+msgid "Puis-je soumettre sans créer de compte ?"
+msgstr ""
+
+msgid ""
+"Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par e-"
+"mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos "
+"demandes sur un tableau de bord, ajoute les notifications en temps réel, la "
+"confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez "
+"convertir une soumission invité en compte à tout moment, et vos demandes "
+"existantes y seront rattachées."
+msgstr ""
+
+msgid "Je ne reçois pas les e-mails de notification ?"
+msgstr ""
+
+msgid ""
+"Vérifiez votre dossier spam. Les notifications restent toujours consultables "
+"dans la cloche en haut de votre tableau de bord, même sans e-mail."
+msgstr ""
+
+msgctxt "help"
+msgid "J'ai oublié mon mot de passe."
+msgstr ""
+
+msgid ""
+"Contactez l'administrateur de la plateforme via la page Contact ; il pourra "
+"réinitialiser votre accès en toute sécurité."
+msgstr ""
+
+msgid "Aucun résultat. Essayez d'autres mots-clés ou consultez la page"
+msgstr ""
+
+msgid "Vous n'avez pas trouvé votre réponse ?"
+msgstr ""
+
+msgctxt "help"
+msgid "Contactez-nous"
+msgstr ""
+
+msgid "Données collectées"
+msgstr ""
+
+msgid "Finalité"
+msgstr ""
+
+msgid "Conservation"
+msgstr ""
+
+msgid "Vos droits"
+msgstr ""
+
+msgid "Exporter mes données (JSON)"
+msgstr ""
+
+msgid "Connectez-vous"
+msgstr ""
+
+msgid "pour exporter vos données."
+msgstr ""
+
+msgid "Retour aux services"
+msgstr ""
+
+msgid "Délai de traitement"
+msgstr ""
+
+msgid "Exigences & conformité"
+msgstr ""
+
+msgid "Demander ce service"
+msgstr ""
+
+msgid "Recommandé"
+msgstr ""
+
+msgid ""
+"Suivez l'état de votre demande, recevez des notifications et accédez à votre "
+"historique."
+msgstr ""
+
+msgid "S'inscrire"
+msgstr ""
+
+msgid "Continuer en tant qu'invité"
+msgstr ""
+
+msgid ""
+"Soumettez votre demande sans compte. Vous recevrez un code de suivi unique."
+msgstr ""
+
+msgid "Soumettre sans compte"
+msgstr ""
+
+msgid "Canal IBTIKAR: votre identifiant IBTIKAR-DGRSDT sera requis."
+msgstr ""
+
 msgid "Nos Services"
 msgstr ""
 
-#: templates/pages/home.html:44
-msgid "Analyses scientifiques et techniques proposées par le laboratoire ESSBO"
-msgstr ""
-
-#: templates/pages/home.html:69
-msgid "ESSBO → PLAGENOR → GENOCLAB"
-msgstr ""
-
-#: templates/pages/home.html:72
-msgid ""
-"L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la "
-"plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la "
-"communauté académique interne, et GENOCLAB pour les prestations externes."
-msgstr ""
-
-#: templates/pages/services.html:9
 msgid "Catalogue des analyses et prestations proposées"
 msgstr ""
 
-#: templates/pages/services.html:27
-msgid "jours"
+msgid "En savoir plus"
 msgstr ""
 
-#: templates/pages/services.html:35
+msgid "Demander"
+msgstr ""
+
 msgid "Aucun service disponible"
 msgstr ""
 
-#: templates/pages/services.html:36
 msgid "Les services seront bientôt publiés. Revenez plus tard."
 msgstr ""
 
-#: templates/pages/track.html:8
 msgid "Suivi de votre demande"
 msgstr ""
 
-#: templates/pages/track.html:9
 msgid ""
 "Entrez votre identifiant de demande ou votre token de suivi pour consulter "
 "l'état d'avancement."
 msgstr ""
 
-#: templates/pages/track.html:11
 msgid "Ex: IBT-2026-0042 ou votre token..."
 msgstr ""
 
-#: templates/pages/track.html:12
 msgid "Rechercher"
 msgstr ""
 
-#: templates/pages/track.html:36
 msgid "Créer un compte pour gérer vos demandes"
 msgstr ""
 
-#: templates/pages/track.html:41
 msgid "Aucun résultat"
 msgstr ""
 
-#: templates/pages/track.html:42
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr ""

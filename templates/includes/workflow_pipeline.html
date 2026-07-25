@@ -1,0 +1,436 @@
+{% load i18n %}
+{% load icons %}
+<!-- Visual Workflow Tracker -->
+<div class="card mb-4" style="margin-top:20px; border:2px solid var(--primary-light, #e0e7ff); background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+    <div class="card-header" style="background:transparent; border-bottom:1px solid var(--slate-200, #e2e8f0); padding:16px 20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <h3 style="margin:0; font-size:1rem; display:flex; align-items:center; gap:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px; color:var(--primary, #4f46e5);">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                {% trans "Suivi du workflow" %}
+                <span class="badge-status {{ req.channel|lower }}" style="font-size:0.65rem;">{{ req.get_channel_display }}</span>
+            </h3>
+            {% if allowed_transitions %}
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="text-xs text-muted">{% trans "Prochaine étape" %}:</span>
+                {% for t in allowed_transitions %}
+                <span class="badge-status {{ t|lower }}" style="font-size:0.6rem;">{{ t }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body" style="padding:20px;">
+        {% if req.channel == 'IBTIKAR' %}
+        {# IBTIKAR Workflow Pipeline #}
+        <div style="display:flex; align-items:flex-start; gap:0; overflow-x:auto; padding:8px 0;">
+            {% with current=req.status %}
+            {# Step 1: Soumis #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'SUBMITTED' or current == 'VALIDATION_PEDAGOGIQUE' or current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white; box-shadow:0 2px 8px rgba(16,185,129,0.4);
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% icon 'check' size=16 %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px; 
+                    {% if current == 'SUBMITTED' or current == 'VALIDATION_PEDAGOGIQUE' or current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669; font-weight:600;{% endif %}">
+                    Soumis
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current != 'DRAFT' and current != 'REJECTED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 2: Validation Pédagogique #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'VALIDATION_PEDAGOGIQUE' %}
+                        background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:white; box-shadow:0 0 0 4px rgba(139,92,246,0.2);
+                    {% elif current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'VALIDATION_PEDAGOGIQUE' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'VALIDATION_PEDAGOGIQUE' %}color:#7c3aed; font-weight:600;{% elif current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Validation Pédago
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'VALIDATION_FINANCE' or current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 3: Validation Finance #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'VALIDATION_FINANCE' %}
+                        background:linear-gradient(135deg, #f59e0b, #d97706); color:white; box-shadow:0 0 0 4px rgba(245,158,11,0.2);
+                    {% elif current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'VALIDATION_FINANCE' %}<span style="animation:pulse 1.5s infinite;">3</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'VALIDATION_FINANCE' %}color:#d97706; font-weight:600;{% elif current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Validation Finance
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'PLATFORM_NOTE_GENERATED' or current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 4: Note Plateforme #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'PLATFORM_NOTE_GENERATED' %}
+                        background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; box-shadow:0 0 0 4px rgba(59,130,246,0.2);
+                    {% elif current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'PLATFORM_NOTE_GENERATED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'PLATFORM_NOTE_GENERATED' %}color:#2563eb; font-weight:600;{% elif current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Note Plateforme
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'IBTIKAR_SUBMISSION_PENDING' or current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 5: Code IBTIKAR #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}
+                        background:linear-gradient(135deg, #ec4899, #db2777); color:white; box-shadow:0 0 0 4px rgba(236,72,153,0.2);
+                    {% elif current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}<span style="animation:pulse 1.5s infinite;">5</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'IBTIKAR_SUBMISSION_PENDING' %}color:#db2777; font-weight:600;{% elif current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Code IBTIKAR
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'IBTIKAR_CODE_SUBMITTED' or current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 6: Assignation + Appointment #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'IBTIKAR_CODE_SUBMITTED' %}
+                        background:linear-gradient(135deg, #06b6d4, #0891b2); color:white; box-shadow:0 0 0 4px rgba(6,182,212,0.2);
+                    {% elif current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'IBTIKAR_CODE_SUBMITTED' %}<span style="animation:pulse 1.5s infinite;">6</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'IBTIKAR_CODE_SUBMITTED' %}color:#0891b2; font-weight:600;{% elif current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Assignation
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' or current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 7: Appointment #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}
+                        background:linear-gradient(135deg, #f97316, #ea580c); color:white; box-shadow:0 0 0 4px rgba(249,115,22,0.2);
+                    {% elif current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}<span style="animation:pulse 1.5s infinite;">7</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'ASSIGNED' or current == 'APPOINTMENT_PROPOSED' %}color:#ea580c; font-weight:600;{% elif current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Appointment
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' or current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 8: Analyse Labo #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}
+                        background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:white; box-shadow:0 0 0 4px rgba(139,92,246,0.2);
+                    {% elif current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'beaker' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'APPOINTMENT_CONFIRMED' or current == 'SAMPLE_RECEIVED' or current == 'ANALYSIS_STARTED' %}color:#7c3aed; font-weight:600;{% elif current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Analyse Labo
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' or current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 9: Rapport #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}
+                        background:linear-gradient(135deg, #0ea5e9, #0284c7); color:white; box-shadow:0 0 0 4px rgba(14,165,233,0.2);
+                    {% elif current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'file-text' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'ANALYSIS_FINISHED' or current == 'REPORT_UPLOADED' or current == 'REPORT_VALIDATED' %}color:#0284c7; font-weight:600;{% elif current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}color:#059669;{% endif %}">
+                    Rapport
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current == 'SENT_TO_REQUESTER' or current == 'COMPLETED' or current == 'CLOSED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:17px; min-width:15px;"></div>
+            
+            {# Step 10: Terminé #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:90px;">
+                <div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600;
+                    {% if current == 'SENT_TO_REQUESTER' %}
+                        background:linear-gradient(135deg, #22c55e, #16a34a); color:white; box-shadow:0 0 0 4px rgba(34,197,94,0.2);
+                    {% elif current == 'COMPLETED' or current == 'CLOSED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white; box-shadow:0 0 0 4px rgba(16,185,129,0.3);
+                    {% elif current == 'REJECTED' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'SENT_TO_REQUESTER' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'check' size=16 %}</span>{% elif current == 'COMPLETED' or current == 'CLOSED' %}{% icon 'flag' size=16 %}{% else %}10{% endif %}
+                </div>
+                <span style="font-size:0.65rem; margin-top:6px; text-align:center; max-width:80px;
+                    {% if current == 'SENT_TO_REQUESTER' %}color:#16a34a; font-weight:600;{% elif current == 'COMPLETED' or current == 'CLOSED' %}color:#059669; font-weight:600;{% endif %}">
+                    Terminé
+                </span>
+            </div>
+            {% endwith %}
+        </div>
+        
+        {% elif req.channel == 'GENOCLAB' %}
+        {# GENOCLAB Workflow Pipeline: Demande → Devis → BC → Assignation → Analyse → Paiement → Rapport → Terminé #}
+        <div style="display:flex; align-items:flex-start; gap:0; overflow-x:auto; padding:8px 0;">
+            {% with current=req.status %}
+            {# Step 1: Demande #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'REQUEST_CREATED' %}
+                        background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+                    {% elif current in 'QUOTE_DRAFT,QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'REJECTED' or current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'REQUEST_CREATED' %}<span style="animation:pulse 1.5s infinite;">1</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'REQUEST_CREATED' %}color:#2563eb; font-weight:600;{% elif current in 'QUOTE_DRAFT,QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Demande
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'QUOTE_DRAFT,QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 2: Devis #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'QUOTE_DRAFT' %}
+                        background:linear-gradient(135deg, #f59e0b, #d97706); color:white; box-shadow:0 0 0 3px rgba(245,158,11,0.2);
+                    {% elif current in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'QUOTE_DRAFT' %}<span style="animation:pulse 1.5s infinite;">2</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'QUOTE_DRAFT' %}color:#d97706; font-weight:600;{% elif current in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Devis
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'QUOTE_SENT,QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 3: BC (Bon de Commande) #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'QUOTE_SENT' %}
+                        background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:white; box-shadow:0 0 0 3px rgba(139,92,246,0.2);
+                    {% elif current in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'QUOTE_SENT' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'clipboard' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'QUOTE_SENT' %}color:#7c3aed; font-weight:600;{% elif current in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    BC
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'QUOTE_VALIDATED_BY_CLIENT,ORDER_UPLOADED,ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 4: Assignation #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'ORDER_UPLOADED' %}
+                        background:linear-gradient(135deg, #06b6d4, #0891b2); color:white; box-shadow:0 0 0 3px rgba(6,182,212,0.2);
+                    {% elif current in 'ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'ORDER_UPLOADED' %}<span style="animation:pulse 1.5s infinite;">4</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'ORDER_UPLOADED' %}color:#0891b2; font-weight:600;{% elif current in 'ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Assignation
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'ASSIGNED,SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 5: Analyse #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'ASSIGNED' %}
+                        background:linear-gradient(135deg, #f97316, #ea580c); color:white; box-shadow:0 0 0 3px rgba(249,115,22,0.2);
+                    {% elif current in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'ASSIGNED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'beaker' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'ASSIGNED' %}color:#ea580c; font-weight:600;{% elif current in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Analyse
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'SAMPLE_RECEIVED,ANALYSIS_STARTED,ANALYSIS_FINISHED,PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 6: Paiement #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'ANALYSIS_FINISHED' %}
+                        background:linear-gradient(135deg, #ec4899, #db2777); color:white; box-shadow:0 0 0 3px rgba(236,72,153,0.2);
+                    {% elif current in 'PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'ANALYSIS_FINISHED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'dollar-sign' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'ANALYSIS_FINISHED' %}color:#db2777; font-weight:600;{% elif current in 'PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Paiement
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'PAYMENT_PENDING,PAYMENT_CONFIRMED,REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 7: Rapport #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'PAYMENT_CONFIRMED' %}
+                        background:linear-gradient(135deg, #0ea5e9, #0284c7); color:white; box-shadow:0 0 0 3px rgba(14,165,233,0.2);
+                    {% elif current in 'REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white;
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'PAYMENT_CONFIRMED' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'file-text' size=16 %}</span>{% else %}{% icon 'check' size=16 %}{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'PAYMENT_CONFIRMED' %}color:#0284c7; font-weight:600;{% elif current in 'REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}color:#059669;{% endif %}">
+                    Rapport
+                </span>
+            </div>
+            <div style="flex:1; height:2px; background:{% if current in 'REPORT_UPLOADED,REPORT_VALIDATED,SENT_TO_CLIENT,COMPLETED,ARCHIVED' %}#10b981{% else %}var(--slate-200, #e2e8f0){% endif %}; margin-top:15px; min-width:10px;"></div>
+            
+            {# Step 8: Terminé #}
+            <div style="display:flex; flex-direction:column; align-items:center; min-width:70px;">
+                <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:600;
+                    {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}
+                        background:linear-gradient(135deg, #22c55e, #16a34a); color:white; box-shadow:0 0 0 3px rgba(34,197,94,0.2);
+                    {% elif current == 'COMPLETED' or current == 'ARCHIVED' %}
+                        background:linear-gradient(135deg, #10b981, #059669); color:white; box-shadow:0 0 0 3px rgba(16,185,129,0.3);
+                    {% elif current == 'QUOTE_REJECTED_BY_CLIENT' %}
+                        background:linear-gradient(135deg, #ef4444, #dc2626); color:white;
+                    {% else %}
+                        background:var(--slate-200, #e2e8f0); color:var(--slate-500, #64748b);
+                    {% endif %}">
+                    {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}<span style="animation:pulse 1.5s infinite; display:flex;">{% icon 'check' size=16 %}</span>{% elif current == 'COMPLETED' or current == 'ARCHIVED' %}{% icon 'flag' size=16 %}{% else %}8{% endif %}
+                </div>
+                <span style="font-size:0.6rem; margin-top:4px; text-align:center; max-width:65px;
+                    {% if current == 'REPORT_VALIDATED' or current == 'SENT_TO_CLIENT' %}color:#16a34a; font-weight:600;{% elif current == 'COMPLETED' or current == 'ARCHIVED' %}color:#059669; font-weight:600;{% endif %}">
+                    Terminé
+                </span>
+            </div>
+            {% endwith %}
+        </div>
+        {% endif %}
+        
+        {# Terminal State Indicator #}
+        {% if req.status == 'REJECTED' or req.status == 'QUOTE_REJECTED_BY_CLIENT' %}
+        <div style="margin-top:16px; padding:12px; background:linear-gradient(135deg, #fef2f2, #fee2e2); border-radius:8px; border:1px solid #fecaca; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="width:20px;height:20px;">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <span style="color:#dc2626; font-weight:600; font-size:0.85rem;">{% trans "Demande rejetée" %}</span>
+        </div>
+        {% elif req.status == 'CLOSED' or req.status == 'ARCHIVED' %}
+        <div style="margin-top:16px; padding:12px; background:linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius:8px; border:1px solid #bbf7d0; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:20px;height:20px;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span style="color:#16a34a; font-weight:600; font-size:0.85rem;">{% trans "Workflow terminé avec succès" %}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+</style>

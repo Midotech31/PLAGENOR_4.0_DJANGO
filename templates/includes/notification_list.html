@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load icons %}
 {% if notifications %}
 <div class="card">
     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -15,7 +16,9 @@
         {% for notif in notifications %}
         <a href="{% url 'notifications:click' notif.pk %}" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; border-bottom:1px solid var(--slate-100, #f1f5f9); text-decoration:none; color:inherit; transition:background 0.15s; {% if not notif.read %}background:#f0f9ff;{% endif %}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='{% if not notif.read %}#f0f9ff{% else %}transparent{% endif %}'">
             <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-                <div style="flex-shrink:0; width:8px; height:8px; border-radius:50%; {% if not notif.read %}background:#2563eb;{% else %}background:#d1d5db;{% endif %}"></div>
+                <div style="flex-shrink:0; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:{{ notif.accent }}1a; color:{{ notif.accent }};">
+                    {% icon notif.icon size=17 %}
+                </div>
                 <div style="flex:1; min-width:0;">
                     <div style="font-size:0.9rem; color:#1e293b; {% if not notif.read %}font-weight:600;{% endif %}">{{ notif.message }}</div>
                     {% if notif.request %}
@@ -23,7 +26,7 @@
                     {% endif %}
                 </div>
             </div>
-            <div style="flex-shrink:0; text-align:right;">
+            <div style="flex-shrink:0; text-align:end;">
                 <span class="text-xs text-muted">{{ notif.created_at|timesince }} {% trans "ago" %}</span>
                 <div style="margin-top:2px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px;"><polyline points="9 18 15 12 9 6"/></svg>

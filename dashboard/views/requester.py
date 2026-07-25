@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float, confirm_appointment_flow
 from django.contrib import messages
 from django.utils import timezone
 
@@ -39,6 +39,17 @@ def index(request):
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
     ).select_related('service').order_by('-updated_at')[:30]
 
+    # Lazy backfill: any archived request with an uploaded report but
+    # no report_token gets one now, so the archives table can route the
+    # download through the gated /report/<token>/ view (the only path
+    # that enforces the citation clause). Cheap — only fires for the
+    # handful of legacy rows without a token.
+    import uuid as _uuid
+    for _req in archived:
+        if _req.report_file and not _req.report_token:
+            _req.report_token = _uuid.uuid4()
+            _req.save(update_fields=['report_token'])
+
     # Available services for new request
     services = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'IBTIKAR']
@@ -68,6 +79,14 @@ def index(request):
 @requester_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    # Lazy backfill: any uploaded report needs a report_token so the
+    # download passes through the gated /report/<token>/ route + citation
+    # clause. Older rows (created before the token was introduced)
+    # otherwise fell back to the raw /media/ URL, bypassing the gate.
+    if req.report_file and not req.report_token:
+        import uuid as _uuid
+        req.report_token = _uuid.uuid4()
+        req.save(update_fields=['report_token'])
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
 
@@ -102,13 +121,66 @@ def request_detail(request, pk):
         request=req, to_user=request.user
     ).select_related('from_user').order_by('created_at')
 
+    # Workflow history — same view as the analyst's, so the requester
+    # can follow the progress of their own request step by step.
+    history = req.history.select_related('actor').order_by('created_at')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
+        'history': history,
+        # Le RDV est « en attente » (donc à confirmer par le demandeur)
+        # uniquement s'il a une date, n'est pas déjà confirmé, et que le
+        # statut est encore au stade proposition/assignation.
+        'appointment_pending': bool(
+            req.appointment_date and not req.appointment_confirmed
+            and req.status in ('APPOINTMENT_PROPOSED', 'ASSIGNED')
+        ),
     }
     return render(request, 'dashboard/requester/request_detail.html', context)
+
+
+@requester_required
+def declare_ibtikar_balance(request):
+    """Self-declared residual IBTIKAR balance.
+
+    Stored on User (not on the request) so it persists across requests:
+    once declared, every new request is sized against this number and
+    every report-delivery deducts from it. The candidate can revise the
+    figure at any time — the DGRSDT IBTIKAR budget is shared across
+    multiple platforms, so the candidate is the only one who knows the
+    true current residual.
+    """
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from django.conf import settings as _s
+    raw = request.POST.get('declared_balance', '').strip()
+    try:
+        declared = float(raw)
+    except (TypeError, ValueError):
+        messages.error(request, "Veuillez saisir un montant valide.")
+        return redirect_back(request, 'dashboard:requester')
+
+    hard_cap = float(_s.IBTIKAR_BUDGET_CAP)
+    if declared < 0 or declared > hard_cap:
+        messages.error(
+            request,
+            f"Le solde déclaré doit être compris entre 0 et {hard_cap:,.0f} DA.",
+        )
+        return redirect_back(request, 'dashboard:requester')
+
+    request.user.ibtikar_declared_balance = declared
+    request.user.ibtikar_balance_declared_at = timezone.now()
+    request.user.save(update_fields=[
+        'ibtikar_declared_balance', 'ibtikar_balance_declared_at',
+    ])
+    messages.success(
+        request,
+        f"Solde IBTIKAR mis à jour : {declared:,.0f} DA. Vous pouvez maintenant soumettre votre demande.",
+    )
+    return redirect_back(request, 'dashboard:requester')
 
 
 @requester_required
@@ -118,23 +190,18 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     service = get_object_or_404(Service, pk=service_id, active=True)
 
-    # Declared balance validation
-    declared = float(request.POST.get('declared_balance', 0))
-    if declared < 0 or declared > 200000:
-        messages.error(request, "Le solde IBTIKAR déclaré doit être entre 0 et 200 000 DA.")
-        return redirect_back(request, 'dashboard:requester')
-    if service.ibtikar_price and float(service.ibtikar_price) > declared:
-        messages.warning(request, f"Attention: le coût estimé ({service.ibtikar_price} DA) dépasse votre solde déclaré ({declared:,.0f} DA).")
-
-    # Budget check before submission
-    budget_check = check_ibtikar_budget(amount=service.ibtikar_price, requester=request.user)
-    if budget_check['exceeded']:
+    # Guard 1 — the requester must have declared a residual balance
+    # before any submission. Without a declared value we cannot size or
+    # cap-check a request, so reject the POST early with a clear redirect
+    # back to the dashboard where the declaration card is shown.
+    if request.user.ibtikar_declared_balance is None:
         messages.error(
             request,
-            f"Budget IBTIKAR dépassé: {budget_check['projected']:,.0f} / {budget_check['cap']:,.0f} DZD. "
-            f"Reste: {budget_check['remaining']:,.0f} DZD."
+            "Vous devez d'abord déclarer votre solde IBTIKAR résiduel "
+            "avant de soumettre une demande.",
         )
         return redirect_back(request, 'dashboard:requester')
+    declared = float(request.user.ibtikar_declared_balance)
 
     # Collect YAML parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -146,18 +213,30 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
-    # Calculate cost from YAML pricing if available
-    from core.pricing import calculate_price
-    from core.registry import get_service_def
-    yaml_def = get_service_def(service.code)
-    if yaml_def and sample_table_data:
-        try:
-            price_result = calculate_price(yaml_def, service_params, sample_table_data)
-            budget_amount = price_result.get('total', float(service.ibtikar_price))
-        except (ValueError, KeyError):
-            budget_amount = float(service.ibtikar_price)
-    else:
-        budget_amount = float(service.ibtikar_price)
+    # Resolve cost via the canonical pricing resolver (DB tiers → YAML →
+    # flat). See core.pricing.resolve_cost for the precedence and rationale.
+    from core.pricing import resolve_cost
+    price_result = resolve_cost(
+        service, 'IBTIKAR',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+    )
+    budget_amount = price_result.get('total') or float(service.ibtikar_price or 0)
+
+    # Budget guard — runs against the requester's DECLARED residual
+    # balance (User.ibtikar_declared_balance), not a flat 200K. The
+    # resolved cost is the basis; checking the flat service price would
+    # let a multi-sample request slip past the cap.
+    budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
+    if budget_check['exceeded']:
+        messages.error(
+            request,
+            f"Coût estimé ({budget_amount:,.0f} DA) supérieur à votre solde déclaré "
+            f"({declared:,.0f} DA). Mettez à jour votre solde si vous avez vérifié "
+            f"votre compte DGRSDT, ou contactez l'administrateur."
+        )
+        return redirect_back(request, 'dashboard:requester')
 
     # Use ibtikar service to submit
     req = submit_ibtikar_request(
@@ -167,14 +246,14 @@ def create_request(request):
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
             'budget_amount': budget_amount,
-            'declared_ibtikar_balance': float(request.POST.get('declared_balance', 0)),
+            'declared_ibtikar_balance': declared,
             'service_params': service_params,
             'sample_table': sample_table_data,
         },
         user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} soumise avec succès.")
-    return redirect_back(request, 'dashboard:requester')
+    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required
@@ -211,7 +290,7 @@ def confirm_receipt(request, pk):
             notification_type='WORKFLOW',
         )
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:requester')
+    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required
@@ -219,20 +298,8 @@ def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    import uuid as _uuid
-    req.appointment_confirmed = True
-    req.appointment_confirmed_at = timezone.now()
-    if not req.report_token:
-        req.report_token = _uuid.uuid4()
-    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
-    try:
-        from core.workflow import transition
-        from core.exceptions import InvalidTransitionError, AuthorizationError
-        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
-    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:requester')
+    confirm_appointment_flow(request, req)
+    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required
@@ -249,7 +316,7 @@ def suggest_alternative_date(request, pk):
             parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Date invalide.")
-            return redirect_back(request, 'dashboard:requester')
+            return redirect_to_detail(request, req, 'dashboard:requester')
         # Store the alternative date on the request
         req.alt_date_proposed = parsed_date
         req.alt_date_note = alt_note
@@ -269,7 +336,7 @@ def suggest_alternative_date(request, pk):
                 notification_type='WORKFLOW',
             )
         messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
-    return redirect_back(request, 'dashboard:requester')
+    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required
@@ -281,7 +348,7 @@ def submit_ibtikar_code(request, pk):
     code = request.POST.get('ibtikar_code', '').strip()
     if not code:
         messages.error(request, "Veuillez saisir votre code IBTIKAR.")
-        return redirect_back(request, 'dashboard:requester')
+        return redirect_to_detail(request, req, 'dashboard:requester')
     req.ibtikar_external_code = code
     req.save(update_fields=['ibtikar_external_code'])
     if req.status == 'IBTIKAR_SUBMISSION_PENDING':
@@ -292,7 +359,7 @@ def submit_ibtikar_code(request, pk):
         except (InvalidTransitionError, AuthorizationError, ValueError):
             pass
     messages.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
-    return redirect_back(request, 'dashboard:requester')
+    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required
@@ -300,11 +367,13 @@ def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    rating = int(request.POST.get('rating', 0))
+    rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating
         req.rating_comment = request.POST.get('comment', '')
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
-    return redirect_back(request, 'dashboard:requester')
+    else:
+        messages.error(request, "Veuillez sélectionner une note entre 1 et 5.")
+    return redirect_to_detail(request, req, 'dashboard:requester')

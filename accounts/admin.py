@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from modeltranslation.admin import TranslationAdmin
 from .models import User, MemberProfile, Technique, PointsHistory, Cheer
 
 
@@ -22,7 +23,8 @@ class MemberProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Technique)
-class TechniqueAdmin(admin.ModelAdmin):
+class TechniqueAdmin(TranslationAdmin):
+    """Editable per-language (fr/en/ar) — see core/translation.py."""
     list_display = ('name', 'category', 'active')
     list_filter = ('category', 'active')
 

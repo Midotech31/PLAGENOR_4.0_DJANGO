@@ -1,0 +1,192 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+{% load icons %}
+{% block title %}{% trans "Centre d'aide" context "help" %} — PLAGENOR 4.0{% endblock %}
+
+{% block extra_css %}
+<style>
+    .help-hero { background: linear-gradient(135deg, #4F46E5, #6366F1); color: #fff; padding: 56px 24px 40px; text-align: center; }
+    .help-hero h1 { font-size: 2.2rem; font-weight: 800; margin: 0 0 8px; }
+    .help-hero p { opacity: 0.9; font-size: 1.05rem; margin: 0 auto; max-width: 640px; }
+    .help-search { max-width: 560px; margin: 24px auto 0; position: relative; }
+    .help-search input { width: 100%; padding-block: 14px; padding-inline-start: 46px; padding-inline-end: 18px; border-radius: 12px; border: none; font-size: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .help-search .search-ic { position: absolute; inset-inline-start: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+    .help-wrap { max-width: 1080px; margin: -28px auto 60px; padding: 0 20px; }
+    .help-quicknav { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 32px; }
+    .help-quicknav a { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 12px; text-align: center; text-decoration: none; color: #1e293b; font-weight: 600; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .help-quicknav a:hover { border-color: #4F46E5; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,.12); color: #4F46E5; }
+    .help-quicknav .qn-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #ede9fe; color: #4F46E5; border-radius: 12px; }
+    .help-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 26px 28px; margin-bottom: 22px; }
+    .help-section > h2 { font-size: 1.3rem; margin: 0 0 6px; color: #1e293b; display: flex; align-items: center; gap: 12px; }
+    .help-section > h2 .h2-ic { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #ede9fe; color: #4F46E5; border-radius: 10px; flex-shrink: 0; }
+    .help-section > .sub { color: #64748b; font-size: .92rem; margin: 0 0 18px; }
+    .help-steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+    .help-steps li { counter-increment: step; position: relative; padding-inline-start: 44px; margin-bottom: 16px; color: #334155; line-height: 1.6; }
+    .help-steps li::before { content: counter(step); position: absolute; inset-inline-start: 0; top: 0; width: 30px; height: 30px; background: #ede9fe; color: #4F46E5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; }
+    .faq-item { border-bottom: 1px solid #f1f5f9; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { width: 100%; text-align: start; background: none; border: none; padding: 16px 0; font-size: 1rem; font-weight: 600; color: #1e293b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .faq-q .chev { transition: transform .2s; color: #94a3b8; display: inline-flex; }
+    .faq-item.open .faq-q .chev { transform: rotate(180deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease; color: #475569; line-height: 1.7; }
+    .faq-item.open .faq-a { max-height: 600px; padding-bottom: 16px; }
+    .role-badge { display: inline-block; background: #ede9fe; color: #4F46E5; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; margin-inline-start: 8px; }
+    .help-empty { text-align: center; color: #94a3b8; padding: 30px; display: none; }
+    mark { background: #fef08a; padding: 0 2px; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="help-hero">
+    <h1>{% trans "Centre d'aide PLAGENOR" %}</h1>
+    <p>{% trans "Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — étape par étape." %}</p>
+    <div class="help-search">
+        <span class="search-ic">{% icon 'search' size=20 %}</span>
+        <input type="text" id="help-search-input" placeholder="{% trans 'Rechercher dans l’aide…' %}" autocomplete="off" oninput="helpFilter(this.value)">
+    </div>
+</div>
+
+<div class="help-wrap">
+
+    <div class="help-quicknav" id="help-quicknav">
+        <a href="#getting-started"><span class="qn-ic">{% icon 'rocket' size=22 %}</span>{% trans "Démarrer" context "help" %}</a>
+        <a href="#account-vs-guest"><span class="qn-ic">{% icon 'unlock' size=22 %}</span>{% trans "Compte ou invité" %}</a>
+        <a href="#requester"><span class="qn-ic">{% icon 'graduation-cap' size=22 %}</span>{% trans "Demandeur IBTIKAR" %}</a>
+        <a href="#client"><span class="qn-ic">{% icon 'building' size=22 %}</span>{% trans "Client GENOCLAB" %}</a>
+        <a href="#tracking"><span class="qn-ic">{% icon 'search' size=22 %}</span>{% trans "Suivi & rapports" context "help" %}</a>
+        <a href="#documents"><span class="qn-ic">{% icon 'file-text' size=22 %}</span>{% trans "Documents" %}</a>
+        <a href="#faq"><span class="qn-ic">{% icon 'help-circle' size=22 %}</span>{% trans "FAQ" %}</a>
+    </div>
+
+    {% if user_role %}
+    <p style="text-align:center; color:#64748b; margin-bottom:24px;">
+        {% blocktrans %}Connecté en tant que <strong>{{ user_role }}</strong> — les sections qui vous concernent sont mises en avant ci-dessous.{% endblocktrans %}
+    </p>
+    {% endif %}
+
+    <div class="help-section help-searchable" id="getting-started">
+        <h2><span class="h2-ic">{% icon 'rocket' size=20 %}</span>{% trans "Bien démarrer" %}</h2>
+        <p class="sub">{% trans "Créer un compte et comprendre les deux canaux." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos informations (nom, établissement, wilaya, e-mail).{% endblocktrans %}</li>
+            <li>{% blocktrans %}Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> (étudiant/chercheur, budget annuel encadré) ou <strong>Client GENOCLAB</strong> (prestation commerciale avec devis).{% endblocktrans %}</li>
+            <li>{% blocktrans %}Connectez-vous : vous arrivez sur votre tableau de bord personnel.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission invité » et suivre votre demande avec le code reçu par e-mail.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="account-vs-guest">
+        <h2><span class="h2-ic">{% icon 'unlock' size=20 %}</span>{% trans "Compte ou soumission invité ?" %}</h2>
+        <p class="sub">{% trans "Les deux fonctionnent — mais un compte vous donne le contrôle complet." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}<strong>En invité</strong>, vous soumettez sans créer de compte et recevez un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se fait demande par demande, via ce code uniquement.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un <strong>tableau de bord unique</strong> avec leur <strong>historique complet</strong> et la timeline détaillée de chaque étape.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Vous recevez des <strong>notifications en temps réel</strong> dans l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon sécurisée.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : retrouvez devis, bons de commande, factures et paiements au même endroit.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : vos demandes existantes sont automatiquement rattachées à votre nouveau compte.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="requester">
+        <h2><span class="h2-ic">{% icon 'graduation-cap' size=20 %}</span>{% trans "Soumettre une demande IBTIKAR" context "help" %}{% if user_role == 'REQUESTER' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
+        <p class="sub">{% trans "Pour les étudiants et chercheurs de l'ESSBO." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle demande</strong>.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, Séquençage…).{% endblocktrans %}</li>
+            <li>{% blocktrans %}Remplissez les <strong>questions du service</strong> (type de kit, contrôle qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût estimé se met à jour en direct</strong>.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en haut — la demande est bloquée si elle dépasse le plafond.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une confirmation par e-mail avec votre identifiant de demande.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="client">
+        <h2><span class="h2-ic">{% icon 'building' size=20 %}</span>{% trans "Demande GENOCLAB (commercial)" context "help" %}{% if user_role == 'CLIENT' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
+        <p class="sub">{% trans "Pour les entreprises, laboratoires et institutions externes." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}Soumettez votre demande avec les détails de l'analyse et vos échantillons.{% endblocktrans %}</li>
+            <li>{% blocktrans %}La plateforme prépare un <strong>devis détaillé</strong> que vous recevez par e-mail.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe peut vous en proposer un nouveau.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Téléversez votre <strong>bon de commande</strong>, puis réglez selon la <strong>facture</strong> émise.{% endblocktrans %}</li>
+            <li>{% blocktrans %}L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la facture.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="tracking">
+        <h2><span class="h2-ic">{% icon 'search' size=20 %}</span>{% trans "Suivre une demande & récupérer un rapport" %}</h2>
+        <p class="sub">{% trans "Où en est votre analyse, à tout moment." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}Connecté : chaque demande affiche son <strong>statut en temps réel</strong> et son historique complet sur votre tableau de bord.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Invité : utilisez la page <strong>Suivi</strong> avec le <strong>code</strong> reçu par e-mail à la soumission.{% endblocktrans %}</li>
+            <li>{% blocktrans %}Vous recevez un <strong>e-mail à chaque étape</strong> (validation, assignation, rendez-vous, rapport prêt).{% endblocktrans %}</li>
+            <li>{% blocktrans %}Quand le rapport est validé, un <strong>lien de téléchargement</strong> sécurisé vous est envoyé.{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="documents">
+        <h2><span class="h2-ic">{% icon 'file-text' size=20 %}</span>{% trans "Documents générés" context "help" %}</h2>
+        <p class="sub">{% trans "Formulaires officiels remplis automatiquement." %}</p>
+        <ol class="help-steps">
+            <li>{% blocktrans %}Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-rempli avec vos informations et vos échantillons.{% endblocktrans %}</li>
+            <li>{% blocktrans %}La <strong>note de plateforme</strong>, le <strong>devis</strong> et la <strong>fiche de réception</strong> sont disponibles au téléchargement (PDF).{% endblocktrans %}</li>
+            <li>{% blocktrans %}Tous portent l'<strong>en-tête institutionnel officiel</strong> (République algérienne, Ministère, ESSBO, PLAGENOR).{% endblocktrans %}</li>
+        </ol>
+    </div>
+
+    <div class="help-section help-searchable" id="faq">
+        <h2><span class="h2-ic">{% icon 'help-circle' size=20 %}</span>{% trans "Questions fréquentes" %}</h2>
+        <p class="sub">{% trans "Réponses rapides aux questions courantes." %}</p>
+
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment changer la langue de l'interface ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. L'interface bascule immédiatement, y compris en arabe avec mise en page de droite à gauche." %}</p></div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Qu'est-ce que le budget IBTIKAR ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord ; une demande qui le dépasse est bloquée automatiquement." %}</p></div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment est calculé le coût d'une analyse ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de base dépend du caractère pathogène, le multiplicateur du mode d'analyse (simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant la saisie." %}</p></div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Puis-je soumettre sans créer de compte ?" context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos demandes sur un tableau de bord, ajoute les notifications en temps réel, la confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez convertir une soumission invité en compte à tout moment, et vos demandes existantes y seront rattachées." %}</p></div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "Je ne reçois pas les e-mails de notification ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "Vérifiez votre dossier spam. Les notifications restent toujours consultables dans la cloche en haut de votre tableau de bord, même sans e-mail." %}</p></div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-q" onclick="helpToggle(this)">{% trans "J'ai oublié mon mot de passe." context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
+            <div class="faq-a"><p>{% trans "Contactez l'administrateur de la plateforme via la page Contact ; il pourra réinitialiser votre accès en toute sécurité." %}</p></div>
+        </div>
+    </div>
+
+    <div class="help-empty" id="help-empty">
+        {% trans "Aucun résultat. Essayez d'autres mots-clés ou consultez la page" %} <a href="{% url 'contact' %}">{% trans "Contact" %}</a>.
+    </div>
+
+    <p style="text-align:center; color:#64748b; margin-top:30px;">
+        {% trans "Vous n'avez pas trouvé votre réponse ?" %}
+        <a href="{% url 'contact' %}" style="color:#4F46E5; font-weight:600;">{% trans "Contactez-nous" context "help" %}</a>.
+    </p>
+</div>
+
+<script>
+function helpToggle(btn) {
+    btn.closest('.faq-item').classList.toggle('open');
+}
+function helpFilter(q) {
+    q = (q || '').trim().toLowerCase();
+    var sections = document.querySelectorAll('.help-searchable');
+    var anyVisible = false;
+    sections.forEach(function(sec) {
+        var match = !q || sec.textContent.toLowerCase().indexOf(q) !== -1;
+        sec.style.display = match ? '' : 'none';
+        if (match) anyVisible = true;
+    });
+    document.getElementById('help-quicknav').style.display = q ? 'none' : '';
+    document.getElementById('help-empty').style.display = anyVisible ? 'none' : 'block';
+}
+</script>
+{% endblock %}

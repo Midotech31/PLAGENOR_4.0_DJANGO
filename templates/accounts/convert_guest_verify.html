@@ -1,0 +1,43 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Finaliser la création de compte" %} — PLAGENOR 4.0{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:500px; margin:40px auto; padding:0 32px;">
+    <h2 class="section-title">{% trans "Finaliser votre compte" %}</h2>
+    <p class="section-subtitle">{% trans "Votre adresse email a été vérifiée. Complétez vos informations et choisissez un mot de passe." %}</p>
+
+    <div class="card" style="margin-top:24px;">
+        <div class="card-body" style="padding:32px;">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>{% trans "Email vérifié" %}</label>
+                    <input type="email" class="form-control" value="{{ email }}" readonly disabled style="background:#f1f5f9; color:#64748b;">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>{% trans "Prénom" %}</label>
+                        <input type="text" name="first_name" class="form-control" value="{{ first_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Nom" %}</label>
+                        <input type="text" name="last_name" class="form-control" value="{{ last_name }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Téléphone" %}</label>
+                    <input type="tel" name="phone" class="form-control" value="{{ phone }}">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Mot de passe" %} *</label>
+                    <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password">
+                    <small class="text-muted">{% trans "8 caractères minimum, non purement numérique." %}</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Créer mon compte" %}</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

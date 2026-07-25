@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from dashboard.utils import redirect_back
+from dashboard.utils import redirect_back, redirect_to_detail, safe_int, confirm_appointment_flow
 from django.contrib import messages
 from django.utils import timezone
 
@@ -42,6 +42,14 @@ def index(request):
         status__in=['COMPLETED', 'CLOSED', 'ARCHIVED']
     ).select_related('service').order_by('-updated_at')[:30]
 
+    # Lazy backfill of report_token for legacy archived rows — see
+    # requester.index for the rationale (gated download via report_view).
+    import uuid as _uuid
+    for _req in archived:
+        if _req.report_file and not _req.report_token:
+            _req.report_token = _uuid.uuid4()
+            _req.save(update_fields=['report_token'])
+
     # Services for new request
     services = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'GENOCLAB']
@@ -68,6 +76,12 @@ def index(request):
 @client_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    # Lazy backfill: ensure report_token exists so download goes through
+    # the citation gate. See requester.request_detail for rationale.
+    if req.report_file and not req.report_token:
+        import uuid as _uuid
+        req.report_token = _uuid.uuid4()
+        req.save(update_fields=['report_token'])
     from core.registry import get_service_def
     yaml_def = get_service_def(req.service.code) if req.service else None
 
@@ -102,11 +116,21 @@ def request_detail(request, pk):
         request=req, to_user=request.user
     ).select_related('from_user').order_by('created_at')
 
+    # Workflow history — same view as the analyst's, so the client
+    # can follow the progress of their own request step by step.
+    history = req.history.select_related('actor').order_by('created_at')
+
     context = {
         'req': req,
         'params_display': params_display,
         'sample_headers': sample_headers,
         'messages_list': messages_list,
+        'history': history,
+        # Cf. requester.request_detail : RDV à confirmer par le client.
+        'appointment_pending': bool(
+            req.appointment_date and not req.appointment_confirmed
+            and req.status in ('APPOINTMENT_PROPOSED', 'ASSIGNED')
+        ),
     }
     return render(request, 'dashboard/client/request_detail.html', context)
 
@@ -128,21 +152,33 @@ def create_request(request):
                 sample_data.setdefault(parts[1], {})[parts[2]] = val
     sample_table_data = list(sample_data.values()) if sample_data else []
 
-    # Use genoclab service to submit
+    # Resolve cost via the canonical pricing resolver. Without this,
+    # GENOCLAB used to bill a flat ``Service.genoclab_price`` regardless of
+    # sample count or admin-configured tiers — meaning 1 sample was billed
+    # the same as 50, and the pricing tiers in the admin UI did nothing.
+    from core.pricing import resolve_cost
+    price_result = resolve_cost(
+        service, 'GENOCLAB',
+        sample_table=sample_table_data,
+        service_params=service_params,
+        urgency=request.POST.get('urgency', 'Normal'),
+    )
+    quote_amount = price_result.get('total') or float(service.genoclab_price or 0)
+
     req = submit_genoclab_request(
         data={
             'title': request.POST.get('title', f"Demande {service.name}"),
             'description': request.POST.get('description', ''),
             'urgency': request.POST.get('urgency', 'Normal'),
             'service_id': str(service.pk),
-            'quote_amount': float(service.genoclab_price),
+            'quote_amount': quote_amount,
             'service_params': service_params,
             'sample_table': sample_table_data,
         },
         user=request.user,
     )
     messages.success(request, f"Demande {req.display_id} créée avec succès.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -169,7 +205,7 @@ def reject_quote(request, pk):
         messages.success(request, f"Devis refusé pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -266,19 +302,9 @@ def upload_payment_receipt(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    import uuid as _uuid
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    req.appointment_confirmed = True
-    req.appointment_confirmed_at = timezone.now()
-    if not req.report_token:
-        req.report_token = _uuid.uuid4()
-    req.save(update_fields=['appointment_confirmed', 'appointment_confirmed_at', 'report_token'])
-    try:
-        transition(req, 'APPOINTMENT_CONFIRMED', request.user, notes='RDV confirmé')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
-    messages.success(request, f"Rendez-vous confirmé pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:client')
+    confirm_appointment_flow(request, req)
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -314,7 +340,7 @@ def confirm_receipt(request, pk):
             notification_type='WORKFLOW',
         )
     messages.success(request, f"Réception confirmée pour {req.display_id}.")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -331,7 +357,7 @@ def suggest_alternative_date(request, pk):
             parsed_date = dt.strptime(alt_date, '%Y-%m-%d').date()
         except ValueError:
             messages.error(request, "Date invalide.")
-            return redirect_back(request, 'dashboard:client')
+            return redirect_to_detail(request, req, 'dashboard:client')
         # Store the alternative date on the request
         req.alt_date_proposed = parsed_date
         req.alt_date_note = alt_note
@@ -351,7 +377,7 @@ def suggest_alternative_date(request, pk):
                 notification_type='WORKFLOW',
             )
         messages.success(request, f"Date alternative proposée: {parsed_date.strftime('%d/%m/%Y')}")
-    return redirect_back(request, 'dashboard:client')
+    return redirect_to_detail(request, req, 'dashboard:client')
 
 
 @client_required
@@ -359,11 +385,13 @@ def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk, requester=request.user)
-    rating = int(request.POST.get('rating', 0))
+    rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating
         req.rating_comment = request.POST.get('comment', '')
         req.rated_at = timezone.now()
         req.save(update_fields=['service_rating', 'rating_comment', 'rated_at'])
         messages.success(request, "Merci pour votre évaluation.")
-    return redirect_back(request, 'dashboard:client')
+    else:
+        messages.error(request, "Veuillez sélectionner une note entre 1 et 5.")
+    return redirect_to_detail(request, req, 'dashboard:client')

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load icons %}
 
 {% block title %}{% trans "Super Admin" %} — PLAGENOR 4.0{% endblock %}
 
@@ -220,7 +221,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary" style="height:34px; font-size:0.85rem; padding:0 16px;">{% trans "Filtrer" %}</button>
                     {% if user_search or user_role_filter %}
-                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;">✕</a>
+                    <a href="{% url 'dashboard:superadmin' %}?tab=users" class="btn btn-outline" style="height:34px; font-size:0.85rem; padding:0 12px;" title="{% trans 'Effacer les filtres' %}">{% icon 'x' size=15 %}</a>
                     {% endif %}
                 </form>
             </div>
@@ -268,6 +269,16 @@
                                     </svg>
                                     {% trans "Réinitialiser" %}
                                 </a>
+                                {% if u.totp_enabled %}
+                                <form method="post" action="{% url 'dashboard:superadmin_reset_2fa' u.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline"
+                                            title="{% trans 'Réinitialiser la 2FA (perte du téléphone)' %}"
+                                            onclick="return confirm('{% trans "Réinitialiser la double authentification de cet utilisateur ?" %}')">
+                                        {% trans "Reset 2FA" %}
+                                    </button>
+                                </form>
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -560,40 +571,91 @@
     </div>
 
     <!-- Content Tab -->
-    <div x-show="tab === 'content'">
+    <div x-show="tab === 'content'" x-data="{ filter: '', editingKey: null, showNew: false }">
         <div class="card">
-            <div class="card-header"><h3>{% trans "Gestion du contenu" %}</h3></div>
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                <h3>{% trans "Gestion du contenu" %}</h3>
+                <button type="button" class="btn btn-sm btn-primary" @click="showNew = !showNew">{% trans "Nouvelle entrée" %}</button>
+            </div>
             <div class="card-body">
-                <form method="post" action="{% url 'dashboard:superadmin_content_update' %}">
+                <p class="text-muted" style="margin-bottom:12px;">
+                    {% trans "Modifiez le texte affiché sur le site dans les trois langues (Français, English, العربية). Une valeur vide retombe sur la langue par défaut puis sur le texte du gabarit." %}
+                </p>
+
+                <!-- Create a new key (all languages at once) -->
+                <form method="post" action="{% url 'dashboard:superadmin_content_save' %}" x-show="showNew" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:20px;">
                     {% csrf_token %}
                     <div class="form-group">
                         <label>{% trans "Clé" %}</label>
                         <input type="text" name="key" class="form-control" required placeholder="hero_title">
                     </div>
+                    {% for code, label in platform_content_languages %}
                     <div class="form-group">
-                        <label>{% trans "Valeur" %}</label>
-                        <textarea name="value" class="form-control" rows="4"></textarea>
+                        <label>{{ label }}</label>
+                        <textarea name="value_{{ code }}" class="form-control" rows="2" {% if code == 'ar' %}dir="rtl"{% endif %}></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">{% trans "Mettre à jour" %}</button>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">{% trans "Créer" %}</button>
+                    <button type="button" class="btn btn-outline" @click="showNew = false">{% trans "Annuler" %}</button>
                 </form>
 
-                {% if platform_content %}
-                <div class="table-wrapper" style="margin-top: 24px;">
+                {% if content_rows %}
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <strong>{% trans "Contenu existant" %} ({{ content_rows|length }} {% trans "clés" %})</strong>
+                    <input type="text" x-model="filter" class="form-control" placeholder="{% trans 'Filtrer par clé ou texte…' %}" style="max-width:320px;">
+                </div>
+                <div class="table-wrapper" style="margin-top:12px;">
                     <table>
-                        <thead><tr><th>{% trans "Clé" %}</th><th>{% trans "Valeur" %}</th><th>{% trans "Modifié" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+                        <thead><tr>
+                            <th>{% trans "Clé" %}</th>
+                            <th>{% trans "Français" %}</th>
+                            <th>English</th>
+                            <th>العربية</th>
+                            <th style="white-space:nowrap;">{% trans "Actions" %}</th>
+                        </tr></thead>
                         <tbody>
-                        {% for pc in platform_content %}
-                        <tr>
-                            <td><strong class="font-mono">{{ pc.key }}</strong></td>
-                            <td>{{ pc.value|truncatechars:80 }}</td>
-                            <td class="text-muted">{{ pc.updated_at|date:"d/m/Y H:i" }}</td>
+                        {% for row in content_rows %}
+                        {% with rid=row.key|slugify %}
+                        <tr x-show="!filter || `{{ row.key|escapejs }} {{ row.fr|default:''|escapejs }} {{ row.en|default:''|escapejs }} {{ row.ar|default:''|escapejs }}`.toLowerCase().includes(filter.toLowerCase())">
                             <td>
-                                <form method="post" action="{% url 'dashboard:superadmin_content_delete' pc.pk %}" style="display:inline;">
+                                <strong class="font-mono">{{ row.key }}</strong>
+                                {% if row.missing %}<br><span class="badge" style="background:#fef3c7; color:#92400e;" title="{% trans 'Langues manquantes' %}">⚠ {{ row.missing|join:", " }}</span>{% endif %}
+                            </td>
+                            <td>{{ row.fr|default:""|truncatechars:80 }}</td>
+                            <td>{{ row.en|default:""|truncatechars:80 }}</td>
+                            <td dir="rtl">{{ row.ar|default:""|truncatechars:80 }}</td>
+                            <td style="white-space:nowrap;">
+                                <button type="button" class="btn btn-sm btn-primary" @click="editingKey = (editingKey === '{{ rid }}' ? null : '{{ rid }}')">{% trans "Modifier" %}</button>
+                                <form method="post" action="{% url 'dashboard:superadmin_content_delete_key' %}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette entrée ?" %}')">{% trans "Supprimer" %}</button>
+                                    <input type="hidden" name="key" value="{{ row.key }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette clé dans toutes les langues ?" %}')">{% trans "Supprimer" %}</button>
                                 </form>
                             </td>
                         </tr>
+                        <tr x-show="editingKey === '{{ rid }}'">
+                            <td colspan="5" style="background:#f8fafc;">
+                                <form method="post" action="{% url 'dashboard:superadmin_content_save' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="key" value="{{ row.key }}">
+                                    <div class="form-group">
+                                        <label>{% trans "Français" %}</label>
+                                        <textarea name="value_fr" class="form-control" rows="2">{{ row.fr|default:"" }}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>English</label>
+                                        <textarea name="value_en" class="form-control" rows="2">{{ row.en|default:"" }}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>العربية</label>
+                                        <textarea name="value_ar" class="form-control" rows="2" dir="rtl">{{ row.ar|default:"" }}</textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Enregistrer" %}</button>
+                                    <button type="button" class="btn btn-sm btn-outline" @click="editingKey = null">{% trans "Annuler" %}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endwith %}
                         {% endfor %}
                         </tbody>
                     </table>
@@ -636,7 +698,7 @@
                         <div class="form-group" style="display:flex; align-items:flex-end; gap:6px;">
                             <button type="submit" class="btn btn-primary">{% trans "Filtrer" %}</button>
                             <a href="?tab=requests&sa_channel={{ sa_channel }}&sa_status={{ sa_status }}&sa_q={{ sa_search }}&export=requests_csv" class="btn btn-outline" style="font-size:0.85rem;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:3px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "CSV" %}
                             </a>
                         </div>
@@ -865,13 +927,13 @@
                             <div>
                                 {% with tier=stat.level.key|default:stat.status|default:"normal" %}
                                 {% if tier == "fire" %}
-                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;">🔥 {% trans "Fire" %}</span>
+                                <span class="badge-status" style="background:#fee2e2;color:#dc2626;display:inline-flex;align-items:center;gap:4px;">{% icon 'flame' size=13 %} {% trans "Fire" %}</span>
                                 {% elif tier == "very_good" %}
-                                <span class="badge-status" style="background:#fef3c7;color:#d97706;">⭐ {% trans "Very Good" %}</span>
+                                <span class="badge-status" style="background:#fef3c7;color:#d97706;display:inline-flex;align-items:center;gap:4px;">{% icon 'star' size=13 %} {% trans "Very Good" %}</span>
                                 {% elif tier == "good" %}
-                                <span class="badge-status" style="background:#d1fae5;color:#059669;">✅ {% trans "Good" %}</span>
+                                <span class="badge-status" style="background:#d1fae5;color:#059669;display:inline-flex;align-items:center;gap:4px;">{% icon 'check-circle' size=13 %} {% trans "Good" %}</span>
                                 {% else %}
-                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;">{{ stat.emoji }} {{ stat.level.label_fr|default:"Pas mal" }}</span>
+                                <span class="badge-status" style="background:#f3f4f6;color:#6b7280;display:inline-flex;align-items:center;gap:4px;">{% icon stat.level.icon|default:"smile" size=13 %} {{ stat.level.label_fr|default:"Pas mal" }}</span>
                                 {% endif %}
                                 {% endwith %}
                             </div>
@@ -925,9 +987,23 @@
             </div>
         </div>
 
+        <!-- Document Block Management (Phase 3.7) -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Blocs de contenu personnalisés" %}</h3></div>
+            <div class="card-body">
+                <p class="text-muted" style="margin-bottom:12px;">
+                    {% trans "Ajoutez ou modifiez des paragraphes (mentions légales, instructions, remarques) injectés dans les documents générés — globalement ou pour un service précis. Les placeholders {{FULL_NAME}}, {{DISPLAY_ID}}, {{DATE}} etc. sont résolus à la volée." %}
+                </p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="{% url 'documents:block_list' %}" class="btn btn-primary">{% trans "Gérer les blocs de contenu" %}</a>
+                    <a href="{% url 'documents:template_list' %}" class="btn btn-outline">{% trans "Modèles DOCX personnalisés" %}</a>
+                </div>
+            </div>
+        </div>
+
         <!-- DOCX Template Management -->
         <div class="card">
-            <div class="card-header"><h3>{% trans "Templates DOCX" %}</h3></div>
+            <div class="card-header"><h3>{% trans "Templates DOCX globaux" %}</h3></div>
             <div class="card-body">
                 <p class="text-muted" style="margin-bottom:16px;">{% trans "Mettez à jour les templates DOCX utilisés pour la génération automatique des documents. Un backup est créé automatiquement avant chaque mise à jour." %}</p>
                 <div class="grid-2" style="gap:16px;">
@@ -936,7 +1012,7 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <strong>{{ tpl_label }}</strong>
                             <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-sm btn-outline" style="font-size:0.78rem;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-inline-end:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 {% trans "Télécharger" %}
                             </a>
                         </div>
@@ -968,7 +1044,7 @@
                             {% with yaml_def=yaml_registry|default_if_none:"" %}
                             <span class="badge-status" style="background:#dbeafe; color:#1d4ed8;">YAML</span>
                             {% endwith %}
-                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-left:8px;">{% trans "Modifier" %}</a>
+                            <a href="{% url 'dashboard:superadmin_service_edit' svc.pk %}" class="btn btn-sm btn-outline" style="margin-inline-start:8px;">{% trans "Modifier" %}</a>
                         </div>
                     </div>
                 </div>
@@ -1011,6 +1087,63 @@
 
     <!-- System Tab -->
     <div x-show="tab === 'system'">
+        <!-- Platform announcements -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>{% trans "Annonces plateforme" %}</h3></div>
+            <div class="card-body">
+                <form method="post" action="{% url 'dashboard:superadmin_announcement_create' %}" style="margin-bottom:16px;">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>{% trans "Titre" %}</label>
+                            <input type="text" name="title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Niveau" %}</label>
+                            <select name="level" class="form-control">
+                                {% for code, label in announcement_levels %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>{% trans "Audience" %}</label>
+                            <select name="audience" class="form-control">
+                                {% for code, label in announcement_audiences %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Message" %}</label>
+                        <textarea name="message" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Publier l'annonce" %}</button>
+                </form>
+                {% if announcements %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>{% trans "Titre" %}</th><th>{% trans "Audience" %}</th><th>{% trans "Actif" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+                        <tbody>
+                        {% for a in announcements %}
+                        <tr>
+                            <td><strong>{{ a.title }}</strong><br><span class="text-muted text-sm">{{ a.message|truncatechars:80 }}</span></td>
+                            <td><span class="badge">{{ a.get_audience_display }}</span></td>
+                            <td>{% if a.active %}<span class="badge" style="background:#dcfce7;color:#166534;">{% trans "Oui" %}</span>{% else %}<span class="badge">{% trans "Non" %}</span>{% endif %}</td>
+                            <td style="white-space:nowrap;">
+                                <form method="post" action="{% url 'dashboard:superadmin_announcement_toggle' a.pk %}" style="display:inline;">{% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline">{% if a.active %}{% trans "Désactiver" %}{% else %}{% trans "Activer" %}{% endif %}</button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:superadmin_announcement_delete' a.pk %}" style="display:inline;">{% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{% trans "Supprimer cette annonce ?" %}')">{% trans "Supprimer" %}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Quick Links to separate pages -->
         <div class="grid-2" style="margin-bottom:24px;">
             <div class="card">
@@ -1018,7 +1151,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez l'historique complet de toutes les transitions, actions et modifications effectuées sur la plateforme." %}</p>
                     <a href="{% url 'dashboard:audit_log' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         {% trans "Voir le journal d'audit" %}
                     </a>
                 </div>
@@ -1028,7 +1161,7 @@
                 <div class="card-body">
                     <p class="text-muted text-sm" style="margin-bottom:12px;">{% trans "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR." %}</p>
                     <a href="{% url 'dashboard:revenue_archives' %}" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         {% trans "Voir les archives" %}
                     </a>
                 </div>
@@ -1055,7 +1188,7 @@
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Restaurer une sauvegarde" %}</h3></div>
             <div class="card-body">
-                <p class="text-muted" style="margin-bottom:12px; color:#dc2626;">⚠ {% trans "Attention : cette opération remplace la base de données actuelle. Un backup automatique sera créé avant la restauration. Le serveur devra être redémarré après la restauration." %}</p>
+                <p class="text-muted" style="margin-bottom:12px; color:#dc2626;">{% icon 'alert-triangle' size=15 %} {% trans "Attention : cette opération remplace la base de données actuelle. Un backup automatique sera créé avant la restauration. Le serveur devra être redémarré après la restauration." %}</p>
                 <form method="post" action="{% url 'dashboard:superadmin_restore' %}" enctype="multipart/form-data" onsubmit="return confirm('{% trans "Êtes-vous sûr de vouloir restaurer la base de données ? Un backup de la base actuelle sera créé automatiquement." %}');">
                     {% csrf_token %}
                     <div class="form-row">
@@ -1076,7 +1209,7 @@
                     <div class="data-card" style="box-shadow: none; border: none; padding: 0;">
                         <div class="data-card-row"><strong>{% trans "Version" %}</strong><span class="font-mono">4.0.0</span></div>
                         <div class="data-card-row"><strong>{% trans "Auteur" %}</strong><span>Prof. Mohamed Merzoug</span></div>
-                        <div class="data-card-row"><strong>{% trans "Institution" %}</strong><span>ESSBO — Université d'Oran</span></div>
+                        <div class="data-card-row"><strong>{% trans "Institution" %}</strong><span>École Supérieure en Sciences Biologiques d'Oran (ESSBO)</span></div>
                         <div class="data-card-row"><strong>{% trans "Base de données" %}</strong><span>SQLite3</span></div>
                         <div class="data-card-row"><strong>{% trans "Framework" %}</strong><span>Django 5.x</span></div>
                     </div>

@@ -47,6 +47,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
             {% trans "Documents" %}
         </a>
+        <a href="{% url 'dashboard:stats' %}" class="nav-item {% if request.resolver_match.url_name == 'stats' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            {% trans "Statistiques" %}
+        </a>
         <a href="{% url 'dashboard:audit_log' %}" class="nav-item {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             {% trans "Audit" %}
@@ -99,6 +103,10 @@
         <a href="{% url 'dashboard:admin_ops' %}?tab=reports" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
             {% trans "Documents" %}
+        </a>
+        <a href="{% url 'dashboard:stats' %}" class="nav-item {% if request.resolver_match.url_name == 'stats' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            {% trans "Statistiques" %}
         </a>
 
         {% elif user.role == 'MEMBER' %}
@@ -211,11 +219,15 @@
         {% endif %}
     </nav>
 
-    <!-- Profile link -->
+    <!-- Profile + Help links -->
     <div style="padding: 0 16px; margin-top: 16px;">
         <a href="{% url 'accounts:profile' %}" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             {% trans "Mon Profil" %}
+        </a>
+        <a href="{% url 'help' %}" class="nav-item {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {% trans "Aide" %}
         </a>
     </div>
 
@@ -229,15 +241,7 @@
             </div>
         </div>
         <div class="sidebar-actions">
-            <form id="language-form" class="no-validation" action="{% url 'set_language' %}" method="post" style="display:none">
-                {% csrf_token %}
-                <input type="hidden" name="language" value="{% if LANGUAGE_CODE == 'fr' %}en{% else %}fr{% endif %}">
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            </form>
-            <button type="button" onclick="toggleLanguage()">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                {{ LANGUAGE_CODE|upper }}
-            </button>
+            {% include 'includes/language_switcher.html' with style='inline' %}
             <form method="post" action="{% url 'accounts:logout' %}" style="flex:1;">
                 {% csrf_token %}
                 <button type="submit" class="sidebar-logout-btn">

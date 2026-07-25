@@ -86,6 +86,24 @@
         </div>
         {% endif %}
 
+        {# Note de plateforme (devis interne IBTIKAR) — visible analyste assigné + observateurs. #}
+        {% if req.channel == 'IBTIKAR' %}
+        <div class="card mb-4" style="border-inline-start:4px solid #4f46e5;">
+            <div class="card-body" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:240px;">
+                    <strong>{% trans "Note de plateforme" %}</strong>
+                    <p class="text-sm text-muted" style="margin:4px 0 0;">
+                        {% trans "Devis interne avec la justification détaillée du tarif." %}
+                        {% if is_observer %}{% trans "(Vous y avez accès en lecture en tant qu'observateur.)" %}{% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'dashboard:admin_platform_note' req.pk %}" class="btn btn-outline">
+                    {% trans "Télécharger la note (.docx)" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Service Details -->
         {% if req.service %}
         <div class="card mb-4">
@@ -186,14 +204,14 @@
                         <form method="post" action="{% url 'dashboard:analyst_accept_alt_date' req.pk %}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-primary">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><polyline points="20 6 9 17 4 12"/></svg>
                                 {% trans "Accepter cette date" %}
                             </button>
                         </form>
                         <!-- Decline -->
                         <div x-data="{ showDecline: false }">
                             <button type="button" class="btn btn-sm btn-outline" @click="showDecline = !showDecline" style="color:#dc2626; border-color:#fecaca;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-inline-end:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 {% trans "Refuser" %}
                             </button>
                             <form method="post" action="{% url 'dashboard:analyst_decline_alt_date' req.pk %}" x-show="showDecline" style="margin-top:8px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
@@ -319,35 +337,7 @@
 </div>
 
 <!-- Workflow Timeline -->
-<div class="card mb-4" style="margin-top:24px;">
-    <div class="card-header"><h3>{% trans "Historique du workflow" %}</h3></div>
-    <div class="card-body">
-        {% for h in history %}
-        <div style="display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--slate-100);">
-            <div style="min-width:120px;">
-                <span class="text-xs text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</span>
-            </div>
-            <div style="flex:1;">
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    {% if h.from_status %}
-                    <span class="badge-status {{ h.from_status|lower }}" style="font-size:0.7rem;">{{ h.from_status }}</span>
-                    <span>&rarr;</span>
-                    {% endif %}
-                    <span class="badge-status {{ h.to_status|lower }}" style="font-size:0.7rem;">{{ h.to_status }}</span>
-                </div>
-                {% if h.notes %}
-                <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
-                {% endif %}
-            </div>
-            <div style="min-width:100px; text-align:right;">
-                <span class="text-sm">{{ h.actor.first_name|default:"Système" }}</span>
-            </div>
-        </div>
-        {% empty %}
-        <div class="text-muted">{% trans "Aucun historique." %}</div>
-        {% endfor %}
-    </div>
-</div>
+{% include 'includes/workflow_timeline.html' with show_actor=True %}
 
 <!-- Comments -->
 {% if comments %}

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .countries import COUNTRY_CHOICES
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
@@ -33,15 +35,78 @@ class User(AbstractUser):
         ('CLIENT', 'Client GENOCLAB'),
     ]
 
+    GENDER_CHOICES = [
+        ('M', 'Homme'),
+        ('F', 'Femme'),
+    ]
+
+    # Organisation type — GENOCLAB (commercial) clients are mostly companies
+    # and private labs, not just academics. "Autre" reveals a free-text box.
+    ORGANIZATION_TYPE_CHOICES = [
+        ('academique', 'Académique'),
+        ('entreprise', 'Entreprise'),
+        ('laboratoire', 'Laboratoire'),
+        ('particulier', 'Particulier'),
+        ('autre', 'Autre'),
+    ]
+
+    # Algerian wilayas — official 2021 list (58 entries: 48 historic + 10
+    # new southern wilayas created by the 2019/2021 reform). Stored as the
+    # numeric code (01-58) so the label can be translated independently.
+    WILAYA_CHOICES = [
+        ('01', 'Adrar'), ('02', 'Chlef'), ('03', 'Laghouat'),
+        ('04', "Oum El Bouaghi"), ('05', 'Batna'), ('06', 'Béjaïa'),
+        ('07', 'Biskra'), ('08', 'Béchar'), ('09', 'Blida'),
+        ('10', 'Bouira'), ('11', 'Tamanrasset'), ('12', 'Tébessa'),
+        ('13', 'Tlemcen'), ('14', 'Tiaret'), ('15', 'Tizi Ouzou'),
+        ('16', 'Alger'), ('17', 'Djelfa'), ('18', 'Jijel'),
+        ('19', 'Sétif'), ('20', 'Saïda'), ('21', 'Skikda'),
+        ('22', 'Sidi Bel Abbès'), ('23', 'Annaba'), ('24', 'Guelma'),
+        ('25', 'Constantine'), ('26', 'Médéa'), ('27', 'Mostaganem'),
+        ('28', "M'Sila"), ('29', 'Mascara'), ('30', 'Ouargla'),
+        ('31', 'Oran'), ('32', 'El Bayadh'), ('33', 'Illizi'),
+        ('34', 'Bordj Bou Arréridj'), ('35', 'Boumerdès'),
+        ('36', 'El Tarf'), ('37', 'Tindouf'), ('38', 'Tissemsilt'),
+        ('39', 'El Oued'), ('40', 'Khenchela'), ('41', 'Souk Ahras'),
+        ('42', 'Tipaza'), ('43', 'Mila'), ('44', 'Aïn Defla'),
+        ('45', 'Naâma'), ('46', 'Aïn Témouchent'), ('47', 'Ghardaïa'),
+        ('48', 'Relizane'), ('49', 'Timimoun'),
+        ('50', 'Bordj Badji Mokhtar'), ('51', 'Ouled Djellal'),
+        ('52', 'Béni Abbès'), ('53', 'In Salah'), ('54', 'In Guezzam'),
+        ('55', 'Touggourt'), ('56', 'Djanet'), ('57', "El M'Ghair"),
+        ('58', 'El Meniaa'),
+    ]
+
     objects = UserManager()
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='REQUESTER')
     organization = models.CharField(max_length=200, default='', blank=True)
+    organization_type = models.CharField(
+        max_length=20, choices=ORGANIZATION_TYPE_CHOICES, blank=True, default='',
+        verbose_name="Type d'organisation",
+    )
+    organization_type_other = models.CharField(
+        max_length=200, blank=True, default='',
+        verbose_name="Préciser le type d'organisation",
+    )
+    country = models.CharField(
+        max_length=2, choices=COUNTRY_CHOICES, blank=True, default='DZ',
+        verbose_name='Pays',
+    )
     phone = models.CharField(max_length=50, default='', blank=True)
     student_level = models.CharField(max_length=100, default='', blank=True)
     supervisor = models.CharField(max_length=200, default='', blank=True)
     laboratory = models.CharField(max_length=200, default='', blank=True)
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
+    # Demographics used by the stats dashboard. Both optional.
+    gender = models.CharField(
+        max_length=1, choices=GENDER_CHOICES, blank=True, default='',
+        verbose_name='Sexe',
+    )
+    wilaya = models.CharField(
+        max_length=2, choices=WILAYA_CHOICES, blank=True, default='',
+        verbose_name='Wilaya',
+    )
 
     # Login security
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='Photo de profil')
@@ -51,6 +116,50 @@ class User(AbstractUser):
 
     # Password reset (Prompt 11)
     must_change_password = models.BooleanField(default=False, verbose_name='Doit changer le mot de passe')
+
+    # Localization preference (Phase 3.0).
+    # Empty string ('') means: defer to cookie / Accept-Language. When set,
+    # PreferredLanguageMiddleware (Phase 3.3) will override the active language
+    # for this user. Storing the field in 3.0 lets the SuperAdmin / profile
+    # editor populate it ahead of middleware roll-out.
+    LANGUAGE_PREFERENCE_CHOICES = [
+        ('', 'Suivre la configuration du navigateur'),
+        ('fr', 'Français'),
+        ('en', 'English'),
+        ('ar', 'العربية'),
+    ]
+    preferred_language = models.CharField(
+        max_length=5, blank=True, default='',
+        choices=LANGUAGE_PREFERENCE_CHOICES,
+        verbose_name='Langue préférée',
+        help_text='Laisser vide pour utiliser la langue du navigateur.',
+    )
+
+    # Optional TOTP two-factor auth (opt-in, mainly for staff). When
+    # ``totp_enabled`` is True the login flow demands a 6-digit code after the
+    # password. A Super Admin can reset both fields if a device is lost.
+    totp_secret = models.CharField(max_length=64, blank=True, default='')
+    totp_enabled = models.BooleanField(default=False, verbose_name='2FA activé')
+
+    # IBTIKAR running balance, self-declared by the requester.
+    #
+    # NULL = the requester has NOT yet declared their residual balance for
+    # this year — the requester dashboard must surface a declaration prompt
+    # before any new request can be submitted. A non-null value (incl. 0) is
+    # the working balance used to size estimates and as the cap-check. After
+    # a request reaches COMPLETED, the resolved cost is deducted here. The
+    # requester can revise this number at any time to mirror what their
+    # actual DGRSDT IBTIKAR account shows (the IBTIKAR budget can be spent
+    # on platforms outside PLAGENOR too).
+    ibtikar_declared_balance = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        verbose_name='Solde IBTIKAR déclaré (DA)',
+    )
+    ibtikar_balance_declared_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Dernière mise à jour du solde IBTIKAR',
+    )
 
     class Meta:
         db_table = 'users'

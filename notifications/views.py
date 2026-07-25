@@ -1,6 +1,17 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import Notification
+
+
+def _safe_redirect(request, target):
+    """Redirect only to URLs on this host — defense against open-redirect."""
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(target)
+    return redirect('dashboard:router')
 
 
 @login_required
@@ -15,7 +26,7 @@ def notification_click(request, pk):
 
     # Priority 1: Use explicit link_url if available (deep linking)
     if notif.link_url:
-        return redirect(notif.link_url)
+        return _safe_redirect(request, notif.link_url)
 
     # Priority 2: Redirect to the appropriate detail page based on user role
     if notif.request_id:
@@ -25,14 +36,39 @@ def notification_click(request, pk):
 
     # Priority 3: Use action_url if available
     if notif.action_url:
-        return redirect(notif.action_url)
+        return _safe_redirect(request, notif.action_url)
 
-    # Fallback: redirect to dashboard
+    # Priority 4: route by notification type for notifications that have no
+    # request attached (e.g. REWARD points/gift/cheer notifications).
+    url = _type_based_url(request.user, notif)
+    if url:
+        return redirect(url)
+
+    # Fallback: the user's own dashboard (role index), never a generic page.
     return redirect('dashboard:router')
 
 
+def _type_based_url(user, notif):
+    """Resolve a destination from the notification *type* when there is no
+    linked request. Today this routes REWARD notifications (points earned,
+    gift unlocked, cheer received) to the analyst's Points tab — which is
+    where the user expects to land after clicking "X points reçus".
+    """
+    from django.urls import reverse
+
+    if notif.notification_type == 'REWARD' and user.role == 'MEMBER':
+        return reverse('dashboard:analyst') + '?tab=points'
+    return None
+
+
 def _get_detail_url(user, req):
-    """Return the correct request detail URL based on user role."""
+    """Return the correct request-detail URL for this user's role.
+
+    A user who received a notification about a request is, by construction,
+    a party to it — so we route straight to the matching detail page. The
+    detail views keep their own ownership/assignment guards (incl. a
+    notification-based allowance for analysts), so this stays safe.
+    """
     from django.urls import reverse
 
     role = user.role
@@ -40,13 +76,7 @@ def _get_detail_url(user, req):
     if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
         return reverse('dashboard:admin_request_detail', args=[req.pk])
     elif role == 'MEMBER':
-        # Only if user is the assigned analyst
-        try:
-            if req.assigned_to and req.assigned_to.user_id == user.pk:
-                return reverse('dashboard:analyst_request_detail', args=[req.pk])
-        except Exception:
-            pass
-        return None
+        return reverse('dashboard:analyst_request_detail', args=[req.pk])
     elif role == 'REQUESTER':
         if req.requester_id == user.pk:
             return reverse('dashboard:requester_request_detail', args=[req.pk])

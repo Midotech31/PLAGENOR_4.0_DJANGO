@@ -12,6 +12,7 @@ class Notification(models.Model):
         ('APPOINTMENT', 'Appointment'),
         ('REPORT', 'Report Ready'),
         ('PAYMENT', 'Payment'),
+        ('REWARD', 'Reward'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
@@ -36,15 +37,67 @@ class Notification(models.Model):
             models.Index(fields=['created_at']),
         ]
 
+    # Context icon (from core.templatetags.icons set) + accent colour per type,
+    # so the notification panel shows a glanceable visual cue, not just text.
+    _ICON_BY_TYPE = {
+        'INFO': 'message-square',
+        'WORKFLOW': 'flag',
+        'SYSTEM': 'zap',
+        'ASSIGNMENT': 'clipboard',
+        'STATUS_CHANGE': 'send',
+        'APPOINTMENT': 'clock',
+        'REPORT': 'file-text',
+        'PAYMENT': 'dollar-sign',
+        'REWARD': 'award',
+    }
+    _ACCENT_BY_TYPE = {
+        'INFO': '#64748b',
+        'WORKFLOW': '#4f46e5',
+        'SYSTEM': '#0ea5e9',
+        'ASSIGNMENT': '#7c3aed',
+        'STATUS_CHANGE': '#2563eb',
+        'APPOINTMENT': '#d97706',
+        'REPORT': '#059669',
+        'PAYMENT': '#16a34a',
+        'REWARD': '#eab308',
+    }
+
+    @property
+    def icon(self):
+        """Icon name for the context cue (see core.templatetags.icons)."""
+        return self._ICON_BY_TYPE.get(self.notification_type, 'message-square')
+
+    @property
+    def accent(self):
+        """Accent colour for the notification's icon badge."""
+        return self._ACCENT_BY_TYPE.get(self.notification_type, '#64748b')
+
     def __str__(self):
         return f"{self.user} — {self.message[:50]}"
-    
+
     def get_absolute_url(self):
-        """Get the URL to navigate to when clicking this notification."""
+        """Resolve the request-detail URL for the recipient's role.
+
+        Each role has its own request-detail view; routing every recipient to
+        the admin URL produces a 403 for analysts/clients/requesters. An
+        explicit ``link_url`` always wins.
+        """
         if self.link_url:
             return self.link_url
         if self.request:
-            return f"/dashboard/ops/request/{self.request.pk}/"
+            role = getattr(self.user, 'role', '')
+            pk = self.request.pk
+            if role in ('SUPER_ADMIN', 'PLATFORM_ADMIN'):
+                return f"/dashboard/ops/request/{pk}/"
+            if role == 'MEMBER':
+                return f"/dashboard/analyst/request/{pk}/"
+            if role == 'CLIENT':
+                return f"/dashboard/client/request/{pk}/"
+            if role == 'REQUESTER':
+                return f"/dashboard/requester/request/{pk}/"
+            # FINANCE has no per-request detail view; land on the finance index.
+            if role == 'FINANCE':
+                return "/dashboard/finance/"
         return "/dashboard/"
     
     def mark_as_read(self):
