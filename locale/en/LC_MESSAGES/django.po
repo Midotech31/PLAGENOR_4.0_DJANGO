@@ -773,7 +773,7 @@ msgid "Solde IBTIKAR déclaré"
 msgstr "Declared IBTIKAR balance"
 
 msgid "Ajuster le coût (DA)"
-msgstr "Adjust cost (DZD)"
+msgstr "Adjust cost (DA)"
 
 msgid "Justification"
 msgstr "Justification"
@@ -1170,10 +1170,10 @@ msgid "Frais et TVA"
 msgstr "Fees and VAT"
 
 msgid "Frais administratifs (DA)"
-msgstr "Administrative fees (DZD)"
+msgstr "Administrative fees (DA)"
 
 msgid "Frais de rapport (DA)"
-msgstr "Report fees (DZD)"
+msgstr "Report fees (DA)"
 
 #, python-format
 msgid "Taux TVA (%%)"
@@ -1513,7 +1513,7 @@ msgid "Confirmer le paiement"
 msgstr "Confirm payment"
 
 msgid "Coût DA"
-msgstr "Cost DZD"
+msgstr "Cost DA"
 
 msgid "Ajuster coût"
 msgstr "Adjust cost"
@@ -2507,10 +2507,10 @@ msgid "Techniques"
 msgstr "Techniques"
 
 msgid "Budget IBTIKAR (DA)"
-msgstr "IBTIKAR Budget (DZD)"
+msgstr "IBTIKAR Budget (DA)"
 
 msgid "Revenue GENOCLAB (DA)"
-msgstr "GENOCLAB Revenue (DZD)"
+msgstr "GENOCLAB Revenue (DA)"
 
 msgid "Note moyenne / 5"
 msgstr "Average rating / 5"
@@ -3056,7 +3056,7 @@ msgstr "Edit the service"
 
 #| msgid "Prix IBTIKAR (DA)"
 msgid "Prix IBTIKAR (DZD)"
-msgstr "IBTIKAR price (DZD)"
+msgstr "IBTIKAR price (DA)"
 
 msgid ""
 "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie "
@@ -3065,7 +3065,7 @@ msgstr "Flat price (used if no detailed pricing rule is defined below)"
 
 #| msgid "Prix GENOCLAB (DA)"
 msgid "Prix GENOCLAB (DZD)"
-msgstr "GENOCLAB price (DZD)"
+msgstr "GENOCLAB price (DA)"
 
 msgid "Image actuelle"
 msgstr "Current image"
@@ -3248,7 +3248,7 @@ msgid "Les deux"
 msgstr "Both"
 
 msgid "Montant (DZD)"
-msgstr "Amount (DZD)"
+msgstr "Amount (DA)"
 
 msgid "Unité"
 msgstr "Unit"
@@ -3873,7 +3873,7 @@ msgid "académique"
 msgstr "academic"
 
 msgid "Solde IBTIKAR déclaré (DA)"
-msgstr "Declared IBTIKAR balance (DZD)"
+msgstr "Declared IBTIKAR balance (DA)"
 
 msgid "Ex: Analyse DRX..."
 msgstr "E.g.: XRD analysis..."

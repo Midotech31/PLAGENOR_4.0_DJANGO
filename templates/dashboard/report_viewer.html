@@ -456,7 +456,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // Rating interaction — emotional feedback that gently anchors on a top
 // rating (default pre-selected) without ever asking for it in words.
 (function () {
-    var EMOJI = {1: '😞', 2: '😕', 3: '🙂', 4: '😊', 5: '🤩'};
+    // Self-hosted Twemoji SVGs (static/emoji/) — no CDN, no JS library:
+    // only these five glyphs are ever shown, so we swap the <img> directly.
+    var EMOJI = {
+        1: "{% static 'emoji/1f61e.svg' %}",
+        2: "{% static 'emoji/1f615.svg' %}",
+        3: "{% static 'emoji/1f642.svg' %}",
+        4: "{% static 'emoji/1f60a.svg' %}",
+        5: "{% static 'emoji/1f929.svg' %}"
+    };
+    var EMOJI_ALT = {1: '😞', 2: '😕', 3: '🙂', 4: '😊', 5: '🤩'};
     var REACT = {
         1: "{% trans 'Nous sommes sincèrement navrés — dites-nous ce que nous pouvons améliorer.' %}",
         2: "{% trans 'Nous voulons vraiment faire mieux pour vous.' %}",
@@ -471,8 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!stars || !emojiEl || !reactEl) { return; }
     function apply(v) {
         v = parseInt(v, 10) || 5;
-        emojiEl.textContent = EMOJI[v];
-        if (window.twemojiParse) { window.twemojiParse(emojiEl); }
+        emojiEl.innerHTML = '<img class="emoji" src="' + EMOJI[v] +
+                            '" alt="' + EMOJI_ALT[v] + '" width="72" height="72">';
         emojiEl.classList.remove('bounce');
         void emojiEl.offsetWidth;
         emojiEl.classList.add('bounce');

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load static %}
 {% block title %}{% trans "Statistiques" %} — PLAGENOR 4.0{% endblock %}
 
 {% block content %}
@@ -230,7 +231,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'vendor/chart-4.4.0.umd.min.js' %}"></script>
 <script>
 (function() {
     const labels = [{% for r in bundle.trend %}"{{ r.month }}"{% if not forloop.last %},{% endif %}{% endfor %}];
