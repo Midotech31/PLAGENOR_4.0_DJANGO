@@ -5,7 +5,11 @@
 > the operational gotchas (push path, signing, DB, secrets). Pair it with
 > `project_memory.md` (per-feature changelog) for finer detail.
 
-_Last updated: 2026-06-26._
+_Last updated: 2026-07-25._
+
+> **État actuel en une ligne :** PR #1 fusionnée → **`main` est la branche de
+> référence** (145 commits, CI verte, 102 tests). Cible d'hébergement :
+> **Railway** (voir `deploy_railway.md`). Render reste l'ancien host.
 
 ---
 
@@ -31,6 +35,22 @@ RTL via logical CSS properties). Emojis via **Twemoji 15.1** CDN.
 ---
 
 ## 2. Live deployment (current state)
+
+### 2.a Cible actuelle — Railway (à déployer par l'utilisateur)
+
+- Guide pas à pas : **`deploy_railway.md`** (à suivre tel quel).
+- Branche à déployer : **`main`**. Config au repo : `railway.json`
+  (build + `preDeployCommand` = migrate/seed/ensure_superuser + gunicorn +
+  healthcheck `/healthz`) et `nixpacks.toml` (install + collectstatic).
+- **Postgres géré par Railway** (add-on) référencé via `${{Postgres.DATABASE_URL}}` :
+  c'est ce qui met fin définitivement aux comptes qui disparaissaient.
+- Médias : on garde **Supabase Storage** (gratuit) via les `SUPABASE_S3_*`.
+- `PORT` et `RAILWAY_PUBLIC_DOMAIN` sont fournis par Railway ; `settings.py`
+  en dérive seul `ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS`.
+- Garde-fou : sans `DATABASE_URL` en prod, l'app **refuse de démarrer**
+  (`ImproperlyConfigured`) au lieu de retomber sur un SQLite éphémère.
+
+### 2.b Ancien host — Render (historique)
 
 - **Host:** Render.com, **free** web service named `plagenor`, **region
   Frankfurt** (moved from Oregon to be near the DB). Blueprint = `render.yaml`.
@@ -59,25 +79,34 @@ RTL via logical CSS properties). Emojis via **Twemoji 15.1** CDN.
 
 ## 3. Git state & how to push (IMPORTANT operational gotchas)
 
-- **Active branch:** `claude/great-newton-6Ce7v` (this is what Render deploys —
-  NOT `claude/festive-wozniak-...`).
+- **Branche de référence : `main`** (PR #1 fusionnée le 2026-07-25, merge
+  `6d041b3`, 145 commits). `claude/great-newton-6Ce7v` était la branche de
+  travail ; elle est désormais **entièrement contenue dans `main`** (0 commit
+  non fusionné). Le travail futur repart de `main` par PR relue + CI verte.
 - **Repo:** `Midotech31/PLAGENOR_4.0_DJANGO` (was renamed from
   `midotech31/plagenor_4.0_django`; old name still redirects).
-- **Latest commit:** `e83c6ec`. Recent history (newest first):
-  - `e83c6ec` fix: Sign up button text was grey-on-indigo (contrast)
-  - `be96e5d` feat: Sign up (Inscription) button in public top nav
-  - `45cb1a4` fix: full smartphone responsiveness
-  - `624cba1` docs(memory)
-  - `7fccc64` feat: idempotent `ensure_superuser` command
-  - `4cf76e2` chore: Render region = frankfurt
+- Derniers travaux avant la fusion (du plus récent) :
+  - `f89e763` docs: deploy from main on Railway
+  - `e11c2c0` fix: **double débit budget IBTIKAR** + cap 2FA + fuite erreurs DB
+  - `e651e9c` build: suppression de toute dépendance CDN externe
+  - `b9aa3df` style: police arabe Tajawal
+  - `1a70825` i18n: 172 chaînes non/mal traduites corrigées
+
+### Création/fusion de PR : bloquée côté plateforme
+- `create_pull_request` / `merge_pull_request` renvoient **403 « GitHub access
+  is not enabled for this session »** : c'est une restriction de l'intégration,
+  **pas** un problème de token. PR #1 a donc été créée et fusionnée
+  **manuellement par l'utilisateur**. Prévoir la même chose la prochaine fois.
 
 ### PUSH BLOCKER (read before trying to push)
 - The agent proxy push **and** the GitHub MCP `push_files`/tree both return
   **403** in this environment. They do NOT work.
 - **Only working push path:** a one-shot HTTPS push with a user-provided PAT:
   ```
-  git push "https://x-access-token:<PAT>@github.com/Midotech31/PLAGENOR_4.0_DJANGO.git" claude/great-newton-6Ce7v
+  git push "https://x-access-token:<PAT>@github.com/Midotech31/PLAGENOR_4.0_DJANGO.git" <branche>
   ```
+  (Un PAT sans le scope `workflow` **ne peut pas** pousser un changement dans
+  `.github/workflows/` — le push est rejeté entièrement.)
   Never store the token in `.git/config`; use it inline once, then ask the user
   to revoke it. (The local `origin` ref goes stale because direct-URL pushes
   don't update it — harmless; `git fetch <url> <branch>` to refresh if needed.)

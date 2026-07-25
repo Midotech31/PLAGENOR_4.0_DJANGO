@@ -1,8 +1,11 @@
 # PLAGENOR 4.0 — Project Memory
 
-## Current Objective
-- Déploiement Render (région Frankfurt) + Supabase. App = https://plagenor.onrender.com.
-- RESTE (action user, UI Render): ajouter DJANGO_SUPERUSER_USERNAME/PASSWORD/EMAIL dans Environment -> redeploy cree l'admin via ensure_superuser. Puis tester /admin/.
+## Current Objective (2026-07-25)
+- PR #1 FUSIONNEE -> `main` est la branche de reference (145 commits, CI verte, 102 tests). 0 commit non fusionne sur claude/great-newton-6Ce7v.
+- PROCHAINE ETAPE (action user): deployer sur **Railway** depuis `main` en suivant `deploy_railway.md` (projet -> add-on Postgres -> reference ${{Postgres.DATABASE_URL}} -> variables SECRET_KEY/DEBUG/DJANGO_SUPERUSER_*/SUPABASE_S3_* -> Generate Domain -> Deploy). Verifier les logs: migrate OK, ensure_superuser cree l'admin, /healthz + /readyz verts.
+- AUTRES ACTIONS USER: revoquer les 3 PAT exposes en chat; ajouter le secret DATABASE_URL (Railway) dans GitHub Actions pour activer db-backup.yml; activer branch protection + secret scanning; SENTRY_DSN optionnel.
+- RESTE CODE (offert, non commence): couverture 37%->60%, audit accessibilite navigateur (axe/Lighthouse), ROLE_CHOICES traduisibles, refactoring CSS/vues, CMS phases B/C.
+- Historique: Render (https://plagenor.onrender.com) reste l'ancien host; le fallback SQLite ephemere qui faisait disparaitre les comptes est desormais interdit en prod (ImproperlyConfigured).
 
 ## Phase 3 (fait, 87 tests, couverture 24%->34%)
 - Tests vues: routeur + 6 dashboards par role (rendu 200 pour le bon role, 403 autres, redirect anon). Exerce toutes les vues d'atterrissage. 24%->27%.
