@@ -181,6 +181,33 @@ class TwoFactorTests(TestCase):
         self.assertTrue(self.user.totp_enabled)
         self.assertEqual(self.user.totp_secret, secret)
 
+    def test_2fa_brute_force_is_capped(self):
+        """Regression: the password step already succeeded, so the account
+        lockout no longer applies — wrong codes must be capped here."""
+        self._enable_totp(self.user)
+        self.client.post('/accounts/login/',
+                         {'username': 'tfa', 'password': 'RightPass!42'})
+        for _ in range(5):
+            r = self.client.post('/accounts/2fa/verify/', {'code': '000000'})
+            self.assertEqual(r.status_code, 200)
+        # 6th attempt burns the pending session and sends the user back.
+        r = self.client.post('/accounts/2fa/verify/', {'code': '000000'})
+        self.assertRedirects(r, '/accounts/login/')
+        self.assertNotIn('pending_2fa_user', self.client.session)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_2fa_attempt_counter_resets_after_success(self):
+        import pyotp
+        secret = self._enable_totp(self.user)
+        self.client.post('/accounts/login/',
+                         {'username': 'tfa', 'password': 'RightPass!42'})
+        self.client.post('/accounts/2fa/verify/', {'code': '000000'})  # 1 échec
+        r = self.client.post('/accounts/2fa/verify/',
+                             {'code': pyotp.TOTP(secret).now()})
+        self.assertEqual(r.status_code, 302)
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertNotIn('pending_2fa_attempts', self.client.session)
+
     def test_superadmin_reset_disables_2fa(self):
         self._enable_totp(self.user)
         admin = User.objects.create_user(

@@ -339,6 +339,11 @@ class Request(models.Model):
 
     # Citation acknowledgment (Prompt 10)
     citation_acknowledged = models.BooleanField(default=False, verbose_name='Citation acknowledgée')
+    # Set once the IBTIKAR budget has been debited for this request, so a
+    # replay of the COMPLETED transition (e.g. an admin forces the request
+    # back and the requester confirms again) can never debit twice.
+    budget_deducted = models.BooleanField(
+        default=False, verbose_name='Budget IBTIKAR déjà déduit')
 
     # Guest
     submitted_as_guest = models.BooleanField(default=False)

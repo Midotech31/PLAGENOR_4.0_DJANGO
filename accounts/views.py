@@ -405,6 +405,14 @@ def _qr_data_uri(text):
     return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
 
 
+# A correct password already got the attacker this far, so the per-account
+# login lockout no longer protects anything: without a cap the 6-digit code
+# would be brute-forceable. Bound both the attempts per session and the
+# requests per IP.
+MAX_2FA_ATTEMPTS = 5
+
+
+@rate_limit('2fa', limit=10, window=300)
 def two_factor_verify(request):
     """Second step of login for TOTP-enrolled users. The user's pk was staged
     in the session by CustomLoginView after a correct password."""
@@ -418,10 +426,21 @@ def two_factor_verify(request):
         return redirect('accounts:login')
     error = None
     if request.method == 'POST':
+        attempts = request.session.get('pending_2fa_attempts', 0) + 1
+        if attempts > MAX_2FA_ATTEMPTS:
+            # Burn the pending session: the password step must be redone.
+            for k in ('pending_2fa_user', 'pending_2fa_next',
+                      'pending_2fa_attempts'):
+                request.session.pop(k, None)
+            messages.error(request, _(
+                "Trop de codes incorrects. Veuillez vous reconnecter."))
+            return redirect('accounts:login')
+        request.session['pending_2fa_attempts'] = attempts
         code = (request.POST.get('code') or '').strip().replace(' ', '')
         if pyotp.TOTP(user.totp_secret).verify(code, valid_window=1):
             nxt = request.session.pop('pending_2fa_next', None)
             request.session.pop('pending_2fa_user', None)
+            request.session.pop('pending_2fa_attempts', None)
             login(request, user)
             return redirect(nxt or '/dashboard/')
         error = _("Code invalide ou expiré. Réessayez.")

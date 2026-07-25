@@ -313,6 +313,11 @@ def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
     when present, fall back to ``budget_amount``, and skip silently if
     neither is set.
 
+    Debits exactly once per request: the ``budget_deducted`` flag is claimed
+    under ``SELECT … FOR UPDATE`` before any money moves, so replaying the
+    COMPLETED transition (an admin forces the request back and the requester
+    confirms again) or two concurrent confirmations can never debit twice.
+
     Failures here NEVER block the workflow — log and continue.
     """
     if to_status != 'COMPLETED' or request_obj.channel != 'IBTIKAR':
@@ -329,10 +334,27 @@ def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
         return
     try:
         from core.financial import deduct_ibtikar_balance
-        deduct_ibtikar_balance(
-            requester, amount,
-            reason=f"COMPLETED:{request_obj.display_id}",
-        )
+        # Claim the debit atomically; if the flag was already set, another
+        # completion (or a replay of this one) has paid — do nothing.
+        with transaction.atomic():
+            locked = (
+                Request.objects.select_for_update()
+                .filter(pk=request_obj.pk, budget_deducted=False)
+                .first()
+            )
+            if locked is None:
+                logger.info(
+                    "IBTIKAR deduction skipped for %s: budget already deducted.",
+                    request_obj.display_id,
+                )
+                return
+            locked.budget_deducted = True
+            locked.save(update_fields=['budget_deducted'])
+            deduct_ibtikar_balance(
+                requester, amount,
+                reason=f"COMPLETED:{request_obj.display_id}",
+            )
+        request_obj.budget_deducted = True
     except Exception as exc:
         logger.exception(
             "IBTIKAR deduction failed for %s (%s DA): %s",

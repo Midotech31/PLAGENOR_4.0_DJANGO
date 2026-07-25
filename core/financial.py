@@ -171,10 +171,12 @@ def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
     IBTIKAR balance. Called when an IBTIKAR request reaches COMPLETED
     (report delivered + receipt confirmed).
 
-    Idempotency: caller passes `reason` (e.g. the request display_id)
-    so we don't double-deduct if the workflow is replayed. We log every
-    deduction; double-call protection at the workflow side uses a
-    per-request flag (see core.workflow._deduct_on_complete).
+    NOT idempotent on its own: every call debits. `reason` is only
+    recorded in the log. The once-per-request guarantee lives in the
+    caller, which claims ``Request.budget_deducted`` under
+    ``SELECT … FOR UPDATE`` before calling this
+    (see core.workflow._deduct_ibtikar_on_complete). Any new caller must
+    provide its own guard.
 
     No-op if the requester never declared a balance — log a warning so
     operators can investigate. Refuses to go negative; floors at 0.

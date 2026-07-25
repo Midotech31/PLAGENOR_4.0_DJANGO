@@ -491,6 +491,29 @@ class IbtikarDeductionTests(TestCase):
         res = deduct_ibtikar_balance(u, 1000, reason='x')
         self.assertTrue(res['skipped'])
 
+    def test_budget_is_deducted_only_once_on_replay(self):
+        """Regression: an admin forcing the request back and the requester
+        confirming again must NOT debit the budget a second time."""
+        u = self.User.objects.create(
+            username='ded-replay', role='REQUESTER',
+            ibtikar_declared_balance=Decimal('100000'))
+        req = Request.objects.create(
+            channel='IBTIKAR', status='SENT_TO_REQUESTER', requester=u,
+            budget_amount=Decimal('30000'), display_id='DED-REPLAY-1')
+
+        transition(req, 'COMPLETED', u)
+        u.refresh_from_db()
+        self.assertEqual(float(u.ibtikar_declared_balance), 70000.0)
+        req.refresh_from_db()
+        self.assertTrue(req.budget_deducted)
+
+        # Replay the completion.
+        force_transition(req, 'SENT_TO_REQUESTER', self.admin, notes='fix')
+        transition(req, 'COMPLETED', u)
+        u.refresh_from_db()
+        self.assertEqual(float(u.ibtikar_declared_balance), 70000.0,
+                         "le budget a été déduit deux fois")
+
     def test_completing_ibtikar_request_deducts_budget(self):
         """End-to-end: SENT_TO_REQUESTER -> COMPLETED on IBTIKAR deducts the
         resolved cost from the requester's declared balance."""
