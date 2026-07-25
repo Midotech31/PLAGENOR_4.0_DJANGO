@@ -13,9 +13,11 @@ collectstatic). Tu n'as rien à coder — juste à cliquer et coller des variabl
 
 1. Va sur https://railway.app → connecte-toi avec GitHub.
 2. **New Project → Deploy from GitHub repo** → choisis `Midotech31/PLAGENOR_4.0_DJANGO`.
-3. Dans le service, **Settings → Branch** → sélectionne **`claude/great-newton-6Ce7v`**
-   (la branche déployée). (Le 1er build va probablement échouer : normal, on n'a
-   pas encore mis les variables. On corrige aux étapes 2–3.)
+3. Dans le service, **Settings → Branch** → sélectionne **`main`** (une fois la
+   PR #1 fusionnée, `main` contient tout ; c'est la branche à déployer
+   désormais, et le travail futur y arrive par PR relue + CI verte).
+   (Le 1er build va probablement échouer : normal, on n'a pas encore mis les
+   variables. On corrige aux étapes 2–3.)
 
 ## 2. Ajouter la base PostgreSQL
 
