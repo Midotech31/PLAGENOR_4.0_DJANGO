@@ -1,4 +1,4 @@
-Django==5.1
+Django==5.2.16
 django-htmx==1.19.0
 django-modeltranslation==0.20.3
 whitenoise==6.7.0
