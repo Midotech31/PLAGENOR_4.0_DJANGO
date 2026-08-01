@@ -44,7 +44,7 @@ from app.models import (
     PieceCheck,
     PieceDefinition,
 )
-from app.services import ocr_service, pdf_service, reference_data, rules_engine
+from app.services import ocr_engines, ocr_service, pdf_service, reference_data, rules_engine
 
 DOCUMENT_AAD_PREFIX = "document"
 PAGE_AAD_PREFIX = "page"
@@ -346,42 +346,67 @@ def run_page_ocr(session: Session, page_id: str, *, force: bool = False) -> OcrR
     document = session.get(Document, page.document_id)
     content = load_document_bytes(session, document.id)
     png = pdf_service.render_page_png(content, page.page_no)
-    result = ocr_service.run_ocr(png)
+
+    # L'échelle essaie plusieurs moteurs et retient le meilleur mesuré. Une
+    # page restreinte ne monte jamais jusqu'au barreau de vision.
+    outcome = ocr_engines.read_page(png, sensitivity=document.sensitivity)
+    if not any(attempt["disponible"] for attempt in outcome.attempts):
+        # Aucun moteur installé : l'échec reste explicite plutôt que silencieux.
+        raise ocr_service.OcrUnavailable(
+            "Aucun moteur de lecture n'est disponible sur ce poste. Installez Tesseract "
+            "(paquets fra, ara et eng) ou « rapidocr-onnxruntime ». Aucun texte n'est "
+            "supposé en leur absence."
+        )
+    result = ocr_service.run_ocr(png) if outcome.engine == "tesseract" else None
 
     key = get_master_key()
     run = OcrRun(
         page_id=page.id,
-        engine=ocr_service.ENGINE_NAME,
-        version=result.engine_version,
-        languages=result.languages,
-        parameters_json=json.dumps(result.parameters, ensure_ascii=False),
-        confidence=result.confidence,
-        low_confidence_words=len(result.low_confidence_words),
-        succeeded=True,
+        engine=outcome.engine,
+        version=result.engine_version if result else outcome.engine,
+        languages=result.languages if result else (get_settings().ocr_languages),
+        parameters_json=json.dumps(
+            {
+                "moteur_retenu": outcome.engine,
+                "barreaux_essayes": outcome.attempts,
+                "accord_entre_moteurs": outcome.agreement,
+                "transcription_humaine_requise": outcome.human_transcription_required,
+                "constat": outcome.notice,
+                **({"tesseract": result.parameters} if result else {}),
+            },
+            ensure_ascii=False,
+        ),
+        confidence=outcome.confidence,
+        low_confidence_words=len(result.low_confidence_words) if result else 0,
+        succeeded=not outcome.human_transcription_required,
     )
     session.add(run)
     session.flush()
-    run.result_cipher = encrypt_text(key, result.text, f"ocr:{run.id}:text")
-    run.boxes_cipher = encrypt_text(key, result.boxes_json(), f"ocr:{run.id}:boxes")
+    run.result_cipher = encrypt_text(key, outcome.text, f"ocr:{run.id}:text")
+    run.boxes_cipher = encrypt_text(
+        key, result.boxes_json() if result else "[]", f"ocr:{run.id}:boxes"
+    )
 
     # Le texte OCR n'écrase jamais le texte initial : s'il n'y avait aucun
     # texte natif, il devient le texte initial de la page ; sinon il est
     # conservé dans la trace OCR et proposé comme correction.
     if page.original_text_cipher is None:
-        page.original_text_cipher = encrypt_text(key, result.text, page_aad(page.id, "original"))
+        page.original_text_cipher = encrypt_text(key, outcome.text, page_aad(page.id, "original"))
     page.mode = ExtractionMode.OCR if page.char_count == 0 else ExtractionMode.MIXTE
-    page.confidence = (result.confidence / 100) if result.confidence is not None else None
-    page.char_count = useful_char_count(result.text)
-    page.needs_ocr = False
-    page.engine_version = result.engine_version
+    page.confidence = (outcome.confidence / 100) if outcome.confidence is not None else None
+    page.char_count = useful_char_count(outcome.text)
+    # Une page qu'aucun moteur n'a su lire reste explicitement à traiter :
+    # la marquer « faite » masquerait le trou au lieu de le signaler.
+    page.needs_ocr = outcome.human_transcription_required
+    page.engine_version = result.engine_version if result else outcome.engine
     page.analyzed_at = datetime.now(timezone.utc)
 
     audit.record(
         session,
         audit.AuditAction.PAGE_OCR,
-        f"OCR local de la page {page.page_no} — confiance moyenne "
-        f"{result.confidence if result.confidence is not None else 'inconnue'} "
-        f"({len(result.low_confidence_words)} mot(s) sous le seuil).",
+        f"OCR local de la page {page.page_no} — moteur retenu {outcome.engine}, "
+        f"confiance {outcome.confidence if outcome.confidence is not None else 'inconnue'}. "
+        + outcome.notice,
         entity_type="page",
         entity_id=page.id,
         dossier_id=document.dossier_id,

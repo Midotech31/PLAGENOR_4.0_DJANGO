@@ -220,3 +220,42 @@ vérifiabilité :**
 passeport n'est reproduit, la section 4.1 est explicitement informative, et le
 nombre de pages est mesuré sur le fichier produit — trois pages atteintes sans
 retirer aucun des vingt-six constats.
+
+## DT-19 — Échelle d'escalade OCR, et aveu d'échec plutôt qu'invention
+
+**Constat mesuré, pas supposé :** sur des pages franchement dégradées
+(caractères de 10 px, flou combiné à une basse résolution), **Tesseract et
+RapidOCR échouent tous les deux complètement** — 0 mot-clé retrouvé sur 7.
+Empiler un second moteur classique ne suffit donc pas.
+
+**Décision :** `ocr_engines` organise une échelle — texte natif, Tesseract
+multi-variantes, RapidOCR, modèle de vision, transcription humaine — et retient
+la meilleure lecture mesurée. Aucune fusion entre moteurs : recoller les
+meilleurs mots de deux passages produirait une page que personne n'a lue.
+
+**Le point critique n'est pas de lire davantage, c'est de ne jamais présenter
+une lecture fausse comme fiable.** Un défaut réel a été trouvé en mesurant :
+sur une page illisible, RapidOCR renvoyait un texte faux avec une confiance
+élevée, et l'application le présentait comme sûr. La confiance d'un moteur
+mesure sa propre certitude, pas sa justesse. Trois doutes indépendants
+déclenchent désormais la relecture humaine, chacun suffisant :
+
+* confiance en deçà du seuil ;
+* moins de 40 caractères utiles extraits d'une page entière ;
+* **désaccord entre deux moteurs** — deux lecteurs indépendants qui divergent
+  constituent un doute, exactement comme pour la relecture des constats.
+
+Une page qu'aucun barreau ne lit reste marquée `needs_ocr` : la déclarer traitée
+masquerait le trou au lieu de le signaler.
+
+**Confidentialité du barreau de vision.** L'expurgation est textuelle et **ne
+peut rien voir dans une image**. Le seul garde-fou possible est donc la
+classification : un bloc image sans sensibilité déclarée est refusé par le
+fournisseur, et une page `RESTREINT` n'atteint jamais ce barreau. Ces deux
+refus sont dans le code, pas dans la configuration.
+
+**Ce qui reste non mesuré :** le gain réel du barreau de vision. Aucun appel à
+un modèle n'a été effectué faute de clé, et je ne peux pas servir de référence
+sur un texte que j'ai moi-même généré — je saurais déjà ce qu'il dit. Le gain
+annoncé pour ce barreau repose sur une différence d'architecture (lecture
+contextuelle contre classification de glyphes), pas sur une mesure faite ici.

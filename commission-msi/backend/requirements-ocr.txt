@@ -1,0 +1,16 @@
+# ===================================================================
+#  Second moteur de lecture — optionnel mais recommandé
+#  Designed by Prof. Merzoug Mohamed
+#
+#  RapidOCR embarque les modèles PP-OCR au format ONNX : environ
+#  100 Mo, aucun GPU requis, fonctionne hors ligne une fois installé.
+#
+#  Pourquoi l'ajouter : mesuré meilleur que Tesseract sur les pages à
+#  basse résolution, et il supplée Tesseract si celui-ci manque. Il ne
+#  le remplace pas — Tesseract reste meilleur sur le flou et le bruit,
+#  et l'application retient automatiquement la meilleure des lectures.
+#
+#  Installation :
+#     backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-ocr.txt
+# ===================================================================
+rapidocr-onnxruntime==1.4.4

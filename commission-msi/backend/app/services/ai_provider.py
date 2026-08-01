@@ -249,11 +249,23 @@ class HybridStrictProvider(AIProvider):
         redacted_blocks: list[dict] = []
         categories: list[str] = ["EXTRAIT_TEXTE"]
         for block in request.blocks:
-            text, removed = redact(str(block.get("text", "")))
             if block.get("sensitivity") == "RESTREINT":
                 raise RestrictedContentRefused(
                     f"le bloc « {block.get('evidence_id', '—')} » est classé restreint"
                 )
+            # L'expurgation lit du texte : elle ne peut rien voir dans une image.
+            # Un bloc image n'est donc transmis que si sa classification a été
+            # posée explicitement — l'absence de classification vaut refus.
+            if str(block.get("kind", "")).startswith("image/"):
+                if "sensitivity" not in block:
+                    raise RestrictedContentRefused(
+                        "un bloc image sans classification de sensibilité a été soumis ; "
+                        "aucune expurgation n'est possible sur une image"
+                    )
+                categories.append("IMAGE_PAGE")
+                redacted_blocks.append(block)
+                continue
+            text, removed = redact(str(block.get("text", "")))
             redacted_blocks.append({**block, "text": text})
             for category in removed:
                 if category not in categories:

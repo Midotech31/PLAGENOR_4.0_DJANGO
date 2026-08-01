@@ -114,9 +114,29 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
 - Les mises en page `compact` et `detaille` restent disponibles, et le choix est
   offert dans l'onglet Rapports.
 
+### Échelle d'escalade OCR
+
+- Nouveau module `ocr_engines` : texte natif → Tesseract multi-variantes →
+  RapidOCR → modèle de vision → transcription humaine. La meilleure lecture
+  mesurée est retenue ; aucune fusion entre moteurs.
+- **RapidOCR** (modèles PP-OCR en ONNX, ~100 Mo, sans GPU) proposé en option
+  via `backend/requirements-ocr.txt`. Mesuré meilleur sur la basse résolution,
+  moins bon sur le flou : il supplée Tesseract sans le remplacer.
+- **Correction d'un défaut réel** : sur une page illisible, un moteur pouvait
+  renvoyer un texte faux avec une confiance élevée, présenté comme fiable.
+  Trois doutes indépendants déclenchent désormais la relecture humaine —
+  confiance basse, moins de 40 caractères utiles sur une page entière, ou
+  désaccord entre deux moteurs.
+- Une page qu'aucun moteur ne lit reste marquée à traiter, avec le motif nommé.
+- Perdre Tesseract n'interrompt plus la lecture si un autre moteur est présent ;
+  l'échec n'est explicite que si aucun moteur n'est disponible.
+- Le barreau de vision refuse inconditionnellement les pages restreintes, et le
+  fournisseur refuse tout bloc image sans classification — l'expurgation étant
+  textuelle, elle ne peut rien voir dans une image.
+
 ### Tests
 
-- 243 tests backend et 15 tests d'interface au vert.
+- 256 tests backend et 15 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

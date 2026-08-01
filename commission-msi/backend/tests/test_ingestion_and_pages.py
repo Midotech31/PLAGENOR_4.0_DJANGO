@@ -129,14 +129,38 @@ def test_ocr_refused_when_native_text_is_sufficient(client, dossier):
     assert "texte natif" in response.json()["error"]["message"]
 
 
-def test_ocr_unavailable_is_explicit(client, dossier, tesseract_absent):
-    """Sans moteur local, l'échec est explicite : aucun texte supposé."""
+def test_ocr_survives_the_loss_of_one_engine(client, dossier, tesseract_absent):
+    """Perdre Tesseract n'arrête plus la lecture si un autre moteur est présent.
+
+    C'est l'intérêt de l'échelle : les barreaux se suppléent. La page reste
+    marquée à relire tant qu'aucune lecture fiable n'a été obtenue.
+    """
+    from app.services import ocr_engines
+
+    if not ocr_engines.rapidocr_available():
+        pytest.skip("Aucun second moteur installé : rien à suppléer.")
+
+    assert _import(client, dossier, synthetic.make_scanned_pdf()).status_code == 201
+    page = client.get(f"/api/v1/dossiers/{dossier['id']}/pages").json()["items"][0]
+    response = client.post(f"/api/v1/dossiers/{dossier['id']}/pages/{page['id']}/ocr")
+
+    assert response.status_code == 200
+    assert response.json()["notice"]
+
+
+def test_ocr_unavailable_is_explicit(client, dossier, tesseract_absent, monkeypatch):
+    """Sans aucun moteur, l'échec est explicite : aucun texte supposé."""
+    from app.services import ocr_engines
+
+    monkeypatch.setattr(ocr_engines, "rapidocr_available", lambda: False)
+
     assert _import(client, dossier, synthetic.make_scanned_pdf()).status_code == 201
     page = client.get(f"/api/v1/dossiers/{dossier['id']}/pages").json()["items"][0]
     response = client.post(f"/api/v1/dossiers/{dossier['id']}/pages/{page['id']}/ocr")
     assert response.status_code == 503
-    assert "OCR local introuvable" in response.json()["error"]["message"]
-    assert "aucun service en ligne" in response.json()["error"]["message"].lower()
+    message = response.json()["error"]["message"]
+    assert "Aucun moteur de lecture n'est disponible" in message
+    assert "Aucun texte n'est supposé" in message
 
 
 def test_page_correction_keeps_initial_text(client, dossier):
