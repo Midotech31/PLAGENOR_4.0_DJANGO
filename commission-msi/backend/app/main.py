@@ -59,7 +59,21 @@ async def lifespan(_app: FastAPI):
             f"Démarrage local de {APP_NAME} version {get_settings().version}.",
         )
     logger.info("%s prêt sur http://%s:%s", APP_NAME, get_settings().host, get_settings().port)
+
+    # Le worker d'analyse tourne hors du fil des requêtes HTTP : fermer le
+    # navigateur ou perdre une requête n'interrompt jamais un traitement.
+    worker: tuple | None = None
+    if get_settings().worker_enabled:
+        from app.services import job_service
+
+        worker = job_service.start_background_worker()
+        logger.info("Worker d'analyse démarré (travaux durables en base).")
+
     yield
+
+    if worker is not None:
+        _thread, stop = worker
+        stop.set()
     with session_scope() as session:
         audit.record(session, audit.AuditAction.APP_STOP, "Arrêt de l'application.")
 

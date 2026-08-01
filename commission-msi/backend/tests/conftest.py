@@ -29,6 +29,9 @@ def isolated_environment(data_dir: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("MSI_DATA_DIR", str(data_dir))
     monkeypatch.setenv("MSI_NETWORK_DISABLED", "1")
     monkeypatch.delenv("MSI_ALLOW_REMOTE", raising=False)
+    # Le worker de fond est arrêté pendant les tests : c'est le test qui décide
+    # quand un travail s'exécute, sinon les assertions courraient après un fil.
+    monkeypatch.setenv("MSI_WORKER_ENABLED", "0")
 
     from app.core import config, db, keyring
     from app.ranking import service as ranking_service

@@ -123,6 +123,30 @@ def limits() -> dict:
     return {"limits": list(DISPLAYED_LIMITS), "designed_by": SIGNATURE}
 
 
+@router.get("/mode-analyse")
+def analysis_mode() -> dict:
+    """Mode d'intelligence artificielle et garanties de confidentialité (§5).
+
+    La clé API n'est jamais renvoyée, ni même son empreinte : seule sa présence
+    ou son absence est indiquée à travers la liste des éléments manquants.
+    """
+    from app.services import ai_provider
+
+    state = ai_provider.status()
+    state["guarantees"] = [
+        "Le PDF original reste chiffré en local et n'est jamais transmis.",
+        "Les pièces d'identité et les numéros de passeport ne sont jamais transmis au modèle "
+        "ni utilisés dans une recherche Web.",
+        "La recherche publique ne porte que sur des identités professionnelles et des "
+        "informations déjà publiques.",
+        "Le raisonnement privé du modèle n'est ni conservé ni affiché.",
+        "Chaque transmission externe est inscrite à l'audit avec le type de données, jamais "
+        "avec le contenu sensible en clair.",
+        "Le choix du statut réglementaire, de la note et de l'avis reste déterministe et local.",
+    ]
+    return state
+
+
 def port_is_free(host: str, port: int) -> bool:
     """Utilisé par le lanceur : le port doit être ouvert avant le navigateur."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:

@@ -39,10 +39,13 @@ from app.schemas.api import (
 from app.services import (
     analysis_service,
     assessment_service,
+    audit_service,
     dossier_service,
     evidence_service,
     evaluation_service,
+    job_service,
     pdf_service,
+    report_qa_service,
     report_service,
 )
 
@@ -564,6 +567,76 @@ def retain_decision(
         motivation=payload.motivation,
     )
     return assessment_service.current_assessment(session, dossier_id)
+
+
+# --------------------------------------------------------------------------
+# Traiter le dossier : travail durable exécuté par le worker
+# --------------------------------------------------------------------------
+
+
+@router.post("/{dossier_id}/traitement", status_code=201)
+def start_processing(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Crée le travail durable. Fermer l'application ne le perd pas."""
+    dossier_service.get_dossier(session, dossier_id)
+    job = job_service.enqueue(
+        session, dossier_id, analysis_mode=get_settings().analysis_mode
+    )
+    return job_service.job_view(session, job)
+
+
+@router.get("/{dossier_id}/traitement")
+def processing_state(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """État détaillé du traitement : étape, pages, recherches, estimation."""
+    dossier_service.get_dossier(session, dossier_id)
+    job = job_service.latest_job(session, dossier_id)
+    if job is None:
+        return {
+            "job": None,
+            "notice": "Aucun traitement n'a encore été lancé pour ce dossier.",
+        }
+    return {"job": job_service.job_view(session, job), "notice": None}
+
+
+@router.post("/{dossier_id}/traitement/{job_id}/annuler")
+def cancel_processing(dossier_id: str, job_id: str, session: Session = Depends(get_db)) -> dict:
+    """Annulation non destructive : les résultats déjà produits sont conservés."""
+    dossier_service.get_dossier(session, dossier_id)
+    job = job_service.cancel(session, job_id)
+    return job_service.job_view(session, job)
+
+
+@router.post("/{dossier_id}/traitement/{job_id}/reprendre")
+def resume_processing(dossier_id: str, job_id: str, session: Session = Depends(get_db)) -> dict:
+    """Reprend au dernier point de reprise valide, sans refaire l'acquis."""
+    dossier_service.get_dossier(session, dossier_id)
+    job = job_service.resume(session, job_id)
+    return job_service.job_view(session, job)
+
+
+@router.get("/{dossier_id}/controle-qualite")
+def quality_control(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Dernier contrôle qualité exécuté avant remise du rapport."""
+    dossier_service.get_dossier(session, dossier_id)
+    result = report_qa_service.latest(session, dossier_id)
+    return result or {
+        "passed": False,
+        "failures": 0,
+        "checks": [],
+        "notice": "Aucun contrôle qualité n'a encore été exécuté pour ce dossier.",
+    }
+
+
+@router.get("/{dossier_id}/desaccords")
+def disagreements(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Désaccords de la relecture indépendante : jamais moyennés, toujours affichés."""
+    dossier_service.get_dossier(session, dossier_id)
+    return {
+        "items": audit_service.listing(session, dossier_id),
+        "notice": (
+            "Un désaccord non résolu classe le critère « non vérifiable ». Aucune moyenne "
+            "n'est faite entre les deux analyses : l'arbitrage vous revient."
+        ),
+    }
 
 
 @router.get("/{dossier_id}/preuves")

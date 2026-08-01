@@ -67,6 +67,43 @@ class Settings:
     min_motivation_length: int = field(default_factory=lambda: _env_int("MSI_MIN_MOTIVATION", 8))
     evaluator_label: str = field(default_factory=lambda: os.environ.get("MSI_EVALUATOR", EVALUATOR_LABEL))
 
+    # Traitement asynchrone durable (§6) ------------------------------
+    worker_enabled: bool = field(default_factory=lambda: _env_bool("MSI_WORKER_ENABLED", True))
+
+    # Mode d'intelligence artificielle (§5) ---------------------------
+    #: `HYBRID_STRICT` ou `LOCAL_ONLY`. Le mode local ne fournit pas le même
+    #: niveau d'analyse sémantique ni de recherche publique, et le dit.
+    analysis_mode: str = field(
+        default_factory=lambda: os.environ.get("ANALYSIS_MODE", "LOCAL_ONLY").upper()
+    )
+    #: La clé n'est jamais écrite dans le code ni dans un fichier versionné :
+    #: elle vient de l'environnement ou du coffre de secrets du système.
+    anthropic_api_key: str = field(
+        default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY", "")
+    )
+    #: Identifiants de modèles configurables — aucun alias « latest » codé en dur.
+    anthropic_model_analysis: str = field(
+        default_factory=lambda: os.environ.get("ANTHROPIC_MODEL_ANALYSIS", "")
+    )
+    anthropic_model_audit: str = field(
+        default_factory=lambda: os.environ.get("ANTHROPIC_MODEL_AUDIT", "")
+    )
+    allow_external_ai: bool = field(default_factory=lambda: _env_bool("ALLOW_EXTERNAL_AI", False))
+    #: Le PDF original ne quitte jamais le poste par défaut.
+    send_original_pdf: bool = field(default_factory=lambda: _env_bool("SEND_ORIGINAL_PDF", False))
+    #: Les pièces d'identité ne sont jamais transmises — la valeur reste `False`
+    #: quoi qu'en dise l'environnement (voir `AIProvider`).
+    send_identity_documents: bool = field(
+        default_factory=lambda: _env_bool("SEND_IDENTITY_DOCUMENTS", False)
+    )
+    web_search_enabled: bool = field(default_factory=lambda: _env_bool("WEB_SEARCH_ENABLED", False))
+    web_search_max_uses: int = field(default_factory=lambda: _env_int("WEB_SEARCH_MAX_USES", 30))
+    #: Le traitement externe ne démarre pas tant que la configuration de
+    #: confidentialité n'a pas été validée une fois.
+    privacy_acknowledged: bool = field(
+        default_factory=lambda: _env_bool("MSI_PRIVACY_ACKNOWLEDGED", False)
+    )
+
     # Chemins dérivés -------------------------------------------------
     @property
     def db_path(self) -> Path:
