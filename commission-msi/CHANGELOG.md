@@ -85,9 +85,21 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   progression, avis, score, matrice) et **Preuves et qualité** (registre,
   contrôle qualité, désaccords d'audit), traduits en français, anglais et arabe.
 
+### OCR des images peu nettes
+
+- Correction d'orientation par l'analyse `--psm 0` de Tesseract, puis jusqu'à
+  cinq prétraitements essayés : standard, contraste fort, binarisation d'Otsu,
+  agrandissement ×2, redressement par profil de projection.
+- Le passage retenu est celui dont la note de qualité mesurée est la meilleure ;
+  la recherche s'arrête dès qu'un résultat est franchement bon.
+- Gains mesurés : flou fort 71,8 % → 92,8 % de confiance ; basse résolution
+  30,4 % sur 25 caractères → 85,0 % sur 88 caractères.
+- Les variantes essayées et leurs scores sont affichés : l'évaluateur voit ce
+  qui a été tenté, pas seulement le résultat.
+
 ### Tests
 
-- 218 tests backend et 15 tests d'interface au vert.
+- 229 tests backend et 15 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

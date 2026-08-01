@@ -168,3 +168,28 @@ avec un débord du registre de preuves.
 tous exigés par le prompt. Les faire tenir en trois pages imposerait de les
 tronquer, ce que le même prompt interdit. La table des preuves est abrégée avec
 son total affiché — la liste est écourtée, jamais un constat.
+
+## DT-17 — OCR : plusieurs prétraitements essayés, le meilleur mesuré retenu
+
+**Constat d'usage :** l'OCR restait faible sur les images peu nettes.
+**Décision :** `run_ocr` corrige d'abord l'orientation via l'analyse `--psm 0`
+de Tesseract, puis essaie jusqu'à cinq prétraitements — standard, contraste
+fort, binarisation d'Otsu, agrandissement ×2, redressement — et retient le
+passage dont la note de qualité est la meilleure. Cette note combine la
+confiance moyenne et le volume de texte utile plafonné : la confiance seule
+récompenserait trois mots très sûrs, le volume seul récompenserait du bruit.
+La recherche s'arrête dès qu'un passage dépasse nettement le seuil de
+confiance, pour ne pas payer cinq passages sur un document déjà net.
+
+**Gains mesurés** sur des dégradations fabriquées (voir
+`tests/test_ocr_robustness.py`) : flou gaussien fort, 71,8 % → 92,8 % ; basse
+résolution, 30,4 % sur 25 caractères → 85,0 % sur 88 caractères.
+
+**Ce qui n'est pas fait, et pourquoi :** aucune fusion entre variantes. Le texte
+retenu provient toujours d'un seul passage, donc il reste cohérent et
+reproductible ; recoller les meilleurs mots de plusieurs passages produirait
+une page que le moteur n'a jamais lue telle quelle. Tout est implémenté avec
+Pillow seul — Otsu est calculé sur l'histogramme, l'inclinaison par profil de
+projection — pour ne pas ajouter OpenCV ou NumPy à une installation qui doit
+rester légère et hors ligne. Les variantes essayées et leurs scores sont
+affichés à l'évaluateur : il voit ce qui a été tenté, pas seulement le résultat.
