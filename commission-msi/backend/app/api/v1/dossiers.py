@@ -34,6 +34,7 @@ from app.schemas.api import (
     ScoreUpdate,
 )
 from app.services import (
+    analysis_service,
     dossier_service,
     evaluation_service,
     pdf_service,
@@ -216,6 +217,23 @@ def download_original(
         content=content,
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{document.original_name}"'},
+    )
+
+
+@router.post("/{dossier_id}/analyse-complete")
+def full_analysis(
+    dossier_id: str,
+    ocr: bool = Query(default=True),
+    prepare_web: bool = Query(default=True),
+    session: Session = Depends(get_db),
+) -> dict:
+    """Analyse tout ce qui peut l'être et propose le résultat à confirmation.
+
+    Aucune information n'est confirmée, aucune note attribuée, aucun avis
+    formulé : ces décisions appartiennent à l'évaluateur.
+    """
+    return analysis_service.run_full_analysis(
+        session, dossier_id, run_ocr=ocr, prepare_web=prepare_web
     )
 
 

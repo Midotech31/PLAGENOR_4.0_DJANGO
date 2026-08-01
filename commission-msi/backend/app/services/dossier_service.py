@@ -239,7 +239,12 @@ def import_document(
     )
     session.commit()
 
+    # Analyse immédiate : l'application propose, l'évaluateur confirme.
+    from app.services import coherence_service, extraction_service
+
+    extraction_service.autofill_dossier(session, dossier.id)
     detect_pieces(session, dossier.id)
+    coherence_service.run_automatic_checks(session, dossier.id)
     run_vigilance(session, dossier.id)
     return document
 

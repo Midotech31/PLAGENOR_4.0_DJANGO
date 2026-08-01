@@ -63,6 +63,13 @@ const fr = {
   'tab.historique': 'Historique',
 
   'document.import': 'Importer le PDF original',
+  'analysis.run': 'Lancer l’analyse complète',
+  'analysis.running': 'Analyse en cours…',
+  'analysis.title': 'Analyse automatique du dossier',
+  'analysis.intro':
+    'L’application analyse le document, extrait les informations, repère les pièces, calcule les contrôles, applique le moteur de vigilance et prépare les requêtes publiques. Tout est proposé au statut À VÉRIFIER : vous confirmez.',
+  'analysis.step': 'Étape',
+  'analysis.result': 'Résultat',
   'document.page': 'Page',
   'document.originalPage': 'Page originale',
   'document.extractedText': 'Texte extrait',

@@ -27,6 +27,10 @@ export function DocumentTab({ dossierId, onChanged }: { dossierId: string; onCha
   const [correction, setCorrection] = useState({ text: '', reason: '' });
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ page_id: string; page_no: number; excerpt: string }[]>([]);
+  const [analysis, setAnalysis] = useState<
+    { etape: string; resultat: string; traite: number; echecs: number }[] | null
+  >(null);
+  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const list = pages.data?.items ?? [];
@@ -61,6 +65,22 @@ export function DocumentTab({ dossierId, onChanged }: { dossierId: string; onCha
     } finally {
       setBusy(false);
       event.target.value = '';
+    }
+  }
+
+  async function runFullAnalysis() {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.fullAnalysis(dossierId);
+      setAnalysis(result.steps);
+      setAnalysisNotice(result.notice);
+      pages.reload();
+      onChanged();
+    } catch (cause) {
+      setError(cause);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -125,10 +145,51 @@ export function DocumentTab({ dossierId, onChanged }: { dossierId: string; onCha
         />
         <p className="aide">
           Le PDF original est conservé chiffré et strictement inchangé ; son empreinte SHA-256 est
-          enregistrée.
+          enregistrée. L’analyse démarre automatiquement après l’import.
         </p>
         <ErrorBanner error={error} />
       </Card>
+
+      {list.length > 0 && (
+        <Card
+          title={t('analysis.title')}
+          actions={
+            <button
+              type="button"
+              className="bouton-principal"
+              onClick={runFullAnalysis}
+              disabled={busy}
+            >
+              {busy ? t('analysis.running') : t('analysis.run')}
+            </button>
+          }
+        >
+          <Notice>{t('analysis.intro')}</Notice>
+          {analysis && (
+            <div className="tableau-conteneur">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">{t('analysis.step')}</th>
+                    <th scope="col">{t('analysis.result')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analysis.map((step) => (
+                    <tr key={step.etape}>
+                      <td>
+                        <Badge tone={step.echecs > 0 ? 'incertain' : 'ok'}>{step.etape}</Badge>
+                      </td>
+                      <td>{step.resultat}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {analysisNotice && <Notice tone="incertain">{analysisNotice}</Notice>}
+        </Card>
+      )}
 
       {pages.loading && <Loading label={t('common.loading')} />}
       {!pages.loading && list.length === 0 && (

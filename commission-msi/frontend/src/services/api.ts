@@ -365,6 +365,12 @@ export const api = {
       { method: 'POST', body },
     );
   },
+  fullAnalysis: (id: string) =>
+    post<{
+      steps: { etape: string; resultat: string; traite: number; echecs: number }[];
+      web_run_id: string | null;
+      notice: string;
+    }>(`/dossiers/${id}/analyse-complete`),
   listPages: (id: string) => get<{ items: PageInfo[] }>(`/dossiers/${id}/pages`),
   getPage: (id: string, pageId: string) => get<PageInfo>(`/dossiers/${id}/pages/${pageId}`),
   pageImageUrl: (id: string, pageId: string, dpi = 150) =>
