@@ -114,6 +114,9 @@ class ReportValidation(BaseModel):
 class ReportRequest(BaseModel):
     format: str = Field(default="docx", pattern="^(docx|pdf)$")
     official: bool = False
+    #: « compact » : trois pages selon la structure imposée. « detaille » :
+    #: rapport complet, lorsque les preuves ou les alertes l'exigent.
+    layout: str = Field(default="compact", pattern="^(compact|detaille)$")
 
 
 class RuleToggle(BaseModel):

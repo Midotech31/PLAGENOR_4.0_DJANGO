@@ -750,11 +750,16 @@ def generate_report(
     dossier_id: str, payload: ReportRequest, session: Session = Depends(get_db)
 ) -> dict:
     report = report_service.generate_report(
-        session, dossier_id, fmt=payload.format, official=payload.official
+        session,
+        dossier_id,
+        fmt=payload.format,
+        official=payload.official,
+        layout=payload.layout,
     )
     return {
         "id": report.id,
         "format": report.fmt,
+        "layout": payload.layout,
         "is_draft": report.is_draft,
         "version": report.version,
         "sha256": report.sha256,

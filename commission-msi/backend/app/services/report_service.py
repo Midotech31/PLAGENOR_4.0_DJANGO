@@ -17,22 +17,43 @@ from app.core.crypto import sha256_bytes
 from app.core.errors import GateBlocked, NotFound, ValidationRefused
 from app.core.security import resolve_within
 from app.models import Dossier, Report
-from app.reports import builder, evaluation_report, writers
+from app.reports import builder, compact_report, evaluation_report, writers
 from app.services import evaluation_service
 
 SUPPORTED_FORMATS = ("docx", "pdf")
 
 
-def generate_report(session: Session, dossier_id: str, *, fmt: str, official: bool = False) -> Report:
+#: Deux mises en page possibles. `COMPACT` est le rendu demandé par défaut :
+#: trois pages, dense et lisible. `DETAILLE` conserve le rapport complet, utile
+#: quand les preuves ou les alertes exigent le détail intégral.
+COMPACT = "compact"
+DETAILLE = "detaille"
+SUPPORTED_LAYOUTS = (COMPACT, DETAILLE)
+
+
+def generate_report(
+    session: Session,
+    dossier_id: str,
+    *,
+    fmt: str,
+    official: bool = False,
+    layout: str = COMPACT,
+) -> Report:
     fmt = (fmt or "").lower().strip()
     if fmt not in SUPPORTED_FORMATS:
         raise ValidationRefused("Format de rapport non pris en charge (docx ou pdf).")
+    layout = (layout or COMPACT).lower().strip()
+    if layout not in SUPPORTED_LAYOUTS:
+        raise ValidationRefused(
+            "Mise en page inconnue : « compact » (trois pages) ou « detaille » (rapport complet)."
+        )
 
     dossier = session.get(Dossier, dossier_id)
     if dossier is None:
         raise NotFound("Dossier introuvable.")
 
-    model = evaluation_report.build(session, dossier_id)
+    builder_module = compact_report if layout == COMPACT else evaluation_report
+    model = builder_module.build(session, dossier_id)
 
     if official:
         if dossier.report_validated_at is None:
@@ -68,7 +89,7 @@ def generate_report(session: Session, dossier_id: str, *, fmt: str, official: bo
         + 1
     )
     suffix = "officiel" if official else "brouillon"
-    filename = f"{dossier.reference}_v{version}_{suffix}.{fmt}"
+    filename = f"{dossier.reference}_v{version}_{layout}_{suffix}.{fmt}"
     target = resolve_within(settings.reports_dir, filename)
     target.write_bytes(content)
 
@@ -85,7 +106,8 @@ def generate_report(session: Session, dossier_id: str, *, fmt: str, official: bo
     audit.record(
         session,
         audit.AuditAction.REPORT_GENERATE,
-        f"Rapport {fmt.upper()} v{version} ({suffix}) généré pour {dossier.reference}.",
+        f"Rapport {fmt.upper()} v{version} ({suffix}, mise en page {layout}) généré pour "
+        f"{dossier.reference}.",
         entity_type="report",
         entity_id=report.id,
         dossier_id=dossier_id,
