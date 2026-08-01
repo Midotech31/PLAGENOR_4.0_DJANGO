@@ -405,10 +405,14 @@ def _keyword_evidence(criterion: dict, facts: DossierFacts) -> tuple[str, str, d
             "l'annonce, non sa réalisation : la confirmation revient à l'évaluateur.",
             calculation,
         )
+    # Le constat reste court ; la liste complète des termes cherchés est
+    # conservée dans le calcul, consultable preuve à l'appui.
+    listed_terms = ", ".join(terms[:3])
+    if len(terms) > 3:
+        listed_terms += f" et {len(terms) - 3} autre(s)"
     return (
         Status.NC,
-        "Aucune mention correspondante n'a été repérée dans le texte extrait "
-        f"(termes recherchés : {', '.join(terms[:6])}).",
+        f"Aucune mention correspondante dans le texte extrait ({listed_terms}).",
         calculation,
     )
 

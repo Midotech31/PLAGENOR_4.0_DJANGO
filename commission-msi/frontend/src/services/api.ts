@@ -337,6 +337,130 @@ export interface RankingView {
 
 // ---------------------------------------------------------------- appels
 
+// ------------------------------------------------ évaluation automatique V4
+
+/** Un des 26 constats réglementaires. Le statut n'est jamais vide. */
+export interface CriterionRow {
+  code: string;
+  label: string;
+  family: string;
+  order: number;
+  status: 'C' | 'PC' | 'NC' | 'NV';
+  proposed_status: string;
+  human_status: string | null;
+  finding: string;
+  exact_source: string;
+  page: string;
+  nature: string;
+  blocking: boolean;
+  evidence_ids: string[];
+  calculation: Record<string, unknown> | null;
+  note: string | null;
+  referential_version: string;
+}
+
+export interface SubScoreRow {
+  key: string;
+  label: string;
+  score: number;
+  proposed_score: number;
+  human_score: number | null;
+  max: number;
+  justification: string;
+  method: string;
+  evidence_ids: string[];
+}
+
+export interface ScoreView {
+  total: number;
+  proposed_total: number;
+  validated_total: number | null;
+  maximum: number;
+  grid_version: string;
+  families: { key: string; label: string; score: number; max: number; subscores: SubScoreRow[] }[];
+}
+
+export interface DecisionView {
+  avis: string;
+  label: string;
+  motivation: string;
+  disclaimer: string;
+  triggered_rules: { rule: string; explanation: string; criteria: string[]; evidence_ids: string[] }[];
+  blocking_criteria: string[];
+  reserves: string[];
+  required_complements: string[];
+  scientific_total: number | null;
+  referential_version: string;
+  human_decision: string | null;
+  decided_by: string | null;
+}
+
+export interface Assessment {
+  criteria: CriterionRow[];
+  score: ScoreView | null;
+  decision: DecisionView | null;
+}
+
+/** Travail durable : il survit à la fermeture de l'application. */
+export interface JobView {
+  id: string;
+  dossier_id: string;
+  state: string;
+  step_label: string;
+  progress: number;
+  pages_total: number;
+  pages_done: number;
+  searches_done: number;
+  validations_done: number;
+  attempt: number;
+  max_attempts: number;
+  cancel_requested: boolean;
+  error_message: string | null;
+  error_code: string | null;
+  analysis_mode: string;
+  model_id: string | null;
+  referential_version: string | null;
+  grid_version: string | null;
+  steps_done: string[];
+  steps_remaining: string[];
+  started_at: string | null;
+  finished_at: string | null;
+  can_resume: boolean;
+  estimate: string;
+}
+
+export interface EvidenceRow {
+  id: string;
+  reference: string;
+  kind: string;
+  page_no: number | null;
+  locator: string | null;
+  sensitivity: string;
+  content_sha256: string | null;
+  excerpt: string;
+}
+
+export interface QaView {
+  passed: boolean;
+  failures: number;
+  checks: { key: string; label: string; passed: boolean; detail: string; blocking: boolean }[];
+  notice?: string;
+}
+
+export interface AnalysisModeView {
+  mode: string;
+  available: boolean;
+  model_id: string | null;
+  missing?: string[];
+  notice: string;
+  external_transmission: boolean;
+  modes: string[];
+  recommended: string;
+  identity_documents_transmitted: boolean;
+  original_pdf_transmitted: boolean;
+  guarantees: string[];
+}
+
 export const api = {
   health: () => get<Health>('/health'),
   readiness: () => get<Readiness>('/readiness'),
@@ -371,6 +495,37 @@ export const api = {
       web_run_id: string | null;
       notice: string;
     }>(`/dossiers/${id}/analyse-complete`),
+  // -- traitement durable ------------------------------------------------
+  startProcessing: (id: string) => post<JobView>(`/dossiers/${id}/traitement`),
+  processingState: (id: string) =>
+    get<{ job: JobView | null; notice: string | null }>(`/dossiers/${id}/traitement`),
+  cancelProcessing: (id: string, jobId: string) =>
+    post<JobView>(`/dossiers/${id}/traitement/${jobId}/annuler`),
+  resumeProcessing: (id: string, jobId: string) =>
+    post<JobView>(`/dossiers/${id}/traitement/${jobId}/reprendre`),
+
+  // -- évaluation automatique --------------------------------------------
+  assessment: (id: string) => get<Assessment>(`/dossiers/${id}/evaluation-automatique`),
+  runAssessment: (id: string) => post<unknown>(`/dossiers/${id}/evaluation-automatique`),
+  qualifyCriterion: (id: string, code: string, status: string, comment: string) =>
+    post<Assessment>(`/dossiers/${id}/evaluation-automatique/criteres/${code}`, {
+      status,
+      comment,
+    }),
+  overrideSubScore: (id: string, key: string, score: number, justification: string) =>
+    post<Assessment>(`/dossiers/${id}/evaluation-automatique/sous-notes/${key}`, {
+      score,
+      justification,
+    }),
+  retainDecision: (id: string, avis: string, motivation: string) =>
+    post<Assessment>(`/dossiers/${id}/evaluation-automatique/avis`, { avis, motivation }),
+
+  evidence: (id: string) => get<{ items: EvidenceRow[] }>(`/dossiers/${id}/preuves`),
+  qualityControl: (id: string) => get<QaView>(`/dossiers/${id}/controle-qualite`),
+  disagreements: (id: string) =>
+    get<{ items: Record<string, unknown>[]; notice: string }>(`/dossiers/${id}/desaccords`),
+  analysisMode: () => get<AnalysisModeView>('/mode-analyse'),
+
   listPages: (id: string) => get<{ items: PageInfo[] }>(`/dossiers/${id}/pages`),
   getPage: (id: string, pageId: string) => get<PageInfo>(`/dossiers/${id}/pages/${pageId}`),
   pageImageUrl: (id: string, pageId: string, dpi = 150) =>
@@ -437,7 +592,7 @@ export const api = {
     post<{ notice: string }>(`/dossiers/${id}/conclusion`, payload),
 
   listReports: (id: string) => get<{ items: ReportInfo[] }>(`/dossiers/${id}/rapports`),
-  generateReport: (id: string, payload: { format: string; official: boolean }) =>
+  generateReport: (id: string, payload: { format: string; official: boolean; layout?: string }) =>
     post<ReportInfo>(`/dossiers/${id}/rapports`, payload),
   reportUrl: (id: string, reportId: string) => `${BASE}/dossiers/${id}/rapports/${reportId}/fichier`,
   validateReport: (id: string, statement: string) =>

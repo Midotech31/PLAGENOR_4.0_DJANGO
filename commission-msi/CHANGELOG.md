@@ -4,6 +4,91 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [2.0.0] — 2026-08-01
+
+Alignement sur le prompt maître V4 : l'application **propose** désormais le
+score scientifique et l'avis technique. Ce sont des propositions motivées,
+rattachées à leurs preuves ; elles ne valent jamais décision.
+
+### Évaluation automatique
+
+- Référentiel versionné des **26 critères** (`rules/referentiel_26_criteres.json`)
+  avec fondement exact, page, nature, caractère bloquant, exceptions et méthode
+  de calcul. Corrections impératives encodées et testées : aucun délai universel
+  de six mois, `A2` à 10 jours avant la session régionale, exception bilatérale
+  sur `I2`, ratio exact sans tolérance inventée sur `I7`, `I9` conditionnel et
+  non bloquant, passeports contrôlés en présence seule.
+- Moteur réglementaire déterministe produisant `C/PC/NC/NV` pour chaque critère.
+  Aucune cellule vide ; un calcul qui échoue devient `NV`, jamais une supposition.
+- **Score scientifique sur 100** selon la grille détaillée (5 familles,
+  24 sous-critères). Chaque sous-note porte une justification brève et ses
+  preuves ; un élément non documenté vaut zéro avec la mention explicite, ce qui
+  ne préjuge d'aucune incapacité réelle de l'organisateur.
+- **Moteur d'avis** à liste fermée, enregistrant les règles déclenchées avec
+  leurs critères et leurs preuves. Un score élevé ne neutralise jamais une
+  non-conformité réglementaire.
+- Les qualifications humaines — statut de critère, sous-note corrigée, avis
+  retenu — priment toujours et ne sont jamais écrasées par une nouvelle analyse.
+
+### Registre de preuves
+
+- Table `evidence_items` : référence lisible et stable, origine, page,
+  extrait chiffré et empreinte SHA-256. Le validateur refuse toute citation
+  d'une preuve absente du registre.
+- Les pièces d'identité y figurent en sensibilité `RESTREINT` : leur existence
+  est traçable, leur contenu n'est ni affiché, ni transmis, ni reproduit.
+
+### Traitement asynchrone durable
+
+- Bouton **Traiter le dossier** créant un travail en base, exécuté par un worker
+  distinct du serveur HTTP sous bail renouvelable avec battement.
+- 13 états, points de reprise par étape indexés sur l'empreinte de leur entrée,
+  boutons **Reprendre** et **Annuler** — l'annulation n'efface rien.
+- Écran de progression : étape courante, pages traitées, recherches préparées,
+  validations effectuées et estimation prudente.
+- Les erreurs expliquent la cause et l'action possible, sans trace technique brute.
+
+### Relecture indépendante et contrôle qualité
+
+- `audit_service` recalcule les constats à partir des seuls faits, sans voir la
+  rédaction du premier analyste. Tout désaccord non résolu classe le critère
+  `NV` avec mention explicite — **aucune moyenne n'est jamais faite**.
+- `report_qa_service` exécute le contrôle qualité §16 avant toute remise :
+  présence et ordre des 26 critères, existence de chaque `evidence_id`,
+  affirmations sans preuve, recalcul du score et des plafonds, avis dans la
+  liste fermée, absence de délai de six mois vérifiée sur les calculs, absence
+  de motif interdit. Un échec bloquant empêche la remise.
+
+### Mode d'intelligence artificielle
+
+- Abstraction `AIProvider` : `LOCAL_ONLY` par défaut, qui dit clairement ce
+  qu'il ne peut pas faire, et `HYBRID_STRICT` configurable **uniquement** par
+  variables d'environnement.
+- Les pièces d'identité et numéros de passeport sont refusés et expurgés dans le
+  code : `SEND_IDENTITY_DOCUMENTS=true` ne peut pas ouvrir cette porte.
+- Un modèle indisponible lève `MODEL_UNAVAILABLE` sans basculement silencieux.
+- Les appels sont journalisés par empreinte et catégorie de données, jamais par
+  contenu ni raisonnement privé.
+
+### Rapport
+
+- Nouvelle mise en page **compacte** par défaut : page 1 informations et score,
+  page 2 matrice réglementaire, page 3 vérifications et conclusion. Le nombre de
+  pages est mesuré sur le fichier produit et renvoyé tel quel.
+- Le rapport détaillé reste disponible (`layout=detaille`) quand les preuves ou
+  les alertes exigent le détail intégral. Rien n'est jamais tronqué pour tenir
+  dans un nombre de pages.
+
+### Interface
+
+- Deux nouveaux onglets : **Traitement du dossier** (bouton principal,
+  progression, avis, score, matrice) et **Preuves et qualité** (registre,
+  contrôle qualité, désaccords d'audit), traduits en français, anglais et arabe.
+
+### Tests
+
+- 218 tests backend et 15 tests d'interface au vert.
+
 ## [1.0.0] — 2026-08-01
 
 Première livraison complète, conforme au prompt maître V3 et au contrat de

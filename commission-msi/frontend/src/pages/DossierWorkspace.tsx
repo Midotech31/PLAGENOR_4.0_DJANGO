@@ -1,4 +1,9 @@
-/** Espace dossier : en-tête permanent et dix onglets. */
+/** Espace dossier : en-tête permanent et douze onglets.
+ *
+ * Le premier onglet porte le bouton principal « Traiter le dossier » : c'est
+ * le point d'entrée normal du travail, les autres onglets servant au contrôle
+ * détaillé et à la qualification humaine.
+ */
 
 import { useState } from 'react';
 
@@ -24,8 +29,10 @@ import {
   RapportsTab,
 } from '../features/AssessmentTabs';
 import { WebRankingTab } from '../features/WebRankingTab';
+import { PreuvesTab, TraitementTab } from '../features/TraitementTab';
 
 const TAB_IDS = [
+  'traitement',
   'document',
   'pieces',
   'informations',
@@ -34,6 +41,7 @@ const TAB_IDS = [
   'alertes',
   'notes',
   'rapports',
+  'preuves',
   'web',
   'historique',
 ] as const;
@@ -42,7 +50,7 @@ type TabId = (typeof TAB_IDS)[number];
 
 export function DossierWorkspace({ dossierId, onBack }: { dossierId: string; onBack: () => void }) {
   const { t } = useLocale();
-  const [active, setActive] = useState<TabId>('document');
+  const [active, setActive] = useState<TabId>('traitement');
   const dossier = useAsync(() => api.getDossier(dossierId), [dossierId]);
 
   const reload = () => dossier.reload();
@@ -100,6 +108,7 @@ export function DossierWorkspace({ dossierId, onBack }: { dossierId: string; onB
             active={active}
             onChange={(id) => setActive(id as TabId)}
             tabs={[
+              { id: 'traitement', label: t('tab.traitement') },
               { id: 'document', label: t('tab.document') },
               { id: 'pieces', label: t('tab.pieces') },
               { id: 'informations', label: t('tab.informations') },
@@ -108,12 +117,14 @@ export function DossierWorkspace({ dossierId, onBack }: { dossierId: string; onB
               { id: 'alertes', label: t('tab.alertes'), badge: dossier.data.open_findings },
               { id: 'notes', label: t('tab.notes') },
               { id: 'rapports', label: t('tab.rapports') },
+              { id: 'preuves', label: t('tab.preuves') },
               { id: 'web', label: t('tab.web') },
               { id: 'historique', label: t('tab.historique') },
             ]}
           />
 
           <TabPanel id={active}>
+            {active === 'traitement' && <TraitementTab dossierId={dossierId} onChanged={reload} />}
             {active === 'document' && <DocumentTab dossierId={dossierId} onChanged={reload} />}
             {active === 'pieces' && <PiecesTab dossierId={dossierId} onChanged={reload} />}
             {active === 'informations' && <InformationsTab dossierId={dossierId} onChanged={reload} />}
@@ -122,6 +133,7 @@ export function DossierWorkspace({ dossierId, onBack }: { dossierId: string; onB
             {active === 'alertes' && <AlertesTab dossierId={dossierId} onChanged={reload} />}
             {active === 'notes' && <NotesTab dossierId={dossierId} onChanged={reload} />}
             {active === 'rapports' && <RapportsTab dossierId={dossierId} onChanged={reload} />}
+            {active === 'preuves' && <PreuvesTab dossierId={dossierId} />}
             {active === 'web' && <WebRankingTab dossierId={dossierId} onChanged={reload} />}
             {active === 'historique' && <HistoriqueTab dossierId={dossierId} />}
           </TabPanel>

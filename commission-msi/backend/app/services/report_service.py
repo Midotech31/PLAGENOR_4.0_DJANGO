@@ -76,6 +76,7 @@ def generate_report(
 
     content = writers.write_docx(model) if fmt == "docx" else writers.write_pdf(model)
     digest = sha256_bytes(content)
+    pages = _page_count(content) if fmt == "pdf" else None
 
     settings = get_settings()
     settings.ensure_directories()
@@ -114,7 +115,21 @@ def generate_report(
         fingerprint=f"sha256:{digest}",
     )
     session.commit()
+    # Le nombre de pages est mesuré, jamais supposé : c'est un fait vérifiable
+    # attaché au fichier réellement produit.
+    report.page_count = pages
     return report
+
+
+def _page_count(pdf_bytes: bytes) -> int | None:
+    """Nombre de pages réellement rendues, ou None si la mesure est impossible."""
+    try:
+        import fitz
+
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as document:
+            return document.page_count
+    except Exception:  # noqa: BLE001 - l'absence de mesure ne bloque pas la remise
+        return None
 
 
 def read_report(session: Session, report_id: str) -> tuple[Report, bytes]:

@@ -53,6 +53,11 @@ COMPACT_SUBTITLE = (
     "Rapport technique d'évaluation — analyse automatique proposée, décision humaine réservée"
 )
 
+#: Nombre de preuves listées dans le tableau du rapport. Le total réel est
+#: toujours affiché, et la liste complète reste consultable dans l'application :
+#: la table est abrégée, jamais le constat.
+EVIDENCE_ROWS = 12
+
 NO_ASSESSMENT = (
     "Aucune évaluation automatique n'a encore été exécutée pour ce dossier. Lancez "
     "« Traiter le dossier » : la matrice réglementaire, le score et l'avis proposé seront "
@@ -88,6 +93,7 @@ def build(session: Session, dossier_id: str) -> EvaluationReport:
         orphan_facts=ctx.orphan_facts,
         headline=_headline(assessment),
         signature=SIGNATURE,
+        density="compact",
     )
 
 
@@ -157,6 +163,7 @@ def _page_one(ctx: _Context, assessment: dict) -> Section:
         "Identification du dossier",
         ["Rubrique", "Valeur au dossier", "Source"],
         rows,
+        widths=[0.24, 0.66, 0.10],
         note="Une valeur non confirmée est affichée avec son statut réel : l'application ne "
         "présente jamais une proposition comme un fait établi.",
     )
@@ -167,20 +174,31 @@ def _page_one(ctx: _Context, assessment: dict) -> Section:
         return section
 
     section.subheading(f"Score scientifique proposé : {score['total']}/{score['maximum']}")
+    # La mise en garde sur les zéros est portée une fois par la note du tableau :
+    # la répéter sur chaque ligne allongerait le rapport sans rien ajouter.
+    caveat = " L'absence de documentation ne préjuge d'aucune incapacité réelle de l'organisateur."
     score_rows = []
     for family in score["families"]:
+        # Aucune cellule n'est laissée vide, y compris sur la ligne de total.
         score_rows.append(
-            [family["label"], f"{family['score']}/{family['max']}", "", ""]
+            [
+                family["label"],
+                f"{family['score']}/{family['max']}",
+                "Somme des sous-critères ci-dessous.",
+                "—",
+            ]
         )
         for sub in family["subscores"]:
             evidence = ", ".join(sub["evidence_ids"][:3]) or "—"
+            justification = sub["justification"].replace(caveat, "").strip()
             score_rows.append(
-                [f"    {sub['label']}", f"{sub['score']}/{sub['max']}", sub["justification"], evidence]
+                [f"    {sub['label']}", f"{sub['score']}/{sub['max']}", justification, evidence]
             )
     section.table(
         f"Grille scientifique (version {score['grid_version']})",
         ["Critère", "Note", "Justification", "Preuves"],
         score_rows,
+        widths=[0.30, 0.08, 0.50, 0.12],
         note="Un élément non documenté vaut zéro, avec la mention explicite « non documenté » ; "
         "ce zéro ne préjuge d'aucune incapacité réelle de l'organisateur. Les totaux sont "
         "recalculés localement à chaque édition.",
@@ -262,6 +280,7 @@ def _page_two(ctx: _Context, assessment: dict) -> Section:
         rows,
         note="Aucune cellule n'est laissée vide. « NV » signifie que le dossier ne permet pas "
         "de vérifier le critère : ce n'est ni une conformité, ni une non-conformité.",
+        widths=[0.05, 0.17, 0.11, 0.33, 0.13, 0.21],
     )
     return section
 
@@ -437,10 +456,16 @@ def _page_three(ctx: _Context, assessment: dict) -> Section:
                 item["locator"] or "—",
                 (item["content_sha256"] or "—")[:16] + "…",
             ]
-            for item in evidence[:40]
+            for item in evidence[:EVIDENCE_ROWS]
         ],
-        note=f"{len(evidence)} preuve(s) au registre. Chaque fait de ce rapport renvoie à l'une "
-        "d'elles, consultable dans l'application par « Voir les preuves ».",
+        note=f"{len(evidence)} preuve(s) au registre"
+        + (
+            f", dont les {EVIDENCE_ROWS} premières listées ici ; la totalité est consultable "
+            "dans l'application par « Voir les preuves »."
+            if len(evidence) > EVIDENCE_ROWS
+            else ". Chaque fait de ce rapport renvoie à l'une d'elles, consultable dans "
+            "l'application par « Voir les preuves »."
+        ),
     )
 
     qa = report_qa_service.latest(ctx.session, ctx.dossier.id)

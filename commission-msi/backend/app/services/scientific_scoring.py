@@ -164,13 +164,17 @@ def _evidence_levels(sub: dict, family: str, facts: DossierFacts) -> SubScore:
     if score == 0 and (hits or filled):
         score = 1
 
-    detail_terms = ", ".join(f"« {hit['terme'] } » (p. {hit['page']})" for hit in hits[:4])
-    detail_fields = ", ".join(filled)
+    # La justification doit rester brève : deux repères suffisent à refaire le
+    # constat, le reste est consultable dans le détail du calcul.
+    detail_terms = ", ".join(f"« {hit['terme']} » p. {hit['page']}" for hit in hits[:2])
+    if len(hits) > 2:
+        detail_terms += f" (+{len(hits) - 2})"
+    detail_fields = ", ".join(filled[:2])
     justification_parts = []
     if detail_terms:
-        justification_parts.append(f"éléments repérés : {detail_terms}")
+        justification_parts.append(f"repéré : {detail_terms}")
     if detail_fields:
-        justification_parts.append(f"champs renseignés : {detail_fields}")
+        justification_parts.append(f"champs : {detail_fields}")
 
     return SubScore(
         family=family,

@@ -110,3 +110,61 @@ interface (démarrage direct, absence d'écran de connexion, RTL, accessibilité
 **Raison :** Playwright impose le téléchargement d'un navigateur, contraire à
 l'exigence d'installation locale reproductible et hors ligne. L'ajout reste
 possible sur un poste disposant déjà d'un navigateur piloté.
+
+## DT-12 — Le score et l'avis deviennent des propositions automatiques
+
+**Prompt V4, §2 :** « les anciennes consignes qui interdisaient toute
+proposition automatique de note ou d'avis sont remplacées par les présentes
+consignes ». **Décision :** l'application propose désormais le score
+scientifique sur 100 et l'avis technique, tous deux motivés et rattachés à
+leurs preuves. La grille officielle saisie par l'évaluateur et la conclusion
+humaine restent des objets distincts, jamais préremplis par le moteur.
+**Raison :** répondre à la nouvelle consigne sans confondre proposition et
+décision. Chaque écran et chaque page du rapport porte la mention « aide à la
+décision, ne valant pas décision officielle ».
+
+## DT-13 — Trois moteurs déterministes, aucun modèle dans le chemin de décision
+
+**Décision :** `regulatory_engine`, `scientific_scoring` et `decision_engine`
+sont des fonctions pures des faits extraits. La même entrée produit toujours la
+même sortie, et chaque point ou statut est explicable ligne à ligne.
+**Raison :** un avis technique doit être reproductible et contestable. Un
+modèle génératif dans le chemin de décision rendrait le résultat
+non reproductible et l'argumentation invérifiable. Le modèle externe, quand il
+est configuré, sert à la lecture sémantique et à la recherche publique — jamais
+à choisir un statut, une note ou un avis.
+
+## DT-14 — Effectifs indéterminés plutôt que ramenés à zéro
+
+**Décision :** lorsqu'aucune entrée d'un comité ou d'une liste d'intervenants ne
+porte de pays identifiable, `facts_service` laisse l'effectif à `None` au lieu
+de compter zéro étranger. Le critère devient alors `NV`.
+**Raison :** compter zéro affirmerait que la manifestation n'a aucun
+participant étranger, ce que le dossier ne dit pas. « Non vérifiable » est la
+seule réponse exacte, et elle n'est ni une conformité, ni une non-conformité.
+
+## DT-15 — Le worker d'analyse est un fil dédié, pas une file externe
+
+**Prompt V4, §6 :** « un worker distinct du serveur HTTP », « ne pas utiliser
+uniquement une tâche en mémoire ou `FastAPI BackgroundTasks` ». **Décision :**
+le travail est une ligne de `analysis_jobs` protégée par un bail transactionnel
+et un battement ; le worker tourne dans un fil dédié démarré au lancement, et
+`job_service.work_once()` permet de l'exécuter depuis n'importe quel processus.
+**Raison :** l'état vit en base, donc le travail survit à la perte du
+processus, et un second worker — voire un processus séparé — peut reprendre un
+bail expiré sans aucun changement de code. Ajouter Redis ou Celery
+contredirait l'exigence d'installation locale hors ligne.
+
+## DT-16 — Le nombre de pages du rapport est mesuré, jamais promis
+
+**Prompt V4, §15 :** « idéalement 3 pages […] dépasser 3 pages seulement
+lorsque les preuves ou alertes l'exigent. Ne jamais tronquer pour respecter un
+nombre de pages. » **Décision :** la mise en page compacte resserre marges,
+corps, interlignes et largeurs de colonnes, et le rapport annonce le nombre de
+pages réellement rendu (`page_count`, mesuré sur le PDF produit). Sur un
+dossier documenté, les trois sections imposées occupent les pages 1, 2 et 3,
+avec un débord du registre de preuves.
+**Raison :** les 26 constats, les 24 sous-notes et le registre de preuves sont
+tous exigés par le prompt. Les faire tenir en trois pages imposerait de les
+tronquer, ce que le même prompt interdit. La table des preuves est abrégée avec
+son total affiché — la liste est écourtée, jamais un constat.

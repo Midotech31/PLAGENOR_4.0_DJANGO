@@ -230,6 +230,14 @@ def write_pdf(model: EvaluationReport) -> bytes:
         TableStyle,
     )
 
+    # En densité « compact », marges, corps et interlignes sont resserrés au
+    # maximum de ce que la lisibilité permet. Le contenu, lui, est identique :
+    # rien n'est jamais retiré pour gagner une page.
+    compact = model.density == "compact"
+    margin = 11 if compact else 16
+    scale = 0.82 if compact else 1.0
+    pad = 2 if compact else 3
+
     buffer = BytesIO()
     document = SimpleDocTemplate(
         buffer,
@@ -237,10 +245,10 @@ def write_pdf(model: EvaluationReport) -> bytes:
         title=f"Rapport d'évaluation — {model.reference}",
         author=model.evaluator,
         subject=SIGNATURE,
-        leftMargin=16 * mm,
-        rightMargin=16 * mm,
-        topMargin=16 * mm,
-        bottomMargin=18 * mm,
+        leftMargin=margin * mm,
+        rightMargin=margin * mm,
+        topMargin=(10 if compact else 16) * mm,
+        bottomMargin=(13 if compact else 18) * mm,
     )
 
     base = getSampleStyleSheet()
@@ -251,25 +259,27 @@ def write_pdf(model: EvaluationReport) -> bytes:
                                textColor=colors.HexColor("#" + AMBRE), spaceAfter=2)
     st_warn = ParagraphStyle("warn", parent=base["Normal"], fontSize=8, alignment=TA_CENTER,
                              textColor=colors.HexColor("#" + ROUGE), spaceAfter=6)
-    st_title = ParagraphStyle("title", parent=base["Title"], fontSize=18, alignment=TA_CENTER,
-                              textColor=navy, spaceAfter=2)
+    st_title = ParagraphStyle("title", parent=base["Title"], fontSize=18 * scale,
+                              alignment=TA_CENTER, textColor=navy, spaceAfter=2)
     st_sub = ParagraphStyle("sub", parent=base["Normal"], fontSize=10.5, alignment=TA_CENTER,
                             textColor=navy, spaceAfter=1)
     st_meta = ParagraphStyle("meta", parent=base["Normal"], fontSize=7.5, alignment=TA_CENTER,
                              textColor=colors.grey, spaceAfter=10)
-    st_h1 = ParagraphStyle("h1", parent=base["Heading1"], fontSize=12.5, textColor=navy,
-                           spaceBefore=12, spaceAfter=5)
-    st_h2 = ParagraphStyle("h2", parent=base["Heading2"], fontSize=10.5, textColor=green,
-                           spaceBefore=8, spaceAfter=4)
-    st_body = ParagraphStyle("body", parent=base["Normal"], fontSize=8.6, leading=11.6,
-                             spaceAfter=3)
-    st_tag = ParagraphStyle("tag", parent=base["Normal"], fontSize=6.6, textColor=green,
-                            spaceAfter=5)
-    st_cell = ParagraphStyle("cell", parent=base["Normal"], fontSize=7.6, leading=9.6)
-    st_head = ParagraphStyle("head", parent=base["Normal"], fontSize=7.6, leading=9.6,
-                             textColor=colors.white, fontName="Helvetica-Bold")
-    st_note = ParagraphStyle("note", parent=base["Normal"], fontSize=6.8, leading=8.6,
-                             textColor=colors.grey, spaceAfter=7)
+    st_h1 = ParagraphStyle("h1", parent=base["Heading1"], fontSize=12.5 * scale, textColor=navy,
+                           spaceBefore=12 * scale, spaceAfter=5 * scale)
+    st_h2 = ParagraphStyle("h2", parent=base["Heading2"], fontSize=10.5 * scale, textColor=green,
+                           spaceBefore=8 * scale, spaceAfter=4 * scale)
+    st_body = ParagraphStyle("body", parent=base["Normal"], fontSize=8.6 * scale,
+                             leading=11.6 * scale, spaceAfter=3 * scale)
+    st_tag = ParagraphStyle("tag", parent=base["Normal"], fontSize=6.6 * scale, textColor=green,
+                            spaceAfter=5 * scale)
+    st_cell = ParagraphStyle("cell", parent=base["Normal"], fontSize=7.6 * scale,
+                             leading=9.3 * scale)
+    st_head = ParagraphStyle("head", parent=base["Normal"], fontSize=7.6 * scale,
+                             leading=9.3 * scale, textColor=colors.white,
+                             fontName="Helvetica-Bold")
+    st_note = ParagraphStyle("note", parent=base["Normal"], fontSize=6.8 * scale,
+                             leading=8.6 * scale, textColor=colors.grey, spaceAfter=7 * scale)
     st_sign = ParagraphStyle("sign", parent=base["Normal"], alignment=TA_RIGHT,
                              fontName="Helvetica-Oblique", textColor=navy)
 
@@ -296,7 +306,7 @@ def write_pdf(model: EvaluationReport) -> bytes:
         ),
     ]
 
-    usable = A4[0] - 32 * mm
+    usable = A4[0] - 2 * margin * mm
 
     if model.headline is not None:
         tone_hex = TONE_COLOR.get(model.headline.tone, BLEU_NUIT)
@@ -318,7 +328,7 @@ def write_pdf(model: EvaluationReport) -> bytes:
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ])
         )
-        story += [headline, Spacer(1, 10)]
+        story += [headline, Spacer(1, 10 * scale)]
 
     for section in model.sections:
         story.append(Paragraph(esc(f"{section.number}. {section.title}"), st_h1))
@@ -344,7 +354,7 @@ def write_pdf(model: EvaluationReport) -> bytes:
                         ]
                     )
                 )
-                story += [boxed, Spacer(1, 7)]
+                story += [boxed, Spacer(1, 7 * scale)]
 
             elif block.kind == "subheading":
                 story.append(Paragraph(esc(block.text), st_h2))
@@ -362,13 +372,16 @@ def write_pdf(model: EvaluationReport) -> bytes:
                         leftIndent=12,
                     )
                 )
-                story.append(Spacer(1, 5))
+                story.append(Spacer(1, 5 * scale))
 
             elif block.kind == "table" and block.table is not None:
                 spec = block.table
                 count = len(spec.headers)
                 # Première colonne plus large : elle porte le libellé.
-                if count == 1:
+                if spec.widths and len(spec.widths) == count:
+                    total = sum(spec.widths) or 1.0
+                    widths = [usable * (part / total) for part in spec.widths]
+                elif count == 1:
                     widths = [usable]
                 else:
                     first = usable * (0.30 if count <= 3 else 0.24)
@@ -390,19 +403,19 @@ def write_pdf(model: EvaluationReport) -> bytes:
                             ("VALIGN", (0, 0), (-1, -1), "TOP"),
                             ("ROWBACKGROUNDS", (0, 1), (-1, -1),
                              [colors.white, colors.HexColor("#FAFCFB")]),
-                            ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                            ("TOPPADDING", (0, 0), (-1, -1), 3),
-                            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                            ("LEFTPADDING", (0, 0), (-1, -1), pad + 1),
+                            ("RIGHTPADDING", (0, 0), (-1, -1), pad + 1),
+                            ("TOPPADDING", (0, 0), (-1, -1), pad),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), pad),
                         ]
                     )
                 )
                 story.append(table)
                 if spec.note:
                     story.append(Paragraph(esc(spec.note), st_note))
-                story.append(Spacer(1, 6))
+                story.append(Spacer(1, 6 * scale))
 
-    story += [Spacer(1, 12), Paragraph(esc(SIGNATURE), st_sign)]
+    story += [Spacer(1, 12 * scale), Paragraph(esc(SIGNATURE), st_sign)]
 
     def decorate(canvas, doc) -> None:
         canvas.saveState()

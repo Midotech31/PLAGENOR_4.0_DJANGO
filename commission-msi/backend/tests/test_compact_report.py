@@ -151,6 +151,24 @@ def test_the_compact_layout_is_the_default_and_produces_a_valid_docx_and_pdf(
     assert rendered[:5] == b"%PDF-"
 
 
+def test_the_page_count_is_measured_and_reported_not_claimed(client, dossier):
+    """Le nombre de pages est mesuré sur le fichier produit et renvoyé tel quel."""
+    _prepare(client, dossier)
+    compact = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/rapports",
+        json={"format": "pdf", "layout": "compact"},
+    ).json()
+    detailed = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/rapports",
+        json={"format": "pdf", "layout": "detaille"},
+    ).json()
+
+    assert isinstance(compact["page_count"], int) and compact["page_count"] >= 1
+    # La mise en page compacte tient sur strictement moins de pages que la
+    # version détaillée, sans qu'aucun constat ne soit retiré.
+    assert compact["page_count"] < detailed["page_count"]
+
+
 def test_the_detailed_layout_remains_available_when_evidence_requires_it(client, dossier):
     _prepare(client, dossier)
     detailed = client.post(

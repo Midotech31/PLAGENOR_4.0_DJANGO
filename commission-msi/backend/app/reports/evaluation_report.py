@@ -138,6 +138,9 @@ class Table:
     headers: list[str]
     rows: list[list[str]] = field(default_factory=list)
     note: str | None = None
+    #: Proportions de largeur des colonnes (somme = 1). Sans valeur, la première
+    #: colonne est élargie et les suivantes réparties également.
+    widths: list[float] | None = None
 
 
 @dataclass
@@ -179,9 +182,21 @@ class Section:
             Block(kind="paragraph", paragraph=Paragraph(text=text, kind=kind, page_no=page_no))
         )
 
-    def table(self, caption: str, headers: list[str], rows: list[list[str]], note: str | None = None) -> None:
+    def table(
+        self,
+        caption: str,
+        headers: list[str],
+        rows: list[list[str]],
+        note: str | None = None,
+        widths: list[float] | None = None,
+    ) -> None:
         self.blocks.append(
-            Block(kind="table", table=Table(caption=caption, headers=headers, rows=rows, note=note))
+            Block(
+                kind="table",
+                table=Table(
+                    caption=caption, headers=headers, rows=rows, note=note, widths=widths
+                ),
+            )
         )
 
     def bullets(self, items: list[str]) -> None:
@@ -219,6 +234,9 @@ class EvaluationReport:
     #: Encadré d'avis affiché en tête du rapport, avant la fiche d'information.
     headline: Box | None = None
     signature: str = SIGNATURE
+    #: Densité de mise en page. « compact » resserre marges, corps et interlignes
+    #: pour tenir en peu de pages **sans jamais tronquer le contenu**.
+    density: str = "normale"
 
     @property
     def banner(self) -> str:

@@ -763,6 +763,7 @@ def generate_report(
         "is_draft": report.is_draft,
         "version": report.version,
         "sha256": report.sha256,
+        "page_count": getattr(report, "page_count", None),
     }
 
 
