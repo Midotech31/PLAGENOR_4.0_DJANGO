@@ -321,3 +321,62 @@ volume de texte dérisoire fait désormais poursuivre.
 **Mesures après correction**, sur trois rendus arabes (`tests/test_ocr_arabic.py`) :
 page nette 3/3 lignes exactes, scan flou 3/3, scan réduit à 55 % 3/3. Aucune
 régression sur le latin.
+
+## DT-23 — Contrôle en ligne des profils : ce qu'il examine, et ce qu'il refuse
+
+**Demande :** que l'application fouille en ligne les profils des intervenants et
+des membres des comités scientifiques et d'organisation étrangers afin de
+détecter « des origines, affiliations ou activités douteuses ou à risque pour
+l'Algérie ».
+
+**Ce qui a été construit.** `SovereigntyScreeningAgent` examine, pour chaque
+sujet PERSONNE, INSTITUTION, PARTENAIRE, SPONSOR et FINANCEUR, les sources
+publiques déjà collectées par la veille, et signale les **rattachements
+institutionnels** et **activités professionnelles publiquement documentés** qui
+touchent l'une des douze catégories de vigilance nationale du référentiel
+(172 termes) : mentions du Maroc, intégrité territoriale, relations
+diplomatiques, défense et sécurité, infrastructures critiques, cyber et
+biosécurité à double usage, données génétiques et biométriques, ressources
+biologiques, patrimoine et archives, financement et influence, souveraineté des
+données. Le vocabulaire n'est pas réécrit dans l'agent : il est chargé depuis le
+référentiel validé, de sorte qu'un ajout ou un retrait s'y répercute sans
+modification de code.
+
+**Deux garde-fous, qui ne sont pas de la prudence ajoutée.**
+
+1. *Exigence de contexte institutionnel.* Un terme n'est retenu que s'il
+   apparaît auprès d'un marqueur d'affiliation, de programme, de financement ou
+   de partenariat. Sans cela, une citation bibliographique — « l'auteur cite des
+   travaux conduits au Maroc » — ou une simple mention géographique deviendrait
+   un signalement. Un test le verrouille.
+2. *Deux sources indépendantes.* En deçà, l'élément reste `ALLEGATION_TIERS` et
+   `A_VERIFIER`, jamais un fait.
+
+**Ce qui n'a pas été construit, et pourquoi.** Le mot « origines » figure dans la
+demande ; il n'a pas été implémenté. Aucune détection ne porte sur la
+nationalité, l'origine ethnique, la religion, le lieu de naissance, la
+consonance d'un nom ou une opinion supposée. Ce refus n'est pas une préférence
+d'implémentation : il est écrit dans le référentiel de l'application — « aucune
+déduction à partir de la nationalité, de l'origine ou d'une opinion supposée » —
+et dans l'encadré de portée du modèle de rapport de la commission elle-même :
+« une nationalité, une formation, une publication, une participation académique
+ou un lien institutionnel antérieur ne constitue pas automatiquement une
+non-conformité ». Les trois catégories identitaires du référentiel
+(`IDENTITE_RELIGION_LANGUE`, `DISCRIMINATION_HAINE`, `MEMOIRE_NATIONALE`) sont
+donc explicitement exclues du champ, et un test échoue si l'une d'elles y entre.
+
+Ce refus n'ampute pas la demande : un rattachement à une institution d'un pays
+donné, un financement, une participation à un programme sont exactement ce que
+la commission a besoin de voir, et ils sont documentables. Une origine ne l'est
+pas, et un rapport qui la retiendrait serait attaquable.
+
+**Restitution.** Section 4.2 du rapport harmonisé, avec le nom de la personne,
+l'élément relevé, le nombre de sources indépendantes et le niveau de preuve.
+L'absence de veille exécutée est écrite comme telle et n'est jamais présentée
+comme une absence de risque. L'encadré de portée qui clôt la section 4 énumère
+les critères refusés : sans cet énoncé, un lecteur prêterait à l'application un
+profilage qu'elle n'exerce pas.
+
+**Un nom d'agent distinct.** `AGENT_SOUVERAINETE_NATIONALE` a été ajouté plutôt
+que de réutiliser `AGENT_INTEGRITE_PUBLIQUE` : deux agents partageant un nom
+rendent leurs constats indiscernables dans le registre des affirmations.

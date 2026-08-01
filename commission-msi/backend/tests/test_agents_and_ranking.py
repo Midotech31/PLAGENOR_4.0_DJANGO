@@ -9,6 +9,7 @@ import pytest
 from app.agents import orchestrator
 from app.agents.base import AgentInput
 from app.agents.specialists import (
+    ALL_AGENTS,
     AlgerianLawAgent,
     EventRankingAgent,
     IdentityAffiliationsAgent,
@@ -214,7 +215,7 @@ def test_agents_run_independently_on_isolated_input():
     results = [_result("https://a.test/1", "Source fictive", SourceTier.T2_INSTITUTION_ACADEMIQUE)]
     data = _input(results)
     outputs = orchestrator.run_agents(data)
-    assert len(outputs) == 6
+    assert len(outputs) == len(ALL_AGENTS)
     assert {output.agent_name for output in outputs} == {item.value for item in AgentName}
     # L'entrée d'origine n'a pas été mutée.
     assert data.results == results

@@ -147,9 +147,31 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   la référence du dossier, sa version et son état au lieu d'un identifiant
   technique.
 
+### Contrôle en ligne des profils des intervenants étrangers
+
+- Nouvel agent `AGENT_SOUVERAINETE_NATIONALE` : pour chaque personne,
+  institution, partenaire, sponsor ou financeur du dossier, il examine les
+  sources publiques collectées et signale les **rattachements institutionnels**
+  et **activités professionnelles publiquement documentés** relevant de l'une
+  des douze catégories de vigilance nationale du référentiel (172 termes).
+- Un terme n'est retenu que dans un **contexte institutionnel** — affiliation,
+  programme, financement, partenariat. Une citation bibliographique ou une
+  simple mention géographique ne déclenche rien.
+- Deux sources indépendantes au minimum pour qu'un élément devienne un fait ;
+  en deçà il reste une allégation à vérifier. L'absence d'élément trouvé est
+  écrite comme telle et n'est jamais présentée comme une garantie.
+- **Section 4.2 du rapport harmonisé** : personne, élément relevé, nombre de
+  sources indépendantes, niveau de preuve. Aucun élément n'est qualifié par
+  l'application.
+- **Ce qui n'est jamais examiné**, et l'encadré de portée le dit au lecteur :
+  la nationalité, l'origine ethnique, la religion, le lieu de naissance, la
+  consonance d'un nom, une opinion supposée. Les trois catégories identitaires
+  du référentiel sont exclues du champ, conformément au principe probatoire de
+  l'application et à l'encadré de portée du modèle de la commission. Voir DT-23.
+
 ### Tests
 
-- 260 tests backend et 15 tests d'interface au vert.
+- 287 tests backend et 15 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

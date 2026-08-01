@@ -5,6 +5,12 @@ transmise au ministère, et une section 4.1 où les éléments relatifs au Maroc
 à Israël sont strictement informatifs. Ces tests verrouillent ces trois points,
 plus les garde-fous qui ne dépendent d'aucun modèle : rien d'inventé, aucun
 numéro de passeport, aucune décision présentée comme prise.
+
+S'y ajoute la section 4.2, où la veille en ligne rend compte des rattachements
+et activités publics des intervenants étrangers. Les tests qui la couvrent
+portent autant sur ce qu'elle affiche que sur ce qu'elle refuse d'examiner :
+sans énoncé des critères écartés, un lecteur prêterait à l'application un
+profilage par l'origine que son propre référentiel lui interdit.
 """
 
 from __future__ import annotations
@@ -166,7 +172,8 @@ def test_section_four_one_covers_morocco_and_israel_as_information_only(
         block.text for block in model.sections[3].blocks if block.kind == "subheading"
     ]
     assert headings == [
-        "4.1. Éléments relatifs au Maroc et à Israël — information au ministère"
+        "4.1. Éléments relatifs au Maroc et à Israël — information au ministère",
+        "4.2. Contrôle en ligne des profils — rattachements et activités publics",
     ]
 
     boxes = [block.box for block in model.sections[3].blocks if block.kind == "box"]
@@ -294,3 +301,124 @@ def test_the_downloaded_file_is_named_for_filing_not_for_machines(client, dossie
     assert dossier["reference"] in disposition
     assert "brouillon" in disposition
     assert dossier["id"] not in disposition
+
+
+# --------------------------------------------------------------------------
+# 4.2 Contrôle en ligne des profils
+# --------------------------------------------------------------------------
+
+
+def _record_screening_claim(session, dossier_id: str, statement: str, *, sources: int = 2):
+    """Dépose un constat de l'agent de souveraineté, comme le ferait une veille."""
+    import json
+
+    from app.agents.sovereignty import INFORMATIVE_ONLY
+    from app.core.crypto import encrypt_text
+    from app.core.keyring import get_master_key
+    from app.core.vocabulary import AgentName, ClaimNature, EvidenceStatus, WebRunStatus
+    from app.models.web_entities import OnlineClaim, WebResearchRun
+    from app.web_research.service import claim_aad
+
+    run = WebResearchRun(dossier_id=dossier_id, status=WebRunStatus.TERMINEE)
+    session.add(run)
+    session.flush()
+
+    record = OnlineClaim(
+        run_id=run.id,
+        dossier_id=dossier_id,
+        agent_name=AgentName.SOUVERAINETE_NATIONALE,
+        subject_label="Pr Jean Dubois",
+        statement_cipher=b"",
+        nature=ClaimNature.FAIT_VERIFIE,
+        status=EvidenceStatus.SOURCES_CONCORDANTES,
+        confidence=0.8,
+        source_ids_json=json.dumps(["https://a.example/p", "https://b.example/q"]),
+        independent_source_count=sources,
+    )
+    session.add(record)
+    session.flush()
+    record.statement_cipher = encrypt_text(
+        get_master_key(), f"{statement}\n{INFORMATIVE_ONLY}", claim_aad(record.id, "statement")
+    )
+    session.commit()
+
+
+def test_the_online_screening_has_its_own_subsection(client, dossier, session):
+    _prepare(client, dossier)
+    model = uniform_report.build(session, dossier["id"])
+
+    text = _flatten(model)
+    assert "4.2. Contrôle en ligne des profils" in text
+
+
+def test_without_a_web_run_the_screening_says_so_rather_than_reassuring(
+    client, dossier, session
+):
+    """Ne pas avoir cherché n'est pas n'avoir rien trouvé."""
+    _prepare(client, dossier)
+    model = uniform_report.build(session, dossier["id"])
+
+    text = _flatten(model)
+    assert "la veille en ligne n'a pas été exécutée" in text
+    assert "ni un constat favorable, ni un constat défavorable" in text
+
+
+def test_a_documented_element_is_tabled_with_its_level_of_proof(client, dossier, session):
+    _prepare(client, dossier)
+    _record_screening_claim(
+        session,
+        dossier["id"],
+        "Un rattachement en lien avec « Bar-Ilan » est documenté publiquement.",
+    )
+    model = uniform_report.build(session, dossier["id"])
+
+    table = next(
+        block.table
+        for block in model.sections[3].blocks
+        if block.kind == "table" and "profils publics" in block.table.caption
+    )
+    assert table.headers == ["Personne", "Élément relevé", "Sources indép.", "Niveau de preuve"]
+    assert table.rows[0][0] == "Pr Jean Dubois"
+    assert "Bar-Ilan" in table.rows[0][1]
+    assert table.rows[0][2] == "2"
+    # La mention de portée n'encombre pas la cellule : elle est dans l'encadré.
+    assert "strictement informatif" not in table.rows[0][1]
+
+
+def test_the_screening_states_the_criteria_it_refuses_to_apply(client, dossier, session):
+    """Sans cet énoncé, un lecteur pourrait croire à un profilage par l'origine."""
+    _prepare(client, dossier)
+    model = uniform_report.build(session, dossier["id"])
+
+    text = _flatten(model)
+    for forbidden in (
+        "la nationalité",
+        "l'origine ethnique",
+        "la religion",
+        "le lieu de naissance",
+        "la consonance d'un nom",
+        "une opinion supposée",
+    ):
+        assert forbidden in text, forbidden
+    assert "n'est pas une garantie et ne constitue pas une habilitation de sécurité" in text
+
+
+def test_the_screening_never_presents_an_element_as_a_non_conformity(client, dossier, session):
+    _prepare(client, dossier)
+    _record_screening_claim(
+        session, dossier["id"], "Un rattachement institutionnel est documenté publiquement."
+    )
+    model = uniform_report.build(session, dossier["id"])
+
+    text = _flatten(model)
+    assert "aucun n'est qualifié par l'application" in text
+    assert "non-conformité" not in _screening_rows(model)
+
+
+def _screening_rows(model) -> str:
+    table = next(
+        block.table
+        for block in model.sections[3].blocks
+        if block.kind == "table" and "profils publics" in block.table.caption
+    )
+    return "\n".join("\n".join(row) for row in table.rows)

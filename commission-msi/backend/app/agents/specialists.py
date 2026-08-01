@@ -480,9 +480,12 @@ class SourceVerifierAgent(Agent):
         return output
 
 
+from app.agents.sovereignty import SovereigntyScreeningAgent
+
 ALL_AGENTS: tuple[Agent, ...] = (
     IdentityAffiliationsAgent(),
     PublicIntegrityAgent(),
+    SovereigntyScreeningAgent(),
     AlgerianLawAgent(),
     ScientificReputationAgent(),
     EventRankingAgent(),

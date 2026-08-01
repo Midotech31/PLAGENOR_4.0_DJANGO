@@ -6,7 +6,9 @@ Huit sections, dans cet ordre imposé :
 2. appréciation scientifique commune — cinq dimensions sur 100, avec motif probant ;
 3. matrice réglementaire uniforme — les 26 critères, `C/PC/NC/NV`, constat, fondement ;
 4. contrôle des intervenants étrangers, dont **4.1 éléments relatifs au Maroc et
-   à Israël**, signalés à titre strictement informatif ;
+   à Israël** relevés dans les pièces, et **4.2 contrôle en ligne des profils**
+   — rattachements institutionnels et activités publics, signalés à titre
+   strictement informatif ;
 5. points de vigilance institutionnelle ;
 6. compléments indispensables avant appréciation ministérielle ;
 7. orientation technique motivée transmise au ministère ;
@@ -19,8 +21,9 @@ délibérées :
   ministère, jamais celui d'une décision. « La décision finale appartient au
   ministère » figure en tête, en section 7, et dans les encadrés de portée ;
 * aucune nationalité, origine ou opinion supposée ne fonde un constat
-  défavorable. Les éléments de la section 4.1 sont informatifs : les qualifier
-  relève du ministère seul.
+  défavorable. Les éléments des sections 4.1 et 4.2 sont informatifs : les
+  qualifier relève du ministère seul, et la section 4.2 énonce explicitement
+  les critères qu'elle refuse d'appliquer.
 """
 
 from __future__ import annotations
@@ -31,7 +34,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.core.config import SIGNATURE, get_settings
-from app.core.vocabulary import NOT_PROVIDED, ReportFactKind
+from app.core.vocabulary import NOT_PROVIDED, AgentName, ClaimNature, ReportFactKind
 from app.models import Dossier
 from app.reports.evaluation_report import Box, EvaluationReport, Section, _Context
 from app.services import (
@@ -58,18 +61,27 @@ MATRIX_LEGEND = (
     "ou pièce absente ; NV = non vérifiable sur les pièces disponibles."
 )
 
+#: Portée unique de toute la section 4 — pièces (4.1) et veille en ligne (4.2).
+#: Elle est énoncée une seule fois : trois encadrés successifs disant à peu près
+#: la même chose coûtaient une page et se faisaient lire de moins en moins.
+#: Ce qu'elle énonce n'est pas décoratif : sans la liste des critères refusés, un
+#: lecteur pourrait prêter à l'application un profilage par l'origine, que son
+#: propre référentiel lui interdit.
 FOREIGN_SCOPE = (
-    "Sources institutionnelles et scientifiques publiques "
-    "consultables ; une homonymie, une page absente ou une affiliation ancienne n'est "
-    "jamais transformée en fait. L'absence d'élément défavorable trouvé ne constitue "
-    "pas une habilitation de sécurité."
-)
-
-SENSITIVE_SCOPE = (
-    "Éléments signalés à titre strictement informatif. Une nationalité, une "
-    "formation, une publication, une participation académique ou un lien institutionnel "
-    "antérieur ne constitue pas automatiquement une non-conformité. L'appréciation de "
-    "leur pertinence et la décision finales relèvent exclusivement du ministère."
+    "Sources institutionnelles et scientifiques publiques consultables ; une homonymie, "
+    "une page absente ou une affiliation ancienne n'est jamais transformée en fait. Seuls "
+    "sont retenus les rattachements institutionnels et activités professionnelles "
+    "publiquement documentés, et uniquement dans un contexte institutionnel — affiliation, "
+    "programme, financement, partenariat : une citation bibliographique ou une simple "
+    "mention géographique ne déclenche aucun signalement. Ne sont jamais examinés : la "
+    "nationalité, l'origine ethnique, la religion, le lieu de naissance, la consonance "
+    "d'un nom, une opinion supposée. Les éléments des sections 4.1 et 4.2 sont signalés à "
+    "titre strictement informatif : une nationalité, une formation, une publication, une "
+    "participation académique ou un lien institutionnel antérieur ne constitue pas "
+    "automatiquement une non-conformité et ne préjuge d'aucune position personnelle ; leur "
+    "appréciation et la décision finales relèvent exclusivement du ministère. L'absence "
+    "d'élément relevé n'est pas une garantie et ne constitue pas une habilitation de "
+    "sécurité : elle dépend de l'indexation, de la langue et de la date de consultation."
 )
 
 EVIDENCE_PRINCIPLE = (
@@ -455,7 +467,8 @@ def _section_intervenants(ctx: _Context) -> Section:
                 "les tampons.",
             ]
         )
-    section.box("Portée", SENSITIVE_SCOPE, tone="attention")
+    # -- 4.2 Contrôle en ligne des profils ---------------------------------
+    _subsection_screening(ctx, section)
 
     urls = _facts_of(ctx).observations.get("urls") or []
     if urls:
@@ -463,6 +476,64 @@ def _section_intervenants(ctx: _Context) -> Section:
         section.bullets([url for url in urls[:8]])
     section.box("Portée du contrôle", FOREIGN_SCOPE, tone="attention")
     return section
+
+
+def _subsection_screening(ctx: _Context, section: Section) -> None:
+    """4.2 — ce que la veille en ligne a établi sur les profils, et rien de plus.
+
+    Deux principes gouvernent cette sous-section, et ils viennent du référentiel
+    de l'application, non d'une prudence ajoutée : un rattachement ou une
+    activité publiquement documentés se rapportent, une origine ne s'examine
+    pas. Ce second principe est énoncé au lecteur dans l'encadré de portée qui
+    clôt la section 4 — sans quoi il pourrait prêter à l'application un
+    profilage qu'elle n'exerce pas.
+    """
+    section.subheading(
+        "4.2. Contrôle en ligne des profils — rattachements et activités publics"
+    )
+
+    claims = ctx.claim_texts(AgentName.SOUVERAINETE_NATIONALE)
+    established = [claim for claim in claims if claim.nature != ClaimNature.ABSENCE_DE_PREUVE]
+
+    if not claims:
+        section.para(
+            "Aucun profil n'a été soumis à ce contrôle : la veille en ligne n'a pas été "
+            "exécutée pour ce dossier, ou aucun intervenant étranger n'y a été identifié. "
+            "Cette absence n'est ni un constat favorable, ni un constat défavorable.",
+            kind=ReportFactKind.A_VERIFIER,
+        )
+    elif not established:
+        section.para(
+            f"{len({claim.subject_label for claim in claims})} profil(s) ont été contrôlés ; "
+            "aucun rattachement institutionnel ni activité publique touchant une catégorie "
+            "de vigilance nationale n'a été établi sur les sources consultées.",
+            kind=ReportFactKind.CALCUL,
+        )
+    else:
+        section.para(
+            f"{len(established)} élément(s) publiquement documenté(s) sont portés à la "
+            f"connaissance du ministère, sur {len({claim.subject_label for claim in claims})} "
+            "profil(s) contrôlés. Ils sont rapportés tels que publiés, avec leur niveau de "
+            "preuve ; aucun n'est qualifié par l'application.",
+            kind=ReportFactKind.CALCUL,
+        )
+        section.table(
+            "Éléments relevés sur les profils publics",
+            ["Personne", "Élément relevé", "Sources indép.", "Niveau de preuve"],
+            [
+                [
+                    claim.subject_label,
+                    # Le corps stocké porte l'affirmation puis sa mention de
+                    # portée ; celle-ci figure déjà dans l'encadré, la répéter
+                    # dans chaque cellule rendrait le tableau illisible.
+                    ctx.claim_body(claim).split("\n", 1)[0],
+                    str(claim.independent_source_count),
+                    claim.status,
+                ]
+                for claim in established
+            ],
+            widths=[0.22, 0.50, 0.10, 0.18],
+        )
 
 
 # --------------------------------------------------------------------------
