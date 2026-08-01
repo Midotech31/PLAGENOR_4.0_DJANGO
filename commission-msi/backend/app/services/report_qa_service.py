@@ -368,11 +368,14 @@ def _check_deliverables(report: QaReport) -> None:
     report.add(
         Check(
             key="controles_de_rendu",
-            label="Ouverture du DOCX, rendu PDF, pagination et empreintes",
+            label="Contrôles portant sur le fichier produit",
             passed=True,
-            detail="Ces contrôles sont exécutés à la génération du rapport et enregistrés avec "
-            "le rapport produit : ouverture du DOCX, rendu PDF, nombre de pages, page blanche, "
-            "texte coupé, débordement, comparaison des valeurs clés et SHA-256 des livrables.",
+            detail="Exécutés à la génération : rendu effectif du DOCX et du PDF, nombre de "
+            "pages mesuré sur le PDF, empreinte SHA-256 du livrable. "
+            "NON exécutés à ce jour, et donc à vérifier à l'œil avant transmission : "
+            "détection de page blanche, de texte coupé, de débordement, de tableau orphelin "
+            "ou de police absente, et comparaison automatique des valeurs clés entre le JSON, "
+            "le DOCX et le PDF.",
             blocking=False,
         )
     )
