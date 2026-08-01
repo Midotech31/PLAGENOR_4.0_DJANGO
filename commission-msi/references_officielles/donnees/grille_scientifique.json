@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "total": 100,
+  "auto_scoring_forbidden": true,
+  "criteria": [
+    {"key": "pertinence_priorites", "label": "Pertinence scientifique et adéquation aux priorités nationales", "max": 30},
+    {"key": "objectifs_resultats_retombes", "label": "Clarté des objectifs, résultats attendus et retombées", "max": 20},
+    {"key": "cooperation_internationale", "label": "Valeur ajoutée de la coopération internationale", "max": 20},
+    {"key": "faisabilite_gouvernance_financement", "label": "Faisabilité organisationnelle, gouvernance et financement", "max": 15},
+    {"key": "valorisation_publications_suivi", "label": "Valorisation, publications, livrables et suivi", "max": 15}
+  ],
+  "rules": [
+    "La note est saisie uniquement par l'évaluateur.",
+    "Toute note exige une justification et des pages sources.",
+    "Le système calcule seulement la somme.",
+    "Aucun seuil de décision n'est inventé à partir du total.",
+    "L'historique des modifications est conservé."
+  ]
+}

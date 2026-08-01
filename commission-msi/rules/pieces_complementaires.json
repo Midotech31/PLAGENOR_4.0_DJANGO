@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "designed_by": "Prof. Merzoug Mohamed",
+  "warning": "Ces pièces complètent les quatorze pièces sourcées de donnees/catalogue_pieces.json (SRC-DOSSIER-PIECES, page 1). Elles proviennent de la liste de travail du prompt maître et non d'un canevas officiel versionné : leur absence ne constitue jamais un motif de non-conformité tant qu'un référentiel actif ne l'exige pas.",
+  "source_ref": "À confirmer par le Professeur Merzoug Mohamed ou par la commission",
+  "pieces": [
+    {"order": 15, "key": "proces_verbal_deliberation", "label": "Procès-verbal ou délibération de l'organe scientifique"},
+    {"order": 16, "key": "programme_scientifique", "label": "Programme scientifique détaillé"},
+    {"order": 17, "key": "comite_scientifique_liste", "label": "Composition du comité scientifique"},
+    {"order": 18, "key": "comite_organisation_liste", "label": "Composition du comité d'organisation"},
+    {"order": 19, "key": "liste_intervenants", "label": "Liste des intervenants"},
+    {"order": 20, "key": "liste_participants", "label": "Liste des participants"},
+    {"order": 21, "key": "affiliations_institutionnelles", "label": "Affiliations institutionnelles déclarées"},
+    {"order": 22, "key": "justificatifs_partenaires", "label": "Justificatifs des partenaires"},
+    {"order": 23, "key": "justificatifs_sponsors", "label": "Justificatifs des sponsors"},
+    {"order": 24, "key": "budget", "label": "Budget prévisionnel"},
+    {"order": 25, "key": "plan_financement", "label": "Plan de financement"},
+    {"order": 26, "key": "modalites_publication", "label": "Modalités de publication"},
+    {"order": 27, "key": "modalites_valorisation", "label": "Modalités de valorisation"},
+    {"order": 28, "key": "annexes_administratives", "label": "Annexes administratives"},
+    {"order": 29, "key": "documents_identite", "label": "Documents d'identité", "sensitivity": "RESTREINT"},
+    {"order": 30, "key": "autorisations_visas_avis", "label": "Autorisations, visas ou avis spécifiques"},
+    {"order": 31, "key": "autres_pieces_referentiel_actif", "label": "Autres pièces exigées par un référentiel actif"}
+  ]
+}

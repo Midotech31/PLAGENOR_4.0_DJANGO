@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "generated_on": "2026-07-31",
+  "principle": "Les originaux prévalent sur toute extraction, synthèse ou règle dérivée.",
+  "sources": [
+    {
+      "id": "SRC-MANUEL-0.9",
+      "file": "references_officielles/originaux/Manuel_procedures_commission_manifestations_scientifiques_internationales.docx",
+      "sha256": "b488d5bd027a68178f96b110ecdaa99fe3370b79c92a5939069491f89ee053fe",
+      "format": "DOCX",
+      "pages_rendered": 52,
+      "date": "2026-07-31",
+      "version": "0.9",
+      "authority": "Projet de document de référence - à compléter",
+      "status": "PROJET_NON_OPPOSABLE",
+      "role": "Méthode de travail, formulaires et hypothèses ; ne crée aucune règle juridique."
+    },
+    {
+      "id": "SRC-595-2025",
+      "file": "references_officielles/originaux/Envoi_595-SG_19-5-2025_Organisation_manifestations_scientifiques.pdf",
+      "sha256": "43b3953a43fe03ea486bafaa235e9626c56caa60b9c7b2e09fd2798becfd2760",
+      "format": "PDF_SCAN_AR",
+      "pages_rendered": 4,
+      "date": "2025-05-19",
+      "reference": "595/SG/2025",
+      "authority": "Secrétariat général du MESRS",
+      "status": "CORRESPONDANCE_OFFICIELLE",
+      "role": "Conditions et procédures relatives aux manifestations scientifiques internationales."
+    },
+    {
+      "id": "SRC-GUIDE-CRU",
+      "file": "references_officielles/originaux/Guide_Manifestations_internationales.doc",
+      "sha256": "1213d761cd34469a9066bda6bb4ec9865b00887e48ed19277e39cf33493d44cf",
+      "format": "DOC",
+      "pages_rendered": 8,
+      "date_document": "2026-07-14",
+      "authority": "Trois Conférences régionales des universités",
+      "status": "PROPOSITION_A_CONFIRMER",
+      "role": "Proposition de guide et canevas ; vérifier son acte d'adoption avant de la traiter comme obligatoire."
+    },
+    {
+      "id": "SRC-DOSSIER-PIECES",
+      "file": "references_officielles/originaux/Dossier_demande_organisation_manifestation_internationale.pdf",
+      "sha256": "e41641703aa07bd17f3a052d9819ae9c3e6b47e1efd42ba7a686d3cca676412e",
+      "format": "PDF_SCAN_FR",
+      "pages_rendered": 1,
+      "date": null,
+      "authority": "À confirmer",
+      "status": "CANEvas_OPERATIONNEL_A_VERSIONNER",
+      "role": "Liste de quatorze pièces et contenu attendu de la fiche technique."
+    },
+    {
+      "id": "SRC-218-2026",
+      "file": "references_officielles/originaux/Envoi_218-DCEU-SDPUR_14-7-2026_الاجراءات_التظاهرات_العلمية.pdf",
+      "sha256": "9ae95d6bc805e8e2f11f1ceef9c087bbcffa9b63ad356476047714975dfc5cbe",
+      "format": "PDF_SCAN_AR_FR",
+      "pages_rendered": 6,
+      "date": "2026-07-14",
+      "reference": "218/DCEU-SDPUR/2026",
+      "authority": "Direction de la coopération et des échanges universitaires - MESRS",
+      "status": "CORRESPONDANCE_OFFICIELLE_RECENTE",
+      "role": "Circuit institutionnel et guide de procédures pour les manifestations internationales."
+    }
+  ]
+}

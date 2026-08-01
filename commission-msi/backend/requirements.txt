@@ -1,0 +1,13 @@
+# Commission MSI — dépendances locales
+# Designed by Prof. Merzoug Mohamed
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+sqlalchemy==2.0.37
+alembic==1.14.1
+pymupdf==1.25.2
+pillow==11.1.0
+cryptography==44.0.0
+python-docx==1.1.2
+reportlab==4.2.5
+python-multipart==0.0.20

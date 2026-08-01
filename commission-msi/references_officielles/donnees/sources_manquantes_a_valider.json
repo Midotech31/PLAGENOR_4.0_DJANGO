@@ -1,0 +1,16 @@
+{
+  "warning": "Ces références sont citées dans le manuel ou la note n°595 mais leurs originaux ne sont pas présents dans le kit. Elles ne doivent pas produire de règle obligatoire avant versement et validation.",
+  "items": [
+    "Envoi n°157/DGRSDT du 29 avril 2024",
+    "Envoi n°652 du 17 avril 2022",
+    "Correspondance DCEU n°608 du 26 octobre 2022",
+    "Correspondance DCEU n°1773 du 24 octobre 2022",
+    "Correspondance DCEU n°98 du 15 février 2022",
+    "Loi n°18-07 du 10 juin 2018 et loi modificative n°25-11 du 24 juillet 2025",
+    "Ordonnance n°21-09 du 8 juin 2021 et loi d'approbation citée",
+    "Charte de déontologie et d'éthique universitaires, édition 2023",
+    "Acte officiel fixant quorum, majorité, vote et durée des mandats",
+    "Instruction officielle actualisée relative aux restrictions diplomatiques applicables à la session"
+  ],
+  "required_status": "NON_ACTIVE_TANT_QUE_SOURCE_ABSENTE"
+}

@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0",
+  "warning": "Ces règles produisent uniquement des alertes de vérification humaine. Elles ne peuvent ni rejeter un dossier ni attribuer une note.",
+  "rules": [
+    {
+      "code": "GEO-MAROC-001",
+      "category": "MENTIONS_MAROC",
+      "label": "Mentions relatives au Maroc — vérification institutionnelle obligatoire",
+      "priority": "ELEVE",
+      "terms": ["Maroc", "Morocco", "Royaume du Maroc", "Moroccan", "marocain", "marocaine", "المغرب", "المملكة المغربية"],
+      "guidance": "Distinguer mention géographique, bibliographie, nationalité, affiliation, participant, partenaire, sponsor, financeur ou coopération. Vérifier les instructions officielles applicables à la session. Aucun rejet par nationalité.",
+      "source_ref": "Spécification de la commission ; contexte diplomatique à vérifier avant chaque session",
+      "source_date": "",
+      "version": "1.0"
+    },
+    {
+      "code": "GEO-SAHARA-001",
+      "category": "INTEGRITE_TERRITORIALE",
+      "label": "Sahara occidental, RASD, statut territorial ou cartographie",
+      "priority": "ELEVE",
+      "terms": ["Sahara occidental", "Western Sahara", "RASD", "SADR", "République arabe sahraouie démocratique", "الصحراء الغربية", "الجمهورية العربية الصحراوية الديمقراطية"],
+      "guidance": "Contrôler le contexte, les cartes, drapeaux, affiliations et dénominations selon les positions et instructions officielles en vigueur.",
+      "source_ref": "Constitution algérienne ; communiqués officiels du MAE",
+      "version": "1.0"
+    },
+    {
+      "code": "GEO-PALESTINE-001",
+      "category": "RELATIONS_DIPLOMATIQUES",
+      "label": "Palestine, Israël ou coopération susceptible d’être interprétée institutionnellement",
+      "priority": "ELEVE",
+      "terms": ["Palestine", "Palestinian", "فلسطين", "Israël", "Israel", "Israeli", "إسرائيل", "normalisation", "normalization"],
+      "guidance": "Distinguer référence scientifique, bibliographie, personne, affiliation, partenaire et co-organisation. Vérifier les instructions officielles ; ne pas inventer d’interdiction.",
+      "source_ref": "Position officielle et instructions de tutelle à vérifier à la date de la session",
+      "version": "1.0"
+    },
+    {
+      "code": "GEO-CARTE-001",
+      "category": "INTEGRITE_TERRITORIALE",
+      "label": "Carte, frontière, drapeau ou dénomination territoriale",
+      "priority": "MOYEN",
+      "terms": ["frontière contestée", "disputed border", "territoire contesté", "disputed territory", "carte politique", "political map"],
+      "guidance": "Contrôler visuellement la carte et toutes ses versions linguistiques. La détection textuelle ne remplace pas l’examen de l’image.",
+      "source_ref": "Constitution algérienne et instructions de communication institutionnelle",
+      "version": "1.0"
+    },
+    {
+      "code": "DIPLO-VISA-001",
+      "category": "RELATIONS_DIPLOMATIQUES",
+      "label": "Visa, statut diplomatique ou relation consulaire",
+      "priority": "MOYEN",
+      "terms": ["visa", "ambassade", "embassy", "consulat", "consulate", "mission diplomatique", "diplomatic mission"],
+      "guidance": "Vérifier les conditions d’entrée, le protocole, la qualité officielle et l’autorité compétente à la date de l’événement.",
+      "source_ref": "MAE et services compétents — information dynamique",
+      "version": "1.0"
+    },
+    {
+      "code": "SYMBOLE-001",
+      "category": "SYMBOLES_OFFICIELS",
+      "label": "Symbole ou dénomination officielle nécessitant une validation",
+      "priority": "MOYEN",
+      "terms": ["hymne national", "national anthem", "emblème national", "national emblem", "drapeau national", "official flag", "Présidence de la République"],
+      "guidance": "Contrôler l’exactitude, le contexte et l’autorisation d’usage avant publication.",
+      "source_ref": "Constitution algérienne",
+      "version": "1.0"
+    },
+    {
+      "code": "MEMOIRE-001",
+      "category": "MEMOIRE_NATIONALE",
+      "label": "Mémoire nationale, Révolution ou histoire coloniale",
+      "priority": "MOYEN",
+      "terms": ["guerre de libération", "Révolution algérienne", "martyrs", "colonialisme", "colonisation française", "Algerian War", "French colonial"],
+      "guidance": "Vérifier le cadrage scientifique, les sources, les formulations et le plan de communication sans empêcher la recherche académique légitime.",
+      "source_ref": "Référentiel institutionnel à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "HAINE-001",
+      "category": "DISCRIMINATION_HAINE",
+      "label": "Discrimination, stigmatisation ou incitation à la haine",
+      "priority": "CRITIQUE",
+      "terms": ["incitation à la haine", "discours de haine", "hate speech", "racial superiority", "supériorité raciale", "appel à la discrimination"],
+      "guidance": "Distinguer citation analytique et promotion. Soumettre les passages confirmés à une revue juridique et institutionnelle.",
+      "source_ref": "Loi n°20-05 du 28 avril 2020",
+      "source_date": "2020-04-28",
+      "version": "1.0"
+    },
+    {
+      "code": "VIOLENCE-001",
+      "category": "ORDRE_PUBLIC",
+      "label": "Incitation à la violence ou mobilisation non scientifique",
+      "priority": "CRITIQUE",
+      "terms": ["appel à la violence", "incite violence", "violent uprising", "émeute", "riot", "attaque coordonnée"],
+      "guidance": "Évaluer le contexte exact, distinguer étude et promotion, préserver la preuve et saisir l’autorité compétente si le risque est confirmé.",
+      "source_ref": "Cadre pénal et sécurité — validation juridique requise",
+      "version": "1.0"
+    },
+    {
+      "code": "DEFENSE-001",
+      "category": "DEFENSE_SECURITE",
+      "label": "Défense, renseignement ou capacité militaire",
+      "priority": "CRITIQUE",
+      "terms": ["secret défense", "military capability", "base militaire", "military base", "renseignement militaire", "military intelligence", "système d’armes", "weapon system"],
+      "guidance": "Restreindre l’accès et demander l’avis de l’autorité sectorielle avant diffusion. Ne pas afficher de détail sensible dans le rapport ordinaire.",
+      "source_ref": "Instruction sectorielle à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "INFRA-001",
+      "category": "INFRASTRUCTURES_CRITIQUES",
+      "label": "Plan, vulnérabilité ou localisation d’une infrastructure critique",
+      "priority": "ELEVE",
+      "terms": ["infrastructure critique", "critical infrastructure", "vulnérabilité du réseau électrique", "power grid vulnerability", "plan du réseau d’eau", "telecom network map", "coordonnées sensibles"],
+      "guidance": "Vérifier le propriétaire de la donnée, le niveau de diffusion et la nécessité de masquer les localisations ou vulnérabilités.",
+      "source_ref": "Ordonnance n°21-09 et politique de sécurité de l’organisme",
+      "version": "1.0"
+    },
+    {
+      "code": "CYBER-001",
+      "category": "CYBER_DUAL_USE",
+      "label": "Cybersécurité offensive ou outil à double usage",
+      "priority": "ELEVE",
+      "terms": ["malware", "ransomware", "zero-day", "exploit development", "cyberattaque", "intrusion offensive", "contournement d’authentification", "phishing kit"],
+      "guidance": "Évaluer la finalité, l’environnement de démonstration, la divulgation responsable et les contrôles empêchant un usage abusif.",
+      "source_ref": "Loi n°09-04 du 5 août 2009 ; validation RSSI",
+      "version": "1.0"
+    },
+    {
+      "code": "IA-DESINFO-001",
+      "category": "IA_DESINFORMATION",
+      "label": "Deepfake, manipulation ou désinformation automatisée",
+      "priority": "ELEVE",
+      "terms": ["deepfake", "synthetic media", "désinformation", "disinformation", "manipulation de l’opinion", "automated propaganda"],
+      "guidance": "Vérifier le dispositif éthique, le marquage, les données, les risques d’abus et la communication publique.",
+      "source_ref": "Politique IA et communication à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "BIOSEC-001",
+      "category": "BIOSECURITE_DUAL_USE",
+      "label": "Agent biologique, toxine ou expérimentation à double usage",
+      "priority": "CRITIQUE",
+      "terms": ["gain-of-function", "gain de fonction", "pathogène hautement virulent", "highly virulent pathogen", "toxine biologique", "biological toxin", "synthèse de pathogène", "pathogen synthesis"],
+      "guidance": "Demander la revue biosécurité/éthique, les autorisations, le niveau de confinement et un contrôle de diffusion proportionné.",
+      "source_ref": "Réglementation sectorielle, biosécurité et éthique à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "SANTE-001",
+      "category": "SANTE_PUBLIQUE",
+      "label": "Allégation sanitaire ou étude impliquant des personnes",
+      "priority": "ELEVE",
+      "terms": ["essai clinique", "clinical trial", "patient data", "données de patients", "guérison garantie", "guaranteed cure", "épidémie", "outbreak"],
+      "guidance": "Vérifier autorisations, avis éthique, consentement, preuve scientifique et communication susceptible de provoquer une panique ou une fausse assurance.",
+      "source_ref": "Loi n°18-11 relative à la santé et textes d’application à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "GENOMIQUE-001",
+      "category": "DONNEES_GENETIQUES",
+      "label": "Données génétiques, biométriques ou génomique de populations",
+      "priority": "ELEVE",
+      "terms": ["génomique des populations", "population genomics", "human genome", "génome humain", "biometric database", "base biométrique", "données génétiques"],
+      "guidance": "Vérifier la finalité, la minimisation, la réidentification, le consentement, le transfert et les formalités de protection des données.",
+      "source_ref": "Loi n°18-07 modifiée par la loi n°25-11",
+      "version": "1.0"
+    },
+    {
+      "code": "RESSBIO-001",
+      "category": "RESSOURCES_BIOLOGIQUES",
+      "label": "Ressource biologique, savoir associé ou transfert d’échantillons",
+      "priority": "ELEVE",
+      "terms": ["ressources biologiques", "biological resources", "ressources génétiques", "genetic resources", "export d’échantillons", "sample export", "traditional knowledge", "connaissances associées"],
+      "guidance": "Vérifier permis d’accès, origine, transfert, dépôt, accord et partage des avantages.",
+      "source_ref": "Loi n°14-07 du 9 août 2014",
+      "source_date": "2014-08-09",
+      "version": "1.0"
+    },
+    {
+      "code": "PATRIMOINE-001",
+      "category": "PATRIMOINE_ARCHIVES",
+      "label": "Patrimoine culturel, archives, fouilles ou reproduction sensible",
+      "priority": "ELEVE",
+      "terms": ["fouilles archéologiques", "archaeological excavation", "patrimoine culturel", "cultural heritage", "manuscrit ancien", "ancient manuscript", "archives nationales"],
+      "guidance": "Vérifier l’autorisation de recherche, de reproduction, de numérisation, de déplacement et de publication.",
+      "source_ref": "Loi n°98-04 du 15 juin 1998",
+      "source_date": "1998-06-15",
+      "version": "1.0"
+    },
+    {
+      "code": "FINANCE-001",
+      "category": "FINANCEMENT_INFLUENCE",
+      "label": "Financement, sponsor ou contrepartie étrangère à clarifier",
+      "priority": "MOYEN",
+      "terms": ["foreign sponsor", "sponsor étranger", "financement étranger", "foreign funding", "donateur anonyme", "anonymous donor", "contrepartie éditoriale"],
+      "guidance": "Identifier le financeur et le bénéficiaire effectif, vérifier contrat, provenance, contreparties, visibilité, conflits et instruction applicable.",
+      "source_ref": "Référentiel financier et institutionnel à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "TRANSFERT-001",
+      "category": "SOUVERAINETE_DONNEES",
+      "label": "Transfert international de données, échantillons ou technologie",
+      "priority": "ELEVE",
+      "terms": ["transfert de données à l’étranger", "international data transfer", "cloud étranger", "foreign cloud", "technology transfer", "transfert de technologie", "material transfer agreement", "MTA"],
+      "guidance": "Vérifier base juridique, autorisations, destinataire, localisation, sécurité, réversibilité et restrictions de diffusion.",
+      "source_ref": "Loi n°18-07 modifiée ; loi n°14-07 selon le contenu",
+      "version": "1.0"
+    },
+    {
+      "code": "COMM-001",
+      "category": "COMMUNICATION_INSTITUTIONNELLE",
+      "label": "Communication pouvant être interprétée comme position officielle",
+      "priority": "MOYEN",
+      "terms": ["position officielle", "official position", "au nom du gouvernement", "on behalf of the government", "communiqué officiel", "official statement", "diffusion en direct", "live broadcast"],
+      "guidance": "Vérifier le porte-parole, les validations, les mentions de réserve, les supports et la version publiée.",
+      "source_ref": "Instruction de communication institutionnelle à confirmer",
+      "version": "1.0"
+    },
+    {
+      "code": "REPUT-001",
+      "category": "REPUTATION_SCIENTIFIQUE",
+      "label": "Risque d’intégrité ou de réputation scientifique",
+      "priority": "MOYEN",
+      "terms": ["predatory journal", "revue prédatrice", "éditeur prédateur", "predatory publisher", "publication garantie", "guaranteed publication", "pay to speak"],
+      "guidance": "Vérifier l’identité des personnes, les affiliations, les revues, les engagements de publication et les conflits d’intérêts.",
+      "source_ref": "Référentiel d’intégrité scientifique à confirmer",
+      "version": "1.0"
+    }
+  ]
+}
+

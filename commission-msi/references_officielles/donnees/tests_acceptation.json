@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "principle": "Aucun test réussi ne transforme l'application en autorité décisionnelle. Tout échec critique interdit l'usage réel jusqu'à correction et nouvelle validation.",
+  "release_gate": {
+    "critical_failures_allowed": 0,
+    "high_failures_allowed": 0,
+    "required_evidence": [
+      "rapport de tests horodaté",
+      "versions des dépendances",
+      "empreinte du build",
+      "matrice exigence-source-page-test",
+      "journal des écarts connus signé par le validateur"
+    ]
+  },
+  "tests": [
+    {
+      "id": "ACC-001",
+      "category": "ingestion",
+      "criticality": "CRITICAL",
+      "scenario": "PDF natif, PDF scanné, PDF mixte et PDF chiffré fictifs",
+      "expected": "Type identifié, original inchangé, SHA-256 conservé, chaque page rendue ou erreur explicite sans résultat partiel valide."
+    },
+    {
+      "id": "ACC-002",
+      "category": "ocr",
+      "criticality": "CRITICAL",
+      "scenario": "Page française, arabe et anglaise avec zones volontairement floues",
+      "expected": "Langue et mode d'extraction enregistrés ; zones incertaines marquées A_VERIFIER ; aucune complétion supposée."
+    },
+    {
+      "id": "ACC-003",
+      "category": "provenance",
+      "criticality": "CRITICAL",
+      "scenario": "Tentative d'enregistrer un fait sans document, page ou passage",
+      "expected": "Enregistrement factuel refusé avec message explicite et journal d'audit."
+    },
+    {
+      "id": "ACC-004",
+      "category": "rules",
+      "criticality": "CRITICAL",
+      "scenario": "Règle issue du guide non adopté ou d'une source absente",
+      "expected": "Règle inactive ; impossible de produire un état de conformité à partir d'elle."
+    },
+    {
+      "id": "ACC-005",
+      "category": "conflicts",
+      "criticality": "CRITICAL",
+      "scenario": "Application simultanée des variantes contradictoires de fréquence ou de format",
+      "expected": "CONTRADICTION_A_ARBITRER, affichage des deux sources et blocage de toute conclusion automatique."
+    },
+    {
+      "id": "ACC-006",
+      "category": "scoring",
+      "criticality": "CRITICAL",
+      "scenario": "Note absente, hors borne ou sans justification",
+      "expected": "Calcul final bloqué ; le système ne propose ni note ni valeur de remplacement."
+    },
+    {
+      "id": "ACC-007",
+      "category": "vigilance",
+      "criticality": "CRITICAL",
+      "scenario": "Mot-clé géopolitique, pays, nationalité ou affiliation détecté sans contexte probant",
+      "expected": "Au plus une alerte de vérification contextualisée ; jamais rejet, interdiction, conclusion ou score automatique."
+    },
+    {
+      "id": "ACC-008",
+      "category": "report",
+      "criticality": "CRITICAL",
+      "scenario": "Génération d'un rapport contenant un fait non sourcé ou une donnée OCR incertaine non signalée",
+      "expected": "Export bloqué ou donnée exclue ; chaque assertion retenue possède source, page et statut humain."
+    },
+    {
+      "id": "ACC-009",
+      "category": "startup",
+      "criticality": "CRITICAL",
+      "scenario": "Premier lancement, second lancement, redémarrage, port occupé et serveur momentanément non prêt",
+      "expected": "Ouverture directe du tableau de bord sans compte, login ni boucle ; un seul serveur ; attente de readiness ; diagnostic clair et récupérable si le port est indisponible."
+    },
+    {
+      "id": "ACC-010",
+      "category": "database",
+      "criticality": "CRITICAL",
+      "scenario": "Interruption simulée pendant une écriture",
+      "expected": "État précédent cohérent, aucune demi-validation, journal technique et reprise contrôlée."
+    },
+    {
+      "id": "ACC-011",
+      "category": "backup",
+      "criticality": "CRITICAL",
+      "scenario": "Sauvegarde chiffrée puis restauration dans un répertoire temporaire",
+      "expected": "Intégrité vérifiée avant remplacement ; mauvaise clé refusée ; restauration originale préservée en cas d'échec."
+    },
+    {
+      "id": "ACC-012",
+      "category": "privacy",
+      "criticality": "CRITICAL",
+      "scenario": "Dossier fictif contenant un passeport et données personnelles",
+      "expected": "Accès restreint, masquage dans les écrans et exports ordinaires, aucune requête réseau, suppression et rétention auditables."
+    },
+    {
+      "id": "ACC-013",
+      "category": "offline",
+      "criticality": "HIGH",
+      "scenario": "Machine sans Internet et ressources externes bloquées",
+      "expected": "Application entièrement fonctionnelle sur 127.0.0.1, sans CDN, télémétrie, police distante ni appel API."
+    },
+    {
+      "id": "ACC-014",
+      "category": "accessibility",
+      "criticality": "HIGH",
+      "scenario": "Parcours clavier complet et affichage français/arabe",
+      "expected": "Focus visible, libellés accessibles, ordre logique, RTL correct et aucune information portée uniquement par la couleur."
+    },
+    {
+      "id": "ACC-015",
+      "category": "human_validation",
+      "criticality": "CRITICAL",
+      "scenario": "Tentative d'export officiel sans validation humaine G7",
+      "expected": "Export officiel bloqué ; seul un brouillon filigrané et explicitement non validé peut être produit."
+    },
+    {
+      "id": "ACC-016",
+      "category": "integrity",
+      "criticality": "CRITICAL",
+      "scenario": "Modification d'un document réglementaire après son enregistrement",
+      "expected": "Empreinte divergente détectée ; toutes les règles liées sont suspendues jusqu'à revalidation."
+    }
+  ]
+}

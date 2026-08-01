@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "referential_version": "1.0.0",
+  "designed_by": "Prof. Merzoug Mohamed",
+  "title": "Classement externe indicatif assisté par IA — non décisionnel, fondé sur des sources publiques consultées à la date indiquée.",
+  "warning": "Ce classement est strictement séparé de la grille scientifique officielle. Il ne modifie jamais une note saisie par l'évaluateur et ne peut jamais motiver à lui seul une acceptation, un rejet, une interdiction ou une transmission.",
+  "total": 100,
+  "axes": [
+    {"key": "reputation_historique", "label": "Réputation et historique vérifiable de la manifestation", "max": 20},
+    {"key": "credibilite_organisateur", "label": "Crédibilité de l'organisateur et des institutions porteuses", "max": 15},
+    {"key": "comite_intervenants", "label": "Qualité et traçabilité du comité scientifique et des intervenants", "max": 20},
+    {"key": "selectivite_programme", "label": "Sélectivité, transparence de l'appel et qualité du programme", "max": 15},
+    {"key": "publication_indexation", "label": "Publication, indexation, archivage et politiques éthiques", "max": 15},
+    {"key": "portee_internationale", "label": "Portée internationale et diversité institutionnelle réelle", "max": 10},
+    {"key": "transparence_partenaires", "label": "Transparence des partenaires, sponsors et conflits d'intérêts", "max": 5}
+  ],
+  "grade_thresholds": [
+    {"grade": "A+", "min_total": 85},
+    {"grade": "A", "min_total": 70},
+    {"grade": "B", "min_total": 55},
+    {"grade": "C", "min_total": 40},
+    {"grade": "D", "min_total": 0}
+  ],
+  "minimum_axes_scored_for_grade": 5,
+  "not_provided_label": "NR — NON RENSEIGNE",
+  "rules": [
+    "Chaque axe reçoit une note proposée, un intervalle d'incertitude et une justification sourcée.",
+    "Les agents travaillent indépendamment ; l'orchestrateur calcule médiane, dispersion et niveau d'accord.",
+    "Aucune note n'est produite si les preuves sont insuffisantes : l'axe reste NR — NON RENSEIGNE.",
+    "Données observées, inférences, limites et avis des agents sont affichés séparément.",
+    "L'évaluateur peut accepter, corriger ou écarter chaque axe avec justification.",
+    "Le ranking ne modifie jamais la grille scientifique officielle."
+  ]
+}

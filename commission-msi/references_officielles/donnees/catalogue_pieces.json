@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "source_primary": "SRC-DOSSIER-PIECES",
+  "source_page": 1,
+  "warning": "La présence d'une pièce ne prouve jamais sa validité juridique ni son contenu.",
+  "statuses": ["ABSENTE", "DETECTEE", "CONFIRMEE", "INCOMPLETE", "ILLISIBLE", "NON_CONFORME", "A_VERIFIER", "NON_APPLICABLE"],
+  "pieces": [
+    {"order": 1, "key": "demande_visee", "label": "Demande visée par le chef d'établissement"},
+    {"order": 2, "key": "validation_scientifique", "label": "Validation par les organes scientifiques de l'établissement"},
+    {"order": 3, "key": "fiche_technique", "label": "Fiche technique"},
+    {"order": 4, "key": "appel_communication", "label": "Copie de l'appel ou projet à communication"},
+    {"order": 5, "key": "conferenciers_etrangers_passports", "label": "Liste des conférenciers étrangers avec copies de leurs passeports", "sensitivity": "RESTREINT"},
+    {"order": 6, "key": "partenaires_internationaux", "label": "Partenaires internationaux"},
+    {"order": 7, "key": "partenaires_nationaux_socioeconomiques", "label": "Partenaires nationaux et socio-économiques"},
+    {"order": 8, "key": "valorisations_programmees", "label": "Valorisations programmées des résultats"},
+    {"order": 9, "key": "indexation_bases_internationales", "label": "Indexation dans des bases de données internationales"},
+    {"order": 10, "key": "publication_revues_renommee", "label": "Publication dans des revues de renommée"},
+    {"order": 11, "key": "proceedings", "label": "Édition de proceedings"},
+    {"order": 12, "key": "ouvrage_collectif", "label": "Édition d'un ouvrage collectif"},
+    {"order": 13, "key": "depot_dspace", "label": "Dépôts dans l'espace DSPACE de l'établissement"},
+    {"order": 14, "key": "session_valorisation", "label": "Session prévue durant la rencontre pour valoriser ses résultats"}
+  ],
+  "fiche_technique_required_fields": [
+    "intitule_et_thematiques", "type_manifestation", "mode_organisation", "objectifs_axes_themes_programme",
+    "comite_scientifique_et_president", "comite_organisation_et_president", "date", "lieu",
+    "frais_participation", "sources_financement", "modes_financement", "organismes_et_personnes_extra_universite"
+  ]
+}

@@ -1,0 +1,784 @@
+# Prompt maître V2 pour Claude Code — Application locale d’évaluation des manifestations scientifiques
+
+## Contexte du kit fourni
+
+Tu travailles dans un kit complet qui contient les cinq documents originaux transmis par l'utilisateur. Avant toute conception ou écriture de code :
+
+1. lis `README.md` et `docs/CONTRAT_FAIL_SAFE.md` ;
+2. vérifie les empreintes de `donnees/manifest_sources.json` ;
+3. ouvre et examine tous les originaux de `references_officielles/originaux/`, page par page ;
+4. utilise les extractions Markdown uniquement comme index de recherche ;
+5. charge tous les JSON de `donnees/` ;
+6. construis une matrice exigence -> source -> page -> test ;
+7. n'active aucune règle issue d'une source absente, d'une proposition non adoptée ou d'une traduction non validée.
+
+Les originaux prévalent sur le présent prompt. En cas de divergence, n'interprète pas : enregistre `CONTRADICTION_A_ARBITRER`, montre les deux passages et exige une validation humaine.
+
+L'application doit être extrêmement sensible au contexte, mais son intelligence doit reposer d'abord sur des contrôles déterministes, des rapprochements explicables, des règles versionnées et des preuves. N'intègre aucune IA générative dans le chemin de décision par défaut. Une éventuelle assistance rédactionnelle future doit être facultative, isolée, clairement signalée et incapable de modifier un score, une conformité, une alerte ou une conclusion.
+
+Le « zéro erreur » absolu n'est pas une promesse acceptable. L'objectif obligatoire est : zéro erreur silencieuse, zéro affirmation orpheline de source, zéro décision automatique et arrêt sécurisé en cas d'incertitude.
+
+## Mode d’emploi
+
+1. Décompresser **tout le kit** dans un dossier de travail ; ne pas isoler le présent Markdown.
+2. Ouvrir Claude Code à la racine du kit.
+3. Lui demander d’exécuter intégralement `PROMPT_MAITRE_CLAUDE_CODE_V2.md` après avoir lu le `README.md`, les deux fichiers de `docs/`, tous les JSON de `donnees/` et les cinq originaux.
+4. Autoriser Claude Code à créer le projet dans un nouveau sous-dossier `application/`, installer les dépendances locales et exécuter les tests.
+5. Exiger une preuve de réussite des tests et une matrice exigence-source-page-test avant de considérer la livraison comme terminée.
+6. Ne jamais lui fournir de vrais dossiers confidentiels pendant le développement : utiliser exclusivement des PDF fictifs et synthétiques.
+
+Sources déjà incluses dans `references_officielles/originaux/` :
+
+- `Envoi_218-DCEU-SDPUR_14-7-2026_الاجراءات_التظاهرات_العلمية.pdf` ;
+- `Envoi_595-SG_19-5-2025_Organisation_manifestations_scientifiques.pdf` ;
+- `Guide_Manifestations_internationales.doc` ;
+- `Dossier_demande_organisation_manifestation_internationale.pdf` ;
+- `Manuel_procedures_commission_manifestations_scientifiques_internationales.docx`.
+
+Toute nouvelle instruction officielle doit être ajoutée au manifeste avec sa date, son autorité, son statut, son champ d’application et son empreinte SHA-256 avant activation d’une règle dérivée.
+
+---
+
+# PROMPT À DONNER INTÉGRALEMENT À CLAUDE CODE
+
+Tu es architecte logiciel senior, ingénieur Python/TypeScript, expert en sécurité applicative locale, traitement documentaire, OCR, UX professionnelle et tests. Tu dois concevoir, développer, tester, documenter et livrer une application complète. Ne fournis pas seulement une analyse ou des extraits de code : crée réellement tous les fichiers du projet, exécute les tests, corrige les erreurs et prépare une archive installable pour Windows.
+
+## 1. Contexte et finalité
+
+L’application est destinée au Professeur Merzoug Mohamed, membre d’une commission régionale algérienne chargée d’examiner les demandes d’organisation de manifestations scientifiques internationales.
+
+Elle doit accélérer et structurer l’examen des dossiers PDF sans remplacer l’évaluateur. Le principe impératif est :
+
+> L’application extrait, vérifie, classe, compare, signale et prépare. L’évaluateur humain contrôle, interprète, apprécie et décide.
+
+L’application ne doit jamais décider automatiquement d’un avis favorable, d’un rejet, d’une interdiction, d’une note scientifique ou de la validité juridique d’une pièce.
+
+## 2. Règles absolues de fiabilité
+
+Le système ne doit jamais :
+
+- inventer un contenu absent du dossier ;
+- compléter un texte illisible par supposition ;
+- transformer une hypothèse en fait ;
+- inventer une référence réglementaire ;
+- conclure à partir d’un simple mot-clé, pays, nom, nationalité ou affiliation ;
+- attribuer ou recommander automatiquement une note ;
+- appliquer une règle non datée, non sourcée, non validée ou désactivée ;
+- présenter l’absence d’alerte comme une garantie d’absence de risque ;
+- envoyer un dossier à un service externe, une API d’IA ou un OCR en ligne.
+
+En cas d’incertitude, afficher exactement :
+
+> Contenu illisible ou insuffisamment fiable — vérification humaine obligatoire.
+
+Chaque alerte doit préciser la source, la page, le contexte, la confiance, la raison, l’action recommandée et le statut humain. Une alerte reste une alerte et ne devient jamais automatiquement une décision.
+
+## 3. Cible, fonctionnement et architecture retenue
+
+Construire une application web locale moderne, prioritairement destinée à Windows 10/11 :
+
+- interface : React + TypeScript + Vite ;
+- composants accessibles, icônes SVG locales et CSS moderne ;
+- backend : Python 3.12 + FastAPI ;
+- base : SQLite en mode WAL, SQLAlchemy 2 et migrations Alembic ;
+- visualisation PDF : PDF.js dans le navigateur local ;
+- extraction/rendu PDF : PyMuPDF ;
+- OCR local : Tesseract avec `fra`, `ara` et `eng` ;
+- prétraitement OCR : Pillow et OpenCV si disponible ;
+- rapports : `python-docx` pour DOCX et ReportLab ou WeasyPrint pour PDF ;
+- cryptographie : `cryptography`, AES-256-GCM ;
+- tests backend : pytest ;
+- tests frontend : Vitest + Testing Library ;
+- tests de parcours : Playwright ;
+- empaquetage Windows : script d’installation et lanceur local fiable, avec PyInstaller si pertinent.
+
+Le backend doit écouter uniquement sur `127.0.0.1`. Aucune télémétrie, CDN, police distante ou ressource externe ne doit être utilisée. Le frontend compilé doit être servi par le backend afin que l’application fonctionne hors ligne.
+
+Si une contrainte technique rend un choix impossible, explique brièvement le blocage dans `docs/DECISIONS_TECHNIQUES.md`, choisis l’alternative locale la plus simple et poursuis le développement sans réduire la sécurité ni la traçabilité.
+
+## 4. Logique générale du workflow
+
+Implémenter ce workflow :
+
+1. ouverture directe et fiable du tableau de bord local, sans compte ni écran de connexion ;
+2. création d’un dossier avec référence, intitulé et organisateur ;
+3. import du PDF original ;
+4. validation du fichier, empreinte SHA-256 et stockage chiffré sans modification ;
+5. analyse structurelle page par page ;
+6. extraction du texte natif ;
+7. classification des pages : native, scannée, mixte, blanche, difficile, doublon probable ;
+8. OCR local uniquement lorsque nécessaire ou demandé ;
+9. extraction prudente des informations ;
+10. propositions de pièces détectées ;
+11. détection des incohérences objectives ;
+12. moteur de vigilance déterministe ;
+13. contrôle et qualification humaine ;
+14. saisie de la grille scientifique ;
+15. notes, réserves et conclusion personnelle ;
+16. génération d’un projet de rapport ;
+17. export, audit et sauvegarde.
+
+États recommandés du dossier :
+
+`NOUVEAU`, `ANALYSE_EN_COURS`, `A_CONTROLER`, `EN_EVALUATION`, `COMPLEMENT_REQUIS`, `PRET_POUR_RAPPORT`, `ARCHIVE`.
+
+Ne jamais attribuer automatiquement un état équivalent à « accepté » ou « rejeté ».
+
+## 5. Interface moderne exigée
+
+Créer une interface claire, institutionnelle et contemporaine, sans surcharge visuelle.
+
+Direction artistique :
+
+- bleu nuit `#123342` ;
+- vert profond `#176B5B` ;
+- fond ivoire/gris très clair `#F5F7F6` ;
+- ambre `#B97812` pour l’incertitude ;
+- rouge sobre `#B33A3A` pour les alertes critiques ;
+- cartes blanches, ombres très légères, rayons de 10 à 14 px ;
+- police locale Inter ou système, et Noto Sans Arabic locale pour l’arabe ;
+- contraste WCAG AA ;
+- navigation clavier, focus visible et libellés accessibles ;
+- prise en charge correcte du français, de l’anglais et de l’arabe RTL.
+
+Écrans obligatoires :
+
+### 5.1 Démarrage local
+
+- aucune page de configuration de compte ;
+- aucun écran de connexion, identifiant, mot de passe, cookie de session ou verrouillage après tentative ;
+- ouverture directe du tableau de bord après vérification de santé du serveur ;
+- message clair si le port local est occupé ou si le serveur ne peut pas démarrer ;
+- avertissement sur `master.key`, le chiffrement du disque et le fait que l'application ne doit jamais être exposée au réseau.
+
+### 5.2 Tableau de bord
+
+- dossiers récents ;
+- nombre d’alertes ouvertes ;
+- pages nécessitant un OCR ;
+- pièces manquantes ;
+- rapports générés ;
+- filtres par statut, organisateur, date et priorité ;
+- recherche globale.
+
+### 5.3 Espace dossier
+
+En-tête permanent : référence, intitulé, organisateur, pages, état, score saisi et alertes ouvertes.
+
+Onglets :
+
+1. `Document` ;
+2. `Pièces` ;
+3. `Informations` ;
+4. `Contrôle administratif` ;
+5. `Évaluation scientifique` ;
+6. `Alertes et points sensibles` ;
+7. `Notes et conclusion` ;
+8. `Rapports` ;
+9. `Historique`.
+
+Dans `Document`, afficher en écran partagé :
+
+- lecteur PDF et navigation page par page ;
+- page originale ;
+- image améliorée lorsque l’OCR est lancé ;
+- texte extrait ;
+- mode d’extraction ;
+- confiance ;
+- anomalies de page ;
+- bouton OCR local ;
+- corrections manuelles conservant toujours le texte initial ;
+- recherche dans le texte avec retour direct à la page.
+
+Tous les champs, pièces et alertes comportant une page doivent offrir un lien `Voir la source` qui ouvre la page concernée.
+
+## 6. Analyse PDF et OCR
+
+Conserver le PDF original chiffré et calculer son SHA-256. Refuser les faux PDF, fichiers vides, corrompus, trop volumineux ou protégés de manière incompatible.
+
+Pour chaque page, enregistrer :
+
+- numéro ;
+- mode `NATIF`, `OCR`, `MIXTE`, `AUCUN` ;
+- texte initial ;
+- texte corrigé séparément ;
+- confiance ;
+- nombre de caractères ;
+- nombre d’images ;
+- dimensions et rotation ;
+- blanche ou non ;
+- doublon probable et page d’origine ;
+- OCR requis ;
+- date et version du moteur.
+
+Pipeline OCR :
+
+1. rendu à 300 dpi ;
+2. détection d’orientation ;
+3. rotation sans perte ;
+4. niveaux de gris ;
+5. contraste automatique ;
+6. réduction prudente du bruit ;
+7. OCR `fra+ara+eng`, limité aux langues installées ;
+8. récupération des mots et boîtes TSV ;
+9. moyenne de confiance ;
+10. surlignage des mots dont la confiance est inférieure à 65 % ;
+11. affichage obligatoire de l’incertitude sous 65 % ou si le texte utile est trop court.
+
+Ne jamais lancer automatiquement l’OCR sur toutes les pages si le texte natif est suffisant. Les noms propres, dates, montants, pays, institutions, affiliations et références réglementaires doivent porter un indicateur de contrôle renforcé.
+
+## 7. Catalogue des pièces
+
+Initialiser chaque dossier avec les pièces suivantes :
+
+1. demande officielle ;
+2. fiche technique ;
+3. procès-verbal ou délibération ;
+4. appel à communication ;
+5. programme scientifique ;
+6. comité scientifique ;
+7. comité d’organisation ;
+8. liste des intervenants ;
+9. liste des participants ;
+10. affiliations institutionnelles ;
+11. justificatifs des partenaires ;
+12. justificatifs des sponsors ;
+13. budget ;
+14. plan de financement ;
+15. modalités de publication ;
+16. modalités de valorisation ;
+17. annexes administratives ;
+18. documents d’identité, dans une section restreinte ;
+19. autorisations, visas ou avis spécifiques ;
+20. autres pièces exigées par un référentiel actif.
+
+Statuts des pièces :
+
+`ABSENTE`, `DETECTEE`, `CONFIRMEE`, `INCOMPLETE`, `ILLISIBLE`, `NON_CONFORME`, `A_VERIFIER`, `NON_APPLICABLE`.
+
+La détection d’un titre ne vaut jamais confirmation de la validité de la pièce.
+
+## 8. Informations structurées
+
+Extraire prudemment ou permettre de saisir :
+
+- intitulé ;
+- type de manifestation ;
+- thème ;
+- objectifs ;
+- dates de début et de fin ;
+- lieu ;
+- format présentiel, hybride ou à distance ;
+- établissement organisateur ;
+- structure porteuse ;
+- responsable scientifique ;
+- comité scientifique ;
+- comité d’organisation ;
+- intervenants ;
+- participants ;
+- pays représentés ;
+- institutions représentées ;
+- partenaires ;
+- sponsors ;
+- financeurs ;
+- montants et devise ;
+- budget total ;
+- modalités de publication ;
+- livrables ;
+- résultats attendus ;
+- retombées scientifiques ;
+- retombées doctorales ;
+- retombées socio-économiques ;
+- références réglementaires citées.
+
+Pour chaque information, conserver :
+
+- valeur proposée ;
+- valeur initiale ;
+- valeur corrigée ;
+- document et page ;
+- extrait source ;
+- coordonnées de zone si disponibles ;
+- mode d’extraction ;
+- confiance ;
+- date ;
+- auteur de la correction ;
+- statut.
+
+Statuts : `A_VERIFIER`, `CONFIRME`, `CORRIGE`, `REJETE`, `INCERTAIN`, `NON_APPLICABLE`.
+
+## 9. Contrôle administratif déterministe
+
+Créer une liste de contrôle éditable pour :
+
+- pièces obligatoires ;
+- signatures et tampons ;
+- visas et autorisations ;
+- cohérence des dates ;
+- cohérence des noms et variantes orthographiques ;
+- affiliations ;
+- programme versus fiche technique ;
+- programme versus thème et objectifs ;
+- budget, sous-totaux, total et devise ;
+- partenaires versus justificatifs ;
+- sponsors versus justificatifs ;
+- intervenants versus affiliations ;
+- nombre de pays annoncé versus liste réelle ;
+- format annoncé versus programme ;
+- publication, valorisation, livrables et suivi ;
+- expiration éventuelle de documents ;
+- références réglementaires identifiables.
+
+Statuts : `CONFIRME`, `NON_CONFIRME`, `INCOMPLET`, `INCOHERENT`, `ILLISIBLE`, `A_VERIFIER`, `NON_APPLICABLE`.
+
+Les comparaisons automatiques doivent être explicables. En cas de rapprochement approximatif de noms, afficher les deux graphies, la métrique utilisée et demander une confirmation.
+
+## 10. Grille scientifique
+
+Créer exactement ces critères :
+
+| Critère | Maximum |
+|---|---:|
+| Pertinence scientifique et adéquation aux priorités nationales | 30 |
+| Clarté des objectifs, résultats attendus et retombées | 20 |
+| Valeur ajoutée de la coopération internationale | 20 |
+| Faisabilité organisationnelle, gouvernance et financement | 15 |
+| Valorisation, publications, livrables et suivi | 15 |
+
+Règles :
+
+- l’utilisateur saisit chaque note ;
+- aucune proposition automatique ;
+- pas de note hors limites ;
+- justification obligatoire pour toute note ;
+- calcul automatique du total uniquement ;
+- historique de toutes les modifications ;
+- passages sources affichables à côté de chaque critère ;
+- avertissement si la justification est vide ou trop courte, sans interprétation automatique de sa qualité.
+
+## 11. Moteur d’alertes et incohérences
+
+Chaque résultat doit avoir :
+
+- identifiant ;
+- catégorie ;
+- code de règle ;
+- libellé ;
+- terme ou comparaison déclencheuse ;
+- contexte ;
+- page ;
+- coordonnées si disponibles ;
+- priorité `FAIBLE`, `MOYEN`, `ELEVE`, `CRITIQUE` ;
+- confiance ;
+- explication ;
+- vérification recommandée ;
+- source réglementaire éventuelle ;
+- statut humain ;
+- commentaire ;
+- dates de création et modification.
+
+Statuts humains : `A_VERIFIER`, `CONFIRME`, `ECARTE`, `INCERTAIN`, `NON_APPLICABLE`, `TRANSMIS`.
+
+Une motivation d’au moins huit caractères est obligatoire pour `CONFIRME`, `ECARTE` et `TRANSMIS`.
+
+## 12. Référentiel initial des points sensibles
+
+Créer un fichier versionné `rules/default_rules.json`. Chaque règle contient :
+
+`code`, `category`, `label`, `priority`, `terms`, `context_terms`, `guidance`, `source_ref`, `source_date`, `authority`, `scope`, `version`, `validated_at`, `active`.
+
+Une règle sans source officielle validée peut exister comme règle de vigilance, mais son `source_ref` doit être `À confirmer par le Professeur Merzoug Mohamed ou par la commission` et elle ne doit jamais être présentée comme une interdiction.
+
+### 12.1 Maroc — section spécifique obligatoire
+
+Catégorie : `MENTIONS_MAROC`.
+
+Termes principaux :
+
+`Maroc`, `Morocco`, `Royaume du Maroc`, `Kingdom of Morocco`, `Moroccan`, `marocain`, `marocaine`, `marocains`, `marocaines`, `المغرب`, `المملكة المغربية`.
+
+Indices secondaires à utiliser seulement avec un contexte institutionnel ou d’affiliation : domaine `.ma`, indicatif `+212`, Rabat, Casablanca, Marrakech/Marrakesh, Fès/Fez, Tanger/Tangier, Agadir, Oujda, Meknès, Tétouan.
+
+Afficher le titre exact :
+
+> Mentions relatives au Maroc — vérification institutionnelle obligatoire
+
+Afficher aussi :
+
+> Point de vigilance institutionnelle — vérifier les instructions officielles applicables à la session avant toute conclusion.
+
+Classifier manuellement ou par proposition prudente la relation :
+
+`MENTION_GEOGRAPHIQUE`, `REFERENCE_BIBLIOGRAPHIQUE`, `AFFILIATION`, `NATIONALITE_DECLAREE`, `INTERVENANT`, `PARTICIPANT`, `PARTENAIRE`, `SPONSOR`, `FINANCEUR`, `COMITE`, `ORGANISATEUR`, `COOPERATION_ENVISAGEE`, `AUTRE`.
+
+Une ville, un domaine, un indicatif ou un nom ne suffit jamais à établir une collaboration. La nationalité d’une personne ne doit jamais produire automatiquement un avis défavorable.
+
+### 12.2 Autres catégories de vigilance
+
+Créer au minimum les catégories et termes indicatifs suivants, toujours comme alertes à vérifier :
+
+1. `INTEGRITE_TERRITORIALE` : Sahara occidental, Western Sahara, RASD, SADR, République arabe sahraouie démocratique, الصحراء الغربية, frontières contestées, cartes politiques, dénominations territoriales.
+2. `RELATIONS_DIPLOMATIQUES` : Palestine, Israël, normalisation, ambassade, consulat, mission diplomatique, visa, protocole officiel.
+3. `CARTES_SYMBOLES` : carte, frontière, drapeau, emblème, hymne, logo officiel, dénomination d’une institution ou d’un territoire.
+4. `COMMUNICATION_INSTITUTIONNELLE` : position officielle, au nom du gouvernement, communiqué officiel, diffusion en direct, porte-parole, représentation officielle.
+5. `MEMOIRE_NATIONALE` : Révolution algérienne, guerre de libération, martyrs, colonialisme, colonisation française, archives mémorielles.
+6. `IDENTITE_RELIGION_LANGUE` : formulations susceptibles de stigmatiser une religion, une langue, une origine, une région ou une communauté. Distinguer impérativement étude scientifique et promotion.
+7. `DISCRIMINATION_HAINE` : incitation à la haine, supériorité raciale, discrimination, stigmatisation.
+8. `ORDRE_PUBLIC_VIOLENCE` : appel à la violence, émeute, mobilisation violente, extrémisme, contenu pouvant provoquer une panique. Distinguer analyse scientifique et incitation.
+9. `DEFENSE_SECURITE` : secret défense, base militaire, capacité militaire, renseignement, système d’armes, informations opérationnelles.
+10. `INFRASTRUCTURES_CRITIQUES` : énergie, eau, télécommunications, transport, plans, coordonnées, vulnérabilités ou cartographies sensibles.
+11. `CYBER_DUAL_USE` : malware, ransomware, zero-day, exploit, intrusion offensive, contournement d’authentification, phishing, outils à double usage.
+12. `IA_DESINFORMATION` : deepfake, médias synthétiques, désinformation, propagande automatisée, manipulation de l’opinion.
+13. `BIOSECURITE_DUAL_USE` : gain de fonction, pathogène virulent, toxine biologique, synthèse de pathogène, protocoles à potentiel de mésusage.
+14. `SANTE_PUBLIQUE` : essai clinique, données de patients, allégation de guérison, épidémie, communication pouvant provoquer panique ou fausse assurance.
+15. `DONNEES_GENETIQUES_BIOMETRIQUES` : génome humain, génomique des populations, base biométrique, réidentification, données génétiques.
+16. `RESSOURCES_BIOLOGIQUES` : ressources génétiques, export d’échantillons, connaissances traditionnelles, accord de transfert de matériel, partage des avantages.
+17. `PATRIMOINE_ARCHIVES` : fouilles archéologiques, manuscrits, archives nationales, patrimoine culturel, reproduction, numérisation ou déplacement.
+18. `FINANCEMENT_INFLUENCE` : financement étranger, sponsor étranger, donateur anonyme, contrepartie éditoriale, conflits d’intérêts.
+19. `SOUVERAINETE_DONNEES` : transfert international, cloud étranger, transfert de technologie, données sensibles, échantillons ou logiciels stratégiques.
+20. `REPUTATION_SCIENTIFIQUE` : revue prédatrice, éditeur prédateur, publication garantie, affiliation non vérifiable, identité douteuse, conflit d’intérêts.
+21. `ETHIQUE_RECHERCHE` : sujets humains, consentement, comité d’éthique, mineurs, populations vulnérables, prélèvements et données personnelles.
+
+Les termes doivent être multilingues lorsque pertinent : français, anglais et arabe. Les règles doivent produire un extrait de contexte et non une simple liste de mots.
+
+## 13. Référentiel réglementaire personnel
+
+Créer un module permettant d’importer les textes, notes, guides, instructions, décisions, listes de pièces et modèles d’avis.
+
+Métadonnées :
+
+- titre ;
+- référence ;
+- date ;
+- version ;
+- autorité émettrice ;
+- date d’entrée en vigueur ;
+- date de fin éventuelle ;
+- champ d’application ;
+- statut `BROUILLON`, `A_VERIFIER`, `VALIDE`, `ABROGE`, `SUSPENDU` ;
+- empreinte du fichier ;
+- fichier source chiffré ;
+- validateur et date de validation.
+
+Seules les règles `VALIDE` et `active=true` peuvent être appliquées. En cas de chevauchement ou contradiction, afficher :
+
+> Contradiction réglementaire détectée — interprétation humaine obligatoire.
+
+Ne jamais inventer une règle à partir du titre d’un document. Conserver le passage exact et la page du texte officiel lorsqu’une disposition est liée à une règle.
+
+## 14. Conclusions possibles
+
+Proposer une liste fermée, choisie uniquement par l’évaluateur :
+
+- `AVIS_FAVORABLE` ;
+- `AVIS_FAVORABLE_SOUS_RESERVES` ;
+- `AJOURNEMENT_COMPLEMENT_INFORMATION` ;
+- `NON_ELIGIBILITE_QUALIFICATION_INTERNATIONALE` ;
+- `POSSIBILITE_REQUALIFICATION` ;
+- `TRANSMISSION_COMMISSION_AVEC_VIGILANCE` ;
+- `TRANSMISSION_TUTELLE_ALERTE_MOTIVEE` ;
+- `NON_DETERMINABLE_INFORMATION_INSUFFISANTE`.
+
+La motivation est obligatoire. Afficher clairement : « Proposition personnelle de l’évaluateur — ne vaut pas décision de la commission ».
+
+## 15. Rapport personnel
+
+Générer un DOCX et un PDF comprenant :
+
+1. identification du dossier ;
+2. synthèse factuelle ;
+3. inventaire des pièces ;
+4. pages illisibles ou incertaines ;
+5. informations manquantes ;
+6. incohérences ;
+7. contrôle administratif ;
+8. éligibilité internationale à apprécier ;
+9. grille scientifique saisie ;
+10. conformité réglementaire à vérifier ;
+11. risques institutionnels ;
+12. mentions relatives au Maroc ;
+13. autres points sensibles ;
+14. questions à la commission ;
+15. réserves ;
+16. conclusion personnelle motivée ;
+17. références aux pages ;
+18. identité de l’évaluateur, date, version et empreinte du rapport.
+
+Distinguer visuellement : `FAIT_EXTRAIT`, `CALCUL`, `ALERTE_SYSTEME`, `COMMENTAIRE_EVALUATEUR`, `CONCLUSION_EVALUATEUR`, `A_VERIFIER`.
+
+Chaque fait doit être relié à une page ou être explicitement indiqué comme saisie manuelle validée. Le document doit porter en première page : « Projet de rapport — validation humaine obligatoire ».
+
+## 16. Modèle de données minimal
+
+Créer des migrations pour les entités suivantes :
+
+- ne créer aucune table `users`, `sessions`, `credentials` ou équivalente ;
+- `dossiers` : id UUID, reference unique, title, organizer, status, page_count, original_name, storage_path, sha256, size, created_at, updated_at ;
+- `documents` : id, dossier_id, type, encrypted_path, sha256, version, sensitivity, created_at ;
+- `pages` : id, document_id, page_no, mode, original_text_cipher, corrected_text_cipher, confidence, char_count, image_count, rotation, needs_ocr, is_blank, duplicate_of, created_at ;
+- `ocr_runs` : id, page_id, engine, version, languages, parameters_json, confidence, result_cipher, boxes_cipher, created_at ;
+- `extracted_items` : id, dossier_id, key, label, initial_value_cipher, current_value_cipher, page_id, source_cipher, bbox_json, extraction_mode, confidence, status, updated_by, updated_at ;
+- `corrections` : id, entity_type, entity_id, previous_hash, new_hash, reason, evaluator_label, created_at ;
+- `piece_definitions` et `piece_checks` ;
+- `persons`, `institutions`, `affiliations`, `participations` ;
+- `administrative_checks` ;
+- `evaluation_criteria` et `evaluation_entries` ;
+- `findings` ;
+- `rules` et `rule_versions` ;
+- `regulations` et `regulation_passages` ;
+- `notes` ;
+- `reports` ;
+- `audit_events` ;
+- `backups`.
+
+Chiffrer les documents, textes, extraits, commentaires, corrections, notes et justifications. Les métadonnées minimales nécessaires à la recherche locale peuvent rester en clair, mais documenter cette limite.
+
+## 17. API locale
+
+Créer des routes versionnées `/api/v1` :
+
+- santé et démarrage : health, readiness et diagnostic local ;
+- dossiers : créer, lister, filtrer, consulter, archiver ;
+- documents : importer, télécharger l’original, afficher une page ;
+- pages : texte, OCR, correction, recherche ;
+- pièces : lister et mettre à jour ;
+- informations : confirmer, corriger, rejeter, ajouter ;
+- contrôle administratif ;
+- évaluation ;
+- alertes ;
+- notes et conclusion ;
+- rapports ;
+- référentiels et règles ;
+- audit ;
+- sauvegardes et vérification de restauration.
+
+Valider toutes les entrées avec Pydantic. Utiliser des réponses d’erreur claires, sans exposer de trace technique ou de secret dans l’interface.
+
+## 18. Sécurité obligatoire
+
+- écoute uniquement sur `127.0.0.1` ;
+- refus d’une adresse distante sans option explicite et avertissement ;
+- aucune ressource Internet ;
+- aucun compte, aucun écran de connexion, aucun mot de passe applicatif et aucune session d'authentification ;
+- aucune route `/setup`, `/login` ou `/logout` ;
+- origine locale stricte, en-têtes `Host` validés et méthodes mutantes refusées depuis une origine non locale ;
+- CSP restrictive ;
+- validation MIME, en-tête et structure PDF ;
+- limite de taille configurable ;
+- protection contre traversée de chemin et noms dangereux ;
+- AES-256-GCM avec AAD liée aux identifiants ;
+- fichiers temporaires dans un dossier dédié, supprimé après usage ;
+- journal d’audit ne contenant pas les valeurs sensibles en clair ;
+- sauvegarde cohérente de la base, des documents, rapports et clé ;
+- avertissement : ne jamais perdre `master.key` ;
+- recommandation BitLocker ;
+- séparation des documents d’identité avec niveau `RESTREINT`.
+
+Point technique impératif : toute écriture SQLite doit être explicitement validée par `commit()` avant d'afficher un succès ou d'envoyer une redirection. En cas d'échec, exécuter `rollback()` et conserver l'état précédent.
+
+Le lanceur Windows doit d’abord ouvrir le port, puis seulement ouvrir le navigateur. Il ne doit pas créer plusieurs onglets ni lancer silencieusement deux serveurs.
+
+## 19. Journal d’audit
+
+Journaliser :
+
+- démarrage et arrêt de l'application ;
+- résultat des contrôles de santé locaux ;
+- import ;
+- empreinte et analyse ;
+- consultation d’un original ;
+- OCR et confiance ;
+- corrections ;
+- confirmations et rejets ;
+- modifications des pièces ;
+- notes et justifications ;
+- qualification d’alertes ;
+- conclusion ;
+- génération et téléchargement de rapports ;
+- sauvegarde/restauration ;
+- import, activation et désactivation des règles ;
+- archivage ou suppression contrôlée.
+
+Une correction ne doit jamais effacer la valeur initiale. Utiliser des empreintes pour tracer les valeurs sensibles sans les exposer dans l’audit.
+
+## 20. Sauvegarde et restauration
+
+Créer depuis l’interface une sauvegarde horodatée comprenant :
+
+- copie cohérente SQLite via l’API backup ;
+- documents chiffrés ;
+- rapports chiffrés ;
+- `master.key` ;
+- référentiel actif ;
+- manifeste avec SHA-256.
+
+Afficher que cette sauvegarde contient la clé et doit être stockée sur un support chiffré. Fournir une commande de vérification et une procédure de restauration sur copie. Ne jamais écraser automatiquement des données existantes pendant une restauration.
+
+## 21. Tests obligatoires
+
+Créer des fixtures fictives et tester :
+
+- PDF natif ;
+- PDF scanné ;
+- PDF mixte ;
+- page blanche ;
+- page inclinée ;
+- image sombre ;
+- faible résolution ;
+- tableau ;
+- signature et tampon ;
+- français, arabe et anglais ;
+- noms propres, dates et montants ;
+- dates contradictoires ;
+- budget incohérent ;
+- pages ou pièces manquantes ;
+- doublons ;
+- mention explicite du Maroc ;
+- institution marocaine indirecte ;
+- simple bibliographie concernant le Maroc ;
+- faux positif ;
+- page illisible pouvant contenir un terme sensible ;
+- absence de mention marocaine ;
+- Sahara occidental et cartographie ;
+- conflit entre règles ;
+- règle inactive ;
+- texte officiel sans page identifiable ;
+- PDF invalide, vide, énorme ou chiffré ;
+- chiffrement et mauvaise clé ;
+- démarrage direct sur le tableau de bord sans `/setup` ni `/login` ;
+- rafraîchissement et redémarrage sans boucle de redirection ;
+- port occupé, second lancement et serveur non prêt ;
+- requête mutante provenant d'une origine ou d'un `Host` non local ;
+- traversée de chemin ;
+- rapport DOCX/PDF valide ;
+- sauvegarde puis restauration sur copie.
+
+Pour chaque test métier, préciser entrée, résultat attendu, résultat interdit, confiance, contrôle humain et preuve conservée.
+
+## 22. Critères d’acceptation
+
+La livraison n’est acceptable que si :
+
+1. l’installation Windows est documentée et reproductible ;
+2. le serveur écoute seulement en local ;
+3. aucun écran, route, table ou mécanisme de connexion ne subsiste ;
+4. le tableau de bord s'ouvre directement, sans boucle de redirection ;
+5. le PDF original reste inchangé et chiffré ;
+6. chaque information possède une source ou le statut `A_VERIFIER` ;
+7. l’OCR affiche sa confiance ;
+8. une alerte ne peut produire ni note ni décision ;
+9. la section Maroc est visible, contextualisée et non discriminatoire ;
+10. une règle non validée ne peut être présentée comme interdiction ;
+11. les corrections sont historisées ;
+12. le rapport distingue faits, alertes et appréciation humaine ;
+13. la sauvegarde contient un manifeste vérifiable ;
+14. tous les tests automatisés passent ;
+15. l’interface est moderne, responsive, accessible et entièrement utilisable sans Internet ;
+16. aucun `TODO`, secret codé en dur, mot de passe par défaut ou fonction fictive ne subsiste dans la livraison.
+
+## 23. Arborescence attendue
+
+Créer au minimum :
+
+```text
+commission-msi/
+  backend/
+    app/
+      api/
+      core/
+      models/
+      schemas/
+      services/
+      rules/
+      reports/
+      main.py
+    migrations/
+    tests/
+    requirements.txt ou pyproject.toml
+  frontend/
+    src/
+      components/
+      pages/
+      features/
+      services/
+      styles/
+      i18n/
+    tests/
+    package.json
+  rules/default_rules.json
+  references_officielles/
+  scripts/
+  docs/
+    ARCHITECTURE.md
+    MODELE_DONNEES.md
+    GUIDE_INSTALLATION.md
+    GUIDE_UTILISATEUR.md
+    SECURITE.md
+    SAUVEGARDE_RESTAURATION.md
+    MISE_A_JOUR.md
+    INCIDENTS.md
+    PLAN_TESTS.md
+    LIMITES.md
+    DECISIONS_TECHNIQUES.md
+  data/.gitkeep
+  install_windows.bat
+  run_windows.bat
+  run_tests.bat
+  .env.example
+  README.md
+  CHANGELOG.md
+  VERSION
+```
+
+## 24. Méthode de travail imposée à Claude Code
+
+Procède dans cet ordre et ne t’arrête pas après le plan :
+
+1. inspecter le dossier et les références fournies ;
+2. rédiger `docs/ANALYSE_FONCTIONNELLE.md` et `docs/ARCHITECTURE.md` ;
+3. créer l’arborescence ;
+4. définir les migrations et modèles ;
+5. développer le backend ;
+6. développer l’interface ;
+7. intégrer PDF.js, PyMuPDF et OCR ;
+8. intégrer règles, contrôles et traçabilité ;
+9. intégrer rapports, audit et sauvegarde ;
+10. créer les scripts Windows ;
+11. créer les tests ;
+12. installer les dépendances ;
+13. exécuter formatage, vérification des types et tests ;
+14. corriger jusqu’à réussite ;
+15. exécuter un scénario de bout en bout ;
+16. créer une archive ZIP finale sans données réelles, sans `.venv`, sans secrets et sans cache ;
+17. afficher un bilan concis : fonctions réalisées, tests réussis, limites résiduelles et chemin de l’archive.
+
+Utilise des données de démonstration entièrement fictives. Ne supprime aucun fichier utilisateur préexistant. Ne réinitialise jamais une base contenant des données. Toute migration doit préserver les dossiers existants.
+
+## 25. Limites à afficher dans l’application
+
+- aucune garantie d’exhaustivité ou de zéro erreur ;
+- OCR particulièrement fragile pour noms, dates, montants et arabe ;
+- absence d’alerte ne prouve pas absence de risque ;
+- détection textuelle insuffisante pour drapeaux, cartes, logos, tampons et signatures ;
+- règles officielles susceptibles d’évoluer ;
+- qualification juridique et diplomatique réservée aux autorités compétentes ;
+- appréciation scientifique réservée à l’évaluateur ;
+- prototype local non équivalent à une plateforme institutionnelle homologuée ;
+- chiffrement applicatif ne remplaçant pas le chiffrement complet du disque.
+
+Commence maintenant. Crée l’application complète dans le dossier courant, exécute les tests et ne te limite pas à me donner des instructions.
+
+---
+
+## Conseils après génération
+
+Avant d’utiliser l’application produite par Claude Code avec des dossiers réels :
+
+1. comparer le référentiel avec les textes officiels en vigueur ;
+2. désactiver toute règle non validée ;
+3. faire tester l’application par un informaticien de confiance ;
+4. effectuer une recette sur des PDF fictifs ;
+5. activer BitLocker ;
+6. tester sauvegarde et restauration ;
+7. vérifier que le serveur écoute exclusivement sur `127.0.0.1` ;
+8. conserver les vrais dossiers hors de tout service cloud non autorisé.

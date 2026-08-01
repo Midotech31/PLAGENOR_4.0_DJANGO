@@ -1,0 +1,40 @@
+# Données locales : jamais versionnées (contiennent master.key et les dossiers)
+data/*
+!data/.gitkeep
+
+# Originaux officiels : déposés localement par l'évaluateur
+references_officielles/originaux/*
+!references_officielles/originaux/README.md
+
+# Environnements et dépendances
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Build
+frontend/dist/
+build/
+dist/
+
+# Secrets et configuration locale
+.env
+*.key
+master.key
+
+# Caches d'outils
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vitest/
+coverage/
+htmlcov/
+.coverage
+
+# Systèmes
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

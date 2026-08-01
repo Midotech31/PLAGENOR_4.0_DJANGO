@@ -1,0 +1,279 @@
+{
+  "schema_version": "1.0",
+  "generated_on": "2026-07-31",
+  "warning": "Cette base est un index de traçabilité, pas une interprétation juridique. L'original cité prévaut. Toute traduction marquée TRADUCTION_A_VALIDER doit être validée par une personne habilitée avant activation.",
+  "activation_policy": {
+    "CORRESPONDANCE_OFFICIELLE": "Activable uniquement après validation du champ d'application, de la traduction et de l'absence de texte ultérieur contraire.",
+    "CANEVAS_A_CONFIRMER": "Utilisable comme liste de contrôle, sans conclure à une obligation juridique tant que l'autorité et la version ne sont pas confirmées.",
+    "PROPOSITION_A_CONFIRMER": "Inactive par défaut.",
+    "PROJET_NON_OPPOSABLE": "Bonne pratique configurable, inactive comme norme."
+  },
+  "requirements": [
+    {
+      "id": "EXG-001",
+      "label": "Champ international",
+      "statement": "Le circuit décrit porte sur les demandes d'organisation de manifestations scientifiques à caractère international.",
+      "source_id": "SRC-218-2026",
+      "pages": [2],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Demander et conserver la qualification du champ ; ne pas l'inférer automatiquement du titre."
+    },
+    {
+      "id": "EXG-002",
+      "label": "Circuit à trois niveaux",
+      "statement": "Le dossier suit un examen au niveau de l'établissement, de la conférence régionale puis de la tutelle.",
+      "source_id": "SRC-218-2026",
+      "pages": [3, 4, 5],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Workflow versionné ; chaque transition exige acteur, date, preuve et statut de validation."
+    },
+    {
+      "id": "EXG-003",
+      "label": "Validation interne préalable",
+      "statement": "L'établissement vérifie et valide le dossier par ses structures scientifiques compétentes avant transmission régionale.",
+      "source_id": "SRC-218-2026",
+      "pages": [3, 4],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Pièce de preuve obligatoire pour franchir la porte G2 ; absence signifie A_COMPLETER, jamais rejet automatique."
+    },
+    {
+      "id": "EXG-004",
+      "label": "Composition de la commission régionale",
+      "statement": "La source décrit une commission régionale et sa composition institutionnelle.",
+      "source_id": "SRC-218-2026",
+      "pages": [4],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Conserver la composition comme paramètre versionné ; ne pas inventer quorum, majorité ou délégation."
+    },
+    {
+      "id": "EXG-005",
+      "label": "Mission régionale et transmission",
+      "statement": "Le niveau régional examine les dossiers et transmet les dossiers retenus à la tutelle pour décision finale.",
+      "source_id": "SRC-218-2026",
+      "pages": [5],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "L'application prépare un avis régional ; elle ne se présente jamais comme l'autorité finale."
+    },
+    {
+      "id": "EXG-006",
+      "label": "Délai de dépôt régional",
+      "statement": "Le dossier est déposé au moins dix jours avant la session régionale concernée.",
+      "source_id": "SRC-218-2026",
+      "pages": [5],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Calculer le délai sans décider ; afficher la règle, les deux dates, le calcul et une option de dérogation documentée."
+    },
+    {
+      "id": "EXG-007",
+      "label": "Sessions régionales",
+      "statement": "La source énumère des sessions en janvier, avril, juillet et octobre.",
+      "source_id": "SRC-218-2026",
+      "pages": [5],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "conflict_id": "CTR-SESSION-001",
+      "implementation": "Calendrier configurable et désactivable ; signaler la contradiction avec SRC-GUIDE-CRU."
+    },
+    {
+      "id": "EXG-008",
+      "label": "Rapport de clôture",
+      "statement": "Un rapport de clôture est transmis dans un délai d'un mois après la manifestation.",
+      "source_id": "SRC-218-2026",
+      "pages": [6],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Créer une échéance explicable ; aucun envoi automatique."
+    },
+    {
+      "id": "EXG-009",
+      "label": "Dépôt et résumé trilingue",
+      "statement": "La clôture comprend le dépôt des livrables dans l'espace institutionnel DSpace et des éléments de résumé en arabe, anglais et français.",
+      "source_id": "SRC-218-2026",
+      "pages": [6],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Contrôles séparés pour dépôt, titre, résumé et mots-clés ; preuve de dépôt conservée."
+    },
+    {
+      "id": "EXG-010",
+      "label": "Liste des quatorze pièces",
+      "statement": "Le canevas fourni énumère quatorze pièces ou engagements documentaires à contrôler.",
+      "source_id": "SRC-DOSSIER-PIECES",
+      "pages": [1],
+      "source_status": "CANEVAS_A_CONFIRMER",
+      "language": "fr",
+      "translation_status": "NON_APPLICABLE",
+      "implementation": "Utiliser donnees/catalogue_pieces.json ; chaque état doit être confirmé manuellement."
+    },
+    {
+      "id": "EXG-011",
+      "label": "Pertinence et priorités",
+      "statement": "Le thème doit être spécialisé, d'intérêt international et relié aux priorités nationales et aux activités de recherche.",
+      "source_id": "SRC-595-2025",
+      "pages": [2],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Présenter un formulaire d'argumentation et de preuves ; aucune classification sémantique ne décide de la conformité."
+    },
+    {
+      "id": "EXG-012",
+      "label": "Dimension internationale du comité",
+      "statement": "La note décrit des exigences relatives à la composition internationale et au niveau scientifique du comité.",
+      "source_id": "SRC-595-2025",
+      "pages": [2],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Paramétrer tout pourcentage ou seuil dans une règle versionnée ; montrer numérateur, dénominateur et cas exclus."
+    },
+    {
+      "id": "EXG-013",
+      "label": "Participation et conférenciers étrangers",
+      "statement": "La participation scientifique étrangère et les conférenciers invités font partie des éléments d'éligibilité internationale examinés.",
+      "source_id": "SRC-595-2025",
+      "pages": [2],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Distinguer invitation, confirmation et participation effective ; la nationalité seule ne produit aucune appréciation."
+    },
+    {
+      "id": "EXG-014",
+      "label": "Partenariat et valorisation",
+      "statement": "La coopération avec le secteur socio-économique ou des sociétés savantes, la visibilité et les perspectives de publication ou de valorisation sont examinées.",
+      "source_id": "SRC-595-2025",
+      "pages": [2],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Séparer présence déclarée, preuve fournie et appréciation humaine."
+    },
+    {
+      "id": "EXG-015",
+      "label": "Calendrier de proposition et d'examen",
+      "statement": "La note encadre la programmation, le dépôt et l'examen des propositions.",
+      "source_id": "SRC-595-2025",
+      "pages": [3],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Ne coder aucune date précise sans transcription humaine validée de la page originale."
+    },
+    {
+      "id": "EXG-016",
+      "label": "Financement sans ingérence",
+      "statement": "Le financement doit être documenté et ne pas permettre une ingérence dans le contenu ou l'organisation scientifique.",
+      "source_id": "SRC-595-2025",
+      "pages": [3],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Collecter bailleur, montant, conditions, contreparties et pièces ; l'évaluateur qualifie le risque."
+    },
+    {
+      "id": "EXG-017",
+      "label": "Modalité présentielle ou distante",
+      "statement": "La note privilégie le présentiel tout en prévoyant certaines interventions à distance.",
+      "source_id": "SRC-595-2025",
+      "pages": [4],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "conflict_id": "CTR-FORMAT-001",
+      "implementation": "Ne pas appliquer automatiquement le seuil de 50 % proposé par le guide tant que le conflit n'est pas arbitré."
+    },
+    {
+      "id": "EXG-018",
+      "label": "Suivi, publication et bilan",
+      "statement": "La tenue de la manifestation est suivie de publications, de livrables et d'un bilan documenté.",
+      "source_id": "SRC-595-2025",
+      "pages": [4],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Créer une phase post-manifestation sans confondre engagement prévisionnel et réalisation."
+    },
+    {
+      "id": "EXG-019",
+      "label": "Accompagnement des formalités de visa",
+      "statement": "La source mentionne l'accompagnement des formalités liées aux participants étrangers.",
+      "source_id": "SRC-595-2025",
+      "pages": [4],
+      "source_status": "CORRESPONDANCE_OFFICIELLE",
+      "language": "ar",
+      "translation_status": "TRADUCTION_A_VALIDER",
+      "implementation": "Suivi administratif uniquement ; accès restreint aux données de passeport et aucune décision consulaire simulée."
+    },
+    {
+      "id": "EXG-020",
+      "label": "Options de fréquence des sessions",
+      "statement": "Le guide présente deux variantes de fréquence, deux ou quatre sessions annuelles.",
+      "source_id": "SRC-GUIDE-CRU",
+      "pages": [3, 4],
+      "source_status": "PROPOSITION_A_CONFIRMER",
+      "language": "fr",
+      "translation_status": "NON_APPLICABLE",
+      "conflict_id": "CTR-SESSION-001",
+      "implementation": "Inactive comme norme ; sert uniquement à afficher la contradiction."
+    },
+    {
+      "id": "EXG-021",
+      "label": "Option hybride à cinquante pour cent",
+      "statement": "Le guide propose un mode présentiel ou hybride avec une présence physique minimale de cinquante pour cent.",
+      "source_id": "SRC-GUIDE-CRU",
+      "pages": [5],
+      "source_status": "PROPOSITION_A_CONFIRMER",
+      "language": "fr",
+      "translation_status": "NON_APPLICABLE",
+      "conflict_id": "CTR-FORMAT-001",
+      "implementation": "Inactive par défaut ; ne devient règle qu'après preuve d'adoption et arbitrage."
+    },
+    {
+      "id": "EXG-022",
+      "label": "Méthode de double expertise",
+      "statement": "Le manuel propose une double expertise, des formulaires, un audit et une gestion des conflits d'intérêts.",
+      "source_id": "SRC-MANUEL-0.9",
+      "pages": [1, 2, 9, 10],
+      "source_status": "PROJET_NON_OPPOSABLE",
+      "language": "fr",
+      "translation_status": "NON_APPLICABLE",
+      "implementation": "Bonne pratique configurable ; ne jamais la présenter comme obligation réglementaire."
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "CTR-SESSION-001",
+      "subject": "Nombre et fréquence des sessions",
+      "sources": ["SRC-218-2026", "SRC-GUIDE-CRU"],
+      "required_output": "CONTRADICTION_A_ARBITRER"
+    },
+    {
+      "id": "CTR-FORMAT-001",
+      "subject": "Présentiel, hybride et seuil de présence",
+      "sources": ["SRC-595-2025", "SRC-GUIDE-CRU"],
+      "required_output": "CONTRADICTION_A_ARBITRER"
+    },
+    {
+      "id": "CTR-LANGUE-001",
+      "subject": "Langues des communications, publications et résumés",
+      "sources": ["SRC-595-2025", "SRC-218-2026"],
+      "required_output": "DISTINGUER_LES_CHAMPS_ET_VALIDER"
+    }
+  ]
+}
