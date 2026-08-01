@@ -21,6 +21,8 @@ from app.models import Document, Dossier, ExtractedItem, Page, PieceCheck, Repor
 from app.schemas.api import (
     AdministrativeCheckUpdate,
     ConclusionCreate,
+    CriterionQualification,
+    DecisionRetained,
     DossierCreate,
     DossierScopeUpdate,
     DossierStatusUpdate,
@@ -32,10 +34,13 @@ from app.schemas.api import (
     ReportRequest,
     ReportValidation,
     ScoreUpdate,
+    SubScoreOverride,
 )
 from app.services import (
     analysis_service,
+    assessment_service,
     dossier_service,
+    evidence_service,
     evaluation_service,
     pdf_service,
     report_service,
@@ -481,6 +486,91 @@ def set_score(dossier_id: str, payload: ScoreUpdate, session: Session = Depends(
         source_pages=payload.source_pages,
     )
     return evaluation_service.evaluation_state(session, dossier_id)
+
+
+# --------------------------------------------------------------------------
+# Évaluation automatique : 26 critères, score sur 100, avis proposé
+# --------------------------------------------------------------------------
+
+
+@router.get("/{dossier_id}/evaluation-automatique")
+def get_assessment(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Relit les constats, le score et l'avis enregistrés, sans rien recalculer."""
+    dossier_service.get_dossier(session, dossier_id)
+    return assessment_service.current_assessment(session, dossier_id)
+
+
+@router.post("/{dossier_id}/evaluation-automatique")
+def run_assessment(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Relance les trois moteurs déterministes sur l'état courant du dossier.
+
+    Le score et l'avis produits sont des **propositions motivées** : aide à la
+    décision, sans valeur de décision officielle.
+    """
+    dossier_service.get_dossier(session, dossier_id)
+    return assessment_service.assess(session, dossier_id)
+
+
+@router.post("/{dossier_id}/evaluation-automatique/criteres/{code}")
+def qualify_criterion(
+    dossier_id: str,
+    code: str,
+    payload: CriterionQualification,
+    session: Session = Depends(get_db),
+) -> dict:
+    """Qualification humaine d'un critère : elle prime toujours sur la proposition."""
+    dossier_service.get_dossier(session, dossier_id)
+    assessment_service.qualify_criterion(
+        session,
+        dossier_id,
+        code=code,
+        status=payload.status,
+        comment=payload.comment,
+    )
+    return assessment_service.current_assessment(session, dossier_id)
+
+
+@router.post("/{dossier_id}/evaluation-automatique/sous-notes/{key}")
+def override_subscore(
+    dossier_id: str,
+    key: str,
+    payload: SubScoreOverride,
+    session: Session = Depends(get_db),
+) -> dict:
+    """Correction d'une sous-note par l'évaluateur ; la proposition reste tracée."""
+    dossier_service.get_dossier(session, dossier_id)
+    assessment_service.override_subscore(
+        session,
+        dossier_id,
+        key=key,
+        score=payload.score,
+        justification=payload.justification,
+    )
+    return assessment_service.current_assessment(session, dossier_id)
+
+
+@router.post("/{dossier_id}/evaluation-automatique/avis")
+def retain_decision(
+    dossier_id: str,
+    payload: DecisionRetained,
+    session: Session = Depends(get_db),
+) -> dict:
+    """Avis retenu par l'évaluateur : l'application ne le remplace jamais."""
+    dossier_service.get_dossier(session, dossier_id)
+    assessment_service.retain_decision(
+        session,
+        dossier_id,
+        avis=payload.avis,
+        motivation=payload.motivation,
+    )
+    return assessment_service.current_assessment(session, dossier_id)
+
+
+@router.get("/{dossier_id}/preuves")
+def list_evidence(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Registre de preuves consultable : « Voir les preuves »."""
+    dossier_service.get_dossier(session, dossier_id)
+    return {"items": evidence_service.listing(session, dossier_id)}
 
 
 # --------------------------------------------------------------------------

@@ -21,6 +21,75 @@ class DossierStatus(StrEnum):
     ARCHIVE = "ARCHIVE"
 
 
+class JobState(StrEnum):
+    """États du travail d'analyse durable (§6 du prompt maître V4)."""
+
+    QUEUED = "QUEUED"
+    VALIDATING = "VALIDATING"
+    EXTRACTING = "EXTRACTING"
+    OCR = "OCR"
+    STRUCTURING = "STRUCTURING"
+    REGULATORY_CHECK = "REGULATORY_CHECK"
+    SCIENTIFIC_SCORING = "SCIENTIFIC_SCORING"
+    WEB_RESEARCH = "WEB_RESEARCH"
+    INDEPENDENT_AUDIT = "INDEPENDENT_AUDIT"
+    REPORT_BUILDING = "REPORT_BUILDING"
+    REPORT_QA = "REPORT_QA"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+#: États terminaux : le worker ne les reprend jamais.
+TERMINAL_JOB_STATES = frozenset({JobState.COMPLETED, JobState.FAILED, JobState.CANCELLED})
+
+#: Libellés affichés à l'évaluateur pendant le traitement.
+JOB_STATE_LABELS: dict[str, str] = {
+    JobState.QUEUED: "En file d'attente",
+    JobState.VALIDATING: "Validation du document source",
+    JobState.EXTRACTING: "Extraction du texte page par page",
+    JobState.OCR: "Reconnaissance optique des pages scannées",
+    JobState.STRUCTURING: "Structuration des informations et registre de preuves",
+    JobState.REGULATORY_CHECK: "Application des 26 critères réglementaires",
+    JobState.SCIENTIFIC_SCORING: "Calcul du score scientifique sur 100",
+    JobState.WEB_RESEARCH: "Vérification publique des intervenants étrangers",
+    JobState.INDEPENDENT_AUDIT: "Relecture indépendante et règle de consensus",
+    JobState.REPORT_BUILDING: "Rédaction du rapport",
+    JobState.REPORT_QA: "Contrôle qualité du rapport",
+    JobState.COMPLETED: "Terminé",
+    JobState.FAILED: "Interrompu",
+    JobState.CANCELLED: "Annulé",
+}
+
+
+class CriterionStatus(StrEnum):
+    """Statut réglementaire d'un critère — jamais vide, jamais inventé."""
+
+    C = "C"
+    PC = "PC"
+    NC = "NC"
+    NV = "NV"
+
+
+CRITERION_STATUS_LABELS: dict[str, str] = {
+    CriterionStatus.C: "Conforme",
+    CriterionStatus.PC: "Partiellement conforme",
+    CriterionStatus.NC: "Non conforme",
+    CriterionStatus.NV: "Non vérifiable",
+}
+
+
+class EvidenceKind(StrEnum):
+    """Origine d'une preuve du registre."""
+
+    DOCUMENT = "DOCUMENT"
+    PAGE = "PAGE"
+    PIECE = "PIECE"
+    CALCUL = "CALCUL"
+    SOURCE_WEB = "SOURCE_WEB"
+    SAISIE_HUMAINE = "SAISIE_HUMAINE"
+
+
 class InformationStatus(StrEnum):
     A_VERIFIER = "A_VERIFIER"
     CONFIRME = "CONFIRME"

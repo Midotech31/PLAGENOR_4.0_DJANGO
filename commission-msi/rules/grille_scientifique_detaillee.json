@@ -1,0 +1,268 @@
+{
+  "schema_version": "2.0",
+  "grid_version": "2026.08.1",
+  "total": 100,
+  "designed_for": "Commission régionale — évaluation des manifestations scientifiques internationales",
+  "notice": "Score scientifique proposé automatiquement à partir des seuls éléments documentés dans le dossier. Il ne remplace jamais le contrôle réglementaire et ne vaut pas décision.",
+  "rules": [
+    "Chaque sous-critère est noté à partir de preuves rattachées (evidence_ids).",
+    "Une information absente vaut zéro au sous-critère concerné, avec la mention « non documenté ».",
+    "Zéro pour absence de documentation ne préjuge jamais d'une incapacité réelle de l'organisateur.",
+    "Les additions et plafonds sont recalculés localement à chaque affichage.",
+    "L'évaluateur peut corriger toute sous-note ; la proposition automatique est alors conservée en historique.",
+    "Un score élevé ne neutralise jamais une non-conformité réglementaire."
+  ],
+  "families": [
+    {
+      "key": "pertinence_priorites",
+      "label": "Pertinence et priorités",
+      "max": 30,
+      "subcriteria": [
+        {
+          "key": "specialisation_coherence_porteur",
+          "label": "Spécialisation et cohérence avec le porteur",
+          "max": 8,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["laboratoire", "unite de recherche", "equipe de recherche", "structure porteuse", "faculte", "departement", "domaine de specialite", "axes de recherche"],
+            "supporting_fields": ["structure_porteuse", "etablissement_organisateur", "theme"]
+          }
+        },
+        {
+          "key": "priorite_nationale_demontree",
+          "label": "Lien avec une priorité nationale explicitement démontrée",
+          "max": 8,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["priorite nationale", "priorites nationales", "strategie nationale", "plan national", "securite alimentaire", "transition energetique", "developpement durable", "economie de la connaissance", "souverainete", "programme national de recherche"],
+            "supporting_fields": ["theme", "objectifs"]
+          }
+        },
+        {
+          "key": "clarte_problematique",
+          "label": "Clarté de la problématique scientifique",
+          "max": 6,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["problematique", "questionnement scientifique", "verrou scientifique", "etat de l art", "hypothese", "enjeu scientifique"],
+            "supporting_fields": ["objectifs", "theme"]
+          }
+        },
+        {
+          "key": "coherence_theme_axes",
+          "label": "Cohérence du thème et des axes",
+          "max": 4,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["axe 1", "axes thematiques", "axes de la manifestation", "thematiques abordees", "sessions thematiques"],
+            "supporting_fields": ["theme"]
+          }
+        },
+        {
+          "key": "retombees_scientifiques",
+          "label": "Retombées scientifiques étayées",
+          "max": 4,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["retombees", "impact scientifique", "perspectives de recherche", "reseau de recherche", "projet commun", "transfert de connaissances"],
+            "supporting_fields": ["objectifs"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "objectifs_resultats",
+      "label": "Objectifs et résultats",
+      "max": 20,
+      "subcriteria": [
+        {
+          "key": "objectifs_precis",
+          "label": "Objectifs précis",
+          "max": 5,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["objectif general", "objectifs specifiques", "objectifs de la manifestation", "buts poursuivis"],
+            "supporting_fields": ["objectifs"]
+          }
+        },
+        {
+          "key": "resultats_livrables",
+          "label": "Résultats et livrables",
+          "max": 5,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["resultats attendus", "livrables", "actes du colloque", "recommandations", "rapport final", "publication des travaux"],
+            "supporting_fields": ["modalites_publication"]
+          }
+        },
+        {
+          "key": "indicateurs_verifiables",
+          "label": "Indicateurs vérifiables",
+          "max": 5,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["indicateur", "indicateurs de suivi", "nombre de communications", "taux de participation", "criteres d evaluation", "mesure de l impact"],
+            "supporting_fields": []
+          }
+        },
+        {
+          "key": "coherence_objectifs_programme",
+          "label": "Cohérence objectifs / programme / résultats",
+          "max": 5,
+          "method": "PROGRAM_COHERENCE",
+          "params": {}
+        }
+      ]
+    },
+    {
+      "key": "valeur_internationale",
+      "label": "Valeur internationale",
+      "max": 20,
+      "subcriteria": [
+        {
+          "key": "diversite_geographique",
+          "label": "Diversité géographique réellement documentée",
+          "max": 4,
+          "method": "COUNTRY_DIVERSITY",
+          "params": {"full_countries": 5, "full_continents": 3}
+        },
+        {
+          "key": "intervenants_etrangers_confirmes",
+          "label": "Intervenants étrangers confirmés et présents",
+          "max": 5,
+          "method": "FOREIGN_SPEAKERS",
+          "params": {}
+        },
+        {
+          "key": "qualite_profils",
+          "label": "Qualité et adéquation des profils",
+          "max": 5,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["professeur", "directeur de recherche", "cv joint", "notoriete", "h-index", "publications", "expertise reconnue", "keynote"],
+            "supporting_fields": ["comite_scientifique", "intervenants"]
+          }
+        },
+        {
+          "key": "cooperation_formalisee",
+          "label": "Coopération formalisée",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["convention", "accord de cooperation", "protocole d accord", "memorandum", "partenariat signe", "projet conjoint", "cooperation bilaterale"],
+            "supporting_fields": ["partenaires"]
+          }
+        },
+        {
+          "key": "valeur_ajoutee_internationale",
+          "label": "Valeur ajoutée internationale",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["mobilite", "co-publication", "reseau international", "echange d experiences", "ouverture internationale", "visibilite internationale"],
+            "supporting_fields": ["objectifs"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "faisabilite_gouvernance",
+      "label": "Faisabilité et gouvernance",
+      "max": 15,
+      "subcriteria": [
+        {
+          "key": "programme_et_mode",
+          "label": "Programme et mode",
+          "max": 4,
+          "method": "PROGRAM_AND_MODE",
+          "params": {}
+        },
+        {
+          "key": "gouvernance",
+          "label": "Gouvernance",
+          "max": 3,
+          "method": "GOVERNANCE",
+          "params": {}
+        },
+        {
+          "key": "calendrier_logistique",
+          "label": "Calendrier et logistique",
+          "max": 3,
+          "method": "SCHEDULE_LOGISTICS",
+          "params": {}
+        },
+        {
+          "key": "budget_financement",
+          "label": "Budget et financement",
+          "max": 3,
+          "method": "BUDGET_QUALITY",
+          "params": {}
+        },
+        {
+          "key": "site_plateforme",
+          "label": "Site et plateforme",
+          "max": 2,
+          "method": "SITE_PLATFORM",
+          "params": {}
+        }
+      ]
+    },
+    {
+      "key": "valorisation_suivi",
+      "label": "Valorisation et suivi",
+      "max": 15,
+      "subcriteria": [
+        {
+          "key": "proceedings_ouvrage",
+          "label": "Proceedings, ouvrage ou publication",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["proceedings", "actes du colloque", "ouvrage collectif", "publication collective", "isbn", "issn"],
+            "supporting_fields": ["modalites_publication"]
+          }
+        },
+        {
+          "key": "portail_textes_integraux",
+          "label": "Portail et textes intégraux",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["texte integral", "textes integraux", "portail", "site de la manifestation", "resume en arabe", "resume en anglais"],
+            "supporting_fields": ["modalites_publication"]
+          }
+        },
+        {
+          "key": "dspace_trilingue",
+          "label": "Dépôt DSpace et métadonnées trilingues",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["dspace", "depot institutionnel", "archive ouverte", "metadonnees", "trilingue"],
+            "supporting_fields": []
+          }
+        },
+        {
+          "key": "bilan_final",
+          "label": "Bilan final",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["bilan final", "rapport de bilan", "bilan de la manifestation", "compte rendu final"],
+            "supporting_fields": []
+          }
+        },
+        {
+          "key": "indexation_revue_session",
+          "label": "Indexation, revue ou session de valorisation",
+          "max": 3,
+          "method": "EVIDENCE_LEVELS",
+          "params": {
+            "signals": ["indexation", "indexe", "revue scientifique", "numero special", "scopus", "doaj", "session de valorisation", "table ronde de synthese"],
+            "supporting_fields": ["modalites_publication"]
+          }
+        }
+      ]
+    }
+  ]
+}

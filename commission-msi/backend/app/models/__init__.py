@@ -30,6 +30,18 @@ from app.models.entities import (
     RuleVersion,
     SourceDocument,
 )
+from app.models.analysis_entities import (
+    AiCall,
+    AnalysisCheckpoint,
+    AnalysisJob,
+    AuditDisagreement,
+    CriterionResult,
+    EvidenceItem,
+    ProposedDecision,
+    ReportQaResult,
+    ScientificScore,
+    ScientificSubScore,
+)
 from app.models.web_entities import (
     AgentAssessment,
     AgentDisagreement,
@@ -45,6 +57,16 @@ from app.models.web_entities import (
 )
 
 __all__ = [
+    "AiCall",
+    "AnalysisCheckpoint",
+    "AnalysisJob",
+    "AuditDisagreement",
+    "CriterionResult",
+    "EvidenceItem",
+    "ProposedDecision",
+    "ReportQaResult",
+    "ScientificScore",
+    "ScientificSubScore",
     "AgentAssessment",
     "AgentDisagreement",
     "AssociationLink",

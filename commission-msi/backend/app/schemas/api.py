@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.core.vocabulary import (
     Conclusion,
     ControlStatus,
+    CriterionStatus,
     FindingStatus,
     InformationStatus,
     MarocRelation,
@@ -63,6 +64,30 @@ class ScoreUpdate(BaseModel):
     score: int
     justification: str = Field(max_length=8000)
     source_pages: list[int] = Field(default_factory=list)
+
+
+class CriterionQualification(BaseModel):
+    """Qualification humaine d'un critère réglementaire.
+
+    Elle prime sur la proposition de l'application, qui reste consultable.
+    """
+
+    status: CriterionStatus
+    comment: str = Field(min_length=8, max_length=4000)
+
+
+class SubScoreOverride(BaseModel):
+    """Correction d'une sous-note ; la proposition initiale reste tracée."""
+
+    score: int = Field(ge=0, le=30)
+    justification: str = Field(min_length=8, max_length=4000)
+
+
+class DecisionRetained(BaseModel):
+    """Avis retenu par l'évaluateur, choisi dans la liste fermée."""
+
+    avis: str
+    motivation: str = Field(min_length=8, max_length=8000)
 
 
 class FindingQualification(BaseModel):

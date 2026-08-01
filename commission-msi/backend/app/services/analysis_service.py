@@ -7,11 +7,18 @@ Enchaîne, dans l'ordre, tout ce que l'application peut faire seule :
 3. repérage des pièces ;
 4. contrôles administratifs calculés ;
 5. moteur de vigilance déterministe ;
-6. préparation des requêtes publiques pour l'analyse enrichie.
+6. constitution du registre de preuves ;
+7. application des 26 critères réglementaires (`C/PC/NC/NV`) ;
+8. score scientifique proposé sur 100 ;
+9. avis technique proposé, motivé et tracé ;
+10. préparation des requêtes publiques pour l'analyse enrichie.
 
-Rien de ce qui en sort n'est confirmé : tout est proposé au statut
-`A_VERIFIER`. L'évaluateur conserve la totalité des décisions — confirmation
-des informations, qualification des pièces et des alertes, notation, avis.
+Depuis la version 2.0, l'application **propose** le score scientifique et
+l'avis technique : ce sont des propositions motivées, rattachées à leurs
+preuves, qui restent des aides à la décision. Les informations extraites
+demeurent au statut `A_VERIFIER`, et la décision finale — confirmation des
+informations, qualification des pièces et des alertes, note retenue, avis
+retenu — appartient toujours à l'évaluateur.
 """
 
 from __future__ import annotations
@@ -22,8 +29,10 @@ from app.core import audit
 from app.core.vocabulary import DossierStatus
 from app.models import Dossier
 from app.services import (
+    assessment_service,
     coherence_service,
     dossier_service,
+    evidence_service,
     extraction_service,
     ocr_service,
 )
@@ -122,7 +131,56 @@ def run_full_analysis(
         }
     )
 
-    # 6. Préparation de la recherche publique ------------------------------
+    # 6-9. Évaluation automatique : preuves, 26 critères, score, avis --------
+    assessment = assessment_service.assess(session, dossier_id)
+    summary = assessment["summary"]
+    counts = summary["counts"]
+    steps.append(
+        {
+            "etape": "Registre de preuves",
+            "resultat": f"{len(evidence_service.known_references(session, dossier_id))} preuve(s) "
+            "citables enregistrées (pages, pièces, calculs). Toute affirmation du rapport "
+            "renvoie à l'une d'elles.",
+            "traite": len(evidence_service.known_references(session, dossier_id)),
+            "echecs": 0,
+        }
+    )
+    steps.append(
+        {
+            "etape": "Constats réglementaires",
+            "resultat": f"{summary['total']} critères appliqués (référentiel "
+            f"{summary['referential_version']}) : {counts['C']} conformes, {counts['PC']} "
+            f"partiellement conformes, {counts['NC']} non conformes, {counts['NV']} non "
+            "vérifiables. Aucune cellule n'est laissée vide.",
+            "traite": summary["total"],
+            "echecs": counts["NV"],
+        }
+    )
+    score = assessment["score"]
+    steps.append(
+        {
+            "etape": "Score scientifique",
+            "resultat": f"{score['total']}/{score['maximum']} proposés (grille "
+            f"{score['grid_version']}) ; {len(score['undocumented'])} sous-critère(s) non "
+            "documenté(s) notés zéro, ce qui ne préjuge d'aucune incapacité de "
+            "l'organisateur.",
+            "traite": score["total"],
+            "echecs": len(score["undocumented"]),
+        }
+    )
+    decision = assessment["decision"]
+    steps.append(
+        {
+            "etape": "Avis technique proposé",
+            "resultat": f"{decision['label']} — {decision['motivation']} "
+            f"{len(decision['triggered_rules'])} règle(s) de décision enregistrée(s) avec "
+            "leurs critères déclencheurs.",
+            "traite": len(decision["triggered_rules"]),
+            "echecs": len(decision["blocking_criteria"]),
+        }
+    )
+
+    # 10. Préparation de la recherche publique ------------------------------
     web_run_id = None
     web_message = "Préparation de la recherche publique non demandée."
     if prepare_web:
@@ -161,10 +219,12 @@ def run_full_analysis(
         "web_run_id": web_run_id,
         "extraction_fields": extraction["fields"],
         "checks": checks["checks"],
+        "assessment": assessment,
         "notice": (
-            "L'analyse a proposé des valeurs, des constats et des alertes, toutes au statut "
-            "A_VERIFIER et rattachées à leur page source. Aucune information n'est confirmée, "
-            "aucune note n'est attribuée et aucun avis n'est formulé : ces décisions vous "
-            "appartiennent."
+            "L'analyse a proposé les valeurs, les constats réglementaires, le score "
+            "scientifique et l'avis technique, tous rattachés à leurs preuves et à leur page "
+            "source. Le score et l'avis sont des propositions motivées : ils constituent une "
+            "aide à la décision et ne valent pas décision officielle de la commission ou de "
+            "la tutelle. La note retenue et l'avis retenu vous appartiennent."
         ),
     }

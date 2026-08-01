@@ -263,21 +263,42 @@ def test_full_analysis_runs_every_step(client, dossier):
         "Repérage des pièces",
         "Contrôles administratifs",
         "Moteur de vigilance",
+        "Registre de preuves",
+        "Constats réglementaires",
+        "Score scientifique",
+        "Avis technique proposé",
         "Recherche publique",
     }
     assert result["web_run_id"], "les requêtes publiques doivent être préparées"
-    assert "aucune note n'est attribuée" in result["notice"]
-    assert "aucun avis n'est formulé" in result["notice"]
+    # Le score et l'avis sont désormais proposés, mais restent des propositions.
+    assert "aide à la décision" in result["notice"]
+    assert "ne valent pas décision officielle" in result["notice"]
 
 
-def test_full_analysis_never_scores_or_concludes(client, dossier):
+def test_full_analysis_proposes_score_and_avis_without_deciding(client, dossier):
+    """Le score et l'avis sont proposés ; la décision reste à l'évaluateur."""
     assert _import(client, dossier, [DOSSIER_COMPLET]).status_code == 201
-    client.post(f"/api/v1/dossiers/{dossier['id']}/analyse-complete")
+    result = client.post(f"/api/v1/dossiers/{dossier['id']}/analyse-complete").json()
 
+    assessment = result["assessment"]
+    assert 0 <= assessment["score"]["total"] <= 100
+    assert assessment["decision"]["avis"] in {
+        "FAVORABLE",
+        "FAVORABLE_SOUS_RESERVES",
+        "AJOURNEMENT_POUR_COMPLEMENTS",
+        "REQUALIFICATION_NATIONALE_A_EXAMINER",
+        "TRANSMISSION_TUTELLE_AVEC_ALERTE_MOTIVEE",
+        "NON_DETERMINABLE_INFORMATION_INSUFFISANTE",
+    }
+    assert "ne valant pas décision officielle" in assessment["decision"]["disclaimer"]
+
+    # La grille officielle saisie par l'évaluateur reste vierge : les deux
+    # notations ne sont jamais confondues.
     evaluation = client.get(f"/api/v1/dossiers/{dossier['id']}/evaluation").json()
     assert evaluation["total"] is None
     assert all(row["score"] is None for row in evaluation["criteria"])
 
+    # Aucune conclusion n'est écrite à la place de l'évaluateur.
     notes = client.get(f"/api/v1/dossiers/{dossier['id']}/notes").json()["items"]
     assert not [note for note in notes if note["kind"] == "CONCLUSION"]
 

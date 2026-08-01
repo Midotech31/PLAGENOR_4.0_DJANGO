@@ -501,6 +501,17 @@ PIECE_HINTS: dict[str, tuple[str, ...]] = {
 }
 
 
+def dossier_pieces(session: Session, dossier_id: str) -> list[PieceCheck]:
+    """Pièces du dossier, dans l'ordre stable du catalogue."""
+    return list(
+        session.scalars(
+            select(PieceCheck)
+            .where(PieceCheck.dossier_id == dossier_id)
+            .order_by(PieceCheck.piece_key)
+        ).all()
+    )
+
+
 def detect_pieces(session: Session, dossier_id: str) -> int:
     """Propose des pièces détectées, sans jamais les confirmer.
 
