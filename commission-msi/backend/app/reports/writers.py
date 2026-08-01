@@ -292,7 +292,7 @@ def write_pdf(model: EvaluationReport) -> bytes:
     if model.is_draft:
         story.append(Paragraph(esc(DRAFT_WARNING), st_warn))
     story += [
-        Paragraph("RAPPORT D'ÉVALUATION", st_title),
+        Paragraph(esc(model.heading), st_title),
         Paragraph(esc(model.subtitle), st_sub),
         Paragraph(f"<b>{esc(model.title)}</b>", st_sub),
         Paragraph(esc(model.organizer), st_sub),

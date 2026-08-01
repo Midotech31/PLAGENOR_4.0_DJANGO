@@ -97,9 +97,26 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
 - Les variantes essayées et leurs scores sont affichés : l'évaluateur voit ce
   qui a été tenté, pas seulement le résultat.
 
+### Rapport harmonisé — format de la commission
+
+- Nouvelle mise en page **par défaut** (`layout=harmonise`), calquée sur le
+  modèle fourni : huit sections, orientation technique transmise au ministère,
+  fiche contrôlée en six rubriques, grille scientifique en cinq dimensions avec
+  motif probant, matrice des 26 critères à cinq colonnes avec libellés communs
+  courts et fondement exact.
+- Section 4.1 dédiée aux éléments relatifs au Maroc et à Israël, signalés à
+  titre strictement informatif : une nationalité, une formation ou un lien
+  institutionnel antérieur ne constitue jamais une non-conformité.
+- Encadrés de portée et principe probatoire repris du modèle ; la décision
+  finale est rappelée comme relevant du ministère en tête, en section 7 et dans
+  les encadrés.
+- Trois pages atteintes sans retirer aucun des vingt-six constats.
+- Les mises en page `compact` et `detaille` restent disponibles, et le choix est
+  offert dans l'onglet Rapports.
+
 ### Tests
 
-- 229 tests backend et 15 tests d'interface au vert.
+- 243 tests backend et 15 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

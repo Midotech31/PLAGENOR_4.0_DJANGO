@@ -237,6 +237,8 @@ class EvaluationReport:
     #: Densité de mise en page. « compact » resserre marges, corps et interlignes
     #: pour tenir en peu de pages **sans jamais tronquer le contenu**.
     density: str = "normale"
+    #: Titre principal imprimé en tête. Le format harmonisé porte le sien.
+    heading: str = "RAPPORT D'ÉVALUATION"
 
     @property
     def banner(self) -> str:

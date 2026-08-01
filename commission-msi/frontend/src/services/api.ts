@@ -593,7 +593,10 @@ export const api = {
 
   listReports: (id: string) => get<{ items: ReportInfo[] }>(`/dossiers/${id}/rapports`),
   generateReport: (id: string, payload: { format: string; official: boolean; layout?: string }) =>
-    post<ReportInfo>(`/dossiers/${id}/rapports`, payload),
+    post<ReportInfo & { layout: string; page_count: number | null }>(
+      `/dossiers/${id}/rapports`,
+      payload,
+    ),
   reportUrl: (id: string, reportId: string) => `${BASE}/dossiers/${id}/rapports/${reportId}/fichier`,
   validateReport: (id: string, statement: string) =>
     post<{ validated_at: string }>(`/dossiers/${id}/rapports/validation-humaine`, { statement }),

@@ -23,7 +23,9 @@
       "id": "CTR-SESSIONS-GUIDE",
       "subject": "Fréquence des sessions ordinaires",
       "statement": "Le Guide mentionne deux sessions ordinaires annuelles et, par ailleurs, les mois de janvier, avril, juillet et octobre.",
-      "sources": ["Guide du 14/07/2026"],
+      "sources": [
+        "Guide du 14/07/2026"
+      ],
       "required_output": "CONTRADICTION_A_ARBITRER",
       "resolution_forbidden": true
     }
@@ -50,7 +52,8 @@
         ]
       },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Demande, validation, fiche et appel"
     },
     {
       "code": "A2",
@@ -64,10 +67,16 @@
       "conditions": "La manifestation figure au programme annuel et le dossier est déposé au moins dix jours avant la session de la conférence régionale compétente.",
       "exceptions": null,
       "calculation": "DEPOSIT_LEAD_TIME",
-      "calculation_params": {"minimum_days": 10, "reference": "session régionale compétente"},
-      "forbidden_rules": ["Aucun délai universel de six mois ne doit être appliqué."],
+      "calculation_params": {
+        "minimum_days": 10,
+        "reference": "session régionale compétente"
+      },
+      "forbidden_rules": [
+        "Aucun délai universel de six mois ne doit être appliqué."
+      ],
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Programme annuel ; dépôt ≥ 10 jours avant session CRU"
     },
     {
       "code": "A3",
@@ -81,9 +90,12 @@
       "conditions": "Le présentiel est privilégié. En mode hybride, la part présentielle doit atteindre au moins 50 %.",
       "exceptions": null,
       "calculation": "PRESENTIAL_SHARE",
-      "calculation_params": {"minimum_ratio": 0.5},
+      "calculation_params": {
+        "minimum_ratio": 0.5
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Présentiel privilégié ; hybride ≥ 50 % présentiel"
     },
     {
       "code": "A4",
@@ -97,10 +109,13 @@
       "conditions": "La liste des conférenciers étrangers et les copies de leurs passeports figurent au dossier, en section restreinte.",
       "exceptions": null,
       "calculation": "RESTRICTED_PIECE_PRESENCE",
-      "calculation_params": {"piece": "conferenciers_etrangers_passports"},
+      "calculation_params": {
+        "piece": "conferenciers_etrangers_passports"
+      },
       "privacy": "Aucune donnée de passeport n'est reproduite dans le rapport : seule la présence de la pièce est contrôlée.",
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Conférenciers étrangers et copies de passeports"
     },
     {
       "code": "I1",
@@ -114,9 +129,16 @@
       "conditions": "Le thème est spécialisé, relié à une priorité nationale et cohérent avec l'activité de recherche de l'établissement porteur.",
       "exceptions": null,
       "calculation": "QUALITATIVE_EVIDENCE",
-      "calculation_params": {"fields": ["theme", "objectifs", "etablissement_organisateur"]},
+      "calculation_params": {
+        "fields": [
+          "theme",
+          "objectifs",
+          "etablissement_organisateur"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Thème spécialisé, prioritaire et lié à l'établissement"
     },
     {
       "code": "I2",
@@ -130,9 +152,14 @@
       "conditions": "Le comité scientifique compte des membres d'au moins trois pays et deux continents.",
       "exceptions": "Exception explicite en cas de projet ou de coopération bilatérale : le critère ne s'applique pas en l'état.",
       "calculation": "COUNTRY_CONTINENT_COVERAGE",
-      "calculation_params": {"min_countries": 3, "min_continents": 2, "bilateral_exception": true},
+      "calculation_params": {
+        "min_countries": 3,
+        "min_continents": 2,
+        "bilateral_exception": true
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Comité : ≥ 3 pays / ≥ 2 continents, sauf projet bilatéral"
     },
     {
       "code": "I3",
@@ -146,9 +173,14 @@
       "conditions": "Au moins 20 % des membres du comité scientifique sont affiliés à un établissement étranger.",
       "exceptions": null,
       "calculation": "RATIO_THRESHOLD",
-      "calculation_params": {"numerator": "membres_etrangers", "denominator": "membres_total", "minimum_ratio": 0.2},
+      "calculation_params": {
+        "numerator": "membres_etrangers",
+        "denominator": "membres_total",
+        "minimum_ratio": 0.2
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Composante internationale du comité ≥ 20 %"
     },
     {
       "code": "I4",
@@ -162,9 +194,12 @@
       "conditions": "La compétence des membres est établie et leur accord préalable est joint.",
       "exceptions": null,
       "calculation": "EVIDENCE_OF_CONSENT",
-      "calculation_params": {"expected": "acceptation individuelle signée par membre"},
+      "calculation_params": {
+        "expected": "acceptation individuelle signée par membre"
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Compétence et accord préalable des membres"
     },
     {
       "code": "I5",
@@ -178,9 +213,14 @@
       "conditions": "La présidence du comité scientifique est assurée par un professeur dont la notoriété est établie.",
       "exceptions": null,
       "calculation": "QUALITATIVE_EVIDENCE",
-      "calculation_params": {"fields": ["responsable_scientifique"]},
+      "calculation_params": {
+        "fields": [
+          "responsable_scientifique"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Présidence scientifique : professeur et notoriété"
     },
     {
       "code": "I6",
@@ -194,9 +234,15 @@
       "conditions": "La présidence du comité d'organisation relève de l'établissement porteur.",
       "exceptions": null,
       "calculation": "QUALITATIVE_EVIDENCE",
-      "calculation_params": {"fields": ["comite_organisation", "etablissement_organisateur"]},
+      "calculation_params": {
+        "fields": [
+          "comite_organisation",
+          "etablissement_organisateur"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Présidence d'organisation rattachée au porteur"
     },
     {
       "code": "I7",
@@ -210,10 +256,18 @@
       "conditions": "Les intervenants internationaux présents physiquement représentent environ 10 % des intervenants.",
       "exceptions": null,
       "calculation": "RATIO_APPROXIMATE",
-      "calculation_params": {"numerator": "intervenants_etrangers_presents", "denominator": "intervenants_total", "reference_ratio": 0.1, "tolerance": null},
-      "forbidden_rules": ["Le libellé « environ » ne doit pas être converti en marge de tolérance chiffrée : le ratio exact est affiché et l'appréciation revient à l'évaluateur."],
+      "calculation_params": {
+        "numerator": "intervenants_etrangers_presents",
+        "denominator": "intervenants_total",
+        "reference_ratio": 0.1,
+        "tolerance": null
+      },
+      "forbidden_rules": [
+        "Le libellé « environ » ne doit pas être converti en marge de tolérance chiffrée : le ratio exact est affiché et l'appréciation revient à l'évaluateur."
+      ],
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Internationaux ≈ 10 % des intervenants en personne"
     },
     {
       "code": "I8",
@@ -227,9 +281,12 @@
       "conditions": "Au moins un conférencier étranger de réputation internationale est annoncé et son profil est vérifiable.",
       "exceptions": null,
       "calculation": "KEYNOTE_VERIFICATION",
-      "calculation_params": {"minimum": 1},
+      "calculation_params": {
+        "minimum": 1
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Keynote étranger de réputation internationale"
     },
     {
       "code": "I9",
@@ -243,9 +300,15 @@
       "conditions": "La coopération avec des partenaires socioéconomiques ou des sociétés savantes est recherchée lorsque cela est possible.",
       "exceptions": "Le libellé « si possible » interdit d'en faire un seuil absolu ou un motif de non-conformité bloquante.",
       "calculation": "QUALITATIVE_EVIDENCE",
-      "calculation_params": {"fields": ["partenaires", "sponsors"]},
+      "calculation_params": {
+        "fields": [
+          "partenaires",
+          "sponsors"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Partenaires socioéconomiques / sociétés savantes"
     },
     {
       "code": "I10",
@@ -259,9 +322,19 @@
       "conditions": "Un programme culturel ou touristique accompagne la manifestation.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["programme culturel", "visite", "excursion", "touristique", "cultural programme", "sightseeing"]},
+      "calculation_params": {
+        "terms": [
+          "programme culturel",
+          "visite",
+          "excursion",
+          "touristique",
+          "cultural programme",
+          "sightseeing"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Programme culturel ou touristique"
     },
     {
       "code": "I11",
@@ -275,9 +348,17 @@
       "conditions": "L'anglais est employé dans les publications et supports de la manifestation.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["anglais", "english", "in english", "langue de communication"]},
+      "calculation_params": {
+        "terms": [
+          "anglais",
+          "english",
+          "in english",
+          "langue de communication"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Anglais dans les publications et supports"
     },
     {
       "code": "I12",
@@ -291,9 +372,12 @@
       "conditions": "Un site officiel institutionnel dédié à la manifestation existe.",
       "exceptions": null,
       "calculation": "URL_EVIDENCE",
-      "calculation_params": {"institutional_only": true},
+      "calculation_params": {
+        "institutional_only": true
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Site officiel institutionnel dédié"
     },
     {
       "code": "I13",
@@ -307,9 +391,20 @@
       "conditions": "Une plateforme de soumission et d'évaluation des communications est mise en place.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["plateforme", "cmt", "easychair", "sciencesconf", "submission platform", "soumission en ligne", "peer review"]},
+      "calculation_params": {
+        "terms": [
+          "plateforme",
+          "cmt",
+          "easychair",
+          "sciencesconf",
+          "submission platform",
+          "soumission en ligne",
+          "peer review"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Plateforme scientifique de soumission / évaluation"
     },
     {
       "code": "S1",
@@ -323,9 +418,18 @@
       "conditions": "Les doctorants, étudiants de fin de master et partenaires concernés sont associés.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["doctorant", "doctorants", "master", "phd student", "étudiants"]},
+      "calculation_params": {
+        "terms": [
+          "doctorant",
+          "doctorants",
+          "master",
+          "phd student",
+          "étudiants"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Doctorants, fin de master et partenaires concernés"
     },
     {
       "code": "S2",
@@ -339,9 +443,18 @@
       "conditions": "Une couverture médiatique est prévue et contribue à la promotion de l'Algérie.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["couverture médiatique", "presse", "media", "communication", "promotion"]},
+      "calculation_params": {
+        "terms": [
+          "couverture médiatique",
+          "presse",
+          "media",
+          "communication",
+          "promotion"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Couverture médiatique et promotion de l'Algérie"
     },
     {
       "code": "S3",
@@ -355,9 +468,17 @@
       "conditions": "Le thème et les contenus ont fait l'objet d'un contrôle préalable au regard des constantes et valeurs nationales.",
       "exceptions": null,
       "calculation": "VIGILANCE_REVIEW",
-      "calculation_params": {"blocking_categories": ["INTEGRITE_TERRITORIALE", "MENTIONS_MAROC", "RELATIONS_DIPLOMATIQUES", "MEMOIRE_NATIONALE"]},
+      "calculation_params": {
+        "blocking_categories": [
+          "INTEGRITE_TERRITORIALE",
+          "MENTIONS_MAROC",
+          "RELATIONS_DIPLOMATIQUES",
+          "MEMOIRE_NATIONALE"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Contrôle préalable du thème, constantes et valeurs"
     },
     {
       "code": "V1",
@@ -371,9 +492,18 @@
       "conditions": "La publication des travaux est prévue sous forme de proceedings, d'ouvrage ou de publication collective.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["proceedings", "actes", "ouvrage collectif", "publication collective", "numéro spécial"]},
+      "calculation_params": {
+        "terms": [
+          "proceedings",
+          "actes",
+          "ouvrage collectif",
+          "publication collective",
+          "numéro spécial"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Proceedings, ouvrage ou publication collective"
     },
     {
       "code": "V2",
@@ -387,9 +517,17 @@
       "conditions": "Les textes intégraux sont publiés sur un portail ou un site, avec un résumé en langue nationale.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["texte intégral", "portail", "résumé en arabe", "full text"]},
+      "calculation_params": {
+        "terms": [
+          "texte intégral",
+          "portail",
+          "résumé en arabe",
+          "full text"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Textes intégraux sur portail / site + résumé national"
     },
     {
       "code": "V3",
@@ -403,9 +541,17 @@
       "conditions": "Dépôt intégral dans DSpace, avec titre, résumé et mots-clés en arabe, anglais et français.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["dspace", "dépôt institutionnel", "repository", "métadonnées"]},
+      "calculation_params": {
+        "terms": [
+          "dspace",
+          "dépôt institutionnel",
+          "repository",
+          "métadonnées"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "DSpace intégral + titre/résumé/mots-clés trilingues"
     },
     {
       "code": "V4",
@@ -419,9 +565,17 @@
       "conditions": "Un bilan final complet est transmis, sous forme numérique et papier, dans un délai maximal d'un mois après la manifestation.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["bilan", "rapport de clôture", "rapport final", "un mois"]},
+      "calculation_params": {
+        "terms": [
+          "bilan",
+          "rapport de clôture",
+          "rapport final",
+          "un mois"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Bilan final complet, double support, ≤ 1 mois"
     },
     {
       "code": "V5",
@@ -435,9 +589,19 @@
       "conditions": "La valorisation des résultats est prévue : indexation, revue, ou session dédiée pendant la manifestation.",
       "exceptions": null,
       "calculation": "KEYWORD_EVIDENCE",
-      "calculation_params": {"terms": ["indexation", "scopus", "web of science", "revue", "session de valorisation", "valorisation"]},
+      "calculation_params": {
+        "terms": [
+          "indexation",
+          "scopus",
+          "web of science",
+          "revue",
+          "session de valorisation",
+          "valorisation"
+        ]
+      },
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Valorisation, indexation / revue et session dédiée"
     },
     {
       "code": "F1",
@@ -453,7 +617,8 @@
       "calculation": "BUDGET_CONSISTENCY",
       "calculation_params": {},
       "version": "2026.08.1",
-      "active": true
+      "active": true,
+      "short_label": "Budget, sources et modes de financement"
     }
   ]
 }

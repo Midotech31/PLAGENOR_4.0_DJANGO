@@ -127,13 +127,13 @@ def test_the_report_states_the_versions_and_fingerprints_it_used(client, dossier
     assert "SHA-256" in rendered
 
 
-def test_the_compact_layout_is_the_default_and_produces_a_valid_docx_and_pdf(
-    client, dossier, session
-):
+def test_the_compact_layout_produces_a_valid_docx_and_pdf(client, dossier, session):
+    """Le format compact reste disponible ; le défaut est désormais « harmonise »."""
     _prepare(client, dossier)
 
     docx = client.post(
-        f"/api/v1/dossiers/{dossier['id']}/rapports", json={"format": "docx"}
+        f"/api/v1/dossiers/{dossier['id']}/rapports",
+        json={"format": "docx", "layout": "compact"},
     ).json()
     assert docx["layout"] == "compact"
     content = client.get(

@@ -17,7 +17,7 @@ from app.core.crypto import sha256_bytes
 from app.core.errors import GateBlocked, NotFound, ValidationRefused
 from app.core.security import resolve_within
 from app.models import Dossier, Report
-from app.reports import builder, compact_report, evaluation_report, writers
+from app.reports import builder, compact_report, evaluation_report, uniform_report, writers
 from app.services import evaluation_service
 
 SUPPORTED_FORMATS = ("docx", "pdf")
@@ -26,9 +26,18 @@ SUPPORTED_FORMATS = ("docx", "pdf")
 #: Deux mises en page possibles. `COMPACT` est le rendu demandé par défaut :
 #: trois pages, dense et lisible. `DETAILLE` conserve le rapport complet, utile
 #: quand les preuves ou les alertes exigent le détail intégral.
+#: `HARMONISE` est le format demandé par la commission : huit sections, une
+#: orientation technique transmise au ministère. C'est la mise en page par défaut.
+HARMONISE = "harmonise"
 COMPACT = "compact"
 DETAILLE = "detaille"
-SUPPORTED_LAYOUTS = (COMPACT, DETAILLE)
+SUPPORTED_LAYOUTS = (HARMONISE, COMPACT, DETAILLE)
+
+LAYOUT_BUILDERS = {
+    HARMONISE: uniform_report,
+    COMPACT: compact_report,
+    DETAILLE: evaluation_report,
+}
 
 
 def generate_report(
@@ -37,22 +46,23 @@ def generate_report(
     *,
     fmt: str,
     official: bool = False,
-    layout: str = COMPACT,
+    layout: str = HARMONISE,
 ) -> Report:
     fmt = (fmt or "").lower().strip()
     if fmt not in SUPPORTED_FORMATS:
         raise ValidationRefused("Format de rapport non pris en charge (docx ou pdf).")
-    layout = (layout or COMPACT).lower().strip()
+    layout = (layout or HARMONISE).lower().strip()
     if layout not in SUPPORTED_LAYOUTS:
         raise ValidationRefused(
-            "Mise en page inconnue : « compact » (trois pages) ou « detaille » (rapport complet)."
+            "Mise en page inconnue : « harmonise » (format de la commission), "
+            "« compact » (trois pages) ou « detaille » (rapport complet)."
         )
 
     dossier = session.get(Dossier, dossier_id)
     if dossier is None:
         raise NotFound("Dossier introuvable.")
 
-    builder_module = compact_report if layout == COMPACT else evaluation_report
+    builder_module = LAYOUT_BUILDERS[layout]
     model = builder_module.build(session, dossier_id)
 
     if official:

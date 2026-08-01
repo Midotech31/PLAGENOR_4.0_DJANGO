@@ -396,6 +396,7 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
   const { t } = useLocale();
   const reports = useAsync(() => api.listReports(dossierId), [dossierId]);
   const [statement, setStatement] = useState('');
+  const [layout, setLayout] = useState('harmonise');
   const [error, setError] = useState<unknown>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -403,8 +404,11 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
     setError(null);
     setMessage(null);
     try {
-      const created = await api.generateReport(dossierId, { format, official });
-      setMessage(`${format.toUpperCase()} v${created.version} — SHA-256 ${created.sha256.slice(0, 16)}…`);
+      const created = await api.generateReport(dossierId, { format, official, layout });
+      const pages = created.page_count ? ` — ${created.page_count} page(s)` : '';
+      setMessage(
+        `${format.toUpperCase()} v${created.version}${pages} — SHA-256 ${created.sha256.slice(0, 16)}…`,
+      );
       reports.reload();
       onChanged();
     } catch (cause) {
@@ -418,6 +422,17 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
         <Notice tone="incertain">{t('rapports.banner')}</Notice>
         <ErrorBanner error={error} />
         {message && <Notice tone="ok">{message}</Notice>}
+        <Field label={t('rapports.layout')} htmlFor="rapport-mise-en-page">
+          <select
+            id="rapport-mise-en-page"
+            value={layout}
+            onChange={(event) => setLayout(event.target.value)}
+          >
+            <option value="harmonise">{t('rapports.layoutHarmonise')}</option>
+            <option value="compact">{t('rapports.layoutCompact')}</option>
+            <option value="detaille">{t('rapports.layoutDetaille')}</option>
+          </select>
+        </Field>
         <div className="actions">
           <button type="button" onClick={() => generate('docx', false)}>
             DOCX — {t('rapports.draft')}

@@ -193,3 +193,30 @@ Pillow seul — Otsu est calculé sur l'histogramme, l'inclinaison par profil de
 projection — pour ne pas ajouter OpenCV ou NumPy à une installation qui doit
 rester légère et hors ligne. Les variantes essayées et leurs scores sont
 affichés à l'évaluateur : il voit ce qui a été tenté, pas seulement le résultat.
+
+## DT-18 — Le rapport harmonisé devient la mise en page par défaut
+
+**Modèle fourni :** `Rapport uniforme — Arganier, Adrar 2027`. **Décision :**
+`uniform_report` reproduit ses huit sections, son vocabulaire d'**orientation
+technique transmise au ministère**, sa fiche contrôlée en six rubriques, sa
+grille scientifique en cinq dimensions et sa matrice à cinq colonnes. C'est le
+format par défaut (`layout=harmonise`) ; `compact` et `detaille` restent
+disponibles.
+
+**Trois écarts assumés par rapport au modèle, tous dans le sens de la
+vérifiabilité :**
+
+* les valeurs lues mais non encore confirmées portent un astérisque dans la
+  fiche. Le modèle, rédigé par un humain, n'en avait pas besoin ; une sortie
+  automatique doit distinguer ce qu'elle a lu de ce qu'un évaluateur a validé ;
+* la section 6 ne liste que l'action attendue par critère. Le modèle y met des
+  actions courtes ; y recopier le constat doublerait la longueur du rapport et
+  ferait doublon avec la section 3 ;
+* la section 8 nomme les versions du référentiel et de la grille appliquées,
+  ainsi que l'empreinte SHA-256 de la pièce. Sans elles, un rapport n'est pas
+  refaisable à l'identique.
+
+**Ce que le format garantit et qui ne vient pas du modèle :** aucun numéro de
+passeport n'est reproduit, la section 4.1 est explicitement informative, et le
+nombre de pages est mesuré sur le fichier produit — trois pages atteintes sans
+retirer aucun des vingt-six constats.
