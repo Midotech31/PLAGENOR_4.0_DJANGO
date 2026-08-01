@@ -8,7 +8,8 @@
 |---|---|---|---|
 | Python | 3.12 (3.11 accepté) | oui | cocher « Add Python to PATH » |
 | Node.js | 20 ou supérieur | pour recompiler l'interface | non requis si `frontend/dist` est fourni |
-| Tesseract OCR | 5.x avec `fra`, `ara`, `eng` | non | sans lui, l'OCR échoue explicitement |
+| Tesseract OCR | 5.x avec `fra`, `ara`, `eng` | non | sans lui, RapidOCR prend le relais |
+| RapidOCR | installé par le script | non | second moteur, ~100 Mo, aucun GPU |
 | BitLocker | — | fortement recommandé | chiffrement complet du disque |
 
 Aucune connexion Internet n'est requise pour le cœur documentaire.
@@ -19,9 +20,13 @@ Aucune connexion Internet n'est requise pour le cœur documentaire.
    autorisé**, par exemple `C:\CommissionMSI`.
 2. Double-cliquez sur `install_windows.bat`.
 
-Le script crée l'environnement virtuel, installe les dépendances Python,
-compile l'interface, applique les migrations et signale l'absence éventuelle de
-Tesseract.
+Le script crée l'environnement virtuel, installe les dépendances Python **et
+le second moteur de lecture RapidOCR**, compile l'interface, applique les
+migrations et signale l'absence éventuelle de Tesseract.
+
+Les deux moteurs se complètent et l'application retient automatiquement la
+meilleure des lectures : Tesseract est mesuré meilleur sur le flou et le bruit,
+RapidOCR sur la basse résolution, et chacun supplée l'autre s'il manque.
 
 3. Copiez `.env.example` en `.env` et adaptez-le si nécessaire.
 
@@ -30,6 +35,10 @@ Tesseract.
 ```bat
 run_tests.bat
 ```
+
+Le script installe au besoin `backend\requirements-dev.txt` : les outils de
+test ne font pas partie de l'installation, un poste d'évaluation n'ayant aucune
+raison d'embarquer un lanceur de tests.
 
 Tous les tests doivent passer. Un seul échec critique interdit l'usage réel.
 

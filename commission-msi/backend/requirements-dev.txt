@@ -1,0 +1,16 @@
+# ===================================================================
+#  Dépendances de test — nécessaires uniquement pour run_tests.bat
+#  Designed by Prof. Merzoug Mohamed
+#
+#  Elles sont séparées des dépendances de l'application : un poste
+#  d'évaluation n'a aucune raison d'embarquer un lanceur de tests.
+#
+#  `httpx` n'est pas facultatif ici : c'est lui qui fait fonctionner
+#  le client de test de FastAPI, sans lequel aucun test d'API ne peut
+#  s'exécuter.
+#
+#  Installation :
+#     backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+# ===================================================================
+pytest==9.1.1
+httpx==0.28.1

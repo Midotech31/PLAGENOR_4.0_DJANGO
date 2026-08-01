@@ -49,14 +49,57 @@ arrêt sécurisé en cas d'incertitude.**
 - **Audit, sauvegarde, restauration** — journal par empreintes, manifeste
   SHA-256, restauration toujours sur copie vérifiée.
 
-## Installation rapide (Windows 10/11)
+## Lancer l'application (Windows 10/11)
+
+Une seule fois, pour installer :
 
 ```bat
 install_windows.bat
+```
+
+Puis, à chaque usage :
+
+```bat
 run_windows.bat
 ```
 
+Le lanceur ouvre le port, attend l'état « prêt », puis seulement ouvre le
+navigateur sur `http://127.0.0.1:8731/`. Si le port est occupé :
+`run_windows.bat --port 8732`. Pour arrêter : `Ctrl+C` dans la fenêtre.
+
+L'application n'écoute que sur `127.0.0.1` et le refuse explicitement sur toute
+autre adresse. Il n'y a ni compte, ni mot de passe, ni écran de connexion.
+
 Détails complets : [`docs/GUIDE_INSTALLATION.md`](docs/GUIDE_INSTALLATION.md).
+
+### Sous Linux ou macOS
+
+```bash
+python -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r backend/requirements.txt -r backend/requirements-ocr.txt
+cd frontend && npm install && npm run build && cd ..
+cd backend && .venv/bin/python -m alembic upgrade head && cd ..
+backend/.venv/bin/python scripts/launcher.py
+```
+
+## Essayer l'application en cinq minutes
+
+1. **Créer un dossier** — référence, intitulé, organisateur, puis « Créer ».
+2. **Ouvrir le dossier** par le bouton « Actions » de sa ligne.
+3. **Onglet « Document »** — verser le PDF de la demande.
+4. **Onglet « Traitement du dossier »** — cliquer **une seule fois** sur
+   « Traiter le dossier ». L'application lit le document, applique les 26
+   critères, calcule le score sur 100, prépare les vérifications publiques, fait
+   relire ses conclusions, propose un avis, **et produit le rapport harmonisé en
+   Word et en PDF**.
+5. **Télécharger** depuis la carte « Rapport harmonisé produit », qui apparaît à
+   la fin du traitement.
+
+Le traitement vit en base : fermer le navigateur ou l'application ne le perd
+pas, il reprend là où il s'est arrêté.
+
+Le rapport produit est un **brouillon filigrané**. L'export officiel reste un
+acte distinct, dans l'onglet « Rapports », soumis à votre validation explicite.
 
 ## Tests
 
@@ -64,7 +107,20 @@ Détails complets : [`docs/GUIDE_INSTALLATION.md`](docs/GUIDE_INSTALLATION.md).
 run_tests.bat
 ```
 
-131 tests backend (pytest) + 8 tests d'interface (Vitest) + vérification des
+Le script installe au besoin les dépendances de test
+(`backend/requirements-dev.txt`), qui ne font délibérément pas partie de
+l'installation : un poste d'évaluation n'a aucune raison d'embarquer un lanceur
+de tests.
+
+Sous Linux ou macOS :
+
+```bash
+backend/.venv/bin/python -m pip install -r backend/requirements-dev.txt
+cd backend && PYTHONPATH=. .venv/bin/python -m pytest tests -q
+cd ../frontend && npm run test && npm run typecheck
+```
+
+292 tests backend (pytest) + 19 tests d'interface (Vitest) + vérification des
 types TypeScript. Plan complet : [`docs/PLAN_TESTS.md`](docs/PLAN_TESTS.md).
 
 ## Sécurité en une page

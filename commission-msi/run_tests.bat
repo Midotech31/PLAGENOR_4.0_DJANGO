@@ -11,6 +11,26 @@ cd /d "%~dp0"
 
 set ECHEC=0
 
+if not exist "backend\.venv\Scripts\python.exe" (
+  echo [ERREUR] L'application n'est pas installee.
+  echo Executez d'abord install_windows.bat
+  pause
+  exit /b 1
+)
+
+REM Les outils de test ne sont pas installes par install_windows.bat :
+REM un poste d'evaluation n'a aucune raison d'embarquer un lanceur de tests.
+backend\.venv\Scripts\python.exe -c "import pytest, httpx" >nul 2>nul
+if errorlevel 1 (
+  echo Installation des dependances de test...
+  call backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+  if errorlevel 1 (
+    echo [ERREUR] Installation des dependances de test echouee.
+    pause
+    exit /b 1
+  )
+)
+
 echo === Tests backend (pytest) ===
 pushd backend
 set PYTHONPATH=.

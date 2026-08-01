@@ -46,6 +46,16 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM --- 2b. Second moteur OCR (optionnel mais recommande) ---------------
+echo Installation du second moteur de lecture (RapidOCR)...
+call backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-ocr.txt
+if errorlevel 1 (
+  echo [AVERTISSEMENT] RapidOCR n'a pas pu etre installe.
+  echo L'application fonctionnera avec Tesseract seul : les pages a basse
+  echo resolution seront moins bien lues, et aucune lecture de secours ne
+  echo sera disponible si Tesseract manque.
+)
+
 REM --- 3. Interface --------------------------------------------------
 where npm >nul 2>nul
 if errorlevel 1 (
