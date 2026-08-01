@@ -256,6 +256,52 @@ def _report_qa(session: Session, job: AnalysisJob) -> dict:
     return result
 
 
+def _render_report(session: Session, job: AnalysisJob) -> dict:
+    """Produit le rapport harmonisé en Word et en PDF, sans second clic.
+
+    Cette étape vient **après** le contrôle qualité, et l'ordre n'est pas
+    arbitraire : un rapport dont un contrôle bloquant a échoué ne doit pas
+    exister sous forme de fichier téléchargeable. Le travail échoue avant
+    d'arriver ici.
+
+    Les deux formats sont produits parce qu'ils ne servent pas au même usage :
+    le Word se corrige et s'annote, le PDF se transmet et se compte en pages —
+    ce comptage est d'ailleurs la seule mesure réelle du volume du rapport, et
+    il est fait sur le fichier réellement écrit, jamais estimé.
+
+    Le brouillon est filigrané. L'export officiel reste un acte humain distinct,
+    soumis à la porte G7 : l'application produit le document, elle ne le valide
+    pas à la place de l'évaluateur.
+    """
+    from app.services import report_service
+
+    produced: list[dict] = []
+    for fmt in ("docx", "pdf"):
+        report = report_service.generate_report(
+            session, job.dossier_id, fmt=fmt, layout=report_service.HARMONISE
+        )
+        produced.append(
+            {
+                "id": report.id,
+                "format": fmt,
+                "version": report.version,
+                "sha256": report.sha256,
+                "pages": report.page_count,
+                "brouillon": report.is_draft,
+            }
+        )
+
+    pages = next((item["pages"] for item in produced if item["pages"]), None)
+    return {
+        "rapports": produced,
+        "constat": (
+            "Rapport harmonisé produit en Word et en PDF"
+            + (f", {pages} page(s) mesurées." if pages else ".")
+            + " Brouillon filigrané : l'export officiel reste un acte humain distinct."
+        ),
+    }
+
+
 STEPS: dict[str, Step] = {
     JobState.VALIDATING: Step(signature=_document_signature, run=_validate),
     JobState.EXTRACTING: Step(signature=_document_signature, run=_extract),
@@ -267,4 +313,5 @@ STEPS: dict[str, Step] = {
     JobState.INDEPENDENT_AUDIT: Step(signature=_values_signature, run=_independent_audit),
     JobState.REPORT_BUILDING: Step(signature=_values_signature, run=_decision),
     JobState.REPORT_QA: Step(signature=_values_signature, run=_report_qa),
+    JobState.REPORT_RENDERING: Step(signature=_values_signature, run=_render_report),
 }

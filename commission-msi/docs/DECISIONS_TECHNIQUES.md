@@ -380,3 +380,54 @@ profilage qu'elle n'exerce pas.
 **Un nom d'agent distinct.** `AGENT_SOUVERAINETE_NATIONALE` a été ajouté plutôt
 que de réutiliser `AGENT_INTEGRITE_PUBLIQUE` : deux agents partageant un nom
 rendent leurs constats indiscernables dans le registre des affirmations.
+
+## DT-24 — Le rapport final fait partie du travail, pas d'une seconde action
+
+**Demande :** « un seul clic sur traiter le dossier devrait lancer le job pour
+générer toutes les informations nécessaires y compris le rapport final ».
+
+**Constat.** Le pipeline s'arrêtait au contrôle qualité. `REPORT_BUILDING`
+portait un nom trompeur : il produisait l'**avis proposé**, pas le fichier. Le
+rapport restait une action manuelle distincte, dans un autre onglet, avec un
+choix de mise en page à faire — alors que la mise en page attendue est toujours
+la même, celle du modèle de la commission.
+
+**Étape ajoutée.** `REPORT_RENDERING`, à 99 % de progression, après
+`REPORT_QA`. Elle produit le rapport harmonisé en Word **et** en PDF. Les deux
+formats parce qu'ils ne servent pas au même usage : le Word s'annote et se
+corrige, le PDF se transmet et se compte en pages.
+
+**L'ordre n'est pas arbitraire.** Le rendu vient après le contrôle qualité, et
+non l'inverse. Un contrôle bloquant qui échoue fait échouer le travail avant le
+rendu : **aucun fichier n'est écrit pour un rapport partiellement valide**. Un
+test le vérifie en faisant échouer le contrôle et en constatant que la liste des
+rapports reste vide.
+
+**Ce que l'étape ne fait pas.** Elle produit un **brouillon filigrané**.
+L'export officiel reste un acte humain distinct, soumis à la porte
+`G7_VALIDATION_HUMAINE`. L'application rédige le document ; elle ne le valide
+pas à la place de l'évaluateur, et cette limite est écrite dans l'interface.
+
+**Nombre de pages.** Mesuré sur le PDF réellement écrit, jamais estimé, et
+conservé dans le point de reprise de l'étape.
+
+**Interface.** Une carte « Rapport harmonisé produit » apparaît à la fin du
+traitement, avec les liens de téléchargement directs. Elle n'offre aucun bouton
+« générer » : le fichier existe déjà. Si la liste est vide, elle dit pourquoi —
+un contrôle bloquant a échoué — plutôt que de laisser un blanc.
+
+**Conformité aux modèles fournis.** Les cinq rapports uniformes de la commission
+(Arganier/Adrar, Bouamama/Mostaganem, Chirurgie pédiatrique/Tlemcen,
+SPRGM/USTO, SAHARA-SMART/ESASA) partagent la même ossature : sept sections
+numérotées, l'encadré d'orientation en tête, une fiche à six rubriques, un
+tableau d'appréciation 7×4 (cinq dimensions, un en-tête, un total) et la matrice
+27×5 des 26 critères. Un test ouvre le fichier produit par le travail et vérifie
+cette ossature.
+
+**Un écart assumé.** Les libellés des six rubriques de la fiche varient d'un
+modèle à l'autre — *Objet / Effectifs / Comité / Partenaires / Budget /
+Publication* ici, *Nature / Programme clinique / Participants / Comité / Budget
+/ Données* là. Un rédacteur humain les choisit selon ce que le dossier a de
+saillant. L'application garde les six libellés du modèle Arganier plutôt que
+d'inventer une heuristique de sélection : mieux vaut un intitulé stable et exact
+qu'un intitulé deviné.

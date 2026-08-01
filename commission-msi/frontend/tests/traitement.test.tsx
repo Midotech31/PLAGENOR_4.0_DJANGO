@@ -157,6 +157,7 @@ function mockRoutes(overrides: Record<string, unknown> = {}) {
     '/mode-analyse': MODE,
     '/traitement': { job: COMPLETED_JOB, notice: null },
     '/evaluation-automatique': ASSESSMENT,
+    '/rapports': PRODUCED_REPORTS,
     ...overrides,
   };
   return vi.fn(async (input: RequestInfo | URL) => {
@@ -178,6 +179,27 @@ function mockRoutes(overrides: Record<string, unknown> = {}) {
     });
   });
 }
+
+const PRODUCED_REPORTS = {
+  items: [
+    {
+      id: 'rap-docx',
+      format: 'docx',
+      is_draft: true,
+      version: 1,
+      sha256: 'a'.repeat(64),
+      created_at: '2026-08-01T10:02:00Z',
+    },
+    {
+      id: 'rap-pdf',
+      format: 'pdf',
+      is_draft: true,
+      version: 2,
+      sha256: 'b'.repeat(64),
+      created_at: '2026-08-01T10:02:01Z',
+    },
+  ],
+};
 
 function renderTab() {
   return render(
@@ -293,5 +315,47 @@ describe('onglet Traitement', () => {
     expect(screen.getByText(/n’a pas pu être lu ou écrit/)).toBeInTheDocument();
     // Les résultats déjà produits restent affichés : rien n'a été effacé.
     expect(screen.getByText('Ajournement pour compléments')).toBeInTheDocument();
+  });
+
+  it('propose au téléchargement le rapport produit par le traitement, sans second clic', async () => {
+    vi.stubGlobal('fetch', mockRoutes());
+    renderTab();
+
+    expect(await screen.findByText('Rapport harmonisé produit')).toBeInTheDocument();
+    const word = await screen.findByRole('link', { name: /DOCX/ });
+    expect(word).toHaveAttribute('href', expect.stringContaining('/rapports/rap-docx/fichier'));
+    expect(await screen.findByRole('link', { name: /PDF/ })).toBeInTheDocument();
+    // Aucun bouton « générer » : le fichier existe déjà.
+    expect(screen.queryByRole('button', { name: /[Gg]énérer/ })).toBeNull();
+  });
+
+  it('dit que le fichier est un brouillon et que l’officiel reste un acte humain', async () => {
+    vi.stubGlobal('fetch', mockRoutes());
+    renderTab();
+
+    expect(await screen.findByText(/brouillons filigranés/)).toBeInTheDocument();
+    expect(await screen.findByText(/votre validation explicite/)).toBeInTheDocument();
+  });
+
+  it('n’affiche aucun rapport tant que le traitement n’est pas terminé', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockRoutes({
+        '/traitement': { job: { ...COMPLETED_JOB, state: 'REPORT_QA', progress: 96 }, notice: null },
+      }),
+    );
+    renderTab();
+
+    await waitFor(() => expect(screen.getByText('Terminé')).toBeInTheDocument());
+    expect(screen.queryByText('Rapport harmonisé produit')).toBeNull();
+  });
+
+  it('explique l’absence de rapport plutôt que de laisser un vide', async () => {
+    vi.stubGlobal('fetch', mockRoutes({ '/rapports': { items: [] } }));
+    renderTab();
+
+    expect(
+      await screen.findByText(/un rapport partiellement valide n’est jamais écrit/),
+    ).toBeInTheDocument();
   });
 });

@@ -489,3 +489,112 @@ def test_a_valid_qualification_is_accepted(client, dossier):
     assert response.status_code == 200
     criteria = {row["code"]: row for row in response.json()["criteria"]}
     assert criteria["A1"]["human_status"] == "C"
+
+
+# --------------------------------------------------------------------------
+# Un seul clic : le rapport final fait partie du travail
+# --------------------------------------------------------------------------
+
+
+def test_one_click_produces_the_final_report_without_a_second_action(client, dossier):
+    """L'évaluateur clique « Traiter le dossier » et le rapport existe."""
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    reports = client.get(f"/api/v1/dossiers/{dossier['id']}/rapports").json()["items"]
+    formats = {report["format"] for report in reports}
+    assert formats == {"docx", "pdf"}, "les deux formats sont produits par le travail"
+
+
+def test_the_report_produced_by_the_job_is_downloadable_as_is(client, dossier):
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    reports = client.get(f"/api/v1/dossiers/{dossier['id']}/rapports").json()["items"]
+    word = next(report for report in reports if report["format"] == "docx")
+    response = client.get(
+        f"/api/v1/dossiers/{dossier['id']}/rapports/{word['id']}/fichier"
+    )
+    assert response.status_code == 200
+    assert response.content[:2] == b"PK"
+    assert dossier["reference"] in response.headers["content-disposition"]
+
+
+def test_the_produced_report_follows_the_commission_model(client, dossier, session):
+    """Le fichier produit sans second clic est le rapport harmonisé attendu."""
+    import io
+
+    import docx
+
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    reports = client.get(f"/api/v1/dossiers/{dossier['id']}/rapports").json()["items"]
+    word = next(report for report in reports if report["format"] == "docx")
+    content = client.get(
+        f"/api/v1/dossiers/{dossier['id']}/rapports/{word['id']}/fichier"
+    ).content
+
+    document = docx.Document(io.BytesIO(content))
+    headings = [
+        paragraph.text.strip()
+        for paragraph in document.paragraphs
+        if paragraph.style.name.startswith("Heading")
+    ]
+    # Les sept sections du modèle de la commission, dans l'ordre.
+    for number, title in enumerate(
+        (
+            "Fiche d'information contrôlée",
+            "Appréciation scientifique commune",
+            "Matrice réglementaire uniforme",
+            "Contrôle des intervenants étrangers",
+            "Points de vigilance institutionnelle",
+            "Compléments indispensables",
+            "Orientation technique motivée",
+        ),
+        start=1,
+    ):
+        assert any(
+            heading.startswith(f"{number}.") and title in heading for heading in headings
+        ), f"section {number} absente : {headings}"
+
+    # Les deux tableaux structurants du modèle : cinq dimensions + total, 26 critères.
+    sizes = {(len(table.rows), len(table.columns)) for table in document.tables}
+    assert (7, 4) in sizes, "tableau d'appréciation scientifique absent"
+    assert (27, 5) in sizes, "matrice des 26 critères absente"
+
+
+def test_the_page_count_is_measured_on_the_file_actually_written(client, dossier, session):
+    assert _import(client, dossier).status_code == 201
+    created = client.post(f"/api/v1/dossiers/{dossier['id']}/traitement").json()
+    job_service.work_once()
+
+    checkpoints = {
+        checkpoint.step: checkpoint
+        for checkpoint in job_service.checkpoints(session, created["id"])
+    }
+    assert JobState.REPORT_RENDERING in checkpoints
+    import json
+
+    result = json.loads(checkpoints[JobState.REPORT_RENDERING].result_json)
+    pdf = next(item for item in result["rapports"] if item["format"] == "pdf")
+    assert pdf["pages"] and pdf["pages"] > 0
+    assert pdf["brouillon"] is True, "le travail produit un brouillon, jamais un officiel"
+
+
+def test_a_report_is_never_produced_when_quality_control_blocks(client, dossier, monkeypatch):
+    """Un rapport dont un contrôle bloquant échoue ne doit pas exister en fichier."""
+    assert _import(client, dossier).status_code == 201
+
+    def refuse(*args, **kwargs):
+        raise report_qa_service.QaFailed(report_qa_service.QaReport(), [])
+
+    monkeypatch.setattr(report_qa_service, "run", refuse)
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    reports = client.get(f"/api/v1/dossiers/{dossier['id']}/rapports").json()["items"]
+    assert reports == []

@@ -35,6 +35,7 @@ class JobState(StrEnum):
     INDEPENDENT_AUDIT = "INDEPENDENT_AUDIT"
     REPORT_BUILDING = "REPORT_BUILDING"
     REPORT_QA = "REPORT_QA"
+    REPORT_RENDERING = "REPORT_RENDERING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
@@ -56,6 +57,7 @@ JOB_STATE_LABELS: dict[str, str] = {
     JobState.INDEPENDENT_AUDIT: "Relecture indépendante et règle de consensus",
     JobState.REPORT_BUILDING: "Rédaction du rapport",
     JobState.REPORT_QA: "Contrôle qualité du rapport",
+    JobState.REPORT_RENDERING: "Production du rapport harmonisé (Word et PDF)",
     JobState.COMPLETED: "Terminé",
     JobState.FAILED: "Interrompu",
     JobState.CANCELLED: "Annulé",

@@ -61,8 +61,9 @@ PIPELINE: tuple[tuple[str, int], ...] = (
     (JobState.SCIENTIFIC_SCORING, 70),
     (JobState.WEB_RESEARCH, 80),
     (JobState.INDEPENDENT_AUDIT, 88),
-    (JobState.REPORT_BUILDING, 94),
-    (JobState.REPORT_QA, 98),
+    (JobState.REPORT_BUILDING, 92),
+    (JobState.REPORT_QA, 96),
+    (JobState.REPORT_RENDERING, 99),
 )
 
 

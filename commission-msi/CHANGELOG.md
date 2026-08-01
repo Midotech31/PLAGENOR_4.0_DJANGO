@@ -169,9 +169,24 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   du référentiel sont exclues du champ, conformément au principe probatoire de
   l'application et à l'encadré de portée du modèle de la commission. Voir DT-23.
 
+### Un seul clic produit le rapport final
+
+- Nouvelle étape `REPORT_RENDERING` en fin de pipeline : le travail produit
+  lui-même le **rapport harmonisé en Word et en PDF**, au format de la
+  commission. Plus de seconde action, plus de mise en page à choisir.
+- L'étape vient **après** le contrôle qualité : un rapport dont un contrôle
+  bloquant échoue n'est jamais écrit sur le disque.
+- Le brouillon est filigrané ; l'export officiel reste un acte humain distinct,
+  soumis à la porte `G7_VALIDATION_HUMAINE`.
+- Le nombre de pages est mesuré sur le PDF réellement écrit et conservé dans le
+  point de reprise de l'étape.
+- Interface : carte « Rapport harmonisé produit » en fin de traitement, avec les
+  liens de téléchargement directs et aucun bouton « générer ». Une liste vide
+  est expliquée au lieu d'être laissée en blanc. Voir DT-24.
+
 ### Tests
 
-- 287 tests backend et 15 tests d'interface au vert.
+- 292 tests backend et 19 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

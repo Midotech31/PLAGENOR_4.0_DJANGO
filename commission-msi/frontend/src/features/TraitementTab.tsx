@@ -39,6 +39,7 @@ const ACTIVE_STATES = new Set([
   'INDEPENDENT_AUDIT',
   'REPORT_BUILDING',
   'REPORT_QA',
+  'REPORT_RENDERING',
 ]);
 
 const STATUS_TONE: Record<string, 'ok' | 'incertain' | 'critique' | 'neutre'> = {
@@ -229,6 +230,8 @@ export function TraitementTab({
         )}
       </Card>
 
+      {job?.state === 'COMPLETED' && <ProducedReportCard dossierId={dossierId} />}
+
       {assessment && (
         <>
           <DecisionCard dossierId={dossierId} assessment={assessment} onChanged={refresh} />
@@ -237,6 +240,54 @@ export function TraitementTab({
         </>
       )}
     </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Rapport produit par le traitement
+// --------------------------------------------------------------------------
+
+/**
+ * Le rapport final fait partie du travail, il n'est pas une action séparée.
+ *
+ * Cette carte n'offre donc aucun bouton « générer » : le traitement a déjà
+ * écrit les fichiers, et il ne reste qu'à les prendre. Elle ne s'affiche qu'une
+ * fois le travail terminé, parce qu'un rapport produit avant la fin du contrôle
+ * qualité n'existe pas — c'est délibéré, un rapport partiellement valide n'est
+ * jamais écrit sur le disque.
+ */
+function ProducedReportCard({ dossierId }: { dossierId: string }) {
+  const { t } = useLocale();
+  const reports = useAsync(() => api.listReports(dossierId), [dossierId]);
+
+  const items = reports.data?.items ?? [];
+
+  return (
+    <Card title={t('processing.reportTitle')}>
+      <Notice>{t('processing.reportIntro')}</Notice>
+      {reports.loading && <Loading label={t('common.loading')} />}
+      <ErrorBanner error={reports.error} />
+
+      {!reports.loading && items.length === 0 && <Empty>{t('processing.reportNone')}</Empty>}
+
+      {items.length > 0 && (
+        <>
+          <p className="actions">
+            {items.map((report) => (
+              <a
+                key={report.id}
+                className="bouton-principal"
+                href={api.reportUrl(dossierId, report.id)}
+              >
+                {t('processing.reportDownload')} {report.format.toUpperCase()} —{' '}
+                {t('processing.reportVersion')} {report.version}
+              </a>
+            ))}
+          </p>
+          <p className="aide">{t('processing.reportDraft')}</p>
+        </>
+      )}
+    </Card>
   );
 }
 

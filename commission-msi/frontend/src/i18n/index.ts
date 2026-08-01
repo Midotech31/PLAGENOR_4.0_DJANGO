@@ -88,7 +88,7 @@ const fr = {
   'processing.resume': 'Reprendre',
   'processing.none': 'Aucun traitement n’a encore été lancé pour ce dossier.',
   'processing.intro':
-    'Un seul bouton : l’application lit le document, extrait les informations, applique les 26 critères réglementaires, calcule le score scientifique, prépare les vérifications publiques, fait relire ses conclusions par un contrôle indépendant et propose un avis technique motivé. Le score et l’avis sont des propositions : la décision vous appartient.',
+    'Un seul bouton : l’application lit le document, extrait les informations, applique les 26 critères réglementaires, calcule le score scientifique, prépare les vérifications publiques, fait relire ses conclusions par un contrôle indépendant, propose un avis technique motivé et produit le rapport harmonisé en Word et en PDF. Un seul clic suffit : il n’y a pas de seconde action à faire. Le score et l’avis sont des propositions : la décision vous appartient.',
   'processing.durable':
     'Le traitement est enregistré en base et exécuté hors du navigateur : vous pouvez fermer l’application, il reprendra là où il s’est arrêté.',
   'processing.mode': 'Mode d’analyse',
@@ -99,6 +99,15 @@ const fr = {
   'processing.steps': 'Détail des étapes',
   'processing.stepDone': 'étape validée, elle ne sera pas refaite',
   'processing.stepPending': 'étape restant à exécuter',
+  'processing.reportTitle': 'Rapport harmonisé produit',
+  'processing.reportIntro':
+    'Le traitement a produit le rapport final au format de la commission, en Word et en PDF. Aucun second clic n’est nécessaire : les fichiers ci-dessous sont ceux qui viennent d’être écrits.',
+  'processing.reportDraft':
+    'Ce sont des brouillons filigranés. L’export officiel reste un acte distinct, soumis à votre validation explicite, dans l’onglet « Rapports ».',
+  'processing.reportNone':
+    'Aucun rapport n’a encore été produit : lancez « Traiter le dossier ». Si le traitement s’est arrêté, c’est qu’un contrôle qualité bloquant a échoué — un rapport partiellement valide n’est jamais écrit.',
+  'processing.reportDownload': 'Télécharger',
+  'processing.reportVersion': 'version',
 
   // -- Avis technique proposé -------------------------------------------
   'decision.title': 'Avis technique proposé',
@@ -341,7 +350,7 @@ const en: Dictionary = {
   'processing.resume': 'Resume',
   'processing.none': 'No processing has been started for this file yet.',
   'processing.intro':
-    'One button: the application reads the document, extracts the information, applies the 26 regulatory criteria, computes the scientific score, prepares the public checks, has its conclusions reviewed independently and proposes a reasoned technical opinion. The score and the opinion are proposals: the decision remains yours.',
+    'One button: the application reads the document, extracts the information, applies the 26 regulatory criteria, computes the scientific score, prepares the public checks, has its conclusions reviewed independently, proposes a reasoned technical opinion and produces the harmonised report as Word and PDF. One click is enough: there is no second action to take. The score and the opinion are proposals: the decision remains yours.',
   'processing.durable':
     'Processing is stored in the database and runs outside the browser: you may close the application, it will resume where it stopped.',
   'processing.mode': 'Analysis mode',
@@ -352,6 +361,15 @@ const en: Dictionary = {
   'processing.steps': 'Step details',
   'processing.stepDone': 'step validated, it will not be redone',
   'processing.stepPending': 'step still to run',
+  'processing.reportTitle': 'Harmonised report produced',
+  'processing.reportIntro':
+    'Processing produced the final report in the commission format, as Word and PDF. No second click is needed: the files below are the ones just written.',
+  'processing.reportDraft':
+    'These are watermarked drafts. The official export remains a separate act, subject to your explicit validation, in the “Reports” tab.',
+  'processing.reportNone':
+    'No report has been produced yet: start “Process the file”. If processing stopped, a blocking quality check failed — a partially valid report is never written.',
+  'processing.reportDownload': 'Download',
+  'processing.reportVersion': 'version',
   'decision.title': 'Proposed technical opinion',
   'decision.none': 'No opinion has been proposed yet: start the file processing.',
   'decision.score': 'Scientific score',
