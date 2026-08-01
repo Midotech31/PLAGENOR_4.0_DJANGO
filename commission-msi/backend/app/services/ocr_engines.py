@@ -326,10 +326,14 @@ def read_page(
             results.append(result)
         if best is None or result.quality > best.quality:
             best = result
+        # Même prudence entre barreaux qu'entre variantes : une confiance
+        # élevée sur un texte dérisoire ne clôt pas la recherche.
+        from app.core.text import useful_char_count
+
         if (
             result.confidence is not None
             and result.confidence >= good_enough
-            and result.text.strip()
+            and useful_char_count(result.text) >= MIN_USEFUL_CHARS
         ):
             break
 

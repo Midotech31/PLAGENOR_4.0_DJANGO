@@ -20,6 +20,10 @@ from app.core.errors import AppError
 
 ENGINE_NAME = "tesseract"
 
+#: En deçà de ce volume, un passage n'est pas tenu pour concluant, quelle que
+#: soit sa confiance : les variantes suivantes sont essayées quand même.
+MIN_USEFUL_CHARS_TO_STOP = 60
+
 
 class OcrUnavailable(AppError):
     """Le moteur OCR local n'est pas disponible."""
@@ -484,8 +488,17 @@ def run_ocr(png_bytes: bytes, *, languages: str | None = None) -> OcrResult:
             best = (score, name, words, processed, steps)
 
         # Un résultat franchement bon arrête la recherche : inutile de payer
-        # quatre passages supplémentaires sur un document déjà net.
-        if average is not None and average >= settings.ocr_low_confidence + 10 and text.strip():
+        # quatre passages supplémentaires sur un document déjà net. Mais une
+        # confiance élevée sur trois mots ne prouve pas que la page a été lue :
+        # un volume dérisoire fait poursuivre, sans quoi une ligne manquée
+        # resterait manquée.
+        from app.core.text import useful_char_count
+
+        if (
+            average is not None
+            and average >= settings.ocr_low_confidence + 10
+            and useful_char_count(text) >= MIN_USEFUL_CHARS_TO_STOP
+        ):
             break
 
     assert best is not None  # la boucle s'exécute toujours au moins une fois
@@ -546,23 +559,72 @@ def _parse_tsv(content: str) -> list[OcrWord]:
     return words
 
 
+#: Plages Unicode des écritures qui se lisent de droite à gauche.
+_RTL_RANGES = (
+    ("\u0590", "\u05ff"),  # hébreu
+    ("\u0600", "\u06ff"),  # arabe
+    ("\u0750", "\u077f"),  # supplément arabe
+    ("\u08a0", "\u08ff"),  # arabe étendu-A
+    ("\ufb50", "\ufdff"),  # formes de présentation arabes A
+    ("\ufe70", "\ufeff"),  # formes de présentation arabes B
+)
+
+
+def is_rtl_text(value: str) -> bool:
+    """Vrai si l'écriture dominante se lit de droite à gauche.
+
+    On compare les lettres fortement directionnelles : un chiffre ou une
+    ponctuation n'indique aucun sens de lecture.
+    """
+    rtl = ltr = 0
+    for char in value:
+        if any(low <= char <= high for low, high in _RTL_RANGES):
+            rtl += 1
+        elif char.isalpha():
+            ltr += 1
+    return rtl > ltr
+
+
 def _rebuild_text(words: list[OcrWord]) -> str:
+    """Reconstitue le texte en respectant le sens de lecture de chaque ligne.
+
+    Tesseract renvoie les mots avec leurs coordonnées à l'écran. Les trier par
+    abscisse croissante convient au français et à l'anglais, mais **inverse
+    l'ordre des mots d'une ligne arabe** : « طلب تنظيم تظاهرة » ressortait
+    « تظاهرة تنظيم طلب ». Le tri suit donc l'écriture réellement présente sur
+    la ligne, et non une hypothèse de gauche à droite.
+    """
     if not words:
         return ""
+
+    # La tolérance de regroupement suit la taille réelle du texte. Une valeur
+    # absolue coupe une ligne en deux dès que la page est rendue plus petite,
+    # et recolle deux lignes distinctes quand elle est rendue plus grande.
+    heights = sorted(word.height for word in words if word.height > 0)
+    median = heights[len(heights) // 2] if heights else 0
+    tolerance = max(8, int(median * 0.6))
+
     lines: list[list[OcrWord]] = []
-    tolerance = 12
     for word in words:
         placed = False
         for line in lines:
-            if abs(line[0].top - word.top) <= tolerance:
+            # La comparaison porte sur le centre vertical : deux mots de
+            # hauteurs différentes appartiennent quand même à la même ligne.
+            line_center = sum(item.top + item.height / 2 for item in line) / len(line)
+            if abs(line_center - (word.top + word.height / 2)) <= tolerance:
                 line.append(word)
                 placed = True
                 break
         if not placed:
             lines.append([word])
+
+    # Les lignes elles-mêmes se lisent toujours de haut en bas.
+    lines.sort(key=lambda line: min(item.top for item in line))
+
     rendered = []
     for line in lines:
-        line.sort(key=lambda item: item.left)
+        rtl = is_rtl_text("".join(item.text for item in line))
+        line.sort(key=lambda item: item.left, reverse=rtl)
         rendered.append(" ".join(item.text for item in line))
     return "\n".join(rendered).strip()
 

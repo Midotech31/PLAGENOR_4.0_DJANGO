@@ -292,3 +292,32 @@ téléchargement immédiatement après la génération. L'export officiel est re
 dans un dépliant qui énonce ses trois conditions. Le fichier porte désormais la
 référence du dossier, sa version et son état (`Rapport_MSI-2027-014_v3_brouillon.pdf`)
 plutôt qu'un identifiant technique : un rapport doit pouvoir se classer.
+
+## DT-22 — L'arabe se lit de droite à gauche, y compris dans le code
+
+**Constat d'usage :** les pages scannées, « et surtout en arabe », n'étaient pas
+détectées. La mesure a montré deux défauts distincts, tous deux invisibles tant
+que je n'avais testé que du latin.
+
+**Défaut 1 — ordre des mots inversé.** `_rebuild_text` triait les mots d'une
+ligne par abscisse croissante. C'est correct pour le français ; c'est faux pour
+l'arabe. « طلب تنظيم تظاهرة علمية دولية » ressortait « دولية علمية تظاهرة تنظيم
+طلب ». Toute recherche de terme, toute extraction de champ et tout extrait de
+preuve portant sur de l'arabe étaient donc erronés. Le tri suit désormais
+l'écriture réellement présente sur la ligne, détectée par les plages Unicode
+fortement directionnelles — un chiffre ou une ponctuation n'indique aucun sens
+de lecture.
+
+**Défaut 2 — lignes coupées sur un scan réduit.** La tolérance de regroupement
+des mots en lignes était une constante de 12 pixels, alors que la hauteur du
+texte varie avec la résolution du rendu. Elle est maintenant proportionnelle à
+la hauteur médiane des mots, et compare les centres verticaux plutôt que les
+sommets, ce qui tolère des hauteurs de caractères différentes sur une même ligne.
+
+**Défaut 3 — arrêt trop précoce.** Une confiance élevée sur trois mots suffisait
+à clore la recherche de variantes, et une ligne manquée restait manquée. Un
+volume de texte dérisoire fait désormais poursuivre.
+
+**Mesures après correction**, sur trois rendus arabes (`tests/test_ocr_arabic.py`) :
+page nette 3/3 lignes exactes, scan flou 3/3, scan réduit à 55 % 3/3. Aucune
+régression sur le latin.
