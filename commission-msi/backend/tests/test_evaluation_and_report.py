@@ -270,28 +270,102 @@ def test_full_workflow_produces_valid_docx_and_pdf(client, dossier):
         assert len(downloaded.content) > 2000
 
 
-def test_report_model_labels_and_signature(client, dossier, session):
-    from app.reports.builder import build_report_model
+def test_report_structure_matches_professional_model(client, dossier, session):
+    """Le rapport suit la structure des rapports d'évaluation de référence."""
+    from app.reports.evaluation_report import NOT_PROVIDED, build
 
     _import(client, dossier)
-    model = build_report_model(session, dossier["id"])
-    # 18 sections imposées + la section dédiée au classement externe indicatif.
-    assert len(model.sections) == 19
-    assert model.sections[11].title.startswith("Mentions relatives au Maroc")
-    ranking_section = model.sections[18]
-    assert ranking_section.title.startswith("Classement externe indicatif assisté par IA")
-    assert any(
-        "ne modifie aucune note de la grille scientifique officielle" in line.text
-        for line in ranking_section.lines
-    )
-    kinds = {line.kind for section in model.sections for line in section.lines}
-    assert {"FAIT_EXTRAIT", "CALCUL", "A_VERIFIER"} <= kinds
-    assert model.signature == "Designed by Prof. Merzoug Mohamed"
+    model = build(session, dossier["id"])
+
+    titles = [f"{s.number}. {s.title}" for s in model.sections]
+    assert titles[0].startswith("1. Fiche d'information")
+    assert "Contrôle de conformité réglementaire" in titles[2]
+    assert "Anomalies et incohérences" in titles[3]
+    assert "Vérification ouverte des profils" in titles[4]
+    assert "Points sensibles à encadrer en Algérie" in titles[6]
+    assert "Conditions minimales avant réexamen" in titles[7]
+    assert titles[8].startswith("9. Avis motivé")
+    assert "Sources vérifiées" in titles[9]
+    assert titles[-1].startswith("A. Annexe")
+
+    # Encadrés obligatoires du modèle.
+    boxes = {b.box.title for s in model.sections for b in s.blocks if b.kind == "box"}
+    assert "CONSTAT DE VEILLE PUBLIQUE" in boxes
+    assert "PROPOSITION À LA COMMISSION" in boxes
+    assert "PORTÉE ET LIMITE" in boxes
+
+    # Tableaux structurés du modèle.
+    headers = [tuple(b.table.headers) for s in model.sections for b in s.blocks if b.kind == "table"]
+    assert ("Rubrique", "Information vérifiée dans le dossier", "Source") in headers
+    assert ("Exigence contrôlée", "Statut", "Constat documenté") in headers
+
     assert model.banner == "Projet de rapport — validation humaine obligatoire"
-    # Chaque ligne porte une source explicite.
-    for section in model.sections:
-        for line in section.lines:
-            assert line.source_label in {"sans source", "saisie manuelle validée"} or line.source_label.startswith("page ")
+    assert model.signature == "Designed by Prof. Merzoug Mohamed"
+    assert NOT_PROVIDED == "Non renseigné dans le dossier"
+
+
+def test_report_never_invents_absent_data(client, dossier, session):
+    """Zéro hallucination : une donnée absente est écrite comme absente."""
+    from app.reports.evaluation_report import NOT_PROVIDED, build
+
+    _import(client, dossier)
+    model = build(session, dossier["id"])
+
+    fiche = next(
+        b.table
+        for s in model.sections
+        for b in s.blocks
+        if b.kind == "table" and b.table.headers[0] == "Rubrique"
+    )
+    # Aucune information n'ayant été confirmée, chaque rubrique doit l'annoncer.
+    filled = [row for row in fiche.rows if row[1] not in (NOT_PROVIDED,)]
+    for row in filled:
+        # Les seules valeurs remplies proviennent de la saisie de l'évaluateur.
+        assert row[2] in ("Saisie de l'évaluateur",) or row[2].startswith(("p. ", "SHA-256", "saisie"))
+    assert any(row[1] == NOT_PROVIDED for row in fiche.rows)
+
+
+def test_public_watch_box_never_claims_clearance(client, dossier, session):
+    """Le constat de veille ne vaut jamais habilitation."""
+    from app.reports.evaluation_report import PUBLIC_WATCH_CAVEAT, build
+
+    _import(client, dossier)
+    model = build(session, dossier["id"])
+    box = next(
+        b.box
+        for s in model.sections
+        for b in s.blocks
+        if b.kind == "box" and b.box.title == "CONSTAT DE VEILLE PUBLIQUE"
+    )
+    assert PUBLIC_WATCH_CAVEAT in box.body
+    assert "Aucune veille publique n'a été menée" in box.body
+
+
+def test_proposal_box_is_empty_without_human_conclusion(client, dossier, session):
+    from app.reports.evaluation_report import build
+
+    _import(client, dossier)
+    model = build(session, dossier["id"])
+    box = next(
+        b.box
+        for s in model.sections
+        for b in s.blocks
+        if b.kind == "box" and b.box.title == "PROPOSITION À LA COMMISSION"
+    )
+    assert "AUCUNE PROPOSITION FORMULÉE" in box.body
+    assert "L'application n'en propose aucune" in box.body
+
+
+def test_conditions_section_lists_real_gaps(client, dossier, session):
+    from app.reports.evaluation_report import build
+
+    _import(client, dossier)
+    model = build(session, dossier["id"])
+    section = next(s for s in model.sections if s.number == "8")
+    conditions = [item for b in section.blocks if b.kind == "list" for item in b.items]
+    assert any("pièces absentes" in c for c in conditions)
+    assert any("grille scientifique" in c for c in conditions)
+    assert any("recherche publique" in c for c in conditions)
 
 
 def test_orphan_fact_is_excluded_from_official_export(client, dossier, session):
@@ -347,3 +421,35 @@ def test_gates_never_reject_the_dossier(client, dossier):
     }
     status = client.get(f"/api/v1/dossiers/{dossier['id']}").json()["status"]
     assert status not in {"ACCEPTE", "REJETE", "INTERDIT"}
+
+
+def test_headline_box_carries_the_human_conclusion(client, dossier, session):
+    """L'encadré d'avis en tête reprend la conclusion humaine, jamais une déduction."""
+    from app.reports.evaluation_report import build
+
+    _import(client, dossier)
+    empty = build(session, dossier["id"])
+    assert empty.headline is not None
+    assert "AUCUN AVIS FORMULÉ" in empty.headline.body
+    assert empty.headline.title == "AVIS PROPOSÉ"
+
+    client.post(
+        f"/api/v1/dossiers/{dossier['id']}/conclusion",
+        json={
+            "conclusion": Conclusion.AJOURNEMENT_COMPLEMENT_INFORMATION,
+            "motivation": "Programme detaille et lettres d acceptation manquants au dossier fictif.",
+        },
+    )
+    session.expire_all()
+    filled = build(session, dossier["id"])
+    assert filled.headline.title == "AVIS PROPOSÉ : AJOURNEMENT_COMPLEMENT_INFORMATION"
+    assert "ne vaut pas décision de la commission" in filled.headline.body
+
+
+def test_french_dates_do_not_depend_on_system_locale():
+    from datetime import datetime, timezone
+
+    from app.reports.evaluation_report import format_date_fr
+
+    assert format_date_fr(datetime(2026, 8, 1, tzinfo=timezone.utc)) == "1er août 2026"
+    assert format_date_fr(datetime(2027, 3, 12, tzinfo=timezone.utc)) == "12 mars 2027"

@@ -17,7 +17,7 @@ from app.core.crypto import sha256_bytes
 from app.core.errors import GateBlocked, NotFound, ValidationRefused
 from app.core.security import resolve_within
 from app.models import Dossier, Report
-from app.reports import builder, writers
+from app.reports import builder, evaluation_report, writers
 from app.services import evaluation_service
 
 SUPPORTED_FORMATS = ("docx", "pdf")
@@ -32,7 +32,7 @@ def generate_report(session: Session, dossier_id: str, *, fmt: str, official: bo
     if dossier is None:
         raise NotFound("Dossier introuvable.")
 
-    model = builder.build_report_model(session, dossier_id)
+    model = evaluation_report.build(session, dossier_id)
 
     if official:
         if dossier.report_validated_at is None:
