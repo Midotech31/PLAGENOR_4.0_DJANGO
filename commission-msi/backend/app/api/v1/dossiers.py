@@ -16,6 +16,7 @@ from app.core.crypto import decrypt_text, encrypt_text, value_fingerprint
 from app.core.db import get_db
 from app.core.errors import NotFound, ValidationRefused
 from app.core.keyring import get_master_key
+from app.core.security import safe_filename
 from app.core.vocabulary import DossierStatus, PieceStatus, Sensitivity
 from app.models import Document, Dossier, ExtractedItem, Page, PieceCheck, Report
 from app.schemas.api import (
@@ -770,7 +771,13 @@ def generate_report(
 @router.get("/{dossier_id}/rapports/{report_id}/fichier")
 def download_report(dossier_id: str, report_id: str, session: Session = Depends(get_db)) -> Response:
     report, content = report_service.read_report(session, report_id)
-    filename = f"{dossier_id}_v{report.version}.{report.fmt}"
+    # Le nom porte la référence du dossier et son état : un identifiant
+    # technique ne se classe pas dans un dossier de commission.
+    dossier = dossier_service.get_dossier(session, dossier_id)
+    etat = "officiel" if not report.is_draft else "brouillon"
+    filename = safe_filename(
+        f"Rapport_{dossier.reference}_v{report.version}_{etat}.{report.fmt}"
+    )
     return Response(
         content=content,
         media_type=MIME[report.fmt],

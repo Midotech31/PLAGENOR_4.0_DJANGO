@@ -277,3 +277,20 @@ def test_the_other_layouts_remain_available(client, dossier):
         )
         assert response.status_code == 201, layout
         assert response.json()["layout"] == layout
+
+
+def test_the_downloaded_file_is_named_for_filing_not_for_machines(client, dossier):
+    """Un identifiant technique ne se classe pas dans un dossier de commission."""
+    _prepare(client, dossier)
+    created = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/rapports", json={"format": "pdf"}
+    ).json()
+
+    response = client.get(
+        f"/api/v1/dossiers/{dossier['id']}/rapports/{created['id']}/fichier"
+    )
+    disposition = response.headers["content-disposition"]
+    assert "attachment" in disposition
+    assert dossier["reference"] in disposition
+    assert "brouillon" in disposition
+    assert dossier["id"] not in disposition

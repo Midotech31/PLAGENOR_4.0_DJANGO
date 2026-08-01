@@ -81,6 +81,47 @@ async def http_error_handler(_request: Request, exc: HTTPException) -> JSONRespo
     return JSONResponse(status_code=exc.status_code, content=error_payload("HTTP", detail))
 
 
+#: Traduction des contraintes Pydantic en phrases utilisables par l'évaluateur.
+#: Sans elles, l'interface n'affiche qu'un « 422 » qui n'apprend rien.
+def _explain_constraint(error: dict) -> str:
+    kind = error.get("type", "")
+    context = error.get("ctx") or {}
+    field = ".".join(str(part) for part in error.get("loc", ()) if part != "body") or "champ"
+
+    if kind in {"string_too_short", "too_short"}:
+        minimum = context.get("min_length", context.get("min_length", 1))
+        return (
+            f"« {field} » : une motivation d'au moins {minimum} caractères est obligatoire. "
+            "Toute qualification humaine doit être justifiée."
+        )
+    if kind in {"string_too_long", "too_long"}:
+        return f"« {field} » : le texte dépasse la longueur maximale autorisée."
+    if kind == "missing":
+        return f"« {field} » est obligatoire et n'a pas été fourni."
+    if kind == "string_pattern_mismatch":
+        return f"« {field} » n'a pas une valeur acceptée."
+    if kind in {"greater_than_equal", "less_than_equal"}:
+        return (
+            f"« {field} » doit rester entre {context.get('ge', 0)} et "
+            f"{context.get('le', '—')}."
+        )
+    if kind == "enum":
+        expected = context.get("expected", "")
+        return f"« {field} » doit être choisi parmi : {expected}."
+    return f"« {field} » : {error.get('msg', 'valeur refusée')}."
+
+
+async def validation_error_handler(_request: Request, exc) -> JSONResponse:
+    """Transforme une erreur de schéma en message actionnable, pas en code brut."""
+    raw = exc.errors() if hasattr(exc, "errors") else []
+    reasons = [_explain_constraint(item) for item in raw]
+    message = " ".join(reasons) or "La requête a été refusée : une valeur ne respecte pas le format attendu."
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=error_payload("VALIDATION_REFUSEE", message, {"champs": len(raw)}),
+    )
+
+
 async def unexpected_error_handler(_request: Request, _exc: Exception) -> JSONResponse:
     """Aucune trace technique n'est renvoyée à l'interface."""
     return JSONResponse(

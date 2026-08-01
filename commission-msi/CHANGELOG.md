@@ -134,9 +134,22 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   fournisseur refuse tout bloc image sans classification — l'expurgation étant
   textuelle, elle ne peut rien voir dans une image.
 
+### Corrections signalées à l'usage
+
+- **« Requête refusée (422) »** à chaque qualification d'un critère : aucun
+  gestionnaire n'existait pour les erreurs de schéma, et le motif réel était
+  perdu. Les contraintes sont désormais traduites en phrases nommant le champ
+  et la règle ; l'interface annonce l'exigence avant l'envoi et désactive
+  l'enregistrement tant qu'elle n'est pas respectée.
+- **Téléchargement du rapport introuvable** : deux boutons principaux, Word et
+  PDF, lancent maintenant le téléchargement dès la génération. L'export
+  officiel est replié avec l'énoncé de ses trois conditions. Le fichier porte
+  la référence du dossier, sa version et son état au lieu d'un identifiant
+  technique.
+
 ### Tests
 
-- 256 tests backend et 15 tests d'interface au vert.
+- 260 tests backend et 15 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

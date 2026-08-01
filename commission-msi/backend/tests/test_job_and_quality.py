@@ -440,3 +440,52 @@ def _configure_hybrid(monkeypatch) -> None:
     monkeypatch.setenv("ALLOW_EXTERNAL_AI", "true")
     monkeypatch.setenv("MSI_PRIVACY_ACKNOWLEDGED", "true")
     reset_settings()
+
+
+# --------------------------------------------------------------------------
+# Messages d'erreur : un refus doit apprendre quoi corriger
+# --------------------------------------------------------------------------
+
+
+def test_a_schema_refusal_names_the_field_and_the_rule(client, dossier):
+    """Un « 422 » nu n'apprend rien à l'évaluateur ; le motif doit être lisible."""
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique")
+
+    response = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique/criteres/A1",
+        json={"status": "C", "comment": "trop"},
+    )
+    assert response.status_code == 422
+    message = response.json()["error"]["message"]
+    assert "comment" in message
+    assert "8 caractères" in message
+    assert "justifiée" in message
+
+
+def test_an_unknown_status_lists_the_accepted_values(client, dossier):
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique")
+
+    response = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique/criteres/A1",
+        json={"status": "INCONNU", "comment": "motivation suffisante"},
+    )
+    assert response.status_code == 422
+    message = response.json()["error"]["message"]
+    assert "status" in message
+    for accepted in ("C", "PC", "NC", "NV"):
+        assert accepted in message
+
+
+def test_a_valid_qualification_is_accepted(client, dossier):
+    assert _import(client, dossier).status_code == 201
+    client.post(f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique")
+
+    response = client.post(
+        f"/api/v1/dossiers/{dossier['id']}/evaluation-automatique/criteres/A1",
+        json={"status": "C", "comment": "Pièces vérifiées une à une en séance."},
+    )
+    assert response.status_code == 200
+    criteria = {row["code"]: row for row in response.json()["criteria"]}
+    assert criteria["A1"]["human_status"] == "C"

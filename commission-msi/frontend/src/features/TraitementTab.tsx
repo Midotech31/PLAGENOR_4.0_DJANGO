@@ -463,14 +463,31 @@ function ScoreCard({
                           />
                           <input
                             aria-label={t('score.justification')}
+                            placeholder={t('matrix.commentPlaceholder')}
                             minLength={8}
                             value={draft.justification}
                             onChange={(event) =>
                               setDraft({ ...draft, justification: event.target.value })
                             }
                           />
-                          <button type="button" onClick={() => save(sub.key)}>
+                          <span className="aide">
+                            {draft.justification.trim().length < 8
+                              ? t('matrix.commentRequired')
+                              : t('matrix.commentOk')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => save(sub.key)}
+                            disabled={draft.justification.trim().length < 8}
+                          >
                             {t('common.save')}
+                          </button>
+                          <button
+                            type="button"
+                            className="bouton-discret"
+                            onClick={() => setEditing(null)}
+                          >
+                            {t('common.cancel')}
                           </button>
                         </>
                       ) : (
@@ -573,7 +590,7 @@ function MatrixCard({
                 </td>
                 <td>
                   {editing === row.code ? (
-                    <>
+                    <div className="qualification">
                       <select
                         aria-label={t('matrix.status')}
                         value={draft.status}
@@ -587,14 +604,33 @@ function MatrixCard({
                       </select>
                       <input
                         aria-label={t('matrix.comment')}
+                        placeholder={t('matrix.commentPlaceholder')}
                         minLength={8}
                         value={draft.comment}
                         onChange={(event) => setDraft({ ...draft, comment: event.target.value })}
                       />
-                      <button type="button" onClick={() => qualify(row.code)}>
+                      {/* La règle est annoncée avant l'envoi plutôt que subie
+                          sous forme de refus du serveur. */}
+                      <span className="aide">
+                        {draft.comment.trim().length < 8
+                          ? t('matrix.commentRequired')
+                          : t('matrix.commentOk')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => qualify(row.code)}
+                        disabled={draft.comment.trim().length < 8}
+                      >
                         {t('common.save')}
                       </button>
-                    </>
+                      <button
+                        type="button"
+                        className="bouton-discret"
+                        onClick={() => setEditing(null)}
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"

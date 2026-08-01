@@ -259,3 +259,36 @@ un modèle n'a été effectué faute de clé, et je ne peux pas servir de réfé
 sur un texte que j'ai moi-même généré — je saurais déjà ce qu'il dit. Le gain
 annoncé pour ce barreau repose sur une différence d'architecture (lecture
 contextuelle contre classification de glyphes), pas sur une mesure faite ici.
+
+## DT-20 — Un refus doit apprendre quoi corriger
+
+**Constat d'usage :** l'évaluateur recevait « Requête refusée (422). » en rouge
+à chaque tentative de qualification d'un critère, sans savoir quoi corriger.
+
+**Cause :** aucun gestionnaire n'était enregistré pour `RequestValidationError`.
+FastAPI renvoyait alors son format par défaut (`{"detail": [...]}`), que
+l'interface — qui lit `error.message` — ne savait pas traduire. La contrainte
+réelle (motivation d'au moins huit caractères) n'apparaissait nulle part.
+
+**Décision :** un gestionnaire traduit chaque contrainte de schéma en phrase
+utilisable, nommant le champ et la règle, dans la même enveloppe d'erreur que
+le reste de l'application. En complément, l'interface annonce la règle **avant**
+l'envoi et garde le bouton d'enregistrement désactivé tant qu'elle n'est pas
+respectée : la contrainte se comprend au lieu de se subir.
+
+**Portée :** cela corrige toutes les saisies motivées de l'application —
+qualification d'un critère, correction d'une sous-note, avis retenu — puisque
+toutes reposent sur la même exigence de justification.
+
+## DT-21 — Le rapport se télécharge, il ne se cherche pas
+
+**Constat d'usage :** le rapport était produit, puis il fallait le retrouver
+dans une liste plus bas et cliquer un lien textuel discret. Deux boutons
+« officiel » figuraient au même niveau que les boutons de brouillon alors qu'ils
+sont refusés tant que la porte G7 n'est pas franchie.
+
+**Décision :** deux boutons principaux — Word et PDF — déclenchent le
+téléchargement immédiatement après la génération. L'export officiel est replié
+dans un dépliant qui énonce ses trois conditions. Le fichier porte désormais la
+référence du dossier, sa version et son état (`Rapport_MSI-2027-014_v3_brouillon.pdf`)
+plutôt qu'un identifiant technique : un rapport doit pouvoir se classer.

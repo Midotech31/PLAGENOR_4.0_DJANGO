@@ -407,13 +407,26 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
       const created = await api.generateReport(dossierId, { format, official, layout });
       const pages = created.page_count ? ` — ${created.page_count} page(s)` : '';
       setMessage(
-        `${format.toUpperCase()} v${created.version}${pages} — SHA-256 ${created.sha256.slice(0, 16)}…`,
+        `${format.toUpperCase()} v${created.version}${pages} — SHA-256 ${created.sha256.slice(0, 16)}… — ` +
+          t('rapports.downloadStarted'),
       );
+      // Le rapport se télécharge dès qu'il est produit : le retrouver dans la
+      // liste plus bas était une étape de trop.
+      triggerDownload(api.reportUrl(dossierId, created.id));
       reports.reload();
       onChanged();
     } catch (cause) {
       setError(cause);
     }
+  }
+
+  function triggerDownload(url: string) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   return (
@@ -434,19 +447,27 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
           </select>
         </Field>
         <div className="actions">
-          <button type="button" onClick={() => generate('docx', false)}>
-            DOCX — {t('rapports.draft')}
+          <button type="button" className="bouton-principal" onClick={() => generate('docx', false)}>
+            {t('rapports.getDocx')}
           </button>
-          <button type="button" onClick={() => generate('pdf', false)}>
-            PDF — {t('rapports.draft')}
-          </button>
-          <button type="button" className="bouton-principal" onClick={() => generate('docx', true)}>
-            DOCX — {t('rapports.official')}
-          </button>
-          <button type="button" className="bouton-principal" onClick={() => generate('pdf', true)}>
-            PDF — {t('rapports.official')}
+          <button type="button" className="bouton-principal" onClick={() => generate('pdf', false)}>
+            {t('rapports.getPdf')}
           </button>
         </div>
+        <p className="aide">{t('rapports.draftExplained')}</p>
+
+        <details>
+          <summary>{t('rapports.officialSummary')}</summary>
+          <p className="aide">{t('rapports.officialExplained')}</p>
+          <div className="actions">
+            <button type="button" onClick={() => generate('docx', true)}>
+              DOCX — {t('rapports.official')}
+            </button>
+            <button type="button" onClick={() => generate('pdf', true)}>
+              PDF — {t('rapports.official')}
+            </button>
+          </div>
+        </details>
       </Card>
 
       <Card title={t('rapports.validate')}>
@@ -501,8 +522,12 @@ export function RapportsTab({ dossierId, onChanged }: { dossierId: string; onCha
                   </td>
                   <td className="mono">{report.sha256.slice(0, 20)}…</td>
                   <td>
-                    <a href={api.reportUrl(dossierId, report.id)} download>
-                      {t('rapports.download')}
+                    <a
+                      className="bouton-discret"
+                      href={api.reportUrl(dossierId, report.id)}
+                      download
+                    >
+                      ⬇ {t('rapports.download')}
                     </a>
                   </td>
                 </tr>

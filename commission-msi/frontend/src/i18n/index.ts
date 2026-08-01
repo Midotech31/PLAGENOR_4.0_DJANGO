@@ -51,6 +51,17 @@ const fr = {
   'dossier.openFindings': 'Alertes ouvertes',
   'dossier.gates': 'Portes de validation',
 
+  'rapports.getDocx': 'Obtenir le rapport (Word)',
+  'rapports.getPdf': 'Obtenir le rapport (PDF)',
+  'rapports.downloadStarted': 'téléchargement lancé.',
+  'rapports.draftExplained':
+    'Le rapport se télécharge immédiatement. Il porte le filigrane « brouillon » tant que vous n’avez pas enregistré la validation humaine ci-dessus.',
+  'rapports.officialSummary': 'Export officiel (sans filigrane)',
+  'rapports.officialExplained':
+    'L’export officiel exige d’abord la validation humaine ci-dessus, aucune alerte laissée à vérifier, et aucun fait sans page source. Sans cela il est refusé, et le motif exact vous est indiqué.',
+  'matrix.commentPlaceholder': 'Motivation de votre qualification…',
+  'matrix.commentRequired': 'Motivation obligatoire : au moins 8 caractères.',
+  'matrix.commentOk': 'Motivation suffisante.',
   'rapports.layout': 'Mise en page du rapport',
   'rapports.layoutHarmonise': 'Harmonisée — format de la commission (8 sections, 3 pages)',
   'rapports.layoutCompact': 'Compacte — informations, matrice, vérifications',
@@ -305,6 +316,17 @@ const en: Dictionary = {
   'dashboard.online': 'Online',
   'dashboard.offline': 'Offline',
   'dashboard.providers': 'Search providers',
+  'rapports.getDocx': 'Get the report (Word)',
+  'rapports.getPdf': 'Get the report (PDF)',
+  'rapports.downloadStarted': 'download started.',
+  'rapports.draftExplained':
+    'The report downloads immediately. It carries the "draft" watermark until you record the human validation above.',
+  'rapports.officialSummary': 'Official export (no watermark)',
+  'rapports.officialExplained':
+    'The official export first requires the human validation above, no alert left to qualify, and no fact without a source page. Otherwise it is refused, and the exact reason is shown.',
+  'matrix.commentPlaceholder': 'Reason for your qualification…',
+  'matrix.commentRequired': 'Reason required: at least 8 characters.',
+  'matrix.commentOk': 'Reason long enough.',
   'rapports.layout': 'Report layout',
   'rapports.layoutHarmonise': 'Harmonised — commission format (8 sections, 3 pages)',
   'rapports.layoutCompact': 'Compact — information, matrix, verifications',
@@ -434,6 +456,17 @@ const ar: Dictionary = {
   'dashboard.online': 'متصل',
   'dashboard.offline': 'غير متصل',
   'dashboard.providers': 'مزودو البحث',
+  'rapports.getDocx': 'الحصول على التقرير (Word)',
+  'rapports.getPdf': 'الحصول على التقرير (PDF)',
+  'rapports.downloadStarted': 'بدأ التنزيل.',
+  'rapports.draftExplained':
+    'يُنزَّل التقرير فوراً. ويحمل علامة «مسوّدة» ما لم تسجّلوا المصادقة البشرية أعلاه.',
+  'rapports.officialSummary': 'تصدير رسمي (بدون علامة مائية)',
+  'rapports.officialExplained':
+    'يتطلب التصدير الرسمي أولاً المصادقة البشرية أعلاه، وألا يبقى أي تنبيه دون تكييف، وألا توجد واقعة بلا صفحة مصدر. وإلا رُفض مع بيان السبب الدقيق.',
+  'matrix.commentPlaceholder': 'تعليل التكييف…',
+  'matrix.commentRequired': 'التعليل إلزامي: 8 أحرف على الأقل.',
+  'matrix.commentOk': 'التعليل كافٍ.',
   'rapports.layout': 'تخطيط التقرير',
   'rapports.layoutHarmonise': 'موحّد — صيغة اللجنة (8 أقسام، 3 صفحات)',
   'rapports.layoutCompact': 'مختصر — المعلومات، المصفوفة، عمليات التحقق',

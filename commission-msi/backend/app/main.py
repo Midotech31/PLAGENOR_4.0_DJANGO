@@ -25,6 +25,7 @@ from app.core.errors import (
     app_error_handler,
     http_error_handler,
     unexpected_error_handler,
+    validation_error_handler,
 )
 from app.core.keyring import get_master_key
 from app.core.security import LocalOnlyMiddleware
@@ -96,7 +97,12 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(LocalOnlyMiddleware, settings=settings)
+    from fastapi.exceptions import RequestValidationError
+
     app.add_exception_handler(AppError, app_error_handler)
+    # Sans ce gestionnaire, une contrainte de schéma n'arrive à l'interface que
+    # sous la forme « Requête refusée (422) », qui n'aide personne.
+    app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_exception_handler(HTTPException, http_error_handler)
     app.add_exception_handler(Exception, unexpected_error_handler)
 
