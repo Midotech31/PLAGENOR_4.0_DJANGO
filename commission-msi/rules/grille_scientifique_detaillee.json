@@ -167,7 +167,7 @@
     },
     {
       "key": "faisabilite_gouvernance",
-      "label": "Faisabilité et gouvernance",
+      "label": "Faisabilité / gouvernance",
       "max": 15,
       "subcriteria": [
         {
@@ -209,7 +209,7 @@
     },
     {
       "key": "valorisation_suivi",
-      "label": "Valorisation et suivi",
+      "label": "Valorisation / suivi",
       "max": 15,
       "subcriteria": [
         {

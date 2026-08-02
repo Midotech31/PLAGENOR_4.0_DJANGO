@@ -577,3 +577,55 @@ fichier unique, et la recherche ne trouvait rien. Les emplacements sont
 maintenant décomposés en segments. Le test l'a révélé parce qu'il s'exécute sur
 Linux — un test qui n'aurait tourné que sous Windows aurait laissé passer la
 faute.
+
+## DT-28 — Sept sections, pas huit : conformité aux douze rapports de la commission
+
+**Source.** Douze rapports « réexaminés » du CRU Ouest, fournis par la
+commission. Analysés un à un, ils partagent une ossature stricte et deux
+variantes conditionnelles.
+
+**Ce que la mesure a montré.** Les douze rapports ont **sept sections**, jamais
+huit. Aucun ne porte de section « Sources et traçabilité », de tableau des
+règles de décision, ni de sous-section de contrôle en ligne. Le rapport produit
+en portait les trois.
+
+**Deux variations conditionnelles, et elles sont déterministes.** Le titre de la
+section 6 suit l'orientation, sans exception sur les douze :
+
+| Orientation | Titre de la section 6 |
+|---|---|
+| avis favorable, ou favorable sous réserves | Réserves maintenues et conditions préalables à la tenue |
+| ajournement, quelle qu'en soit la forme | Compléments indispensables avant appréciation ministérielle |
+
+Ce n'est pas une nuance de style : sous réserves, la manifestation peut se tenir
+et les points listés sont des conditions préalables ; en ajournement, elle ne le
+peut pas et les mêmes points sont des compléments à produire avant tout examen.
+
+La section 4.1 n'apparaît que si les pièces portent des éléments à signaler, et
+son titre suit ce qui est trouvé — « éléments relatifs au Maroc », ou « au Maroc
+et à Israël ».
+
+**Autres écarts corrigés**, tous mesurés sur les modèles : fiche de six lignes
+sans ligne de titre ; légende de la matrice **avant** le tableau et non après ;
+en-tête dans l'ordre intitulé, lieu et dates, pièce évaluée ; libellés de
+dimensions `Faisabilité / gouvernance` et `Valorisation / suivi` ; suppression
+des étiquettes `[FAIT EXTRAIT]` et `[CALCUL]` accolées aux paragraphes.
+
+**Ce qui a été conservé, et pourquoi.** La provenance — référence, évaluateur,
+date, version — ne figure dans aucun modèle. Elle descend en **pied de page**
+plutôt que de disparaître : un document officiel sans référence ni date n'est
+pas défendable, et le pied concilie la conformité du corps avec l'exigence de
+traçabilité.
+
+**Où sont passés les éléments retirés.** Dans l'interface, via
+`GET /dossiers/{id}/rapport-details` et une carte « Traçabilité du rapport » :
+sources, fondements réglementaires, versions, nombre de preuves citables,
+contrôle en ligne des profils avec sa portée, contradictions connues, légendes
+et principe probatoire. Rien n'est perdu ; ces éléments fondent le rapport et
+doivent rester vérifiables, mais aucun des douze modèles ne les imprime et la
+pièce transmise au ministère n'a pas à s'en alourdir.
+
+Un détail d'écran mérite d'être noté : la carte ne répète ni les règles de
+décision ni les versions de référentiel, déjà portées par les cartes d'avis et
+de score. Deux listes identiques dans le même écran font douter qu'il s'agisse
+bien des mêmes.

@@ -6,11 +6,10 @@ transmise au ministère, et une section 4.1 où les éléments relatifs au Maroc
 plus les garde-fous qui ne dépendent d'aucun modèle : rien d'inventé, aucun
 numéro de passeport, aucune décision présentée comme prise.
 
-S'y ajoute la section 4.2, où la veille en ligne rend compte des rattachements
-et activités publics des intervenants étrangers. Les tests qui la couvrent
-portent autant sur ce qu'elle affiche que sur ce qu'elle refuse d'examiner :
-sans énoncé des critères écartés, un lecteur prêterait à l'application un
-profilage par l'origine que son propre référentiel lui interdit.
+Les douze rapports fournis par la commission n'ont que **sept** sections : ni
+sources, ni règles de décision, ni contrôle en ligne des profils. Ces éléments
+n'ont pas disparu pour autant — ils sont restitués à l'interface par
+`/rapport-details`, et une seconde série de tests vérifie qu'ils y sont bien.
 """
 
 from __future__ import annotations
@@ -45,7 +44,6 @@ SECTION_TITLES = [
     "Points de vigilance institutionnelle",
     "Compléments indispensables avant appréciation ministérielle",
     "Orientation technique motivée transmise au ministère",
-    "Sources et traçabilité",
 ]
 
 
@@ -91,12 +89,13 @@ def _flatten(model) -> str:
 # --------------------------------------------------------------------------
 
 
-def test_the_eight_sections_follow_the_model_order(client, dossier, session):
+def test_the_seven_sections_follow_the_model_order(client, dossier, session):
+    """Les douze rapports de la commission ont sept sections, pas huit."""
     _prepare(client, dossier)
     model = uniform_report.build(session, dossier["id"])
 
-    assert model.heading == "RAPPORT D'ÉVALUATION HARMONISÉ"
-    assert [section.number for section in model.sections] == list("12345678")
+    assert model.heading == "RAPPORT D'ÉVALUATION"
+    assert [section.number for section in model.sections] == list("1234567")
     assert [section.title for section in model.sections] == SECTION_TITLES
 
 
@@ -104,9 +103,12 @@ def test_the_header_names_the_assessed_piece(client, dossier, session):
     _prepare(client, dossier)
     model = uniform_report.build(session, dossier["id"])
 
-    assert "Pièce évaluée : dossier.pdf" in model.subtitle
+    # Ordre du modèle : intitulé, puis lieu et dates, puis pièce évaluée.
+    assert "Pièce évaluée : dossier.pdf" in model.organizer
+    assert "Adrar" in model.subtitle
     # Les balises de statut restent dans les tableaux, pas dans le titre.
     assert "[A_VERIFIER]" not in model.subtitle
+    assert "[A_VERIFIER]" not in model.organizer
 
 
 def test_the_orientation_is_shown_at_the_top_with_the_ministry_as_decider(
@@ -159,7 +161,14 @@ def test_the_matrix_uses_the_short_common_labels_of_the_model(client, dossier, s
     assert rows["I7"][1] == "Internationaux ≈ 10 % des intervenants en personne"
     for row in table.rows:
         assert all(cell and cell.strip() for cell in row), f"cellule vide sur {row[0]}"
-    assert "C = conforme démontré" in (table.note or "")
+    # La légende précède le tableau dans le modèle, elle n'est plus une note.
+    legend = [
+        block.paragraph.text
+        for block in model.sections[2].blocks
+        if block.kind == "paragraph" and block.paragraph
+    ]
+    assert any("C = conforme démontré" in text for text in legend), legend
+    assert table.note is None
 
 
 def test_section_four_one_covers_morocco_and_israel_as_information_only(
@@ -173,7 +182,6 @@ def test_section_four_one_covers_morocco_and_israel_as_information_only(
     ]
     assert headings == [
         "4.1. Éléments relatifs au Maroc et à Israël — information au ministère",
-        "4.2. Contrôle en ligne des profils — rattachements et activités publics",
     ]
 
     boxes = [block.box for block in model.sections[3].blocks if block.kind == "box"]
@@ -195,10 +203,13 @@ def test_the_complements_are_short_actions_not_a_second_matrix(client, dossier, 
     ]
     assert items
     for item in items:
-        assert len(item) < 120, f"complément trop verbeux : {item}"
-        assert any(
-            action in item for action in ("à produire", "à documenter", "à compléter")
-        )
+        # Puces courtes, comme dans les douze modèles : une référence et un
+        # libellé. L'action attendue et le caractère bloquant se lisent en
+        # section 3 et dans l'interface, pas deux fois.
+        assert len(item) < 80, f"complément trop verbeux : {item}"
+        assert " — " in item, item
+    # Aucune puce ne redit le constat détaillé de la matrice.
+    assert not any("preuve" in item.lower() for item in items)
 
 
 def test_the_decision_section_speaks_of_orientation_never_of_a_decision(
@@ -210,21 +221,6 @@ def test_the_decision_section_speaks_of_orientation_never_of_a_decision(
 
     assert "l'appréciation et la décision finales appartiennent au ministère" in rendered
     assert "aide technique à l'instruction" in rendered
-
-
-def test_sources_carry_the_versions_and_the_evidence_principle(client, dossier, session):
-    _prepare(client, dossier)
-    rendered = _flatten(uniform_report.build(session, dossier["id"]))
-
-    assert "Référentiel réglementaire appliqué : version" in rendered
-    assert "Grille scientifique appliquée : version" in rendered
-    assert "SHA-256" in rendered
-    assert "aucune déduction à partir de la nationalité, de l'origine" in rendered
-
-
-# --------------------------------------------------------------------------
-# Garde-fous indépendants du modèle
-# --------------------------------------------------------------------------
 
 
 def test_no_passport_number_is_ever_reproduced(client, dossier, session):
@@ -343,54 +339,59 @@ def _record_screening_claim(session, dossier_id: str, statement: str, *, sources
     session.commit()
 
 
-def test_the_online_screening_has_its_own_subsection(client, dossier, session):
-    _prepare(client, dossier)
-    model = uniform_report.build(session, dossier["id"])
-
-    text = _flatten(model)
-    assert "4.2. Contrôle en ligne des profils" in text
-
-
-def test_without_a_web_run_the_screening_says_so_rather_than_reassuring(
-    client, dossier, session
-):
-    """Ne pas avoir cherché n'est pas n'avoir rien trouvé."""
-    _prepare(client, dossier)
-    model = uniform_report.build(session, dossier["id"])
-
-    text = _flatten(model)
-    assert "la veille en ligne n'a pas été exécutée" in text
-    assert "ni un constat favorable, ni un constat défavorable" in text
-
-
-def test_a_documented_element_is_tabled_with_its_level_of_proof(client, dossier, session):
-    _prepare(client, dossier)
-    _record_screening_claim(
-        session,
-        dossier["id"],
-        "Un rattachement en lien avec « Bar-Ilan » est documenté publiquement.",
-    )
-    model = uniform_report.build(session, dossier["id"])
-
+def _screening_rows(model) -> str:
     table = next(
         block.table
         for block in model.sections[3].blocks
         if block.kind == "table" and "profils publics" in block.table.caption
     )
-    assert table.headers == ["Personne", "Élément relevé", "Sources indép.", "Niveau de preuve"]
-    assert table.rows[0][0] == "Pr Jean Dubois"
-    assert "Bar-Ilan" in table.rows[0][1]
-    assert table.rows[0][2] == "2"
-    # La mention de portée n'encombre pas la cellule : elle est dans l'encadré.
-    assert "strictement informatif" not in table.rows[0][1]
+    return "\n".join("\n".join(row) for row in table.rows)
 
 
-def test_the_screening_states_the_criteria_it_refuses_to_apply(client, dossier, session):
-    """Sans cet énoncé, un lecteur pourrait croire à un profilage par l'origine."""
+# --------------------------------------------------------------------------
+# Ce que le rapport ne porte plus doit rester consultable
+# --------------------------------------------------------------------------
+
+
+def test_the_details_carry_the_versions_and_the_evidence_principle(client, dossier):
+    """Sortir la traçabilité du fichier ne doit pas la faire disparaître."""
     _prepare(client, dossier)
-    model = uniform_report.build(session, dossier["id"])
+    details = client.get(f"/api/v1/dossiers/{dossier['id']}/rapport-details").json()
 
-    text = _flatten(model)
+    assert details["versions"]["referentiel"]
+    assert details["versions"]["grille"]
+    assert details["versions"]["application"]
+    assert details["preuves"] > 0
+    assert "aucune déduction à partir de" in details["principe_probatoire"]
+    assert any("SHA-256" in item for item in details["sources"])
+    assert any("595/SG" in item for item in details["fondements"])
+
+
+def test_the_decision_rules_stay_verifiable_outside_the_report(client, dossier):
+    _prepare(client, dossier)
+    details = client.get(f"/api/v1/dossiers/{dossier['id']}/rapport-details").json()
+
+    rules = details["regles_de_decision"]
+    assert rules, "l'orientation doit rester explicable règle par règle"
+    for rule in rules:
+        assert rule["regle"] and rule["motif"]
+
+
+def test_the_online_screening_moves_to_the_interface(client, dossier):
+    _prepare(client, dossier)
+    details = client.get(f"/api/v1/dossiers/{dossier['id']}/rapport-details").json()
+
+    screening = details["controle_en_ligne"]
+    assert screening["veille_executee"] is False
+    assert "n'a pas été exécutée" in screening["constat"]
+    assert "ni un constat favorable, ni un constat défavorable" in screening["constat"]
+
+
+def test_the_scope_still_names_what_the_control_refuses_to_examine(client, dossier):
+    """L'énoncé des critères écartés ne doit disparaître ni du rapport ni de l'écran."""
+    _prepare(client, dossier)
+    details = client.get(f"/api/v1/dossiers/{dossier['id']}/rapport-details").json()
+
     for forbidden in (
         "la nationalité",
         "l'origine ethnique",
@@ -399,26 +400,53 @@ def test_the_screening_states_the_criteria_it_refuses_to_apply(client, dossier, 
         "la consonance d'un nom",
         "une opinion supposée",
     ):
-        assert forbidden in text, forbidden
-    assert "n'est pas une garantie et ne constitue pas une habilitation de sécurité" in text
+        assert forbidden in details["portee_controle"], forbidden
 
 
-def test_the_screening_never_presents_an_element_as_a_non_conformity(client, dossier, session):
+def test_the_legends_removed_from_the_report_are_kept_for_the_screen(client, dossier):
     _prepare(client, dossier)
-    _record_screening_claim(
-        session, dossier["id"], "Un rattachement institutionnel est documenté publiquement."
-    )
+    details = client.get(f"/api/v1/dossiers/{dossier['id']}/rapport-details").json()
+
+    assert "astérisque" in details["legendes"]["asterisque"]
+    assert "ne préjuge d'aucune incapacité" in details["legendes"]["score_zero"]
+    assert "C = conforme démontré" in details["legendes"]["matrice"]
+
+
+def test_an_unknown_dossier_is_refused_plainly(client):
+    response = client.get("/api/v1/dossiers/inconnu/rapport-details")
+
+    assert response.status_code == 404
+
+
+# --------------------------------------------------------------------------
+# Section 6 : le titre suit l'orientation
+# --------------------------------------------------------------------------
+
+
+def test_the_sixth_section_is_titled_after_the_orientation(client, dossier, session):
+    """Les douze modèles appliquent cette règle sans exception."""
+    _prepare(client, dossier)
     model = uniform_report.build(session, dossier["id"])
 
-    text = _flatten(model)
-    assert "aucun n'est qualifié par l'application" in text
-    assert "non-conformité" not in _screening_rows(model)
+    # Le dossier de test est ajourné : ce sont des compléments à produire.
+    assert model.sections[5].title == uniform_report.COMPLEMENTS_TITLE
+
+    # Sous avis favorable, la manifestation peut se tenir : ce sont des réserves.
+    for avis in ("FAVORABLE", "FAVORABLE_SOUS_RESERVES"):
+        assert (
+            uniform_report._complements_title({"decision": {"avis": avis}})
+            == uniform_report.RESERVES_TITLE
+        )
+    for avis in ("AJOURNEMENT_POUR_COMPLEMENTS", "NON_DETERMINABLE_INFORMATION_INSUFFISANTE"):
+        assert (
+            uniform_report._complements_title({"decision": {"avis": avis}})
+            == uniform_report.COMPLEMENTS_TITLE
+        )
 
 
-def _screening_rows(model) -> str:
-    table = next(
-        block.table
-        for block in model.sections[3].blocks
-        if block.kind == "table" and "profils publics" in block.table.caption
-    )
-    return "\n".join("\n".join(row) for row in table.rows)
+def test_a_human_orientation_drives_the_sixth_section_title():
+    """Si l'évaluateur retient un autre avis, le titre suit le sien."""
+    assessment = {
+        "decision": {"avis": "AJOURNEMENT_POUR_COMPLEMENTS", "human_decision": "FAVORABLE_SOUS_RESERVES"}
+    }
+    assert uniform_report._complements_title(assessment) == uniform_report.RESERVES_TITLE

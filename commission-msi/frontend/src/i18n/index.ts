@@ -115,6 +115,17 @@ const fr = {
   'document.engineAbsent': 'absent',
   'document.arabicMissing':
     'Aucun moteur installé ne sait lire l’arabe. Une page arabe nette ressortira « illisible » tant que ce manque n’est pas comblé — la page n’est alors pas en cause. À installer :',
+  'details.title': 'Traçabilité du rapport',
+  'details.intro':
+    'Le rapport transmis au ministère suit le format de la commission : sept sections, sans annexe. Les éléments qui le fondent — sources, versions, règles de décision, contrôle en ligne des profils — restent consultables ici.',
+  'details.application': 'Application',
+  'details.evidence': 'preuves citables',
+  'details.screening': 'Contrôle en ligne des profils',
+  'details.independentSources': 'sources indépendantes',
+  'details.sources': 'Sources et fondements réglementaires',
+  'details.legends': 'Légendes et conventions de lecture',
+  'details.contradictions': 'Contradictions connues du référentiel',
+  'details.orphanFacts': 'Faits sans page source, exclus de la synthèse',
 
   // -- Avis technique proposé -------------------------------------------
   'decision.title': 'Avis technique proposé',
@@ -384,6 +395,17 @@ const en: Dictionary = {
   'document.engineAbsent': 'absent',
   'document.arabicMissing':
     'No installed engine can read Arabic. A clean Arabic page will come out “unreadable” until this is fixed — the page is not at fault. To install:',
+  'details.title': 'Report traceability',
+  'details.intro':
+    'The report sent to the ministry follows the commission format: seven sections, no annex. What underpins it — sources, versions, decision rules, online profile screening — stays available here.',
+  'details.application': 'Application',
+  'details.evidence': 'citable evidence',
+  'details.screening': 'Online profile screening',
+  'details.independentSources': 'independent sources',
+  'details.sources': 'Sources and regulatory grounds',
+  'details.legends': 'Legends and reading conventions',
+  'details.contradictions': 'Known contradictions in the referential',
+  'details.orphanFacts': 'Facts without a source page, excluded from the synthesis',
   'decision.title': 'Proposed technical opinion',
   'decision.none': 'No opinion has been proposed yet: start the file processing.',
   'decision.score': 'Scientific score',

@@ -224,9 +224,30 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   puis les emplacements d'installation standard — y compris une installation
   utilisateur sans droits administrateur. Voir DT-27.
 
+### Rapport conforme aux douze rapports de la commission
+
+- **Sept sections, plus huit.** Les douze rapports « réexaminés » du CRU Ouest
+  ne portent ni section « Sources et traçabilité », ni tableau des règles de
+  décision, ni sous-section de contrôle en ligne. Le rapport produit s'y
+  conforme.
+- **Titre de la section 6 conditionnel**, comme dans les douze modèles :
+  « Réserves maintenues et conditions préalables à la tenue » sous avis
+  favorable, « Compléments indispensables avant appréciation ministérielle » en
+  ajournement.
+- Fiche de six lignes sans ligne de titre ; légende de la matrice avant le
+  tableau ; en-tête dans l'ordre intitulé, lieu et dates, pièce évaluée ;
+  libellés de dimensions alignés ; étiquettes `[FAIT EXTRAIT]` et `[CALCUL]`
+  retirées du format harmonisé.
+- La provenance descend en **pied de page** : absente des modèles, mais un
+  document officiel ne peut pas se passer de sa référence et de sa date.
+- **Les détails retirés passent à l'interface** : nouveau
+  `GET /dossiers/{id}/rapport-details` et carte « Traçabilité du rapport » —
+  sources, versions, preuves citables, contrôle en ligne des profils et sa
+  portée, contradictions connues, légendes, principe probatoire. Voir DT-28.
+
 ### Tests
 
-- 312 tests backend et 19 tests d'interface au vert.
+- 314 tests backend et 22 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

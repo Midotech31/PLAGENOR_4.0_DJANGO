@@ -231,6 +231,31 @@ export interface OcrDiagnostic {
   limite: string;
 }
 
+export interface ReportDetails {
+  sources: string[];
+  fondements: string[];
+  versions: { referentiel: string; grille: string; application: string };
+  preuves: number;
+  regles_de_decision: { regle: string; motif: string; criteres: string[] }[];
+  controle_en_ligne: {
+    profils_controles: number;
+    veille_executee: boolean;
+    constat: string;
+    elements: {
+      personne: string;
+      element: string;
+      sources_independantes: number;
+      niveau_de_preuve: string;
+    }[];
+  };
+  contradictions: { id: string; sujet: string; constat: string; traitement: string }[];
+  desaccords_audit: unknown[];
+  faits_orphelins: string[];
+  legendes: { asterisque: string; score_zero: string; matrice: string };
+  principe_probatoire: string;
+  portee_controle: string;
+}
+
 export interface ReportInfo {
   id: string;
   format: string;
@@ -608,6 +633,8 @@ export const api = {
     post<{ notice: string }>(`/dossiers/${id}/conclusion`, payload),
 
   ocrDiagnostic: () => get<OcrDiagnostic>('/diagnostic-ocr'),
+
+  reportDetails: (id: string) => get<ReportDetails>(`/dossiers/${id}/rapport-details`),
 
   listReports: (id: string) => get<{ items: ReportInfo[] }>(`/dossiers/${id}/rapports`),
   generateReport: (id: string, payload: { format: string; official: boolean; layout?: string }) =>

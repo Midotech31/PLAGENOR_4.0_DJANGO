@@ -231,6 +231,7 @@ export function TraitementTab({
       </Card>
 
       {job?.state === 'COMPLETED' && <ProducedReportCard dossierId={dossierId} />}
+      {job?.state === 'COMPLETED' && <ReportDetailsCard dossierId={dossierId} />}
 
       {assessment && (
         <>
@@ -287,6 +288,105 @@ function ProducedReportCard({ dossierId }: { dossierId: string }) {
           <p className="aide">{t('processing.reportDraft')}</p>
         </>
       )}
+    </Card>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Traçabilité du rapport
+// --------------------------------------------------------------------------
+
+/**
+ * Ce que le rapport ne porte plus, et pourquoi il faut le voir ici.
+ *
+ * Les douze rapports de la commission ont sept sections : ni sources, ni règles
+ * de décision, ni contrôle en ligne des profils. Le rapport produit s'y conforme
+ * — mais ces éléments le fondent, et un rapport qu'on ne peut pas remonter
+ * jusqu'à ses preuves ne vaut rien. Ils sont donc restitués ici, à l'écran, où
+ * ils n'alourdissent pas la pièce transmise au ministère.
+ */
+function ReportDetailsCard({ dossierId }: { dossierId: string }) {
+  const { t } = useLocale();
+  const state = useAsync(() => api.reportDetails(dossierId), [dossierId]);
+
+  if (state.loading) return <Loading label={t('common.loading')} />;
+  if (state.error || !state.data) return <ErrorBanner error={state.error} />;
+  const d = state.data;
+
+  return (
+    <Card title={t('details.title')}>
+      <Notice>{t('details.intro')}</Notice>
+
+      {/* Les versions de référentiel et de grille sont déjà portées par les
+          cartes d'avis et de score : seules figurent ici les données qu'aucune
+          autre carte ne montre. */}
+      <p className="actions">
+        <Badge tone="neutre">
+          {d.preuves} {t('details.evidence')}
+        </Badge>
+        <Badge tone="neutre">
+          {t('details.application')} {d.versions.application}
+        </Badge>
+      </p>
+
+      {/* Les règles de décision ne sont pas répétées ici : la carte « Avis
+          technique proposé » les affiche déjà, et deux listes identiques dans
+          le même écran font douter qu'il s'agisse bien des mêmes. */}
+      <details open>
+        <summary>{t('details.screening')}</summary>
+        <p className="aide">{d.controle_en_ligne.constat}</p>
+        {d.controle_en_ligne.elements.length > 0 && (
+          <ul className="aide">
+            {d.controle_en_ligne.elements.map((item, index) => (
+              <li key={`${item.personne}-${index}`}>
+                <strong>{item.personne}</strong> — {item.element}{' '}
+                <Badge tone="neutre">{item.niveau_de_preuve}</Badge> (
+                {item.sources_independantes} {t('details.independentSources')})
+              </li>
+            ))}
+          </ul>
+        )}
+        <Notice tone="incertain">{d.portee_controle}</Notice>
+      </details>
+
+      <details>
+        <summary>{t('details.sources')}</summary>
+        <ul className="aide">
+          {[...d.sources, ...d.fondements].map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </details>
+
+      <details>
+        <summary>{t('details.legends')}</summary>
+        <ul className="aide">
+          <li>{d.legendes.matrice}</li>
+          <li>{d.legendes.asterisque}</li>
+          <li>{d.legendes.score_zero}</li>
+        </ul>
+      </details>
+
+      {d.contradictions.length > 0 && (
+        <details>
+          <summary>{t('details.contradictions')}</summary>
+          <ul className="aide">
+            {d.contradictions.map((item) => (
+              <li key={item.id}>
+                <Badge tone="incertain">{item.id}</Badge> {item.sujet} — {item.constat}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {d.faits_orphelins.length > 0 && (
+        <Notice tone="critique">
+          {t('details.orphanFacts')} : {d.faits_orphelins.join(', ')}
+        </Notice>
+      )}
+
+      <p className="aide">{d.principe_probatoire}</p>
     </Card>
   );
 }

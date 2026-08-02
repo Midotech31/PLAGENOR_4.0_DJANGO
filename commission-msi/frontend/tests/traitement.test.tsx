@@ -158,6 +158,7 @@ function mockRoutes(overrides: Record<string, unknown> = {}) {
     '/traitement': { job: COMPLETED_JOB, notice: null },
     '/evaluation-automatique': ASSESSMENT,
     '/rapports': PRODUCED_REPORTS,
+    '/rapport-details': REPORT_DETAILS,
     ...overrides,
   };
   return vi.fn(async (input: RequestInfo | URL) => {
@@ -199,6 +200,32 @@ const PRODUCED_REPORTS = {
       created_at: '2026-08-01T10:02:01Z',
     },
   ],
+};
+
+const REPORT_DETAILS = {
+  sources: ['Pièce source : dossier.pdf — SHA-256 abc123… (4 pages).'],
+  fondements: ['Envoi n° 595/SG du 19 mai 2025 — critères et calendrier.'],
+  versions: { referentiel: '2026.08.1', grille: '2026.08.1', application: '2.0.1' },
+  preuves: 58,
+  regles_de_decision: [
+    { regle: 'R1_CRITERE_OBLIGATOIRE_NON_SATISFAIT', motif: '15 critères bloquants.', criteres: ['A1', 'A2'] },
+  ],
+  controle_en_ligne: {
+    profils_controles: 0,
+    veille_executee: false,
+    constat: "la veille en ligne n'a pas été exécutée pour ce dossier.",
+    elements: [],
+  },
+  contradictions: [],
+  desaccords_audit: [],
+  faits_orphelins: [],
+  legendes: {
+    asterisque: 'Un astérisque signale une valeur non confirmée.',
+    score_zero: "Un élément non documenté vaut zéro : ce zéro ne préjuge d'aucune incapacité.",
+    matrice: 'Légende : C = conforme démontré ; PC = partiellement conforme.',
+  },
+  principe_probatoire: "aucune déduction à partir de la nationalité, de l'origine.",
+  portee_controle: "Ne sont jamais examinés : la nationalité, l'origine ethnique, la religion.",
 };
 
 function renderTab() {
@@ -357,5 +384,33 @@ describe('onglet Traitement', () => {
     expect(
       await screen.findByText(/un rapport partiellement valide n’est jamais écrit/),
     ).toBeInTheDocument();
+  });
+
+  it('montre la traçabilité que le rapport ne porte plus', async () => {
+    vi.stubGlobal('fetch', mockRoutes());
+    renderTab();
+
+    expect(await screen.findByText('Traçabilité du rapport')).toBeInTheDocument();
+    expect(await screen.findByText('58 preuves citables')).toBeInTheDocument();
+    expect(await screen.findByText('Application 2.0.1')).toBeInTheDocument();
+    // Les règles de décision ne sont montrées qu'une fois, par la carte d'avis.
+    expect(screen.getAllByText(/R1_CRITERE_OBLIGATOIRE_NON_SATISFAIT/)).toHaveLength(1);
+  });
+
+  it('rappelle à l’écran ce que le contrôle refuse d’examiner', async () => {
+    vi.stubGlobal('fetch', mockRoutes());
+    renderTab();
+
+    await userEvent.click(await screen.findByText('Contrôle en ligne des profils'));
+    expect(
+      screen.getByText(/Ne sont jamais examinés : la nationalité/),
+    ).toBeInTheDocument();
+  });
+
+  it('explique que le rapport suit le format de la commission, sans annexe', async () => {
+    vi.stubGlobal('fetch', mockRoutes());
+    renderTab();
+
+    expect(await screen.findByText(/sept sections, sans annexe/)).toBeInTheDocument();
   });
 });

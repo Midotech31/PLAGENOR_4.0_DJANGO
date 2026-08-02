@@ -138,6 +138,10 @@ class Table:
     headers: list[str]
     rows: list[list[str]] = field(default_factory=list)
     note: str | None = None
+    #: Les en-têtes servent toujours à compter et dimensionner les colonnes ;
+    #: `False` les rend seulement invisibles. La fiche du modèle de la
+    #: commission est un tableau rubrique/valeur sans ligne de titre.
+    show_headers: bool = True
     #: Proportions de largeur des colonnes (somme = 1). Sans valeur, la première
     #: colonne est élargie et les suivantes réparties également.
     widths: list[float] | None = None
@@ -189,12 +193,18 @@ class Section:
         rows: list[list[str]],
         note: str | None = None,
         widths: list[float] | None = None,
+        show_headers: bool = True,
     ) -> None:
         self.blocks.append(
             Block(
                 kind="table",
                 table=Table(
-                    caption=caption, headers=headers, rows=rows, note=note, widths=widths
+                    caption=caption,
+                    headers=headers,
+                    rows=rows,
+                    note=note,
+                    widths=widths,
+                    show_headers=show_headers,
                 ),
             )
         )
@@ -237,6 +247,11 @@ class EvaluationReport:
     #: Densité de mise en page. « compact » resserre marges, corps et interlignes
     #: pour tenir en peu de pages **sans jamais tronquer le contenu**.
     density: str = "normale"
+    #: Étiquettes « [FAIT EXTRAIT] », « [CALCUL] » accolées aux paragraphes.
+    #: Utiles dans le rapport détaillé, où la traçabilité est le sujet ; absentes
+    #: des douze rapports de la commission, où elles parasiteraient la lecture.
+    #: L'information n'est pas perdue : `uniform_report.details()` la porte.
+    show_fact_labels: bool = True
     #: Titre principal imprimé en tête. Le format harmonisé porte le sien.
     heading: str = "RAPPORT D'ÉVALUATION"
 

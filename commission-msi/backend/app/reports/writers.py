@@ -90,27 +90,35 @@ def write_docx(model: EvaluationReport) -> bytes:
     # -- titre --------------------------------------------------------------
     title = document.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title_run = title.add_run("RAPPORT D'ÉVALUATION")
+    title_run = title.add_run(model.heading)
     title_run.bold = True
     title_run.font.size = Pt(18)
     title_run.font.color.rgb = RGBColor.from_string(BLEU_NUIT)
 
-    for text, size in ((model.subtitle, 11), (model.title, 12), (model.organizer, 10)):
+    # Ordre imposé par le modèle de la commission : l'intitulé de la
+    # manifestation d'abord, puis le lieu et les dates, puis la pièce évaluée.
+    for text, size in ((model.title, 14), (model.subtitle, 11), (model.organizer, 10)):
+        if not text:
+            continue
         paragraph = document.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = paragraph.add_run(text)
         run.font.size = Pt(size)
-        if size == 12:
+        if size == 14:
             run.bold = True
 
-    meta = document.add_paragraph()
-    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    meta_run = meta.add_run(
+    # La provenance descend en pied de page. Aucun rapport modèle ne la porte
+    # dans le corps, et un document officiel ne peut pas pour autant se passer
+    # de sa référence, de son évaluateur et de sa date : le pied concilie les
+    # deux exigences au lieu d'en sacrifier une.
+    footer = document.sections[0].footer.paragraphs[0]
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer.add_run(
         f"Référence {model.reference} — évaluateur {model.evaluator} — "
         f"généré le {model.generated_at.strftime('%d/%m/%Y à %H:%M UTC')} — "
         f"version {model.version}"
     )
-    meta_run.font.size = Pt(8)
+    footer_run.font.size = Pt(7)
 
     # -- encadré d'avis proposé, en tête du rapport --------------------------
     if model.headline is not None:
@@ -162,10 +170,11 @@ def write_docx(model: EvaluationReport) -> bytes:
             elif block.kind == "paragraph" and block.paragraph is not None:
                 paragraph = document.add_paragraph()
                 paragraph.add_run(block.paragraph.text)
-                marker = paragraph.add_run("  " + _annotation(block))
-                marker.font.size = Pt(7)
-                marker.italic = True
-                marker.font.color.rgb = RGBColor.from_string(VERT_PROFOND)
+                if model.show_fact_labels:
+                    marker = paragraph.add_run("  " + _annotation(block))
+                    marker.font.size = Pt(7)
+                    marker.italic = True
+                    marker.font.color.rgb = RGBColor.from_string(VERT_PROFOND)
 
             elif block.kind == "list":
                 for item in block.items:
@@ -173,16 +182,19 @@ def write_docx(model: EvaluationReport) -> bytes:
 
             elif block.kind == "table" and block.table is not None:
                 spec = block.table
-                table = document.add_table(rows=1, cols=len(spec.headers))
+                table = document.add_table(
+                    rows=1 if spec.show_headers else 0, cols=len(spec.headers)
+                )
                 table.style = "Table Grid"
-                for index, header in enumerate(spec.headers):
-                    cell = table.rows[0].cells[index]
-                    cell.text = ""
-                    run = cell.paragraphs[0].add_run(header)
-                    run.bold = True
-                    run.font.size = Pt(9)
-                    run.font.color.rgb = RGBColor.from_string(BLEU_NUIT)
-                    shade(cell, GRIS)
+                if spec.show_headers:
+                    for index, header in enumerate(spec.headers):
+                        cell = table.rows[0].cells[index]
+                        cell.text = ""
+                        run = cell.paragraphs[0].add_run(header)
+                        run.bold = True
+                        run.font.size = Pt(9)
+                        run.font.color.rgb = RGBColor.from_string(BLEU_NUIT)
+                        shade(cell, GRIS)
                 for row in spec.rows:
                     cells = table.add_row().cells
                     for index, value in enumerate(row[: len(spec.headers)]):
@@ -361,7 +373,8 @@ def write_pdf(model: EvaluationReport) -> bytes:
 
             elif block.kind == "paragraph" and block.paragraph is not None:
                 story.append(Paragraph(esc(block.paragraph.text), st_body))
-                story.append(Paragraph(esc(_annotation(block)), st_tag))
+                if model.show_fact_labels:
+                    story.append(Paragraph(esc(_annotation(block)), st_tag))
 
             elif block.kind == "list":
                 story.append(
@@ -387,18 +400,25 @@ def write_pdf(model: EvaluationReport) -> bytes:
                     first = usable * (0.30 if count <= 3 else 0.24)
                     widths = [first] + [(usable - first) / (count - 1)] * (count - 1)
 
-                data = [[Paragraph(esc(header), st_head) for header in spec.headers]]
+                data = (
+                    [[Paragraph(esc(header), st_head) for header in spec.headers]]
+                    if spec.show_headers
+                    else []
+                )
                 for row in spec.rows:
                     data.append(
                         [Paragraph(esc(value), st_cell) for value in row[:count]]
                         + [Paragraph("", st_cell)] * max(0, count - len(row))
                     )
 
-                table = Table(data, colWidths=widths, repeatRows=1)
+                table = Table(data, colWidths=widths, repeatRows=1 if spec.show_headers else 0)
                 table.setStyle(
                     TableStyle(
                         [
-                            ("BACKGROUND", (0, 0), (-1, 0), navy),
+                            # Sans ligne d'en-tête, teinter la première ligne
+                            # colorerait une donnée : la plage est vide.
+                            ("BACKGROUND", (0, 0), (-1, 0 if spec.show_headers else -1),
+                             navy if spec.show_headers else colors.white),
                             ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#D9E0E2")),
                             ("VALIGN", (0, 0), (-1, -1), "TOP"),
                             ("ROWBACKGROUNDS", (0, 1), (-1, -1),

@@ -746,6 +746,23 @@ def list_reports(dossier_id: str, session: Session = Depends(get_db)) -> dict:
     }
 
 
+@router.get("/{dossier_id}/rapport-details")
+def report_details(dossier_id: str, session: Session = Depends(get_db)) -> dict:
+    """Traçabilité du rapport, destinée à l'écran et non au fichier.
+
+    Les rapports de la commission n'impriment ni leurs sources, ni les règles
+    qui ont produit l'orientation, ni le contrôle en ligne des profils. Ces
+    éléments fondent pourtant le rapport : ils restent consultables ici, sans
+    alourdir la pièce transmise au ministère.
+    """
+    from app.reports import uniform_report
+
+    try:
+        return uniform_report.details(session, dossier_id)
+    except ValueError as exc:
+        raise NotFound(str(exc)) from exc
+
+
 @router.post("/{dossier_id}/rapports", status_code=201)
 def generate_report(
     dossier_id: str, payload: ReportRequest, session: Session = Depends(get_db)

@@ -1,18 +1,24 @@
 """Rapport d'évaluation **harmonisé** — format du modèle fourni par la commission.
 
-Huit sections, dans cet ordre imposé :
+Sept sections, dans cet ordre imposé — celui des douze rapports fournis par la
+commission :
 
 1. fiche d'information contrôlée — six rubriques condensées, pas un vidage de champs ;
 2. appréciation scientifique commune — cinq dimensions sur 100, avec motif probant ;
 3. matrice réglementaire uniforme — les 26 critères, `C/PC/NC/NV`, constat, fondement ;
-4. contrôle des intervenants étrangers, dont **4.1 éléments relatifs au Maroc et
-   à Israël** relevés dans les pièces, et **4.2 contrôle en ligne des profils**
-   — rattachements institutionnels et activités publics, signalés à titre
-   strictement informatif ;
+4. contrôle des intervenants étrangers, avec **4.1 éléments relatifs au Maroc et
+   à Israël** lorsque les pièces en portent, signalés à titre strictement
+   informatif ;
 5. points de vigilance institutionnelle ;
-6. compléments indispensables avant appréciation ministérielle ;
-7. orientation technique motivée transmise au ministère ;
-8. sources et traçabilité, avec le principe probatoire.
+6. **réserves maintenues** sous avis favorable, **compléments indispensables**
+   en ajournement — le titre suit l'orientation, comme dans les douze modèles ;
+7. orientation technique motivée transmise au ministère.
+
+Ce que le rapport ne porte pas — sources, versions de référentiel, règles de
+décision déclenchées, contrôle en ligne des profils, contradictions connues —
+n'a pas disparu : `details()` le restitue à l'interface. Ces éléments fondent le
+rapport et doivent rester vérifiables, mais aucun des douze modèles ne les
+imprime, et la pièce transmise au ministère n'a pas à s'en alourdir.
 
 Deux différences de fond avec un rapport d'analyse ordinaire, et elles sont
 délibérées :
@@ -21,9 +27,9 @@ délibérées :
   ministère, jamais celui d'une décision. « La décision finale appartient au
   ministère » figure en tête, en section 7, et dans les encadrés de portée ;
 * aucune nationalité, origine ou opinion supposée ne fonde un constat
-  défavorable. Les éléments des sections 4.1 et 4.2 sont informatifs : les
-  qualifier relève du ministère seul, et la section 4.2 énonce explicitement
-  les critères qu'elle refuse d'appliquer.
+  défavorable. Les éléments de la section 4.1 sont informatifs : les qualifier
+  relève du ministère seul, et l'encadré de portée énonce explicitement les
+  critères que le contrôle refuse d'appliquer.
 """
 
 from __future__ import annotations
@@ -46,7 +52,7 @@ from app.services import (
     scientific_scoring,
 )
 
-TITLE = "RAPPORT D'ÉVALUATION HARMONISÉ"
+TITLE = "RAPPORT D'ÉVALUATION"
 
 #: Mention obligatoire : l'orientation est une aide, jamais une décision.
 MINISTRY_NOTICE = "Décision finale : ministère."
@@ -136,13 +142,14 @@ def build(session: Session, dossier_id: str) -> EvaluationReport:
         _section_vigilance(ctx),
         _section_complements(assessment),
         _section_orientation(assessment),
-        _section_sources(ctx),
     ]
 
     return EvaluationReport(
         reference=dossier.reference,
         title=dossier.title,
-        organizer=dossier.organizer,
+        # Le modèle porte la pièce évaluée là où un rapport ordinaire mettrait
+        # l'organisateur : celui-ci figure déjà dans la fiche, rubrique Porteur.
+        organizer=_piece_line(ctx),
         evaluator=settings.evaluator_label,
         generated_at=datetime.now(timezone.utc),
         version=settings.version,
@@ -153,6 +160,7 @@ def build(session: Session, dossier_id: str) -> EvaluationReport:
         headline=_headline(assessment),
         signature=SIGNATURE,
         density="compact",
+        show_fact_labels=False,
         heading=TITLE,
     )
 
@@ -169,20 +177,23 @@ def _plain(ctx: _Context, key: str) -> str:
 
 
 def _subtitle(ctx: _Context) -> str:
-    """Sous-titre : lieu, dates et pièce évaluée, comme en tête du modèle."""
+    """Lieu et dates, seuls — la pièce évaluée a sa propre ligne dans le modèle."""
     place = _plain(ctx, "lieu")
     start = _plain(ctx, "date_debut")
     end = _plain(ctx, "date_fin")
     when = f"{start} — {end}" if start != NOT_PROVIDED and end != NOT_PROVIDED else "dates non renseignées"
+    return f"{place} — {when}"
 
+
+def _piece_line(ctx: _Context) -> str:
+    """« Pièce évaluée : <nom> (<n> pages) », ligne propre du modèle."""
     documents = list(ctx.dossier.documents)
-    if documents:
-        pieces = " ; ".join(
-            f"{document.original_name} ({ctx.dossier.page_count} pages)" for document in documents[:2]
-        )
-    else:
-        pieces = "aucune pièce versée"
-    return f"{place} — {when} · Pièce évaluée : {pieces}"
+    if not documents:
+        return "Pièce évaluée : aucune pièce versée"
+    pieces = " ; ".join(
+        f"{document.original_name} ({ctx.dossier.page_count} pages)" for document in documents[:2]
+    )
+    return f"Pièce évaluée : {pieces}"
 
 
 def _headline(assessment: dict) -> Box:
@@ -282,6 +293,10 @@ def _section_fiche(ctx: _Context, assessment: dict) -> Section:
         ["Budget", budget, budget_pending],
         ["Publication", publication, publication_pending],
     ]
+    # Six rubriques, sans ligne de titre : c'est la fiche du modèle de la
+    # commission. L'astérisque des valeurs non confirmées reste, il porte une
+    # information que le lecteur ne peut retrouver ailleurs ; sa légende, elle,
+    # est passée dans l'interface.
     section.table(
         "Rubriques contrôlées",
         ["Rubrique", "Élément retenu au dossier"],
@@ -289,10 +304,8 @@ def _section_fiche(ctx: _Context, assessment: dict) -> Section:
             [label, f"{value}\u00a0*" if pending and value != NOT_PROVIDED else value]
             for label, value, pending in rows
         ],
-        note="Un astérisque signale une valeur lue au dossier mais non encore confirmée par "
-        "l'évaluateur. « Non renseigné » signifie que la pièce ne le documente pas, jamais "
-        "que l'organisateur ne l'a pas prévu.",
         widths=[0.20, 0.80],
+        show_headers=False,
     )
     return section
 
@@ -347,8 +360,6 @@ def _section_appreciation(ctx: _Context, assessment: dict) -> Section:
         f"Grille commune (version {score['grid_version']})",
         ["Dimension", "Max.", "Note", "Motif probant"],
         rows,
-        note="Un élément non documenté vaut zéro : ce zéro constate l'absence de preuve au "
-        "dossier et ne préjuge d'aucune incapacité réelle de l'organisateur.",
         widths=[0.26, 0.07, 0.07, 0.60],
     )
     section.para(
@@ -394,11 +405,13 @@ def _section_matrice(ctx: _Context, assessment: dict) -> Section:
         )
 
     version = criteria[0].get("referential_version", "—")
+    # La légende précède le tableau dans le modèle, et c'est plus utile ainsi :
+    # elle se lit avant les états qu'elle explique, pas après.
+    section.para(MATRIX_LEGEND, kind=ReportFactKind.CALCUL)
     section.table(
         f"Les 26 critères communs (référentiel {version})",
         ["Réf.", "Critère commun", "État", "Constat / preuve au dossier", "Fondement"],
         rows,
-        note=f"{MATRIX_LEGEND} Un état suivi d'un astérisque a été qualifié par l'évaluateur.",
         widths=[0.05, 0.20, 0.06, 0.42, 0.27],
     )
     return section
@@ -467,73 +480,12 @@ def _section_intervenants(ctx: _Context) -> Section:
                 "les tampons.",
             ]
         )
-    # -- 4.2 Contrôle en ligne des profils ---------------------------------
-    _subsection_screening(ctx, section)
-
     urls = _facts_of(ctx).observations.get("urls") or []
     if urls:
         section.para("Sources spécifiques du contrôle :", kind=ReportFactKind.CALCUL)
         section.bullets([url for url in urls[:8]])
     section.box("Portée du contrôle", FOREIGN_SCOPE, tone="attention")
     return section
-
-
-def _subsection_screening(ctx: _Context, section: Section) -> None:
-    """4.2 — ce que la veille en ligne a établi sur les profils, et rien de plus.
-
-    Deux principes gouvernent cette sous-section, et ils viennent du référentiel
-    de l'application, non d'une prudence ajoutée : un rattachement ou une
-    activité publiquement documentés se rapportent, une origine ne s'examine
-    pas. Ce second principe est énoncé au lecteur dans l'encadré de portée qui
-    clôt la section 4 — sans quoi il pourrait prêter à l'application un
-    profilage qu'elle n'exerce pas.
-    """
-    section.subheading(
-        "4.2. Contrôle en ligne des profils — rattachements et activités publics"
-    )
-
-    claims = ctx.claim_texts(AgentName.SOUVERAINETE_NATIONALE)
-    established = [claim for claim in claims if claim.nature != ClaimNature.ABSENCE_DE_PREUVE]
-
-    if not claims:
-        section.para(
-            "Aucun profil n'a été soumis à ce contrôle : la veille en ligne n'a pas été "
-            "exécutée pour ce dossier, ou aucun intervenant étranger n'y a été identifié. "
-            "Cette absence n'est ni un constat favorable, ni un constat défavorable.",
-            kind=ReportFactKind.A_VERIFIER,
-        )
-    elif not established:
-        section.para(
-            f"{len({claim.subject_label for claim in claims})} profil(s) ont été contrôlés ; "
-            "aucun rattachement institutionnel ni activité publique touchant une catégorie "
-            "de vigilance nationale n'a été établi sur les sources consultées.",
-            kind=ReportFactKind.CALCUL,
-        )
-    else:
-        section.para(
-            f"{len(established)} élément(s) publiquement documenté(s) sont portés à la "
-            f"connaissance du ministère, sur {len({claim.subject_label for claim in claims})} "
-            "profil(s) contrôlés. Ils sont rapportés tels que publiés, avec leur niveau de "
-            "preuve ; aucun n'est qualifié par l'application.",
-            kind=ReportFactKind.CALCUL,
-        )
-        section.table(
-            "Éléments relevés sur les profils publics",
-            ["Personne", "Élément relevé", "Sources indép.", "Niveau de preuve"],
-            [
-                [
-                    claim.subject_label,
-                    # Le corps stocké porte l'affirmation puis sa mention de
-                    # portée ; celle-ci figure déjà dans l'encadré, la répéter
-                    # dans chaque cellule rendrait le tableau illisible.
-                    ctx.claim_body(claim).split("\n", 1)[0],
-                    str(claim.independent_source_count),
-                    claim.status,
-                ]
-                for claim in established
-            ],
-            widths=[0.22, 0.50, 0.10, 0.18],
-        )
 
 
 # --------------------------------------------------------------------------
@@ -576,13 +528,30 @@ COMPLEMENT_ACTION = {
 }
 
 
+#: Titres de la section 6, selon l'orientation. Ce n'est pas une nuance de
+#: style : sous réserves, la manifestation peut se tenir et les points listés
+#: sont des conditions préalables ; en ajournement, elle ne le peut pas et les
+#: mêmes points sont des compléments à produire avant tout examen. Les douze
+#: rapports du modèle appliquent cette règle sans exception.
+COMPLEMENTS_TITLE = "Compléments indispensables avant appréciation ministérielle"
+RESERVES_TITLE = "Réserves maintenues et conditions préalables à la tenue"
+
+
+def _complements_title(assessment: dict) -> str:
+    decision = assessment.get("decision") or {}
+    chosen = decision.get("human_decision") or decision.get("avis")
+    if chosen in {decision_engine.FAVORABLE, decision_engine.FAVORABLE_SOUS_RESERVES}:
+        return RESERVES_TITLE
+    return COMPLEMENTS_TITLE
+
+
 def _section_complements(assessment: dict) -> Section:
     """Actions attendues, une ligne par critère.
 
     Le constat détaillé vit en section 3 : le répéter ici doublerait la longueur
     du rapport sans rien apprendre au lecteur.
     """
-    section = Section("6", "Compléments indispensables avant appréciation ministérielle")
+    section = Section("6", _complements_title(assessment))
     criteria = assessment.get("criteria") or []
     if not criteria:
         section.para(NO_ASSESSMENT, kind=ReportFactKind.A_VERIFIER)
@@ -593,19 +562,14 @@ def _section_complements(assessment: dict) -> Section:
     # D'abord ce qui bloque, puis le reste, chacun dans l'ordre du référentiel.
     pending.sort(key=lambda row: (not row["blocking"], row["order"]))
     if pending:
+        # Puces courtes, comme le modèle : le constat détaillé et le caractère
+        # bloquant de chaque point vivent en section 3 et dans l'interface. Les
+        # répéter ici doublerait la longueur sans rien apprendre.
         section.bullets(
             [
-                f"{row['code']} — {short.get(row['code'], row['label'])} : "
-                f"{COMPLEMENT_ACTION[row['status']]}"
-                + (" (bloquant)." if row["blocking"] else ".")
+                f"{row['code']} — {short.get(row['code'], row['label'])}"
                 for row in pending
             ]
-        )
-        section.para(
-            f"{len(pending)} complément(s) attendus, dont "
-            f"{sum(1 for row in pending if row['blocking'])} sur un critère bloquant. "
-            "Le constat détaillé de chacun figure en section 3.",
-            kind=ReportFactKind.CALCUL,
         )
     else:
         section.para(
@@ -644,72 +608,121 @@ def _section_orientation(assessment: dict) -> Section:
             "L'orientation retenue ci-dessus est celle de l'évaluateur.",
             kind=ReportFactKind.CONCLUSION_EVALUATEUR,
         )
-    section.table(
-        "Règles de décision déclenchées",
-        ["Règle", "Motif", "Critères"],
-        [
-            [rule["rule"], rule["explanation"], ", ".join(rule["criteria"]) or "—"]
-            for rule in decision["triggered_rules"]
-        ],
-        note="Chaque règle enregistre ses critères déclencheurs et leurs preuves : "
-        "le raisonnement est vérifiable ligne à ligne.",
-        widths=[0.22, 0.62, 0.16],
-    )
     return section
 
 
 # --------------------------------------------------------------------------
-# 8. Sources et traçabilité
+# Détails de traçabilité — pour l'interface, plus pour le fichier
 # --------------------------------------------------------------------------
 
 
-def _section_sources(ctx: _Context) -> Section:
-    section = Section("8", "Sources et traçabilité")
+def details(session: Session, dossier_id: str) -> dict:
+    """Tout ce que le rapport ne porte plus, à destination de l'écran.
 
-    documents = [
-        f"Pièce source : {document.original_name} — SHA-256 {document.sha256[:16]}… "
-        f"({ctx.dossier.page_count} pages), analysée selon la lisibilité disponible."
-        for document in ctx.dossier.documents
-    ] or ["Aucune pièce source n'est versée au dossier."]
+    Les douze rapports de la commission n'ont que sept sections : ni sources,
+    ni règles de décision, ni contrôle en ligne des profils. Ces éléments ne
+    sont pas pour autant sans valeur — ils fondent le rapport et doivent rester
+    vérifiables. Ils quittent donc le document pour l'interface, où l'évaluateur
+    peut les consulter sans alourdir la pièce transmise au ministère.
+    """
+    dossier = session.get(Dossier, dossier_id)
+    if dossier is None:
+        raise ValueError("Dossier introuvable.")
 
+    ctx = _Context(session, dossier)
+    assessment = assessment_service.current_assessment(session, dossier_id)
     referential = regulatory_engine.load_referential()
-    evidence = evidence_service.listing(ctx.session, ctx.dossier.id)
-    disagreements = [
-        item for item in audit_service.listing(ctx.session, ctx.dossier.id) if not item["resolved"]
-    ]
+    evidence = evidence_service.listing(session, dossier_id)
+    decision = assessment.get("decision") or {}
 
-    section.bullets(
-        documents
-        + [
+    return {
+        "sources": [
+            f"Pièce source : {document.original_name} — SHA-256 {document.sha256[:16]}… "
+            f"({dossier.page_count} pages), analysée selon la lisibilité disponible."
+            for document in dossier.documents
+        ]
+        or ["Aucune pièce source n'est versée au dossier."],
+        "fondements": [
             "Envoi n° 595/SG du 19 mai 2025 — critères et calendrier des manifestations "
             "scientifiques internationales.",
             "Envoi n° 218/DCEU-SDPUR du 14 juillet 2026 et Guide des manifestations "
             "internationales — procédure régionale.",
             "Dossier et formulaire de demande d'organisation — liste des pièces et canevas.",
-            f"Référentiel réglementaire appliqué : version {referential['referential_version']} "
-            f"({referential.get('snapshot_label', 'instantané local')}).",
-            f"Grille scientifique appliquée : version {scientific_scoring.load_grid()['grid_version']}.",
-            f"Registre de preuves : {len(evidence)} preuve(s) citables, consultables dans "
-            "l'application par « Voir les preuves ».",
-            f"Application locale, version {get_settings().version}.",
-        ]
-    )
+        ],
+        "versions": {
+            "referentiel": referential["referential_version"],
+            "grille": scientific_scoring.load_grid()["grid_version"],
+            "application": get_settings().version,
+        },
+        "preuves": len(evidence),
+        "regles_de_decision": [
+            {
+                "regle": rule["rule"],
+                "motif": rule["explanation"],
+                "criteres": rule["criteria"],
+            }
+            for rule in decision.get("triggered_rules") or []
+        ],
+        "controle_en_ligne": _screening_details(ctx),
+        "contradictions": [
+            {
+                "id": item["id"],
+                "sujet": item["subject"],
+                "constat": item["statement"],
+                "traitement": item.get("required_output", "CONTRADICTION_A_ARBITRER"),
+            }
+            for item in referential.get("known_contradictions") or []
+        ],
+        "desaccords_audit": [
+            item
+            for item in audit_service.listing(session, dossier_id)
+            if not item["resolved"]
+        ],
+        "faits_orphelins": ctx.orphan_facts,
+        "legendes": {
+            "asterisque": "Un astérisque signale une valeur lue au dossier mais non encore "
+            "confirmée par l'évaluateur. « Non renseigné » signifie que la pièce ne le "
+            "documente pas, jamais que l'organisateur ne l'a pas prévu.",
+            "score_zero": "Un élément non documenté vaut zéro : ce zéro constate l'absence "
+            "de preuve au dossier et ne préjuge d'aucune incapacité réelle de "
+            "l'organisateur.",
+            "matrice": MATRIX_LEGEND,
+        },
+        "principe_probatoire": EVIDENCE_PRINCIPLE,
+        "portee_controle": FOREIGN_SCOPE,
+    }
 
-    for contradiction in referential.get("known_contradictions") or []:
-        section.para(
-            f"Contradiction enregistrée {contradiction['id']} — {contradiction['subject']} : "
-            f"{contradiction['statement']} Elle n'est jamais résolue par supposition ; "
-            "l'arbitrage relève de l'autorité compétente.",
-            kind=ReportFactKind.ALERTE_SYSTEME,
-        )
 
-    if disagreements:
-        section.para(
-            f"{len(disagreements)} désaccord(s) non résolu(s) entre l'analyse et sa relecture "
-            "indépendante : les critères concernés sont classés « non vérifiable ». Aucune "
-            "moyenne n'est faite entre deux analyses divergentes.",
-            kind=ReportFactKind.ALERTE_SYSTEME,
-        )
-
-    section.box("Principe probatoire", EVIDENCE_PRINCIPLE, tone="neutre")
-    return section
+def _screening_details(ctx: _Context) -> dict:
+    """Contrôle en ligne des profils — sorti du rapport, conservé à l'écran."""
+    claims = ctx.claim_texts(AgentName.SOUVERAINETE_NATIONALE)
+    established = [claim for claim in claims if claim.nature != ClaimNature.ABSENCE_DE_PREUVE]
+    return {
+        "profils_controles": len({claim.subject_label for claim in claims}),
+        "veille_executee": bool(claims),
+        "elements": [
+            {
+                "personne": claim.subject_label,
+                "element": ctx.claim_body(claim).split("\n", 1)[0],
+                "sources_independantes": claim.independent_source_count,
+                "niveau_de_preuve": claim.status,
+            }
+            for claim in established
+        ],
+        "constat": (
+            "Aucun profil n'a été soumis à ce contrôle : la veille en ligne n'a pas été "
+            "exécutée pour ce dossier, ou aucun intervenant étranger n'y a été identifié. "
+            "Cette absence n'est ni un constat favorable, ni un constat défavorable."
+            if not claims
+            else (
+                f"{len(established)} élément(s) publiquement documenté(s) sur "
+                f"{len({claim.subject_label for claim in claims})} profil(s) contrôlés. "
+                "Ils sont rapportés tels que publiés ; aucun n'est qualifié par "
+                "l'application."
+                if established
+                else f"{len({claim.subject_label for claim in claims})} profil(s) contrôlés ; "
+                "aucun rattachement institutionnel ni activité publique touchant une "
+                "catégorie de vigilance nationale n'a été établi."
+            )
+        ),
+    }
