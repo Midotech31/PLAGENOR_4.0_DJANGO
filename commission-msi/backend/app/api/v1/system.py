@@ -101,6 +101,20 @@ def diagnostic(session: Session = Depends(get_db)) -> dict:
     }
 
 
+@router.get("/diagnostic-ocr")
+def ocr_diagnostic() -> dict:
+    """État des moteurs de lecture, consultable sans ouvrir un terminal.
+
+    Un poste peut refuser de lire une page parfaitement nette parce qu'il lui
+    manque un paquet de langue. L'évaluateur doit pouvoir le constater
+    lui-même : sans cette page, l'application paraît accuser le document d'un
+    défaut qui est en réalité le sien.
+    """
+    from app.services import ocr_engines
+
+    return ocr_engines.diagnostic()
+
+
 @router.get("/vocabulary")
 def vocabulary() -> dict:
     """Vocabulaire contrôlé exposé à l'interface (aucune valeur libre)."""

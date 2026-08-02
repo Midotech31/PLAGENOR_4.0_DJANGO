@@ -89,11 +89,28 @@ REM --- 5. OCR --------------------------------------------------------
 where tesseract >nul 2>nul
 if errorlevel 1 (
   echo [AVERTISSEMENT] Tesseract est introuvable.
-  echo L'OCR local sera indisponible : les pages scannees resteront non extraites
-  echo et explicitement marquees "verification humaine obligatoire".
-  echo Installez Tesseract avec les paquets de langue fra, ara et eng.
+  echo Les pages scannees resteront non extraites et explicitement marquees
+  echo "verification humaine obligatoire".
+  echo.
+  echo   Telechargez : https://github.com/UB-Mannheim/tesseract/wiki
+  echo   COCHEZ, dans l'installateur, "Additional language data" puis
+  echo   Arabic, French et English. Sans le paquet arabe, aucune page
+  echo   arabe ne pourra etre lue : RapidOCR ne lit que le latin.
 ) else (
-  echo Tesseract detecte : OCR local disponible.
+  echo Tesseract detecte. Verification des paquets de langue...
+  tesseract --list-langs 2>nul | findstr /B /C:"ara" >nul
+  if errorlevel 1 (
+    echo [AVERTISSEMENT] Le paquet de langue ARABE est absent.
+    echo Aucune page arabe ne pourra etre lue. RapidOCR ne comble pas ce
+    echo manque : ses modeles couvrent le latin, pas l'arabe.
+    echo.
+    echo   Reexecutez l'installateur Tesseract et cochez
+    echo   "Additional language data" ^> Arabic,
+    echo   ou copiez ara.traineddata dans le dossier tessdata de Tesseract.
+    echo   Fichier : https://github.com/tesseract-ocr/tessdata/raw/main/ara.traineddata
+  ) else (
+    echo Paquet arabe present : les pages arabes sont lisibles.
+  )
 )
 
 echo.

@@ -357,6 +357,19 @@ def run_page_ocr(session: Session, page_id: str, *, force: bool = False) -> OcrR
             "(paquets fra, ara et eng) ou « rapidocr-onnxruntime ». Aucun texte n'est "
             "supposé en leur absence."
         )
+    # Un moteur présent mais incapable de l'écriture de la page produit un texte
+    # vide sans erreur. Le refus doit alors nommer l'installation manquante :
+    # présenter un défaut d'outillage comme un défaut du document ferait perdre
+    # à l'évaluateur un temps qu'il passerait à retoucher un scan déjà net.
+    if not outcome.text.strip():
+        capable, missing = ocr_engines.arabic_capable()
+        if not capable:
+            raise ocr_service.OcrUnavailable(
+                "Aucun texte n'a été lu et aucun moteur installé ne sait lire l'arabe. "
+                "Si cette page est en arabe, elle n'est pas en cause : il manque "
+                + " ; ".join(missing)
+                + ". RapidOCR ne comble pas ce manque, ses modèles couvrent le latin."
+            )
     result = ocr_service.run_ocr(png) if outcome.engine == "tesseract" else None
 
     key = get_master_key()

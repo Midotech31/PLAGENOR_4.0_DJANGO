@@ -275,6 +275,7 @@ export function DocumentTab({ dossierId, onChanged }: { dossierId: string; onCha
                     )}
                   </p>
                   {detail.notice && <Notice tone="incertain">{detail.notice}</Notice>}
+                  {(detail.needs_ocr || detail.uncertain) && <OcrCapability />}
                   <div className="actions" style={{ marginBottom: '0.6rem' }}>
                     <button type="button" onClick={() => runOcr(false)} disabled={busy}>
                       {t('document.runOcr')}
@@ -330,5 +331,61 @@ export function DocumentTab({ dossierId, onChanged }: { dossierId: string; onCha
         </>
       )}
     </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Ce que le poste sait lire
+// --------------------------------------------------------------------------
+
+/**
+ * Pourquoi ce bloc existe : une page arabe parfaitement nette peut ressortir
+ * « illisible » alors que la page n'est pas en cause — le poste n'a simplement
+ * aucun moteur qui connaisse cette écriture. Tesseract sans son paquet « ara »
+ * ne lit pas l'arabe, et RapidOCR non plus : sur une page arabe il a été mesuré
+ * renvoyant « rmg » à 62 % de confiance.
+ *
+ * Laisser l'évaluateur devant « contenu illisible » revient à lui faire
+ * soupçonner son document, retoucher son scan, recommencer — pour un manque qui
+ * se répare en dix minutes. Le bloc ne s'affiche donc que là où la question se
+ * pose, et il nomme l'action à faire.
+ */
+function OcrCapability() {
+  const { t } = useLocale();
+  const state = useAsync(() => api.ocrDiagnostic(), []);
+
+  if (state.loading || state.error || !state.data) return null;
+  const { barreaux, arabe_lisible, manque_pour_l_arabe } = state.data;
+
+  return (
+    <details className="aide" style={{ marginBottom: '0.6rem' }}>
+      <summary>
+        {t('document.enginesTitle')}{' '}
+        <Badge tone={arabe_lisible ? 'ok' : 'critique'}>
+          {arabe_lisible ? t('document.arabicReadable') : t('document.arabicNotReadable')}
+        </Badge>
+      </summary>
+      {!arabe_lisible && (
+        <Notice tone="critique">
+          {t('document.arabicMissing')}
+          <ul>
+            {manque_pour_l_arabe.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </Notice>
+      )}
+      <ul>
+        {barreaux.map((engine) => (
+          <li key={engine.moteur}>
+            <Badge tone={engine.disponible ? 'ok' : 'neutre'}>{engine.moteur}</Badge>{' '}
+            {engine.disponible ? t('document.engineAvailable') : t('document.engineAbsent')}
+            {engine.langues.length > 0 && ` — ${engine.langues.join(', ')}`}
+            <br />
+            {engine.portee}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

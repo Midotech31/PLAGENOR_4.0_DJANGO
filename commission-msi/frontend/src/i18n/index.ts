@@ -108,6 +108,13 @@ const fr = {
     'Aucun rapport n’a encore été produit : lancez « Traiter le dossier ». Si le traitement s’est arrêté, c’est qu’un contrôle qualité bloquant a échoué — un rapport partiellement valide n’est jamais écrit.',
   'processing.reportDownload': 'Télécharger',
   'processing.reportVersion': 'version',
+  'document.enginesTitle': 'Ce que ce poste sait lire',
+  'document.arabicReadable': 'arabe lisible',
+  'document.arabicNotReadable': 'arabe NON lisible',
+  'document.engineAvailable': 'présent',
+  'document.engineAbsent': 'absent',
+  'document.arabicMissing':
+    'Aucun moteur installé ne sait lire l’arabe. Une page arabe nette ressortira « illisible » tant que ce manque n’est pas comblé — la page n’est alors pas en cause. À installer :',
 
   // -- Avis technique proposé -------------------------------------------
   'decision.title': 'Avis technique proposé',
@@ -370,6 +377,13 @@ const en: Dictionary = {
     'No report has been produced yet: start “Process the file”. If processing stopped, a blocking quality check failed — a partially valid report is never written.',
   'processing.reportDownload': 'Download',
   'processing.reportVersion': 'version',
+  'document.enginesTitle': 'What this machine can read',
+  'document.arabicReadable': 'Arabic readable',
+  'document.arabicNotReadable': 'Arabic NOT readable',
+  'document.engineAvailable': 'present',
+  'document.engineAbsent': 'absent',
+  'document.arabicMissing':
+    'No installed engine can read Arabic. A clean Arabic page will come out “unreadable” until this is fixed — the page is not at fault. To install:',
   'decision.title': 'Proposed technical opinion',
   'decision.none': 'No opinion has been proposed yet: start the file processing.',
   'decision.score': 'Scientific score',

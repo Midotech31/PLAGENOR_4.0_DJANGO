@@ -431,3 +431,64 @@ Publication* ici, *Nature / Programme clinique / Participants / Comité / Budget
 saillant. L'application garde les six libellés du modèle Arganier plutôt que
 d'inventer une heuristique de sélection : mieux vaut un intitulé stable et exact
 qu'un intitulé deviné.
+
+## DT-25 — Un défaut d'installation ne s'impute pas au document
+
+**Constat d'usage :** une page arabe **parfaitement nette** — en-tête de la
+République algérienne, cachet, signature — ressortait « Contenu illisible ou
+insuffisamment fiable ». L'écriture était claire ; le message était faux.
+
+**Mesure.** Sur un rendu arabe propre, les deux moteurs locaux ont été
+comparés :
+
+| Moteur | Résultat |
+|---|---|
+| Tesseract + paquet `ara` | 3 lignes sur 3, confiance 89 % |
+| RapidOCR | `« rmg »`, confiance **62 %** |
+
+**RapidOCR ne lit pas l'arabe.** Ses modèles PP-OCR embarqués couvrent le latin
+et le chinois. Ce n'est pas une faiblesse de reconnaissance : c'est une absence
+de couverture d'écriture, et elle n'était déclarée nulle part.
+
+**Le mécanisme du message trompeur.** RapidOCR se déclare `available=True` et ne
+lève aucune erreur. Il comptait donc comme « un moteur disponible », ce qui
+désactivait le seul message honnête existant (« aucun moteur de lecture n'est
+disponible »). Pire, ses trois caractères de bruit suffisaient à sortir du
+chemin « aucun texte lu » : l'application affichait « moins de 40 caractères
+utiles extraits d'une page entière » — vrai, mais qui fait porter le soupçon sur
+la page. L'évaluateur retouche alors un scan déjà net, pour un manque qui
+s'installe en dix minutes.
+
+C'est exactement la faute corrigée en DT-19 sur le contrôle qualité : affirmer
+un constat que l'on n'a pas les moyens d'établir. Ici l'application n'avait pas
+les moyens de lire cette écriture, et elle a conclu que l'écriture était
+mauvaise.
+
+**Corrections.**
+
+1. **Table `ENGINE_SCRIPTS`** : chaque barreau déclare les écritures qu'il sait
+   lire. RapidOCR y figure comme latin seulement.
+2. **`arabic_capable()`** distingue trois situations qui n'ont pas le même
+   remède : Tesseract absent, Tesseract présent sans `ara`, mode `LOCAL_ONLY`
+   sans barreau de vision. Le message nomme l'installation manquante, jamais une
+   fatalité — et **ne propose jamais RapidOCR** comme remède, ce qui enverrait
+   l'évaluateur dans un mur.
+3. **Le complément d'explication est ajouté dès qu'aucun texte exploitable n'est
+   lu**, pas seulement quand le texte est vide : c'est le cas `« rmg »` qui l'a
+   imposé.
+4. **`GET /api/v1/diagnostic-ocr`** et un bloc dépliant dans l'onglet
+   « Document » : l'évaluateur voit quels moteurs sont présents, quelles langues
+   Tesseract connaît, et si l'arabe est lisible — sans ouvrir un terminal.
+5. **`install_windows.bat` vérifie le paquet `ara`**, et non plus la seule
+   présence de `tesseract.exe`. Il donne le lien de `ara.traineddata` et
+   rappelle que RapidOCR ne comble pas ce manque.
+
+**Sur la lecture en ligne.** Le barreau de vision existe déjà et lit les pages
+qu'aucun moteur local ne sait traiter, quelle que soit l'écriture. Il exige
+`ANALYSIS_MODE=HYBRID_STRICT`, une clé fournie par l'environnement et
+`ALLOW_EXTERNAL_AI=true`. Deux refus y restent inconditionnels et vérifiés dans
+le code, pas seulement en configuration : une page classée restreinte n'est
+jamais transmise, et aucune pièce d'identité ni aucun numéro de passeport ne
+sort du poste. Ce barreau est un complément aux moteurs locaux, pas un
+substitut : installer le paquet `ara` reste la première chose à faire, elle est
+gratuite, hors ligne, et suffit dans la grande majorité des cas.

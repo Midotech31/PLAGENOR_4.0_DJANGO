@@ -184,9 +184,26 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   liens de téléchargement directs et aucun bouton « générer ». Une liste vide
   est expliquée au lieu d'être laissée en blanc. Voir DT-24.
 
+### OCR — un défaut d'installation n'est plus imputé au document
+
+- **Mesuré : RapidOCR ne lit pas l'arabe.** Sur une page arabe nette, Tesseract
+  avec son paquet `ara` lit 3 lignes sur 3 à 89 % ; RapidOCR renvoie « rmg » à
+  62 %. Ses modèles PP-OCR couvrent le latin, pas l'arabe.
+- Conséquence corrigée : RapidOCR se déclarait disponible et son bruit suffisait
+  à faire afficher « contenu illisible » sur une page parfaitement lisible. Le
+  soupçon portait sur le document alors que le manque était celui du poste.
+- Chaque moteur déclare désormais les **écritures** qu'il sait lire. Le message
+  d'échec nomme l'installation manquante — Tesseract absent, paquet `ara`
+  absent, ou mode `LOCAL_ONLY` — et ne propose jamais RapidOCR pour l'arabe.
+- Nouveau `GET /api/v1/diagnostic-ocr` et bloc dépliant dans l'onglet
+  « Document » : moteurs présents, langues Tesseract installées, arabe lisible
+  ou non, sans ouvrir de terminal.
+- `install_windows.bat` vérifie la présence du paquet `ara` et donne le lien de
+  `ara.traineddata`. Voir DT-25.
+
 ### Tests
 
-- 292 tests backend et 19 tests d'interface au vert.
+- 304 tests backend et 19 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

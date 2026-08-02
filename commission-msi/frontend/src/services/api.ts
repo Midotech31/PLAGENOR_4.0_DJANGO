@@ -215,6 +215,22 @@ export interface NoteInfo {
   created_at: string;
 }
 
+export interface OcrEngineState {
+  moteur: string;
+  disponible: boolean;
+  langues: string[];
+  ecritures: string[];
+  portee: string;
+}
+
+export interface OcrDiagnostic {
+  barreaux: OcrEngineState[];
+  arabe_lisible: boolean;
+  manque_pour_l_arabe: string[];
+  jamais_transmis: string[];
+  limite: string;
+}
+
 export interface ReportInfo {
   id: string;
   format: string;
@@ -590,6 +606,8 @@ export const api = {
     post(`/dossiers/${id}/notes`, payload),
   setConclusion: (id: string, payload: { conclusion: string; motivation: string }) =>
     post<{ notice: string }>(`/dossiers/${id}/conclusion`, payload),
+
+  ocrDiagnostic: () => get<OcrDiagnostic>('/diagnostic-ocr'),
 
   listReports: (id: string) => get<{ items: ReportInfo[] }>(`/dossiers/${id}/rapports`),
   generateReport: (id: string, payload: { format: string; official: boolean; layout?: string }) =>

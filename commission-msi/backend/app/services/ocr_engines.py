@@ -40,6 +40,60 @@ HUMAN_TRANSCRIPTION_REQUIRED = (
 #: Catégories de données que le barreau vision ne reçoit jamais.
 NEVER_SENT = ("pièce d'identité", "passeport", "page classée restreinte")
 
+#: Écritures que chaque barreau sait lire.
+#:
+#: Cette table n'est pas décorative : **RapidOCR, tel qu'il est distribué, ne
+#: lit pas l'arabe.** Ses modèles PP-OCR embarqués couvrent le latin et le
+#: chinois ; sur une page arabe il renvoie une chaîne vide sans lever d'erreur.
+#: Sans cette table, il compte comme « un moteur disponible », et l'application
+#: conclut « contenu illisible » là où la cause réelle est qu'aucun moteur
+#: installé ne connaît l'écriture de la page. Accuser le document d'un défaut
+#: d'installation est exactement le genre de constat faux que le reste de
+#: l'application s'interdit.
+ENGINE_SCRIPTS: dict[str, frozenset[str]] = {
+    "tesseract": frozenset({"latin", "arabe"}),  # selon les paquets installés
+    "rapidocr": frozenset({"latin"}),
+    "vision": frozenset({"latin", "arabe"}),
+}
+
+#: Code de langue Tesseract requis pour l'arabe.
+ARABIC_LANGUAGE = "ara"
+
+
+def arabic_capable() -> tuple[bool, list[str]]:
+    """L'arabe est-il lisible sur ce poste, et sinon que manque-t-il ?
+
+    Renvoie l'état et la liste des installations qui le rétabliraient, pour que
+    le message affiché nomme une action et non une fatalité.
+    """
+    from app.services import ai_provider, ocr_service
+
+    missing: list[str] = []
+
+    if ocr_service.is_available():
+        if ARABIC_LANGUAGE in ocr_service.installed_languages():
+            return True, []
+        missing.append(
+            "le paquet de langue arabe de Tesseract (« ara ») : Tesseract est "
+            "installé mais ne connaît pas l'arabe"
+        )
+    else:
+        missing.append(
+            "Tesseract avec ses paquets « ara », « fra » et « eng » : c'est le seul "
+            "moteur local qui lise l'arabe"
+        )
+
+    provider = ai_provider.get_provider()
+    if provider.mode == ai_provider.HYBRID_STRICT and provider.available():
+        return True, []
+    missing.append(
+        "ou, à défaut, le mode HYBRID_STRICT avec sa clé, qui active la lecture "
+        "par modèle de vision"
+    )
+
+    # RapidOCR ne figure pas dans les remèdes : il ne lit pas l'arabe.
+    return False, missing
+
 
 @dataclass
 class EngineResult:
@@ -344,7 +398,7 @@ def read_page(
             engine="aucun",
             attempts=attempts,
             human_transcription_required=True,
-            notice=HUMAN_TRANSCRIPTION_REQUIRED,
+            notice=HUMAN_TRANSCRIPTION_REQUIRED + _capability_hint(),
         )
 
     # Trois doutes distincts, chacun suffisant à exiger une relecture humaine.
@@ -355,7 +409,8 @@ def read_page(
 
     from app.core.text import similarity, useful_char_count
 
-    if useful_char_count(best.text) < MIN_USEFUL_CHARS:
+    unusable = useful_char_count(best.text) < MIN_USEFUL_CHARS
+    if unusable:
         reasons.append(
             f"moins de {MIN_USEFUL_CHARS} caractères utiles extraits d'une page entière"
         )
@@ -392,36 +447,83 @@ def read_page(
                 else "Au-dessus des seuils de fiabilité, ce qui ne dispense pas d'un "
                 "contrôle des noms, dates et montants."
             )
+            + (_capability_hint() if unusable else "")
         ),
     )
 
 
+def _capability_hint() -> str:
+    """Rappelle l'installation manquante quand rien d'exploitable n'a été lu.
+
+    Ce complément existe à cause d'un cas mesuré : sur une page arabe nette,
+    RapidOCR renvoie « rmg » à 62 % de confiance. Trois caractères de bruit
+    suffisent à faire sortir du chemin « aucun texte » et à produire le message
+    « moins de 40 caractères utiles » — vrai, mais qui laisse croire que la page
+    est en cause. Elle ne l'est pas : c'est le poste qui n'a aucun moteur
+    capable de cette écriture, et cela se répare.
+    """
+    capable, missing = arabic_capable()
+    if capable:
+        return ""
+    return (
+        " Aucun moteur installé sur ce poste ne sait lire l'arabe : si cette page est "
+        "en arabe, ce n'est pas elle qui est illisible. Il manque "
+        + " ; ".join(missing)
+        + ". RapidOCR ne comble pas ce manque, ses modèles couvrent le latin."
+    )
+
+
 def diagnostic() -> dict:
-    """État des barreaux, affichable à l'évaluateur."""
+    """État des barreaux, affichable à l'évaluateur.
+
+    Ce diagnostic existe parce qu'un poste peut refuser de lire une page
+    parfaitement nette, et que la cause est alors une installation manquante,
+    pas le document. L'évaluateur doit pouvoir le constater lui-même en une
+    seconde, sans lire un journal ni ouvrir un terminal.
+    """
     from app.services import ai_provider, ocr_service
 
     provider = ai_provider.get_provider()
+    tesseract_ok = ocr_service.is_available()
+    languages = ocr_service.installed_languages() if tesseract_ok else []
+    vision_ok = provider.mode == ai_provider.HYBRID_STRICT and provider.available()
+    capable, missing = arabic_capable()
+
     return {
         "barreaux": [
             {
                 "moteur": "tesseract",
-                "disponible": ocr_service.is_available(),
-                "portee": "cinq prétraitements locaux ; bon sur le flou et le bruit",
+                "disponible": tesseract_ok,
+                "langues": languages,
+                "ecritures": sorted(
+                    ENGINE_SCRIPTS["tesseract"]
+                    if ARABIC_LANGUAGE in languages
+                    else {"latin"}
+                ),
+                "portee": "cinq prétraitements locaux ; bon sur le flou et le bruit. "
+                "Seul moteur local capable de lire l'arabe, et uniquement si son "
+                "paquet « ara » est installé.",
             },
             {
                 "moteur": "rapidocr",
                 "disponible": rapidocr_available(),
+                "langues": ["latin", "chinois"],
+                "ecritures": sorted(ENGINE_SCRIPTS["rapidocr"]),
                 "portee": "modèles PP-OCR en ONNX, local et sans GPU ; mesuré meilleur "
-                "sur la basse résolution",
+                "sur la basse résolution. Ne lit pas l'arabe : sur une page arabe il "
+                "renvoie un texte vide sans signaler d'erreur.",
             },
             {
                 "moteur": "vision",
-                "disponible": provider.mode == ai_provider.HYBRID_STRICT
-                and provider.available(),
+                "disponible": vision_ok,
+                "langues": ["toutes écritures"],
+                "ecritures": sorted(ENGINE_SCRIPTS["vision"]),
                 "portee": "lecture contextuelle des pages très dégradées ; jamais "
                 "utilisée sur une pièce d'identité ni en mode LOCAL_ONLY",
             },
         ],
+        "arabe_lisible": capable,
+        "manque_pour_l_arabe": missing,
         "jamais_transmis": list(NEVER_SENT),
         "limite": "Une page qu'aucun barreau ne lit est signalée « transcription "
         "humaine obligatoire ». L'application n'invente jamais un contenu.",
