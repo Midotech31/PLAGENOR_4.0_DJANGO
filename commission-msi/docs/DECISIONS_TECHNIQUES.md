@@ -546,3 +546,34 @@ script est relançable à tout moment, sans réinstaller.
 illisibles : RapidOCR ne les lit pas de toute façon (DT-25). Le message
 d'échec le dit désormais, pour éviter que l'évaluateur ne s'acharne sur la
 mauvaise cause.
+
+## DT-27 — Trouver Tesseract même lorsqu'il n'est pas dans le PATH
+
+**Anticipation d'un échec certain.** Le diagnostic de DT-25 fonctionne : sur le
+poste de l'évaluateur, le bandeau affiche « arabe NON lisible » et les trois
+moteurs absents. L'action indiquée est d'installer Tesseract. Or l'installateur
+Windows le plus répandu — celui d'UB-Mannheim, celui que la documentation
+recommande — **n'ajoute pas Tesseract au PATH par défaut**. La case existe, elle
+est facile à manquer, et rien ne le signale ensuite.
+
+L'évaluateur aurait donc installé Tesseract, relancé l'application, et lu de
+nouveau « tesseract absent ». Diagnostic faux, deuxième fois, et cette fois avec
+le moteur bel et bien présent sur le disque.
+
+`tesseract_command()` cherche désormais, dans cet ordre :
+
+1. le chemin explicitement configuré (`MSI_TESSERACT_CMD`) — il prime toujours,
+   c'est le seul moyen d'imposer une version précise ;
+2. le PATH ;
+3. les emplacements d'installation standard, y compris ceux d'une installation
+   faite sans droits administrateur sous `%LOCALAPPDATA%`.
+
+Trois appels système, et une impasse supprimée.
+
+**Un défaut de portabilité trouvé par le test.** Les chemins utilisateur étaient
+d'abord écrits `r"Programs\Tesseract-OCR\tesseract.exe"`. Hors de Windows,
+l'antislash n'est pas un séparateur : le chemin composé devenait un nom de
+fichier unique, et la recherche ne trouvait rien. Les emplacements sont
+maintenant décomposés en segments. Le test l'a révélé parce qu'il s'exécute sur
+Linux — un test qui n'aurait tourné que sous Windows aurait laissé passer la
+faute.

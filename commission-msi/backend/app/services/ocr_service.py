@@ -85,11 +85,61 @@ class OcrResult:
         )
 
 
+#: Emplacements d'installation par défaut de Tesseract sous Windows.
+#:
+#: L'installateur le plus répandu (UB-Mannheim) **n'ajoute pas Tesseract au
+#: PATH** : la case existe, elle est facile à manquer, et rien ne le signale
+#: ensuite. Le moteur est alors parfaitement installé et l'application le
+#: déclare absent — un diagnostic faux, qui envoie l'évaluateur réinstaller ce
+#: qu'il a déjà. Chercher aux emplacements standard coûte trois appels
+#: système et supprime cette impasse.
+WINDOWS_DEFAULT_PATHS = (
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+)
+
+#: Emplacements relatifs au profil de l'utilisateur, pour une installation
+#: faite sans droits administrateur. Décomposés en segments plutôt qu'écrits
+#: avec des antislashs : un antislash n'est pas un séparateur hors de Windows,
+#: et le chemin composé deviendrait un nom de fichier unique.
+WINDOWS_USER_PATHS = (
+    ("Programs", "Tesseract-OCR", "tesseract.exe"),
+    ("Tesseract-OCR", "tesseract.exe"),
+)
+
+
+def _windows_candidates() -> list[str]:
+    import os
+
+    candidates = list(WINDOWS_DEFAULT_PATHS)
+    for variable in ("LOCALAPPDATA", "APPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)"):
+        base = os.environ.get(variable)
+        if not base:
+            continue
+        for parts in WINDOWS_USER_PATHS:
+            candidates.append(str(Path(base).joinpath(*parts)))
+    return candidates
+
+
 def tesseract_command() -> str | None:
+    """Chemin du binaire Tesseract, PATH ou non.
+
+    L'ordre est délibéré : un chemin explicitement configuré prime toujours —
+    c'est le seul moyen pour l'évaluateur d'imposer une version précise — puis
+    le PATH, puis les emplacements d'installation standard.
+    """
     settings = get_settings()
     if settings.tesseract_cmd:
         return settings.tesseract_cmd if Path(settings.tesseract_cmd).exists() else None
-    return shutil.which(ENGINE_NAME)
+
+    found = shutil.which(ENGINE_NAME)
+    if found:
+        return found
+
+    for candidate in _windows_candidates():
+        if Path(candidate).exists():
+            return candidate
+    return None
 
 
 def is_available() -> bool:

@@ -262,3 +262,67 @@ def test_the_verdict_distinguishes_no_reading_from_no_arabic():
     source = inspect.getsource(verify.main)
     assert "PAS les pages arabes" in source
     assert "AUCUNE page scannée" in source
+
+
+# --------------------------------------------------------------------------
+# Trouver Tesseract même hors du PATH
+# --------------------------------------------------------------------------
+
+
+def test_tesseract_is_found_at_its_default_windows_location(tmp_path, monkeypatch):
+    """L'installateur Windows n'ajoute pas Tesseract au PATH par défaut.
+
+    Sans cette recherche, un moteur parfaitement installé était déclaré absent,
+    et l'évaluateur repartait réinstaller ce qu'il avait déjà.
+    """
+    fake = tmp_path / "Tesseract-OCR" / "tesseract.exe"
+    fake.parent.mkdir(parents=True)
+    fake.write_bytes(b"")
+
+    monkeypatch.setattr(ocr_service.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(ocr_service, "WINDOWS_DEFAULT_PATHS", (str(fake),))
+
+    assert ocr_service.tesseract_command() == str(fake)
+    assert ocr_service.is_available() is True
+
+
+def test_a_user_installation_without_admin_rights_is_found(tmp_path, monkeypatch):
+    base = tmp_path / "AppData"
+    fake = base / "Programs" / "Tesseract-OCR" / "tesseract.exe"
+    fake.parent.mkdir(parents=True)
+    fake.write_bytes(b"")
+
+    monkeypatch.setattr(ocr_service.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(ocr_service, "WINDOWS_DEFAULT_PATHS", ())
+    monkeypatch.setenv("LOCALAPPDATA", str(base))
+
+    assert ocr_service.tesseract_command() == str(fake)
+
+
+def test_an_explicit_configuration_always_wins(tmp_path, monkeypatch):
+    """L'évaluateur doit pouvoir imposer une version précise."""
+    chosen = tmp_path / "choisi.exe"
+    chosen.write_bytes(b"")
+    other = tmp_path / "autre.exe"
+    other.write_bytes(b"")
+
+    from app.core.config import get_settings, reset_settings
+
+    monkeypatch.setenv("MSI_TESSERACT_CMD", str(chosen))
+    reset_settings()
+    try:
+        monkeypatch.setattr(ocr_service.shutil, "which", lambda _name: str(other))
+        assert ocr_service.tesseract_command() == str(chosen)
+    finally:
+        monkeypatch.delenv("MSI_TESSERACT_CMD", raising=False)
+        reset_settings()
+    assert get_settings() is not None
+
+
+def test_nothing_installed_stays_honestly_absent(monkeypatch):
+    monkeypatch.setattr(ocr_service.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(ocr_service, "WINDOWS_DEFAULT_PATHS", ())
+    monkeypatch.setattr(ocr_service, "_windows_candidates", list)
+
+    assert ocr_service.tesseract_command() is None
+    assert ocr_service.is_available() is False

@@ -216,9 +216,17 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
 - L'échec de RapidOCR précise désormais qu'il n'empêche pas la lecture de
   l'arabe, dont Tesseract seul se charge. Voir DT-26.
 
+### Tesseract trouvé même hors du PATH
+
+- L'installateur Windows d'UB-Mannheim **n'ajoute pas Tesseract au PATH** par
+  défaut. L'application le déclarait donc absent alors qu'il était installé.
+- La recherche essaie désormais, dans l'ordre : le chemin configuré, le PATH,
+  puis les emplacements d'installation standard — y compris une installation
+  utilisateur sans droits administrateur. Voir DT-27.
+
 ### Tests
 
-- 308 tests backend et 19 tests d'interface au vert.
+- 312 tests backend et 19 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 
