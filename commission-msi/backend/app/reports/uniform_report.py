@@ -81,7 +81,7 @@ FOREIGN_SCOPE = (
     "programme, financement, partenariat : une citation bibliographique ou une simple "
     "mention géographique ne déclenche aucun signalement. Ne sont jamais examinés : la "
     "nationalité, l'origine ethnique, la religion, le lieu de naissance, la consonance "
-    "d'un nom, une opinion supposée. Les éléments des sections 4.1 et 4.2 sont signalés à "
+    "d'un nom, une opinion supposée. Les éléments de la section 4.1 sont signalés à "
     "titre strictement informatif : une nationalité, une formation, une publication, une "
     "participation académique ou un lien institutionnel antérieur ne constitue pas "
     "automatiquement une non-conformité et ne préjuge d'aucune position personnelle ; leur "
