@@ -201,9 +201,24 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
 - `install_windows.bat` vérifie la présence du paquet `ara` et donne le lien de
   `ara.traineddata`. Voir DT-25.
 
+### Installation — un verdict de lecture, pas un simple « terminé »
+
+- **Limite des 260 caractères de Windows détectée avant l'installation.** Un
+  poste réel a vu RapidOCR échouer sur un chemin de 262 caractères — dossier
+  d'installation de 133, dépendance la plus profonde de 129. Le contrôle est
+  désormais fait d'emblée, avec les deux remèdes : chemin court, ou
+  `LongPathsEnabled`.
+- Nouveau `scripts/verify_install.py` : il **fait lire deux images de contrôle**,
+  une latine et une arabe, et rend trois verdicts distincts — tout est lu,
+  seul le latin est lu, ou rien n'est lu. Relançable à tout moment.
+- `install_windows.bat` l'exécute et rappelle son résultat : « Installation
+  terminée » ne veut rien dire si aucune page ne peut être lue.
+- L'échec de RapidOCR précise désormais qu'il n'empêche pas la lecture de
+  l'arabe, dont Tesseract seul se charge. Voir DT-26.
+
 ### Tests
 
-- 304 tests backend et 19 tests d'interface au vert.
+- 308 tests backend et 19 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

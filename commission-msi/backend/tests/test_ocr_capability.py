@@ -200,3 +200,65 @@ def test_the_diagnostic_is_reachable_without_a_terminal(client):
     payload = response.json()
     assert "barreaux" in payload
     assert "arabe_lisible" in payload
+
+
+# --------------------------------------------------------------------------
+# Vérification d'installation
+# --------------------------------------------------------------------------
+
+
+def _verify_module():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "verify_install.py"
+    spec = importlib.util.spec_from_file_location("verify_install", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_the_path_budget_matches_the_failure_that_produced_it():
+    """Le chemin réel qui a échoué faisait 133 caractères ; le budget doit le refuser.
+
+    L'installation avait échoué sur un fichier d'`onnxruntime` à 262 caractères,
+    deux de trop. Le budget se déduit de cette mesure, il n'est pas choisi au
+    hasard : 260 moins la profondeur observée des dépendances, moins une marge.
+    """
+    verify = _verify_module()
+
+    budget = verify.MAX_PATH - verify.DEEPEST_DEPENDENCY_SUFFIX - verify.PATH_SAFETY_MARGIN
+    assert budget < 133, "le chemin qui a réellement échoué doit être refusé"
+    assert budget > 60, "un budget trop strict refuserait des chemins acceptables"
+
+
+def test_a_too_long_path_names_both_remedies(tmp_path, monkeypatch):
+    verify = _verify_module()
+    monkeypatch.setattr(verify, "ROOT", tmp_path / ("x" * 140))
+
+    report: list[str] = []
+    assert verify.check_path_length(report) is False
+
+    text = " ".join(report)
+    assert "260" in text
+    assert "C:\\CommissionMSI" in text
+    assert "LongPathsEnabled" in text
+
+
+def test_a_short_path_passes_without_noise(tmp_path, monkeypatch):
+    verify = _verify_module()
+    monkeypatch.setattr(verify, "ROOT", tmp_path)
+
+    report: list[str] = []
+    assert verify.check_path_length(report) is True
+    assert len(report) == 1, "un chemin correct ne mérite pas cinq lignes d'explication"
+
+
+def test_the_verdict_distinguishes_no_reading_from_no_arabic():
+    """« Rien n'est lu » et « l'arabe n'est pas lu » n'appellent pas la même action."""
+    verify = _verify_module()
+    import inspect
+
+    source = inspect.getsource(verify.main)
+    assert "PAS les pages arabes" in source
+    assert "AUCUNE page scannée" in source

@@ -26,6 +26,35 @@ if errorlevel 1 (
 for /f "tokens=2" %%v in ('python --version 2^>^&1') do set PYVER=%%v
 echo Python detecte : !PYVER!
 
+REM --- 1b. Longueur du chemin d'installation --------------------------
+REM Windows refuse tout fichier de plus de 260 caracteres. Les dependances
+REM ajoutent jusqu'a 129 caracteres apres ce dossier : un chemin trop long
+REM fait echouer l'installation EN COURS DE ROUTE, apres plusieurs minutes
+REM de telechargement. Mieux vaut le dire avant.
+set "ICI=%CD%"
+REM Python est deja verifie present : lui demander la longueur evite une
+REM sous-routine batch fragile, qui devrait manipuler setlocal pour rien.
+for /f %%L in ('python -c "import os;print(len(os.getcwd()))"') do set TAILLE=%%L
+if !TAILLE! GTR 101 (
+  echo.
+  echo [ERREUR] Le chemin d'installation fait !TAILLE! caracteres, maximum conseille 101.
+  echo   %ICI%
+  echo.
+  echo Windows refuse tout fichier depassant 260 caracteres au total, et les
+  echo dependances ajoutent jusqu'a 129 caracteres apres ce dossier.
+  echo L'installation echouerait en cours de route.
+  echo.
+  echo Deux remedes, l'un ou l'autre suffit :
+  echo   1. deplacez ce dossier vers un chemin court, par exemple C:\CommissionMSI,
+  echo      puis relancez install_windows.bat ;
+  echo   2. ou activez les chemins longs, en PowerShell ADMINISTRATEUR, sur une
+  echo      seule ligne, puis redemarrez le poste et relancez install_windows.bat :
+  echo      New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force
+  echo.
+  choice /C ON /M "Continuer malgre tout (O) ou arreter (N)"
+  if errorlevel 2 exit /b 1
+)
+
 REM --- 2. Environnement virtuel --------------------------------------
 if not exist "backend\.venv" (
   echo Creation de l'environnement virtuel local...
@@ -51,9 +80,16 @@ echo Installation du second moteur de lecture (RapidOCR)...
 call backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-ocr.txt
 if errorlevel 1 (
   echo [AVERTISSEMENT] RapidOCR n'a pas pu etre installe.
+  echo.
+  echo Si l'erreur ci-dessus mentionne "No such file or directory" avec un
+  echo chemin tres long, la cause est la limite des 260 caracteres de Windows,
+  echo et non un probleme de reseau. Voir les deux remedes indiques plus haut.
+  echo.
   echo L'application fonctionnera avec Tesseract seul : les pages a basse
   echo resolution seront moins bien lues, et aucune lecture de secours ne
   echo sera disponible si Tesseract manque.
+  echo RapidOCR ne lit de toute facon pas l'arabe : son absence n'empeche
+  echo pas la lecture des pages arabes, c'est Tesseract qui s'en charge.
 )
 
 REM --- 3. Interface --------------------------------------------------
@@ -114,6 +150,14 @@ if errorlevel 1 (
 )
 
 echo.
+echo === Verification de l'installation ===
+echo.
+REM "Installation terminee" ne veut rien dire si aucune page ne peut etre lue.
+REM Le script fait lire deux images de controle et rend un verdict.
+call backend\.venv\Scripts\python.exe scripts\verify_install.py
+set VERDICT=%errorlevel%
+
+echo.
 echo === Installation terminee ===
 echo.
 echo IMPORTANT
@@ -126,5 +170,12 @@ echo.
 echo Lancez maintenant run_windows.bat
 echo.
 echo Designed by Prof. Merzoug Mohamed
+if not "%VERDICT%"=="0" (
+  echo.
+  echo [RAPPEL] La verification ci-dessus a signale un point bloquant pour la
+  echo lecture des pages. Relancez-la a tout moment avec :
+  echo    backend\.venv\Scripts\python.exe scripts\verify_install.py
+)
 pause
 endlocal
+exit /b 0

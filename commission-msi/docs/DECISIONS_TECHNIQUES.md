@@ -492,3 +492,57 @@ jamais transmise, et aucune pièce d'identité ni aucun numéro de passeport ne
 sort du poste. Ce barreau est un complément aux moteurs locaux, pas un
 substitut : installer le paquet `ara` reste la première chose à faire, elle est
 gratuite, hors ligne, et suffit dans la grande majorité des cas.
+
+## DT-26 — « Installation terminée » ne veut rien dire si rien ne peut être lu
+
+**Constat d'usage :** le journal d'installation d'un poste réel se termine sur
+« === Installation terminee === » alors que **aucune page scannée ne pouvait y
+être lue**. Deux échecs s'y étaient produits, tous deux ravalés au rang
+d'avertissement.
+
+**Échec 1 — la limite des 260 caractères de Windows.** L'installation de
+RapidOCR s'est interrompue sur :
+
+```
+OSError: [Errno 2] No such file or directory:
+'E:\...\backend\.venv\Lib\site-packages\onnxruntime\tools\ort_format_model\
+ ort_flatbuffers_py\fbs\DeprecatedNodeIndexAndKernelDefHash.py'
+```
+
+Mesuré : ce chemin fait **262 caractères**, deux de trop. Le dossier
+d'installation en occupait 133, et la dépendance la plus profonde en ajoute 129.
+Ce n'est ni un problème de réseau ni un paquet cassé, et rien dans le message ne
+le disait.
+
+Le budget retenu — **101 caractères** pour le dossier d'installation — se déduit
+de cette mesure : 260 moins les 129 observés, moins 30 de marge pour des
+dépendances plus profondes. Un test le fige en vérifiant qu'il refuse bien le
+chemin de 133 caractères qui a réellement échoué.
+
+Le contrôle est fait **avant** toute installation. Échouer après plusieurs
+minutes de téléchargement, sur un obstacle connu d'avance, n'est pas acceptable.
+Deux remèdes sont proposés, l'un ou l'autre suffisant : déplacer le dossier vers
+un chemin court, ou activer `LongPathsEnabled`.
+
+**Échec 2 — Tesseract absent.** L'avertissement existait, mais il se perdait
+entre deux pages de journal, et l'installation se déclarait terminée.
+
+**Correction de fond.** `scripts/verify_install.py` répond à la seule question
+qui compte : *cette installation lit-elle quelque chose, et quoi ?* Il
+n'inventorie pas des paquets — il **fait lire deux images de contrôle**, une
+latine et une arabe, et rapporte ce qui en sort. Trois verdicts distincts, parce
+qu'ils n'appellent pas la même action :
+
+| Verdict | Sortie | Signification |
+|---|---|---|
+| latin **et** arabe lus | 0 | rien ne manque |
+| latin lu, arabe non | 1 | un dossier algérien sera à moitié illisible |
+| rien n'est lu | 1 | toute page scannée restera vide |
+
+L'installateur l'exécute et rappelle son résultat après le message de fin. Le
+script est relançable à tout moment, sans réinstaller.
+
+**Ce que l'échec de RapidOCR ne cause pas.** Il ne rend pas les pages arabes
+illisibles : RapidOCR ne les lit pas de toute façon (DT-25). Le message
+d'échec le dit désormais, pour éviter que l'évaluateur ne s'acharne sur la
+mauvaise cause.
