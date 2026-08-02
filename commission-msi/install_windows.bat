@@ -32,6 +32,10 @@ REM ajoutent jusqu'a 129 caracteres apres ce dossier : un chemin trop long
 REM fait echouer l'installation EN COURS DE ROUTE, apres plusieurs minutes
 REM de telechargement. Mieux vaut le dire avant.
 set "ICI=%CD%"
+REM Valeur de repli : si la mesure echoue, on n'ecrit pas une comparaison
+REM avec une variable vide, qui ferait planter le script sur une erreur de
+REM syntaxe au lieu d'installer.
+set "TAILLE=0"
 REM Python est deja verifie present : lui demander la longueur evite une
 REM sous-routine batch fragile, qui devrait manipuler setlocal pour rien.
 for /f %%L in ('python -c "import os;print(len(os.getcwd()))"') do set TAILLE=%%L
@@ -76,6 +80,24 @@ if errorlevel 1 (
 )
 
 REM --- 2b. Second moteur OCR (optionnel mais recommande) ---------------
+REM RapidOCR tire onnxruntime, dont un fichier depasse la limite des 260
+REM caracteres sur un chemin long. Le telecharger 70 Mo pour echouer a
+REM l'ecriture, puis afficher un mur de rouge, n'apprend rien a personne :
+REM quand le chemin est trop long, l'etape est annoncee comme sautee.
+REM Ce moteur ne lit pas l'arabe : son absence ne coute que la lecture des
+REM pages latines a basse resolution.
+if !TAILLE! GTR 101 (
+  echo.
+  echo [IGNORE] Second moteur RapidOCR : installation sautee.
+  echo Le chemin de ce dossier fait !TAILLE! caracteres et son installation
+  echo echouerait a l'ecriture, sans rien apprendre d'utile.
+  echo Ce moteur ne lit PAS l'arabe : son absence n'est pas la cause d'une
+  echo page arabe illisible. Seul Tesseract lit l'arabe.
+  echo Pour l'obtenir : deplacez le dossier vers un chemin court, ou activez
+  echo les chemins longs, puis relancez install_windows.bat.
+  goto :APRES_OCR
+)
+
 echo Installation du second moteur de lecture (RapidOCR)...
 call backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-ocr.txt
 if errorlevel 1 (
@@ -91,6 +113,7 @@ if errorlevel 1 (
   echo RapidOCR ne lit de toute facon pas l'arabe : son absence n'empeche
   echo pas la lecture des pages arabes, c'est Tesseract qui s'en charge.
 )
+:APRES_OCR
 
 REM --- 3. Interface --------------------------------------------------
 where npm >nul 2>nul

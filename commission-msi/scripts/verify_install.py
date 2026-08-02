@@ -167,7 +167,14 @@ def check_engines(report: list[str]) -> tuple[bool, bool]:
     if rapid:
         report.append(f"{OK} RapidOCR : présent (latin et chinois ; ne lit pas l'arabe).")
     else:
-        report.append(f"{WARN} RapidOCR : absent. Second avis local indisponible.")
+        report.append(
+            f"{WARN} RapidOCR : absent. Second avis local indisponible sur les pages "
+            "latines à basse résolution."
+        )
+        report.append(
+            "         Sans effet sur l'arabe : RapidOCR ne le lit pas. Si des pages "
+            "arabes ressortent vides, la cause est Tesseract, pas celui-ci."
+        )
 
     latin_ok = arabic_ok = False
 
