@@ -123,6 +123,23 @@ cd ../frontend && npm run test && npm run typecheck
 292 tests backend (pytest) + 19 tests d'interface (Vitest) + vérification des
 types TypeScript. Plan complet : [`docs/PLAN_TESTS.md`](docs/PLAN_TESTS.md).
 
+## Construire l'archive de livraison
+
+```bat
+backend\.venv\Scripts\python.exe scripts\build_archive.py
+```
+
+Le script procède **par liste blanche** : rien n'entre dans l'archive qui n'ait
+été explicitement nommé. Il refuse de produire un fichier si un secret apparaît
+dans un fichier texte, relit l'archive terminée pour vérifier qu'aucun chemin
+interdit ne s'y est glissé, et affiche l'empreinte SHA-256 du résultat.
+
+Ne sont jamais embarqués : `data/` (clé maîtresse, base, documents versés),
+`references_officielles/originaux/`, `tests_private/`, `.venv`, `node_modules`,
+`.git` et tout fichier `.key`, `.sqlite3` ou `.env`. L'interface compilée
+(`frontend/dist`) l'est en revanche à dessein, pour qu'un poste sans Node.js
+puisse lancer l'application.
+
 ## Sécurité en une page
 
 - Aucun compte, aucun mot de passe, aucune session, aucune route `/login`.
