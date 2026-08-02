@@ -101,6 +101,21 @@ pas, il reprend là où il s'est arrêté.
 Le rapport produit est un **brouillon filigrané**. L'export officiel reste un
 acte distinct, dans l'onglet « Rapports », soumis à votre validation explicite.
 
+## Si les pages arabes ne sont pas lues
+
+```bat
+backend\.venv\Scripts\python.exe scripts\installer_arabe.py
+```
+
+Le script constate l'état réel, **pose le paquet arabe lui-même** si Tesseract
+est présent sans lui, et vérifie le résultat en faisant lire une page arabe de
+contrôle — il ne se contente pas de déposer un fichier. Si Tesseract est
+entièrement absent, il donne la commande exacte pour l'installer.
+
+Rappel de ce qui a coûté deux tentatives sur un poste réel : dans l'installateur
+Windows de Tesseract, il faut **déplier « Additional language data »** et cocher
+**Arabic**. RapidOCR ne comble pas ce manque — il ne lit pas l'arabe.
+
 ## Tests
 
 ```bat

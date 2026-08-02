@@ -629,3 +629,47 @@ Un détail d'écran mérite d'être noté : la carte ne répète ni les règles 
 décision ni les versions de référentiel, déjà portées par les cartes d'avis et
 de score. Deux listes identiques dans le même écran font douter qu'il s'agisse
 bien des mêmes.
+
+## DT-29 — Poser le paquet arabe plutôt que répéter la consigne
+
+**Constat.** Après deux échanges et deux tentatives, le panneau de diagnostic du
+poste affiche toujours « tesseract absent » et « arabe NON lisible ». La
+consigne était juste et précise ; elle n'a pas suffi. L'installateur Windows de
+Tesseract cache l'arabe derrière une case à cocher — « Additional language
+data » — qu'il faut déplier, et que personne ne déplie.
+
+Répéter une troisième fois n'aurait rien changé. `scripts/installer_arabe.py`
+fait le travail : quand Tesseract est présent sans son modèle arabe, il pose le
+paquet lui-même.
+
+**Trois points de conception méritent d'être notés.**
+
+1. **Le dossier `tessdata` est lu, pas deviné.** Il est extrait de la première
+   ligne de `tesseract --list-langs`, qui nomme le dossier réellement utilisé.
+   Le déduire du chemin du binaire serait faux dès qu'un `TESSDATA_PREFIX` est
+   défini — et c'est fréquent sur un poste d'entreprise.
+
+2. **Plusieurs adresses, sur des hôtes différents.** La forme
+   `github.com/.../raw/...` a été **mesurée renvoyant 403** derrière le
+   mandataire de cet environnement, là où `raw.githubusercontent.com` passe. Un
+   poste administratif est exactement le genre d'endroit où l'un marche et
+   l'autre non. Une seule adresse aurait été un point de rupture unique. Un test
+   vérifie que les adresses ne partagent pas toutes le même hôte.
+
+3. **Le résultat est vérifié sur le comportement, jamais sur le fichier.** Après
+   écriture, le script redemande à Tesseract ce qu'il sait lire, puis fait lire
+   une page arabe de contrôle. Un fichier déposé ne prouve rien : il peut être
+   tronqué, ou posé dans un dossier que le moteur n'utilise pas. Un contrôle de
+   taille écarte par ailleurs les pages d'erreur — 378 octets de HTML au lieu de
+   1,4 Mo de modèle.
+
+**Vérifié en conditions réelles**, et pas seulement en simulation : le paquet
+arabe a été retiré du poste, le script relancé, et l'arabe est redevenu lisible —
+téléchargement, écriture, confirmation par Tesseract et lecture d'une page arabe
+de contrôle.
+
+**Ce que le script ne fait pas.** Installer Tesseract lui-même. Poser un binaire
+sur un poste administratif sans que son porteur le sache serait déplacé ; le
+script cherche `winget`, propose la recherche du paquet, et n'écrit aucun
+identifiant en dur — celui-ci change avec le dépôt, et une commande fausse
+ferait perdre plus de temps qu'une recherche.

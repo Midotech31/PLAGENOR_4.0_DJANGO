@@ -326,3 +326,97 @@ def test_nothing_installed_stays_honestly_absent(monkeypatch):
 
     assert ocr_service.tesseract_command() is None
     assert ocr_service.is_available() is False
+
+
+# --------------------------------------------------------------------------
+# Installation automatique du paquet arabe
+# --------------------------------------------------------------------------
+
+
+def _installer_module():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "installer_arabe.py"
+    spec = importlib.util.spec_from_file_location("installer_arabe", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_the_tessdata_directory_is_read_from_tesseract_not_guessed():
+    """Deviner le dossier à partir du binaire est faux dès que TESSDATA_PREFIX existe."""
+    installer = _installer_module()
+
+    line = 'List of available languages in "/usr/share/tesseract-ocr/5/tessdata/" (4):'
+    assert installer.TESSDATA_LINE.search(line).group(1) == (
+        "/usr/share/tesseract-ocr/5/tessdata/"
+    )
+
+
+def test_an_error_page_is_never_installed_as_a_model(monkeypatch):
+    """Une page d'erreur de quelques centaines d'octets ne doit pas devenir un modèle."""
+    installer = _installer_module()
+
+    class _Tiny:
+        def read(self):
+            return b"<html>403 Forbidden</html>"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    monkeypatch.setattr(installer.urllib.request, "urlopen", lambda *a, **k: _Tiny())
+
+    assert installer._fetch() is None
+
+
+def test_a_refused_mirror_falls_back_to_the_next(monkeypatch):
+    """Une seule adresse serait un point de rupture unique — mesuré en 403."""
+    installer = _installer_module()
+    seen: list[str] = []
+
+    class _Payload:
+        def __init__(self, data):
+            self.data = data
+
+        def read(self):
+            return self.data
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def _open(url, *_args, **_kwargs):
+        seen.append(url)
+        if len(seen) == 1:
+            raise OSError("HTTP Error 403: Forbidden")
+        return _Payload(b"x" * (installer.MIN_MODEL_BYTES + 1))
+
+    monkeypatch.setattr(installer.urllib.request, "urlopen", _open)
+
+    payload = installer._fetch()
+    assert payload is not None
+    assert len(seen) == 2, "la seconde adresse doit être essayée"
+
+
+def test_the_mirrors_do_not_all_share_the_same_host():
+    """Trois adresses sur un seul hôte ne protègent de rien."""
+    installer = _installer_module()
+    from urllib.parse import urlparse
+
+    hosts = {urlparse(url).netloc for url in installer.ARABIC_MODEL_URLS}
+    assert len(hosts) >= 2, hosts
+
+
+def test_an_installed_file_is_confirmed_by_asking_tesseract(monkeypatch, tmp_path):
+    """Le fichier posé ne prouve rien : seul Tesseract dit ce qu'il sait lire."""
+    installer = _installer_module()
+    monkeypatch.setattr(installer, "_download", lambda _target: True)
+    monkeypatch.setattr(installer, "_languages", lambda _cmd: (["eng", "fra"], None))
+
+    assert installer._install_arabic("tesseract", str(tmp_path)) is False

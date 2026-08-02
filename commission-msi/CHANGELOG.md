@@ -245,9 +245,23 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   sources, versions, preuves citables, contrôle en ligne des profils et sa
   portée, contradictions connues, légendes, principe probatoire. Voir DT-28.
 
+### Le paquet arabe s'installe tout seul
+
+- Nouveau `scripts/installer_arabe.py` : quand Tesseract est présent sans son
+  modèle arabe, **le script pose le paquet lui-même** puis vérifie le résultat
+  en faisant lire une page arabe de contrôle. Répéter la consigne n'avait pas
+  suffi sur un poste réel.
+- Le dossier `tessdata` est lu dans la sortie de `tesseract --list-langs`, et
+  non déduit du chemin du binaire — ce qui serait faux dès qu'un
+  `TESSDATA_PREFIX` est défini.
+- Plusieurs adresses de téléchargement, sur des hôtes différents : la forme
+  `github.com/.../raw/...` a été mesurée renvoyant 403 derrière un mandataire,
+  là où `raw.githubusercontent.com` passe.
+- `install_windows.bat` l'exécute. Voir DT-29.
+
 ### Tests
 
-- 314 tests backend et 22 tests d'interface au vert.
+- 319 tests backend et 22 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

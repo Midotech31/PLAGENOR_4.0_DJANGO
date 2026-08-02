@@ -172,6 +172,12 @@ if errorlevel 1 (
   )
 )
 
+REM --- 5b. Pose automatique du paquet arabe ---------------------------
+REM Repeter la consigne n'a pas suffi sur un poste reel : l'arabe se cache
+REM derriere une case a cocher que personne ne deplie. Le script le pose
+REM lui-meme quand Tesseract est la sans son modele arabe.
+call backend\.venv\Scripts\python.exe scripts\installer_arabe.py
+
 echo.
 echo === Verification de l'installation ===
 echo.
