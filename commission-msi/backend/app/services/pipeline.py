@@ -131,6 +131,51 @@ def _ocr(session: Session, job: AnalysisJob) -> dict:
     }
 
 
+def _semantic_reading(session: Session, job: AnalysisJob) -> dict:
+    """Lecture assistée du texte — n'a d'effet qu'en mode `HYBRID_STRICT`.
+
+    Elle est placée **avant** la structuration, et pas après : la structuration
+    calcule les contrôles, les alertes et le registre de preuves à partir des
+    valeurs. Les produire avant que la lecture ait comblé les manques donnerait
+    des contrôles portant sur un dossier à moitié vide.
+
+    En `LOCAL_ONLY`, l'étape ne fait rien et l'écrit noir sur blanc. Elle ne
+    bascule pas silencieusement vers une lecture dégradée : l'évaluateur doit
+    pouvoir lire, dans le journal du traitement, que cette capacité n'était pas
+    active.
+
+    Une panne d'appel, elle, n'est pas absorbée : l'exception remonte, le
+    travail devient reprenable, et les étapes déjà validées ne sont pas
+    refaites. Absorber l'échec produirait un rapport d'apparence normale, bâti
+    sur une lecture qui n'a pas eu lieu.
+    """
+    from app.services import ai_semantic_reading
+
+    try:
+        result = ai_semantic_reading.run(session, job.dossier_id, job_id=job.id)
+    except ai_semantic_reading.NotAvailable as exc:
+        return {
+            "active": False,
+            "motif": str(exc),
+            "constat": "Lecture sémantique assistée inactive : "
+            f"{exc}. Seules les détections déterministes locales ont été appliquées ; "
+            "les informations rédigées en prose ou en tableau peuvent rester non "
+            "extraites et sont alors signalées « non vérifiable ».",
+        }
+
+    job.model_id = result.get("model_id") or job.model_id
+    job.validations_done += result["proposed"]
+    return {
+        "active": True,
+        **result,
+        "constat": f"{result['proposed']} information(s) lue(s) et proposée(s) au statut "
+        f"A_VERIFIER, {result['rejected']} proposition(s) rejetée(s) faute d'extrait "
+        f"vérifiable sur la page citée, {result['kept_local']} champ(s) déjà mieux établi(s) "
+        f"conservé(s). {result['pages_transmises']} page(s) transmises en "
+        f"{result['appels']} appel(s).",
+    }
+
+
 def _structure(session: Session, job: AnalysisJob) -> dict:
     extraction = extraction_service.autofill_dossier(session, job.dossier_id)
     detected = dossier_service.detect_pieces(session, job.dossier_id)
@@ -306,6 +351,7 @@ STEPS: dict[str, Step] = {
     JobState.VALIDATING: Step(signature=_document_signature, run=_validate),
     JobState.EXTRACTING: Step(signature=_document_signature, run=_extract),
     JobState.OCR: Step(signature=_document_signature, run=_ocr),
+    JobState.SEMANTIC_READING: Step(signature=_text_signature, run=_semantic_reading),
     JobState.STRUCTURING: Step(signature=_text_signature, run=_structure),
     JobState.REGULATORY_CHECK: Step(signature=_values_signature, run=_regulatory),
     JobState.SCIENTIFIC_SCORING: Step(signature=_values_signature, run=_scoring),

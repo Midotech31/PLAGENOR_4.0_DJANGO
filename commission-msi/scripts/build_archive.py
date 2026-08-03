@@ -39,6 +39,8 @@ ROOT_FILES = (
     "run_windows.bat",
     "run_tests.bat",
     "reparer_ocr_arabe.bat",
+    "activer_hybrid_strict.bat",
+    "activer_local_only.bat",
 )
 
 #: Répertoires embarqués, avec le motif des fichiers retenus.

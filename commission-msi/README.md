@@ -72,6 +72,28 @@ autre adresse. Il n'y a ni compte, ni mot de passe, ni écran de connexion.
 
 Détails complets : [`docs/GUIDE_INSTALLATION.md`](docs/GUIDE_INSTALLATION.md).
 
+### Lecture sémantique assistée — recommandée
+
+```bat
+activer_hybrid_strict.bat
+```
+
+Sans elle, seules les informations écrites sous la forme `Libellé : valeur` sont
+repérées. Mesure sur un dossier réel de 76 pages : **4 champs sur 29, dont
+2 faux**. Avec elle, le texte est lu.
+
+Le script demande la clé API sans jamais l'afficher ni l'écrire dans un fichier
+du projet, puis effectue **un appel réel de contrôle** — une configuration
+complète peut parfaitement accompagner une clé révoquée.
+
+Le PDF original, les pièces d'identité, les numéros de passeport et les pages
+classées `RESTREINT` ne sont jamais transmis : ces refus sont dans le code, pas
+dans la configuration. Le modèle ne produit ni statut, ni note, ni avis — il
+propose des valeurs, chacune devant citer sa page et un extrait relu mot pour
+mot sur le texte local, sans quoi elle est rejetée.
+
+Pour tout refermer et effacer la clé : `activer_local_only.bat`.
+
 ### Sous Linux ou macOS
 
 ```bash

@@ -28,6 +28,7 @@ class JobState(StrEnum):
     VALIDATING = "VALIDATING"
     EXTRACTING = "EXTRACTING"
     OCR = "OCR"
+    SEMANTIC_READING = "SEMANTIC_READING"
     STRUCTURING = "STRUCTURING"
     REGULATORY_CHECK = "REGULATORY_CHECK"
     SCIENTIFIC_SCORING = "SCIENTIFIC_SCORING"
@@ -50,6 +51,7 @@ JOB_STATE_LABELS: dict[str, str] = {
     JobState.VALIDATING: "Validation du document source",
     JobState.EXTRACTING: "Extraction du texte page par page",
     JobState.OCR: "Reconnaissance optique des pages scannées",
+    JobState.SEMANTIC_READING: "Lecture sémantique assistée du dossier",
     JobState.STRUCTURING: "Structuration des informations et registre de preuves",
     JobState.REGULATORY_CHECK: "Application des 26 critères réglementaires",
     JobState.SCIENTIFIC_SCORING: "Calcul du score scientifique sur 100",

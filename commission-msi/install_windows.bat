@@ -206,6 +206,13 @@ echo  - N'exposez jamais cette application au reseau.
 echo.
 echo Lancez maintenant run_windows.bat
 echo.
+echo LECTURE SEMANTIQUE ASSISTEE (optionnel, recommande)
+echo  - Sans elle, seules les informations ecrites sous la forme
+echo    "Libelle : valeur" sont extraites. Mesure sur un dossier reel de
+echo    76 pages : 4 champs sur 29, dont 2 faux.
+echo  - Pour l'activer : activer_hybrid_strict.bat (une cle API est requise).
+echo    Le PDF original et les pieces d'identite ne sont jamais transmis.
+echo.
 echo Designed by Prof. Merzoug Mohamed
 if not "%VERDICT%"=="0" (
   echo.

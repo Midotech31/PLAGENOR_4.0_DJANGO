@@ -52,6 +52,7 @@ const COMPLETED_JOB = {
   finished_at: '2026-08-01T10:02:00Z',
   can_resume: false,
   estimate: 'Terminé.',
+  lecture_assistee: null,
 };
 
 const ASSESSMENT = {
@@ -412,5 +413,68 @@ describe('onglet Traitement', () => {
     renderTab();
 
     expect(await screen.findByText(/sept sections, sans annexe/)).toBeInTheDocument();
+  });
+
+  it('affiche ce que la lecture assistée a proposé ET ce qu’elle a rejeté', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockRoutes({
+        '/traitement': {
+          job: {
+            ...COMPLETED_JOB,
+            analysis_mode: 'HYBRID_STRICT',
+            lecture_assistee: {
+              active: true,
+              constat: 'Lecture effectuée.',
+              proposed: 11,
+              rejected: 3,
+              kept_local: 2,
+              pages_transmises: 25,
+              pages_retenues_sur_le_poste: 0,
+              model_id: 'modele-fictif',
+              rejets: [{ cle: 'budget_total', motif: 'extrait introuvable sur la page 17' }],
+              notice: 'Aucune valeur n’est confirmée : la confirmation appartient à l’évaluateur.',
+            },
+          },
+          notice: null,
+        },
+      }),
+    );
+    renderTab();
+
+    expect(await screen.findByText('Lecture sémantique assistée')).toBeInTheDocument();
+    // Le compte de rejets est au même rang que celui des propositions : une
+    // valeur retenue sans savoir combien ont été écartées invite à faire
+    // confiance sans raison.
+    expect(await screen.findByText('11 information(s) lue(s) et proposée(s)')).toBeInTheDocument();
+    expect(await screen.findByText('3 proposition(s) rejetée(s)')).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByText(/Propositions rejetées faute d’extrait vérifiable|Propositions rejetées faute d'extrait vérifiable/),
+    );
+    expect(screen.getByText(/extrait introuvable sur la page 17/)).toBeInTheDocument();
+  });
+
+  it('dit que la lecture assistée n’a pas eu lieu, plutôt que de la masquer', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockRoutes({
+        '/traitement': {
+          job: {
+            ...COMPLETED_JOB,
+            lecture_assistee: {
+              active: false,
+              motif: 'mode LOCAL_ONLY actif',
+              constat:
+                'Lecture sémantique assistée inactive : mode LOCAL_ONLY actif. Seules les détections déterministes locales ont été appliquées.',
+            },
+          },
+          notice: null,
+        },
+      }),
+    );
+    renderTab();
+
+    expect(await screen.findByText(/Lecture sémantique assistée inactive/)).toBeInTheDocument();
   });
 });

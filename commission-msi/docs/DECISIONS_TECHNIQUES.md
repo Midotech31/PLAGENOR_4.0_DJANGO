@@ -865,3 +865,95 @@ version that satisfies ») de celui du chemin trop long, et le dit pour ce
 qu'il est plutôt que de laisser l'utilisateur chercher un remède qui n'existe
 pas encore. L'application continue de fonctionner avec Tesseract seul, qui
 lit l'arabe — RapidOCR ne le fait de toute façon pas.
+
+## DT-34 — `HYBRID_STRICT` était une façade : le mode n'avait aucun client
+
+**Constat, dans le code :** `HybridStrictProvider._call` exigeait qu'on lui
+injecte un client et levait `ExternalAiNotConfigured` sinon ; **aucune
+implémentation de client n'existait dans le projet**. Le mode était donc
+entièrement configurable — variables d'environnement, refus documentés, écran
+d'état, tests — et n'a jamais pu émettre un seul appel. Le barreau de vision de
+DT-19 était inatteignable pour la même raison.
+
+`app/services/ai_client.py` comble ce manque : un POST vers l'API Messages,
+écrit avec la bibliothèque standard. Ajouter une dépendance HTTP pour une seule
+requête aurait élargi la surface d'installation, qui est déjà le point le plus
+fragile de ce projet sous Windows (DT-25, DT-33).
+
+Quatre choix méritent d'être écrits :
+
+* **`temperature: 0`.** Sur une tâche de relevé, la variabilité ne produit que
+  deux lectures différentes du même dossier, sans qu'on puisse dire laquelle
+  est la bonne ;
+* **la clé ne circule que dans l'en-tête**, lue depuis la configuration, qui la
+  prend dans l'environnement. Elle n'apparaît ni dans le corps, ni dans un
+  message d'erreur : `_safe_detail` ne recopie jamais le corps de la réponse
+  d'erreur, qui peut renvoyer la requête en écho — le journaliser rendrait au
+  journal ce que l'expurgation vient d'en retirer ;
+* **les blocs `thinking` sont ignorés à la lecture.** La chaîne de pensée
+  privée n'est ni conservée ni affichée ;
+* **un modèle inconnu devient `LookupError`**, que le fournisseur traduit en
+  `MODEL_UNAVAILABLE`. Une erreur de configuration ne doit pas ressembler à une
+  panne réseau, et aucun repli silencieux vers un modèle plus faible n'a lieu.
+
+## DT-35 — Une expression régulière ne lit pas une page de garde
+
+**Mesure sur le dossier réel de 76 pages** (BOUAMAMA, décembre 2026) :
+l'extraction déterministe a retrouvé **4 champs sur 29, dont 2 faux**
+(`intitule` = l'en-tête arabe de l'université ; `date_debut` = la date du guide,
+pas celle de la manifestation). La page 12 énonce pourtant en clair l'intitulé,
+l'université, la faculté, le laboratoire, les dates et le format.
+
+**Cause exacte :** `_extract_labelled` exige la forme `Libellé : valeur` sur une
+seule ligne. Un dossier réel est fait de blocs de titre, de tableaux et de
+prose. Ce n'est pas un seuil à ajuster : aucune expression régulière ne lit une
+page de garde.
+
+**Ce que la mesure a aussi réfuté :** j'avais présenté l'OCR comme le levier
+indispensable. Le pipeline complet relancé avec un OCR fonctionnel (51 pages
+océrisées, 859 s) a produit un résultat **identique** à celui obtenu avec l'OCR
+cassé — 29/100, 8 NC / 8 NV / 9 PC / 1 C. L'OCR fournissait déjà le texte ; ce
+qui manquait, c'était la lecture.
+
+**Décision :** une étape `SEMANTIC_READING` (`ai_semantic_reading`) fait lire le
+texte par le modèle, **en mode `HYBRID_STRICT` uniquement**. C'est ce que faisait
+l'IA ayant rédigé le rapport Word de référence.
+
+Ce qu'elle ne change pas :
+
+* **le chemin de décision reste déterministe (DT-13).** Le modèle propose des
+  *valeurs de champs*. Les statuts C/PC/NC/NV, le score et l'avis restent
+  calculés par les moteurs, à partir de ces valeurs une fois qualifiées. Une
+  clé hors de la liste des 29 champs est rejetée : le modèle ne peut pas glisser
+  un avis dans le dossier par ce chemin ;
+* **rien n'est confirmé.** Tout est écrit au statut `A_VERIFIER`, comme
+  l'extraction déterministe ;
+* **rien n'est cru sur parole.** Chaque proposition doit citer une page **et** un
+  extrait ; l'extrait est relu sur le texte local (`containment ≥ 0.85`) et la
+  proposition est rejetée s'il ne s'y trouve pas. C'est la seule protection
+  honnête contre une valeur plausible mais inventée, et les rejets sont comptés
+  et affichés plutôt que tus ;
+* **rien de restreint ne sort.** Les pages d'un document `RESTREINT` sont
+  écartées à la source, en plus du refus du fournisseur.
+
+**Arbitrage entre les deux producteurs.** Deux sources proposent désormais des
+valeurs. Sans règle, la dernière passée gagnait — y compris l'heuristique
+« première ligne significative de la page 1 » (0,5), celle-là même qui avait
+produit le faux intitulé, écrasant une lecture argumentée (0,75).
+`extraction_service.may_overwrite` pose la règle dans les deux sens : une
+proposition ne remplace qu'une proposition **moins sûre qu'elle**. Un libellé
+explicite (0,85) l'emporte donc sur une lecture, et une lecture l'emporte sur un
+motif structurel ou une heuristique de position. Ce que l'évaluateur a qualifié
+n'est jamais touché.
+
+**Une panne d'appel n'est pas absorbée.** L'exception remonte, le travail
+devient reprenable au dernier point de reprise valide, et les appels déjà payés
+ne sont pas refaits. Absorber l'échec produirait un rapport d'apparence normale,
+bâti sur une lecture qui n'a pas eu lieu.
+
+**Ce qui n'est pas mesuré, et doit être dit :** aucun appel réel n'a été émis.
+Je n'ai pas de clé API. Le chemin est construit et couvert par 17 tests avec un
+ouvreur HTTP factice — aucun test ne sort du poste — mais **le gain sur le
+dossier réel reste à mesurer par vous**, avec votre clé. Ce que je peux affirmer
+est structurel, pas empirique : la voie déterministe a été mesurée insuffisante
+sur ce dossier, et celle-ci lit le texte au lieu d'y chercher une forme.

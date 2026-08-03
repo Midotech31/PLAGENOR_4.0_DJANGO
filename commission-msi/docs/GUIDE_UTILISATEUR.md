@@ -149,3 +149,56 @@ clair : seules des empreintes SHA-256.
 Créez une sauvegarde horodatée depuis l'application. Elle contient une copie
 cohérente de la base, les documents et rapports chiffrés, le référentiel actif,
 `master.key` et un manifeste SHA-256. **Conservez-la sur un support chiffré.**
+
+## 15. Lecture sémantique assistée (mode `HYBRID_STRICT`)
+
+### Pourquoi l'activer
+
+Sans elle, l'application ne repère que les informations écrites sous la forme
+`Libellé : valeur` sur une seule ligne. Mesure faite sur un dossier réel de
+76 pages : **4 champs sur 29, dont 2 faux**, alors que la page 12 énonçait en
+clair l'intitulé, l'université, la faculté, le laboratoire, les dates et le
+format. Un dossier réel est fait de blocs de titre, de tableaux et de prose.
+
+Avec elle, le texte est **lu**, comme le ferait un rapporteur.
+
+### Comment l'activer
+
+Lancez `activer_hybrid_strict.bat`. Il demande l'identifiant exact du modèle,
+puis la clé API — saisie masquée, jamais affichée, jamais écrite dans un fichier
+du projet : elle est posée dans les variables d'environnement de votre session
+Windows. Le script termine par **un appel réel de contrôle** : c'est le seul
+moyen de savoir si la clé et le modèle fonctionnent vraiment, une configuration
+complète pouvant parfaitement accompagner une clé révoquée.
+
+Pour tout refermer : `activer_local_only.bat`, qui efface aussi la clé.
+
+Pour revérifier à tout moment, sans rien changer :
+
+```
+backend\.venv\Scripts\python.exe scripts\verifier_ia.py --appel
+```
+
+### Ce qui ne quitte jamais le poste
+
+Le PDF original, les pièces d'identité, les numéros de passeport, et les pages
+de tout document que vous avez classé `RESTREINT`. Ces refus sont écrits dans le
+code, pas dans la configuration : aucune variable d'environnement ne peut les
+ouvrir.
+
+### Ce que le modèle ne fait pas
+
+Il ne produit **ni statut, ni note, ni avis**. Les 26 critères, le score sur 100
+et l'avis technique restent calculés par les moteurs déterministes, à partir des
+valeurs une fois que **vous** les avez qualifiées.
+
+### Comment lire la carte « Lecture sémantique assistée »
+
+Elle affiche, au même rang, ce qui a été proposé **et ce qui a été rejeté**.
+Chaque valeur devait citer sa page et un extrait ; l'extrait est relu mot pour
+mot sur le texte de cette page, et la proposition est écartée s'il ne s'y trouve
+pas. Un nombre de rejets non nul n'est pas un défaut : c'est le contrôle qui
+fonctionne. Dépliez la liste pour voir lesquelles et pourquoi.
+
+Toutes les valeurs retenues arrivent au statut **À vérifier**, avec leur page et
+leur extrait. Aucune n'est confirmée : la confirmation vous appartient.

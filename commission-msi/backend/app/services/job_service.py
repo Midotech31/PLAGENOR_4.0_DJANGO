@@ -55,8 +55,9 @@ ACTIVE_STATES = tuple(state for state in JobState if state not in TERMINAL_JOB_S
 PIPELINE: tuple[tuple[str, int], ...] = (
     (JobState.VALIDATING, 5),
     (JobState.EXTRACTING, 15),
-    (JobState.OCR, 30),
-    (JobState.STRUCTURING, 45),
+    (JobState.OCR, 28),
+    (JobState.SEMANTIC_READING, 40),
+    (JobState.STRUCTURING, 48),
     (JobState.REGULATORY_CHECK, 60),
     (JobState.SCIENTIFIC_SCORING, 70),
     (JobState.WEB_RESEARCH, 80),
@@ -215,10 +216,25 @@ def checkpoints(session: Session, job_id: str) -> list[AnalysisCheckpoint]:
     )
 
 
+def _step_result(session: Session, job_id: str, step: str) -> dict | None:
+    """Résultat enregistré d'une étape, s'il existe et reste lisible."""
+    row = checkpoint_for(session, job_id, step)
+    if row is None or not row.result_json:
+        return None
+    try:
+        payload = json.loads(row.result_json)
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
 def job_view(session: Session, job: AnalysisJob) -> dict:
     done = [row.step for row in checkpoints(session, job.id)]
     remaining = [state for state, _ in PIPELINE if state not in done]
     return {
+        # Ce que la lecture assistée a proposé, et surtout ce qu'elle a rejeté :
+        # un compte de rejets visible vaut mieux qu'une confiance implicite.
+        "lecture_assistee": _step_result(session, job.id, JobState.SEMANTIC_READING),
         "id": job.id,
         "dossier_id": job.dossier_id,
         "state": job.state,
@@ -434,6 +450,14 @@ def _explain(exc: Exception, job: AnalysisJob) -> str:
         "UnknownEvidence": "une affirmation citait une preuve absente du registre",
         "ValidationRefused": "une donnée du dossier a été refusée par les contrôles",
         "PermissionError": "un fichier local n'a pas pu être lu ou écrit",
+        # Modes d'échec du mode hybride : nommés, parce qu'ils se corrigent dans
+        # la configuration et non dans le dossier.
+        "ModelUnavailable": "le modèle configuré n'est pas disponible pour ce compte ; "
+        "aucun repli vers un modèle moins performant n'a été fait",
+        "ExternalAiNotConfigured": "le mode HYBRID_STRICT est incomplètement configuré",
+        "RestrictedContentRefused": "une donnée restreinte allait être transmise : "
+        "la transmission a été refusée",
+        "AiError": "l'appel au modèle n'a pas abouti",
     }
     cause = causes.get(type(exc).__name__, "une erreur technique est survenue")
     action = (

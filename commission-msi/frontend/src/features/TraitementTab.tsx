@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { api } from '../services/api';
-import type { Assessment, CriterionRow, JobView } from '../services/api';
+import type { AssistedReadingView, Assessment, CriterionRow, JobView } from '../services/api';
 import {
   Badge,
   Card,
@@ -32,6 +32,7 @@ const ACTIVE_STATES = new Set([
   'VALIDATING',
   'EXTRACTING',
   'OCR',
+  'SEMANTIC_READING',
   'STRUCTURING',
   'REGULATORY_CHECK',
   'SCIENTIFIC_SCORING',
@@ -230,6 +231,7 @@ export function TraitementTab({
         )}
       </Card>
 
+      {job?.lecture_assistee && <AssistedReadingCard reading={job.lecture_assistee} />}
       {job?.state === 'COMPLETED' && <ProducedReportCard dossierId={dossierId} />}
       {job?.state === 'COMPLETED' && <ReportDetailsCard dossierId={dossierId} />}
 
@@ -241,6 +243,76 @@ export function TraitementTab({
         </>
       )}
     </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Lecture sémantique assistée
+// --------------------------------------------------------------------------
+
+/**
+ * Ce que le modèle a lu — et surtout ce qui a été refusé.
+ *
+ * Le nombre de rejets est affiché au même rang que le nombre de propositions,
+ * délibérément : une valeur retenue sans que l'on sache combien ont été
+ * écartées invite à faire confiance sans raison. Chaque proposition devait
+ * citer une page et un extrait relu mot pour mot sur le texte local ; celles
+ * qui ont échoué à ce contrôle sont listées avec leur motif.
+ *
+ * En mode local, la carte s'affiche quand même et dit que la lecture n'a pas
+ * eu lieu : une capacité inactive doit se voir, sinon son absence passe pour
+ * un résultat.
+ */
+function AssistedReadingCard({ reading }: { reading: AssistedReadingView }) {
+  if (!reading.active) {
+    return (
+      <Card title="Lecture sémantique assistée">
+        <Notice tone="incertain">{reading.constat}</Notice>
+      </Card>
+    );
+  }
+
+  return (
+    <Card title="Lecture sémantique assistée">
+      <p className="actions">
+        <Badge tone="ok">{reading.proposed ?? 0} information(s) lue(s) et proposée(s)</Badge>
+        <Badge tone={reading.rejected ? 'critique' : 'neutre'}>
+          {reading.rejected ?? 0} proposition(s) rejetée(s)
+        </Badge>
+        <Badge tone="neutre">{reading.kept_local ?? 0} champ(s) déjà mieux établi(s)</Badge>
+        <Badge tone="neutre">{reading.pages_transmises ?? 0} page(s) transmise(s)</Badge>
+        <Badge tone="neutre">
+          {reading.pages_retenues_sur_le_poste ?? 0} page(s) retenue(s) sur le poste
+        </Badge>
+        <Badge tone="neutre">{reading.model_id ?? '—'}</Badge>
+      </p>
+
+      {reading.notice && <Notice>{reading.notice}</Notice>}
+
+      {reading.rejets && reading.rejets.length > 0 && (
+        <details>
+          <summary>Propositions rejetées faute d'extrait vérifiable</summary>
+          <ul className="aide">
+            {reading.rejets.map((rejet, index) => (
+              <li key={`${rejet.cle}-${index}`}>
+                <Badge tone="critique">{rejet.cle}</Badge> {rejet.motif}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {reading.remarques && reading.remarques.length > 0 && (
+        <details>
+          <summary>Remarques de lecture</summary>
+          <ul className="aide">
+            {reading.remarques.map((remarque, index) => (
+              <li key={index}>{remarque}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </Card>
   );
 }
 

@@ -164,6 +164,37 @@ COUNT_PATTERN = re.compile(r"\b(\d{1,4})\s+(?:pays|countries|دول)\b", re.IGNO
 # --------------------------------------------------------------------------
 
 
+#: Statuts posés par l'évaluateur : aucune proposition automatique ne les touche.
+HUMAN_QUALIFIED = frozenset(
+    {
+        InformationStatus.CONFIRME,
+        InformationStatus.CORRIGE,
+        InformationStatus.REJETE,
+        InformationStatus.NON_APPLICABLE,
+    }
+)
+
+
+def may_overwrite(item: ExtractedItem, new_confidence: float) -> bool:
+    """Dit si une proposition automatique peut remplacer la valeur en place.
+
+    Deux producteurs proposent désormais des valeurs : les motifs déterministes
+    et, en mode hybride, la lecture assistée. Sans arbitrage, le dernier passé
+    gagnait — y compris une heuristique de position (0.5) écrasant une lecture
+    argumentée (0.75). La règle est donc explicite et vaut dans les deux sens :
+    une proposition ne remplace qu'une proposition **moins sûre qu'elle**, à
+    confiance égale elle rafraîchit.
+
+    Ce que l'évaluateur a qualifié n'est jamais touché, quelle que soit la
+    confiance.
+    """
+    if item.status in HUMAN_QUALIFIED:
+        return False
+    if item.current_value_cipher is None:
+        return True
+    return new_confidence >= (item.confidence or 0.0)
+
+
 @dataclass
 class Extraction:
     key: str
@@ -602,19 +633,12 @@ def autofill_dossier(session: Session, dossier_id: str) -> dict:
         ).all()
     }
 
-    human_qualified = {
-        InformationStatus.CONFIRME,
-        InformationStatus.CORRIGE,
-        InformationStatus.REJETE,
-        InformationStatus.NON_APPLICABLE,
-    }
-
     filled, skipped = 0, 0
     for field_key, extraction in proposals.items():
         item = items.get(field_key)
         if item is None:
             continue
-        if item.status in human_qualified:
+        if not may_overwrite(item, extraction.confidence):
             skipped += 1
             continue
 
@@ -643,7 +667,8 @@ def autofill_dossier(session: Session, dossier_id: str) -> dict:
         session,
         audit.AuditAction.ITEM_CORRECTION,
         f"Extraction automatique : {filled} information(s) proposée(s) au statut A_VERIFIER, "
-        f"{skipped} champ(s) déjà qualifié(s) par l'évaluateur préservé(s).",
+        f"{skipped} champ(s) préservé(s) — qualifiés par l'évaluateur, ou déjà renseignés "
+        "par une détection plus fiable.",
         entity_type="dossier",
         entity_id=dossier_id,
         dossier_id=dossier_id,

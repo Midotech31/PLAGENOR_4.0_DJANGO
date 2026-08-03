@@ -4,6 +4,38 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [2.1.0] — 2026-08-03
+
+### Mode `HYBRID_STRICT` rendu opérant
+
+- **`app/services/ai_client.py`** : le client d'appel manquait. Le mode était
+  configurable, documenté et testé, mais `HybridStrictProvider` exigeait qu'on
+  lui injecte un client et aucun n'existait — aucun appel n'a jamais pu partir.
+  Le client utilise la bibliothèque standard : une dépendance HTTP de plus
+  élargirait la surface d'installation, déjà le point le plus fragile sous
+  Windows. `temperature: 0`, clé transmise dans l'en-tête seulement, blocs
+  `thinking` ignorés, modèle inconnu traduit en `MODEL_UNAVAILABLE` sans repli.
+- **Étape `SEMANTIC_READING`** (`ai_semantic_reading`) : le texte des pages est
+  lu par le modèle. Chaque valeur proposée doit citer une page **et** un extrait,
+  relu mot pour mot sur le texte local ; sinon elle est rejetée et comptée. Tout
+  arrive au statut `A_VERIFIER`. Une clé hors des 29 champs attendus est refusée :
+  le modèle ne peut pas glisser un avis dans le dossier par ce chemin.
+- **`extraction_service.may_overwrite`** : arbitrage entre les deux producteurs
+  de valeurs. Une proposition ne remplace qu'une proposition moins sûre qu'elle,
+  dans les deux sens. Corrige un défaut réel : l'heuristique « première ligne de
+  la page 1 » (0,5) pouvait écraser une lecture argumentée (0,75).
+- **`activer_hybrid_strict.bat` / `activer_local_only.bat` / `scripts/verifier_ia.py`** :
+  activation guidée, clé saisie masquée et posée dans l'environnement de la
+  session — jamais dans un fichier du projet —, et **appel réel de contrôle**,
+  parce qu'une configuration complète peut accompagner une clé révoquée.
+- Interface : carte « Lecture sémantique assistée », qui montre les rejets au
+  même rang que les propositions, et le dit explicitement quand la lecture n'a
+  pas eu lieu.
+
+**Non mesuré :** aucun appel réel n'a été émis faute de clé. 17 tests couvrent
+le chemin avec un ouvreur HTTP factice ; le gain sur dossier réel reste à
+mesurer sur poste.
+
 ## [2.0.0] — 2026-08-01
 
 Alignement sur le prompt maître V4 : l'application **propose** désormais le

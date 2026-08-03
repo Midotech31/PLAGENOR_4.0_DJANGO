@@ -314,9 +314,18 @@ class HybridStrictProvider(AIProvider):
 
 
 def get_provider(*, client=None) -> AIProvider:
-    """Retourne le fournisseur correspondant au mode configuré."""
+    """Retourne le fournisseur correspondant au mode configuré.
+
+    Le client réel n'est construit que dans le mode hybride, et seulement si
+    l'appelant n'en fournit pas : en `LOCAL_ONLY`, rien qui sache parler à
+    l'extérieur n'est même instancié. L'import est local pour la même raison.
+    """
     mode = get_settings().analysis_mode
     if mode == HYBRID_STRICT:
+        if client is None:
+            from app.services.ai_client import AnthropicClient
+
+            client = AnthropicClient()
         return HybridStrictProvider(client=client)
     return LocalOnlyProvider()
 

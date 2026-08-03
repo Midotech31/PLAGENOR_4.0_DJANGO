@@ -442,8 +442,33 @@ export interface Assessment {
   decision: DecisionView | null;
 }
 
+/**
+ * Compte rendu de la lecture sémantique assistée.
+ *
+ * `active: false` en mode LOCAL_ONLY : l'étape existe et dit qu'elle n'a pas
+ * eu lieu, plutôt que de disparaître silencieusement de la progression.
+ */
+export interface AssistedReadingView {
+  active: boolean;
+  constat: string;
+  motif?: string;
+  proposed?: number;
+  rejected?: number;
+  kept_local?: number;
+  preserved?: number;
+  appels?: number;
+  pages_transmises?: number;
+  pages_retenues_sur_le_poste?: number;
+  model_id?: string | null;
+  rejets?: { cle: string; motif: string }[];
+  non_trouves?: string[];
+  remarques?: string[];
+  notice?: string;
+}
+
 /** Travail durable : il survit à la fermeture de l'application. */
 export interface JobView {
+  lecture_assistee: AssistedReadingView | null;
   id: string;
   dossier_id: string;
   state: string;
