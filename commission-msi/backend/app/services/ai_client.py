@@ -39,9 +39,18 @@ ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
 #: Version d'API exigée par l'en-tête `anthropic-version`.
 ANTHROPIC_API_VERSION = "2023-06-01"
 
-#: Plafond de jetons produits. Une réponse d'extraction structurée est courte ;
-#: un plafond large ne coûterait que du temps et de l'argent en cas de dérive.
-MAX_OUTPUT_TOKENS = 4096
+#: Plafond de jetons produits. Il couvre **le raisonnement et la réponse** : sur
+#: les modèles récents, la réflexion est active par défaut et se compte dans ce
+#: plafond. Un plafond serré tronquerait la réponse au milieu d'un champ.
+MAX_OUTPUT_TOKENS = 16000
+
+#: Modèles pour lesquels l'API accepte un repli automatique en cas de refus de
+#: ses classificateurs de sécurité. Le repli est demandé pour ceux-là seulement :
+#: l'envoyer à un modèle qui ne le connaît pas ferait échouer la requête.
+FALLBACK_CAPABLE = ("claude-opus-5", "claude-fable-5", "claude-mythos-5")
+
+#: En-tête d'activation du repli automatique.
+FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 #: Au-delà, l'appel est abandonné : le travail durable le reprendra plutôt que
 #: de bloquer le poste de l'évaluateur sur une requête qui n'aboutit pas.
@@ -70,37 +79,46 @@ class AnthropicClient:
             # redire ici évite qu'une évolution du fournisseur ouvre un trou.
             raise LookupError("aucune clé API n'est configurée")
 
-        body = json.dumps(
-            {
-                "model": model_id,
-                "max_tokens": MAX_OUTPUT_TOKENS,
-                # Température nulle : sur une tâche d'extraction, la variabilité
-                # n'apporte rien et rendrait deux analyses du même dossier
-                # différentes sans raison.
-                "temperature": 0,
-                "system": request.instruction,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": json.dumps(
-                            {"blocs": request.blocks, "schema": request.json_schema},
-                            ensure_ascii=False,
-                        ),
-                    }
-                ],
-            },
-            ensure_ascii=False,
-        ).encode("utf-8")
+        payload_body: dict = {
+            "model": model_id,
+            "max_tokens": MAX_OUTPUT_TOKENS,
+            # Aucun réglage d'échantillonnage : `temperature`, `top_p` et `top_k`
+            # sont refusés par les modèles récents et feraient échouer l'appel.
+            # La stabilité d'une extraction vient de l'instruction et de la
+            # vérification des extraits, pas d'un réglage de variabilité.
+            "system": request.instruction,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {"blocs": request.blocks, "schema": request.json_schema},
+                        ensure_ascii=False,
+                    ),
+                }
+            ],
+        }
+
+        headers = {
+            "content-type": "application/json",
+            "anthropic-version": ANTHROPIC_API_VERSION,
+            "x-api-key": key,
+        }
+
+        # Un classificateur de sécurité peut refuser une requête pourtant
+        # légitime. Sur les modèles qui le permettent, l'API réessaie alors
+        # d'elle-même sur un modèle de repli : le dossier est analysé au lieu
+        # d'être bloqué sur un faux positif.
+        if model_id.startswith(FALLBACK_CAPABLE):
+            payload_body["fallbacks"] = "default"
+            headers["anthropic-beta"] = FALLBACK_BETA
+
+        body = json.dumps(payload_body, ensure_ascii=False).encode("utf-8")
 
         http = urllib.request.Request(  # noqa: S310 - point d'entrée nommé en dur
             self._endpoint,
             data=body,
             method="POST",
-            headers={
-                "content-type": "application/json",
-                "anthropic-version": ANTHROPIC_API_VERSION,
-                "x-api-key": key,
-            },
+            headers=headers,
         )
 
         try:
@@ -140,6 +158,15 @@ class AnthropicClient:
         Les blocs `thinking` sont explicitement écartés : le prompt maître
         interdit de conserver ou d'afficher la chaîne de pensée du modèle.
         """
+        # Un refus est une réponse valide (HTTP 200), pas une panne : le champ
+        # `content` peut être vide. Le lire sans vérifier produirait une erreur
+        # trompeuse au lieu du motif réel.
+        if payload.get("stop_reason") == "refusal":
+            raise RuntimeError(
+                "la requête a été refusée par les filtres du fournisseur ; aucune valeur "
+                "n'est retenue. Le dossier reste analysable en mode LOCAL_ONLY."
+            )
+
         pieces: list[str] = []
         for block in payload.get("content") or []:
             if not isinstance(block, dict):

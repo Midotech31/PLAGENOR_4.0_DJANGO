@@ -957,3 +957,41 @@ ouvreur HTTP factice — aucun test ne sort du poste — mais **le gain sur le
 dossier réel reste à mesurer par vous**, avec votre clé. Ce que je peux affirmer
 est structurel, pas empirique : la voie déterministe a été mesurée insuffisante
 sur ce dossier, et celle-ci lit le texte au lieu d'y chercher une forme.
+
+## DT-36 — Le client aurait été refusé par l'API dès le premier appel
+
+**Constat, avant tout appel réel.** Le client écrit en DT-34 envoyait
+`"temperature": 0`, avec une justification qui semblait solide : sur une tâche
+de relevé, la variabilité ne produit que deux lectures différentes du même
+dossier. Le raisonnement était juste ; **le paramètre est refusé**. Les modèles
+récents rejettent `temperature`, `top_p` et `top_k` avec une erreur 400. L'appel
+de contrôle de `activer_hybrid_strict.bat` aurait donc échoué à la première
+tentative, sur un motif que rien dans le message n'aurait relié à sa cause.
+
+Deux autres défauts du même appel, trouvés en vérifiant celui-là :
+
+* **`max_tokens: 4096` était un plafond de troncature.** Sur ces modèles la
+  réflexion est active par défaut et **se compte dans ce plafond**. Le
+  raisonnement d'une lecture de 25 pages l'aurait consommé avant la réponse, et
+  le JSON serait arrivé coupé au milieu d'un champ — c'est-à-dire illisible,
+  donc entièrement perdu. Porté à 16000 ;
+* **un refus n'était pas traité.** Un filtre de sécurité rend un refus avec un
+  code HTTP 200 et un `content` vide : c'est une réponse valide, pas une panne.
+  Le code lisait `content` sans vérifier et produisait « réponse vide du
+  modèle » — un message qui décrit le symptôme et cache la cause.
+
+Le repli automatique est désormais demandé pour les modèles qui l'acceptent :
+si un filtre refuse une page à tort, l'API réessaie d'elle-même sur un modèle de
+secours plutôt que de bloquer le dossier. Il n'est **pas** envoyé aux autres
+modèles — le paramètre y ferait échouer la requête, ce qui remplacerait un
+risque rare par une panne certaine.
+
+**Ce que cet épisode dit du reste.** Ces trois défauts étaient dans du code
+couvert par dix-sept tests verts. Aucun ne pouvait les voir : ils vérifiaient
+que le client envoie bien ce que j'avais décidé d'envoyer, pas que l'API
+l'accepte. Un ouvreur factice ne refuse rien. La leçon n'est pas qu'il fallait
+appeler l'API pour de vrai — je n'ai pas de clé — mais que **la vérification
+d'une intégration ne peut pas venir de mes propres suppositions** : elle doit
+venir de la référence de l'API, relue au moment d'écrire. Les trois tests
+ajoutés vérifient maintenant l'absence des paramètres refusés, le plafond, et le
+traitement du refus.

@@ -123,17 +123,52 @@ def test_the_client_sends_the_key_in_the_header_and_never_in_the_body(hybrid):
     assert "cle-de-test-jamais-reelle" not in sent.data.decode("utf-8")
 
 
-def test_the_client_asks_for_a_reproducible_answer(hybrid):
+def test_the_client_sends_no_sampling_parameter(hybrid):
+    """`temperature`, `top_p` et `top_k` sont refusés par les modèles récents."""
     opener = _Opener(_text_payload({"champs": []}))
     ai_client.AnthropicClient(opener=opener).complete(
-        model_id="modele-fictif",
+        model_id="claude-opus-5",
         request=ai_provider.AiRequest(role="TEST", instruction="lis", blocks=[]),
     )
 
     body = json.loads(opener.requests[0].data.decode("utf-8"))
-    # Deux lectures du même dossier ne doivent pas différer sans raison.
-    assert body["temperature"] == 0
-    assert body["model"] == "modele-fictif"
+    for refuse in ("temperature", "top_p", "top_k"):
+        assert refuse not in body, f"{refuse} ferait échouer l'appel"
+    assert body["model"] == "claude-opus-5"
+    # Le plafond couvre le raisonnement ET la réponse : trop bas, il tronque.
+    assert body["max_tokens"] >= 16000
+
+
+def test_a_repli_is_requested_only_where_the_api_accepts_it(hybrid):
+    """L'envoyer à un modèle qui ne le connaît pas ferait échouer la requête."""
+    capable = _Opener(_text_payload({"champs": []}))
+    ai_client.AnthropicClient(opener=capable).complete(
+        model_id="claude-opus-5",
+        request=ai_provider.AiRequest(role="TEST", instruction="lis", blocks=[]),
+    )
+    body = json.loads(capable.requests[0].data.decode("utf-8"))
+    assert body["fallbacks"] == "default"
+    assert capable.requests[0].get_header("Anthropic-beta") == ai_client.FALLBACK_BETA
+
+    autre = _Opener(_text_payload({"champs": []}))
+    ai_client.AnthropicClient(opener=autre).complete(
+        model_id="claude-sonnet-5",
+        request=ai_provider.AiRequest(role="TEST", instruction="lis", blocks=[]),
+    )
+    body = json.loads(autre.requests[0].data.decode("utf-8"))
+    assert "fallbacks" not in body
+    assert autre.requests[0].get_header("Anthropic-beta") is None
+
+
+def test_a_refusal_is_reported_as_such_not_as_a_breakdown(hybrid):
+    """Un refus est une réponse valide : `content` peut être vide."""
+    opener = _Opener({"stop_reason": "refusal", "content": []})
+
+    with pytest.raises(RuntimeError, match="refusée par les filtres"):
+        ai_client.AnthropicClient(opener=opener).complete(
+            model_id="claude-opus-5",
+            request=ai_provider.AiRequest(role="TEST", instruction="lis", blocks=[]),
+        )
 
 
 def test_the_client_never_returns_the_private_reasoning(hybrid):
