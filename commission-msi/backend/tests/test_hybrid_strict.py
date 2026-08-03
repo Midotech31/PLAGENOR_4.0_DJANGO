@@ -448,3 +448,62 @@ def test_a_restricted_document_is_never_read_by_the_model(hybrid, client, dossie
 
     assert pages == {}
     assert withheld >= 1
+
+
+# --------------------------------------------------------------------------
+# Le script de vérification côté poste
+# --------------------------------------------------------------------------
+
+
+def _load_verifier():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "verifier_ia.py"
+    spec = importlib.util.spec_from_file_location("verifier_ia", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_a_missing_dependency_is_explained_not_dumped(capsys):
+    """Une trace brute fait chercher la panne du côté de la clé ou du réseau."""
+    verifier = _load_verifier()
+
+    code = verifier._explain_missing_environment(ModuleNotFoundError(name="sqlalchemy"))
+    sortie = capsys.readouterr().out
+
+    assert code == 1
+    assert "sqlalchemy" in sortie
+    # Le point essentiel : dire ce qui n'est PAS en cause.
+    assert "aucun appel n'a été tenté" in sortie
+    assert "install_windows.bat" in sortie
+    assert "Traceback" not in sortie
+
+
+def test_a_path_too_long_names_itself_as_the_probable_cause(capsys, monkeypatch):
+    """Mesuré sur un poste réel : 145 caractères, pour un budget de 101."""
+    from pathlib import Path
+
+    verifier = _load_verifier()
+    long_path = Path("E:/") / ("r" * 150)
+    monkeypatch.setattr(
+        verifier, "Path", type("P", (), {"__call__": staticmethod(lambda *_: long_path)})
+    )
+
+    # `_explain_missing_environment` mesure la racine du projet ; on la force.
+    original = verifier.__file__
+    try:
+        verifier.__file__ = str(long_path / "scripts" / "verifier_ia.py")
+        verifier.Path = Path  # la vraie classe, sur un chemin artificiellement long
+        code = verifier._explain_missing_environment(ModuleNotFoundError(name="sqlalchemy"))
+    finally:
+        verifier.__file__ = original
+
+    sortie = capsys.readouterr().out
+    assert code == 1
+    assert "caractères" in sortie
+    assert "C:\\CommissionMSI" in sortie
+    # La clé et les réglages ne sont pas dans le dossier : le dire évite une
+    # ressaisie inutile du secret après le déplacement.
+    assert "survivent au déplacement" in sortie

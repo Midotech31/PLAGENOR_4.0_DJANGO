@@ -21,12 +21,61 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 
+#: Longueur de chemin au-delà de laquelle l'installation des dépendances échoue
+#: sous Windows. Identique au seuil de `install_windows.bat`, et pour la même
+#: raison : les dépendances ajoutent jusqu'à 129 caractères après ce dossier,
+#: pour un maximum absolu de 260.
+MAX_PATH_BUDGET = 101
+
+
 def _title(text: str) -> None:
     print(f"\n{text}\n{'-' * len(text)}")
 
 
+def _explain_missing_environment(exc: ModuleNotFoundError) -> int:
+    """Traduit une dépendance absente en cause probable et en remède.
+
+    Un `ModuleNotFoundError` brut fait chercher du côté de la clé ou du réseau,
+    alors que rien n'a encore été tenté : l'environnement Python lui-même n'est
+    pas en état. Sur un chemin trop long, la cause est presque toujours la même
+    et le remède ne se devine pas.
+    """
+    racine = Path(__file__).resolve().parents[1]
+    longueur = len(str(racine))
+
+    _title("[ECHEC] L'environnement Python n'est pas installé")
+    print(f"Dépendance absente : {exc.name}.")
+    print()
+    print("Ni la clé API ni le modèle ne sont en cause : aucun appel n'a été tenté.")
+    print("Les bibliothèques dont l'application a besoin ne sont pas installées.")
+    print()
+
+    if longueur > MAX_PATH_BUDGET:
+        print(f"Cause probable : le chemin d'installation fait {longueur} caractères,")
+        print(f"pour un maximum conseillé de {MAX_PATH_BUDGET}.")
+        print(f"  {racine}")
+        print()
+        print("Windows refuse tout fichier dépassant 260 caractères au total, et les")
+        print("dépendances ajoutent jusqu'à 129 caractères après ce dossier.")
+        print("L'installation a donc échoué en cours de route.")
+        print()
+        print("Remède : déplacez ce dossier vers un chemin court, par exemple")
+        print("C:\\CommissionMSI, puis relancez install_windows.bat depuis là.")
+        print("Vos réglages de mode et votre clé API survivent au déplacement :")
+        print("ils sont dans l'environnement Windows, pas dans le dossier.")
+    else:
+        print("Remède : relancez install_windows.bat, et lisez la fin de son")
+        print("exécution — si une erreur y figure, c'est elle qu'il faut traiter.")
+    return 1
+
+
 def main(argv: list[str]) -> int:
-    from app.services import ai_provider
+    try:
+        from app.services import ai_provider
+    except ModuleNotFoundError as exc:
+        # L'environnement n'est pas en état : le dire plutôt que de laisser
+        # remonter une trace technique qui n'apprend rien à l'évaluateur.
+        return _explain_missing_environment(exc)
 
     state = ai_provider.status()
     mode = state["mode"]

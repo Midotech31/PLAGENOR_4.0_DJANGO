@@ -995,3 +995,41 @@ d'une intégration ne peut pas venir de mes propres suppositions** : elle doit
 venir de la référence de l'API, relue au moment d'écrire. Les trois tests
 ajoutés vérifient maintenant l'absence des paramètres refusés, le plafond, et le
 traitement du refus.
+
+## DT-37 — Demander un secret avant de vérifier que l'application peut tourner
+
+**Mesuré sur le poste de l'évaluateur.** `activer_hybrid_strict.bat` a déroulé
+tout son discours, fait choisir le modèle, **fait saisir la clé API**, l'a
+enregistrée — puis a rendu ceci :
+
+```
+ModuleNotFoundError: No module named 'sqlalchemy'
+```
+
+Deux fautes distinctes dans le même écran.
+
+**La première est l'ordre.** Le script demandait un secret avant de vérifier
+que l'environnement était en état. Faire manipuler une clé API pour échouer
+ensuite sur une dépendance absente, c'est faire prendre un risque sans
+contrepartie. La vérification de l'environnement passe désormais **avant** tout
+le reste, y compris avant la question d'activation : rien n'est demandé tant que
+l'application ne peut pas fonctionner.
+
+**La seconde est le message.** Une trace Python brute, sous un titre
+« l'appel de contrôle a échoué » qui invite à relire « la clé, l'identifiant du
+modèle, ou le réseau » — aucun des trois n'était en cause, et **aucun appel
+n'avait été tenté**. Le message envoyait donc chercher la panne exactement là
+où elle n'était pas. `verifier_ia.py` traduit maintenant un
+`ModuleNotFoundError` en cause probable et en remède, et dit explicitement ce
+qui n'est pas responsable.
+
+**La cause réelle, mesurable dans la trace elle-même** : le chemin
+d'installation faisait **145 caractères**, pour un budget de 101 (DT-25).
+L'installateur l'avait signalé et proposé de s'arrêter ; l'évaluateur a choisi
+de continuer, et l'installation des dépendances a échoué en cours de route sans
+que rien ne le rappelle au moment où la conséquence est apparue. Le diagnostic
+mesure donc à nouveau la longueur du chemin **au moment de l'échec**, et non
+seulement au moment de l'installation — c'est là qu'elle est utile.
+
+Il précise aussi que les réglages et la clé survivent au déplacement du
+dossier : sans cette phrase, la réaction naturelle est de tout ressaisir.

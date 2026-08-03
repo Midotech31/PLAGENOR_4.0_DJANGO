@@ -11,6 +11,30 @@ REM ===================================================================
 setlocal
 cd /d "%~dp0"
 
+REM --- 0. L'environnement est-il installe ? -----------------------------
+REM Verifie AVANT de demander quoi que ce soit : faire saisir une cle API
+REM pour echouer ensuite sur une dependance absente fait chercher la panne
+REM au mauvais endroit, et fait manipuler un secret pour rien.
+if not exist "backend\.venv\Scripts\python.exe" (
+  echo.
+  echo [ERREUR] L'environnement Python n'existe pas.
+  echo Lancez d'abord install_windows.bat, puis revenez ici.
+  echo.
+  pause
+  exit /b 1
+)
+backend\.venv\Scripts\python.exe -c "import sqlalchemy, fastapi" >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo [ERREUR] Les dependances Python ne sont pas installees.
+  echo Ni la cle API ni le modele ne sont en cause : rien n'a encore ete tente.
+  echo.
+  backend\.venv\Scripts\python.exe scripts\verifier_ia.py
+  echo.
+  pause
+  exit /b 1
+)
+
 echo.
 echo === Commission MSI - activation du mode HYBRID_STRICT ===
 echo.
