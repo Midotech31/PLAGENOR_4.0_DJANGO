@@ -1033,3 +1033,40 @@ seulement au moment de l'installation — c'est là qu'elle est utile.
 
 Il précise aussi que les réglages et la clé survivent au déplacement du
 dossier : sans cette phrase, la réaction naturelle est de tout ressaisir.
+
+## DT-38 — Le message nommait l'état terminal au lieu de l'étape qui a échoué
+
+**Copie d'écran du poste de l'évaluateur, mode `HYBRID_STRICT` actif, 81 pages
+océrisées :**
+
+> L'étape « **Interrompu** » n'a pas abouti : l'appel au modèle n'a pas abouti.
+> **Vérifiez le dossier importé**, puis utilisez « Reprendre ».
+
+Trois défauts dans une seule phrase.
+
+**« Interrompu » n'est pas une étape**, c'est le libellé de l'état `FAILED`. La
+cause : le gestionnaire d'erreur écrasait `job.step_label` avec le libellé de
+l'état terminal **avant** de construire le message, qui relisait ce même champ.
+Le nom de l'étape réellement en cause — « Lecture sémantique assistée du
+dossier » — était perdu une ligne trop tôt. Il est désormais retenu avant
+l'écrasement.
+
+**« Vérifiez le dossier importé » désigne le seul endroit où le problème
+n'était pas.** Une clé refusée, un crédit absent ou un modèle inconnu ne se
+corrigent pas en relisant un PDF. Les échecs de configuration reçoivent
+maintenant une action qui leur correspond : la commande `verifier_ia.py
+--appel`, qui nomme la cause exacte, et le rappel que `LOCAL_ONLY` reste
+utilisable en attendant.
+
+**« Tentative : 6/3 ».** Le compteur dépassait son propre plafond parce que
+chaque reprise humaine consommait une tentative sans jamais rouvrir le budget.
+Une reprise demandée par l'évaluateur remet donc le compteur à zéro : il mesure
+les reprises automatiques après panne, pas les décisions humaines.
+
+**Ce que l'épisode coûte, et pourquoi c'est le vrai sujet.** La cause réelle
+était une clé d'un autre fournisseur (`sk-proj-…`, OpenAI) enregistrée à la
+place d'une clé Anthropic (`sk-ant-…`). L'application disposait de
+l'information — l'API répond `401 authentication_error` — et ne l'a pas
+transmise. C'est le troisième diagnostic de cette série (DT-32, DT-37) où le
+défaut n'est pas la panne mais le fait que l'application **savait et n'a pas
+dit**.

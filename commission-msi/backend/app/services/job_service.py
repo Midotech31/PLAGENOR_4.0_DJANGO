@@ -188,6 +188,11 @@ def resume(session: Session, job_id: str) -> AnalysisJob:
     steps = [row.step for row in checkpoints(session, job_id)]
     job.state = JobState.QUEUED
     job.step_label = JOB_STATE_LABELS[JobState.QUEUED]
+    # Une reprise demandée par l'évaluateur rouvre le compteur de tentatives :
+    # sans cela l'écran affichait « Tentative : 6/3 », un rapport qui n'a pas de
+    # sens et laisse croire à un dérèglement. Le compteur mesure les reprises
+    # automatiques après panne, pas les décisions humaines.
+    job.attempt = 0
     job.cancel_requested = False
     job.error_message = None
     job.error_code = None
@@ -419,12 +424,17 @@ def run_job(session: Session, job: AnalysisJob) -> dict:
         session.commit()
 
     except Exception as exc:  # noqa: BLE001 - l'erreur est expliquée, jamais brute
+        # Le libellé de l'étape est retenu **avant** d'être remplacé par celui de
+        # l'état terminal : sans cela, le message annonçait « L'étape
+        # "Interrompu" n'a pas abouti », ce qui ne nomme aucune étape et ne dit
+        # donc pas où chercher.
+        failed_step = job.step_label
         job.state = (
             JobState.FAILED if job.attempt >= job.max_attempts else JobState.QUEUED
         )
         job.step_label = JOB_STATE_LABELS[job.state]
         job.error_code = type(exc).__name__
-        job.error_message = _explain(exc, job)
+        job.error_message = _explain(exc, job, failed_step)
         job.lease_owner = None
         job.lease_expires_at = None
         if job.state == JobState.FAILED:
@@ -443,7 +453,27 @@ def run_job(session: Session, job: AnalysisJob) -> dict:
     return summary
 
 
-def _explain(exc: Exception, job: AnalysisJob) -> str:
+#: Codes d'erreur qui se corrigent dans la configuration, jamais dans le dossier.
+#: Envoyer « vérifiez le dossier importé » pour une clé refusée fait chercher la
+#: panne exactement là où elle n'est pas.
+CONFIGURATION_ERRORS = frozenset(
+    {"AiError", "ModelUnavailable", "ExternalAiNotConfigured", "RestrictedContentRefused"}
+)
+
+#: Marche à suivre pour un échec de configuration : une commande qui nomme la
+#: cause précise, plutôt qu'une invitation à deviner.
+CONFIGURATION_ACTION = (
+    "Ce point ne se corrige pas dans le dossier. Lancez, depuis le dossier de "
+    "l'application :\n"
+    "    backend\\.venv\\Scripts\\python.exe scripts\\verifier_ia.py --appel\n"
+    "Ce contrôle nomme la cause exacte : clé refusée, crédit absent, modèle "
+    "inconnu ou réseau bloqué. Corrigez-la, puis utilisez « Reprendre » : les "
+    "étapes déjà validées ne seront pas refaites. Le mode LOCAL_ONLY reste "
+    "utilisable en attendant."
+)
+
+
+def _explain(exc: Exception, job: AnalysisJob, failed_step: str | None = None) -> str:
     """Message compréhensible : la cause et l'action possible, sans trace brute."""
     causes = {
         "FileNotFoundError": "un fichier de référence attendu est absent",
@@ -459,15 +489,26 @@ def _explain(exc: Exception, job: AnalysisJob) -> str:
         "la transmission a été refusée",
         "AiError": "l'appel au modèle n'a pas abouti",
     }
-    cause = causes.get(type(exc).__name__, "une erreur technique est survenue")
-    action = (
-        "Vous pouvez relancer le traitement avec « Reprendre » : les étapes déjà validées "
-        "ne seront pas refaites."
-        if job.state != JobState.FAILED
-        else "Vérifiez le dossier importé, puis utilisez « Reprendre » pour continuer au "
-        "dernier point de reprise valide."
-    )
-    return f"L'étape « {job.step_label} » n'a pas abouti : {cause}. {action}"
+    code = type(exc).__name__
+    cause = causes.get(code, "une erreur technique est survenue")
+
+    if code in CONFIGURATION_ERRORS:
+        action = CONFIGURATION_ACTION
+    elif job.state != JobState.FAILED:
+        action = (
+            "Vous pouvez relancer le traitement avec « Reprendre » : les étapes déjà "
+            "validées ne seront pas refaites."
+        )
+    else:
+        action = (
+            "Vérifiez le dossier importé, puis utilisez « Reprendre » pour continuer au "
+            "dernier point de reprise valide."
+        )
+
+    # Le libellé retenu est celui de l'étape qui a échoué, pas celui de l'état
+    # dans lequel le travail se trouve maintenant.
+    etape = failed_step or job.step_label
+    return f"L'étape « {etape} » n'a pas abouti : {cause}. {action}"
 
 
 # --------------------------------------------------------------------------

@@ -430,8 +430,19 @@ def test_a_failed_call_does_not_produce_a_report_built_on_nothing(
 
     state = client.get(f"/api/v1/dossiers/{dossier['id']}/traitement").json()["job"]
     assert state["state"] in {JobState.QUEUED, JobState.FAILED}
-    assert state["error_message"]
-    assert "Reprendre" in state["error_message"]
+    message = state["error_message"]
+
+    # L'étape nommée doit être celle qui a échoué, pas l'état terminal du
+    # travail : « L'étape "Interrompu" n'a pas abouti » ne dit rien.
+    assert "Lecture sémantique assistée" in message
+    assert "Interrompu" not in message
+
+    # Et l'action proposée doit viser la configuration, pas le dossier : une
+    # clé refusée ne se corrige pas en relisant le PDF.
+    assert "verifier_ia.py --appel" in message
+    assert "ne se corrige pas dans le dossier" in message
+    assert "Vérifiez le dossier importé" not in message
+    assert "LOCAL_ONLY" in message
 
 
 def test_a_restricted_document_is_never_read_by_the_model(hybrid, client, dossier, session):
@@ -507,3 +518,20 @@ def test_a_path_too_long_names_itself_as_the_probable_cause(capsys, monkeypatch)
     # La clé et les réglages ne sont pas dans le dossier : le dire évite une
     # ressaisie inutile du secret après le déplacement.
     assert "survivent au déplacement" in sortie
+
+
+def test_a_human_resume_reopens_the_attempt_budget(hybrid, client, dossier, monkeypatch):
+    """« Tentative : 6/3 » n'a pas de sens et laisse croire à un dérèglement."""
+    assert _import(client, dossier, [PAGE_1]).status_code == 201
+    _install_client(monkeypatch, _FailingOpener(urllib.error.URLError("réseau")))
+
+    created = client.post(f"/api/v1/dossiers/{dossier['id']}/traitement").json()
+    for _ in range(4):
+        job_service.work_once()
+
+    state = client.get(f"/api/v1/dossiers/{dossier['id']}/traitement").json()["job"]
+    assert state["attempt"] <= state["max_attempts"], "le compteur ne doit pas dépasser"
+
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement/{created['id']}/reprendre")
+    repris = client.get(f"/api/v1/dossiers/{dossier['id']}/traitement").json()["job"]
+    assert repris["attempt"] == 0
