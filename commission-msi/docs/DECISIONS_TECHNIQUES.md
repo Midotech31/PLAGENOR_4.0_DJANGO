@@ -795,3 +795,73 @@ d'installation qui n'existe plus.
 **Ce qui reste vrai sans ambiguïté** : quand Tesseract est absent, ou que son
 paquet arabe est réellement absent, le verdict reste un échec franc — rien
 dans cette correction n'atténue un cas où le manque est réel.
+
+## DT-32 — Le contrôle comparait le texte brut, jamais normalisé
+
+**Le même faux « ÉCHOUÉE » est réapparu une troisième fois**, sur le même
+poste, après DT-31 : Tahoma et Segoe UI ajoutés, détection de rendu garbled en
+place, paquet arabe confirmé par Tesseract — et pourtant :
+
+```
+[OK]    Paquet arabe « ara » : présent.
+[ECHEC] Lecture d'une page arabe de contrôle : ÉCHOUÉE.
+```
+
+**La cause, trouvée en isolant le calcul lui-même** : `check_engines`
+comparait le texte lu **brut** à la ligne attendue par inclusion littérale
+(`line in outcome.text`), sans jamais appeler `app.core.text.normalize` — la
+même normalisation que le reste de l'application utilise pour tout
+rapprochement de texte arabe (elle replie déjà alif maksoura vers ya, les
+formes de alif, les diacritiques). Une lecture OCR n'est jamais pixel-parfaite
+: une variante de graphie usuelle suffisait à faire échouer une lecture par
+ailleurs correcte, et le message affirmait « ÉCHOUÉE » à tort.
+
+**Mesuré, avec la fonction déjà présente dans le projet** (`containment`,
+utilisée ailleurs pour comparer une affiliation courte à un texte long) :
+
+| Texte | Comparaison littérale | `containment` après normalisation |
+|---|---|---|
+| Lecture correcte (variante alif maksoura) | échoue | **1.0** |
+| Rendu garbled (police sans jointure) | échoue | 0.0 |
+| Rendu garbled (police sans glyphes) | échoue | 0.0 |
+
+Marge large entre le cas correct et les deux cas ratés : `containment` sépare
+proprement ce que la comparaison littérale confondait.
+
+**Correction.** `_reading_score` remplace l'inclusion littérale par la
+moyenne de `containment(ligne, texte)` sur les deux lignes attendues.
+`GOOD_ARABIC_SCORE = 0.7` retient une lecture comme bonne. Sous ce seuil,
+**le verdict est désormais gouverné par un seul fait, celui qu'on peut
+vérifier sans ambiguïté** : si Tesseract confirme lui-même le paquet
+`ara` (déjà affiché juste au-dessus dans le rapport), le résultat est
+**toujours** « non concluant », jamais « ÉCHOUÉE » — quel que soit le
+score, garbled ou non. Le score et le drapeau garbled ne servent plus qu'à
+composer le message, jamais à décider du verdict. Un test le verrouille
+directement : un score artificiellement bas avec le paquet confirmé présent
+ne doit jamais produire la chaîne « ÉCHOUÉE ».
+
+**Ce qui reste un échec franc** : Tesseract absent, ou son paquet arabe
+réellement absent. Rien dans cette correction n'atténue ce cas.
+
+**Une leçon pour la suite** : ce test synthétique a maintenant produit trois
+diagnostics erronés successifs sur le même poste, chacun corrigé sans
+résoudre le suivant (police, puis rendu garbled, puis comparaison littérale).
+C'est pourquoi le verdict ne dépend plus, structurellement, que du fait que
+Tesseract confirme ou non le paquet : plus aucune amélioration future de ce
+test synthétique ne pourra reproduire ce genre de faux négatif, puisqu'il ne
+peut plus, par construction, l'emporter sur ce fait.
+
+## DT-33 — RapidOCR n'a pas de wheel pour Python 3.13
+
+**Mesuré sur le même poste** : `pip install rapidocr-onnxruntime==1.4.4` sous
+Python 3.13.2 énumère des dizaines de versions, toutes `Requires-Python
+<3.13`. Au moment de l'écriture, **aucune version de RapidOCR ne prend en
+charge Python 3.13**. Ni un chemin trop long, ni un problème réseau : une
+incompatibilité de version, qui se résoudra quand RapidOCR publiera une roue
+compatible, pas avant.
+
+`install_windows.bat` distingue maintenant ce message (« Could not find a
+version that satisfies ») de celui du chemin trop long, et le dit pour ce
+qu'il est plutôt que de laisser l'utilisateur chercher un remède qui n'existe
+pas encore. L'application continue de fonctionner avec Tesseract seul, qui
+lit l'arabe — RapidOCR ne le fait de toute façon pas.

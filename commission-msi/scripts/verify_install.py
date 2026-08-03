@@ -124,26 +124,56 @@ def _looks_garbled(text: str) -> bool:
     return (count / len(bigrams)) > 0.35
 
 
+#: Score minimal pour une lecture jugée bonne. Calibré sur des mesures
+#: réelles : un rendu correct (avec une variante de graphie usuelle, alif
+#: maksoura pour ya) atteint 1.0 ; les deux rendus ratés par une police sans
+#: jointure arabe atteignent 0.0. La marge est large.
+GOOD_ARABIC_SCORE = 0.7
+
+
+def _reading_score(text: str) -> float:
+    """Proportion des mots attendus retrouvés, après la même normalisation
+
+    que le reste de l'application (variantes de alif, diacritiques, casse).
+
+    Une lecture OCR n'est jamais pixel-parfaite : le contrôle précédent
+    comparait le texte lu **brut** à la ligne attendue par inclusion
+    littérale, ce qui faisait échouer une lecture par ailleurs correcte pour
+    une simple variante de graphie — mesuré sur un poste réel où le paquet
+    arabe était confirmé présent et la lecture pourtant déclarée « ÉCHOUÉE ».
+    `containment` compare mot à mot, après normalisation ; il absorbe ce genre
+    d'écart sans rien absorber d'un vrai échec de lecture.
+    """
+    from app.core.text import containment
+
+    if not ARABIC_LINES:
+        return 0.0
+    scores = [containment(line, text) for line in ARABIC_LINES]
+    return sum(scores) / len(scores)
+
+
 def _best_arabic_reading(ocr_engines):
-    """Essaie chaque police candidate ; retient la première lecture exacte,
-    sinon la moins suspecte, en disant laquelle des deux elle a obtenue.
+    """Essaie chaque police candidate ; retient la meilleure lecture mesurée.
 
     Renvoie `None` si aucune police n'a même pu être chargée, sinon
-    `(outcome, police, exact, suspect)`.
+    `(outcome, police, score, suspect)` — `score` est la fidélité mesurée par
+    `_reading_score` (1.0 = tous les mots attendus retrouvés), `suspect` un
+    indice de rendu raté par la police (voir `_looks_garbled`), gardé pour le
+    message, pas pour décider.
     """
-    fallback = None
+    best = None
     for font_path in ARABIC_FONTS:
         png = _render_with(ARABIC_LINES, font_path)
         if png is None:
             continue
         outcome = ocr_engines.read_page(png)
-        exact = any(line in outcome.text for line in ARABIC_LINES)
-        if exact:
-            return outcome, font_path, True, False
+        score = _reading_score(outcome.text)
+        if score >= GOOD_ARABIC_SCORE:
+            return outcome, font_path, score, False
         suspect = _looks_garbled(outcome.text)
-        if fallback is None or (fallback[3] and not suspect):
-            fallback = (outcome, font_path, False, suspect)
-    return fallback
+        if best is None or score > best[2]:
+            best = (outcome, font_path, score, suspect)
+    return best
 
 
 def check_path_length(report: list[str]) -> bool:
@@ -264,22 +294,34 @@ def check_engines(report: list[str]) -> tuple[bool, bool, bool]:
     if result is None:
         report.append(f"{WARN} Lecture arabe : non testée (police de contrôle absente).")
     else:
-        outcome, _font_path, arabic_ok, suspect = result
+        outcome, _font_path, score, suspect = result
+        arabic_ok = score >= GOOD_ARABIC_SCORE
         if arabic_ok:
             report.append(
-                f"{OK} Lecture d'une page arabe de contrôle : réussie via {outcome.engine}."
+                f"{OK} Lecture d'une page arabe de contrôle : réussie via {outcome.engine} "
+                f"({score:.0%} des mots attendus retrouvés)."
             )
-        elif suspect and ocr_engines.ARABIC_LANGUAGE in languages:
+        elif ocr_engines.ARABIC_LANGUAGE in languages:
+            # Le paquet est confirmé par Tesseract lui-même juste au-dessus : c'est le
+            # fait qui compte. Un score bas ici tient à l'image synthétique — la police
+            # système qui la rend, ou une lecture partiellement fidèle — jamais à une
+            # incapacité de Tesseract qu'on vient pourtant de vérifier positive.
             arabic_inconclusive = True
             report.append(
-                f"{WARN} Lecture d'une page arabe de contrôle : non concluante sur ce poste."
+                f"{WARN} Lecture d'une page arabe de contrôle : non concluante sur ce poste "
+                f"({score:.0%} des mots attendus retrouvés)."
             )
             report.append(
-                "         Le paquet « ara » est présent, mais la police système utilisée "
-                "pour cette image de test ne semble pas former l'arabe correctement — ceci "
-                "teste le rendu d'une police, pas la capacité de Tesseract. Un vrai document "
-                "scanné, qui n'est pas rendu par une police système, n'est pas concerné : "
-                "testez-le, c'est ce test-là qui fait foi."
+                "         Le paquet « ara » est présent et confirmé par Tesseract lui-même : "
+                + (
+                    "la police système utilisée pour cette image de test ne semble pas "
+                    "former l'arabe correctement — "
+                    if suspect
+                    else "cette image de test synthétique n'a été lue que partiellement — "
+                )
+                + "ceci teste le rendu d'une police, pas la capacité de Tesseract. Un vrai "
+                "document scanné, qui n'est pas rendu par une police système, n'est pas "
+                "concerné : testez-le, c'est ce test-là qui fait foi."
             )
         else:
             report.append(f"{FAIL} Lecture d'une page arabe de contrôle : ÉCHOUÉE.")

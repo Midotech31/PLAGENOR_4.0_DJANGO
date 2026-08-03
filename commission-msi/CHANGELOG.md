@@ -287,9 +287,30 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   inconcluant sur ce poste » — la seconde ne renvoie plus vers une réparation
   qui n'a plus lieu d'être. Voir DT-31.
 
+### Le contrôle arabe comparait un texte brut, jamais normalisé
+
+- **Troisième réapparition du même faux « ÉCHOUÉE »**, sur le même poste,
+  après DT-31. Isolée cette fois dans le calcul lui-même : le contrôle
+  comparait le texte lu **brut** à la ligne attendue par inclusion littérale,
+  sans jamais appeler la normalisation que le reste de l'application utilise
+  déjà pour tout rapprochement de texte arabe. Une variante de graphie usuelle
+  (alif maksoura pour ya) suffisait à faire échouer une lecture par ailleurs
+  correcte.
+- `_reading_score` remplace l'inclusion littérale par `containment` — déjà
+  utilisée ailleurs dans le projet — après normalisation. Mesuré : 1.0 sur une
+  lecture correcte avec variante de graphie, 0.0 sur les deux rendus ratés
+  précédemment mesurés.
+- **Le verdict ne dépend plus du score seul.** Dès que Tesseract confirme
+  lui-même le paquet `ara`, le résultat est toujours « non concluant », jamais
+  « ÉCHOUÉE » — quel que soit le score du test synthétique. Un test verrouille
+  cette garantie directement. Voir DT-32.
+- **RapidOCR n'a pas de roue pour Python 3.13**, mesuré sur le même poste.
+  `install_windows.bat` le distingue maintenant du cas « chemin trop long » et
+  le nomme pour ce qu'il est. Voir DT-33.
+
 ### Tests
 
-- 332 tests backend et 22 tests d'interface au vert.
+- 336 tests backend et 22 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

@@ -107,9 +107,17 @@ if errorlevel 1 (
   echo chemin tres long, la cause est la limite des 260 caracteres de Windows,
   echo et non un probleme de reseau. Voir les deux remedes indiques plus haut.
   echo.
-  echo L'application fonctionnera avec Tesseract seul : les pages a basse
-  echo resolution seront moins bien lues, et aucune lecture de secours ne
-  echo sera disponible si Tesseract manque.
+  echo Si l'erreur mentionne "Could not find a version that satisfies" avec
+  echo une longue liste de versions "Requires-Python", la cause est que
+  echo RapidOCR ne prend pas encore en charge la version de Python installee
+  echo ^(mesure : aucune version de rapidocr-onnxruntime ne prend en charge
+  echo Python 3.13 au moment de l'ecriture^). Ni un chemin ni une connexion n'y
+  echo changeraient rien : il faut attendre une version compatible de
+  echo RapidOCR, ou installer Python 3.12 a cote pour ce seul composant.
+  echo.
+  echo Dans les deux cas, l'application fonctionnera avec Tesseract seul : les
+  echo pages a basse resolution seront moins bien lues, et aucune lecture de
+  echo secours ne sera disponible si Tesseract manque.
   echo RapidOCR ne lit de toute facon pas l'arabe : son absence n'empeche
   echo pas la lecture des pages arabes, c'est Tesseract qui s'en charge.
 )

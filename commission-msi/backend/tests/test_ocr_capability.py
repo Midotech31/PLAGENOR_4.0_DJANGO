@@ -351,6 +351,84 @@ def test_a_garbling_font_reports_inconclusive_not_failed_when_the_pack_is_presen
 
 
 # --------------------------------------------------------------------------
+# Une variante de graphie usuelle n'est pas un échec de lecture
+# --------------------------------------------------------------------------
+#
+# Le défaut réel, trouvé sur un poste où le paquet arabe était installé et
+# confirmé par Tesseract : le contrôle comparait le texte lu **brut** à la
+# ligne attendue par inclusion littérale, sans jamais appeler la
+# normalisation du reste de l'application. Une variante de graphie usuelle —
+# alif maksoura pour ya, un ligature différente — suffisait à faire échouer
+# une lecture par ailleurs correcte, et le message affirmait « ÉCHOUÉE » là où
+# le paquet fonctionnait.
+
+
+def test_a_common_spelling_variant_still_scores_as_a_good_reading():
+    """Mesuré : Tesseract lit « العالى » (alif maksoura) là où l'image porte
+
+    « العالي » (ya) — une variante usuelle, pas une erreur de lecture. Le
+    score doit rester au-dessus du seuil de bonne lecture.
+    """
+    verify = _verify_module()
+
+    read_with_variant = (
+        "الجمهورية الجزائرية الديمقراطية الشعبية\n"
+        "وزارة التعليم العالى و البحث العلمى\n"
+        "الموضوع: طلب الموافقة لتنظيم ملتقى دولي"
+    )
+    score = verify._reading_score(read_with_variant)
+
+    assert score >= verify.GOOD_ARABIC_SCORE, score
+
+
+def test_the_previous_check_would_have_wrongly_failed_this_same_text():
+    """Verrouille le défaut lui-même : l'ancienne comparaison littérale
+
+    aurait échoué sur ce texte, bien que la lecture soit correcte.
+    """
+    read_with_variant = (
+        "وزارة التعليم العالى و البحث العلمى"  # ى (alif maksoura), pas ي (ya)
+    )
+    expected_line = "وزارة التعليم العالي و البحث العلمي"  # ي (ya)
+
+    assert expected_line not in read_with_variant, (
+        "si ce texte redevenait identique, le test ne prouverait plus rien"
+    )
+
+
+def test_garbled_text_still_scores_far_below_the_threshold():
+    verify = _verify_module()
+
+    garbled = "الالالالالالالا لالالالالالالالالا لالالالالالالالالالالا"
+    assert verify._reading_score(garbled) < verify.GOOD_ARABIC_SCORE
+
+
+def test_once_the_pack_is_confirmed_the_verdict_is_never_a_hard_failure(monkeypatch):
+    """Le fait qui compte : Tesseract confirme « ara ». Un score bas ensuite
+
+    ne doit jamais reproduire le faux « ÉCHOUÉE » mesuré en usage réel.
+    """
+    verify = _verify_module()
+    from app.services import ocr_engines, ocr_service
+
+    monkeypatch.setattr(ocr_service, "is_available", lambda: True)
+    monkeypatch.setattr(ocr_service, "installed_languages", lambda: ["ara", "eng", "osd"])
+    monkeypatch.setattr(verify, "_best_arabic_reading", lambda _engines: (
+        type("Outcome", (), {"engine": "tesseract", "text": "quelque chose de partiel"})(),
+        "police-de-test",
+        0.2,  # score bas, mais le paquet est confirmé au-dessus
+        False,
+    ))
+
+    report: list[str] = []
+    _latin_ok, arabic_ok, inconclusive = verify.check_engines(report)
+
+    assert arabic_ok is False
+    assert inconclusive is True, "jamais un échec dur quand Tesseract confirme le paquet"
+    assert not any("ÉCHOUÉE" in line for line in report)
+
+
+# --------------------------------------------------------------------------
 # Trouver Tesseract même hors du PATH
 # --------------------------------------------------------------------------
 
