@@ -18,6 +18,7 @@ Deux mesures fondent ces tests, et elles sont reproductibles :
 from __future__ import annotations
 
 import io
+import sys
 
 import pytest
 
@@ -264,6 +265,91 @@ def test_the_verdict_distinguishes_no_reading_from_no_arabic():
     assert "AUCUNE page scannée" in source
 
 
+def test_the_verdict_also_distinguishes_inconclusive_from_definitively_unreadable():
+    """Un test synthétique raté par la police système n'est pas un paquet absent."""
+    verify = _verify_module()
+    import inspect
+
+    source = inspect.getsource(verify.main)
+    assert "arabic_inconclusive" in source
+    assert "n'est pas la même chose qu'un paquet manquant" in source
+
+
+# --------------------------------------------------------------------------
+# Un rendu arabe raté par la police système n'est pas un vrai échec
+# --------------------------------------------------------------------------
+
+
+def test_a_correct_rendering_is_never_flagged_as_garbled():
+    verify = _verify_module()
+
+    correct = (
+        "الجمهورية الجزائرية الديمقراطية الشعبية\n"
+        "وزارة التعليم العالي و البحث العلمي\n"
+        "الموضوع: طلب الموافقة لتنظيم ملتقى دولي"
+    )
+    assert verify._looks_garbled(correct) is False
+
+
+def test_a_font_without_arabic_joining_is_flagged_as_garbled():
+    """Mesuré : une police sans jointure arabe correcte répète « لا » pour la
+
+    moitié des paires de lettres lues, contre 11 % sur un rendu correct.
+    """
+    verify = _verify_module()
+
+    garbled = "الالالالالالالا لالالالالالالالالا لالالالالالالالالالالا"
+    assert verify._looks_garbled(garbled) is True
+
+
+def test_a_font_with_almost_no_arabic_glyph_is_flagged_as_garbled():
+    """Mesuré : une police sans glyphes arabes du tout ne produit presque
+
+    aucune lettre arabe en sortie, pas du texte arabe faux.
+    """
+    verify = _verify_module()
+
+    assert verify._looks_garbled("0000000000\n00000\n0 0\n0ن 0\n0 0\n00600") is True
+
+
+def test_windows_arabic_shaping_fonts_are_tried_before_the_less_reliable_ones():
+    """Tahoma et Segoe UI, historiquement chargés de l'arabe sur Windows,
+
+    doivent être essayés avant Arial et Times New Roman.
+    """
+    verify = _verify_module()
+    fonts = [font.lower() for font in verify.ARABIC_FONTS]
+
+    tahoma = next(i for i, f in enumerate(fonts) if "tahoma" in f)
+    segoe = next(i for i, f in enumerate(fonts) if "segoeui" in f)
+    arial = next(i for i, f in enumerate(fonts) if f.endswith("arial.ttf"))
+    times = next(i for i, f in enumerate(fonts) if "times" in f)
+
+    assert tahoma < arial
+    assert segoe < arial
+    assert tahoma < times
+    assert segoe < times
+
+
+def test_a_garbling_font_reports_inconclusive_not_failed_when_the_pack_is_present():
+    """Reproduit la mesure réelle : le paquet arabe installé, la seule police
+
+    disponible sur ce poste réel n'articule pas l'arabe correctement.
+    """
+    verify = _verify_module()
+    verify.ARABIC_FONTS = (
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    )
+
+    report: list[str] = []
+    _latin_ok, arabic_ok, inconclusive = verify.check_engines(report)
+
+    assert arabic_ok is False
+    assert inconclusive is True
+    assert any("non concluante" in line for line in report)
+    assert any("n'est pas concerné" in line for line in report)
+
+
 # --------------------------------------------------------------------------
 # Trouver Tesseract même hors du PATH
 # --------------------------------------------------------------------------
@@ -416,10 +502,66 @@ def test_the_mirrors_do_not_all_share_the_same_host():
 def test_an_installed_file_is_confirmed_by_asking_tesseract(monkeypatch, tmp_path):
     """Le fichier posé ne prouve rien : seul Tesseract dit ce qu'il sait lire."""
     installer = _installer_module()
-    monkeypatch.setattr(installer, "_download", lambda _target: True)
+    monkeypatch.setattr(installer, "_download", lambda _target, _lang="ara": True)
     monkeypatch.setattr(installer, "_languages", lambda _cmd: (["eng", "fra"], None))
 
     assert installer._install_arabic("tesseract", str(tmp_path)) is False
+
+
+def test_french_is_installed_alongside_arabic_when_both_are_missing():
+    """Mesuré sur un poste réel : winget ne pose que l'anglais et osd.
+
+    Les dossiers de la commission sont bilingues français/arabe ; installer
+    l'un sans l'autre laisserait la moitié du dossier illisible.
+    """
+    installer = _installer_module()
+
+    assert set(installer.REQUIRED_LANGUAGES) == {"ara", "fra"}
+    assert installer.LANGUAGE_LABELS["ara"] == "arabe"
+    assert installer.LANGUAGE_LABELS["fra"] == "français"
+
+
+def test_missing_languages_are_each_installed_and_reverified(monkeypatch):
+    """Les deux paquets manquants doivent chacun être posés puis reconfirmés."""
+    installer = _installer_module()
+    attempted: list[str] = []
+
+    monkeypatch.setattr(installer, "_tesseract", lambda: "tesseract")
+    monkeypatch.setattr(installer, "_languages", lambda _cmd: (["eng", "osd"], "/tessdata"))
+
+    def _install(_command, _tessdata, lang):
+        attempted.append(lang)
+        return True
+
+    monkeypatch.setattr(installer, "_install_language", _install)
+
+    class _Stub:
+        @staticmethod
+        def check_engines(_report):
+            return True, True, False
+
+    monkeypatch.setitem(sys.modules, "verify_install", _Stub())
+    assert installer.main() == 0
+    assert set(attempted) == {"ara", "fra"}
+
+
+def test_an_inconclusive_arabic_test_is_not_reported_as_a_failure(monkeypatch):
+    """Le paquet est confirmé par Tesseract : ne pas renvoyer l'utilisateur
+
+    chercher une cause d'installation qui n'existe plus.
+    """
+    installer = _installer_module()
+
+    monkeypatch.setattr(installer, "_tesseract", lambda: "tesseract")
+    monkeypatch.setattr(installer, "_languages", lambda _cmd: (["ara", "fra", "eng"], "/tessdata"))
+
+    class _Stub:
+        @staticmethod
+        def check_engines(_report):
+            return True, False, True  # latin ok, arabe non confirmé, inconcluant
+
+    monkeypatch.setitem(sys.modules, "verify_install", _Stub())
+    assert installer.main() == 0
 
 
 def test_the_winget_identifier_is_the_one_observed_on_a_real_machine():
@@ -442,6 +584,27 @@ def test_a_double_clickable_repair_exists_and_relocates_itself():
     assert "installer_arabe.py" in content
     # Une fenêtre qui se referme aussitôt ne montre aucun message.
     assert "pause" in content
+
+
+def test_the_repair_shortcut_self_elevates_when_writing_needs_admin_rights():
+    """winget installe Tesseract dans Program Files : y écrire exige l'administrateur.
+
+    Mesuré sur un poste réel : Tesseract trouvé, paquet arabe absent, puis
+    « Permission denied » à l'écriture dans Program Files\\Tesseract-OCR\\tessdata.
+    Le raccourci doit demander l'élévation lui-même plutôt que de renvoyer
+    l'utilisateur relancer à la main.
+    """
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "reparer_ocr_arabe.bat"
+    content = script.read_text(encoding="utf-8", errors="ignore")
+
+    assert "net session" in content, "détection des droits administrateur absente"
+    assert "-Verb RunAs" in content, "pas de demande d'élévation"
+    assert "Start-Process" in content
+    # Un marqueur en argument évite de redemander l'élévation en boucle si
+    # elle échoue ou si l'utilisateur la refuse.
+    assert "ELEVE" in content
 
 
 def test_the_repair_shortcut_is_shipped_in_the_archive():

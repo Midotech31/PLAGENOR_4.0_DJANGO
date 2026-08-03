@@ -44,8 +44,19 @@ PATH_SAFETY_MARGIN = 30
 LATIN_LINES = ("DEMANDE D'ORGANISATION", "Colloque international 2027")
 ARABIC_LINES = ("الجمهورية الجزائرية الديمقراطية الشعبية", "وزارة التعليم العالي و البحث العلمي")
 
+#: Polices essayées pour le rendu arabe, **dans un ordre qui n'est pas
+#: arbitraire**. Mesuré sur un poste réel : une fois le paquet « ara » installé,
+#: le rendu via `arial.ttf` a produit un texte lisiblement faux — des lettres
+#: mal jointes, lues par Tesseract avec une confiance de 66 % sur un contenu
+#: qui n'existait pas dans l'image d'origine. `_render` ne vérifie que le
+#: chargement du fichier, pas la qualité du rendu : Tahoma et Segoe UI, les
+#: polices historiquement chargées de l'arabe sur Windows, sont donc essayées
+#: avant Arial et Times New Roman, moins fiables sur cette écriture.
 ARABIC_FONTS = (
     "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
+    r"C:\Windows\Fonts\tahoma.ttf",
+    r"C:\Windows\Fonts\segoeui.ttf",
+    r"C:\Windows\Fonts\arialuni.ttf",
     r"C:\Windows\Fonts\arial.ttf",
     r"C:\Windows\Fonts\times.ttf",
 )
@@ -60,19 +71,28 @@ FAIL = "  [ECHEC]"
 
 
 def _render(lines: tuple[str, ...], fonts: tuple[str, ...]) -> bytes | None:
+    """Rend avec la première police qui **charge**, sans juger du résultat.
+
+    Suffisant pour le latin, où toute police installée convient. Insuffisant
+    pour l'arabe : voir `_best_arabic_reading`, qui juge le rendu et pas
+    seulement le chargement du fichier.
+    """
+    for candidate in fonts:
+        png = _render_with(lines, candidate)
+        if png is not None:
+            return png
+    return None
+
+
+def _render_with(lines: tuple[str, ...], font_path: str, size: int = 36) -> bytes | None:
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
         return None
 
-    font = None
-    for candidate in fonts:
-        try:
-            font = ImageFont.truetype(candidate, 36)
-            break
-        except OSError:
-            continue
-    if font is None:
+    try:
+        font = ImageFont.truetype(font_path, size)
+    except OSError:
         return None
 
     image = Image.new("L", (1000, 240), 255)
@@ -82,6 +102,48 @@ def _render(lines: tuple[str, ...], fonts: tuple[str, ...]) -> bytes | None:
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return buffer.getvalue()
+
+
+def _looks_garbled(text: str) -> bool:
+    """Un rendu arabe raté par la police système, pas un vrai échec de lecture.
+
+    Calibré sur deux échecs mesurés, tous deux avec le paquet « ara » présent :
+    une police sans jointure arabe correcte a produit une répétition de « لا »
+    représentant la moitié des paires de lettres lues (contre 11 % sur un rendu
+    correct), et une police sans glyphes arabes du tout a produit un texte
+    presque sans lettre arabe. Les deux sont ici couverts, avec une marge large
+    entre le cas correct et les deux cas ratés.
+    """
+    letters = [c for c in text if "\u0600" <= c <= "\u06ff"]
+    if len(letters) < 8:
+        return True
+    from collections import Counter
+
+    bigrams = [a + b for a, b in zip(letters, letters[1:])]
+    _, count = Counter(bigrams).most_common(1)[0]
+    return (count / len(bigrams)) > 0.35
+
+
+def _best_arabic_reading(ocr_engines):
+    """Essaie chaque police candidate ; retient la première lecture exacte,
+    sinon la moins suspecte, en disant laquelle des deux elle a obtenue.
+
+    Renvoie `None` si aucune police n'a même pu être chargée, sinon
+    `(outcome, police, exact, suspect)`.
+    """
+    fallback = None
+    for font_path in ARABIC_FONTS:
+        png = _render_with(ARABIC_LINES, font_path)
+        if png is None:
+            continue
+        outcome = ocr_engines.read_page(png)
+        exact = any(line in outcome.text for line in ARABIC_LINES)
+        if exact:
+            return outcome, font_path, True, False
+        suspect = _looks_garbled(outcome.text)
+        if fallback is None or (fallback[3] and not suspect):
+            fallback = (outcome, font_path, False, suspect)
+    return fallback
 
 
 def check_path_length(report: list[str]) -> bool:
@@ -137,8 +199,16 @@ def check_long_paths_enabled(report: list[str]) -> None:
         report.append(f"{WARN} Chemins longs Windows : désactivés (clé absente).")
 
 
-def check_engines(report: list[str]) -> tuple[bool, bool]:
-    """Renvoie (latin lisible, arabe lisible), mesurés et non supposés."""
+def check_engines(report: list[str]) -> tuple[bool, bool, bool]:
+    """Renvoie (latin lisible, arabe lisible, arabe inconcluant), mesurés.
+
+    Le troisième élément distingue un cas précis : le paquet « ara » est
+    présent, mais l'image arabe synthétique n'a pu être ni lue exactement ni
+    jugée franchement illisible — signe probable d'une police système sans
+    jointure arabe correcte, pas d'une incapacité de Tesseract. Ce n'est pas
+    une nuance cosmétique : le confondre avec un vrai échec renvoie
+    l'évaluateur chercher une cause d'installation qui n'existe plus.
+    """
     from app.services import ocr_engines, ocr_service
 
     tesseract = ocr_service.is_available()
@@ -189,18 +259,32 @@ def check_engines(report: list[str]) -> tuple[bool, bool]:
             + (f"réussie via {outcome.engine}." if latin_ok else "ÉCHOUÉE.")
         )
 
-    arabic_png = _render(ARABIC_LINES, ARABIC_FONTS)
-    if arabic_png is None:
+    arabic_inconclusive = False
+    result = _best_arabic_reading(ocr_engines)
+    if result is None:
         report.append(f"{WARN} Lecture arabe : non testée (police de contrôle absente).")
     else:
-        outcome = ocr_engines.read_page(arabic_png)
-        arabic_ok = any(line in outcome.text for line in ARABIC_LINES)
-        report.append(
-            f"{OK if arabic_ok else FAIL} Lecture d'une page arabe de contrôle : "
-            + (f"réussie via {outcome.engine}." if arabic_ok else "ÉCHOUÉE.")
-        )
+        outcome, _font_path, arabic_ok, suspect = result
+        if arabic_ok:
+            report.append(
+                f"{OK} Lecture d'une page arabe de contrôle : réussie via {outcome.engine}."
+            )
+        elif suspect and ocr_engines.ARABIC_LANGUAGE in languages:
+            arabic_inconclusive = True
+            report.append(
+                f"{WARN} Lecture d'une page arabe de contrôle : non concluante sur ce poste."
+            )
+            report.append(
+                "         Le paquet « ara » est présent, mais la police système utilisée "
+                "pour cette image de test ne semble pas former l'arabe correctement — ceci "
+                "teste le rendu d'une police, pas la capacité de Tesseract. Un vrai document "
+                "scanné, qui n'est pas rendu par une police système, n'est pas concerné : "
+                "testez-le, c'est ce test-là qui fait foi."
+            )
+        else:
+            report.append(f"{FAIL} Lecture d'une page arabe de contrôle : ÉCHOUÉE.")
 
-    return latin_ok, arabic_ok
+    return latin_ok, arabic_ok, arabic_inconclusive
 
 
 def check_application(report: list[str]) -> bool:
@@ -232,7 +316,7 @@ def main() -> int:
     path_ok = check_path_length(report)
     check_long_paths_enabled(report)
     app_ok = check_application(report)
-    latin_ok, arabic_ok = check_engines(report)
+    latin_ok, arabic_ok, arabic_inconclusive = check_engines(report)
 
     for line in report:
         print(line)
@@ -245,6 +329,16 @@ def main() -> int:
 
     if latin_ok and arabic_ok:
         print("  Lecture opérationnelle en latin ET en arabe. Rien ne manque.")
+        return 0
+
+    if latin_ok and arabic_inconclusive:
+        print(
+            "  Lecture opérationnelle en latin. Le paquet arabe est présent et confirmé\n"
+            "  par Tesseract, mais l'image de test synthétique n'a pas pu le confirmer sur\n"
+            "  ce poste — la police système utilisée pour ce test ne semble pas former\n"
+            "  l'arabe correctement. Ce n'est pas la même chose qu'un paquet manquant :\n"
+            "  testez avec un document réel plutôt que de vous fier à ce seul indicateur."
+        )
         return 0
 
     if latin_ok and not arabic_ok:

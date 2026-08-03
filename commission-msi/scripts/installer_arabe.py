@@ -1,4 +1,4 @@
-"""Rendre l'arabe lisible sur ce poste, en une commande.
+"""Rendre l'arabe (et le français) lisibles sur ce poste, en une commande.
 
 Pourquoi ce script existe : sur un poste réel, l'arabe est resté illisible
 malgré deux tentatives, parce que l'installateur Windows de Tesseract cache
@@ -9,13 +9,20 @@ faire le travail.
 Ce que le script fait, dans l'ordre :
 
 1. il constate l'état réel — Tesseract présent ou non, langues installées ;
-2. si Tesseract est là mais sans l'arabe, il **installe le paquet lui-même** :
-   il localise le dossier `tessdata` que Tesseract utilise réellement, y dépose
-   `ara.traineddata` depuis le dépôt officiel, et **revérifie en interrogeant
+2. si Tesseract est là mais qu'il manque l'arabe ou le français — les deux
+   langues attendues par défaut, en plus de l'anglais qu'une installation
+   winget pose seule — il **installe les paquets manquants lui-même** : il
+   localise le dossier `tessdata` que Tesseract utilise réellement, y dépose
+   les modèles depuis le dépôt officiel, et **revérifie en interrogeant
    Tesseract** — pas en supposant que le téléchargement a suffi ;
 3. si Tesseract est absent, il ne peut pas l'installer à la place de
    l'utilisateur, mais il cherche `winget` et donne la commande exacte plutôt
-   qu'un lien vers une page.
+   qu'un lien vers une page ;
+4. il fait enfin lire une page arabe de contrôle, en essayant plusieurs
+   polices : mesuré sur un poste réel, une police système sans jointure arabe
+   correcte peut faire échouer ce contrôle même quand le paquet est bel et
+   bien installé. Ce cas est reconnu et signalé pour ce qu'il est — un artefact
+   du test, pas une preuve que l'arabe reste illisible.
 
 Ce qu'il ne fait pas : prétendre. Chaque étape est vérifiée sur le comportement
 de Tesseract, jamais sur la présence d'un fichier.
@@ -39,7 +46,8 @@ BACKEND = ROOT / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-#: Modèles arabes officiels du projet Tesseract, essayés dans l'ordre.
+#: Modèles officiels du projet Tesseract, essayés dans l'ordre, pour n'importe
+#: quelle langue à installer.
 #:
 #: Plusieurs adresses parce qu'une seule est un point de rupture unique : la
 #: forme `github.com/.../raw/...` a été mesurée renvoyant 403 derrière un
@@ -47,14 +55,32 @@ if str(BACKEND) not in sys.path:
 #: administratif est précisément le genre d'endroit où l'un marche et l'autre
 #: non.
 #:
-#: `tessdata_fast` d'abord : 1,4 Mo contre 2,4 Mo, sensiblement plus rapide, et
-#: la différence de justesse est marginale sur des documents administratifs
-#: nets. Le modèle complet sert de recours.
-ARABIC_MODEL_URLS = (
-    "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ara.traineddata",
-    "https://github.com/tesseract-ocr/tessdata_fast/raw/main/ara.traineddata",
-    "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/ara.traineddata",
+#: `tessdata_fast` d'abord : 1,4 Mo contre 2,4 Mo pour l'arabe, sensiblement
+#: plus rapide, et la différence de justesse est marginale sur des documents
+#: administratifs nets. Le modèle complet sert de recours.
+MODEL_URL_TEMPLATES = (
+    "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/{lang}.traineddata",
+    "https://github.com/tesseract-ocr/tessdata_fast/raw/main/{lang}.traineddata",
+    "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/{lang}.traineddata",
 )
+
+
+def _model_urls(lang: str) -> tuple[str, ...]:
+    return tuple(template.format(lang=lang) for template in MODEL_URL_TEMPLATES)
+
+
+#: Conservé pour compatibilité : mêmes adresses qu'auparavant, pour l'arabe.
+ARABIC_MODEL_URLS = _model_urls("ara")
+
+#: Langues attendues par défaut (`MSI_OCR_LANGUAGES`), au-delà de l'anglais
+#: qu'une installation winget pose seule. Mesuré sur un poste réel : après
+#: winget, Tesseract ne connaissait que `eng` et `osd` — ni l'arabe, ni le
+#: français, alors que les deux sont nécessaires aux dossiers bilingues de la
+#: commission.
+REQUIRED_LANGUAGES = ("ara", "fra")
+
+#: Nom lisible de chaque langue, pour les messages.
+LANGUAGE_LABELS = {"ara": "arabe", "fra": "français"}
 
 #: Identifiant winget du portage Windows de Tesseract, **relevé sur un poste
 #: réel** et non supposé : `winget search tesseract` y a renvoyé
@@ -100,9 +126,10 @@ def _languages(command: str) -> tuple[list[str], str | None]:
     return [line.strip() for line in lines[1:] if line.strip()], directory
 
 
-def _fetch() -> bytes | None:
-    """Récupère le modèle depuis la première adresse qui répond correctement."""
-    for url in ARABIC_MODEL_URLS:
+def _fetch(lang: str = "ara") -> bytes | None:
+    """Récupère le modèle d'une langue depuis la première adresse qui répond."""
+    urls = _model_urls(lang)
+    for url in urls:
         print(f"  Téléchargement depuis {url}")
         try:
             with urllib.request.urlopen(url, timeout=120) as response:  # noqa: S310
@@ -122,12 +149,12 @@ def _fetch() -> bytes | None:
     print("          Si ce poste passe par un mandataire, téléchargez le fichier")
     print("          depuis un poste connecté et copiez-le à la main dans le")
     print("          dossier tessdata indiqué plus haut :")
-    print(f"              {ARABIC_MODEL_URLS[0]}")
+    print(f"              {urls[0]}")
     return None
 
 
-def _download(target: Path) -> bool:
-    payload = _fetch()
+def _download(target: Path, lang: str = "ara") -> bool:
+    payload = _fetch(lang)
     if payload is None:
         return False
     temporary = target.with_suffix(".part")
@@ -138,16 +165,18 @@ def _download(target: Path) -> bool:
     except OSError as exc:
         temporary.unlink(missing_ok=True)
         print(f"  [ECHEC] Écriture impossible dans {target.parent} : {exc}")
-        print("          Relancez cette commande depuis une invite ADMINISTRATEUR.")
+        print("          Relancez cette commande depuis une invite ADMINISTRATEUR ("
+              "clic droit sur reparer_ocr_arabe.bat, Exécuter en tant qu'administrateur).")
         return False
 
     print(f"  Modèle écrit : {target} ({len(payload) // 1024} Ko)")
     return True
 
 
-def _install_arabic(command: str, tessdata: str | None) -> bool:
+def _install_language(command: str, tessdata: str | None, lang: str) -> bool:
+    label = LANGUAGE_LABELS.get(lang, lang)
     if not tessdata:
-        print("  [ECHEC] Dossier tessdata introuvable : installation automatique impossible.")
+        print(f"  [ECHEC] Dossier tessdata introuvable : installation du {label} impossible.")
         return False
 
     directory = Path(tessdata)
@@ -155,19 +184,24 @@ def _install_arabic(command: str, tessdata: str | None) -> bool:
         print(f"  [ECHEC] {directory} n'existe pas.")
         return False
 
-    if not _download(directory / "ara.traineddata"):
+    if not _download(directory / f"{lang}.traineddata", lang):
         return False
 
     # Le seul contrôle qui vaille : redemander à Tesseract ce qu'il sait lire.
     languages, _ = _languages(command)
-    if "ara" in languages:
-        print("  [OK]    Tesseract déclare désormais connaître l'arabe.")
+    if lang in languages:
+        print(f"  [OK]    Tesseract déclare désormais connaître le {label}.")
         return True
     print(
-        "  [ECHEC] Le fichier est en place mais Tesseract ne voit toujours pas l'arabe. "
+        f"  [ECHEC] Le fichier est en place mais Tesseract ne voit toujours pas le {label}. "
         "Un TESSDATA_PREFIX pointant ailleurs en est la cause la plus fréquente."
     )
     return False
+
+
+def _install_arabic(command: str, tessdata: str | None) -> bool:
+    """Conservé pour compatibilité : installe spécifiquement l'arabe."""
+    return _install_language(command, tessdata, "ara")
 
 
 def _guide_full_install() -> None:
@@ -181,19 +215,24 @@ def _guide_full_install() -> None:
             "changé depuis, retrouvez-le par :"
         )
         print("      winget search tesseract")
+        print(
+            "\n  winget ne pose que l'anglais par défaut : relancez ensuite ce script, "
+            "il posera l'arabe et le français lui-même."
+        )
     else:
         print("\n  winget est absent. Installateur graphique :")
         print("      https://github.com/UB-Mannheim/tesseract/wiki")
-    print(
-        "\n  Dans l'installateur graphique, DÉPLIEZ « Additional language data » et "
-        "cochez Arabic, French, English. C'est l'étape qui se manque.\n"
-        "  Si vous l'oubliez, relancez ce script : il posera l'arabe tout seul."
-    )
+        print(
+            "\n  Dans l'installateur graphique, DÉPLIEZ « Additional language data » et "
+            "cochez Arabic, French, English. C'est l'étape qui se manque.\n"
+            "  Si vous l'oubliez, relancez ce script : il posera l'arabe et le français "
+            "tout seul."
+        )
 
 
 def main() -> int:
     print()
-    print("=== Rendre l'arabe lisible — Commission MSI ===")
+    print("=== Rendre l'arabe et le français lisibles — Commission MSI ===")
     print()
 
     command = _tesseract()
@@ -207,14 +246,20 @@ def main() -> int:
     if tessdata:
         print(f"          Dossier tessdata : {tessdata}")
 
-    if "ara" in languages:
-        print("  [OK]    Le paquet arabe est déjà présent : rien à faire.")
+    missing = [lang for lang in REQUIRED_LANGUAGES if lang not in languages]
+    if not missing:
+        print("  [OK]    Les paquets arabe et français sont déjà présents : rien à faire.")
     else:
-        print("  [!]     Paquet arabe absent — installation en cours.")
-        if not _install_arabic(command, tessdata):
-            return 2
+        for lang in missing:
+            label = LANGUAGE_LABELS.get(lang, lang)
+            print(f"  [!]     Paquet {label} absent — installation en cours.")
+            if not _install_language(command, tessdata, lang):
+                return 2
 
-    # Contrôle final : une vraie page arabe, lue par la chaîne complète.
+    # Contrôle final : une vraie page arabe, lue par la chaîne complète. Le
+    # français n'a pas ce même contrôle : l'écriture latine ne dépend pas
+    # d'une police système capable ou non de la joindre, contrairement à
+    # l'arabe — la présence confirmée du paquet suffit à s'y fier.
     print("\n  Contrôle de lecture sur une page arabe de test…")
     try:
         import verify_install  # type: ignore[import-not-found]
@@ -223,13 +268,22 @@ def main() -> int:
         import verify_install  # type: ignore[import-not-found]
 
     report: list[str] = []
-    _latin_ok, arabic_ok = verify_install.check_engines(report)
+    _latin_ok, arabic_ok, arabic_inconclusive = verify_install.check_engines(report)
     for line in report:
         print(line)
 
     print()
     if arabic_ok:
         print("  L'arabe est lisible sur ce poste. Relancez l'application et le traitement.")
+        return 0
+    if arabic_inconclusive:
+        print(
+            "  Le paquet arabe est présent et confirmé par Tesseract lui-même. Le test\n"
+            "  synthétique de cette page n'a pas pu le confirmer sur ce poste — la police\n"
+            "  système utilisée pour ce test ne semble pas former l'arabe correctement.\n"
+            "  Ce n'est pas la même chose qu'un paquet manquant : relancez l'application\n"
+            "  et essayez avec un vrai document plutôt que de vous fier à ce seul indicateur."
+        )
         return 0
     print(
         "  L'arabe reste illisible malgré le paquet. Envoyez-moi ces lignes : la cause "

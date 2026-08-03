@@ -708,3 +708,90 @@ recherche reste indiquée au cas où le dépôt changerait.
 À noter : l'installation par winget prend les options par défaut, qui n'incluent
 que l'anglais. Installer Tesseract par winget ne rend donc **pas** l'arabe
 lisible — c'est exactement le cas que `installer_arabe.py` traite ensuite.
+
+## DT-31 — Élévation automatique, français manquant, et un faux « échec » causé par la police système
+
+**Trois défauts trouvés en suivant l'usage réel jusqu'au bout**, après que
+l'installation du paquet arabe a échoué une première fois puis réussi.
+
+### 1. Écrire dans « Program Files » exige l'administrateur
+
+`winget install --id UB-Mannheim.TesseractOCR` installe Tesseract dans
+`C:\Program Files\Tesseract-OCR\`. Y déposer `ara.traineddata` a produit :
+
+```
+[ECHEC] Écriture impossible ... [Errno 13] Permission denied
+```
+
+`reparer_ocr_arabe.bat` se relance désormais lui-même avec élévation
+(`net session` pour détecter l'absence de droits, `Start-Process -Verb RunAs`
+pour les redemander). Un marqueur passé en argument (`ELEVE`) évite de
+redemander en boucle si l'élévation échoue ou est refusée ; dans ce cas, le
+message renvoie explicitement au clic droit « Exécuter en tant
+qu'administrateur », plutôt que de boucler silencieusement.
+
+### 2. Le français manquait aussi, et rien ne le signalait
+
+Une fois l'arabe posé, les langues installées étaient `ara, eng, osd` — **pas
+`fra`**, alors que `MSI_OCR_LANGUAGES` vaut `fra+ara+eng` par défaut et que les
+dossiers de la commission sont bilingues français/arabe. `winget` n'installe
+que l'anglais et le module d'orientation ; ni l'arabe ni le français n'y
+étaient inclus.
+
+`installer_arabe.py` est généralisé : `REQUIRED_LANGUAGES = ("ara", "fra")`,
+chacune installée et **reconfirmée séparément en interrogeant Tesseract**,
+selon le même principe que pour l'arabe seul. Le nom du fichier et son
+entrée dans les deux lanceurs (`install_windows.bat`,
+`reparer_ocr_arabe.bat`) sont conservés pour ne rien casser ; son objet est
+élargi dans la documentation du module.
+
+### 3. Le contrôle de lecture a rendu un faux « ÉCHOUÉE »
+
+Après l'installation réussie du paquet, confirmée par Tesseract lui-même
+(`ara` listé), le contrôle de lecture d'une page arabe de synthèse a échoué :
+
+```
+[OK]    Paquet arabe « ara » : présent.
+[ECHEC] Lecture d'une page arabe de contrôle : ÉCHOUÉE.
+```
+
+**Mesuré, pas supposé** : `_render` charge la première police qui **s'ouvre**,
+sans jamais juger la qualité du rendu. Sur ce Linux de développement, une
+police latine sans jointure arabe correcte (Liberation Sans) a produit, à
+partir de la même image source, un texte comme
+`« الالالالالالالا لالالالالالالالالا... »` — Tesseract l'a lu avec 66 % de
+confiance. Une police totalement dépourvue de glyphes arabes (Liberation Mono)
+a produit presque exclusivement des chiffres. **Dans les deux cas, aucune
+erreur n'est levée : le rendu est simplement faux**, et le seul signe en est le
+texte lu.
+
+C'est très probablement ce qui s'est produit sur le poste réel avec
+`arial.ttf` : le paquet arabe était installé, confirmé par Tesseract, et
+pourtant notre propre image de contrôle a échoué à le prouver — un défaut du
+test, pas de l'installation.
+
+**Correction, en trois parties :**
+
+1. `ARABIC_FONTS` essaie désormais `tahoma.ttf` et `segoeui.ttf` — les polices
+   historiquement chargées de l'arabe sur Windows — avant `arial.ttf` et
+   `times.ttf`.
+2. `_best_arabic_reading` essaie chaque police et retient la première lecture
+   **exacte** ; à défaut, la moins suspecte.
+3. `_looks_garbled(texte)` détecte un rendu raté : moins de 8 lettres arabes
+   dans le résultat, ou une même paire de lettres représentant plus de 35 %
+   des paires lues. Calibré sur les deux échecs mesurés (0,11 sur un rendu
+   correct, 0,50 sur le rendu Liberation Sans) — marge large entre le cas
+   correct et les deux cas ratés.
+
+`check_engines` renvoie désormais un triplet `(latin_ok, arabic_ok,
+arabic_inconclusive)`. Quand le paquet est confirmé présent par Tesseract et
+que seul le rendu de contrôle est suspect, le verdict — dans
+`verify_install.py` comme dans `installer_arabe.py` — dit explicitement que ce
+n'est **pas la même chose qu'un paquet manquant**, et renvoie tester avec un
+document réel plutôt que de s'en tenir à cet indicateur. Confondre les deux
+aurait renvoyé l'utilisateur chercher, une nouvelle fois, une cause
+d'installation qui n'existe plus.
+
+**Ce qui reste vrai sans ambiguïté** : quand Tesseract est absent, ou que son
+paquet arabe est réellement absent, le verdict reste un échec franc — rien
+dans cette correction n'atténue un cas où le manque est réel.

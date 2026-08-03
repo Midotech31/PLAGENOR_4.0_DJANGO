@@ -268,9 +268,28 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   `UB-Mannheim.TesseractOCR`. L'installation par winget ne pose que l'anglais,
   d'où l'étape suivante qui pose l'arabe. Voir DT-30.
 
+### Élévation automatique, français manquant, faux échec de la police système
+
+- **`reparer_ocr_arabe.bat` se relance lui-même avec élévation** quand
+  l'écriture l'exige : winget installe Tesseract dans `Program Files`, où
+  seul un administrateur peut écrire. Un marqueur évite de redemander en
+  boucle si l'utilisateur refuse.
+- **Le français est désormais installé au même titre que l'arabe.** Mesuré sur
+  un poste réel : après winget, Tesseract ne connaissait que l'anglais — ni
+  l'arabe ni le français, alors que les dossiers de la commission sont
+  bilingues et que `fra+ara+eng` est la configuration par défaut.
+- **Un rendu de police raté n'est plus rapporté comme un paquet manquant.**
+  Mesuré : une police sans jointure arabe correcte fait lire à Tesseract un
+  texte entièrement faux, sans lever d'erreur — `« الالالالا... »` à 66 % de
+  confiance sur une image qui ne contenait pas ce texte. Le contrôle essaie
+  désormais plusieurs polices (Tahoma et Segoe UI d'abord), détecte un rendu
+  suspect, et distingue clairement « paquet absent » de « test synthétique
+  inconcluant sur ce poste » — la seconde ne renvoie plus vers une réparation
+  qui n'a plus lieu d'être. Voir DT-31.
+
 ### Tests
 
-- 322 tests backend et 22 tests d'interface au vert.
+- 332 tests backend et 22 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 
