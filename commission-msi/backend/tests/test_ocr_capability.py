@@ -420,3 +420,38 @@ def test_an_installed_file_is_confirmed_by_asking_tesseract(monkeypatch, tmp_pat
     monkeypatch.setattr(installer, "_languages", lambda _cmd: (["eng", "fra"], None))
 
     assert installer._install_arabic("tesseract", str(tmp_path)) is False
+
+
+def test_the_winget_identifier_is_the_one_observed_on_a_real_machine():
+    """Un identifiant supposé enverrait l'utilisateur sur une commande fausse."""
+    installer = _installer_module()
+
+    assert installer.WINGET_PACKAGE == "UB-Mannheim.TesseractOCR"
+
+
+def test_a_double_clickable_repair_exists_and_relocates_itself():
+    """Un chemin relatif tapé depuis un autre dossier ne donne qu'une erreur muette."""
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "reparer_ocr_arabe.bat"
+    assert script.is_file(), "le raccourci de réparation doit être livré"
+
+    content = script.read_text(encoding="utf-8", errors="ignore")
+    # Sans cette ligne, le fichier ne marche que depuis le bon dossier.
+    assert 'cd /d "%~dp0"' in content
+    assert "installer_arabe.py" in content
+    # Une fenêtre qui se referme aussitôt ne montre aucun message.
+    assert "pause" in content
+
+
+def test_the_repair_shortcut_is_shipped_in_the_archive():
+    """Un outil de dépannage absent de l'archive ne dépanne personne."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "build_archive.py"
+    spec = importlib.util.spec_from_file_location("build_archive", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert "reparer_ocr_arabe.bat" in module.ROOT_FILES

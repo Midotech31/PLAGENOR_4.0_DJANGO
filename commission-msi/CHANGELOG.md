@@ -259,9 +259,18 @@ rattachées à leurs preuves ; elles ne valent jamais décision.
   là où `raw.githubusercontent.com` passe.
 - `install_windows.bat` l'exécute. Voir DT-29.
 
+### Un raccourci double-cliquable pour réparer la lecture arabe
+
+- Nouveau **`reparer_ocr_arabe.bat`** à la racine. La consigne précédente,
+  relative, échouait sur « Le chemin d'accès spécifié est introuvable » dès
+  qu'elle était tapée depuis un autre dossier — le script ne démarrait même pas.
+- L'identifiant winget est désormais inscrit, **relevé** sur un poste réel :
+  `UB-Mannheim.TesseractOCR`. L'installation par winget ne pose que l'anglais,
+  d'où l'étape suivante qui pose l'arabe. Voir DT-30.
+
 ### Tests
 
-- 319 tests backend et 22 tests d'interface au vert.
+- 322 tests backend et 22 tests d'interface au vert.
 
 ## [1.0.0] — 2026-08-01
 

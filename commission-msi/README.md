@@ -103,9 +103,19 @@ acte distinct, dans l'onglet « Rapports », soumis à votre validation explicit
 
 ## Si les pages arabes ne sont pas lues
 
+**Double-cliquez sur `reparer_ocr_arabe.bat`**, à la racine du dossier de
+l'application. Rien à taper, aucun dossier où se placer : le fichier se rend
+lui-même au bon endroit avant de travailler.
+
+Si Tesseract n'est pas encore installé, installez-le d'abord — une commande,
+depuis n'importe quel dossier :
+
 ```bat
-backend\.venv\Scripts\python.exe scripts\installer_arabe.py
+winget install --id UB-Mannheim.TesseractOCR
 ```
+
+puis double-cliquez sur `reparer_ocr_arabe.bat`, qui posera le paquet arabe :
+l'installation par winget ne pose que l'anglais.
 
 Le script constate l'état réel, **pose le paquet arabe lui-même** si Tesseract
 est présent sans lui, et vérifie le résultat en faisant lire une page arabe de

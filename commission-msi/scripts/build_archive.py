@@ -38,6 +38,7 @@ ROOT_FILES = (
     "install_windows.bat",
     "run_windows.bat",
     "run_tests.bat",
+    "reparer_ocr_arabe.bat",
 )
 
 #: Répertoires embarqués, avec le motif des fichiers retenus.

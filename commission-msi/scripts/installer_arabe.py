@@ -56,6 +56,16 @@ ARABIC_MODEL_URLS = (
     "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/ara.traineddata",
 )
 
+#: Identifiant winget du portage Windows de Tesseract, **relevé sur un poste
+#: réel** et non supposé : `winget search tesseract` y a renvoyé
+#: `UB-Mannheim.TesseractOCR 5.4.0.20240606`. C'est le portage que la
+#: documentation du projet recommande sous Windows.
+#:
+#: L'installation par winget prend les options par défaut, qui n'incluent que
+#: l'anglais : c'est précisément pourquoi ce script existe et pose l'arabe
+#: ensuite.
+WINGET_PACKAGE = "UB-Mannheim.TesseractOCR"
+
 #: En deçà, le fichier récupéré n'est pas un modèle : c'est une page d'erreur
 #: ou une redirection. Le modèle arabe pèse environ 1,4 Mo.
 MIN_MODEL_BYTES = 500_000
@@ -164,14 +174,13 @@ def _guide_full_install() -> None:
     print("  Tesseract n'est pas installé : c'est le seul moteur local qui lise l'arabe.")
     winget = shutil.which("winget")
     if winget:
-        print("\n  winget est disponible sur ce poste. Cherchez le paquet :")
-        print("      winget search tesseract")
-        print("  puis installez celui d'UB-Mannheim avec l'identifiant affiché :")
-        print("      winget install --id <identifiant-affiche>")
+        print("\n  winget est disponible. Installez Tesseract par cette commande :")
+        print(f"      winget install --id {WINGET_PACKAGE}")
         print(
-            "\n  L'identifiant n'est pas écrit en dur ici : il change avec le dépôt, "
-            "et une commande fausse ferait perdre plus de temps qu'une recherche."
+            "\n  Cet identifiant a été relevé sur un poste Windows 11 réel. S'il a "
+            "changé depuis, retrouvez-le par :"
         )
+        print("      winget search tesseract")
     else:
         print("\n  winget est absent. Installateur graphique :")
         print("      https://github.com/UB-Mannheim/tesseract/wiki")

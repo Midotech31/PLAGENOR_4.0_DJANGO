@@ -673,3 +673,38 @@ sur un poste administratif sans que son porteur le sache serait déplacé ; le
 script cherche `winget`, propose la recherche du paquet, et n'écrit aucun
 identifiant en dur — celui-ci change avec le dépôt, et une commande fausse
 ferait perdre plus de temps qu'une recherche.
+
+## DT-30 — Une commande relative n'est pas une instruction utilisable
+
+**Constat d'usage.** La consigne donnée était
+`backend\.venv\Scripts\python.exe scripts\installer_arabe.py`. Exécutée depuis
+`C:\Users\dell`, elle a produit :
+
+```
+Le chemin d'accès spécifié est introuvable.
+```
+
+Le script n'a jamais démarré : `cmd.exe` échoue avant Python, et le message ne
+nomme ni ce qui manque, ni le dossier attendu. Aucune amélioration du script
+n'aurait pu rattraper cela — la faute était dans l'instruction, pas dans le code.
+
+**Correction.** `reparer_ocr_arabe.bat`, à la racine, **double-cliquable**. Il
+fait `cd /d "%~dp0"` avant toute chose, comme `install_windows.bat` et
+`run_windows.bat` le faisaient déjà. Il vérifie que l'environnement virtuel
+existe et, sinon, explique que le fichier doit rester à la racine du dossier de
+l'application. Il se termine par `pause`, sans quoi la fenêtre se refermerait
+avant d'être lue.
+
+Un test vérifie ces trois points : la relocalisation, l'appel du script et la
+pause. Un autre vérifie que le fichier entre bien dans l'archive de livraison —
+un outil de dépannage absent de l'archive ne dépanne personne.
+
+**Identifiant winget.** Il n'était volontairement pas écrit en dur, faute de
+pouvoir le vérifier. `winget search tesseract` exécuté sur le poste a renvoyé
+`UB-Mannheim.TesseractOCR 5.4.0.20240606`. L'identifiant est désormais inscrit,
+avec la mention qu'il a été **relevé** et non supposé, et la commande de
+recherche reste indiquée au cas où le dépôt changerait.
+
+À noter : l'installation par winget prend les options par défaut, qui n'incluent
+que l'anglais. Installer Tesseract par winget ne rend donc **pas** l'arabe
+lisible — c'est exactement le cas que `installer_arabe.py` traite ensuite.
