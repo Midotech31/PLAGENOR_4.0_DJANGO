@@ -314,7 +314,10 @@ def test_local_only_is_the_default_and_says_what_it_cannot_do(client):
     assert state["mode"] == ai_provider.LOCAL_ONLY
     assert state["external_transmission"] is False
     assert "ne fournit pas le même niveau" in state["notice"]
-    assert state["recommended"] == ai_provider.HYBRID_STRICT
+    # Le mode recommandé est celui qui lit **sans rien faire sortir**. Pour une
+    # commission qui traite des dossiers confidentiels, recommander un mode qui
+    # transmet — et qui exige une clé payante — ne se défendrait pas.
+    assert state["recommended"] == ai_provider.LOCAL_MODEL
 
 
 def test_the_api_key_is_never_exposed(client, monkeypatch):

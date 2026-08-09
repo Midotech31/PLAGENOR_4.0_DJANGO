@@ -65,6 +65,17 @@ CONFIDENCE_READING = 0.75
 #: extrait cité reste toujours vérifiable sur sa page.
 CHARS_PER_CALL = 45_000
 
+#: Part de la fenêtre de contexte réservée à l'entrée pour un modèle local. Le
+#: reste couvre l'instruction, le catalogue des champs et la réponse. Dépasser
+#: la fenêtre ne produit pas d'erreur : le texte est tronqué en silence, et le
+#: modèle répond sur des pages amputées.
+LOCAL_INPUT_SHARE = 0.55
+
+#: Caractères par jeton, estimation prudente pour du français et de l'arabe.
+#: Sous-estimer la longueur d'un jeton fait déborder la fenêtre ; la valeur est
+#: donc choisie basse.
+CHARS_PER_TOKEN = 3.0
+
 #: Une page seule qui dépasse ce budget est tronquée — un extrait cité dans la
 #: partie tronquée serait invérifiable, donc rejeté : la troncature est sûre.
 MAX_PAGE_CHARS = CHARS_PER_CALL
@@ -197,14 +208,28 @@ def readable_pages(session: Session, dossier_id: str) -> tuple[dict[int, str], i
     return pages, withheld
 
 
-def build_batches(pages: dict[int, str]) -> list[list[int]]:
+def budget_for(provider) -> int:
+    """Budget de caractères par appel, adapté au fournisseur.
+
+    Un modèle de service dispose d'une très large fenêtre ; un modèle local a
+    celle que le poste peut lui offrir. Envoyer le budget du premier au second
+    ne provoque pas d'erreur — le texte est **tronqué en silence**, et les pages
+    perdues deviennent des « non vérifiable » que personne ne relie à la cause.
+    """
+    if getattr(provider, "mode", None) != ai_provider.LOCAL_MODEL:
+        return CHARS_PER_CALL
+    fenetre = get_settings().local_model_context
+    return max(4_000, int(fenetre * LOCAL_INPUT_SHARE * CHARS_PER_TOKEN))
+
+
+def build_batches(pages: dict[int, str], budget: int = CHARS_PER_CALL) -> list[list[int]]:
     """Regroupe les pages en lots tenant dans le budget de caractères."""
     batches: list[list[int]] = []
     current: list[int] = []
     size = 0
     for page_no in sorted(pages):
         length = len(pages[page_no])
-        if current and size + length > CHARS_PER_CALL:
+        if current and size + length > budget:
             batches.append(current)
             current, size = [], 0
         current.append(page_no)
@@ -303,7 +328,7 @@ def read_dossier(
 ) -> ReadingResult:
     """Fait lire le dossier par le modèle et vérifie chaque proposition."""
     provider = provider or ai_provider.get_provider()
-    if provider.mode != ai_provider.HYBRID_STRICT or not provider.available():
+    if provider.mode not in ai_provider.READING_MODES or not provider.available():
         described = provider.describe()
         missing = ", ".join(described.get("missing") or []) or "mode LOCAL_ONLY actif"
         raise NotAvailable(missing)
@@ -316,7 +341,7 @@ def read_dossier(
     catalogue = _field_catalogue()
     allowed = {item["cle"] for item in catalogue}
 
-    for page_numbers in build_batches(pages):
+    for page_numbers in build_batches(pages, budget_for(provider)):
         request = ai_provider.AiRequest(
             role=ROLE,
             instruction=INSTRUCTION,

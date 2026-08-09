@@ -69,6 +69,48 @@ def _explain_missing_environment(exc: ModuleNotFoundError) -> int:
     return 1
 
 
+def _check_local_server(state: dict) -> int:
+    """Distingue « serveur arrêté » de « modèle non téléchargé ».
+
+    Les deux produisent le même symptôme — l'appel échoue — et se corrigent de
+    deux manières différentes. Les confondre fait chercher longtemps.
+    """
+    from app.services.local_model_client import LocalModelClient
+
+    voulu = state.get("model_id") or ""
+    try:
+        installes = LocalModelClient().installed_models()
+    except RuntimeError as exc:
+        print()
+        print(f"[ECHEC] {exc}")
+        print()
+        print("Ollama démarre normalement avec Windows. Pour le lancer à la main,")
+        print("ouvrez une invite de commandes et tapez :  ollama serve")
+        return 1
+
+    # Ollama nomme un modèle « qwen2.5:7b » ; un identifiant sans étiquette
+    # désigne implicitement « :latest ». La comparaison tolère les deux formes.
+    connu = any(
+        nom == voulu or nom.split(":", 1)[0] == voulu.split(":", 1)[0]
+        for nom in installes
+    )
+    if not connu:
+        print()
+        print(f"[ECHEC] Le modèle « {voulu} » n'est pas installé sur ce poste.")
+        if installes:
+            print("Modèles présents : " + ", ".join(installes))
+        else:
+            print("Aucun modèle n'est installé.")
+        print()
+        print(f"Installez-le avec :  ollama pull {voulu}")
+        print("ou relancez installer_modele_local.bat.")
+        return 1
+
+    print()
+    print(f"[OK] Serveur local joignable, modèle « {voulu} » présent.")
+    return 0
+
+
 def main(argv: list[str]) -> int:
     try:
         from app.services import ai_provider
@@ -86,6 +128,9 @@ def main(argv: list[str]) -> int:
     print(f"  PDF original transmis .................. {'non'}")
     print(f"  Pièces d'identité transmises ........... {'non'}")
     print(f"  Modèle configuré ....................... {state.get('model_id') or '—'}")
+    if mode == ai_provider.LOCAL_MODEL:
+        print(f"  Serveur local .......................... {state.get('server_url')}")
+        print(f"  Fenêtre de contexte .................... {state.get('context_tokens')} jetons")
 
     if mode == ai_provider.LOCAL_ONLY:
         print()
@@ -96,15 +141,28 @@ def main(argv: list[str]) -> int:
         )
         return 0
 
+    reparateur = (
+        "installer_modele_local.bat"
+        if mode == ai_provider.LOCAL_MODEL
+        else "activer_hybrid_strict.bat"
+    )
+
     missing = state.get("missing") or []
     if missing:
         print()
-        print("[ECHEC] Le mode HYBRID_STRICT est incomplet. Manque :")
+        print(f"[ECHEC] Le mode {mode} est incomplet. Manque :")
         for item in missing:
             print(f"  - {item}")
         print()
-        print("Relancez activer_hybrid_strict.bat après correction.")
+        print(f"Relancez {reparateur} après correction.")
         return 1
+
+    # Un modèle local absent est la panne la plus fréquente et la plus simple à
+    # corriger : la nommer évite de chercher du côté du réseau ou des réglages.
+    if mode == ai_provider.LOCAL_MODEL:
+        code = _check_local_server(state)
+        if code != 0:
+            return code
 
     print()
     print("[OK] La configuration est complète.")
@@ -143,12 +201,24 @@ def main(argv: list[str]) -> int:
         print()
         print(f"[ECHEC] {exc.code} — {exc}")
         print()
-        if exc.code == "MODEL_UNAVAILABLE":
+        if exc.code == "MODEL_UNAVAILABLE" and mode == ai_provider.LOCAL_MODEL:
+            print(
+                "Le modèle n'est pas installé sur ce poste. Installez-le avec :\n"
+                f"    ollama pull {state.get('model_id')}\n"
+                "ou relancez installer_modele_local.bat."
+            )
+        elif exc.code == "MODEL_UNAVAILABLE":
             print(
                 "Corrigez ANTHROPIC_MODEL_ANALYSIS : l'identifiant doit être exact,\n"
                 "et le modèle accessible à ce compte. Aucun repli vers un modèle\n"
                 "moins performant n'est fait — ce serait vous faire croire à un\n"
                 "résultat produit par le modèle que vous aviez choisi."
+            )
+        elif mode == ai_provider.LOCAL_MODEL:
+            print(
+                "Vérifiez, dans cet ordre : qu'Ollama est démarré (icône dans la\n"
+                "barre des tâches, ou commande `ollama list`), puis que le modèle\n"
+                "est bien téléchargé."
             )
         else:
             print(

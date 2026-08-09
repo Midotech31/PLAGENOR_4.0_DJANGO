@@ -34,8 +34,15 @@ from app.models import AiCall
 from app.models.base import new_id
 
 LOCAL_ONLY = "LOCAL_ONLY"
+#: Modèle de langage installé **sur le poste**. Rien ne sort — c'est la garantie
+#: de souveraineté du mode local, avec la lecture sémantique en plus.
+LOCAL_MODEL = "LOCAL_MODEL"
 HYBRID_STRICT = "HYBRID_STRICT"
-MODES = (LOCAL_ONLY, HYBRID_STRICT)
+MODES = (LOCAL_ONLY, LOCAL_MODEL, HYBRID_STRICT)
+
+#: Modes capables de lecture sémantique. Les deux valent pour l'étape de
+#: lecture ; ils diffèrent par ce qui quitte le poste, pas par ce qu'ils font.
+READING_MODES = (LOCAL_MODEL, HYBRID_STRICT)
 
 PROMPT_VERSION = "2026.08.1"
 
@@ -172,6 +179,88 @@ class LocalOnlyProvider(AIProvider):
             "LOCAL_ONLY_NO_MODEL",
             "Aucun appel externe n'est possible en mode LOCAL_ONLY. Les constats produits "
             "reposent uniquement sur les moteurs déterministes locaux.",
+        )
+
+
+class LocalModelProvider(AIProvider):
+    """Lecture sémantique par un modèle installé sur le poste.
+
+    Aucune expurgation n'est nécessaire et aucune n'est faite : rien ne quitte
+    la machine, donc il n'y a rien à protéger d'un tiers. Les pages classées
+    `RESTREINT` restent néanmoins écartées à la source par l'appelant — ce qui
+    ne doit pas être lu par un modèle ne doit pas l'être non plus par un modèle
+    local, la classification exprime une règle de traitement, pas seulement une
+    règle de transmission.
+    """
+
+    mode = LOCAL_MODEL
+
+    def __init__(self, *, client=None) -> None:
+        self._client = client
+
+    def _settings(self):
+        return get_settings()
+
+    def available(self) -> bool:
+        return bool(self._settings().local_model_name)
+
+    def describe(self) -> dict:
+        settings = self._settings()
+        missing = []
+        if not settings.local_model_name:
+            missing.append("MSI_LOCAL_MODEL (identifiant du modèle installé)")
+        return {
+            "mode": LOCAL_MODEL,
+            "available": not missing,
+            "model_id": settings.local_model_name or None,
+            "missing": missing,
+            "server_url": settings.local_model_url,
+            "context_tokens": settings.local_model_context,
+            "notice": "Mode LOCAL_MODEL : la lecture sémantique est faite par un modèle "
+            "installé sur ce poste. Rien ne quitte la machine — ni le PDF, ni les pièces "
+            "d'identité, ni le texte des pages. Un modèle local lit moins bien qu'un "
+            "modèle de service : il proposera moins de valeurs, jamais des valeurs moins "
+            "vérifiées.",
+            "external_transmission": False,
+        }
+
+    def complete(self, request: AiRequest) -> AiResponse:
+        settings = self._settings()
+        if not self.available():
+            raise ExternalAiNotConfigured(
+                "aucun modèle local n'est configuré : "
+                + ", ".join(self.describe()["missing"])
+                + "."
+            )
+        if self._client is None:
+            from app.services.local_model_client import LocalModelClient
+
+            self._client = LocalModelClient()
+
+        started = time.monotonic()
+        try:
+            content = self._client.complete(model_id=settings.local_model_name, request=request)
+        except LookupError as exc:
+            raise ModelUnavailable(settings.local_model_name) from exc
+        except AiError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - toute panne devient un code exploitable
+            raise AiError(
+                "AI_CALL_FAILED",
+                f"L'appel au modèle local n'a pas abouti : {exc}. Le travail reste "
+                "reprenable une fois la cause corrigée.",
+            ) from exc
+        duration = int((time.monotonic() - started) * 1000)
+
+        return AiResponse(
+            role=request.role,
+            model_id=settings.local_model_name,
+            content=content,
+            status="OK",
+            duration_ms=duration,
+            # Aucune donnée n'est sortie : la catégorie dit ce qui a été lu, pas
+            # ce qui a été transmis.
+            data_categories=["EXTRAIT_TEXTE_LOCAL"],
         )
 
 
@@ -321,6 +410,8 @@ def get_provider(*, client=None) -> AIProvider:
     l'extérieur n'est même instancié. L'import est local pour la même raison.
     """
     mode = get_settings().analysis_mode
+    if mode == LOCAL_MODEL:
+        return LocalModelProvider(client=client)
     if mode == HYBRID_STRICT:
         if client is None:
             from app.services.ai_client import AnthropicClient
@@ -373,7 +464,10 @@ def status() -> dict:
     provider = get_provider()
     described = provider.describe()
     described["modes"] = list(MODES)
-    described["recommended"] = HYBRID_STRICT
+    # Le mode recommandé est celui qui lit **sans rien faire sortir** : pour une
+    # commission qui traite des dossiers confidentiels, c'est la seule
+    # recommandation défendable, et elle ne coûte ni clé ni abonnement.
+    described["recommended"] = LOCAL_MODEL
     described["identity_documents_transmitted"] = False
     described["original_pdf_transmitted"] = False
     return described

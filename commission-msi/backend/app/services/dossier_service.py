@@ -650,6 +650,41 @@ def run_vigilance(session: Session, dossier_id: str) -> int:
         finding.context_cipher = encrypt_text(key, detection.context, finding_aad(finding.id, "context"))
         created += 1
 
+    # Une alerte dont la cause a disparu doit disparaître avec elle.
+    #
+    # Mesuré sur un dossier réel : après un OCR réussi, 51 alertes « page non
+    # extraite » subsistaient alors que 7 pages seulement restaient illisibles.
+    # Le calcul n'ajoutait que les nouvelles détections et ne retirait jamais
+    # les anciennes : l'évaluateur voyait, et le rapport reprenait, des alertes
+    # pour un problème résolu — ce qui use la confiance dans toutes les autres.
+    #
+    # Ce que l'évaluateur a qualifié est conservé sans condition : le moteur ne
+    # réécrit jamais une décision humaine, même devenue sans objet. Seules les
+    # alertes encore au statut `A_VERIFIER`, c'est-à-dire jamais examinées,
+    # sont retirées lorsque leur cause n'existe plus.
+    signatures = {detection.signature for detection in detections}
+    obsoletes = 0
+    for signature, finding in existing.items():
+        if signature in signatures:
+            continue
+        if finding.human_status != FindingStatus.A_VERIFIER:
+            continue
+        session.delete(finding)
+        obsoletes += 1
+
+    if obsoletes:
+        audit.record(
+            session,
+            audit.AuditAction.FINDING_QUALIFY,
+            f"{obsoletes} alerte(s) devenue(s) sans objet retirée(s) : leur cause n'est "
+            "plus présente dans le texte courant. Aucune alerte qualifiée par "
+            "l'évaluateur n'a été touchée.",
+            entity_type="dossier",
+            entity_id=dossier_id,
+            dossier_id=dossier_id,
+            actor_label=get_settings().evaluator_label,
+        )
+
     session.commit()
     return created
 

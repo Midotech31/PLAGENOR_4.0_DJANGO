@@ -104,6 +104,30 @@ class Settings:
         default_factory=lambda: _env_bool("MSI_PRIVACY_ACKNOWLEDGED", False)
     )
 
+    # Modèle local (mode `LOCAL_MODEL`) -------------------------------
+    #: Adresse du serveur de modèle local. Boucle locale par défaut : un
+    #: modèle « local » qui écouterait sur le réseau ne le serait plus.
+    local_model_url: str = field(
+        default_factory=lambda: os.environ.get("MSI_LOCAL_MODEL_URL", "http://127.0.0.1:11434")
+    )
+    #: Identifiant exact du modèle installé (par exemple `qwen2.5:7b`). Aucun
+    #: défaut : un identifiant deviné produirait une erreur incompréhensible.
+    local_model_name: str = field(
+        default_factory=lambda: os.environ.get("MSI_LOCAL_MODEL", "")
+    )
+    #: Fenêtre de contexte demandée au modèle local, en jetons. **Réglage
+    #: critique** : la valeur par défaut d'Ollama (2048) tronquerait
+    #: silencieusement les pages transmises, et le modèle répondrait sur un
+    #: texte amputé sans que rien ne le signale.
+    local_model_context: int = field(
+        default_factory=lambda: _env_int("MSI_LOCAL_MODEL_CONTEXT", 8192)
+    )
+    #: Un modèle local sur processeur est lent : le délai est large, et c'est
+    #: le travail durable qui protège de l'attente, pas un délai court.
+    local_model_timeout: int = field(
+        default_factory=lambda: _env_int("MSI_LOCAL_MODEL_TIMEOUT", 900)
+    )
+
     # Chemins dérivés -------------------------------------------------
     @property
     def db_path(self) -> Path:

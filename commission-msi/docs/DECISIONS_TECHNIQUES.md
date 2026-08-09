@@ -1070,3 +1070,67 @@ l'information — l'API répond `401 authentication_error` — et ne l'a pas
 transmise. C'est le troisième diagnostic de cette série (DT-32, DT-37) où le
 défaut n'est pas la panne mais le fait que l'application **savait et n'a pas
 dit**.
+
+## DT-39 — Le modèle local n'est pas un pis-aller, c'est la bonne réponse
+
+**Constat.** L'évaluateur n'a pas de clé API et n'a pas vocation à en avoir une :
+c'est une commission publique, le paiement par carte internationale est un
+obstacle réel, et le budget d'un service n'a pas à financer un abonnement pour
+lire des dossiers.
+
+**Ce que la contrainte a révélé.** Toute cette application existe pour qu'un
+dossier de commission ne quitte jamais le poste. Le mode `HYBRID_STRICT`
+transmettait des extraits expurgés — un compromis assumé, entouré de garde-fous
+(DT-34, DT-35). Un modèle installé **sur le poste** supprime le compromis :
+rien ne sort, pas même un extrait, pas même vers un fournisseur de confiance.
+
+Le mode `LOCAL_MODEL` est donc **le mode recommandé**, et `HYBRID_STRICT`
+devient l'option pour qui veut la meilleure lecture et accepte de transmettre.
+
+**Pourquoi un petit modèle est utilisable ici alors qu'il ne le serait pas
+ailleurs.** Un modèle de 7 milliards de paramètres sur un poste bureautique lit
+moins bien : il se trompe davantage, produit parfois du JSON malformé, et lit
+l'arabe moins bien que le français. Cela ne le rend pas dangereux **parce que
+l'architecture ne lui fait pas confiance** : chaque valeur doit citer une page
+et un extrait relu mot pour mot sur le texte local (DT-35). Une valeur inventée
+ne passe pas ce contrôle. Le mode de défaillance est donc « moins de champs
+extraits », jamais « des champs faux acceptés ».
+
+C'est la première fois dans ce projet qu'une exigence de rigueur posée pour
+d'autres raisons rend possible une solution qu'elle n'avait pas anticipée.
+
+**Deux réglages qui ne se devinent pas, et dont l'oubli est silencieux :**
+
+* **`num_ctx`** — la valeur par défaut d'Ollama (2048 jetons) **tronque
+  l'entrée sans rien signaler**. Le modèle répondrait sur des pages amputées, et
+  les champs perdus deviendraient des « non vérifiable » que personne ne
+  relierait à la cause. La fenêtre est donc toujours demandée explicitement, et
+  le découpage en lots est calculé à partir d'elle (`budget_for`) et non à
+  partir du budget d'un modèle de service ;
+* **`format: "json"`** — Ollama contraint alors la sortie à être du JSON valide.
+  Sans cela, un petit modèle rend du texte mêlé de commentaires, inexploitable.
+
+**Ce qui reste non mesuré, et doit être dit :** aucun appel réel n'a été émis,
+ici non plus. 16 tests couvrent le chemin avec un ouvreur factice. La qualité de
+lecture d'un `qwen2.5:7b` sur un dossier réel en français et en arabe reste à
+mesurer sur poste.
+
+## DT-40 — Une alerte dont la cause a disparu doit disparaître avec elle
+
+**Mesuré :** après un OCR réussi, **51 alertes « page non extraite »**
+subsistaient alors que 7 pages seulement restaient illisibles.
+
+**Cause :** `run_vigilance` n'ajoutait que les détections nouvelles et ne
+retirait jamais les anciennes. Les alertes de couverture, entièrement dérivées
+de la lisibilité des pages, survivaient donc à la disparition de leur cause.
+
+**Ce que cela coûtait** dépasse le comptage : l'évaluateur voyait — et le
+rapport reprenait — des alertes pour un problème résolu. Une liste d'alertes
+dont une partie est fausse n'est pas une liste à demi utile, c'est une liste
+qu'on cesse de lire.
+
+**Décision :** une alerte encore au statut `A_VERIFIER`, c'est-à-dire jamais
+examinée, est retirée lorsque sa signature n'apparaît plus dans le recalcul.
+Ce que l'évaluateur a qualifié est conservé sans condition, même devenu sans
+objet : le moteur ne réécrit jamais une décision humaine. Le retrait est
+journalisé et compté.
