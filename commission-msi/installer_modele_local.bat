@@ -10,6 +10,25 @@ REM ===================================================================
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+REM --- 0. L'application est-elle installee ? ---------------------------
+REM Verifie AVANT tout : ce script se termine par une verification qui
+REM utilise l'environnement Python de l'application. Sans lui, elle
+REM echouerait sur un message de cmd incomprehensible, apres un
+REM telechargement de plusieurs Go. Autant le dire tout de suite.
+if not exist "backend\.venv\Scripts\python.exe" (
+  echo.
+  echo [ERREUR] L'application n'est pas encore installee.
+  echo.
+  echo Lancez d'abord install_windows.bat, puis revenez ici.
+  echo L'ordre compte : ce script se termine par une verification qui a
+  echo besoin de l'environnement Python cree par l'installation.
+  echo.
+  echo Rien n'a ete telecharge ni modifie.
+  echo.
+  pause
+  exit /b 1
+)
+
 echo.
 echo === Commission MSI - modele de lecture local ===
 echo.
