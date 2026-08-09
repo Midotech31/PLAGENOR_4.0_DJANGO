@@ -256,6 +256,25 @@ def check_engines(report: list[str]) -> tuple[bool, bool, bool]:
                 "l'installateur Tesseract en cochant « Additional language data » "
                 "puis Arabic, ou copiez ara.traineddata dans le dossier tessdata."
             )
+        # Le français est la langue principale des dossiers de la commission.
+        # Son absence ne fait rien échouer — les langues demandées sont
+        # restreintes à celles installées — mais les pages françaises sont
+        # alors lues avec le modèle anglais : accents et ligatures se
+        # dégradent, en silence. Un silence sur la langue majoritaire du
+        # corpus est précisément ce qu'un contrôle d'installation doit rompre.
+        if "fra" in languages:
+            report.append(f"{OK} Paquet français « fra » : présent.")
+        else:
+            report.append(f"{WARN} Paquet français « fra » : ABSENT.")
+            report.append(
+                "         Les pages françaises seront lues avec le modèle anglais : "
+                "accents et ligatures moins bien reconnus, sans message d'erreur. "
+                "Le français est la langue principale des dossiers."
+            )
+            report.append(
+                "         Remède : clic droit sur reparer_ocr_arabe.bat, "
+                "« Exécuter en tant qu'administrateur » — il pose aussi le français."
+            )
     else:
         report.append(f"{FAIL} Tesseract : ABSENT.")
         report.append(

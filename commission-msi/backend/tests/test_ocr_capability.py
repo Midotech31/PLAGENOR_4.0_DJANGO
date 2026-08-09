@@ -696,3 +696,45 @@ def test_the_repair_shortcut_is_shipped_in_the_archive():
     spec.loader.exec_module(module)
 
     assert "reparer_ocr_arabe.bat" in module.ROOT_FILES
+
+
+def test_the_french_pack_absence_is_reported(monkeypatch):
+    """Le français est la langue principale des dossiers : son absence se dit.
+
+    Elle ne fait rien échouer — les langues demandées sont restreintes à celles
+    installées — mais les pages françaises sont alors lues avec le modèle
+    anglais. Une dégradation silencieuse sur la langue majoritaire du corpus est
+    exactement ce qu'un contrôle d'installation doit rompre.
+    """
+    verify = _verify_module()
+    from app.services import ocr_engines, ocr_service
+
+    monkeypatch.setattr(ocr_service, "is_available", lambda: True)
+    monkeypatch.setattr(ocr_service, "installed_languages", lambda: ["ara", "eng", "osd"])
+    monkeypatch.setattr(ocr_engines, "rapidocr_available", lambda: False)
+
+    report: list[str] = []
+    verify.check_engines(report)
+    texte = "\n".join(report)
+
+    assert "Paquet français « fra » : ABSENT" in texte
+    assert "modèle anglais" in texte
+    assert "reparer_ocr_arabe.bat" in texte
+    # L'arabe présent ne doit pas être signalé comme un problème.
+    assert "Paquet arabe « ara » : présent" in texte
+
+
+def test_the_french_pack_presence_is_confirmed(monkeypatch):
+    verify = _verify_module()
+    from app.services import ocr_engines, ocr_service
+
+    monkeypatch.setattr(ocr_service, "is_available", lambda: True)
+    monkeypatch.setattr(ocr_service, "installed_languages", lambda: ["ara", "eng", "fra"])
+    monkeypatch.setattr(ocr_engines, "rapidocr_available", lambda: False)
+
+    report: list[str] = []
+    verify.check_engines(report)
+    texte = "\n".join(report)
+
+    assert "Paquet français « fra » : présent" in texte
+    assert "ABSENT" not in texte.split("français")[1][:200]

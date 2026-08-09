@@ -206,12 +206,19 @@ echo  - N'exposez jamais cette application au reseau.
 echo.
 echo Lancez maintenant run_windows.bat
 echo.
-echo LECTURE SEMANTIQUE ASSISTEE (optionnel, recommande)
+echo LECTURE SEMANTIQUE (recommande)
 echo  - Sans elle, seules les informations ecrites sous la forme
 echo    "Libelle : valeur" sont extraites. Mesure sur un dossier reel de
 echo    76 pages : 4 champs sur 29, dont 2 faux.
-echo  - Pour l'activer : activer_hybrid_strict.bat (une cle API est requise).
-echo    Le PDF original et les pieces d'identite ne sont jamais transmis.
+echo.
+echo  - Pour l'activer :  installer_modele_local.bat
+echo    Un modele de langage installe SUR CE POSTE. Aucune cle API, aucun
+echo    compte, aucun abonnement -- et AUCUNE donnee ne quitte la machine.
+echo.
+echo  - Variante avec un modele de service : activer_hybrid_strict.bat
+echo    Meilleure lecture, mais exige une cle API payante et transmet le
+echo    texte des pages ordinaires, expurge. Le PDF original et les pieces
+echo    d'identite ne sont jamais transmis dans aucun des deux modes.
 echo.
 echo Designed by Prof. Merzoug Mohamed
 if not "%VERDICT%"=="0" (

@@ -1134,3 +1134,44 @@ examinée, est retirée lorsque sa signature n'apparaît plus dans le recalcul.
 Ce que l'évaluateur a qualifié est conservé sans condition, même devenu sans
 objet : le moteur ne réécrit jamais une décision humaine. Le retrait est
 journalisé et compté.
+
+## DT-41 — L'installateur recommandait encore le chemin payant
+
+**Constat, dans le journal d'installation de l'évaluateur**, après que le mode
+local soit devenu la voie recommandée :
+
+> LECTURE SEMANTIQUE ASSISTEE (optionnel, recommande)
+> Pour l'activer : **activer_hybrid_strict.bat (une cle API est requise)**
+
+J'avais changé la recommandation dans le code, dans `status()`, dans le README
+et dans la documentation — et laissé le message de fin d'installation pointer
+vers le seul chemin que cet évaluateur ne peut pas emprunter. Le dernier écran
+d'une installation est celui qu'on lit ; c'était le seul endroit où l'ancienne
+recommandation subsistait, et donc le pire.
+
+**Leçon de méthode :** un changement de recommandation touche autant de textes
+que de lignes de code. La recherche de l'ancien nom (`activer_hybrid_strict`)
+aurait suffi à le voir.
+
+## DT-42 — Le paquet français manquait, et le contrôle ne le disait pas
+
+**Mesuré sur le poste :** Tesseract présent avec `ara, eng, osd`. Pas de `fra`.
+Le contrôle d'installation affichait « Paquet arabe « ara » : présent » et
+**restait muet sur le français**.
+
+Cette absence ne fait rien échouer : `effective_languages()` restreint les
+langues demandées à celles installées, et l'OCR continue. Les pages françaises
+sont alors lues **avec le modèle anglais** — accents et ligatures dégradés,
+sans le moindre message.
+
+Or le français est la langue **principale** des dossiers de la commission.
+Vérifier l'arabe et taire le français, c'est contrôler la langue minoritaire et
+ignorer la majoritaire. Le contrôle signale désormais les deux, avec le remède
+exact : `reparer_ocr_arabe.bat` en administrateur, qui pose aussi le français.
+
+**Pourquoi la pose automatique avait échoué :** `installer_arabe.py`, appelé
+depuis `install_windows.bat` non élevé, ne peut pas écrire dans
+`C:\Program Files\Tesseract-OCR\tessdata`. Il l'a dit correctement et a nommé
+le remède. Ce n'est pas un défaut — c'est la limite d'un installateur qui ne
+demande pas les droits d'administrateur pour l'ensemble de son exécution, ce
+qui reste le bon choix.
