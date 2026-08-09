@@ -149,7 +149,30 @@ class LocalModelClient:
                     f"le modèle « {model_id} » n'est pas installé sur ce poste ({detail})"
                 ) from exc
             raise RuntimeError(f"appel refusé (HTTP {exc.code}) : {detail}") from exc
+        except TimeoutError as exc:
+            # Cause la plus fréquente sur un poste sans carte graphique, et la
+            # seule qui ne se voit pas : le modèle travaille, simplement trop
+            # lentement pour le délai. La confondre avec une panne ferait
+            # chercher du côté du serveur, qui va parfaitement bien.
+            raise RuntimeError(
+                f"le modèle local n'a pas répondu en {settings.local_model_timeout} secondes. "
+                "Il n'est pas en panne : il est trop lent pour ce poste. "
+                f"Trois remèdes, du plus efficace au plus simple : un modèle plus petit "
+                f"(ollama pull qwen2.5:7b puis setx MSI_LOCAL_MODEL qwen2.5:7b), une fenêtre "
+                f"de contexte plus courte (setx MSI_LOCAL_MODEL_CONTEXT 4096, qui divise "
+                f"la taille de chaque lot), ou un délai plus large "
+                f"(setx MSI_LOCAL_MODEL_TIMEOUT 3600)."
+            ) from exc
         except urllib.error.URLError as exc:
+            if isinstance(exc.reason, TimeoutError):
+                raise RuntimeError(
+                    f"le modèle local n'a pas répondu en {settings.local_model_timeout} "
+                    "secondes. Il n'est pas en panne : il est trop lent pour ce poste. "
+                    "Essayez un modèle plus petit (ollama pull qwen2.5:7b puis "
+                    "setx MSI_LOCAL_MODEL qwen2.5:7b), une fenêtre plus courte "
+                    "(setx MSI_LOCAL_MODEL_CONTEXT 4096) ou un délai plus large "
+                    "(setx MSI_LOCAL_MODEL_TIMEOUT 3600)."
+                ) from exc
             raise RuntimeError(
                 f"le serveur de modèle local ne répond pas ({exc.reason}). "
                 "Vérifiez qu'Ollama est démarré."

@@ -494,3 +494,50 @@ def test_cancel_is_honoured_during_a_long_step(client, dossier, session):
     job = session.get(AnalysisJob, created["id"])
     with pytest.raises(job_service.Cancelled):
         pipeline._keepalive(session, job, 0.0)
+
+
+def test_a_slow_model_is_not_reported_as_a_breakdown(local_mode):
+    """Le modèle travaille ; il est simplement trop lent pour le délai."""
+    opener = _FailingOpener(TimeoutError("timed out"))
+
+    with pytest.raises(RuntimeError) as leve:
+        local_model_client.LocalModelClient(opener=opener).complete(
+            model_id="qwen2.5:14b",
+            request=ai_provider.AiRequest(role="TEST", instruction="lis", blocks=[]),
+        )
+
+    message = str(leve.value)
+    assert "n'est pas en panne" in message
+    # Les trois remèdes, du plus efficace au plus simple.
+    assert "qwen2.5:7b" in message
+    assert "MSI_LOCAL_MODEL_CONTEXT" in message
+    assert "MSI_LOCAL_MODEL_TIMEOUT" in message
+
+
+def test_the_local_mode_is_never_told_to_check_a_key(local_mode, client, dossier, monkeypatch):
+    """Parler de « clé refusée » à qui n'a ni clé ni compte envoie chercher une
+    panne qui ne peut pas exister."""
+    from app.services import job_service
+
+    assert _import(client, dossier, [PAGE_1]).status_code == 201
+    real = local_model_client.LocalModelClient
+    monkeypatch.setattr(
+        local_model_client,
+        "LocalModelClient",
+        lambda **kw: real(opener=_FailingOpener(TimeoutError("timed out"))),
+    )
+
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    message = client.get(
+        f"/api/v1/dossiers/{dossier['id']}/traitement"
+    ).json()["job"]["error_message"]
+
+    assert "Lecture sémantique assistée" in message
+    assert "clé refusée" not in message
+    assert "crédit absent" not in message
+    assert "Ollama" in message
+    # Le motif précis remonte jusqu'à l'écran, au lieu d'être remplacé par une
+    # formule générique.
+    assert "trop lent" in message

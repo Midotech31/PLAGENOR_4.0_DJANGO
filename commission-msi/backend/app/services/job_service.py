@@ -462,15 +462,37 @@ CONFIGURATION_ERRORS = frozenset(
 
 #: Marche à suivre pour un échec de configuration : une commande qui nomme la
 #: cause précise, plutôt qu'une invitation à deviner.
-CONFIGURATION_ACTION = (
+#:
+#: Les causes possibles ne sont pas les mêmes selon le mode. Parler de « clé
+#: refusée » et de « crédit absent » à qui fait tourner un modèle sur son poste
+#: — sans clé et sans compte — envoie chercher une panne qui ne peut pas exister.
+_VERIFIER = "    backend\\.venv\\Scripts\\python.exe scripts\\verifier_ia.py --appel"
+
+CONFIGURATION_ACTION_SERVICE = (
     "Ce point ne se corrige pas dans le dossier. Lancez, depuis le dossier de "
-    "l'application :\n"
-    "    backend\\.venv\\Scripts\\python.exe scripts\\verifier_ia.py --appel\n"
+    "l'application :\n" + _VERIFIER + "\n"
     "Ce contrôle nomme la cause exacte : clé refusée, crédit absent, modèle "
     "inconnu ou réseau bloqué. Corrigez-la, puis utilisez « Reprendre » : les "
     "étapes déjà validées ne seront pas refaites. Le mode LOCAL_ONLY reste "
     "utilisable en attendant."
 )
+
+CONFIGURATION_ACTION_LOCAL = (
+    "Ce point ne se corrige pas dans le dossier. Lancez, depuis le dossier de "
+    "l'application :\n" + _VERIFIER + "\n"
+    "Ce contrôle nomme la cause exacte : serveur Ollama arrêté, modèle non "
+    "téléchargé, ou modèle trop lent pour ce poste. Corrigez-la, puis utilisez "
+    "« Reprendre » : les étapes déjà validées ne seront pas refaites. Le mode "
+    "LOCAL_ONLY reste utilisable en attendant."
+)
+
+
+def _configuration_action() -> str:
+    from app.core.config import get_settings
+
+    if get_settings().analysis_mode == "LOCAL_MODEL":
+        return CONFIGURATION_ACTION_LOCAL
+    return CONFIGURATION_ACTION_SERVICE
 
 
 def _explain(exc: Exception, job: AnalysisJob, failed_step: str | None = None) -> str:
@@ -492,8 +514,17 @@ def _explain(exc: Exception, job: AnalysisJob, failed_step: str | None = None) -
     code = type(exc).__name__
     cause = causes.get(code, "une erreur technique est survenue")
 
+    # Le message porté par l'exception est composé par cette application : il
+    # nomme la cause précise — délai dépassé, serveur arrêté, modèle absent —
+    # et souvent le remède. Le remplacer par une formule générique revenait à
+    # jeter la seule information utile. Il ne contient jamais de secret : la
+    # clé n'est ni lue ni recopiée dans ces messages.
+    detail = str(exc).strip()
+    if code in CONFIGURATION_ERRORS and detail and detail != cause:
+        cause = f"{cause} — {detail}"
+
     if code in CONFIGURATION_ERRORS:
-        action = CONFIGURATION_ACTION
+        action = _configuration_action()
     elif job.state != JobState.FAILED:
         action = (
             "Vous pouvez relancer le traitement avec « Reprendre » : les étapes déjà "

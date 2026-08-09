@@ -1209,3 +1209,38 @@ verrait jamais la demande posée par l'interface dans une autre session.
 
 Appeler la base à chaque page coûterait plus que la fraîcheur ne rapporte ; le
 rythme est donc temporel, pas événementiel.
+
+## DT-44 — Le message jetait la seule information utile
+
+**Copie d'écran, mode `LOCAL_MODEL` actif, 76 pages océrisées :**
+
+> L'étape « Lecture sémantique assistée du dossier » n'a pas abouti : l'appel au
+> modèle n'a pas abouti. […] Ce contrôle nomme la cause exacte : **clé refusée,
+> crédit absent**, modèle inconnu ou réseau bloqué.
+
+L'étape était correctement nommée (DT-38 tenait). Mais le message parlait de
+**clé** et de **crédit** à un évaluateur qui fait tourner un modèle sur son
+propre poste, sans clé, sans compte et sans facture — l'envoyant chercher une
+panne qui ne peut pas exister dans ce mode.
+
+Deux défauts distincts, réparés ensemble.
+
+**Le texte n'était pas adapté au mode.** `CONFIGURATION_ACTION` était unique. Il
+existe maintenant en deux versions, et le mode local énumère ses propres causes :
+serveur Ollama arrêté, modèle non téléchargé, modèle trop lent pour le poste.
+
+**Le motif précis était écarté.** `_explain` remplaçait le message de l'exception
+par une formule générique. Or ce message est composé par cette application : il
+nomme la cause — délai dépassé, serveur injoignable, modèle absent — et souvent
+le remède. Le jeter revenait à écarter la seule information utile, au profit
+d'une phrase qui n'en portait aucune. Il est désormais concaténé à la cause. Il
+ne contient jamais de secret : aucune clé n'est lue ni recopiée dans ces
+messages.
+
+**La cause la plus probable, et la plus invisible :** le délai. Un modèle de
+14 milliards de paramètres sur un poste sans carte graphique met plusieurs
+minutes par lot ; le plafond était à 900 secondes. Un dépassement de délai
+ressemblait à une panne alors que le modèle **travaillait**. Il est maintenant
+distingué explicitement, avec ses trois remèdes classés par efficacité : un
+modèle plus petit, une fenêtre de contexte plus courte — qui réduit d'autant la
+taille de chaque lot — ou un délai plus large.
