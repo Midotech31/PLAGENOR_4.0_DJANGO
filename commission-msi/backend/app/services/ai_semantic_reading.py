@@ -324,7 +324,12 @@ def _dedupe(proposals: list[Proposal]) -> dict[str, Proposal]:
 
 
 def read_dossier(
-    session: Session, dossier_id: str, *, provider=None, job_id: str | None = None
+    session: Session,
+    dossier_id: str,
+    *,
+    provider=None,
+    job_id: str | None = None,
+    on_progress=None,
 ) -> ReadingResult:
     """Fait lire le dossier par le modèle et vérifie chaque proposition."""
     provider = provider or ai_provider.get_provider()
@@ -369,6 +374,11 @@ def read_dossier(
             remark = str(item)[:400]
             if remark not in result.remarks:
                 result.remarks.append(remark)
+
+        if on_progress is not None:
+            # Appelé entre deux lots : c'est le seul moment sûr pour renouveler
+            # le bail, la transaction venant d'être validée.
+            on_progress()
 
         ai_provider.record_call(
             session,
@@ -475,8 +485,15 @@ def apply_reading(session: Session, dossier_id: str, result: ReadingResult) -> d
 
 
 def run(
-    session: Session, dossier_id: str, *, provider=None, job_id: str | None = None
+    session: Session,
+    dossier_id: str,
+    *,
+    provider=None,
+    job_id: str | None = None,
+    on_progress=None,
 ) -> dict:
     """Point d'entrée de l'étape : lecture puis enregistrement."""
-    result = read_dossier(session, dossier_id, provider=provider, job_id=job_id)
+    result = read_dossier(
+        session, dossier_id, provider=provider, job_id=job_id, on_progress=on_progress
+    )
     return apply_reading(session, dossier_id, result)

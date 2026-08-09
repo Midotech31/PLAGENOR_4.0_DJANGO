@@ -14,6 +14,7 @@ travail redevient alors reprenable.
 from __future__ import annotations
 
 import hashlib
+import time
 from dataclasses import dataclass
 from typing import Callable
 
@@ -36,6 +37,39 @@ from app.services import (
 class Step:
     signature: Callable[[Session, str], str]
     run: Callable[[Session, AnalysisJob], dict]
+
+
+def _keepalive(session: Session, job: AnalysisJob, last: float) -> float:
+    """Renouvelle le bail et relit la demande d'annulation, pendant une étape longue.
+
+    Deux défauts sont corrigés ici, et ils ont la même cause : le battement
+    n'était émis qu'**au début** de chaque étape.
+
+    * **le bail expirait pendant le travail.** Il dure 120 secondes ; l'OCR d'un
+      dossier de 76 pages en demande plusieurs centaines, et une lecture par
+      modèle local davantage encore. `heartbeat_at` restait figé, si bien que
+      rien ne distinguait un worker à l'ouvrage d'un worker mort — exactement la
+      distinction que ce champ existe pour établir ;
+    * **« Annuler » restait sans effet** jusqu'à la fin de l'étape en cours. Sur
+      une lecture de quarante minutes, un bouton qui ne répond pas n'est pas un
+      bouton.
+
+    Le rythme suit `HEARTBEAT_SECONDS` : appeler la base à chaque page coûterait
+    plus que ce que la fraîcheur rapporte.
+    """
+    from app.services import job_service
+
+    now = time.monotonic()
+    if now - last < job_service.HEARTBEAT_SECONDS:
+        return last
+
+    job_service.heartbeat(session, job)
+    # `heartbeat` valide la transaction : la relecture voit alors la demande
+    # d'annulation posée par l'interface dans une autre session.
+    session.refresh(job)
+    if job.cancel_requested:
+        raise job_service.Cancelled()
+    return now
 
 
 def _document_signature(session: Session, dossier_id: str) -> str:
@@ -115,6 +149,7 @@ def _ocr(session: Session, job: AnalysisJob) -> dict:
         if page.needs_ocr and not page.is_blank
     ]
     done, failed = 0, 0
+    battement = time.monotonic()
     for page in pages:
         try:
             dossier_service.run_page_ocr(session, page.id)
@@ -122,6 +157,9 @@ def _ocr(session: Session, job: AnalysisJob) -> dict:
         except Exception:  # noqa: BLE001 - un échec OCR n'interrompt jamais la chaîne
             failed += 1
         job.pages_done = min(job.pages_total, job.pages_done + 1)
+        # Une page difficile demande plusieurs prétraitements : sans battement,
+        # le bail expirerait bien avant la fin du dossier.
+        battement = _keepalive(session, job, battement)
     return {
         "traitees": done,
         "echecs": failed,
@@ -152,7 +190,17 @@ def _semantic_reading(session: Session, job: AnalysisJob) -> dict:
     from app.services import ai_semantic_reading
 
     try:
-        result = ai_semantic_reading.run(session, job.dossier_id, job_id=job.id)
+        battement = time.monotonic()
+
+        def _pendant_la_lecture() -> None:
+            # Chaque appel à un modèle local dure plusieurs minutes : le
+            # battement passe par ici entre deux lots.
+            nonlocal battement
+            battement = _keepalive(session, job, battement)
+
+        result = ai_semantic_reading.run(
+            session, job.dossier_id, job_id=job.id, on_progress=_pendant_la_lecture
+        )
     except ai_semantic_reading.NotAvailable as exc:
         return {
             "active": False,

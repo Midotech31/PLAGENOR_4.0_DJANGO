@@ -1175,3 +1175,37 @@ depuis `install_windows.bat` non élevé, ne peut pas écrire dans
 le remède. Ce n'est pas un défaut — c'est la limite d'un installateur qui ne
 demande pas les droits d'administrateur pour l'ensemble de son exécution, ce
 qui reste le bon choix.
+
+## DT-43 — Le battement n'était émis qu'au début de chaque étape
+
+**Ce que l'évaluateur observait :** « Pages traitées : 67/76 » figé, 28 % qui ne
+bouge pas, et la question naturelle — est-ce que ça travaille encore ?
+
+Les 28 % sont normaux : c'est la valeur fixe de l'étape OCR, seul le compteur de
+pages avance. Mais la question a mis au jour deux défauts réels, de même cause :
+`heartbeat` n'était appelé qu'une fois, dans `_set_state`, **au démarrage** de
+chaque étape.
+
+**Le bail expirait pendant le travail.** Il dure 120 secondes. L'OCR d'un dossier
+de 76 pages en demande plusieurs centaines ; une lecture par modèle local, dix à
+vingt fois plus. `heartbeat_at` restait donc figé pendant toute l'étape, et rien
+ne distinguait un worker à l'ouvrage d'un worker mort — exactement la distinction
+que ce champ existe pour établir, et que l'en-tête du module annonce.
+
+Avec un seul fil d'exécution, la conséquence restait théorique. Elle cessait de
+l'être dès qu'un second worker, un redémarrage ou une reprise entrait en jeu :
+un bail expiré autorise la réclamation d'un travail pourtant en cours.
+
+**« Annuler » restait sans effet** jusqu'à la fin de l'étape. La demande était
+lue par `_set_state`, donc **entre** deux étapes seulement. Sur une lecture de
+quarante minutes, l'évaluateur pouvait cliquer, voir le bouton réagir, et
+attendre. Un bouton qui ne répond pas n'est pas un bouton.
+
+**Décision :** `pipeline._keepalive` renouvelle le bail et relit la demande
+d'annulation, au rythme de `HEARTBEAT_SECONDS`, à l'intérieur des deux boucles
+longues — l'OCR page par page et la lecture lot par lot. La relecture suit la
+validation de transaction du battement : sans cela, la session du worker ne
+verrait jamais la demande posée par l'interface dans une autre session.
+
+Appeler la base à chaque page coûterait plus que la fraîcheur ne rapporte ; le
+rythme est donc temporel, pas événementiel.

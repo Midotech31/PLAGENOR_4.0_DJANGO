@@ -436,3 +436,61 @@ def test_an_alert_qualified_by_the_evaluator_is_never_removed(client, dossier, s
 
     session.refresh(finding)
     assert finding.human_status == FindingStatus.CONFIRME
+
+
+# --------------------------------------------------------------------------
+# Battement et annulation pendant une étape longue
+# --------------------------------------------------------------------------
+
+
+def test_a_long_step_keeps_its_lease_alive(client, dossier, session, monkeypatch):
+    """Le bail dure 120 s ; l'OCR d'un dossier réel en demande bien plus."""
+    from app.services import pipeline
+
+    assert _import(client, dossier, [PAGE_1, PAGE_1]).status_code == 201
+    created = client.post(f"/api/v1/dossiers/{dossier['id']}/traitement").json()
+
+    from app.models import AnalysisJob
+
+    job = session.get(AnalysisJob, created["id"])
+    # Le dernier battement remonte à plus que l'intervalle : il doit être émis.
+    ancien = job.lease_expires_at
+    rendu = pipeline._keepalive(session, job, 0.0)
+
+    assert rendu > 0.0, "le battement doit avoir eu lieu"
+    session.refresh(job)
+    assert job.lease_expires_at != ancien or job.heartbeat_at is not None
+
+
+def test_the_beat_is_not_emitted_on_every_page(client, dossier, session):
+    """Un appel à la base par page coûterait plus que la fraîcheur ne rapporte."""
+    import time as _time
+
+    from app.services import pipeline
+
+    assert _import(client, dossier, [PAGE_1]).status_code == 201
+    created = client.post(f"/api/v1/dossiers/{dossier['id']}/traitement").json()
+
+    from app.models import AnalysisJob
+
+    job = session.get(AnalysisJob, created["id"])
+    maintenant = _time.monotonic()
+    # Battement tout juste émis : le suivant doit être ignoré.
+    assert pipeline._keepalive(session, job, maintenant) == maintenant
+
+
+def test_cancel_is_honoured_during_a_long_step(client, dossier, session):
+    """Sur une lecture de quarante minutes, un bouton qui ne répond pas n'en est pas un."""
+    from app.services import job_service, pipeline
+    from app.models import AnalysisJob
+
+    assert _import(client, dossier, [PAGE_1]).status_code == 201
+    created = client.post(f"/api/v1/dossiers/{dossier['id']}/traitement").json()
+
+    # L'interface pose la demande dans une AUTRE session : le worker ne la voit
+    # qu'en relisant depuis la base.
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement/{created['id']}/annuler")
+
+    job = session.get(AnalysisJob, created["id"])
+    with pytest.raises(job_service.Cancelled):
+        pipeline._keepalive(session, job, 0.0)
