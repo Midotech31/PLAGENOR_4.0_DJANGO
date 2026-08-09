@@ -346,7 +346,8 @@ def read_dossier(
     catalogue = _field_catalogue()
     allowed = {item["cle"] for item in catalogue}
 
-    for page_numbers in build_batches(pages, budget_for(provider)):
+    lots = build_batches(pages, budget_for(provider))
+    for rang, page_numbers in enumerate(lots, start=1):
         request = ai_provider.AiRequest(
             role=ROLE,
             instruction=INSTRUCTION,
@@ -376,9 +377,11 @@ def read_dossier(
                 result.remarks.append(remark)
 
         if on_progress is not None:
-            # Appelé entre deux lots : c'est le seul moment sûr pour renouveler
-            # le bail, la transaction venant d'être validée.
-            on_progress()
+            # Appelé entre deux lots : seul moment sûr pour renouveler le bail,
+            # la transaction venant d'être validée. Le rang du lot est transmis
+            # parce qu'une étape qui dure des heures sans rien afficher ne se
+            # distingue pas d'une étape bloquée.
+            on_progress(rang, len(lots))
 
         ai_provider.record_call(
             session,

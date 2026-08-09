@@ -541,3 +541,42 @@ def test_the_local_mode_is_never_told_to_check_a_key(local_mode, client, dossier
     # Le motif précis remonte jusqu'à l'écran, au lieu d'être remplacé par une
     # formule générique.
     assert "trop lent" in message
+
+
+def test_the_reading_shows_which_batch_is_running(local_mode, client, dossier, monkeypatch):
+    """Une étape qui dure des heures sans rien afficher ne se distingue pas
+    d'une étape bloquée — et c'est précisément la question que l'on se pose."""
+    from app.services import job_service
+
+    # Fenêtre étroite : le budget tombe au plancher et plusieurs lots sont
+    # nécessaires, comme sur un poste modeste.
+    monkeypatch.setenv("MSI_LOCAL_MODEL_CONTEXT", "2048")
+    reset_settings()
+
+    pages = [PAGE_1 * 8 for _ in range(4)]
+    assert _import(client, dossier, pages).status_code == 201
+
+    vus: list[str] = []
+    opener = _Opener(_chat_payload({"champs": [], "non_trouves": [], "remarques": []}))
+    real = local_model_client.LocalModelClient
+    monkeypatch.setattr(
+        local_model_client, "LocalModelClient", lambda **kw: real(opener=opener)
+    )
+
+    from app.services import pipeline
+
+    original = pipeline._keepalive
+
+    def espion(session, job, last):
+        vus.append(job.step_label)
+        return original(session, job, last)
+
+    monkeypatch.setattr(pipeline, "_keepalive", espion)
+
+    client.post(f"/api/v1/dossiers/{dossier['id']}/traitement")
+    job_service.work_once()
+
+    libelles = [v for v in vus if "lot" in v]
+    assert libelles, "le rang du lot doit apparaître dans le libellé de l'étape"
+    assert "Lecture sémantique assistée" in libelles[0]
+    assert "lot 1/" in libelles[0]

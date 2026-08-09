@@ -1276,3 +1276,38 @@ sur trois commençaient par `activer_`, dont un qui retire une capacité.
 des deux premiers, qui n'étaient distinctifs que tant qu'ils n'étaient que deux.
 Un vocabulaire cohérent à deux termes peut devenir trompeur au troisième — et
 c'est l'utilisateur qui paie la vérification.
+
+## DT-46 — Le premier appel réel, et ce qu'il a appris
+
+**Mesure, sur le poste de l'évaluateur, mode `LOCAL_MODEL`, `qwen2.5:14b` :**
+
+```
+Modèle ayant répondu ... qwen2.5:14b
+Durée de l'appel ....... 17348 ms
+[OK] Appel réussi, contenu transmis et relu par le modèle.
+```
+
+**C'est le premier appel réel abouti de tout ce projet.** Jusqu'ici, chaque
+chemin d'appel — hybride puis local — était couvert par des tests à ouvreur
+factice et n'avait jamais rencontré un serveur. Il fonctionne.
+
+**Ce que cette mesure ne dit pas.** 17 secondes portent sur une phrase de test
+d'une cinquantaine de jetons, chargement du modèle compris. Un lot réel fait
+~13 500 caractères, soit environ 4 500 jetons d'entrée : sur processeur, la
+seule ingestion se compte en minutes, et un dossier de 76 pages demande six à
+huit lots. L'étape entière peut donc durer des heures.
+
+Deux conséquences, corrigées ensemble.
+
+**Le délai par défaut était calibré pour un modèle de service.** 900 secondes
+suffisent largement à une API ; c'est court pour un lot de 4 500 jetons sur un
+processeur. Porté à 1800, avec les trois remèdes déjà nommés dans le message
+d'erreur (DT-44).
+
+**L'étape n'affichait aucune progression.** Le pourcentage est fixe pendant une
+étape, et le compteur de pages ne concerne que l'OCR. Une lecture de trois
+heures présentait donc exactement le même écran qu'une lecture bloquée — et
+c'est précisément la question que l'évaluateur pose, il l'a posée deux fois. Le
+libellé porte maintenant le rang du lot : « Lecture sémantique assistée du
+dossier — lot 3/8 ». Le rappel du bail (DT-43) fournissait déjà le point
+d'accroche ; il ne manquait que l'information.

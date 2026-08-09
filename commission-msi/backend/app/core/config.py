@@ -125,7 +125,7 @@ class Settings:
     #: Un modèle local sur processeur est lent : le délai est large, et c'est
     #: le travail durable qui protège de l'attente, pas un délai court.
     local_model_timeout: int = field(
-        default_factory=lambda: _env_int("MSI_LOCAL_MODEL_TIMEOUT", 900)
+        default_factory=lambda: _env_int("MSI_LOCAL_MODEL_TIMEOUT", 1800)
     )
 
     # Chemins dérivés -------------------------------------------------

@@ -21,7 +21,7 @@ from typing import Callable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.vocabulary import DossierStatus, JobState
+from app.core.vocabulary import JOB_STATE_LABELS, DossierStatus, JobState
 from app.models import AnalysisJob, Document, Dossier
 from app.services import (
     assessment_service,
@@ -192,10 +192,15 @@ def _semantic_reading(session: Session, job: AnalysisJob) -> dict:
     try:
         battement = time.monotonic()
 
-        def _pendant_la_lecture() -> None:
-            # Chaque appel à un modèle local dure plusieurs minutes : le
-            # battement passe par ici entre deux lots.
+        def _pendant_la_lecture(rang: int, total: int) -> None:
+            # Chaque appel à un modèle local dure plusieurs minutes, et l'étape
+            # entière peut durer des heures. Sans ce compteur, l'évaluateur n'a
+            # aucun moyen de distinguer un traitement qui avance d'un traitement
+            # bloqué — et c'est précisément la question qu'il se pose.
             nonlocal battement
+            job.step_label = (
+                f"{JOB_STATE_LABELS[JobState.SEMANTIC_READING]} — lot {rang}/{total}"
+            )
             battement = _keepalive(session, job, battement)
 
         result = ai_semantic_reading.run(
