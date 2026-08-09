@@ -313,7 +313,12 @@ def test_local_only_is_the_default_and_says_what_it_cannot_do(client):
     state = client.get("/api/v1/mode-analyse").json()
     assert state["mode"] == ai_provider.LOCAL_ONLY
     assert state["external_transmission"] is False
-    assert "ne fournit pas le même niveau" in state["notice"]
+    # Le message doit dire ce que ce mode NE FAIT PAS, et nommer l'issue :
+    # « LOCAL_ONLY » se lit comme « tout est local », ce qui est exactement ce
+    # que cherche un évaluateur soucieux de confidentialité — alors que ce mode
+    # désigne l'absence de lecture.
+    assert "aucune lecture sémantique" in state["notice"].lower()
+    assert "LOCAL_MODEL" in state["notice"]
     # Le mode recommandé est celui qui lit **sans rien faire sortir**. Pour une
     # commission qui traite des dossiers confidentiels, recommander un mode qui
     # transmet — et qui exige une clé payante — ne se défendrait pas.

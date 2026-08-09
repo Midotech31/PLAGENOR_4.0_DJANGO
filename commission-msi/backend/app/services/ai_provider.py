@@ -48,9 +48,11 @@ PROMPT_VERSION = "2026.08.1"
 
 #: Message affiché quand le mode local est actif.
 LOCAL_ONLY_NOTICE = (
-    "Mode LOCAL_ONLY : l'analyse sémantique et la recherche publique restent limitées à ce "
-    "que le poste peut faire seul. Ce mode ne fournit pas le même niveau de lecture "
-    "sémantique ni de vérification publique que le mode HYBRID_STRICT."
+    "Mode LOCAL_ONLY : aucune lecture sémantique. Seules les informations écrites sous la "
+    "forme « Libellé : valeur » sont extraites ; celles rédigées en prose ou en tableau "
+    "resteront signalées « non vérifiable ». Le nom de ce mode ne désigne pas le modèle "
+    "local : pour faire lire le dossier sans que rien ne quitte le poste, installez un "
+    "modèle local (mode LOCAL_MODEL)."
 )
 
 #: Motifs de données interdites de transmission, quelle que soit la configuration.

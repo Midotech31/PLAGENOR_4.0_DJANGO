@@ -1,0 +1,49 @@
+===================================================================
+  COMMISSION MSI — QUEL SCRIPT LANCER ?
+  Designed by Prof. Merzoug Mohamed
+===================================================================
+
+Il n'y a QU'UN SEUL script a lancer pour faire lire vos dossiers :
+
+      installer_modele_local.bat
+
+Un modele de langage tourne alors SUR VOTRE POSTE. Aucune cle,
+aucun compte, aucun abonnement. AUCUNE donnee ne quitte la machine.
+C'est le mode recommande.
+
+-------------------------------------------------------------------
+  LES DEUX AUTRES SCRIPTS — a n'utiliser que si vous savez pourquoi
+-------------------------------------------------------------------
+
+  activer_hybrid_strict.bat
+      EXIGE UNE CLE API PAYANTE (platform.claude.com).
+      Meilleure lecture, mais transmet le texte des pages a
+      l'exterieur. Ne le lancez pas si vous n'avez pas de cle.
+
+  desactiver_lecture_semantique.bat
+      RETIRE la lecture. Ne l'active pas.
+      Il pose le mode "LOCAL_ONLY" — ce nom ne designe PAS le
+      modele local, il designe l'ABSENCE de lecture.
+
+-------------------------------------------------------------------
+  COMMENT SAVOIR OU VOUS EN ETES
+-------------------------------------------------------------------
+
+Dans l'application, onglet "Traitement du dossier", la pastille
+"Mode d'analyse" affiche :
+
+  LOCAL_MODEL    le modele local lit vos dossiers        (voulu)
+  HYBRID_STRICT  un modele de service lit vos dossiers
+  LOCAL_ONLY     aucune lecture
+
+-------------------------------------------------------------------
+  SI VOUS VOUS ETES TROMPE DE SCRIPT
+-------------------------------------------------------------------
+
+Rien n'est perdu. Le modele telecharge reste installe.
+Une seule commande remet le bon mode :
+
+      setx ANALYSIS_MODE LOCAL_MODEL
+
+Puis fermez et relancez run_windows.bat.
+===================================================================

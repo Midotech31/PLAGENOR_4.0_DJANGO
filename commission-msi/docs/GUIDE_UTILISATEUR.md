@@ -171,7 +171,10 @@ Windows. Le script termine par **un appel réel de contrôle** : c'est le seul
 moyen de savoir si la clé et le modèle fonctionnent vraiment, une configuration
 complète pouvant parfaitement accompagner une clé révoquée.
 
-Pour tout refermer : `activer_local_only.bat`, qui efface aussi la clé.
+Pour désactiver la lecture : `desactiver_lecture_semantique.bat`, qui efface
+aussi la clé de service. **Attention au vocabulaire** : le mode `LOCAL_ONLY`
+qu'il pose ne désigne pas le modèle local, mais l'absence de toute lecture
+sémantique. Pour la lecture par un modèle local : `installer_modele_local.bat`.
 
 Pour revérifier à tout moment, sans rien changer :
 

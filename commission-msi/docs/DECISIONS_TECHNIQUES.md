@@ -1244,3 +1244,35 @@ ressemblait à une panne alors que le modèle **travaillait**. Il est maintenant
 distingué explicitement, avec ses trois remèdes classés par efficacité : un
 modèle plus petit, une fenêtre de contexte plus courte — qui réduit d'autant la
 taille de chaque lot — ou un délai plus large.
+
+## DT-45 — Trois scripts, deux commençant par « activer », un seul pertinent
+
+**Constat d'usage, en deux temps.** L'évaluateur, qui voulait faire lire ses
+dossiers par le modèle installé sur son poste, a lancé successivement :
+
+1. `activer_local_only.bat` — qui a **désactivé** la lecture ;
+2. `activer_hybrid_strict.bat` — qui lui a demandé une **clé API payante** qu'il
+   n'a pas.
+
+Aucune de ces deux tentatives n'était déraisonnable. C'est le nommage qui l'était.
+
+**Le mot « local » désignait deux choses opposées.** `LOCAL_ONLY` se lit comme
+« tout reste local » — exactement ce que cherche un évaluateur soucieux de
+confidentialité — alors qu'il désigne l'**absence** de lecture. Et deux scripts
+sur trois commençaient par `activer_`, dont un qui retire une capacité.
+
+**Corrections :**
+
+* `activer_local_only.bat` devient **`desactiver_lecture_semantique.bat`** : le
+  nom dit ce que le script fait. Sa bannière affiche les trois modes, l'état
+  courant du poste, et ce qui sera perdu — avant la question ;
+* le message du mode `LOCAL_ONLY` ne se contente plus de dire qu'il « ne fournit
+  pas le même niveau » : il énonce **« aucune lecture sémantique »**, et nomme
+  l'issue — installer un modèle local ;
+* un fichier **`MODES.txt`** à la racine répond à la seule question qui se pose :
+  quel script lancer. Réponse : un seul.
+
+**Ce que l'épisode enseigne.** J'ai ajouté un troisième mode en gardant les noms
+des deux premiers, qui n'étaient distinctifs que tant qu'ils n'étaient que deux.
+Un vocabulaire cohérent à deux termes peut devenir trompeur au troisième — et
+c'est l'utilisateur qui paie la vérification.

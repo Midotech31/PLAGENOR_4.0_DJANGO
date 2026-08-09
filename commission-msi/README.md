@@ -117,7 +117,10 @@ dans la configuration. Le modèle ne produit ni statut, ni note, ni avis — il
 propose des valeurs, chacune devant citer sa page et un extrait relu mot pour
 mot sur le texte local, sans quoi elle est rejetée.
 
-Pour tout refermer et effacer la clé : `activer_local_only.bat`.
+Pour désactiver la lecture : `desactiver_lecture_semantique.bat`.
+
+> ⚠️ Ce script **retire** la lecture. Le nom `LOCAL_ONLY` qu'il pose ne
+> désigne pas le modèle local : il désigne l'**absence** de lecture.
 
 ### Sous Linux ou macOS
 

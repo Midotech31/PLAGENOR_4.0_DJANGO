@@ -165,7 +165,7 @@ if "%VERDICT%"=="0" (
   echo Le motif exact figure ci-dessus.
 )
 echo.
-echo Pour revenir au mode sans lecture : activer_local_only.bat
+echo Pour DESACTIVER la lecture : desactiver_lecture_semantique.bat
 echo.
 echo Designed by Prof. Merzoug Mohamed
 pause

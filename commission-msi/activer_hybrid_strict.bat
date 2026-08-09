@@ -147,7 +147,7 @@ if "%VERDICT%"=="0" (
   echo du modele, ou du reseau. Relancez ce script apres correction.
 )
 echo.
-echo Pour revenir au mode local : activer_local_only.bat
+echo Pour DESACTIVER la lecture : desactiver_lecture_semantique.bat
 echo.
 echo Designed by Prof. Merzoug Mohamed
 pause

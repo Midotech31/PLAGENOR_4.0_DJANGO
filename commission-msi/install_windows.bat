@@ -212,6 +212,8 @@ echo    "Libelle : valeur" sont extraites. Mesure sur un dossier reel de
 echo    76 pages : 4 champs sur 29, dont 2 faux.
 echo.
 echo  - Pour l'activer :  installer_modele_local.bat
+echo    C'est LE SEUL script a lancer. Les deux autres retirent la lecture
+echo    ou exigent une cle payante -- voir MODES.txt en cas de doute.
 echo    Un modele de langage installe SUR CE POSTE. Aucune cle API, aucun
 echo    compte, aucun abonnement -- et AUCUNE donnee ne quitte la machine.
 echo.

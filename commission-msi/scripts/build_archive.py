@@ -33,6 +33,7 @@ ROOT_FILES = (
     "README.md",
     "CHANGELOG.md",
     "VERSION",
+    "MODES.txt",
     ".env.example",
     ".gitignore",
     "install_windows.bat",
@@ -40,7 +41,7 @@ ROOT_FILES = (
     "run_tests.bat",
     "reparer_ocr_arabe.bat",
     "activer_hybrid_strict.bat",
-    "activer_local_only.bat",
+    "desactiver_lecture_semantique.bat",
     "installer_modele_local.bat",
 )
 
