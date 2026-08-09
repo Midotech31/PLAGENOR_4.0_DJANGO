@@ -72,11 +72,36 @@ autre adresse. Il n'y a ni compte, ni mot de passe, ni écran de connexion.
 
 Détails complets : [`docs/GUIDE_INSTALLATION.md`](docs/GUIDE_INSTALLATION.md).
 
-### Lecture sémantique assistée — recommandée
+### Lecture sémantique — recommandée, sans clé et sans rien transmettre
+
+```bat
+installer_modele_local.bat
+```
+
+Installe un modèle de langage **qui tourne sur ce poste**. Aucune clé API,
+aucun compte, aucun abonnement, aucune facture — et **aucune donnée ne quitte la
+machine**, pas même un extrait.
+
+Sans cette lecture, seules les informations écrites sous la forme
+`Libellé : valeur` sont repérées. Mesure sur un dossier réel de 76 pages :
+**4 champs sur 29, dont 2 faux**. Avec elle, le texte est lu.
+
+Coût : environ 5 Go de disque, 8 Go de RAM, et 15 à 40 minutes par dossier sans
+carte graphique. Le traitement tourne en arrière-plan et reprend où il s'est
+arrêté.
+
+Un modèle local lit moins bien qu'un modèle de service : il proposera **moins**
+de valeurs, jamais des valeurs **moins vérifiées** — chacune doit citer sa page
+et un extrait relu mot pour mot sur le texte local, sans quoi elle est rejetée.
+
+### Lecture par un modèle de service — si vous préférez la meilleure lecture
 
 ```bat
 activer_hybrid_strict.bat
 ```
+
+Exige une clé Anthropic (`platform.claude.com`) et transmet le texte des pages
+ordinaires, expurgé. Environ 1 $ par dossier.
 
 Sans elle, seules les informations écrites sous la forme `Libellé : valeur` sont
 repérées. Mesure sur un dossier réel de 76 pages : **4 champs sur 29, dont
