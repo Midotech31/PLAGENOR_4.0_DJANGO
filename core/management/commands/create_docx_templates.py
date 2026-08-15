@@ -1,7 +1,6 @@
 """Management command to create physical DOCX template files."""
-import os
 from pathlib import Path
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 
@@ -14,13 +13,10 @@ class Command(BaseCommand):
             from docx.shared import Inches, Pt, Cm
             from docx.enum.text import WD_ALIGN_PARAGRAPH
         except ImportError:
-            self.stdout.write(self.style.WARNING(
-                'python-docx not installed. Installing...'
-            ))
-            os.system('pip install python-docx')
-            from docx import Document
-            from docx.shared import Inches, Pt, Cm
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            raise CommandError(
+                'python-docx is required. Install the project dependencies '
+                'with: python -m pip install -r requirements.txt'
+            )
 
         output_dir = settings.BASE_DIR / 'documents' / 'docx_templates'
         output_dir.mkdir(parents=True, exist_ok=True)

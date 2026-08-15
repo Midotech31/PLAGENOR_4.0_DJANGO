@@ -176,10 +176,20 @@
     </div>
 </div>
 
+{{ existing_items|json_script:"existing-items-data" }}
 <script>
 (function() {
     const container = document.getElementById('line-items-container');
     let itemCount = 0;
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>'"]/g, function(char) {
+            return {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                "'": '&#39;', '"': '&quot;'
+            }[char];
+        });
+    }
 
     // Template for a line item row
     function createLineItemRow(idx, data) {
@@ -191,7 +201,7 @@
         div.innerHTML = `
             <div>
                 <label class="text-xs text-muted">Description</label>
-                <input type="text" name="item_label_${idx}" value="${data.label || ''}" class="form-control" style="font-size:0.85rem;" placeholder="Ex: Analyse par échantillon">
+                <input type="text" name="item_label_${idx}" value="${escapeHtml(data.label || '')}" class="form-control" style="font-size:0.85rem;" placeholder="Ex: Analyse par échantillon">
             </div>
             <div>
                 <label class="text-xs text-muted">P.U. (DA)</label>
@@ -214,7 +224,9 @@
 
     // Initialize from existing quote or auto-estimate
     window.initLineItems = function() {
-        const existingItems = {{ existing_items_json|safe }};
+        const existingItems = JSON.parse(
+            document.getElementById('existing-items-data').textContent
+        );
         if (existingItems.length > 0) {
             existingItems.forEach(function(item) {
                 const row = createLineItemRow(itemCount, item);
@@ -225,7 +237,7 @@
         {% if auto_estimate and not existing_quote.items %}
         // Pre-populate from auto-estimate
         const autoItem = {
-            label: '{{ req.service.name|default:"Analyse" }}' + ' (x{{ auto_estimate.number_of_units }})',
+            label: '{{ req.service.name|default:"Analyse"|escapejs }}' + ' (x{{ auto_estimate.number_of_units }})',
             unit_price: {{ auto_estimate.unit_price|default:0 }},
             quantity: {{ auto_estimate.number_of_units|default:1 }},
         };

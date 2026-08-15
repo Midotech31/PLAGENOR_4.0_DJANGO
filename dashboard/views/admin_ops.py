@@ -799,14 +799,13 @@ def prepare_quote(request, pk):
     yaml_def = get_service_def(req.service.code) if req.service else None
     auto_estimate = _compute_auto_estimate(req, yaml_def)
 
-    import json
     existing_quote = req.quote_detail or {}
     context = {
         'req': req,
         'yaml_def': yaml_def,
         'auto_estimate': auto_estimate,
         'existing_quote': existing_quote,
-        'existing_items_json': json.dumps(existing_quote.get('items', [])),
+        'existing_items': existing_quote.get('items', []),
     }
     return render(request, 'dashboard/admin_ops/prepare_quote.html', context)
 

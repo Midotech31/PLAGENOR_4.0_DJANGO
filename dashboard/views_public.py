@@ -94,6 +94,12 @@ def track(request):
         if token is not None:
             tracked_request = Request.objects.filter(guest_token=token).first()
             if tracked_request:
+                # Backfill legacy report rows created before tokens were
+                # assigned at upload time.  Without this, rendering the guest
+                # download URL raises NoReverseMatch on completed requests.
+                if tracked_request.report_file and not tracked_request.report_token:
+                    tracked_request.report_token = uuid_lib.uuid4()
+                    tracked_request.save(update_fields=['report_token'])
                 history = tracked_request.history.select_related('actor').order_by('created_at')
     return render(request, 'pages/track.html', {
         'tracked_request': tracked_request,
@@ -323,10 +329,15 @@ def guest_submit(request):
     })
 
 
-def guest_ibtikar_code(request, pk):
+def guest_ibtikar_code(request, token):
     """Guest submits their IBTIKAR-DGRSDT code via tracking page."""
     from django.contrib import messages as msg
-    req = get_object_or_404(Request, pk=pk, submitted_as_guest=True)
+    # The unguessable guest token is the authorization capability.  Using the
+    # request primary key here allowed anyone who learned a request UUID to
+    # alter its external IBTIKAR code without possessing the tracking token.
+    req = get_object_or_404(
+        Request, guest_token=token, submitted_as_guest=True,
+    )
     if request.method != 'POST':
         return redirect('track')
     code = request.POST.get('ibtikar_code', '').strip()

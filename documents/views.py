@@ -191,6 +191,24 @@ def ibtikar_form_view(request, request_id):
     )
 
 
+def guest_ibtikar_form_view(request, token):
+    """Serve a guest's IBTIKAR form using their tracking token.
+
+    Guest users cannot pass ``login_required``.  The UUID tracking token is
+    the same capability already required to view the public tracking page.
+    """
+    req = get_object_or_404(
+        Request,
+        guest_token=token,
+        submitted_as_guest=True,
+        channel='IBTIKAR',
+    )
+    return _cached_serve_doc(
+        req, 'IBTIKAR_FORM', generate_ibtikar_form,
+        f"IBTIKAR_FORM_{req.display_id}",
+    )
+
+
 @login_required
 def platform_note_view(request, request_id):
     req = get_object_or_404(Request, pk=request_id)

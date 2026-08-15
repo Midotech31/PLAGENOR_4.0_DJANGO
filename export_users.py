@@ -10,6 +10,12 @@ django.setup()
 
 from accounts.models import User
 
+if os.environ.get('ALLOW_SENSITIVE_EXPORT') != 'yes':
+    raise SystemExit(
+        'Refusing to export password hashes and personal data. '
+        'Set ALLOW_SENSITIVE_EXPORT=yes only for an approved, encrypted migration.'
+    )
+
 users_data = []
 for user in User.objects.all():
     users_data.append({
@@ -40,5 +46,6 @@ for user in User.objects.all():
 
 with open('users_export.json', 'w', encoding='utf-8') as f:
     json.dump(users_data, f, ensure_ascii=False, indent=2)
+os.chmod('users_export.json', 0o600)
 
-print(f"Exported {len(users_data)} users to users_export.json")
+print(f"Exported {len(users_data)} users to users_export.json (sensitive; mode 0600)")

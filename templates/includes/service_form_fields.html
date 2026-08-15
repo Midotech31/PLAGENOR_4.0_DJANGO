@@ -128,7 +128,7 @@
 
 <!-- Pricing Configuration Data -->
 <div id="pricing-config"
-     data-pricing-config='{{ pricing_json|safe }}'
+     data-pricing-config='{{ pricing_json }}'
      data-service-code="{{ service_code|default:'' }}"
      style="display:none;"></div>
 
@@ -158,7 +158,7 @@
 {% endif %}
 
 <div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
-     data-pricing='{{ pricing_json|safe }}'>
+     data-pricing='{{ pricing_json }}'>
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
     <div class="text-muted text-xs" style="margin-top:4px;">{% trans "Ce montant peut varier selon le nombre d'échantillons et le type d'analyse." %}</div>
     <div id="pricing-modifiers-summary" style="margin-top:8px; display:none;">

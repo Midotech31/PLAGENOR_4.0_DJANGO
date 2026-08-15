@@ -1,7 +1,6 @@
 import json
 
 from django import template
-from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -25,7 +24,10 @@ def as_json(value):
     """
     if value is None:
         return ''
-    return mark_safe(json.dumps(value, ensure_ascii=False))
+    # Return an ordinary string so Django's normal contextual HTML escaping
+    # remains active.  Marking JSON as safe lets quotes or ``</script>`` from
+    # editable service configuration break out of attributes/script blocks.
+    return json.dumps(value, ensure_ascii=False)
 
 
 @register.filter

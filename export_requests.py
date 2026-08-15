@@ -10,6 +10,12 @@ django.setup()
 
 from core.models import Request
 
+if os.environ.get('ALLOW_SENSITIVE_EXPORT') != 'yes':
+    raise SystemExit(
+        'Refusing to export guest tokens and personal request data. '
+        'Set ALLOW_SENSITIVE_EXPORT=yes only for an approved, encrypted migration.'
+    )
+
 requests_data = []
 for req in Request.objects.all():
     fields = {
@@ -80,5 +86,6 @@ for req in Request.objects.all():
 
 with open('requests_export.json', 'w', encoding='utf-8') as f:
     json.dump(requests_data, f, ensure_ascii=False, indent=2)
+os.chmod('requests_export.json', 0o600)
 
-print(f"Exported {len(requests_data)} requests to requests_export.json")
+print(f"Exported {len(requests_data)} requests to requests_export.json (sensitive; mode 0600)")
