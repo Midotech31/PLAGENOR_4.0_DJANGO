@@ -11,7 +11,7 @@ REM   2. Create venv (skip if present)
 REM   3. Install pip dependencies
 REM   4. Write a .env with DEBUG=True + a generated SECRET_KEY (skip if exists)
 REM   5. Run migrations
-REM   6. Load the 9 production services from services_export.json
+REM   6. Seed the production services from the version-controlled YAML registry
 REM   7. Seed CMS content (156 rows across fr/en/ar)
 REM   8. Compile translation catalogs (skipped silently on Windows if gettext
 REM      is absent — the .mo files committed to git work without it)
@@ -66,27 +66,17 @@ REM 5. Migrations
 echo [4/9] Running migrations...
 python manage.py migrate --noinput || goto :err
 
-REM 6. Services (from the version-controlled fixture)
-echo [5/9] Loading services from services_export.json...
-python manage.py loaddata services_export.json || (
-    echo       services_export.json missing or invalid — try `seed_services` as fallback
-    python manage.py seed_services
-)
+REM 6. Services (idempotent; sourced from core/service_registry/*.yaml)
+echo [5/9] Seeding services from the YAML registry...
+python manage.py seed_services || goto :err
 
 REM 7. CMS content
 echo [6/9] Seeding CMS content ^(fr / en / ar^)...
 python manage.py seed_content >nul || goto :err
 
-REM 7b. Demo accounts (one per role — see seed_accounts.py for the table)
-echo [6b/9] Creating demo accounts ^(admin / amina / analyst / etc.^)...
-python manage.py seed_accounts --quiet
-echo       Login at http://localhost:8000/accounts/login/ — credentials below:
-echo         admin       / admin1234        ^(SUPER_ADMIN^)
-echo         admin_ops   / platform1234     ^(PLATFORM_ADMIN^)
-echo         analyst     / analyst1234      ^(MEMBER / Analyst^)
-echo         finance     / finance1234      ^(FINANCE^)
-echo         amina       / demo1234         ^(REQUESTER^)
-echo         client      / client1234       ^(CLIENT^)
+REM Demo accounts are intentionally not created here. Shared default passwords
+REM are unsafe outside an isolated development environment. The superuser prompt
+REM below creates the initial administrator with a password chosen at setup time.
 
 REM 8. Translation catalogs — silent if gettext missing, .mo files are in git anyway
 echo [7/9] Compiling translation catalogs ^(safe to fail on Windows^)...

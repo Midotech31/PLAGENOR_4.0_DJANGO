@@ -6,10 +6,10 @@ services:
     runtime: python
     plan: free
     region: frankfurt        # proche de la base Supabase (Irlande) -> moins de latence
-    branch: claude/great-newton-6Ce7v
+    branch: main
     buildCommand: "./build.sh"
     startCommand: "gunicorn plagenor.wsgi:application --workers 3 --bind 0.0.0.0:$PORT"
-    healthCheckPath: /
+    healthCheckPath: /healthz
     envVars:
       - key: DEBUG
         value: "false"

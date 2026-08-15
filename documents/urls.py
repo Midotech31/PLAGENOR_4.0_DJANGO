@@ -6,6 +6,8 @@ app_name = 'documents'
 urlpatterns = [
     # Document generation (existing)
     path('ibtikar-form/<uuid:request_id>/', views.ibtikar_form_view, name='ibtikar_form'),
+    path('guest/ibtikar-form/<uuid:token>/', views.guest_ibtikar_form_view,
+         name='guest_ibtikar_form'),
     path('platform-note/<uuid:request_id>/', views.platform_note_view, name='platform_note'),
     path('quote/<uuid:request_id>/', views.quote_view, name='quote'),
     path('reception-form/<uuid:request_id>/', views.reception_form_view, name='reception_form'),

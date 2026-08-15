@@ -44,7 +44,7 @@
                     </tr>
                     <tr>
                         <th>{% trans "Description" %}</th>
-                        <td>{{ template.description|default:"<em class='text-muted'>Aucune description</em>"|safe }}</td>
+                        <td>{% if template.description %}{{ template.description }}{% else %}<em class="text-muted">Aucune description</em>{% endif %}</td>
                     </tr>
                     <tr>
                         <th>{% trans "Fichier" %}</th>

@@ -4286,12 +4286,12 @@ msgid "Suivi de votre demande"
 msgstr "تتبُّع طلبك"
 
 msgid ""
-"Entrez votre identifiant de demande ou votre token de suivi pour consulter "
-"l'état d'avancement."
-msgstr "أدخل معرّف طلبك أو رمز التتبُّع لعرض حالة التقدُّم."
+"Entrez le token de suivi reçu par e-mail pour consulter l'état "
+"d'avancement."
+msgstr "أدخل رمز التتبُّع الذي وصلك عبر البريد الإلكتروني لعرض حالة التقدُّم."
 
-msgid "Ex: IBT-2026-0042 ou votre token..."
-msgstr "مثال: IBT-2026-0042 أو رمزك..."
+msgid "Collez votre token de suivi..."
+msgstr "ألصق رمز التتبُّع الخاص بك..."
 
 msgid "Rechercher"
 msgstr "بحث"

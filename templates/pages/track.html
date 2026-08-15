@@ -6,9 +6,9 @@
 {% block content %}
 <div class="track-section">
     <h2>{% trans "Suivi de votre demande" %}</h2>
-    <p>{% trans "Entrez votre identifiant de demande ou votre token de suivi pour consulter l'état d'avancement." %}</p>
+    <p>{% trans "Entrez le token de suivi reçu par e-mail pour consulter l'état d'avancement." %}</p>
     <form class="track-form" method="get" action="{% url 'track' %}">
-        <input type="text" name="q" class="form-control" placeholder="{% trans 'Ex: IBT-2026-0042 ou votre token...' %}" value="{{ request.GET.q|default:'' }}" required>
+        <input type="text" name="q" class="form-control" placeholder="{% trans 'Collez votre token de suivi...' %}" value="{{ request.GET.q|default:'' }}" required>
         <button type="submit" class="btn btn-primary">{% trans "Rechercher" %}</button>
     </form>
 
@@ -37,9 +37,6 @@
             {% if tracked_request.appointment_date %}
             <div><span class="text-muted">{% trans "Rendez-vous" %}:</span> {{ tracked_request.appointment_date|date:"d/m/Y" }}</div>
             {% endif %}
-            {% if tracked_request.assigned_to %}
-            <div><span class="text-muted">{% trans "Analyste" %}:</span> {{ tracked_request.assigned_to.user.first_name }}</div>
-            {% endif %}
             {% if history %}
             <div style="margin-top:16px;">
                 <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:8px;">{% trans "Historique" %}</h4>
@@ -61,21 +58,23 @@
             {% if tracked_request.channel == 'IBTIKAR' %}
             {% if tracked_request.status == 'IBTIKAR_SUBMISSION_PENDING' or tracked_request.status == 'IBTIKAR_CODE_SUBMITTED' %}
             <div style="margin-top:20px;">
-                {% url 'documents:ibtikar_form' tracked_request.pk as ibkformurl %}
-                {% url 'guest_ibtikar_code' tracked_request.pk as ibkcodeurl %}
+                {% url 'documents:guest_ibtikar_form' tracked_request.guest_token as ibkformurl %}
+                {% url 'guest_ibtikar_code' tracked_request.guest_token as ibkcodeurl %}
                 {% include 'includes/ibtikar_submission_workflow.html' with ibk_req=tracked_request ibk_form_url=ibkformurl ibk_code_submit_url=ibkcodeurl %}
             </div>
             {% endif %}
             {% endif %}
 
             <!-- Report download for guests -->
-            {% if tracked_request.report_file and tracked_request.status == 'SENT_TO_REQUESTER' or tracked_request.status == 'SENT_TO_CLIENT' or tracked_request.status == 'COMPLETED' %}
+            {% if tracked_request.report_file %}
+            {% if tracked_request.status == 'SENT_TO_REQUESTER' or tracked_request.status == 'SENT_TO_CLIENT' or tracked_request.status == 'COMPLETED' %}
             <div style="margin-top:16px; padding:16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
-                <a href="{{ tracked_request.report_file.url }}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
+                <a href="{% url 'report_download' token=tracked_request.report_token %}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     {% trans "Télécharger le rapport" %}
                 </a>
             </div>
+            {% endif %}
             {% endif %}
 
             {% if tracked_request.submitted_as_guest and tracked_request.guest_email %}

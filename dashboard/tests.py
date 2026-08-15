@@ -4,9 +4,12 @@ The IBTIKAR citation clause must block report downloads until acknowledged;
 GENOCLAB clients and internal staff are exempt. These guard
 ``protected_report_media`` / ``serve_media`` (dashboard/views/report.py).
 """
+import uuid
+
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.test import TestCase, override_settings
+from django.template import Context, Template
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from core.models import Request
 
@@ -25,6 +28,14 @@ def _save_report(name='reports/gatecheck.pdf', data=b'PDF-BYTES'):
 
 
 class ReportGateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.owner = User.objects.create_user(
+            username='report-owner', password='x', role='CLIENT')
+        cls.staff = User.objects.create_user(
+            username='report-staff', password='x', role='PLATFORM_ADMIN')
+
     def tearDown(self):
         for n in ('reports/gatecheck.pdf', 'misc/note.txt'):
             if default_storage.exists(n):
@@ -33,25 +44,49 @@ class ReportGateTests(TestCase):
     def test_ibtikar_unacknowledged_is_blocked(self):
         rel = _save_report()
         Request.objects.create(channel='IBTIKAR', report_file=rel,
+                               requester=self.owner,
                                citation_acknowledged=False)
+        self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertIn(resp.status_code, (302, 403))  # redirect to clause / forbidden
 
     def test_ibtikar_acknowledged_is_served(self):
         rel = _save_report()
         Request.objects.create(channel='IBTIKAR', report_file=rel,
+                               requester=self.owner,
                                citation_acknowledged=True)
+        self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
         body = b''.join(resp.streaming_content)
         self.assertEqual(body, b'PDF-BYTES')
 
-    def test_genoclab_report_is_served_without_clause(self):
+    def test_raw_genoclab_report_is_not_public(self):
         rel = _save_report()
         Request.objects.create(channel='GENOCLAB', report_file=rel,
+                               requester=self.owner,
                                citation_acknowledged=False)
         resp = self.client.get('/media/' + rel)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_raw_genoclab_report_is_served_to_owner(self):
+        rel = _save_report()
+        Request.objects.create(channel='GENOCLAB', report_file=rel,
+                               requester=self.owner)
+        self.client.force_login(self.owner)
+        resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
+
+    def test_report_token_download_remains_available_to_guest(self):
+        rel = _save_report()
+        token = uuid.uuid4()
+        Request.objects.create(
+            channel='GENOCLAB', report_file=rel, report_token=token,
+            requester=self.owner, display_id='GCL-REPORT-TOKEN',
+        )
+        resp = self.client.get(f'/report/{token}/download/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(b''.join(resp.streaming_content), b'PDF-BYTES')
 
     def test_serve_media_404_on_missing(self):
         resp = self.client.get('/media/avatars/does-not-exist.png')
@@ -226,6 +261,123 @@ class HealthEndpointTests(TestCase):
         resp = self.client.get('/readyz')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()['database'], 'ok')
+
+
+class TemplateEscapingTests(SimpleTestCase):
+    def test_json_filter_preserves_html_escaping(self):
+        payload = {"label": "'></div><script>alert(1)</script>"}
+        rendered = Template(
+            "{% load dashboard_extras %}<div data-json='{{ value|as_json }}'></div>"
+        ).render(Context({'value': payload}))
+        self.assertNotIn('<script>', rendered)
+        self.assertIn('&lt;script&gt;', rendered)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class GuestTrackingSecurityTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.analyst = User.objects.create_user(
+            username='guest-track-analyst', password='x', role='MEMBER',
+            first_name='HiddenAnalystName',
+        )
+
+    def test_guest_code_submission_requires_tracking_token(self):
+        token = uuid.uuid4()
+        req = Request.objects.create(
+            channel='IBTIKAR', submitted_as_guest=True, guest_token=token,
+            status='IBTIKAR_CODE_SUBMITTED', display_id='IBT-GUEST-CODE',
+        )
+        wrong = self.client.post(
+            f'/track/ibtikar-code/{uuid.uuid4()}/',
+            {'ibtikar_code': 'UNAUTHORIZED'},
+        )
+        self.assertEqual(wrong.status_code, 404)
+        req.refresh_from_db()
+        self.assertEqual(req.ibtikar_external_code, '')
+
+        ok = self.client.post(
+            f'/track/ibtikar-code/{token}/',
+            {'ibtikar_code': 'AUTHORIZED'},
+        )
+        self.assertEqual(ok.status_code, 302)
+        req.refresh_from_db()
+        self.assertEqual(req.ibtikar_external_code, 'AUTHORIZED')
+
+    def test_public_tracking_hides_analyst_identity(self):
+        token = uuid.uuid4()
+        Request.objects.create(
+            channel='IBTIKAR', submitted_as_guest=True, guest_token=token,
+            assigned_to=self.analyst.member_profile,
+            status='ASSIGNED', display_id='IBT-GUEST-PRIVATE',
+        )
+        response = self.client.get('/track/', {'q': str(token)})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'HiddenAnalystName')
+
+    def test_completed_request_without_report_renders_safely(self):
+        token = uuid.uuid4()
+        Request.objects.create(
+            channel='GENOCLAB', submitted_as_guest=True, guest_token=token,
+            status='COMPLETED', display_id='GCL-NO-REPORT',
+        )
+        response = self.client.get('/track/', {'q': str(token)})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Télécharger le rapport')
+
+    def test_tracking_backfills_legacy_report_token(self):
+        token = uuid.uuid4()
+        req = Request.objects.create(
+            channel='GENOCLAB', submitted_as_guest=True, guest_token=token,
+            status='COMPLETED', display_id='GCL-LEGACY-REPORT',
+            report_file='reports/legacy.pdf', report_token=None,
+        )
+        response = self.client.get('/track/', {'q': str(token)})
+        self.assertEqual(response.status_code, 200)
+        req.refresh_from_db()
+        self.assertIsNotNone(req.report_token)
+
+    def test_guest_ibtikar_form_uses_tracking_token(self):
+        from django.http import HttpResponse
+        from unittest.mock import patch
+
+        token = uuid.uuid4()
+        Request.objects.create(
+            channel='IBTIKAR', submitted_as_guest=True, guest_token=token,
+            status='IBTIKAR_SUBMISSION_PENDING', display_id='IBT-GUEST-FORM',
+        )
+        with patch(
+            'documents.views._cached_serve_doc',
+            return_value=HttpResponse(b'DOCX'),
+        ) as serve:
+            response = self.client.get(f'/documents/guest/ibtikar-form/{token}/')
+        self.assertEqual(response.status_code, 200)
+        serve.assert_called_once()
+        wrong = self.client.get(
+            f'/documents/guest/ibtikar-form/{uuid.uuid4()}/')
+        self.assertEqual(wrong.status_code, 404)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class QuoteTemplateSecurityTests(TestCase):
+    def test_existing_quote_json_cannot_close_script_tag(self):
+        from accounts.models import User
+        from core.models import Service
+
+        admin = User.objects.create_user(
+            username='quote-admin', password='x', role='PLATFORM_ADMIN')
+        service = Service.objects.create(code='QUOTE-XSS', name='Quote service')
+        req = Request.objects.create(
+            channel='GENOCLAB', service=service, display_id='GCL-QUOTE-XSS',
+            quote_detail={'items': [{'label': '</script><script>alert(1)</script>',
+                                     'unit_price': 1, 'quantity': 1}]},
+        )
+        self.client.force_login(admin)
+        response = self.client.get(f'/dashboard/ops/quote/{req.pk}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '</script><script>alert(1)</script>')
+        self.assertContains(response, '\\u003C/script\\u003E')
 
 
 class MediaAuthorizationTests(TestCase):

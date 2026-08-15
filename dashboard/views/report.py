@@ -174,26 +174,32 @@ def protected_report_media(request, path):
     """Gate direct ``/media/reports/<file>`` access behind the citation clause.
 
     Report files live under ``MEDIA_ROOT/reports/`` and would otherwise be
-    served raw by the static media handler (and by most web servers in
-    production) — letting an IBTIKAR requester grab the PDF without ever
-    accepting the authorship / citation clause. This view intercepts every
-    request for a report file: IBTIKAR reports are refused until
-    ``citation_acknowledged`` is True; GENOCLAB (commercial) reports and any
-    non-report media fall through to normal serving.
+    served raw by the static media handler. Raw filenames are not access
+    tokens: only internal staff or the authenticated request owner may use
+    this route. External/guest delivery uses the unguessable report token.
     """
     rel = f"reports/{path}"
     req = Request.objects.filter(report_file=rel).first()
-    if (req is not None and req.channel == 'IBTIKAR'
-            and not req.citation_acknowledged
-            and not _is_internal_staff(request.user)):
+    # Raw storage names are not authorization capabilities.  Anonymous users
+    # must use the unguessable report-token route; otherwise a predictable
+    # GENOCLAB filename could expose a confidential commercial report.
+    if req is None:
+        raise Http404("Fichier introuvable")
+    if _is_internal_staff(request.user):
+        pass
+    elif not (
+        getattr(request.user, 'is_authenticated', False)
+        and req.requester_id == request.user.pk
+    ):
+        raise Http404("Fichier introuvable")
+    elif req.channel == 'IBTIKAR' and not req.citation_acknowledged:
         if req.report_token:
             return redirect('report_view', token=req.report_token)
         return HttpResponseForbidden(
             "Veuillez accepter la clause d'auteur et de citation avant de "
             "télécharger le rapport."
         )
-    # Acknowledged IBTIKAR, GENOCLAB, or unknown file → stream from the
-    # configured storage backend (Supabase Storage in prod, local FS in dev).
+    # Authorized staff/owner → stream from the configured storage backend.
     if not default_storage.exists(rel):
         raise Http404("Fichier introuvable")
     return FileResponse(default_storage.open(rel, 'rb'))
@@ -250,4 +256,3 @@ def serve_media(request, path):
     if not default_storage.exists(path):
         raise Http404("Fichier introuvable")
     return FileResponse(default_storage.open(path, 'rb'))
-
