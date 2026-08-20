@@ -159,11 +159,17 @@ DATA_DIR.mkdir(exist_ok=True)
 # Production: Set DATABASE_URL environment variable (e.g., postgresql://user:pass@host:5432/dbname)
 # Local development: Falls back to SQLite automatically
 if os.getenv('DATABASE_URL'):
+    # Hosted production databases require TLS. Local PostgreSQL containers
+    # used by CI/development may opt out explicitly; the secure default stays
+    # enabled everywhere else.
+    database_ssl_required = os.getenv(
+        'DATABASE_SSL_REQUIRE', 'true'
+    ).lower() == 'true'
     DATABASES = {
         'default': dj_database_url.parse(
             os.getenv('DATABASE_URL'),
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=database_ssl_required,
         )
     }
 elif DEBUG:

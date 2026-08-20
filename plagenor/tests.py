@@ -13,12 +13,13 @@ FERNET_TEST_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 class ProductionSettingsTests(SimpleTestCase):
     """Production must fail closed when durable integrations are unsafe."""
 
-    def _import_settings(self, **overrides):
+    def _import_settings(self, code='import plagenor.settings', **overrides):
         env = os.environ.copy()
         for key in (
             'EMAIL_BACKEND', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD',
             'SMTP_FROM', 'SUPABASE_S3_ENDPOINT',
             'SUPABASE_S3_ACCESS_KEY_ID', 'SUPABASE_S3_SECRET_ACCESS_KEY',
+            'DATABASE_SSL_REQUIRE',
         ):
             env.pop(key, None)
         env.update({
@@ -30,7 +31,7 @@ class ProductionSettingsTests(SimpleTestCase):
         })
         env.update(overrides)
         return subprocess.run(
-            [sys.executable, '-c', 'import plagenor.settings'],
+            [sys.executable, '-c', code],
             cwd=BASE_DIR,
             env=env,
             capture_output=True,
@@ -69,3 +70,28 @@ class ProductionSettingsTests(SimpleTestCase):
             REQUIRE_SMTP='false',
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_database_tls_is_required_by_default(self):
+        result = self._import_settings(
+            code=(
+                'from plagenor.settings import DATABASES; '
+                'print(DATABASES["default"]["OPTIONS"]["sslmode"])'
+            ),
+            REQUIRE_PERSISTENT_MEDIA_STORAGE='false',
+            REQUIRE_SMTP='false',
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'require')
+
+    def test_trusted_local_database_can_disable_tls(self):
+        result = self._import_settings(
+            code=(
+                'from plagenor.settings import DATABASES; '
+                'print(DATABASES["default"].get("OPTIONS", {}))'
+            ),
+            REQUIRE_PERSISTENT_MEDIA_STORAGE='false',
+            REQUIRE_SMTP='false',
+            DATABASE_SSL_REQUIRE='false',
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('sslmode', result.stdout)
