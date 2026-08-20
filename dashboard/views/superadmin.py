@@ -13,6 +13,8 @@ from core.models import Service, Request, PlatformContent, Invoice, PaymentMetho
 from core.templatetags.cms import clear_cms_cache
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
+from core.uploads import validate_upload
+from django.core.exceptions import ValidationError
 
 
 def superadmin_required(view_func):
@@ -241,6 +243,13 @@ def member_assign_techniques(request, pk):
 def service_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
+    image = request.FILES.get('image')
+    if image:
+        try:
+            image = validate_upload(image, 'image')
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+            return redirect_back(request, 'dashboard:superadmin')
     Service.objects.create(
         code=request.POST.get('code', ''),
         name=request.POST.get('name', ''),
@@ -249,7 +258,7 @@ def service_create(request):
         ibtikar_price=request.POST.get('ibtikar_price', 0),
         genoclab_price=request.POST.get('genoclab_price', 0),
         turnaround_days=request.POST.get('turnaround_days', 7),
-        image=request.FILES.get('image'),
+        image=image,
     )
     messages.success(request, "Service créé avec succès.")
     return redirect_back(request, 'dashboard:superadmin')
@@ -419,9 +428,22 @@ def reset_2fa(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     target = get_object_or_404(User, pk=pk)
+    reason = request.POST.get('reason', '').strip()
+    if len(reason) < 10:
+        messages.error(request, "Une raison d'au moins 10 caractères est obligatoire.")
+        return redirect_back(request, 'dashboard:superadmin')
     target.totp_secret = ''
     target.totp_enabled = False
     target.save(update_fields=['totp_secret', 'totp_enabled'])
+    from core.audit import log_action
+    log_action('ADMIN_2FA_RESET', 'USER', str(target.pk), request.user,
+               {'reason': reason})
+    from notifications.models import Notification
+    Notification.objects.create(
+        user=target,
+        message=("Votre double authentification a été réinitialisée par un "
+                 "administrateur. Réinscrivez un appareil avant de continuer."),
+        notification_type='SECURITY')
     messages.success(request, f"2FA réinitialisée pour {target.username}.")
     return redirect_back(request, 'dashboard:superadmin')
 
@@ -538,7 +560,11 @@ def service_edit(request, pk):
         service.genoclab_price = request.POST.get('genoclab_price', service.genoclab_price)
         service.turnaround_days = request.POST.get('turnaround_days', service.turnaround_days)
         if 'image' in request.FILES:
-            service.image = request.FILES['image']
+            try:
+                service.image = validate_upload(request.FILES['image'], 'image')
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+                return redirect('dashboard:superadmin_service_edit', pk=service.pk)
         service.save()
 
         # ---- Custom form fields: wipe + recreate (simple, low-volume data)
@@ -910,8 +936,10 @@ def upload_template(request):
         messages.error(request, "Type de template invalide.")
         return redirect_back(request, 'dashboard:superadmin')
     upload = request.FILES['template_file']
-    if not upload.name.endswith('.docx'):
-        messages.error(request, "Seuls les fichiers .docx sont acceptés.")
+    try:
+        validate_upload(upload, 'docx_template')
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect_back(request, 'dashboard:superadmin')
     dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
     if dest.exists():

@@ -1,3 +1,5 @@
+import logging
+
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Q
@@ -11,6 +13,8 @@ from django.views.decorators.http import require_POST
 
 from core.models import Request
 from dashboard.utils import safe_int
+
+logger = logging.getLogger('plagenor.reports')
 
 
 # Internal staff (analyst / admins / finance) are never subject to the
@@ -86,7 +90,10 @@ def _notify_report_consulted(req):
                 notification_type='REPORT',
             )
     except Exception:
-        pass
+        logger.exception(
+            "Failed to create report-consulted notifications for %s",
+            req.display_id,
+        )
 
 
 def rate_report(request, token):

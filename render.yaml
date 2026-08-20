@@ -3,12 +3,11 @@
 services:
   - type: web
     name: plagenor
-    runtime: python
+    runtime: docker
     plan: free
     region: frankfurt        # proche de la base Supabase (Irlande) -> moins de latence
     branch: main
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn plagenor.wsgi:application --workers 3 --bind 0.0.0.0:$PORT"
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     envVars:
       - key: DEBUG
@@ -19,6 +18,12 @@ services:
         value: "3.11.9"
       - key: DATABASE_URL
         sync: false                    # paste your Supabase connection string
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false                    # Fernet key; keep stable across deploys
+      - key: PRIVILEGED_MFA_ENFORCEMENT
+        value: "true"
+      - key: CSP_REPORT_ONLY
+        value: "true"                  # staged rollout; monitor before enforcing
       - key: ALLOWED_HOSTS
         sync: false                    # your domain(s); the *.onrender.com host is auto-added
       - key: CSRF_TRUSTED_ORIGINS

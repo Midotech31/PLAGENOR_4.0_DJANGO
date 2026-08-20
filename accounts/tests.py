@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from accounts.forms import RegistrationForm
 from accounts.models import User
+from notifications.models import Notification
 
 
 def _base_data(**over):
@@ -128,16 +129,16 @@ class TwoFactorTests(TestCase):
     def _enable_totp(self, user):
         import pyotp
         secret = pyotp.random_base32()
-        user.totp_secret = secret
+        user.set_totp_secret(secret)
         user.totp_enabled = True
         user.save(update_fields=['totp_secret', 'totp_enabled'])
         return secret
 
-    def test_user_without_2fa_logs_in_directly(self):
+    def test_privileged_user_without_2fa_is_sent_to_enrollment(self):
         resp = self.client.post('/accounts/login/',
                                 {'username': 'tfa', 'password': 'RightPass!42'})
         self.assertEqual(resp.status_code, 302)
-        self.assertNotIn('/2fa/verify', resp.url)
+        self.assertEqual(resp.url, '/accounts/2fa/setup/')
 
     def test_2fa_user_is_redirected_to_verify_and_not_logged_in(self):
         self._enable_totp(self.user)
@@ -179,7 +180,9 @@ class TwoFactorTests(TestCase):
         self.assertEqual(r2.status_code, 302)
         self.user.refresh_from_db()
         self.assertTrue(self.user.totp_enabled)
-        self.assertEqual(self.user.totp_secret, secret)
+        self.assertNotEqual(self.user.totp_secret, secret)
+        self.assertTrue(self.user.totp_secret.startswith('fernet$'))
+        self.assertEqual(self.user.get_totp_secret(), secret)
 
     def test_2fa_brute_force_is_capped(self):
         """Regression: the password step already succeeded, so the account
@@ -214,11 +217,62 @@ class TwoFactorTests(TestCase):
             username='sa-2fa', password='x', role='SUPER_ADMIN',
             is_superuser=True, is_staff=True)
         self.client.force_login(admin)
-        resp = self.client.post(f'/dashboard/home/user/{self.user.pk}/reset-2fa/')
+        resp = self.client.post(
+            f'/dashboard/home/user/{self.user.pk}/reset-2fa/',
+            {'reason': 'Lost authenticator device'})
         self.assertEqual(resp.status_code, 302)
         self.user.refresh_from_db()
         self.assertFalse(self.user.totp_enabled)
         self.assertEqual(self.user.totp_secret, '')
+        self.assertTrue(Notification.objects.filter(
+            user=self.user, notification_type='SECURITY').exists())
+
+    def test_superadmin_reset_requires_a_reason(self):
+        self._enable_totp(self.user)
+        admin = User.objects.create_user(
+            username='sa-no-reason', password='x', role='SUPER_ADMIN',
+            is_superuser=True, is_staff=True)
+        self.client.force_login(admin)
+        self.client.post(
+            f'/dashboard/home/user/{self.user.pk}/reset-2fa/',
+            {'reason': 'short'})
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.totp_enabled)
+
+    def test_self_disable_requires_password_and_current_totp(self):
+        import pyotp
+        secret = self._enable_totp(self.user)
+        self.client.force_login(self.user)
+        self.client.post('/accounts/2fa/disable/', {
+            'password': 'wrong', 'code': pyotp.TOTP(secret).now(),
+        })
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.totp_enabled)
+        self.client.post('/accounts/2fa/disable/', {
+            'password': 'RightPass!42', 'code': pyotp.TOTP(secret).now(),
+        })
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.totp_enabled)
+
+    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=True)
+    def test_middleware_blocks_privileged_session_until_enrollment(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/dashboard/analyst/')
+        self.assertRedirects(response, '/accounts/2fa/setup/')
+
+    def test_plaintext_totp_migration_is_idempotent(self):
+        from django.core.management import call_command
+        self.user.totp_secret = 'JBSWY3DPEHPK3PXP'
+        self.user.totp_enabled = True
+        self.user.save(update_fields=['totp_secret', 'totp_enabled'])
+        call_command('migrate_totp_secrets', verbosity=0)
+        self.user.refresh_from_db()
+        encrypted = self.user.totp_secret
+        self.assertTrue(encrypted.startswith('fernet$'))
+        self.assertEqual(self.user.get_totp_secret(), 'JBSWY3DPEHPK3PXP')
+        call_command('migrate_totp_secrets', verbosity=0)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.totp_secret, encrypted)
 
 
 @override_settings(

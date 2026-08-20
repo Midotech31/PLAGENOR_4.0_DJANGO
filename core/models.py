@@ -215,6 +215,41 @@ class ServicePricing(models.Model):
         ordering = ['service', 'priority', 'pk']
         verbose_name = 'Configuration tarifaire'
         verbose_name_plural = 'Configurations tarifaires'
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gte=0),
+                name='service_pricing_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(min_quantity__gte=1),
+                name='service_pricing_min_quantity_positive',
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(max_quantity__isnull=True)
+                    | models.Q(max_quantity__gte=models.F('min_quantity'))
+                ),
+                name='service_pricing_quantity_range_valid',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(min_amount__isnull=True)
+                           | models.Q(min_amount__gte=0)),
+                name='service_pricing_min_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(max_amount__isnull=True)
+                           | models.Q(max_amount__gte=0)),
+                name='service_pricing_max_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(min_amount__isnull=True)
+                    | models.Q(max_amount__isnull=True)
+                    | models.Q(max_amount__gte=models.F('min_amount'))
+                ),
+                name='service_pricing_amount_range_valid',
+            ),
+        ]
     
     def __str__(self):
         return f"{self.service.code} - {self.name}: {self.amount} DZD"
@@ -261,6 +296,7 @@ class Request(models.Model):
         ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
         ('INVOICE_GENERATED', 'Facture Générée'),
         ('PAYMENT_PENDING', 'En Attente Paiement'),
+        ('PAYMENT_PROOF_UPLOADED', 'Preuve de Paiement Téléversée'),
         ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
         ('SENT_TO_CLIENT', 'Transmis Client'),
         ('ARCHIVED', 'Archivé'),
@@ -305,6 +341,11 @@ class Request(models.Model):
     # GENOCLAB: Payment receipt
     payment_receipt_file = models.FileField(upload_to='payments/', null=True, blank=True, verbose_name='Reçu de paiement')
     payment_uploaded_at = models.DateTimeField(null=True, blank=True)
+    payment_verified_at = models.DateTimeField(null=True, blank=True)
+    payment_verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        blank=True, related_name='payments_verified')
+    payment_verification_note = models.TextField(default='', blank=True)
 
     # Appointment
     appointment_date = models.DateField(null=True, blank=True)
@@ -378,6 +419,32 @@ class Request(models.Model):
             models.Index(fields=['guest_token']),
             models.Index(fields=['report_token']),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(status='PAYMENT_CONFIRMED')
+                    | models.Q(payment_verified_at__isnull=False)
+                ),
+                name='confirmed_payment_has_verification_time',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(budget_amount__gte=0),
+                name='request_budget_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(declared_ibtikar_balance__gte=0),
+                name='request_declared_balance_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quote_amount__gte=0),
+                name='request_quote_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(admin_validated_price__isnull=True)
+                           | models.Q(admin_validated_price__gte=0)),
+                name='request_admin_price_nonnegative',
+            ),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -439,6 +506,25 @@ class Invoice(models.Model):
     class Meta:
         db_table = 'invoices'
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(subtotal_ht__gte=0),
+                name='invoice_subtotal_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(vat_rate__gte=0)
+                           & models.Q(vat_rate__lte=1)),
+                name='invoice_vat_rate_valid',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(vat_amount__gte=0),
+                name='invoice_vat_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(total_ttc__gte=0),
+                name='invoice_total_nonnegative',
+            ),
+        ]
 
     def __str__(self):
         return self.invoice_number

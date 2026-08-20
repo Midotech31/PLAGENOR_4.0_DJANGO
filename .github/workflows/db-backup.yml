@@ -1,12 +1,11 @@
 name: Database Backup
 
-# Weekly (Mondays 03:00 UTC) + on-demand. Dumps the Postgres database and
-# uploads it as a downloadable, retained artifact. No-op (does not fail) if
-# the DATABASE_URL secret is not configured, so the Actions tab stays green.
+# Weekly (Mondays 03:00 UTC) + on-demand. The database dump is encrypted with
+# age before it is uploaded. The unencrypted dump never becomes an artifact.
 #
 # SETUP: repo Settings → Secrets and variables → Actions → New secret
-#        name DATABASE_URL, value = the same Supabase connection string used
-#        on Render (direct connection recommended for pg_dump).
+#        DATABASE_URL: production PostgreSQL connection string
+#        BACKUP_AGE_RECIPIENT: age public recipient (for example age1...)
 on:
   schedule:
     - cron: '0 3 * * 1'
@@ -16,40 +15,43 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Check secret
-        id: guard
+      - name: Require backup secrets
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "DATABASE_URL secret not set — skipping backup."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          fi
+          test -n "$DATABASE_URL" || { echo "DATABASE_URL is required" >&2; exit 1; }
+          test -n "$BACKUP_AGE_RECIPIENT" || { echo "BACKUP_AGE_RECIPIENT is required" >&2; exit 1; }
 
       - name: Install PostgreSQL 16 client
-        if: steps.guard.outputs.run == 'true'
         run: |
           sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-16 age
 
       - name: Dump database
-        if: steps.guard.outputs.run == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
+          set -euo pipefail
           ts=$(date -u +%Y%m%d-%H%M%S)
-          /usr/lib/postgresql/16/bin/pg_dump "$DATABASE_URL" --no-owner --no-privileges \
-            | gzip -9 > "plagenor-backup-$ts.sql.gz"
-          ls -lh plagenor-backup-*.sql.gz
+          umask 077
+          plain="$(mktemp --suffix=.dump)"
+          trap 'rm -f "$plain"' EXIT
+          /usr/lib/postgresql/16/bin/pg_dump "$DATABASE_URL" \
+            --format=custom --no-owner --no-privileges --file="$plain"
+          /usr/lib/postgresql/16/bin/pg_restore --list "$plain" >/dev/null
+          age --recipient "$BACKUP_AGE_RECIPIENT" \
+            --output "plagenor-backup-$ts.dump.age" "$plain"
+          test -s "plagenor-backup-$ts.dump.age"
+          rm -f "$plain"
 
       - name: Upload backup artifact
-        if: steps.guard.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: db-backup
-          path: plagenor-backup-*.sql.gz
+          path: plagenor-backup-*.dump.age
+          if-no-files-found: error
           retention-days: 90

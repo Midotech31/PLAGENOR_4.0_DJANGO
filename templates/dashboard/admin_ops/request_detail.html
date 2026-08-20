@@ -417,11 +417,15 @@
                 </div>
                 
                 <!-- Payment Status Summary -->
-                {% if req.payment_receipt_file %}
+                {% if req.status == 'PAYMENT_CONFIRMED' %}
                 <div style="margin-top:12px; padding:10px; background:#ecfdf5; border-radius:6px; border:1px solid #a7f3d0; display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="width:20px;height:20px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <span style="font-weight:600; color:#059669;">{% trans "Paiement confirmé" %}</span>
                     <span style="color:#64748b; font-size:0.85rem;">— {% trans "Le rapport peut être délivré au client" %}</span>
+                </div>
+                {% elif req.status == 'PAYMENT_PROOF_UPLOADED' %}
+                <div style="margin-top:12px; padding:10px; background:#fff7ed; border-radius:6px; border:1px solid #fed7aa;">
+                    {% trans "Preuve reçue — vérification finance en attente." %}
                 </div>
                 {% endif %}
             </div>
@@ -631,9 +635,11 @@
             {% endif %}
 
             {# GENOCLAB: Payment confirmation button #}
-            {% if req.channel == 'GENOCLAB' and req.status == 'INVOICE_GENERATED' %}
+            {% if req.channel == 'GENOCLAB' and req.status == 'PAYMENT_PROOF_UPLOADED' %}
             <form method="post" action="{% url 'dashboard:admin_confirm_payment' req.pk %}" style="display:inline;">
                 {% csrf_token %}
+                <input type="text" name="verification_note" required minlength="3"
+                       placeholder="{% trans 'Référence / note de vérification' %}">
                 <button type="submit" class="btn btn-sm btn-primary" style="background:#059669;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     {% trans "Confirmer le paiement" %}

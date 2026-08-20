@@ -33,3 +33,17 @@ plagenor_data_clean.json
 
 .coverage
 htmlcov/
+.venv/
+
+# Never commit database snapshots, exports, restores, or backup material.
+*.sqlite3
+*.sql
+*.sql.gz
+*.dump
+*.backup
+*.bak
+*.age
+*_data.json
+*_users.json
+*_requests.json
+*_services.json

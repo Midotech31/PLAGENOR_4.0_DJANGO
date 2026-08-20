@@ -4,36 +4,24 @@
 from __future__ import annotations
 
 import logging
+from decimal import Decimal, InvalidOperation
 
 from django.db import models
 
 logger = logging.getLogger('plagenor.pricing')
 
+from core.exceptions import PricingConfigurationError
 
-def _coerce_int(value, default=0, key=''):
-    """Coerce a YAML registry value to int; log + fall back on failure."""
+
+def _decimal(value, *, key: str) -> Decimal:
+    """Return a finite, non-negative Decimal or fail the quote closed."""
     try:
-        return int(value)
-    except (TypeError, ValueError):
-        if value not in (None, ''):
-            logger.warning(
-                "pricing: cannot coerce %r to int at %s; using %s",
-                value, key or '?', default,
-            )
-        return default
-
-
-def _coerce_float(value, default=0.0, key=''):
-    """Coerce a YAML registry value to float; log + fall back on failure."""
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        if value not in (None, ''):
-            logger.warning(
-                "pricing: cannot coerce %r to float at %s; using %s",
-                value, key or '?', default,
-            )
-        return default
+        result = Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        raise PricingConfigurationError(f"Invalid numeric pricing value at {key}.") from exc
+    if not result.is_finite() or result < 0:
+        raise PricingConfigurationError(f"Invalid numeric pricing value at {key}.")
+    return result
 
 MULTIPLIER_KEY_MAP = {
     'nombre_echantillons': 'nombre_echantillons',
@@ -61,20 +49,20 @@ def calculate_price(service_def: dict, service_params: dict, sample_table: list)
     Returns: {pricing_model, number_of_units, unit_price, total, currency, breakdown}
     """
     if not service_def:
-        raise ValueError("Service definition is missing")
+        raise PricingConfigurationError("Service definition is missing")
 
     pricing = service_def.get('pricing')
     if not pricing:
-        raise ValueError(f"Service {service_def.get('service_code')} has no pricing definition")
+        raise PricingConfigurationError(f"Service {service_def.get('service_code')} has no pricing definition")
 
     model = pricing.get('model')
     currency = pricing.get('currency', 'DZD')
 
     if not model:
-        raise ValueError("Pricing model not defined in registry")
+        raise PricingConfigurationError("Pricing model not defined in registry")
 
     if not isinstance(sample_table, list):
-        raise ValueError("Sample table must be a list")
+        raise PricingConfigurationError("Sample table must be a list")
 
     if model == 'per_sample_table_row_with_multiplier':
         return _price_per_row_with_multiplier(pricing, service_params or {}, sample_table, currency)
@@ -82,7 +70,7 @@ def calculate_price(service_def: dict, service_params: dict, sample_table: list)
     if model == 'per_sample_fixed':
         return _price_per_sample_fixed(pricing, sample_table, currency)
 
-    raise ValueError(f"Unsupported pricing model: {model}")
+    raise PricingConfigurationError(f"Unsupported pricing model: {model}")
 
 
 def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, currency: str) -> dict:
@@ -92,7 +80,7 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     """
     n = len(samples)
     if n <= 0:
-        raise ValueError("At least one sample is required")
+        raise PricingConfigurationError("At least one sample is required")
 
     params = _normalize_params(params)
 
@@ -103,9 +91,11 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
     # is mistyped (e.g. quoted "1000" with a thousand-separator).
     pathogenic = bool(params.get('pathogenic', False))
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
-    base_price = _coerce_int(
-        base_prices.get(base_key, base_prices.get('default', 0)),
-        default=0, key=f"base_price/{base_key}",
+    if base_key not in base_prices and 'default' not in base_prices:
+        raise PricingConfigurationError(f"Missing base price for {base_key}.")
+    base_price = _decimal(
+        base_prices.get(base_key, base_prices.get('default')),
+        key=f"base_price/{base_key}",
     )
 
     # Determine multiplier key
@@ -115,17 +105,15 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
         or params.get('primer_type')
     )
 
-    if not mult_key and multipliers:
-        mult_key = list(multipliers.keys())[0]
-
-    # Multiplier defaults to 1.0 (no effect) — never 0 — so a typo never
-    # silently zeroes out a quote.
-    multiplier = (
-        _coerce_float(multipliers.get(mult_key, 1), default=1.0,
-                      key=f"multiplier/{mult_key}")
-        if mult_key else 1.0
-    )
-    unit_price = int(base_price * multiplier)
+    if multipliers:
+        if not mult_key:
+            raise PricingConfigurationError("A pricing multiplier selection is required.")
+        if mult_key not in multipliers:
+            raise PricingConfigurationError(f"Unknown pricing multiplier: {mult_key}.")
+        multiplier = _decimal(multipliers[mult_key], key=f"multiplier/{mult_key}")
+    else:
+        multiplier = Decimal('1')
+    unit_price = base_price * multiplier
     total = unit_price * n
 
     return {
@@ -148,9 +136,11 @@ def _price_per_sample_fixed(pricing: dict, samples: list, currency: str) -> dict
     """Fixed price per sample."""
     n = len(samples)
     if n <= 0:
-        raise ValueError("At least one sample is required")
+        raise PricingConfigurationError("At least one sample is required")
 
-    unit_price = _coerce_int(pricing.get('unit_price', 0), default=0, key="unit_price")
+    if 'unit_price' not in pricing:
+        raise PricingConfigurationError("Missing unit_price.")
+    unit_price = _decimal(pricing['unit_price'], key="unit_price")
     total = unit_price * n
 
     return {
@@ -163,7 +153,7 @@ def _price_per_sample_fixed(pricing: dict, samples: list, currency: str) -> dict
     }
 
 
-def format_price(amount: float, currency: str = 'DZD') -> str:
+def format_price(amount, currency: str = 'DZD') -> str:
     """Format a price for display."""
     return f"{amount:,.0f} {currency}"
 
@@ -211,29 +201,27 @@ def resolve_cost(
 ):
     """Resolve the canonical cost for a request submission.
 
-    Returns ``{'total': float, 'source': str, 'breakdown': [...]}``.
+    Returns ``{'total': Decimal, 'source': str, 'breakdown': [...]}``.
     ``source`` is one of ``'db_tiers'`` / ``'yaml_registry'`` / ``'flat'``
     so the caller can surface which path was taken — useful when an admin
     is debugging "why is my discount tier not firing?".
 
-    Never raises on bad input; falls back to the flat path and logs.
+    Invalid authoritative configuration raises ``PricingConfigurationError``
+    so a request cannot be created with an accidental fallback price.
     """
     sample_table = sample_table or []
     service_params = service_params or {}
     if not service:
-        return {'total': 0.0, 'source': 'no_service', 'breakdown': []}
+        raise PricingConfigurationError("Service is required.")
     if channel not in ('IBTIKAR', 'GENOCLAB'):
-        channel = 'GENOCLAB' if channel.lower().startswith('g') else 'IBTIKAR'
+        raise PricingConfigurationError(f"Unsupported pricing channel: {channel}.")
 
     # 1) DB tiers — what the SuperAdmin actually configured
-    try:
-        has_tiers = service.pricing_configs.filter(
-            is_active=True,
-        ).filter(
-            models.Q(channel=channel) | models.Q(channel='BOTH')
-        ).exists()
-    except Exception:
-        has_tiers = False
+    has_tiers = service.pricing_configs.filter(
+        is_active=True,
+    ).filter(
+        models.Q(channel=channel) | models.Q(channel='BOTH')
+    ).exists()
 
     if has_tiers:
         result = calculate_cost_from_db(
@@ -253,6 +241,10 @@ def resolve_cost(
     #     touching the YAML on disk.
     pdata = getattr(service, 'pricing_data', None) or {}
     db_pricing_block = None
+    if pdata and not isinstance(pdata, dict):
+        raise PricingConfigurationError("Service pricing_data must be an object.")
+    if pdata and not (pdata.get('base_price') and pdata.get('multipliers')):
+        raise PricingConfigurationError("Service pricing_data is incomplete.")
     if isinstance(pdata, dict) and pdata.get('base_price') and pdata.get('multipliers'):
         db_pricing_block = {
             'model': 'per_sample_table_row_with_multiplier',
@@ -263,11 +255,8 @@ def resolve_cost(
 
     # 2b) YAML registry — for the legacy 9 IBTIKAR services (fallback when
     #     pricing_data hasn't been authored yet).
-    try:
-        from core.registry import get_service_def
-        yaml_def = get_service_def(service.code)
-    except Exception:
-        yaml_def = None
+    from core.registry import get_service_def
+    yaml_def = get_service_def(service.code)
 
     # If the SuperAdmin has authored pricing_data, that overrides the YAML
     # pricing block while keeping the rest of the YAML definition (so
@@ -275,55 +264,41 @@ def resolve_cost(
     if db_pricing_block and sample_table:
         synthetic_def = dict(yaml_def or {})
         synthetic_def['pricing'] = db_pricing_block
-        try:
-            db_result = calculate_price(synthetic_def, service_params, sample_table)
-            return {
-                'total': float(db_result.get('total', 0)),
+        db_result = calculate_price(synthetic_def, service_params, sample_table)
+        return {
+                'total': db_result['total'],
                 'source': 'service_pricing_data',
                 'breakdown': [{
                     'name': 'DB-authored base × multiplier × samples',
                     'type': db_result.get('pricing_model', 'db'),
-                    'amount': float(db_result.get('unit_price', 0)),
+                    'amount': db_result['unit_price'],
                     'quantity': db_result.get('number_of_units', 0),
-                    'subtotal': float(db_result.get('total', 0)),
+                    'subtotal': db_result['total'],
                 }],
                 'yaml_breakdown': db_result.get('breakdown', {}),
                 'currency': db_result.get('currency', 'DZD'),
             }
-        except (ValueError, KeyError, TypeError) as exc:
-            logger.warning(
-                "resolve_cost: pricing_data calculate_price failed for %s (%s); "
-                "falling through to YAML/flat",
-                service.code, exc,
-            )
 
     if yaml_def and yaml_def.get('pricing') and sample_table:
-        try:
-            yaml_result = calculate_price(yaml_def, service_params, sample_table)
-            return {
-                'total': float(yaml_result.get('total', 0)),
+        yaml_result = calculate_price(yaml_def, service_params, sample_table)
+        return {
+                'total': yaml_result['total'],
                 'source': 'yaml_registry',
                 'breakdown': [{
                     'name': 'YAML pricing',
                     'type': yaml_result.get('pricing_model', 'yaml'),
-                    'amount': float(yaml_result.get('unit_price', 0)),
+                    'amount': yaml_result['unit_price'],
                     'quantity': yaml_result.get('number_of_units', 0),
-                    'subtotal': float(yaml_result.get('total', 0)),
+                    'subtotal': yaml_result['total'],
                 }],
                 'yaml_breakdown': yaml_result.get('breakdown', {}),
                 'currency': yaml_result.get('currency', 'DZD'),
             }
-        except (ValueError, KeyError, TypeError) as exc:
-            logger.warning(
-                "resolve_cost: YAML calculate_price failed for %s (%s); "
-                "falling through to flat",
-                service.code, exc,
-            )
 
     # 3) Flat per-sample fallback — never per-request, so GENOCLAB billing
     #    actually scales with sample count.
     flat = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
-    flat = float(flat or 0)
+    flat = _decimal(flat, key=f"{channel.lower()}_price")
     sample_count = max(1, len([s for s in sample_table if s]))
     total = flat * sample_count
     return {
@@ -414,10 +389,9 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
                 config_total = config.amount
         elif config.pricing_type == 'DISCOUNT':
             quantity = 1
-            # DISCOUNT amount is conventionally stored NEGATIVE in the DB
-            # (matches the "Remise volume −500" pattern in the seed fixtures);
-            # but if an operator typed a positive number we treat it as a
-            # subtraction so the math is intuitive either way.
+            # Discounts are stored canonically as a positive magnitude and
+            # applied as a subtraction. ``abs`` preserves compatibility with
+            # legacy rows until migration 0025 normalizes them.
             config_total = -abs(config.amount)
         elif config.pricing_type == 'OVERRIDE':
             # Forfait total — short-circuit the whole computation. The

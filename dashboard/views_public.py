@@ -7,6 +7,7 @@ from datetime import datetime
 from accounts.countries import COUNTRY_CHOICES
 from core.models import Service, Request, RequestHistory
 from core.ratelimit import rate_limit
+from core.exceptions import PricingConfigurationError
 from core.sequences import next_display_id
 from dashboard.utils import safe_float
 
@@ -275,15 +276,20 @@ def guest_submit(request):
         # Use the canonical pricing resolver so guest submissions price the
         # same way as authenticated submissions (DB tiers → YAML → flat).
         from core.pricing import resolve_cost
-        _price_result = resolve_cost(
-            service, channel,
-            sample_table=sample_table_data,
-            service_params=service_params,
-            urgency=urgency,
-        )
-        quote = _price_result.get('total') or float(
-            service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
-        )
+        try:
+            _price_result = resolve_cost(
+                service, channel,
+                sample_table=sample_table_data,
+                service_params=service_params,
+                urgency=urgency,
+            )
+        except PricingConfigurationError:
+            messages.error(request, "La tarification de ce service est temporairement indisponible. Veuillez contacter l'administration.")
+            return render(request, 'pages/guest_submit.html', {
+                'services': services_qs,
+                'country_choices': COUNTRY_CHOICES,
+            })
+        quote = _price_result['total']
 
         req = Request.objects.create(
             display_id=display_id,

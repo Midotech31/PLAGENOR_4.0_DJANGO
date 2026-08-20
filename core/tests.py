@@ -8,8 +8,14 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
-from core.exceptions import AuthorizationError, InvalidTransitionError
+from core.exceptions import (
+    AuthorizationError, FinancialValidationError, InvalidTransitionError,
+    PricingConfigurationError,
+)
 from core.financial import (
     check_ibtikar_budget, compute_invoice_totals, deduct_ibtikar_balance,
 )
@@ -17,6 +23,8 @@ from core.models import Request, RequestHistory, Service
 from core.pricing import calculate_price, resolve_cost
 from core.state_machine import get_allowed_next_states
 from core.workflow import check_role_permission, force_transition, transition
+from core.uploads import validate_upload
+from core.assignment import member_is_eligible
 
 
 # ---------------------------------------------------------------------------
@@ -53,14 +61,13 @@ class CalculatePriceTests(SimpleTestCase):
         self.assertEqual(res['unit_price'], 2000)  # pathogenic base, x1
         self.assertEqual(res['total'], 2000)
 
-    def test_missing_multiplier_key_defaults_to_one(self):
-        # An unknown analysis_mode must never zero out the quote.
-        res = calculate_price(
-            self._def(),
-            {'analysis_mode': 'does-not-exist'},
-            sample_table=[{'a': 1}],
-        )
-        self.assertEqual(res['unit_price'], 1000)  # base * 1.0
+    def test_unknown_multiplier_fails_closed(self):
+        with self.assertRaises(PricingConfigurationError):
+            calculate_price(
+                self._def(),
+                {'analysis_mode': 'does-not-exist'},
+                sample_table=[{'a': 1}],
+            )
 
     def test_per_sample_fixed_model(self):
         sdef = {'service_code': 'Y', 'pricing': {
@@ -87,6 +94,65 @@ class CalculatePriceTests(SimpleTestCase):
         with self.assertRaises(ValueError):
             calculate_price(self._def(), {}, sample_table=[])
 
+    def test_malformed_numeric_price_fails_closed(self):
+        with self.assertRaises(PricingConfigurationError):
+            calculate_price(
+                self._def(base_price={'non_pathogenic': 'not-a-price'}),
+                {'analysis_mode': 'standard'}, [{'a': 1}],
+            )
+
+
+class UploadValidationTests(SimpleTestCase):
+    def test_spoofed_pdf_is_rejected(self):
+        upload = SimpleUploadedFile('invoice.pdf', b'<html>not pdf</html>', 'application/pdf')
+        with self.assertRaises(ValidationError):
+            validate_upload(upload, 'business_document')
+
+    def test_valid_pdf_is_renamed_to_opaque_name(self):
+        upload = SimpleUploadedFile('customer-name.pdf', b'%PDF-1.4\n%%EOF', 'application/pdf')
+        validate_upload(upload, 'business_document')
+        self.assertRegex(upload.name, r'^[0-9a-f]{32}\.pdf$')
+
+    def test_mime_mismatch_is_rejected(self):
+        upload = SimpleUploadedFile('invoice.pdf', b'%PDF-1.4\n%%EOF', 'text/html')
+        with self.assertRaises(ValidationError):
+            validate_upload(upload, 'business_document')
+
+    def test_oversized_file_is_rejected(self):
+        upload = SimpleUploadedFile('invoice.pdf', b'%PDF-' + b'x' * 100, 'application/pdf')
+        with self.assertRaises(ValidationError):
+            validate_upload(upload, 'business_document', max_bytes=10)
+
+
+class AssignmentEligibilityTests(TestCase):
+    def setUp(self):
+        from accounts.models import User, MemberProfile, Technique
+        self.user = User.objects.create_user(username='eligible-member', role='MEMBER')
+        self.profile = self.user.member_profile
+        self.profile.max_load = 2
+        self.profile.save(update_fields=['max_load'])
+        self.technique = Technique.objects.create(name='TEST_SERVICE')
+        self.profile.techniques.add(self.technique)
+        self.service = Service.objects.create(code='TEST_SERVICE', name='Test Service')
+
+    def test_matching_available_member_is_eligible(self):
+        self.assertTrue(member_is_eligible(self.profile, self.service))
+
+    def test_capacity_and_active_account_are_enforced(self):
+        self.profile.current_load = 2
+        self.profile.save(update_fields=['current_load'])
+        self.assertFalse(member_is_eligible(self.profile, self.service))
+        self.profile.current_load = 0
+        self.profile.save(update_fields=['current_load'])
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        self.assertFalse(member_is_eligible(self.profile, self.service))
+
+    def test_nonmatching_technique_is_ineligible(self):
+        self.technique.name = 'UNRELATED'
+        self.technique.save(update_fields=['name'])
+        self.assertFalse(member_is_eligible(self.profile, self.service))
+
 
 # ---------------------------------------------------------------------------
 # resolve_cost — canonical resolver, flat fallback (DB-backed Service)
@@ -102,10 +168,9 @@ class ResolveCostTests(TestCase):
             ibtikar_price=Decimal('1500'), genoclab_price=Decimal('3000'),
         )
 
-    def test_no_service_returns_zero(self):
-        res = resolve_cost(None, 'GENOCLAB')
-        self.assertEqual(res['total'], 0.0)
-        self.assertEqual(res['source'], 'no_service')
+    def test_no_service_fails_closed(self):
+        with self.assertRaises(PricingConfigurationError):
+            resolve_cost(None, 'GENOCLAB')
 
     def test_flat_ibtikar_uses_ibtikar_price_times_samples(self):
         res = resolve_cost(self.service, 'IBTIKAR', sample_table=[{'a': 1}, {'a': 2}])
@@ -120,15 +185,9 @@ class ResolveCostTests(TestCase):
         res = resolve_cost(self.service, 'GENOCLAB', sample_table=[])
         self.assertEqual(res['total'], 3000.0)  # max(1, 0) * 3000
 
-    def test_invalid_channel_is_normalised(self):
-        # An unknown channel not starting with 'g' -> treated as IBTIKAR.
-        res = resolve_cost(self.service, 'XYZ', sample_table=[{'a': 1}])
-        self.assertEqual(res['total'], 1500.0)
-
-    def test_invalid_channel_starting_with_g_is_genoclab(self):
-        # ...while one starting with 'g' -> GENOCLAB (documents the rule).
-        res = resolve_cost(self.service, 'garbage', sample_table=[{'a': 1}])
-        self.assertEqual(res['total'], 3000.0)
+    def test_invalid_channel_fails_closed(self):
+        with self.assertRaises(PricingConfigurationError):
+            resolve_cost(self.service, 'XYZ', sample_table=[{'a': 1}])
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +278,24 @@ class InvoiceTotalsTests(SimpleTestCase):
         t = compute_invoice_totals([{'total': 1500}], vat_rate=0.19)
         json.dumps(t)  # must not raise (stored in Request.quote_detail JSONField)
         self.assertIsInstance(t['total_ttc'], float)
+
+    def test_rejects_malformed_line_total_instead_of_zero(self):
+        with self.assertRaises(FinancialValidationError):
+            compute_invoice_totals([{'total': 'not-a-number'}])
+
+    def test_rejects_negative_and_nonfinite_money(self):
+        for value in ('-0.01', 'NaN', 'Infinity', '-Infinity'):
+            with self.subTest(value=value):
+                with self.assertRaises(FinancialValidationError):
+                    compute_invoice_totals([{'total': value}])
+
+    def test_rejects_vat_above_one(self):
+        with self.assertRaises(FinancialValidationError):
+            compute_invoice_totals([{'total': 100}], vat_rate='1.01')
+
+    def test_rejects_negative_optional_fee(self):
+        with self.assertRaises(FinancialValidationError):
+            compute_invoice_totals([{'total': 100}], admin_fees='-1')
 
 
 # ---------------------------------------------------------------------------
@@ -367,7 +444,15 @@ class EndToEndPipelineTests(TestCase):
         self._step(req, 'ANALYSIS_STARTED', self.analyst_user)
         self._step(req, 'ANALYSIS_FINISHED', self.analyst_user)
         self._step(req, 'PAYMENT_PENDING', self.admin)
-        self._step(req, 'PAYMENT_CONFIRMED', client)
+        self._step(req, 'PAYMENT_PROOF_UPLOADED', client)
+        req.payment_verified_at = timezone.now()
+        req.payment_verified_by = self.finance
+        req.payment_verification_note = 'Proof matched to the bank receipt.'
+        req.save(update_fields=[
+            'payment_verified_at', 'payment_verified_by',
+            'payment_verification_note',
+        ])
+        self._step(req, 'PAYMENT_CONFIRMED', self.finance)
         self._step(req, 'REPORT_UPLOADED', self.analyst_user)
         self._step(req, 'REPORT_VALIDATED', self.admin)
         self._step(req, 'SENT_TO_CLIENT', self.admin)
@@ -382,6 +467,37 @@ class EndToEndPipelineTests(TestCase):
             channel='GENOCLAB', status='ORDER_UPLOADED', requester=client)
         with self.assertRaises(AuthorizationError):
             transition(req, 'INVOICE_GENERATED', client)
+
+    def test_client_uploads_proof_but_finance_confirms_payment(self):
+        from accounts.models import User
+        client = User.objects.create(username='payment-client', role='CLIENT')
+        req = Request.objects.create(
+            channel='GENOCLAB', status='PAYMENT_PENDING', requester=client)
+
+        transition(req, 'PAYMENT_PROOF_UPLOADED', client)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'PAYMENT_PROOF_UPLOADED')
+
+        with self.assertRaises(AuthorizationError):
+            transition(req, 'PAYMENT_CONFIRMED', client)
+
+        req.payment_verified_at = timezone.now()
+        req.payment_verified_by = self.finance
+        req.payment_verification_note = 'Proof matched to the bank receipt.'
+        req.save(update_fields=[
+            'payment_verified_at', 'payment_verified_by',
+            'payment_verification_note',
+        ])
+        transition(req, 'PAYMENT_CONFIRMED', self.finance)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'PAYMENT_CONFIRMED')
+        self.assertEqual(req.payment_verified_by, self.finance)
+
+    def test_payment_confirmation_requires_verification_audit(self):
+        req = Request.objects.create(
+            channel='GENOCLAB', status='PAYMENT_PROOF_UPLOADED')
+        with self.assertRaises(InvalidTransitionError):
+            transition(req, 'PAYMENT_CONFIRMED', self.finance)
 
 
 # ---------------------------------------------------------------------------

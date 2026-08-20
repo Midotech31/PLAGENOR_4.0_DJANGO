@@ -3,7 +3,9 @@
 Usage:  {% load icons %}  then  {% icon 'globe' %}  or  {% icon 'trophy' size=40 style='color:#7c3aed;' %}
 """
 from django import template
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
+from django.utils.safestring import SafeString
+import re
 
 register = template.Library()
 
@@ -72,11 +74,22 @@ def icon(name, size=20, cls='', style='', stroke_width=2, flip_rtl=False):
     solid = name in _SOLID
     fill = 'currentColor' if solid else 'none'
     stroke = 'none' if solid else 'currentColor'
+    try:
+        size = max(8, min(256, int(size)))
+        stroke_width = max(0, min(8, float(stroke_width)))
+    except (TypeError, ValueError):
+        size, stroke_width = 20, 2
+    cls = cls if re.fullmatch(r'[A-Za-z0-9 _-]*', str(cls)) else ''
+    style = style if re.fullmatch(r'[A-Za-z0-9:#;.%(), _-]*', str(style)) else ''
     classes = ('app-icon ' + cls).strip()
-    flip_attr = ' data-flip-rtl="true"' if flip_rtl else ''
-    return mark_safe(
-        f'<svg class="{classes}" viewBox="0 0 24 24" aria-hidden="true"{flip_attr} '
-        f'style="width:{size}px;height:{size}px;fill:{fill};stroke:{stroke};'
-        f'stroke-width:{stroke_width};stroke-linecap:round;stroke-linejoin:round;'
-        f'flex-shrink:0;vertical-align:middle;{style}">{body}</svg>'
+    flip_attr = format_html(' data-flip-rtl="true"') if flip_rtl else ''
+    return format_html(
+        '<svg class="{}" viewBox="0 0 24 24" aria-hidden="true"{} '
+        'style="width:{}px;height:{}px;fill:{};stroke:{};stroke-width:{};'
+        'stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;'
+        'vertical-align:middle;{}">{}</svg>',
+        classes, flip_attr, size, size, fill, stroke, stroke_width, style,
+        # The SVG fragment comes exclusively from the module-level _ICONS
+        # constant; no request, database, or template input can reach it.
+        SafeString(body),  # nosec B703
     )

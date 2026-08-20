@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -9,6 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secure by default: DEBUG=False unless the operator opts in.
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+PRIVILEGED_MFA_ENFORCEMENT = os.getenv(
+    'PRIVILEGED_MFA_ENFORCEMENT', 'false' if DEBUG else 'true'
+).lower() == 'true'
+CSP_REPORT_ONLY = os.getenv('CSP_REPORT_ONLY', 'true').lower() == 'true'
 
 # SECRET_KEY is required in production. We allow a known-insecure fallback
 # only when DEBUG is on, so a misconfigured production deploy fails fast
@@ -18,10 +23,26 @@ if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = 'dev-insecure-key-change-in-production'
     else:
-        from django.core.exceptions import ImproperlyConfigured
         raise ImproperlyConfigured(
             "SECRET_KEY environment variable must be set when DEBUG is False."
         )
+
+# Privileged-account TOTP seeds are encrypted at rest. Production must fail
+# during boot if the stable Fernet key is missing or malformed, instead of
+# discovering the problem only when a user attempts MFA enrollment/login.
+TOTP_ENCRYPTION_KEY = os.getenv('TOTP_ENCRYPTION_KEY', '').strip()
+if not DEBUG:
+    if not TOTP_ENCRYPTION_KEY:
+        raise ImproperlyConfigured(
+            "TOTP_ENCRYPTION_KEY must be set when DEBUG is False."
+        )
+    try:
+        from cryptography.fernet import Fernet
+        Fernet(TOTP_ENCRYPTION_KEY.encode('ascii'))
+    except (ValueError, TypeError, UnicodeEncodeError) as exc:
+        raise ImproperlyConfigured(
+            "TOTP_ENCRYPTION_KEY must be a valid Fernet key."
+        ) from exc
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -89,6 +110,8 @@ MIDDLEWARE = [
     # activated a language from the cookie / Accept-Language header).
     'dashboard.middleware.PreferredLanguageMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'dashboard.middleware.PrivilegedMFAMiddleware',
+    'dashboard.middleware.ContentSecurityPolicyMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dashboard.middleware.UpdateLastSeenMiddleware',
     'dashboard.middleware.ForcePasswordChangeMiddleware',

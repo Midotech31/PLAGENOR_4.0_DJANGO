@@ -63,7 +63,9 @@ ROLE_PERMISSIONS = {
     ('ORDER_UPLOADED', 'ASSIGNED'): _ADMINS,
     ('INVOICE_GENERATED', 'ASSIGNED'): _ADMINS,
     ('ANALYSIS_FINISHED', 'PAYMENT_PENDING'): _ADMINS + ['MEMBER'],
-    ('PAYMENT_PENDING', 'PAYMENT_CONFIRMED'): _ADMINS + ['FINANCE', 'CLIENT'],
+    ('PAYMENT_PENDING', 'PAYMENT_PROOF_UPLOADED'): _ADMINS + ['CLIENT'],
+    ('PAYMENT_PROOF_UPLOADED', 'PAYMENT_CONFIRMED'): _ADMINS + ['FINANCE'],
+    ('PAYMENT_PROOF_UPLOADED', 'PAYMENT_PENDING'): _ADMINS + ['FINANCE'],
     ('PAYMENT_CONFIRMED', 'REPORT_UPLOADED'): _ADMINS + ['MEMBER'],
     ('REPORT_VALIDATED', 'SENT_TO_CLIENT'): _ADMINS,
     ('SENT_TO_CLIENT', 'COMPLETED'): _ADMINS + ['CLIENT'],
@@ -102,31 +104,38 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     Validates the transition against the state machine and role permissions.
     Raises InvalidTransitionError or AuthorizationError on failure.
     """
-    old_status = request_obj.status
-
-    if not force:
-        # Validate state machine
-        allowed = get_allowed_next_states(request_obj.channel, old_status)
-        if to_status not in allowed:
-            raise InvalidTransitionError(
-                f"Transition {old_status} -> {to_status} non autorisée pour le canal {request_obj.channel}. "
-                f"États autorisés: {sorted(allowed) if allowed else 'AUCUN (état terminal)'}"
-            )
-
-        # Validate role permissions
-        if not check_role_permission(request_obj, to_status, actor):
-            raise AuthorizationError(
-                f"Le rôle {getattr(actor, 'role', '?')} n'est pas autorisé pour la transition "
-                f"{old_status} -> {to_status}"
-            )
-
-    # Status change + history must be all-or-nothing.
+    # Lock before reading the current state. Validating a stale in-memory
+    # object permits two concurrent requests to both transition from the same
+    # state and create contradictory history rows.
     with transaction.atomic():
-        request_obj.status = to_status
-        request_obj.save(update_fields=['status', 'updated_at'])
+        locked = Request.objects.select_for_update().get(pk=request_obj.pk)
+        old_status = locked.status
+
+        if not force:
+            allowed = get_allowed_next_states(locked.channel, old_status)
+            if to_status not in allowed:
+                raise InvalidTransitionError(
+                    f"Transition {old_status} -> {to_status} non autorisée pour le canal {locked.channel}. "
+                    f"États autorisés: {sorted(allowed) if allowed else 'AUCUN (état terminal)'}"
+                )
+            if not check_role_permission(locked, to_status, actor):
+                raise AuthorizationError(
+                    f"Le rôle {getattr(actor, 'role', '?')} n'est pas autorisé pour la transition "
+                    f"{old_status} -> {to_status}"
+                )
+
+        if to_status == 'PAYMENT_CONFIRMED' and (
+                not locked.payment_verified_at
+                or not locked.payment_verified_by_id
+                or not locked.payment_verification_note.strip()):
+            raise InvalidTransitionError(
+                "La preuve de paiement doit être vérifiée et auditée avant confirmation.")
+
+        locked.status = to_status
+        locked.save(update_fields=['status', 'updated_at'])
 
         RequestHistory.objects.create(
-            request=request_obj,
+            request=locked,
             from_status=old_status,
             to_status=to_status,
             actor=actor,
@@ -134,24 +143,31 @@ def transition(request_obj, to_status, actor, notes='', force=False):
             forced=force,
         )
 
-    # Audit log
-    log_workflow_transition(request_obj, old_status, to_status, actor, {'notes': notes, 'forced': force})
+        # This is money-critical and belongs in the same transaction as the
+        # state and history updates. Any failure rolls the transition back.
+        _deduct_ibtikar_on_complete(locked, old_status, to_status)
 
-    # IBTIKAR balance deduction — fires once per request, at the moment
-    # the requester has confirmed reception (COMPLETED). The financial
-    # helper is responsible for idempotency safety.
-    _deduct_ibtikar_on_complete(request_obj, old_status, to_status)
+        # Notifications, email and document rendering are noncritical side
+        # effects. Run only after the database commit so a later rollback can
+        # never send a false status or generate an orphaned deliverable.
+        transaction.on_commit(
+            lambda: _post_commit_transition(
+                locked, old_status, to_status, actor, notes, force))
 
-    # Email notifications for key transitions
-    _send_transition_emails(request_obj, old_status, to_status)
-
-    # In-app notifications for key transitions
-    _create_notifications(request_obj, to_status)
-
-    # Auto-generate documents on specific transitions
-    _auto_generate_documents(request_obj, to_status)
+    request_obj.status = locked.status
+    request_obj.updated_at = locked.updated_at
+    request_obj.budget_deducted = locked.budget_deducted
 
     return request_obj
+
+
+def _post_commit_transition(request_obj, old_status, to_status, actor, notes, force):
+    log_workflow_transition(
+        request_obj, old_status, to_status, actor,
+        {'notes': notes, 'forced': force})
+    _send_transition_emails(request_obj, old_status, to_status)
+    _create_notifications(request_obj, to_status)
+    _auto_generate_documents(request_obj, to_status)
 
 
 def force_transition(request_obj, to_status, actor, notes=''):
@@ -242,7 +258,8 @@ def _send_transition_emails(request_obj, old_status, to_status):
     """
     try:
         from notifications import emails as nem
-    except Exception:
+    except Exception as exc:
+        logger.exception("Unable to load email notification handlers: %s", exc)
         return
 
     def _safe(fn, *args, **kw):
@@ -292,8 +309,24 @@ def _send_transition_emails(request_obj, old_status, to_status):
 
 
 def _auto_generate_documents(request_obj, to_status):
-    """Auto-generate documents on specific transitions."""
-    pass
+    """Generate transition-owned documents after a successful commit."""
+    generators = {
+        'SUBMITTED': 'generate_ibtikar_form',
+        'PLATFORM_NOTE_GENERATED': 'generate_platform_note',
+        'SAMPLE_RECEIVED': 'generate_reception_form',
+    }
+    function_name = generators.get(to_status)
+    if not function_name:
+        return
+    if to_status == 'SUBMITTED' and request_obj.channel != 'IBTIKAR':
+        return
+    try:
+        from documents import generators as document_generators
+        getattr(document_generators, function_name)(request_obj)
+    except Exception as exc:
+        logger.exception(
+            "Document generation %s failed for %s: %s",
+            function_name, request_obj.display_id, exc)
 
 
 def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
@@ -318,45 +351,32 @@ def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
     COMPLETED transition (an admin forces the request back and the requester
     confirms again) or two concurrent confirmations can never debit twice.
 
-    Failures here NEVER block the workflow — log and continue.
+    Failures here block and roll back the transition because balance, status,
+    history, and the idempotency flag are one financial transaction.
     """
     if to_status != 'COMPLETED' or request_obj.channel != 'IBTIKAR':
         return
     requester = getattr(request_obj, 'requester', None)
     if requester is None:
         return
+    from decimal import Decimal
     amount = (
-        float(request_obj.admin_validated_price)
+        Decimal(request_obj.admin_validated_price)
         if getattr(request_obj, 'admin_validated_price', None)
-        else float(request_obj.budget_amount or 0)
+        else Decimal(request_obj.budget_amount or 0)
     )
     if amount <= 0:
         return
-    try:
-        from core.financial import deduct_ibtikar_balance
-        # Claim the debit atomically; if the flag was already set, another
-        # completion (or a replay of this one) has paid — do nothing.
-        with transaction.atomic():
-            locked = (
-                Request.objects.select_for_update()
-                .filter(pk=request_obj.pk, budget_deducted=False)
-                .first()
-            )
-            if locked is None:
-                logger.info(
-                    "IBTIKAR deduction skipped for %s: budget already deducted.",
-                    request_obj.display_id,
-                )
-                return
-            locked.budget_deducted = True
-            locked.save(update_fields=['budget_deducted'])
-            deduct_ibtikar_balance(
-                requester, amount,
-                reason=f"COMPLETED:{request_obj.display_id}",
-            )
-        request_obj.budget_deducted = True
-    except Exception as exc:
-        logger.exception(
-            "IBTIKAR deduction failed for %s (%s DA): %s",
-            request_obj.display_id, amount, exc,
-        )
+    if request_obj.budget_deducted:
+        logger.info(
+            "IBTIKAR deduction skipped for %s: budget already deducted.",
+            request_obj.display_id)
+        return
+    from accounts.models import User
+    from core.financial import deduct_ibtikar_balance
+    locked_requester = User.objects.select_for_update().get(pk=requester.pk)
+    deduct_ibtikar_balance(
+        locked_requester, amount,
+        reason=f"COMPLETED:{request_obj.display_id}")
+    request_obj.budget_deducted = True
+    request_obj.save(update_fields=['budget_deducted'])

@@ -17,6 +17,26 @@ ASSIGNMENT_WEIGHTS = {
 DEFAULT_MAX_LOAD = 5
 
 
+def member_is_eligible(member_profile: MemberProfile, service=None) -> bool:
+    """Return whether a member may be assigned, not merely how they rank."""
+    if (not member_profile.user.is_active
+            or member_profile.user.role != 'MEMBER'
+            or not member_profile.available
+            or member_profile.current_load >= (
+                member_profile.max_load or DEFAULT_MAX_LOAD)):
+        return False
+    if service is None:
+        return True
+    techniques = [name.casefold() for name in
+                  member_profile.techniques.values_list('name', flat=True)]
+    if not techniques:
+        return False
+    code = (getattr(service, 'code', '') or '').casefold()
+    name = (getattr(service, 'name', '') or '').casefold()
+    return any(code in technique or technique in code or name in technique
+               for technique in techniques)
+
+
 def compute_member_score(member_profile: MemberProfile, service=None) -> float:
     """Compute assignment score for a member profile."""
     weights = ASSIGNMENT_WEIGHTS
@@ -72,7 +92,7 @@ def get_recommended_members(service=None, limit: int = 5) -> list:
 
     scored = []
     for m in members:
-        if m.current_load >= (m.max_load or DEFAULT_MAX_LOAD):
+        if not member_is_eligible(m, service):
             continue
         m._score = compute_member_score(m, service)
         scored.append(m)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-25 10:46+0100\n"
+"POT-Creation-Date: 2026-08-20 16:35+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -125,6 +125,9 @@ msgstr ""
 msgid "Votre mot de passe a été mis à jour avec succès."
 msgstr ""
 
+msgid "Trop de codes incorrects. Veuillez vous reconnecter."
+msgstr "Trop de codes incorrects. Veuillez vous reconnecter."
+
 msgid "Code invalide ou expiré. Réessayez."
 msgstr ""
 
@@ -135,6 +138,12 @@ msgid "Double authentification activée."
 msgstr ""
 
 msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr ""
+
+msgid "La double authentification n'est pas activée."
+msgstr "La double authentification n'est pas activée."
+
+msgid "Mot de passe ou code 2FA invalide."
 msgstr ""
 
 msgid "Double authentification désactivée."
@@ -488,6 +497,12 @@ msgstr ""
 msgid "Votre compte est protégé par un code à usage unique à chaque connexion."
 msgstr ""
 
+msgid "Mot de passe actuel"
+msgstr ""
+
+msgid "Code 2FA actuel"
+msgstr "Code 2FA actuel"
+
 msgid "Désactiver la double authentification ?"
 msgstr ""
 
@@ -720,9 +735,6 @@ msgid "En attente de réponse du client"
 msgstr ""
 
 msgid "Générer facture"
-msgstr ""
-
-msgid "Confirmer paiement"
 msgstr ""
 
 msgid "Contacter par email"
@@ -1360,6 +1372,9 @@ msgstr ""
 msgid "Le rapport peut être délivré au client"
 msgstr ""
 
+msgid "Preuve reçue — vérification finance en attente."
+msgstr "Preuve reçue — vérification finance en attente."
+
 msgid "Documents"
 msgstr ""
 
@@ -1409,6 +1424,9 @@ msgid "Préparer / Modifier le devis"
 msgstr ""
 
 msgid "Générer la facture"
+msgstr ""
+
+msgid "Référence / note de vérification"
 msgstr ""
 
 msgid "Confirmer le paiement"
@@ -2441,6 +2459,9 @@ msgstr ""
 msgid "Réinitialiser / Reset Account"
 msgstr ""
 
+msgid "Raison obligatoire"
+msgstr ""
+
 msgid "Réinitialiser la 2FA (perte du téléphone)"
 msgstr ""
 
@@ -2844,7 +2865,7 @@ msgstr ""
 msgid "Modifier le service"
 msgstr ""
 
-msgid "Prix IBTIKAR (DZD)"
+msgid "Prix IBTIKAR (DA)"
 msgstr ""
 
 msgid ""
@@ -2852,7 +2873,7 @@ msgid ""
 "ci-dessous)"
 msgstr ""
 
-msgid "Prix GENOCLAB (DZD)"
+msgid "Prix GENOCLAB (DA)"
 msgstr ""
 
 msgid "Image actuelle"
@@ -3012,7 +3033,7 @@ msgstr ""
 msgid "Les deux"
 msgstr ""
 
-msgid "Montant (DZD)"
+msgid "Montant (DA)"
 msgstr ""
 
 msgid "Unité"
@@ -3971,8 +3992,7 @@ msgid "Suivi de votre demande"
 msgstr ""
 
 msgid ""
-"Entrez le token de suivi reçu par e-mail pour consulter l'état "
-"d'avancement."
+"Entrez le token de suivi reçu par e-mail pour consulter l'état d'avancement."
 msgstr ""
 
 msgid "Collez votre token de suivi..."

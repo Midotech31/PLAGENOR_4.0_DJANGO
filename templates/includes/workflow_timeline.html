@@ -18,7 +18,7 @@
                     {% endif %}
                     <span class="badge-status {{ h.to_status|lower }}" style="font-size:0.7rem;">{{ h.to_status }}</span>
                 </div>
-                {% if h.notes %}
+                {% if show_actor and h.notes %}
                 <div class="text-sm text-muted" style="margin-top:4px;">{{ h.notes }}</div>
                 {% endif %}
             </div>

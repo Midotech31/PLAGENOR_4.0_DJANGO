@@ -155,12 +155,6 @@
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer facture" %}</button>
                         </form>
 
-                        {% elif req.status == 'INVOICE_GENERATED' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="to_status" value="PAYMENT_CONFIRMED">
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Confirmer paiement" %}</button>
-                        </form>
                         {% endif %}
 
                         {# Contact button for any request with email #}

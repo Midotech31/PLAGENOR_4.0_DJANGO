@@ -47,7 +47,6 @@
                         <div style="font-size:0.8rem; color:var(--slate-500);">{{ h.created_at|date:"d/m/Y H:i" }}</div>
                         <div style="font-size:0.85rem;">
                             <span class="badge-status" style="font-size:0.7rem;">{{ h.to_status }}</span>
-                            {% if h.notes %}<span class="text-muted"> — {{ h.notes }}</span>{% endif %}
                         </div>
                     </div>
                     {% endfor %}

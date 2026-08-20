@@ -11,7 +11,7 @@ from django.core.files.storage import default_storage
 from django.template import Context, Template
 from django.test import SimpleTestCase, TestCase, override_settings
 
-from core.models import Request
+from core.models import Request, RequestHistory
 
 # Plain (non-manifest) storages so template {% static %} works without a
 # collectstatic run in tests.
@@ -316,6 +316,21 @@ class GuestTrackingSecurityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'HiddenAnalystName')
 
+    def test_public_tracking_hides_internal_history_notes(self):
+        token = uuid.uuid4()
+        req = Request.objects.create(
+            channel='IBTIKAR', submitted_as_guest=True, guest_token=token,
+            assigned_to=self.analyst.member_profile,
+            status='ASSIGNED', display_id='IBT-GUEST-NOTES',
+        )
+        RequestHistory.objects.create(
+            request=req, actor=self.analyst, to_status='ASSIGNED',
+            notes='INTERNAL-ONLY-ANALYST-NOTE',
+        )
+        response = self.client.get('/track/', {'q': str(token)})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'INTERNAL-ONLY-ANALYST-NOTE')
+
     def test_completed_request_without_report_renders_safely(self):
         token = uuid.uuid4()
         Request.objects.create(
@@ -433,3 +448,203 @@ class MediaAuthorizationTests(TestCase):
     def test_generated_document_served_to_staff(self):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get('/media/documents/DEVIS_X.docx').status_code, 200)
+
+
+class PricingApiIntegrityTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        from core.models import Service
+
+        cls.admin = User.objects.create_user(
+            username='pricing-admin', password='x', role='PLATFORM_ADMIN')
+        cls.service = Service.objects.create(
+            code='STRICT-PRICE', name='Strict pricing service')
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def _post(self, **overrides):
+        from django.urls import reverse
+
+        payload = {
+            'name': 'Tarif institutionnel',
+            'pricing_type': 'BASE',
+            'channel': 'GENOCLAB',
+            'amount': '1500.50',
+            'min_quantity': '1',
+            'max_quantity': '',
+            'min_amount': '',
+            'max_amount': '',
+            'priority': '0',
+            'is_active': 'on',
+        }
+        payload.update(overrides)
+        return self.client.post(
+            reverse('dashboard:pricing_add_api', args=[self.service.pk]),
+            payload,
+        )
+
+    def test_malformed_amount_is_rejected_not_saved_as_zero(self):
+        from core.models import ServicePricing
+
+        response = self._post(amount='not-a-number')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(ServicePricing.objects.count(), 0)
+
+    def test_active_zero_or_nonfinite_amount_is_rejected(self):
+        from core.models import ServicePricing
+
+        for amount in ('0', '-1', 'NaN', 'Infinity'):
+            with self.subTest(amount=amount):
+                response = self._post(amount=amount)
+                self.assertEqual(response.status_code, 400)
+        self.assertEqual(ServicePricing.objects.count(), 0)
+
+    def test_incoherent_quantity_and_amount_ranges_are_rejected(self):
+        self.assertEqual(
+            self._post(min_quantity='5', max_quantity='2').status_code, 400)
+        self.assertEqual(
+            self._post(min_amount='500', max_amount='100').status_code, 400)
+
+    def test_valid_tariff_is_created_exactly(self):
+        from decimal import Decimal
+        from core.models import ServicePricing
+
+        response = self._post()
+        self.assertEqual(response.status_code, 201)
+        tier = ServicePricing.objects.get()
+        self.assertEqual(tier.amount, Decimal('1500.50'))
+
+
+class AdminFinancialMutationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        from core.models import Service
+
+        cls.admin = User.objects.create_user(
+            username='finance-admin', password='x', role='SUPER_ADMIN')
+        cls.client_user = User.objects.create_user(
+            username='finance-client', password='x', role='CLIENT')
+        cls.service = Service.objects.create(
+            code='FINANCE-STRICT', name='Financial integrity service')
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def _request(self, **overrides):
+        values = {
+            'display_id': f'GCL-FIN-{uuid.uuid4().hex[:8]}',
+            'title': 'Financial request',
+            'channel': 'GENOCLAB',
+            'status': 'ORDER_UPLOADED',
+            'service': self.service,
+            'requester': self.client_user,
+            'quote_amount': '1190.00',
+            'quote_detail': {
+                'items': [{
+                    'label': 'Analyse', 'unit_price': 1000,
+                    'quantity': 1, 'total': 1000,
+                }],
+                'admin_fees': 0,
+                'report_fees': 0,
+                'vat_rate': 0.19,
+            },
+        }
+        values.update(overrides)
+        return Request.objects.create(**values)
+
+    def test_cost_adjustment_requires_positive_finite_amount_and_reason(self):
+        from django.urls import reverse
+
+        req = self._request(status='REQUEST_CREATED')
+        url = reverse('dashboard:admin_adjust_cost', args=[req.pk])
+        for payload in (
+            {'admin_price': '-1', 'cost_justification': 'Correction documentée'},
+            {'admin_price': 'NaN', 'cost_justification': 'Correction documentée'},
+            {'admin_price': '1000', 'cost_justification': 'court'},
+        ):
+            with self.subTest(payload=payload):
+                self.client.post(url, payload)
+                req.refresh_from_db()
+                self.assertIsNone(req.admin_validated_price)
+
+    def test_valid_cost_adjustment_is_saved_as_decimal(self):
+        from decimal import Decimal
+        from django.urls import reverse
+
+        req = self._request(status='REQUEST_CREATED')
+        self.client.post(reverse('dashboard:admin_adjust_cost', args=[req.pk]), {
+            'admin_price': '1234.56',
+            'cost_justification': 'Correction tarifaire documentée',
+        })
+        req.refresh_from_db()
+        self.assertEqual(req.admin_validated_price, Decimal('1234.56'))
+
+    def test_malformed_quote_does_not_replace_existing_quote(self):
+        from django.urls import reverse
+
+        req = self._request(status='REQUEST_CREATED')
+        original = req.quote_detail
+        response = self.client.post(
+            reverse('dashboard:admin_prepare_quote', args=[req.pk]),
+            {
+                'item_label_0': 'Analyse',
+                'item_unit_price_0': 'garbage',
+                'item_quantity_0': '1',
+                'admin_fees': '0', 'report_fees': '0', 'vat_rate': '19',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        req.refresh_from_db()
+        self.assertEqual(req.quote_detail, original)
+
+    def test_invoice_and_transition_succeed_together(self):
+        from core.models import Invoice
+        from django.urls import reverse
+
+        req = self._request()
+        response = self.client.post(
+            reverse('dashboard:admin_generate_invoice', args=[req.pk]))
+        self.assertEqual(response.status_code, 302)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'INVOICE_GENERATED')
+        invoice = Invoice.objects.get(request=req)
+        self.assertEqual(str(invoice.total_ttc), '1190.00')
+
+    def test_invoice_recomputes_tampered_quote_line_total(self):
+        from core.models import Invoice
+        from django.urls import reverse
+
+        req = self._request(quote_detail={
+            'items': [{
+                'label': 'Analyse', 'unit_price': 1000,
+                'quantity': 2, 'total': 1,
+            }],
+            'admin_fees': 0, 'report_fees': 0, 'vat_rate': 0.19,
+        })
+        self.client.post(
+            reverse('dashboard:admin_generate_invoice', args=[req.pk]))
+        invoice = Invoice.objects.get(request=req)
+        self.assertEqual(str(invoice.subtotal_ht), '2000.00')
+        self.assertEqual(str(invoice.total_ttc), '2380.00')
+        self.assertEqual(invoice.line_items[0]['total'], 2000.0)
+
+    def test_transition_failure_rolls_invoice_back(self):
+        from unittest.mock import patch
+        from core.exceptions import InvalidTransitionError
+        from core.models import Invoice
+        from django.urls import reverse
+
+        req = self._request()
+        with patch(
+            'dashboard.views.admin_ops.transition',
+            side_effect=InvalidTransitionError('simulated transition failure'),
+        ):
+            response = self.client.post(
+                reverse('dashboard:admin_generate_invoice', args=[req.pk]))
+        self.assertEqual(response.status_code, 302)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'ORDER_UPLOADED')
+        self.assertFalse(Invoice.objects.filter(request=req).exists())

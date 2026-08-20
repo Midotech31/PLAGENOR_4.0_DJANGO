@@ -4,11 +4,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, confirm_appointment_flow
 from django.contrib import messages
 from django.utils import timezone
+from django.db import transaction
 
 from core.models import Service, Request, Invoice
 from core.workflow import transition
 from core.services.genoclab import submit_genoclab_request
-from core.exceptions import InvalidTransitionError, AuthorizationError
+from core.exceptions import InvalidTransitionError, AuthorizationError, PricingConfigurationError
+from core.uploads import validate_upload
+from django.core.exceptions import ValidationError
 from notifications.models import Notification
 
 
@@ -157,13 +160,17 @@ def create_request(request):
     # sample count or admin-configured tiers — meaning 1 sample was billed
     # the same as 50, and the pricing tiers in the admin UI did nothing.
     from core.pricing import resolve_cost
-    price_result = resolve_cost(
-        service, 'GENOCLAB',
-        sample_table=sample_table_data,
-        service_params=service_params,
-        urgency=request.POST.get('urgency', 'Normal'),
-    )
-    quote_amount = price_result.get('total') or float(service.genoclab_price or 0)
+    try:
+        price_result = resolve_cost(
+            service, 'GENOCLAB',
+            sample_table=sample_table_data,
+            service_params=service_params,
+            urgency=request.POST.get('urgency', 'Normal'),
+        )
+    except PricingConfigurationError:
+        messages.error(request, "La tarification de ce service doit être corrigée par un administrateur avant la soumission.")
+        return redirect_back(request, 'dashboard:client')
+    quote_amount = price_result['total']
 
     req = submit_genoclab_request(
         data={
@@ -213,39 +220,30 @@ def upload_order(request, pk):
     """Upload purchase order (Bon de commande) - mandatory per Algerian commercial code."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
-    
-    # Check status - client must have accepted quote
-    if req.status != 'QUOTE_VALIDATED_BY_CLIENT':
-        messages.error(request, "Vous ne pouvez pas télécharger de bon de commande à ce stade.")
-        return redirect('dashboard:client_request_detail', pk=pk)
-    
     order_file = request.FILES.get('order_file')
     if not order_file:
         messages.error(request, "Veuillez sélectionner un fichier pour le Bon de Commande.")
         return redirect('dashboard:client_request_detail', pk=pk)
     
-    # Validate file type
-    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png']
-    import os
-    ext = os.path.splitext(order_file.name)[1].lower()
-    if ext not in allowed_extensions:
-        messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
+    try:
+        validate_upload(order_file, 'business_document')
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect('dashboard:client_request_detail', pk=pk)
     
-    # Save the order file
-    req.order_file = order_file
-    req.order_uploaded_at = timezone.now()
-    req.save(update_fields=['order_file', 'order_uploaded_at'])
-    
-    # Transition to ORDER_UPLOADED
     try:
-        transition(req, 'ORDER_UPLOADED', request.user, notes='Bon de commande téléchargé par le client')
-        
-        # Notify admin about purchase order upload
-        from notifications.services import notify_purchase_order_uploaded
-        notify_purchase_order_uploaded(req)
-        
+        with transaction.atomic():
+            req = get_object_or_404(
+                Request.objects.select_for_update(), pk=pk, requester=request.user,
+            )
+            if req.status != 'QUOTE_VALIDATED_BY_CLIENT':
+                raise InvalidTransitionError("Vous ne pouvez pas télécharger de bon de commande à ce stade.")
+            req.order_file = order_file
+            req.order_uploaded_at = timezone.now()
+            req.save(update_fields=['order_file', 'order_uploaded_at'])
+            transition(req, 'ORDER_UPLOADED', request.user, notes='Bon de commande téléchargé par le client')
+            from notifications.services import notify_purchase_order_uploaded
+            transaction.on_commit(lambda: notify_purchase_order_uploaded(req))
         messages.success(request, f"Bon de Commande téléchargé avec succès pour {req.display_id}. L'administrateur va maintenant assigner votre demande à un analyste.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
@@ -258,40 +256,31 @@ def upload_payment_receipt(request, pk):
     """Upload payment receipt after analysis is finished."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
-    
-    # Check status - client must have received payment request
-    if req.status != 'PAYMENT_PENDING':
-        messages.error(request, "Vous ne pouvez pas télécharger de reçu de paiement à ce stade.")
-        return redirect('dashboard:client_request_detail', pk=pk)
-    
     payment_receipt = request.FILES.get('payment_receipt_file')
     if not payment_receipt:
         messages.error(request, "Veuillez sélectionner un fichier pour le Reçu de Paiement.")
         return redirect('dashboard:client_request_detail', pk=pk)
     
-    # Validate file type
-    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png']
-    import os
-    ext = os.path.splitext(payment_receipt.name)[1].lower()
-    if ext not in allowed_extensions:
-        messages.error(request, f"Type de fichier non autorisé. Formats acceptés: {', '.join(allowed_extensions)}")
+    try:
+        validate_upload(payment_receipt, 'business_document')
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect('dashboard:client_request_detail', pk=pk)
     
-    # Save the payment receipt
-    req.payment_receipt_file = payment_receipt
-    req.payment_uploaded_at = timezone.now()
-    req.save(update_fields=['payment_receipt_file', 'payment_uploaded_at'])
-    
-    # Transition to PAYMENT_CONFIRMED
     try:
-        transition(req, 'PAYMENT_CONFIRMED', request.user, notes='Reçu de paiement téléchargé par le client')
-        
-        # Notify assigned analyst that they can now upload the report
-        from notifications.services import notify_payment_received
-        notify_payment_received(req)
-        
-        messages.success(request, f"Paiement confirmé pour {req.display_id}. L'analyste assigné peut maintenant télécharger le rapport d'analyse.")
+        with transaction.atomic():
+            req = get_object_or_404(
+                Request.objects.select_for_update(), pk=pk, requester=request.user,
+            )
+            if req.status != 'PAYMENT_PENDING':
+                raise InvalidTransitionError("Vous ne pouvez pas télécharger de reçu de paiement à ce stade.")
+            req.payment_receipt_file = payment_receipt
+            req.payment_uploaded_at = timezone.now()
+            req.save(update_fields=['payment_receipt_file', 'payment_uploaded_at'])
+            transition(req, 'PAYMENT_PROOF_UPLOADED', request.user, notes='Reçu de paiement téléchargé par le client')
+            from notifications.services import notify_payment_received
+            transaction.on_commit(lambda: notify_payment_received(req))
+        messages.success(request, f"Preuve de paiement reçue pour {req.display_id}. Elle doit maintenant être vérifiée par la finance.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     

@@ -9,6 +9,7 @@ from django.utils import timezone
 from core.models import Service, Request
 from core.services.ibtikar import submit_ibtikar_request, get_ibtikar_request_context
 from core.financial import check_ibtikar_budget
+from core.exceptions import PricingConfigurationError
 from notifications.models import Notification
 
 
@@ -216,13 +217,17 @@ def create_request(request):
     # Resolve cost via the canonical pricing resolver (DB tiers → YAML →
     # flat). See core.pricing.resolve_cost for the precedence and rationale.
     from core.pricing import resolve_cost
-    price_result = resolve_cost(
-        service, 'IBTIKAR',
-        sample_table=sample_table_data,
-        service_params=service_params,
-        urgency=request.POST.get('urgency', 'Normal'),
-    )
-    budget_amount = price_result.get('total') or float(service.ibtikar_price or 0)
+    try:
+        price_result = resolve_cost(
+            service, 'IBTIKAR',
+            sample_table=sample_table_data,
+            service_params=service_params,
+            urgency=request.POST.get('urgency', 'Normal'),
+        )
+    except PricingConfigurationError:
+        messages.error(request, "La tarification de ce service doit être corrigée par un administrateur avant la soumission.")
+        return redirect_back(request, 'dashboard:requester')
+    budget_amount = price_result['total']
 
     # Budget guard — runs against the requester's DECLARED residual
     # balance (User.ibtikar_declared_balance), not a flat 200K. The

@@ -138,7 +138,7 @@ class User(AbstractUser):
     # Optional TOTP two-factor auth (opt-in, mainly for staff). When
     # ``totp_enabled`` is True the login flow demands a 6-digit code after the
     # password. A Super Admin can reset both fields if a device is lost.
-    totp_secret = models.CharField(max_length=64, blank=True, default='')
+    totp_secret = models.CharField(max_length=512, blank=True, default='')
     totp_enabled = models.BooleanField(default=False, verbose_name='2FA activé')
 
     # IBTIKAR running balance, self-declared by the requester.
@@ -163,9 +163,24 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'users'
+        constraints = [
+            models.CheckConstraint(
+                condition=(models.Q(ibtikar_declared_balance__isnull=True)
+                           | models.Q(ibtikar_declared_balance__gte=0)),
+                name='user_ibtikar_balance_nonnegative',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_role_display()})"
+
+    def set_totp_secret(self, secret):
+        from .totp import encrypt_secret
+        self.totp_secret = encrypt_secret(secret)
+
+    def get_totp_secret(self):
+        from .totp import decrypt_secret
+        return decrypt_secret(self.totp_secret)
 
     @property
     def is_superadmin(self):

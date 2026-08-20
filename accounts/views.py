@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -11,6 +13,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 
 from core.ratelimit import rate_limit
+from core.uploads import validate_upload
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
@@ -25,6 +28,7 @@ from .forms import RegistrationForm
 
 _GUEST_TOKEN_SALT = 'guest-conversion'
 _GUEST_TOKEN_TTL = 24 * 60 * 60  # 24 hours
+logger = logging.getLogger('plagenor.accounts')
 
 
 # Brute-force lockout: after MAX_LOGIN_ATTEMPTS consecutive failures the
@@ -64,7 +68,10 @@ class CustomLoginView(LoginView):
             self.request.session['pending_2fa_user'] = user.pk
             self.request.session['pending_2fa_next'] = self.get_success_url()
             return redirect('accounts:two_factor_verify')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        if user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER'):
+            return redirect('accounts:two_factor_setup')
+        return response
 
     def form_invalid(self, form):
         from django.utils import timezone
@@ -157,17 +164,21 @@ def profile(request):
             user.preferred_language = pref
 
         if 'avatar' in request.FILES:
-            user.avatar = request.FILES['avatar']
+            try:
+                user.avatar = validate_upload(request.FILES['avatar'], 'image')
+            except DjangoValidationError as exc:
+                messages.error(request, exc.messages[0])
+                return redirect('accounts:profile')
         user.save()
 
         # Member technique update
         if user.role == 'MEMBER':
-            try:
-                member_profile = user.member_profile
+            member_profile = getattr(user, 'member_profile', None)
+            if member_profile is not None:
                 technique_ids = request.POST.getlist('techniques')
                 member_profile.techniques.set(technique_ids)
-            except Exception:
-                pass
+            else:
+                logger.warning("Member %s has no MemberProfile", user.pk)
 
         messages.success(request, _("Profil mis à jour."))
         return redirect('accounts:profile')
@@ -228,7 +239,7 @@ def convert_guest(request):
                     fail_silently=True,
                 )
             except Exception:
-                pass
+                logger.exception("Guest-conversion email failed")
 
         # Always show the same confirmation, even if no matching guest requests
         # existed — avoid leaking whether a given email is on file.
@@ -385,7 +396,7 @@ def check_email(request):
 
         exists = User.objects.filter(email__iexact=email).exists()
         return JsonResponse({'exists': exists})
-    except Exception:
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError, TypeError):
         return JsonResponse({'exists': False})
 
 
@@ -437,7 +448,7 @@ def two_factor_verify(request):
             return redirect('accounts:login')
         request.session['pending_2fa_attempts'] = attempts
         code = (request.POST.get('code') or '').strip().replace(' ', '')
-        if pyotp.TOTP(user.totp_secret).verify(code, valid_window=1):
+        if pyotp.TOTP(user.get_totp_secret()).verify(code, valid_window=1):
             nxt = request.session.pop('pending_2fa_next', None)
             request.session.pop('pending_2fa_user', None)
             request.session.pop('pending_2fa_attempts', None)
@@ -462,7 +473,7 @@ def two_factor_setup(request):
     if request.method == 'POST':
         code = (request.POST.get('code') or '').strip().replace(' ', '')
         if pyotp.TOTP(secret).verify(code, valid_window=1):
-            request.user.totp_secret = secret
+            request.user.set_totp_secret(secret)
             request.user.totp_enabled = True
             request.user.save(update_fields=['totp_secret', 'totp_enabled'])
             request.session.pop('pending_totp_secret', None)
@@ -478,8 +489,19 @@ def two_factor_setup(request):
 
 @login_required
 def two_factor_disable(request):
-    """Turn off 2FA for the current user (requires POST)."""
+    """Disable 2FA only after password and current-code verification."""
     if request.method != 'POST':
+        return redirect('accounts:profile')
+    if not request.user.totp_enabled or not request.user.totp_secret:
+        messages.info(request, _("La double authentification n'est pas activée."))
+        return redirect('accounts:profile')
+    import pyotp
+    password = request.POST.get('password', '')
+    code = (request.POST.get('code') or '').strip().replace(' ', '')
+    if (not request.user.check_password(password)
+            or not pyotp.TOTP(request.user.get_totp_secret()).verify(
+                code, valid_window=1)):
+        messages.error(request, _("Mot de passe ou code 2FA invalide."))
         return redirect('accounts:profile')
     request.user.totp_secret = ''
     request.user.totp_enabled = False
