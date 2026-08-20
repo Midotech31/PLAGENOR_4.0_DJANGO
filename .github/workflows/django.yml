@@ -78,6 +78,9 @@ jobs:
       ALLOWED_HOSTS: localhost,127.0.0.1
       DATABASE_URL: postgresql://plagenor:ci-only-password@127.0.0.1:5432/plagenor_ci
       DATABASE_SSL_REQUIRE: "false"
+      # The Django test client sends plain HTTP requests. Production keeps the
+      # secure default because this override exists only inside this CI job.
+      SECURE_SSL_REDIRECT: "false"
       TOTP_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
       PRIVILEGED_MFA_ENFORCEMENT: "false"
       REQUIRE_PERSISTENT_MEDIA_STORAGE: "false"
