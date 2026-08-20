@@ -4,7 +4,7 @@ and country, plus duplicate-email rejection.
 from django.test import TestCase
 
 from accounts.forms import RegistrationForm
-from accounts.models import User
+from accounts.models import MemberProfile, Technique, User
 from notifications.models import Notification
 
 
@@ -274,6 +274,19 @@ class TwoFactorTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.totp_secret, encrypted)
 
+    def test_enrollment_brute_force_discards_pending_secret(self):
+        self.client.force_login(self.user)
+        self.client.get('/accounts/2fa/setup/')
+        original = self.client.session['pending_totp_secret']
+        for _ in range(5):
+            response = self.client.post('/accounts/2fa/setup/', {'code': '000000'})
+            self.assertEqual(response.status_code, 200)
+        response = self.client.post('/accounts/2fa/setup/', {'code': '000000'})
+        self.assertRedirects(
+            response, '/accounts/2fa/setup/', fetch_redirect_response=False)
+        self.assertNotEqual(self.client.session.get('pending_totp_secret'), original)
+        self.assertNotIn('pending_totp_attempts', self.client.session)
+
 
 @override_settings(
     STORAGES=_TEST_STORAGES,
@@ -319,9 +332,75 @@ class PasswordResetFlowTests(TestCase):
         r1 = self.client.get(f'/accounts/password-reset/confirm/{uidb64}/{token}/')
         self.assertEqual(r1.status_code, 302)
         r2 = self.client.post(r1.url, {
-            'new_password1': 'BrandNew!99', 'new_password2': 'BrandNew!99'})
+            'new_password1': 'BrandNew!9942', 'new_password2': 'BrandNew!9942'})
         self.assertEqual(r2.status_code, 302)
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('BrandNew!99'))
+        self.assertTrue(self.user.check_password('BrandNew!9942'))
         self.assertEqual(self.user.login_attempts, 0)
         self.assertIsNone(self.user.locked_until)
+
+
+@override_settings(
+    STORAGES=_TEST_STORAGES,
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class AccountPrivacyAndProfileTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_live_email_enumeration_endpoint_is_removed(self):
+        User.objects.create_user(
+            username='private-account', email='private@example.com',
+            password='StrongPass!42', role='CLIENT')
+        response = self.client.post(
+            '/accounts/check-email/',
+            data='{"email":"private@example.com"}',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_guest_conversion_does_not_disclose_existing_account(self):
+        from django.core import mail
+        User.objects.create_user(
+            username='already', email='already@example.com',
+            password='StrongPass!42', role='CLIENT')
+        response = self.client.post(
+            '/accounts/convert-guest/', {'email': 'already@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['sent'])
+        self.assertNotContains(response, 'Un compte avec cet email existe déjà')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_member_cannot_self_assign_validated_techniques(self):
+        user = User.objects.create_user(
+            username='member-profile', email='member@example.com',
+            password='StrongPass!42', role='MEMBER')
+        profile, _ = MemberProfile.objects.get_or_create(user=user)
+        existing = Technique.objects.create(name='PCR', active=True)
+        attempted = Technique.objects.create(name='WGS', active=True)
+        profile.techniques.add(existing)
+        self.client.force_login(user)
+        response = self.client.post('/accounts/profile/', {
+            'first_name': 'Member', 'last_name': 'One',
+            'email': 'attacker-controlled@example.com',
+            'techniques': [attempted.pk],
+        })
+        self.assertEqual(response.status_code, 302)
+        user.refresh_from_db()
+        profile.refresh_from_db()
+        self.assertEqual(user.email, 'member@example.com')
+        self.assertEqual(list(profile.techniques.all()), [existing])
+
+    def test_member_profile_renders_competencies_read_only(self):
+        user = User.objects.create_user(
+            username='member-readonly', email='readonly@example.com',
+            password='StrongPass!42', role='MEMBER')
+        profile, _ = MemberProfile.objects.get_or_create(user=user)
+        technique = Technique.objects.create(name='MALDI-TOF', active=True)
+        profile.techniques.add(technique)
+        self.client.force_login(user)
+        response = self.client.get('/accounts/profile/')
+        self.assertContains(response, 'MALDI-TOF')
+        self.assertNotContains(response, 'name="techniques"')
+        self.assertContains(response, 'readonly')

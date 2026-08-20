@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 
 from core.models import Request, RequestHistory
 from core.sequences import next_display_id
 
+logger = logging.getLogger('plagenor.services.ibtikar')
 
-def submit_ibtikar_request(data: dict, user) -> Request:
+
+def submit_ibtikar_request(data: dict, user=None) -> Request:
     """Submit a new IBTIKAR request. Budget enforcement happens at the view
     layer (see dashboard.views.requester.create_request)."""
     # Generate display_id atomically (no .count()+1 race).
@@ -39,6 +42,11 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         pricing=data.get('pricing', {}),
         sample_table=data.get('sample_table', []),
         requester_data=data.get('requester_data', {}),
+        submitted_as_guest=bool(data.get('submitted_as_guest', False)),
+        guest_token=data.get('guest_token'),
+        guest_name=data.get('guest_name', ''),
+        guest_email=data.get('guest_email', ''),
+        guest_phone=data.get('guest_phone', ''),
     )
 
     RequestHistory.objects.create(
@@ -61,7 +69,10 @@ def submit_ibtikar_request(data: dict, user) -> Request:
                 notification_type='WORKFLOW',
             )
     except Exception:
-        pass
+        logger.exception(
+            "Unable to notify administrators for IBTIKAR request %s",
+            request_obj.pk,
+        )
 
     # Email the requester their submission confirmation. The guest path
     # already did this; authenticated requesters were missing it.
@@ -69,7 +80,10 @@ def submit_ibtikar_request(data: dict, user) -> Request:
         from notifications.emails import notify_submission_confirmation
         notify_submission_confirmation(request_obj)
     except Exception:
-        pass
+        logger.exception(
+            "Unable to send submission confirmation for IBTIKAR request %s",
+            request_obj.pk,
+        )
 
     return request_obj
 

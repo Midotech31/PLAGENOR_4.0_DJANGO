@@ -13,6 +13,6 @@ omit =
 [report]
 show_missing = False
 skip_covered = False
-# Floor set at current measured coverage (40% of non-test code). Ratchet UP
-# as tests grow — never down. Guards against large coverage regressions in CI.
-fail_under = 40
+# Floor set below the measured 50.78% to allow minor interpreter variance.
+# Raise it as tests grow — never down. Guards against large coverage regressions in CI.
+fail_under = 50

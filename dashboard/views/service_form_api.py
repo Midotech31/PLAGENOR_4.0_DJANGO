@@ -1,8 +1,12 @@
 """API endpoint that returns HTML form fragment for a service's YAML-defined parameters."""
+import logging
 import json
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from core.registry import get_service_def
+
+
+logger = logging.getLogger(__name__)
 
 
 def service_form_fragment(request, service_code):
@@ -49,6 +53,7 @@ def service_form_fragment(request, service_code):
         if _svc and isinstance(_svc.pricing_data, dict) and _svc.pricing_data.get('multipliers'):
             db_pdata = _svc.pricing_data
     except Exception:
+        logger.exception("Unable to load DB pricing for service=%s", service_code)
         db_pdata = {}
     if db_pdata.get('base_price') or db_pdata.get('multipliers'):
         # Surface the override to the cost calculator as if it were the YAML.
@@ -125,7 +130,7 @@ def service_form_fragment(request, service_code):
                         'conditional_logic': f.conditional_logic or [],
                     })
     except Exception:
-        pass
+        logger.exception("Unable to load DB form fields for service=%s", service_code)
 
     # Merge admin-defined sample columns into the (possibly empty) YAML table.
     if db_columns:

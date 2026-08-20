@@ -9,17 +9,40 @@ Note: the default LocMemCache is per-process, so with N gunicorn workers the
 effective limit is up to N× the configured value. That is fine for slowing
 brute-force / email-bombing; use a shared cache (Redis) for exactness.
 """
+import logging
 from functools import wraps
+from ipaddress import ip_address
 
+from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 
 
+logger = logging.getLogger(__name__)
+
+
 def _client_ip(request):
-    xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR', 'unknown')
+    """Return a normalized client IP without trusting arbitrary XFF input.
+
+    Render appends the connecting client to ``X-Forwarded-For``. Therefore
+    the right-most valid address is the only forwarded value consumed when
+    proxy trust is explicitly enabled. Unknown deployments keep using the
+    socket peer from ``REMOTE_ADDR``.
+    """
+    candidates = []
+    if getattr(settings, 'TRUST_PROXY_HEADERS', False):
+        candidates.extend(reversed([
+            part.strip() for part in
+            request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')
+            if part.strip()
+        ]))
+    candidates.append(request.META.get('REMOTE_ADDR', ''))
+    for candidate in candidates:
+        try:
+            return ip_address(candidate).compressed
+        except ValueError:
+            continue
+    return 'unknown'
 
 
 def rate_limit(key: str, limit: int, window: int, methods=('POST',)):
@@ -48,7 +71,9 @@ def rate_limit(key: str, limit: int, window: int, methods=('POST',)):
                         except ValueError:
                             cache.add(cache_key, 1, timeout=window)
                 except Exception:
-                    pass  # fail open — never block on cache trouble
+                    # This limiter deliberately fails open, but the degraded
+                    # security control must remain visible to operators.
+                    logger.exception("Rate-limit cache unavailable for key=%s", key)
             return view(request, *args, **kwargs)
         return wrapped
     return decorator

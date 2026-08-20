@@ -4,12 +4,15 @@ The IBTIKAR citation clause must block report downloads until acknowledged;
 GENOCLAB clients and internal staff are exempt. These guard
 ``protected_report_media`` / ``serve_media`` (dashboard/views/report.py).
 """
+import tempfile
 import uuid
+from pathlib import Path
+from unittest.mock import patch
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.template import Context, Template
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import Client, RequestFactory, SimpleTestCase, TestCase, override_settings
 
 from core.models import Request, RequestHistory
 
@@ -27,6 +30,7 @@ def _save_report(name='reports/gatecheck.pdf', data=b'PDF-BYTES'):
     return default_storage.save(name, ContentFile(data))
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
 class ReportGateTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -92,6 +96,37 @@ class ReportGateTests(TestCase):
         resp = self.client.get('/media/avatars/does-not-exist.png')
         self.assertEqual(resp.status_code, 404)
 
+    def test_delivery_beacon_requires_csrf(self):
+        token = uuid.uuid4()
+        req = Request.objects.create(
+            channel='GENOCLAB', report_token=token, requester=self.owner,
+            display_id='CSRF-REPORT',
+        )
+        strict = Client(enforce_csrf_checks=True)
+        page = strict.get(f'/report/{token}/')
+        self.assertEqual(page.status_code, 200)
+        denied = strict.post(f'/report/{token}/delivered/')
+        self.assertEqual(denied.status_code, 403)
+        csrf = strict.cookies['csrftoken'].value
+        accepted = strict.post(
+            f'/report/{token}/delivered/', HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(accepted.status_code, 204)
+        req.refresh_from_db()
+        self.assertTrue(req.report_delivered)
+
+    def test_rating_comment_is_bounded(self):
+        token = uuid.uuid4()
+        req = Request.objects.create(
+            channel='GENOCLAB', report_token=token, requester=self.owner,
+            display_id='RATING-BOUND',
+        )
+        response = self.client.post(
+            f'/report/{token}/rate/', {'rating': '4', 'comment': 'x' * 5000})
+        self.assertEqual(response.status_code, 302)
+        req.refresh_from_db()
+        self.assertEqual(req.service_rating, 4)
+        self.assertEqual(len(req.rating_comment), 2000)
+
 
 @override_settings(STORAGES=_TEST_STORAGES,
                    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -113,6 +148,22 @@ class RateLimitTests(TestCase):
         for _ in range(10):
             r = self.client.get('/accounts/password-reset/')
             self.assertEqual(r.status_code, 200)
+
+    @override_settings(TRUST_PROXY_HEADERS=True)
+    def test_proxy_ip_uses_rightmost_valid_forwarded_address(self):
+        from core.ratelimit import _client_ip
+        request = RequestFactory().post(
+            '/', HTTP_X_FORWARDED_FOR='203.0.113.50, 198.51.100.7',
+            REMOTE_ADDR='10.0.0.5')
+        self.assertEqual(_client_ip(request), '198.51.100.7')
+
+    @override_settings(TRUST_PROXY_HEADERS=False)
+    def test_untrusted_proxy_header_is_ignored(self):
+        from core.ratelimit import _client_ip
+        request = RequestFactory().post(
+            '/', HTTP_X_FORWARDED_FOR='203.0.113.50',
+            REMOTE_ADDR='127.0.0.1')
+        self.assertEqual(_client_ip(request), '127.0.0.1')
 
 
 @override_settings(STORAGES=_TEST_STORAGES)
@@ -251,6 +302,74 @@ class AnnouncementTests(TestCase):
         self.assertEqual(resp.status_code, 403)
 
 
+@override_settings(STORAGES=_TEST_STORAGES)
+class AccountResetDeliveryTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+        cls.admin = User.objects.create_user(
+            username='reset-admin', password='x', role='SUPER_ADMIN',
+            is_superuser=True, is_staff=True,
+        )
+        cls.target = User.objects.create_user(
+            username='reset-target', password='old-password',
+            email='target@example.test', role='REQUESTER',
+        )
+
+    def _post(self):
+        from django.urls import reverse
+        self.client.force_login(self.admin)
+        return self.client.post(
+            reverse('dashboard:superadmin_reset_account', args=[self.target.pk])
+        )
+
+    def test_reset_rolls_back_when_email_transport_fails(self):
+        from django.contrib.messages import get_messages
+        from unittest.mock import patch
+
+        with patch('django.core.mail.send_mail', side_effect=OSError('SMTP unavailable')):
+            response = self._post()
+
+        self.assertEqual(response.status_code, 302)
+        self.target.refresh_from_db()
+        self.assertFalse(self.target.must_change_password)
+        self.assertTrue(self.target.check_password('old-password'))
+        queued = [(message.tags, str(message)) for message in get_messages(response.wsgi_request)]
+        self.assertFalse(any('success' in tags for tags, _ in queued))
+        self.assertTrue(any('error' in tags and 'n’a pas pu être livré' in text
+                            for tags, text in queued))
+
+    def test_reset_does_not_show_delivery_warning_when_email_is_sent(self):
+        from django.contrib.messages import get_messages
+        from unittest.mock import patch
+
+        with patch('django.core.mail.send_mail', return_value=1):
+            response = self._post()
+
+        queued = [(message.tags, str(message)) for message in get_messages(response.wsgi_request)]
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.must_change_password)
+        self.assertFalse(self.target.check_password('old-password'))
+        self.assertTrue(any('success' in tags for tags, _ in queued))
+        self.assertFalse(any('error' in tags for tags, _ in queued))
+
+    def test_reset_without_verified_email_is_rejected(self):
+        from django.contrib.messages import get_messages
+        from unittest.mock import patch
+
+        self.target.email = ''
+        self.target.save(update_fields=['email'])
+        with patch('django.core.mail.send_mail') as send_mail:
+            response = self._post()
+
+        send_mail.assert_not_called()
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.check_password('old-password'))
+        queued = [(message.tags, str(message)) for message in get_messages(response.wsgi_request)]
+        self.assertTrue(any('error' in tags and 'email vérifiée' in text
+                            for tags, text in queued))
+
+
 class HealthEndpointTests(TestCase):
     def test_healthz_ok(self):
         resp = self.client.get('/healthz')
@@ -271,6 +390,162 @@ class TemplateEscapingTests(SimpleTestCase):
         ).render(Context({'value': payload}))
         self.assertNotIn('<script>', rendered)
         self.assertIn('&lt;script&gt;', rendered)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class ServiceFormFragmentTests(TestCase):
+    def _url(self, code):
+        from django.urls import reverse
+        return reverse('dashboard:service_form_fragment', args=[code])
+
+    def test_unknown_service_returns_neutral_not_found_fragment(self):
+        with patch('dashboard.views.service_form_api.get_service_def', return_value=None):
+            response = self.client.get(self._url('DOES-NOT-EXIST'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Service non trouvé')
+
+    def test_database_only_service_renders_questions_and_sample_columns(self):
+        from core.models import Service, ServiceFormField
+
+        service = Service.objects.create(code='DB-FORM', name='DB form')
+        ServiceFormField.objects.create(
+            service=service, name='urgency_level', label='Niveau urgence',
+            field_type='enum', options=['Normal', 'Express'], required=True,
+            affects_pricing=True, price_modifier_type='add',
+            price_modifier_value='1500', option_pricing={'Express': 1500},
+        )
+        ServiceFormField.objects.create(
+            service=service, name='sample_code', label='Code échantillon',
+            field_type='string', field_category='sample_column', required=True,
+        )
+        with patch('dashboard.views.service_form_api.get_service_def', return_value=None):
+            response = self.client.get(self._url(service.code))
+
+        self.assertContains(response, 'Niveau urgence')
+        self.assertContains(response, 'Code échantillon')
+        self.assertContains(response, 'data-pricing-value="1500.0"')
+        self.assertContains(response, 'data-option-price="1500"')
+        self.assertContains(response, 'sample_0_sample_code')
+
+    def test_admin_pricing_overrides_registry_and_multiplier_bridge_is_rendered(self):
+        from core.models import Service
+
+        Service.objects.create(
+            code='PRICED-FORM', name='Priced form',
+            pricing_data={
+                'base_price': {'non_pathogenic': 4000, 'pathogenic': 6000},
+                'multipliers': {'Simple': 1, 'Duplicate': 2},
+            },
+        )
+        definition = {
+            'parameters': [{
+                'name': 'analysis_mode', 'label': 'Mode analyse',
+                'type': 'enum', 'options': ['Simple', 'Duplicate'],
+            }],
+            'sample_table': {'enabled': True, 'columns': [
+                {'name': 'code', 'label': 'Code YAML', 'type': 'string'},
+            ]},
+            'pricing': {
+                'model': 'per_sample_table_row_with_multiplier',
+                'base_price': {'non_pathogenic': 1000, 'pathogenic': 2000},
+                'multipliers': {'Simple': 1, 'Duplicate': 1.5},
+            },
+        }
+        with patch('dashboard.views.service_form_api.get_service_def', return_value=definition):
+            response = self.client.get(self._url('PRICED-FORM'))
+
+        html = response.content.decode()
+        self.assertIn('Mode analyse', html)
+        self.assertIn('data-option-price="2"', html)
+        self.assertIn('&quot;non_pathogenic&quot;: 4000', html)
+        self.assertNotIn('&quot;non_pathogenic&quot;: 1000', html)
+        self.assertIn('Code YAML', html)
+
+    def test_db_sample_column_merges_without_duplicating_yaml_column(self):
+        from core.models import Service, ServiceFormField
+
+        service = Service.objects.create(code='MERGED-FORM', name='Merged form')
+        ServiceFormField.objects.create(
+            service=service, name='code', label='Duplicate code',
+            field_category='sample_column')
+        ServiceFormField.objects.create(
+            service=service, name='volume', label='Volume DB',
+            field_type='number', field_category='sample_column')
+        definition = {
+            'parameters': [],
+            'sample_table': {'enabled': True, 'columns': [
+                {'name': 'code', 'label': 'Code YAML', 'type': 'string'},
+            ]},
+            'pricing': {},
+        }
+        with patch('dashboard.views.service_form_api.get_service_def', return_value=definition):
+            response = self.client.get(self._url(service.code))
+        html = response.content.decode()
+        self.assertEqual(html.count('data-col="code"'), 1)
+        self.assertIn('Volume DB', html)
+        self.assertIn('sample_0_volume', html)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class GuestSubmissionWorkflowTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from core.models import Service
+        cls.ibtikar_service = Service.objects.create(
+            code='GUEST-IBT-SERVICE', name='Guest IBTIKAR service',
+            channel_availability='IBTIKAR', ibtikar_price='1250',
+        )
+        cls.genoclab_service = Service.objects.create(
+            code='GUEST-GCL-SERVICE', name='Guest GENOCLAB service',
+            channel_availability='GENOCLAB', genoclab_price='2500',
+        )
+
+    def _post(self, service, channel, **extra):
+        from unittest.mock import patch
+        data = {
+            'guest_name': 'Guest User',
+            'guest_email': 'guest@example.test',
+            'guest_phone': '+213000000000',
+            'service_id': str(service.pk),
+            'channel': channel,
+            'title': f'{channel} guest request',
+            'sample_0_code': 'S-1',
+        }
+        data.update(extra)
+        with (
+            patch('notifications.emails.notify_submission_confirmation'),
+            patch('notifications.emails.notify_guest_tracking_code'),
+        ):
+            return self.client.post('/guest-submit/', data)
+
+    def test_guest_ibtikar_uses_canonical_submitted_state_and_budget(self):
+        response = self._post(
+            self.ibtikar_service, 'IBTIKAR',
+            declared_balance='50000', ibtikar_id='IBT-EXT-1',
+        )
+        self.assertEqual(response.status_code, 200)
+        req = Request.objects.get(title='IBTIKAR guest request')
+        self.assertEqual(req.status, 'SUBMITTED')
+        self.assertTrue(req.display_id.startswith('IBK-'))
+        self.assertEqual(req.budget_amount, 1250)
+        self.assertTrue(req.submitted_as_guest)
+        self.assertIsNotNone(req.guest_token)
+        self.assertTrue(req.history.filter(to_status='SUBMITTED').exists())
+
+    def test_guest_genoclab_uses_canonical_request_created_state_and_quote(self):
+        response = self._post(self.genoclab_service, 'GENOCLAB')
+        self.assertEqual(response.status_code, 200)
+        req = Request.objects.get(title='GENOCLAB guest request')
+        self.assertEqual(req.status, 'REQUEST_CREATED')
+        self.assertTrue(req.display_id.startswith('GCL-'))
+        self.assertEqual(req.quote_amount, 2500)
+        self.assertTrue(req.history.filter(to_status='REQUEST_CREATED').exists())
+
+    def test_cross_channel_service_is_rejected_server_side(self):
+        response = self._post(self.ibtikar_service, 'GENOCLAB')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Request.objects.exists())
+        self.assertContains(response, "Ce service n&#x27;est pas disponible")
 
 
 @override_settings(STORAGES=_TEST_STORAGES)
@@ -648,3 +923,230 @@ class AdminFinancialMutationTests(TestCase):
         req.refresh_from_db()
         self.assertEqual(req.status, 'ORDER_UPLOADED')
         self.assertFalse(Invoice.objects.filter(request=req).exists())
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class QrCodeAuthorizationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+
+        cls.admin = User.objects.create_user(
+            username='qr-admin', password='x', role='PLATFORM_ADMIN')
+        cls.analyst = User.objects.create_user(
+            username='qr-analyst', password='x', role='MEMBER')
+        cls.other_analyst = User.objects.create_user(
+            username='qr-other', password='x', role='MEMBER')
+        cls.owner = User.objects.create_user(
+            username='qr-owner', password='x', role='CLIENT')
+        cls.req = Request.objects.create(
+            display_id='GCL-QR-001', title='QR protected report',
+            channel='GENOCLAB', requester=cls.owner,
+            assigned_to=cls.analyst.member_profile,
+        )
+
+    def test_qr_requires_login(self):
+        response = self.client.get(f'/dashboard/qr/{self.req.pk}/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login', response.url)
+
+    def test_qr_hides_request_from_owner_and_unassigned_member(self):
+        for user in (self.owner, self.other_analyst):
+            with self.subTest(user=user.username):
+                self.client.force_login(user)
+                response = self.client.get(f'/dashboard/qr/{self.req.pk}/')
+                self.assertEqual(response.status_code, 404)
+
+    def test_assigned_member_gets_png_and_token_is_created(self):
+        self.client.force_login(self.analyst)
+        response = self.client.get(f'/dashboard/qr/{self.req.pk}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertTrue(response.content.startswith(b'\x89PNG\r\n\x1a\n'))
+        self.req.refresh_from_db()
+        self.assertIsNotNone(self.req.report_token)
+
+    def test_admin_can_read_existing_token_and_missing_request_is_404(self):
+        self.client.force_login(self.admin)
+        first = self.client.get(f'/dashboard/qr/{self.req.pk}/')
+        self.assertEqual(first.status_code, 200)
+        missing = self.client.get(f'/dashboard/qr/{uuid.uuid4()}/')
+        self.assertEqual(missing.status_code, 404)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class RequestMessagingAuthorizationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+
+        cls.admin = User.objects.create_user(
+            username='msg-admin', password='x', role='PLATFORM_ADMIN')
+        cls.superadmin = User.objects.create_user(
+            username='msg-superadmin', password='x', role='SUPER_ADMIN')
+        cls.analyst = User.objects.create_user(
+            username='msg-analyst', password='x', role='MEMBER')
+        cls.other_analyst = User.objects.create_user(
+            username='msg-other', password='x', role='MEMBER')
+        cls.owner = User.objects.create_user(
+            username='msg-owner', password='x', role='CLIENT')
+
+    def setUp(self):
+        from core.models import Message
+
+        Message.objects.all().delete()
+        self.req = Request.objects.create(
+            display_id=f'GCL-MSG-{uuid.uuid4().hex[:8]}',
+            title='Protected message thread', channel='GENOCLAB',
+            requester=self.owner, assigned_to=self.analyst.member_profile,
+            status='ASSIGNED',
+        )
+
+    def _send(self, user, text='Message documenté'):
+        self.client.force_login(user)
+        return self.client.post(
+            f'/dashboard/message/{self.req.pk}/', {'message_text': text})
+
+    def test_get_blank_and_unrelated_member_cannot_create_messages(self):
+        from core.models import Message
+
+        self.client.force_login(self.owner)
+        self.assertEqual(
+            self.client.get(f'/dashboard/message/{self.req.pk}/').status_code,
+            403,
+        )
+        self.assertEqual(self._send(self.owner, '   ').status_code, 302)
+        self.assertEqual(self._send(self.other_analyst).status_code, 403)
+        self.assertEqual(Message.objects.count(), 0)
+
+    def test_owner_message_reaches_assignee_and_all_active_admins(self):
+        from core.models import Message
+
+        response = self._send(self.owner)
+        self.assertEqual(response.status_code, 302)
+        recipients = set(Message.objects.values_list('to_user__username', flat=True))
+        self.assertEqual(recipients, {'msg-analyst', 'msg-admin', 'msg-superadmin'})
+
+    def test_admin_message_reaches_assignee_only(self):
+        from core.models import Message
+
+        self._send(self.admin)
+        self.assertEqual(
+            list(Message.objects.values_list('to_user__username', flat=True)),
+            ['msg-analyst'],
+        )
+
+    def test_assigned_member_reaches_owner_and_last_admin(self):
+        from core.models import Message
+
+        RequestHistory.objects.create(
+            request=self.req, from_status='VALIDATED', to_status='ASSIGNED',
+            actor=self.admin,
+        )
+        self._send(self.analyst)
+        recipients = set(Message.objects.values_list('to_user__username', flat=True))
+        self.assertEqual(recipients, {'msg-owner', 'msg-admin'})
+
+    def test_admin_without_assignee_falls_back_to_requester(self):
+        from core.models import Message
+
+        self.req.assigned_to = None
+        self.req.save(update_fields=['assigned_to'])
+        self._send(self.admin)
+        self.assertEqual(Message.objects.get().to_user, self.owner)
+
+
+class StatsViewAndExportTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from accounts.models import User
+
+        cls.admin = User.objects.create_user(
+            username='stats-admin', password='x', role='PLATFORM_ADMIN')
+        cls.client_user = User.objects.create_user(
+            username='stats-client', password='x', role='CLIENT')
+
+    def test_common_filters_strips_values_and_omits_blanks(self):
+        from dashboard.views.stats import _common_filters
+
+        request = RequestFactory().get('/dashboard/stats/', {
+            'channel': ' GENOCLAB ', 'status': ' ',
+            'date_from': '2026-01-01', 'date_to': '',
+        })
+        self.assertEqual(_common_filters(request), {
+            'channel': 'GENOCLAB', 'date_from': '2026-01-01',
+        })
+
+    def test_stats_view_passes_role_scoped_filters_to_engine(self):
+        from dashboard.views.stats import stats_view
+
+        request = RequestFactory().get('/dashboard/stats/', {
+            'channel': 'IBTIKAR', 'wilaya': '16',
+        })
+        request.user = self.admin
+        with (
+            patch('dashboard.views.stats.stats_for_user', return_value={'ok': True}) as stats,
+            patch('core.bilan.available_sections', return_value=['overview']),
+            patch('dashboard.views.stats.render') as rendered,
+        ):
+            rendered.return_value.status_code = 200
+            response = stats_view.__wrapped__(request)
+        self.assertEqual(response.status_code, 200)
+        stats.assert_called_once_with(self.admin, channel='IBTIKAR', wilaya='16')
+        self.assertTrue(rendered.call_args.args[2]['is_admin'])
+
+    def test_stats_export_forbids_non_admin(self):
+        from dashboard.views.stats import stats_export
+
+        request = RequestFactory().get('/dashboard/stats/export/')
+        request.user = self.client_user
+        response = stats_export.__wrapped__(request)
+        self.assertEqual(response.status_code, 403)
+
+    def test_xlsx_export_validates_granularity_and_streams_file(self):
+        from dashboard.views.stats import stats_export
+
+        with tempfile.TemporaryDirectory() as directory:
+            xlsx = Path(directory) / 'bilan.xlsx'
+            xlsx.write_bytes(b'XLSX-CONTENT')
+            request = RequestFactory().get('/dashboard/stats/export/', {
+                'format': 'xlsx', 'granularity': 'week',
+                'sections': ['overview'], 'organization': ' CNRDPA ',
+            })
+            request.user = self.admin
+            with (
+                patch('core.bilan.build_bilan', return_value={'rows': []}) as build,
+                patch('documents.stats_excel.generate_bilan_excel', return_value=xlsx),
+            ):
+                response = stats_export.__wrapped__(request)
+                body = b''.join(response.streaming_content)
+                response.close()
+        self.assertEqual(body, b'XLSX-CONTENT')
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        build.assert_called_once_with(
+            {'organization': 'CNRDPA'}, sections=['overview'], granularity='month')
+
+    @override_settings(DOCUMENT_PDF_ENABLED=False)
+    def test_docx_export_streams_without_pdf_conversion(self):
+        from dashboard.views.stats import stats_export
+
+        with tempfile.TemporaryDirectory() as directory:
+            docx = Path(directory) / 'stats.docx'
+            docx.write_bytes(b'DOCX-CONTENT')
+            request = RequestFactory().get(
+                '/dashboard/stats/export/', {'format': 'docx'})
+            request.user = self.admin
+            with (
+                patch('dashboard.views.stats.stats_for_user', return_value={'ok': True}),
+                patch('documents.generators.generate_stats_report', return_value=docx),
+                patch('documents.pdf_converter.convert_docx_to_pdf') as convert,
+            ):
+                response = stats_export.__wrapped__(request)
+                body = b''.join(response.streaming_content)
+                response.close()
+        self.assertEqual(body, b'DOCX-CONTENT')
+        self.assertIn('.docx', response['Content-Disposition'])
+        convert.assert_not_called()

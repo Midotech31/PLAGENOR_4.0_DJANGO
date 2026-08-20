@@ -8,12 +8,21 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _env_bool(name, default):
+    return os.getenv(name, default).strip().lower() == 'true'
+
+
 # Secure by default: DEBUG=False unless the operator opts in.
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = _env_bool('DEBUG', 'False')
 PRIVILEGED_MFA_ENFORCEMENT = os.getenv(
     'PRIVILEGED_MFA_ENFORCEMENT', 'false' if DEBUG else 'true'
 ).lower() == 'true'
 CSP_REPORT_ONLY = os.getenv('CSP_REPORT_ONLY', 'true').lower() == 'true'
+TRUST_PROXY_HEADERS = _env_bool(
+    'TRUST_PROXY_HEADERS',
+    'true' if os.getenv('RENDER_EXTERNAL_HOSTNAME') else 'false',
+)
 
 # SECRET_KEY is required in production. We allow a known-insecure fallback
 # only when DEBUG is on, so a misconfigured production deploy fails fast
@@ -180,7 +189,10 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 12},
+    },
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -210,6 +222,26 @@ USE_SUPABASE_STORAGE = bool(
     and os.getenv('SUPABASE_S3_ACCESS_KEY_ID')
     and os.getenv('SUPABASE_S3_SECRET_ACCESS_KEY')
 )
+REQUIRE_PERSISTENT_MEDIA_STORAGE = _env_bool(
+    'REQUIRE_PERSISTENT_MEDIA_STORAGE', 'false' if DEBUG else 'true')
+
+_storage_keys = (
+    'SUPABASE_S3_ENDPOINT', 'SUPABASE_S3_ACCESS_KEY_ID',
+    'SUPABASE_S3_SECRET_ACCESS_KEY',
+)
+_configured_storage_keys = [key for key in _storage_keys if os.getenv(key)]
+if _configured_storage_keys and len(_configured_storage_keys) != len(_storage_keys):
+    missing = sorted(set(_storage_keys) - set(_configured_storage_keys))
+    raise ImproperlyConfigured(
+        "Incomplete private-media storage configuration; missing: "
+        + ", ".join(missing)
+    )
+if REQUIRE_PERSISTENT_MEDIA_STORAGE and not USE_SUPABASE_STORAGE:
+    raise ImproperlyConfigured(
+        "Persistent private-media storage is required in production. Set the "
+        "SUPABASE_S3_ENDPOINT, SUPABASE_S3_ACCESS_KEY_ID and "
+        "SUPABASE_S3_SECRET_ACCESS_KEY environment variables."
+    )
 
 if USE_SUPABASE_STORAGE:
     STORAGES = {
@@ -282,10 +314,35 @@ DOCUMENT_PDF_BACKEND = os.getenv('DOCUMENT_PDF_BACKEND', 'spawn').lower()
 # Email configuration
 # Use SMTP backend automatically when SMTP_HOST is configured in .env
 _smtp_host = os.getenv('SMTP_HOST') or os.getenv('EMAIL_HOST', '')
-EMAIL_BACKEND = os.getenv(
+REQUIRE_SMTP = _env_bool('REQUIRE_SMTP', 'false' if DEBUG else 'true')
+_smtp_backend = 'django.core.mail.backends.smtp.EmailBackend'
+_configured_email_backend = os.getenv(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.smtp.EmailBackend' if _smtp_host and _smtp_host not in ('', 'localhost') else 'django.core.mail.backends.console.EmailBackend',
+    _smtp_backend if _smtp_host and _smtp_host != 'localhost'
+    else 'django.core.mail.backends.console.EmailBackend',
 )
+if REQUIRE_SMTP:
+    _required_smtp = {
+        'SMTP_HOST': _smtp_host,
+        'SMTP_USER': os.getenv('SMTP_USER') or os.getenv('EMAIL_HOST_USER', ''),
+        'SMTP_PASSWORD': (
+            os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWORD', '')
+        ),
+        'SMTP_FROM': (
+            os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', '')
+        ),
+    }
+    _missing_smtp = [key for key, value in _required_smtp.items() if not value]
+    if _missing_smtp:
+        raise ImproperlyConfigured(
+            "Production email delivery is required; missing: "
+            + ", ".join(_missing_smtp)
+        )
+    if _configured_email_backend != _smtp_backend:
+        raise ImproperlyConfigured(
+            "Production email delivery requires Django's SMTP email backend."
+        )
+EMAIL_BACKEND = _configured_email_backend
 EMAIL_HOST = _smtp_host or 'localhost'
 EMAIL_PORT = int(os.getenv('SMTP_PORT') or os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
@@ -294,12 +351,6 @@ EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWO
 DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
 
 # ─── Production security headers ─────────────────────────────────────────
-# Secure-by-default when DEBUG is off; every flag can still be overridden
-# via .env to support proxies that already terminate TLS, etc.
-def _env_bool(name, default):
-    return os.getenv(name, default).lower() == 'true'
-
-
 if not DEBUG:
     SECURE_SSL_REDIRECT = _env_bool('SECURE_SSL_REDIRECT', 'True')
     SESSION_COOKIE_SECURE = _env_bool('SESSION_COOKIE_SECURE', 'True')
@@ -357,13 +408,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # is present, unhandled exceptions are reported with the Django integration.
 SENTRY_DSN = os.getenv('SENTRY_DSN', '').strip()
 if SENTRY_DSN:
-    try:
-        import sentry_sdk
-        sentry_sdk.init(
-            dsn=SENTRY_DSN,
-            environment=os.getenv('SENTRY_ENVIRONMENT', 'production'),
-            traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0')),
-            send_default_pii=False,
-        )
-    except Exception:  # never let monitoring setup break boot
-        pass
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.getenv('SENTRY_ENVIRONMENT', 'production'),
+        traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0')),
+        send_default_pii=False,
+    )

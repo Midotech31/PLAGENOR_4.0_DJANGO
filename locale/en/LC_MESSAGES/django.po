@@ -1,17 +1,16 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# PLAGENOR English translations.
+# Copyright (C) 2026 PLAGENOR contributors
+# This file is distributed under the same license as PLAGENOR.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 16:35+0530\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"PO-Revision-Date: 2026-08-20 14:20+0100\n"
+"Last-Translator: PLAGENOR contributors\n"
+"Language-Team: English\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -91,9 +90,6 @@ msgstr "Profile updated."
 msgid "Email requis."
 msgstr "Email required."
 
-msgid "Un compte avec cet email existe déjà."
-msgstr "An account with this email already exists."
-
 msgid "Vérification de votre adresse — PLAGENOR 4.0"
 msgstr "Verify your email address — PLAGENOR 4.0"
 
@@ -135,6 +131,9 @@ msgstr "Invalid or expired code. Please try again."
 msgid "La double authentification est déjà activée."
 msgstr "Two-factor authentication is already enabled."
 
+msgid "Trop de codes incorrects. Veuillez recommencer."
+msgstr "Too many incorrect codes. Please start again."
+
 msgid "Double authentification activée."
 msgstr "Two-factor authentication enabled."
 
@@ -165,16 +164,20 @@ msgstr "Quote"
 msgid "Vous ne pouvez pas réinitialiser votre propre compte."
 msgstr "You cannot reset your own account."
 
+msgid ""
+"Réinitialisation annulée : ce compte ne possède pas d’adresse email vérifiée."
+msgstr "Reset cancelled: this account does not have a verified email address."
+
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
 msgstr "Reset of your PLAGENOR 4.0 account"
 
-#, python-format
 msgid ""
-"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant "
-"les instructions a été envoyé."
-msgstr ""
-"The account of %(username)s has been reset successfully. An email with "
-"instructions has been sent."
+"Réinitialisation annulée : l’email d’instructions n’a pas pu être livré."
+msgstr "Reset cancelled: the instruction email could not be delivered."
+
+#, python-format
+msgid "Le compte de %(username)s a été réinitialisé avec succès."
+msgstr "The account of %(username)s has been reset successfully."
 
 msgid "Créer un compte"
 msgstr "Create an account"
@@ -513,6 +516,12 @@ msgstr "Personal information"
 msgid "Photo de profil"
 msgstr "Profile picture"
 
+msgid ""
+"L’adresse de connexion ne peut être modifiée qu’après vérification par un "
+"administrateur."
+msgstr ""
+"The sign-in email can only be changed after administrator verification."
+
 msgid "Organisation / Université"
 msgstr "Organization / University"
 
@@ -522,8 +531,18 @@ msgstr "Preferred language"
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr "Leave blank to use the language detected by your browser."
 
-msgid "Techniques maîtrisées"
-msgstr "Mastered techniques"
+msgid "Techniques validées"
+msgstr "Verified techniques"
+
+msgid "Aucune technique validée. Contactez un administrateur de la plateforme."
+msgstr "No verified technique. Contact a platform administrator."
+
+msgid ""
+"Ces compétences contrôlent l’éligibilité aux affectations et ne sont pas "
+"auto-déclarables."
+msgstr ""
+"These competencies control assignment eligibility and cannot be self-"
+"declared."
 
 msgid "Mettre à jour"
 msgstr "Update"
@@ -4258,6 +4277,16 @@ msgstr "No results"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "No request found with this ID. Please check and try again."
+
+#~ msgid ""
+#~ "L’email d’instructions n’a pas pu être envoyé. Transmettez les "
+#~ "instructions par un canal sécurisé."
+#~ msgstr ""
+#~ "The instruction email could not be sent. Share the instructions through a "
+#~ "secure channel."
+
+#~ msgid "Un compte avec cet email existe déjà."
+#~ msgstr "An account with this email already exists."
 
 #~ msgid "Confirmer paiement"
 #~ msgstr "Confirm payment"

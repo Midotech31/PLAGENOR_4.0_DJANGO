@@ -11,7 +11,14 @@ in Git, tickets, screenshots, or chat:
 - `TOTP_ENCRYPTION_KEY`: stable Fernet key used to encrypt TOTP seeds. Generate
   it with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
 - `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`: the exact production domains.
-- Supabase S3 and SMTP credentials when those integrations are enabled.
+- Supabase S3 credentials. Production sets
+  `REQUIRE_PERSISTENT_MEDIA_STORAGE=true` and refuses an ephemeral media
+  fallback.
+- SMTP host, user, password, and sender. Production sets `REQUIRE_SMTP=true`
+  and refuses the console backend so recovery and tracking tokens cannot be
+  written to service logs.
+- `TRUST_PROXY_HEADERS=true` on Render only; rate limiting then consumes the
+  right-most valid address added by the trusted proxy.
 
 Keep `DEBUG=false` and `PRIVILEGED_MFA_ENFORCEMENT=true`. Losing or rotating
 `TOTP_ENCRYPTION_KEY` before re-enrolling users makes existing encrypted TOTP

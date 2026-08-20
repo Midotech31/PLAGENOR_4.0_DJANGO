@@ -1,6 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.utils import timezone, translation
 from django.shortcuts import redirect
+
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateLastSeenMiddleware:
@@ -17,7 +22,7 @@ class UpdateLastSeenMiddleware:
                 from accounts.models import User
                 User.objects.filter(pk=request.user.pk).update(last_seen=timezone.now())
             except Exception:
-                pass
+                logger.exception("Unable to update last_seen for user_id=%s", request.user.pk)
         return response
 
 

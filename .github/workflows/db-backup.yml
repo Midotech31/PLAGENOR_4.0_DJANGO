@@ -11,9 +11,17 @@ on:
     - cron: '0 3 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-backup
+  cancel-in-progress: false
+
 jobs:
   backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Require backup secrets
         env:

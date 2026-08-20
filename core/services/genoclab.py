@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 
 from core.models import Request, RequestHistory
 from core.sequences import next_display_id
 
+logger = logging.getLogger('plagenor.services.genoclab')
 
-def submit_genoclab_request(data: dict, user) -> Request:
+
+def submit_genoclab_request(data: dict, user=None) -> Request:
     """Submit a new GENOCLAB request."""
     # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
@@ -36,6 +39,11 @@ def submit_genoclab_request(data: dict, user) -> Request:
         pricing=data.get('pricing', {}),
         sample_table=data.get('sample_table', []),
         requester_data=data.get('requester_data', {}),
+        submitted_as_guest=bool(data.get('submitted_as_guest', False)),
+        guest_token=data.get('guest_token'),
+        guest_name=data.get('guest_name', ''),
+        guest_email=data.get('guest_email', ''),
+        guest_phone=data.get('guest_phone', ''),
     )
 
     RequestHistory.objects.create(
@@ -58,7 +66,10 @@ def submit_genoclab_request(data: dict, user) -> Request:
                 notification_type='WORKFLOW',
             )
     except Exception:
-        pass
+        logger.exception(
+            "Unable to notify administrators for GENOCLAB request %s",
+            request_obj.pk,
+        )
 
     # Email the client their submission confirmation. Same fix as IBTIKAR:
     # only the guest path was emailing; authenticated clients now get one too.
@@ -66,6 +77,9 @@ def submit_genoclab_request(data: dict, user) -> Request:
         from notifications.emails import notify_submission_confirmation
         notify_submission_confirmation(request_obj)
     except Exception:
-        pass
+        logger.exception(
+            "Unable to send submission confirmation for GENOCLAB request %s",
+            request_obj.pk,
+        )
 
     return request_obj

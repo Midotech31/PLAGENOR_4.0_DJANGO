@@ -510,10 +510,18 @@ document.addEventListener('DOMContentLoaded', function() {
     var url = "{% url 'report_mark_delivered' token=req.report_token %}";
     var send = function () {
         try {
+            var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!csrf) { return; }
             if (navigator.sendBeacon) {
-                navigator.sendBeacon(url, new Blob([], {type: 'text/plain'}));
+                var form = new FormData();
+                form.append('csrfmiddlewaretoken', csrf.value);
+                navigator.sendBeacon(url, form);
             } else {
-                fetch(url, {method: 'POST', keepalive: true, credentials: 'omit'}).catch(function () {});
+                fetch(url, {
+                    method: 'POST', keepalive: true,
+                    credentials: 'same-origin',
+                    headers: {'X-CSRFToken': csrf.value}
+                }).catch(function () {});
             }
         } catch (_) {}
     };

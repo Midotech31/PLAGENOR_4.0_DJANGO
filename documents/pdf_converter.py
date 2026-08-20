@@ -170,7 +170,7 @@ class _LibreOfficeDaemon:
                 try:
                     self._proc.kill()
                 except Exception:
-                    pass
+                    logger.exception("Unable to kill LibreOffice conversion process")
             self._proc = None
             self._desktop = None
 

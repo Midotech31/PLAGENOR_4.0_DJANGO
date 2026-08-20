@@ -14,7 +14,8 @@ The defaults match the model file supplied by the owner.
 """
 from __future__ import annotations
 
-from decimal import Decimal
+import logging
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -35,6 +36,9 @@ from documents.docx_helpers import (
     SIZE_H2,
     _GENOCLAB_LOGO,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 # Logo colours — sampled from the GENOCLAB asset itself (see comment at
@@ -85,7 +89,7 @@ def cms_get(key: str, default: str = '') -> str:
         if obj and (obj.value or '').strip():
             return obj.value
     except Exception:
-        pass
+        logger.exception("Unable to load CMS value key=%s", key)
     return CMS_DEFAULTS.get(key, default)
 
 
@@ -379,8 +383,8 @@ def add_prestation_table(doc: DocumentType, line_items,
                 total = 0
         try:
             subtotal_ht += Decimal(str(total))
-        except Exception:
-            pass
+        except (InvalidOperation, TypeError, ValueError):
+            logger.warning("Ignoring invalid GENOCLAB line total: %r", total)
         cells = table.rows[r].cells
         _set_cell_text(cells[0], str(label))
         _set_cell_text(cells[1], str(qty), align=WD_ALIGN_PARAGRAPH.CENTER)

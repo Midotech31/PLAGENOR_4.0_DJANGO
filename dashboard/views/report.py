@@ -8,10 +8,10 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import Request
+from core.ratelimit import rate_limit
 from dashboard.utils import safe_int
 
 logger = logging.getLogger('plagenor.reports')
@@ -47,7 +47,7 @@ def report_viewer(request, token):
 
 
 @require_POST
-@csrf_exempt  # secret is the report_token UUID in the URL; cookies are absent
+@rate_limit('report_delivery', limit=30, window=3600)
 def mark_report_delivered(request, token):
     """POST beacon fired by the report viewer page on first display.
 
@@ -96,6 +96,7 @@ def _notify_report_consulted(req):
         )
 
 
+@rate_limit('report_rating', limit=10, window=3600)
 def rate_report(request, token):
     """Handle star rating submission from the public report viewer."""
     if request.method != 'POST':
@@ -103,7 +104,7 @@ def rate_report(request, token):
     rating = safe_int(request.POST.get('rating'))
     if not (1 <= rating <= 5):
         return redirect('report_view', token=token)
-    comment = request.POST.get('comment', '') or ''
+    comment = (request.POST.get('comment', '') or '').strip()[:2000]
     with transaction.atomic():
         req = (
             Request.objects.select_for_update()
@@ -120,6 +121,7 @@ def rate_report(request, token):
 
 
 @require_POST
+@rate_limit('report_citation', limit=20, window=3600)
 def acknowledge_citation(request, token):
     """Mark citation as acknowledged for this report (called via AJAX)."""
     try:

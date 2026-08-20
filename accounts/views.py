@@ -131,6 +131,7 @@ class ForgotPasswordCompleteView(PasswordResetCompleteView):
     template_name = 'accounts/password_reset_complete.html'
 
 
+@method_decorator(rate_limit('register', limit=5, window=3600), name='dispatch')
 class RegisterView(CreateView):
     model = User
     form_class = RegistrationForm
@@ -149,7 +150,9 @@ def profile(request):
         user = request.user
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = request.POST.get('email', user.email)
+        # Email is an authentication/recovery identity. Changing it requires
+        # a dedicated verified-email flow; the ordinary profile form must not
+        # silently replace it.
         user.phone = request.POST.get('phone', user.phone or '')
         user.organization = request.POST.get('organization', user.organization or '')
         user.laboratory = request.POST.get('laboratory', user.laboratory or '')
@@ -171,22 +174,16 @@ def profile(request):
                 return redirect('accounts:profile')
         user.save()
 
-        # Member technique update
-        if user.role == 'MEMBER':
-            member_profile = getattr(user, 'member_profile', None)
-            if member_profile is not None:
-                technique_ids = request.POST.getlist('techniques')
-                member_profile.techniques.set(technique_ids)
-            else:
-                logger.warning("Member %s has no MemberProfile", user.pk)
-
         messages.success(request, _("Profil mis à jour."))
         return redirect('accounts:profile')
 
     techniques = None
     if request.user.role == 'MEMBER':
-        from accounts.models import Technique
-        techniques = Technique.objects.filter(active=True)
+        member_profile = getattr(request.user, 'member_profile', None)
+        if member_profile is not None:
+            # Competencies are administrator-validated assignment controls,
+            # not self-declared profile preferences.
+            techniques = member_profile.techniques.filter(active=True)
 
     return render(request, 'accounts/profile.html', {
         'techniques': techniques,
@@ -194,6 +191,7 @@ def profile(request):
     })
 
 
+@rate_limit('guest_convert', limit=5, window=3600)
 def convert_guest(request):
     """Stage 1 of guest conversion: request an email-verification link.
 
@@ -210,14 +208,12 @@ def convert_guest(request):
         if not email:
             messages.error(request, _("Email requis."))
             return render(request, 'accounts/convert_guest.html', {'email': email, 'sent': False})
-        if User.objects.filter(email__iexact=email).exists():
-            messages.error(request, _("Un compte avec cet email existe déjà."))
-            return render(request, 'accounts/convert_guest.html', {'email': email, 'sent': False})
-
         from core.models import Request
-        has_guest_requests = Request.objects.filter(
-            guest_email__iexact=email, submitted_as_guest=True, requester__isnull=True,
-        ).exists()
+        account_exists = User.objects.filter(email__iexact=email).exists()
+        has_guest_requests = (not account_exists and Request.objects.filter(
+            guest_email__iexact=email, submitted_as_guest=True,
+            requester__isnull=True,
+        ).exists())
 
         if has_guest_requests:
             token = TimestampSigner(salt=_GUEST_TOKEN_SALT).sign(email)
@@ -236,7 +232,7 @@ def convert_guest(request):
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
                     html_message=html_body,
-                    fail_silently=True,
+                    fail_silently=False,
                 )
             except Exception:
                 logger.exception("Guest-conversion email failed")
@@ -363,43 +359,6 @@ def force_change_password(request):
     return render(request, 'accounts/force_change_password.html', {'form': form})
 
 
-def check_email(request):
-    """AJAX endpoint to check if email is already registered.
-    
-    Rate-limited: max 20 requests per minute per IP to prevent enumeration.
-    """
-    from django.http import JsonResponse
-    from django.core.cache import cache
-    import json
-    import time
-
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-    # Simple IP-based rate limiting (20 req/min)
-    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', 'unknown'))
-    ip = ip.split(',')[0].strip()
-    rate_key = f'email_check_rate:{ip}'
-    now = int(time.time())
-    window_key = f'{rate_key}:{now // 60}'  # per-minute window
-    count = cache.get(window_key, 0)
-    if count >= 20:
-        return JsonResponse({'error': 'Too many requests'}, status=429)
-    cache.set(window_key, count + 1, timeout=70)
-
-    try:
-        data = json.loads(request.body)
-        email = data.get('email', '').strip().lower()
-
-        if not email:
-            return JsonResponse({'exists': False})
-
-        exists = User.objects.filter(email__iexact=email).exists()
-        return JsonResponse({'exists': exists})
-    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError, TypeError):
-        return JsonResponse({'exists': False})
-
-
 # ── Two-factor authentication (TOTP, opt-in) ──────────────────────────────
 def _totp_uri(user, secret):
     import pyotp
@@ -459,6 +418,7 @@ def two_factor_verify(request):
 
 
 @login_required
+@rate_limit('2fa_setup', limit=10, window=300)
 def two_factor_setup(request):
     """Enroll the current user in TOTP. GET shows a QR + pending secret held in
     the session; POST with a valid code confirms and enables 2FA."""
@@ -471,12 +431,21 @@ def two_factor_setup(request):
         secret = pyotp.random_base32()
         request.session['pending_totp_secret'] = secret
     if request.method == 'POST':
+        attempts = request.session.get('pending_totp_attempts', 0) + 1
+        if attempts > MAX_2FA_ATTEMPTS:
+            request.session.pop('pending_totp_secret', None)
+            request.session.pop('pending_totp_attempts', None)
+            messages.error(request, _(
+                "Trop de codes incorrects. Veuillez recommencer."))
+            return redirect('accounts:two_factor_setup')
+        request.session['pending_totp_attempts'] = attempts
         code = (request.POST.get('code') or '').strip().replace(' ', '')
         if pyotp.TOTP(secret).verify(code, valid_window=1):
             request.user.set_totp_secret(secret)
             request.user.totp_enabled = True
             request.user.save(update_fields=['totp_secret', 'totp_enabled'])
             request.session.pop('pending_totp_secret', None)
+            request.session.pop('pending_totp_attempts', None)
             messages.success(request, _("Double authentification activée."))
             return redirect('accounts:profile')
         messages.error(request, _("Code invalide. Vérifiez l'heure de votre appareil et réessayez."))
@@ -488,6 +457,7 @@ def two_factor_setup(request):
 
 
 @login_required
+@rate_limit('2fa_disable', limit=5, window=300)
 def two_factor_disable(request):
     """Disable 2FA only after password and current-code verification."""
     if request.method != 'POST':
@@ -506,5 +476,6 @@ def two_factor_disable(request):
     request.user.totp_secret = ''
     request.user.totp_enabled = False
     request.user.save(update_fields=['totp_secret', 'totp_enabled'])
+    request.session.cycle_key()
     messages.success(request, _("Double authentification désactivée."))
     return redirect('accounts:profile')

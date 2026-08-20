@@ -39,7 +39,8 @@
             </div>
             <div class="form-group">
                 <label>{% trans "Email" %}</label>
-                <input type="email" name="email" class="form-control" value="{{ request.user.email }}">
+                <input type="email" class="form-control" value="{{ request.user.email }}" readonly>
+                <small class="text-muted">{% trans "L’adresse de connexion ne peut être modifiée qu’après vérification par un administrateur." %}</small>
             </div>
             <div class="form-group">
                 <label>{% trans "Téléphone" %}</label>
@@ -68,18 +69,19 @@
                 <small class="text-muted">{% trans "Laissez vide pour utiliser la langue détectée par votre navigateur." %}</small>
             </div>
 
-            {% if techniques %}
+            {% if request.user.role == 'MEMBER' %}
             <div class="form-group">
-                <label>{% trans "Techniques maîtrisées" %}</label>
+                <label>{% trans "Techniques validées" %}</label>
                 <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    {% if techniques %}
                     {% for t in techniques %}
-                    <label style="display:inline-flex; align-items:center; gap:4px; font-size:0.9rem;">
-                        <input type="checkbox" name="techniques" value="{{ t.pk }}"
-                            {% if t in request.user.member_profile.techniques.all %}checked{% endif %}>
-                        {{ t.name }}
-                    </label>
+                    <span class="badge">{{ t.name }}</span>
                     {% endfor %}
+                    {% else %}
+                    <span class="text-muted">{% trans "Aucune technique validée. Contactez un administrateur de la plateforme." %}</span>
+                    {% endif %}
                 </div>
+                <small class="text-muted">{% trans "Ces compétences contrôlent l’éligibilité aux affectations et ne sont pas auto-déclarables." %}</small>
             </div>
             {% endif %}
 

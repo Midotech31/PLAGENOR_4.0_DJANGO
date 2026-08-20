@@ -1,6 +1,7 @@
 """QR code generator view — returns a PNG QR code image for a request's report page."""
 import io
 import qrcode
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 from core.models import Request
@@ -19,7 +20,7 @@ def report_qr(request, pk):
             try:
                 if req.assigned_to != request.user.member_profile:
                     raise Http404
-            except Exception:
+            except ObjectDoesNotExist:
                 raise Http404
         else:
             raise Http404

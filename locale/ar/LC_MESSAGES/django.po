@@ -1,17 +1,16 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# PLAGENOR Arabic translations.
+# Copyright (C) 2026 PLAGENOR contributors
+# This file is distributed under the same license as PLAGENOR.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 16:35+0530\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"PO-Revision-Date: 2026-08-20 14:20+0100\n"
+"Last-Translator: PLAGENOR contributors\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -92,9 +91,6 @@ msgstr "تم تحديث الملف الشخصي."
 msgid "Email requis."
 msgstr "البريد الإلكتروني مطلوب."
 
-msgid "Un compte avec cet email existe déjà."
-msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً."
-
 msgid "Vérification de votre adresse — PLAGENOR 4.0"
 msgstr "التحقُّق من بريدك الإلكتروني — PLAGENOR 4.0"
 
@@ -136,6 +132,9 @@ msgstr "رمز غير صالح أو منتهي الصلاحية. أعد المح
 msgid "La double authentification est déjà activée."
 msgstr "المصادقة الثنائية مفعّلة بالفعل."
 
+msgid "Trop de codes incorrects. Veuillez recommencer."
+msgstr "عدد كبير من الرموز غير الصحيحة. يرجى البدء من جديد."
+
 msgid "Double authentification activée."
 msgstr "تم تفعيل المصادقة الثنائية."
 
@@ -166,16 +165,20 @@ msgstr "عرض الأسعار"
 msgid "Vous ne pouvez pas réinitialiser votre propre compte."
 msgstr "لا يمكنك إعادة تعيين حسابك الخاص."
 
+msgid ""
+"Réinitialisation annulée : ce compte ne possède pas d’adresse email vérifiée."
+msgstr "تم إلغاء إعادة التعيين: لا يحتوي هذا الحساب على عنوان بريد إلكتروني موثّق."
+
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
 msgstr "إعادة تعيين حسابك على PLAGENOR 4.0"
 
-#, python-format
 msgid ""
-"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant "
-"les instructions a été envoyé."
-msgstr ""
-"تمت إعادة تعيين حساب %(username)s بنجاح. تم إرسال بريد إلكتروني يحتوي على "
-"التعليمات."
+"Réinitialisation annulée : l’email d’instructions n’a pas pu être livré."
+msgstr "تم إلغاء إعادة التعيين: تعذر تسليم رسالة التعليمات."
+
+#, python-format
+msgid "Le compte de %(username)s a été réinitialisé avec succès."
+msgstr "تمت إعادة تعيين حساب %(username)s بنجاح."
 
 msgid "Créer un compte"
 msgstr "إنشاء حساب"
@@ -502,6 +505,11 @@ msgstr "المعلومات الشخصية"
 msgid "Photo de profil"
 msgstr "الصورة الشخصية"
 
+msgid ""
+"L’adresse de connexion ne peut être modifiée qu’après vérification par un "
+"administrateur."
+msgstr "لا يمكن تغيير بريد تسجيل الدخول إلا بعد التحقق من قِبل مسؤول."
+
 msgid "Organisation / Université"
 msgstr "المؤسسة / الجامعة"
 
@@ -511,8 +519,16 @@ msgstr "اللغة المفضّلة"
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr "اتركه فارغًا لاستخدام اللغة التي يكتشفها متصفحك."
 
-msgid "Techniques maîtrisées"
-msgstr "التقنيات المُتقَنة"
+msgid "Techniques validées"
+msgstr "التقنيات المعتمدة"
+
+msgid "Aucune technique validée. Contactez un administrateur de la plateforme."
+msgstr "لا توجد تقنية معتمدة. تواصل مع مسؤول المنصة."
+
+msgid ""
+"Ces compétences contrôlent l’éligibilité aux affectations et ne sont pas "
+"auto-déclarables."
+msgstr "تتحكم هذه الكفاءات في أهلية الإسناد ولا يمكن التصريح بها ذاتيًا."
 
 msgid "Mettre à jour"
 msgstr "تحديث"
@@ -4172,6 +4188,14 @@ msgstr "لا توجد نتائج"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التحقُّق والمحاولة مجدداً."
+
+#~ msgid ""
+#~ "L’email d’instructions n’a pas pu être envoyé. Transmettez les "
+#~ "instructions par un canal sécurisé."
+#~ msgstr "تعذر إرسال رسالة التعليمات. يُرجى إرسال التعليمات عبر قناة آمنة."
+
+#~ msgid "Un compte avec cet email existe déjà."
+#~ msgstr "يوجد حساب بهذا البريد الإلكتروني مسبقاً."
 
 #~ msgid "Confirmer paiement"
 #~ msgstr "تأكيد الدفع"

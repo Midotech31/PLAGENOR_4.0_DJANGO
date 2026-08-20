@@ -1,15 +1,17 @@
 import uuid as uuid_lib
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
-from datetime import datetime
+from django.db import transaction
 
 from accounts.countries import COUNTRY_CHOICES
-from core.models import Service, Request, RequestHistory
+from core.models import Service, Request
 from core.ratelimit import rate_limit
 from core.exceptions import PricingConfigurationError
-from core.sequences import next_display_id
 from dashboard.utils import safe_float
+
+logger = logging.getLogger('plagenor.public')
 
 # Caps applied to guest-submitted payload — bound DB row size and rendered
 # DOCX output (M3). Generous enough that no realistic submission is rejected.
@@ -210,17 +212,6 @@ def guest_submit(request):
                 'country_choices': COUNTRY_CHOICES,
             })
 
-        # Generate display_id atomically (race-free) — guest GCL shares the
-        # same sequence as registered GCL submissions; guest IBT has its own.
-        year = datetime.now().year
-        prefix = 'IBT' if channel == 'IBTIKAR' else 'GCL'
-        display_id = next_display_id(
-            prefix, year,
-            initial_value_fn=lambda: Request.objects.filter(
-                channel=channel, created_at__year=year,
-                display_id__startswith=f'{prefix}-{year}-',
-            ).count(),
-        )
         guest_token = uuid_lib.uuid4()
 
         # Collect YAML parameter values — capped to prevent unbounded POST
@@ -291,38 +282,39 @@ def guest_submit(request):
             })
         quote = _price_result['total']
 
-        req = Request.objects.create(
-            display_id=display_id,
-            title=title or f"Demande {service.name}",
-            description=description,
-            channel=channel,
-            status='REQUEST_CREATED',
-            urgency=urgency,
-            service=service,
-            quote_amount=quote,
-            submitted_as_guest=True,
-            guest_token=guest_token,
-            guest_name=guest_name,
-            guest_email=guest_email,
-            guest_phone=guest_phone,
-            service_params=service_params,
-            sample_table=sample_table_data,
-            requester_data=requester_data,
-        )
-
-        RequestHistory.objects.create(
-            request=req,
-            from_status='',
-            to_status='REQUEST_CREATED',
-        )
+        submission_data = {
+            'title': title or f"Demande {service.name}",
+            'description': description,
+            'urgency': urgency,
+            'service_id': str(service.pk),
+            'service_params': service_params,
+            'sample_table': sample_table_data,
+            'requester_data': requester_data,
+            'submitted_as_guest': True,
+            'guest_token': guest_token,
+            'guest_name': guest_name,
+            'guest_email': guest_email,
+            'guest_phone': guest_phone,
+        }
+        if channel == 'IBTIKAR':
+            from core.services.ibtikar import submit_ibtikar_request
+            submission_data.update({
+                'budget_amount': quote,
+                'declared_ibtikar_balance': declared_balance,
+            })
+            req = submit_ibtikar_request(submission_data, user=None)
+        else:
+            from core.services.genoclab import submit_genoclab_request
+            submission_data['quote_amount'] = quote
+            req = submit_genoclab_request(submission_data, user=None)
 
         # Send email with tracking code
         try:
-            from notifications.emails import notify_guest_tracking_code, notify_submission_confirmation
+            from notifications.emails import notify_guest_tracking_code
             notify_guest_tracking_code(req)
-            notify_submission_confirmation(req)
         except Exception:
-            pass
+            logger.exception(
+                "Unable to send guest tracking code for request %s", req.pk)
 
         return render(request, 'pages/guest_submit_success.html', {
             'req': req,
@@ -350,14 +342,17 @@ def guest_ibtikar_code(request, token):
     if not code:
         msg.error(request, "Veuillez saisir votre code IBTIKAR.")
         return redirect(f"{reverse('track')}?q={req.guest_token}")
-    req.ibtikar_external_code = code
-    req.save(update_fields=['ibtikar_external_code'])
-    if req.status == 'IBTIKAR_SUBMISSION_PENDING':
-        try:
+    with transaction.atomic():
+        req = Request.objects.select_for_update().get(pk=req.pk)
+        req.ibtikar_external_code = code
+        req.save(update_fields=['ibtikar_external_code'])
+        if req.status == 'IBTIKAR_SUBMISSION_PENDING':
             from core.workflow import transition
-            transition(req, 'IBTIKAR_CODE_SUBMITTED', None, notes=f'Code IBTIKAR (guest): {code}', force=True)
-        except Exception:
-            pass
+            transition(
+                req, 'IBTIKAR_CODE_SUBMITTED', None,
+                notes='Code IBTIKAR soumis par le détenteur du lien invité',
+                force=True,
+            )
     msg.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
     return redirect(f"{reverse('track')}?q={req.guest_token}")
 
@@ -391,7 +386,10 @@ def switch_language(request):
                 request.user.preferred_language = lang
                 request.user.save(update_fields=['preferred_language'])
             except Exception:
-                pass
+                logger.exception(
+                    "Unable to persist language preference for user %s",
+                    request.user.pk,
+                )
         return response
 
     return HttpResponseRedirect(next_url)

@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.urls import NoReverseMatch
 
 
 # Role → request-detail URL name. After a per-request action we send the
@@ -121,6 +122,6 @@ def redirect_to_detail(request, req, fallback_url='dashboard:router'):
     if name and req is not None and getattr(req, 'pk', None):
         try:
             return redirect(name, pk=req.pk)
-        except Exception:
+        except NoReverseMatch:
             pass
     return redirect_back(request, fallback_url)
