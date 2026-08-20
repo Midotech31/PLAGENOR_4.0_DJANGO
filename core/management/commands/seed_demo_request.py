@@ -21,8 +21,10 @@ or as ``amina`` / ``demo1234`` to see it from the requester side.
 """
 from datetime import datetime
 import uuid
+import json
 
 from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
 from accounts.models import User, MemberProfile
@@ -126,6 +128,10 @@ class Command(BaseCommand):
             urgency='Normal',
         )
         budget_amount = float(price_result.get('total') or service.ibtikar_price or 5000)
+        # Pricing engines may return Decimal values. Request.pricing is a
+        # JSONField, so normalize the payload using Django's encoder before
+        # persisting it (notably for DB-only services using flat pricing).
+        price_result = json.loads(json.dumps(price_result, cls=DjangoJSONEncoder))
 
         extras = PRESET_FIELDS[target_status].copy()
         if target_status == 'APPOINTMENT_CONFIRMED' or target_status in (

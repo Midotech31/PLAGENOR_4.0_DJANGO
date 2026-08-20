@@ -309,7 +309,7 @@ def template_create(request):
                 created_by=request.user,
             )
             messages.success(request, f'Modèle "{template.name}" créé avec succès.')
-            return redirect('template_detail', pk=template.pk)
+            return redirect('documents:template_detail', pk=template.pk)
     
     context = {
         'services': services,
@@ -360,7 +360,7 @@ def template_edit(request, pk):
             
             template.save()
             messages.success(request, f'Modèle "{template.name}" mis à jour.')
-            return redirect('template_detail', pk=template.pk)
+            return redirect('documents:template_detail', pk=template.pk)
     
     context = {
         'template': template,
@@ -379,7 +379,7 @@ def template_delete(request, pk):
         template_name = template.name
         template.delete()
         messages.success(request, f'Modèle "{template_name}" supprimé.')
-        return redirect('template_list')
+        return redirect('documents:template_list')
     
     return render(request, 'documents/template_confirm_delete.html', {'template': template})
 
@@ -406,7 +406,7 @@ def template_toggle_active(request, pk):
 
         template.save()
 
-    return redirect('template_detail', pk=template.pk)
+    return redirect('documents:template_detail', pk=template.pk)
 
 
 # ============================================================
