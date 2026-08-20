@@ -42,6 +42,110 @@ from core.uploads import validate_upload
 from core.assignment import member_is_eligible
 
 
+class ManagementCommandCoverageTests(TestCase):
+    """Smoke-test operational commands without touching an external database."""
+
+    def test_account_notification_revenue_and_demo_seed_commands(self):
+        from django.core.management import call_command
+        from accounts.models import User
+        from notifications.models import Notification
+
+        call_command('seed_accounts', quiet=True, verbosity=0)
+        self.assertTrue(User.objects.filter(username='admin', role='SUPER_ADMIN').exists())
+        # Re-running covers the refresh/idempotency path.
+        call_command('seed_accounts', quiet=False, verbosity=0)
+        call_command('seed_notifications', verbosity=0)
+        call_command('seed_notifications', verbosity=0)
+        self.assertTrue(Notification.objects.exists())
+        call_command('archive_revenue', month=1, year=2026, verbosity=0)
+
+        Service.objects.create(
+            code='DEMO-COVER', name='Demo coverage', active=True,
+            channel_availability='IBTIKAR', ibtikar_price=Decimal('5000'),
+        )
+        call_command(
+            'seed_demo_request', service='DEMO-COVER', status='ASSIGNED',
+            balance=180000, verbosity=0,
+        )
+        call_command(
+            'seed_demo_request', service='missing-code', status='REPORT_UPLOADED',
+            balance=170000, verbosity=0,
+        )
+        self.assertEqual(Request.objects.filter(display_id__startswith='IBT-DEMO-').count(), 1)
+
+    def test_backup_restore_commands_success_and_errors(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        from pathlib import Path
+        import tempfile
+
+        temp_dir = Path(tempfile.mkdtemp(prefix='plagenor-command-tests-'))
+        backup = temp_dir / 'backup.sqlite3'
+        backup.write_bytes(b'SQLite format 3')
+        with patch('core.management.commands.backup_db.perform_backup', return_value=backup):
+            call_command('backup_db', keep=2, verbosity=0)
+        with patch('core.management.commands.backup_db.perform_backup', side_effect=RuntimeError('failed')):
+            with self.assertRaises(CommandError):
+                call_command('backup_db', verbosity=0)
+        with self.assertRaises(CommandError):
+            call_command('restore_db', input=str(temp_dir / 'missing.sqlite3'), verbosity=0)
+        with patch('core.management.commands.restore_db.perform_restore') as restore:
+            call_command('restore_db', input=str(backup), verbosity=0)
+            restore.assert_called_once_with(backup)
+        with patch('core.management.commands.restore_db.perform_restore', side_effect=RuntimeError('failed')):
+            with self.assertRaises(CommandError):
+                call_command('restore_db', input=str(backup), verbosity=0)
+
+    def test_programmatic_template_builders_create_valid_docx_files(self):
+        from django.core.management import call_command
+        from pathlib import Path
+        import tempfile
+        import documents.build_default_templates as builders
+
+        temp_dir = Path(tempfile.mkdtemp(prefix='plagenor-template-builders-'))
+        with patch.object(builders, 'TEMPLATE_DIR', temp_dir):
+            paths = builders.build_all()
+            self.assertEqual(len(paths), 3)
+            self.assertTrue(all(path.exists() for path in paths))
+            # Existing files exercise the one-time backup behavior.
+            builders.build_all()
+            self.assertTrue((temp_dir / 'quote_template.bak.docx').exists())
+
+        fake_base = temp_dir / 'project'
+        with self.settings(BASE_DIR=fake_base):
+            call_command('create_docx_templates', verbosity=0)
+        output = fake_base / 'documents' / 'docx_templates'
+        self.assertEqual(len(list(output.glob('*.docx'))), 4)
+
+    def test_demo_seed_schema_helpers_cover_typed_fields(self):
+        from core.management.commands.seed_demo_request import Command
+
+        service = Service.objects.create(
+            code='SCHEMA-COVER', name='Schema coverage', active=True,
+            channel_availability='IBTIKAR', ibtikar_price=Decimal('10'))
+        definition = {
+            'parameters': [
+                {'name': 'enabled', 'type': 'boolean'},
+                {'name': 'mode', 'type': 'choice', 'options': ['fast', 'slow']},
+                {'name': 'comment', 'type': 'string'},
+                {'type': 'string'},
+            ],
+            'sample_table': {'columns': [
+                {'name': 'sample_code', 'type': 'string', 'label': 'Code'},
+                {'name': 'replicates', 'type': 'integer', 'label': 'Replicates'},
+                {'name': 'matrix', 'type': 'choice', 'options': ['soil', 'water']},
+                {'name': 'description', 'type': 'string', 'label': 'Description'},
+                {'type': 'string'},
+            ]},
+        }
+        with patch('core.registry.get_service_def', return_value=definition):
+            params, rows = Command()._build_service_aware_samples(service, count=2)
+        self.assertFalse(params['enabled'])
+        self.assertEqual(params['mode'], 'fast')
+        self.assertEqual(rows[0]['replicates'], '1')
+        self.assertEqual(rows[1]['matrix'], 'soil')
+
+
 # ---------------------------------------------------------------------------
 # calculate_price — pure pricing engine (no DB)
 # ---------------------------------------------------------------------------

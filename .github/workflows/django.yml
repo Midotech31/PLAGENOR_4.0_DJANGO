@@ -47,9 +47,8 @@ jobs:
     - name: Run tests with coverage
       run: |
         coverage run manage.py test
-        # Current measured floor. Raise it as regression tests are added;
-        # never claim a threshold the suite does not yet meet.
-        coverage report --fail-under=50
+        # Enforced regression floor, verified by the full Django suite.
+        coverage report --fail-under=80
     - name: Dependency vulnerability audit
       run: |
         pip-audit -r requirements.txt

@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files.storage import default_storage
 from django.template import Context, Template
 from django.test import Client, RequestFactory, SimpleTestCase, TestCase, override_settings
@@ -1150,3 +1151,483 @@ class StatsViewAndExportTests(TestCase):
         self.assertEqual(body, b'DOCX-CONTENT')
         self.assertIn('.docx', response['Content-Disposition'])
         convert.assert_not_called()
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class RoleWorkflowCoverageTests(TestCase):
+    """End-to-end coverage for the three operational user journeys."""
+
+    def setUp(self):
+        from accounts.models import User
+        from core.models import Service
+
+        self.admin = User.objects.create_user(
+            username='flow-admin', password='x', role='PLATFORM_ADMIN', is_staff=True)
+        self.requester = User.objects.create_user(
+            username='flow-requester', password='x', role='REQUESTER',
+            ibtikar_declared_balance=200000)
+        self.client_user = User.objects.create_user(
+            username='flow-client', password='x', role='CLIENT')
+        self.analyst = User.objects.create_user(
+            username='flow-analyst', password='x', role='MEMBER',
+            first_name='Flow', last_name='Analyst')
+        self.profile = self.analyst.member_profile
+        self.service = Service.objects.create(
+            code='FLOW-SVC', name='Workflow service', channel_availability='BOTH',
+            ibtikar_price=5000, genoclab_price=7000,
+        )
+
+    def make_request(self, display_id, *, channel='IBTIKAR', requester=None,
+                     status='ASSIGNED', assigned=True, **kwargs):
+        defaults = {
+            'display_id': display_id, 'title': display_id, 'channel': channel,
+            'requester': requester or self.requester, 'service': self.service,
+            'status': status, 'service_params': {'mode': 'standard'},
+            'sample_table': [{'sample_code': 'S1'}],
+        }
+        defaults.update(kwargs)
+        if assigned:
+            defaults['assigned_to'] = self.profile
+        return Request.objects.create(**defaults)
+
+    def test_requester_dashboard_creation_and_actions(self):
+        req = self.make_request(
+            'FLOW-IBK-1', appointment_date=__import__('datetime').date(2026, 9, 1),
+            report_file='reports/result.pdf')
+        self.client.force_login(self.requester)
+        self.assertEqual(self.client.get('/dashboard/requester/').status_code, 200)
+        self.assertEqual(self.client.get(f'/dashboard/requester/request/{req.pk}/').status_code, 200)
+        req.refresh_from_db()
+        self.assertIsNotNone(req.report_token)
+
+        for value in ('bad', '-1', '999999'):
+            self.assertEqual(
+                self.client.post('/dashboard/requester/declare-balance/', {'declared_balance': value}).status_code,
+                302,
+            )
+        self.client.post('/dashboard/requester/declare-balance/', {'declared_balance': '150000'})
+        self.requester.refresh_from_db()
+        self.assertEqual(float(self.requester.ibtikar_declared_balance), 150000)
+
+        with patch('dashboard.views.requester.resolve_cost', create=True):
+            # The resolver is imported in-function; patch the canonical source.
+            pass
+        with patch('core.pricing.resolve_cost', return_value={'total': 5000}):
+            response = self.client.post('/dashboard/requester/create/', {
+                'service_id': self.service.pk, 'title': 'Created request',
+                'param_mode': 'full', 'sample_0_sample_code': 'NEW-1',
+            })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Request.objects.filter(requester=self.requester, title='Created request').exists())
+
+        self.client.post(f'/dashboard/requester/alt-date/{req.pk}/', {'alt_date': 'bad'})
+        self.client.post(f'/dashboard/requester/alt-date/{req.pk}/', {
+            'alt_date': '2026-09-12', 'alt_note': 'Disponible le matin'})
+        self.client.post(f'/dashboard/requester/ibtikar-code/{req.pk}/', {'ibtikar_code': ''})
+        self.client.post(f'/dashboard/requester/ibtikar-code/{req.pk}/', {'ibtikar_code': 'IBK-EXT-1'})
+        self.client.post(f'/dashboard/requester/rate/{req.pk}/', {'rating': '0'})
+        self.client.post(f'/dashboard/requester/rate/{req.pk}/', {'rating': '5', 'comment': 'Excellent'})
+        self.client.post(f'/dashboard/requester/appointment/{req.pk}/confirm/')
+        req.status = 'SENT_TO_REQUESTER'
+        req.save(update_fields=['status'])
+        self.client.post(f'/dashboard/requester/confirm/{req.pk}/')
+        req.refresh_from_db()
+        self.assertTrue(req.receipt_confirmed)
+        self.assertEqual(req.service_rating, 5)
+
+    def test_client_dashboard_creation_and_actions(self):
+        req = self.make_request(
+            'FLOW-GCL-1', channel='GENOCLAB', requester=self.client_user,
+            status='QUOTE_SENT', appointment_date=__import__('datetime').date(2026, 9, 2),
+            report_file='reports/client.pdf')
+        self.client.force_login(self.client_user)
+        self.assertEqual(self.client.get('/dashboard/client/').status_code, 200)
+        self.assertEqual(self.client.get(f'/dashboard/client/request/{req.pk}/').status_code, 200)
+
+        with patch('core.pricing.resolve_cost', return_value={'total': 7000}):
+            response = self.client.post('/dashboard/client/create/', {
+                'service_id': self.service.pk, 'title': 'Client created',
+                'param_mode': 'full', 'sample_0_sample_code': 'G-1',
+            })
+        self.assertEqual(response.status_code, 302)
+        self.client.post(f'/dashboard/client/quote/{req.pk}/accept/')
+
+        self.client.post(f'/dashboard/client/order/{req.pk}/upload/', {})
+        invalid = SimpleUploadedFile('payload.html', b'<html></html>', content_type='text/html')
+        self.client.post(f'/dashboard/client/order/{req.pk}/upload/', {'order_file': invalid})
+        self.client.post(f'/dashboard/client/payment/{req.pk}/upload/', {})
+        invalid2 = SimpleUploadedFile('payload.html', b'<html></html>', content_type='text/html')
+        self.client.post(
+            f'/dashboard/client/payment/{req.pk}/upload/', {'payment_receipt_file': invalid2})
+
+        self.client.post(f'/dashboard/client/alt-date/{req.pk}/', {'alt_date': 'invalid'})
+        self.client.post(f'/dashboard/client/alt-date/{req.pk}/', {
+            'alt_date': '2026-09-15', 'alt_note': 'Après-midi'})
+        self.client.post(f'/dashboard/client/rate/{req.pk}/', {'rating': '9'})
+        self.client.post(f'/dashboard/client/rate/{req.pk}/', {'rating': '4', 'comment': 'Bien'})
+        self.client.post(f'/dashboard/client/appointment/{req.pk}/confirm/')
+        req.status = 'SENT_TO_CLIENT'
+        req.save(update_fields=['status'])
+        self.client.post(f'/dashboard/client/confirm/{req.pk}/')
+        req.refresh_from_db()
+        self.assertTrue(req.receipt_confirmed)
+
+        rejected = self.make_request(
+            'FLOW-GCL-REJECT', channel='GENOCLAB', requester=self.client_user,
+            status='QUOTE_SENT')
+        self.client.post(f'/dashboard/client/quote/{rejected.pk}/reject/')
+        rejected.refresh_from_db()
+        self.assertEqual(rejected.status, 'QUOTE_REJECTED_BY_CLIENT')
+
+    def test_analyst_dashboard_task_and_appointment_actions(self):
+        req = self.make_request('FLOW-AN-1', status='ASSIGNED')
+        self.client.force_login(self.analyst)
+        for score in (95, 80, 60, 40, 10):
+            self.profile.productivity_score = score
+            self.profile.save(update_fields=['productivity_score'])
+            self.assertEqual(self.client.get('/dashboard/analyst/').status_code, 200)
+        self.assertEqual(self.client.get(f'/dashboard/analyst/request/{req.pk}/').status_code, 200)
+
+        self.client.post(f'/dashboard/analyst/accept/{req.pk}/')
+        self.client.post(f'/dashboard/analyst/appointment/{req.pk}/', {
+            'appointment_date': 'bad'})
+        self.client.post(f'/dashboard/analyst/appointment/{req.pk}/', {
+            'appointment_date': '2026-09-20', 'appointment_time': '10:00',
+            'appointment_note': 'À jeun'})
+        req.refresh_from_db()
+        req.alt_date_proposed = __import__('datetime').date(2026, 9, 22)
+        req.save(update_fields=['alt_date_proposed'])
+        self.client.post(f'/dashboard/analyst/alt-date/{req.pk}/accept/')
+        req.refresh_from_db()
+        self.assertTrue(req.appointment_confirmed)
+
+        decline_alt = self.make_request(
+            'FLOW-AN-ALT', status='APPOINTMENT_PROPOSED',
+            alt_date_proposed=__import__('datetime').date(2026, 9, 25))
+        self.client.post(
+            f'/dashboard/analyst/alt-date/{decline_alt.pk}/decline/',
+            {'decline_reason': 'Indisponible'})
+        decline_alt.refresh_from_db()
+        self.assertIsNone(decline_alt.alt_date_proposed)
+
+        self.client.post(f'/dashboard/analyst/upload/{req.pk}/', {})
+        wrong = SimpleUploadedFile('report.html', b'<html></html>', content_type='text/html')
+        req.channel = 'IBTIKAR'
+        req.status = 'ANALYSIS_FINISHED'
+        req.save(update_fields=['channel', 'status'])
+        self.client.post(f'/dashboard/analyst/upload/{req.pk}/', {'report_file': wrong})
+
+        self.profile.gift_unlocked = True
+        self.profile.gift_collected = False
+        self.profile.save(update_fields=['gift_unlocked', 'gift_collected'])
+        self.client.post('/dashboard/analyst/collect-gift/')
+        self.client.post('/dashboard/analyst/collect-gift/')
+
+        declined = self.make_request('FLOW-AN-DECLINE', status='ASSIGNED')
+        self.client.post(f'/dashboard/analyst/decline/{declined.pk}/', {'reason': 'Charge élevée'})
+        declined.refresh_from_db()
+        self.assertIsNone(declined.assigned_to)
+
+    def test_observer_can_read_but_cannot_mutate(self):
+        req = self.make_request('FLOW-OBS', assigned=False)
+        req.informed_members.add(self.profile)
+        self.client.force_login(self.analyst)
+        self.assertEqual(self.client.get(f'/dashboard/analyst/request/{req.pk}/').status_code, 200)
+        self.assertEqual(
+            self.client.post(f'/dashboard/analyst/action/{req.pk}/', {'to_status': 'ANALYSIS_STARTED'}).status_code,
+            403,
+        )
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class SuperadminWorkflowCoverageTests(TestCase):
+    """Exercise the SuperAdmin control plane through its HTTP routes."""
+
+    def setUp(self):
+        from accounts.models import Technique, User
+        from core.models import Announcement, PlatformContent, Request, Service
+        self.admin = User.objects.create_user(
+            username='coverage-superadmin', password='pass', role='SUPER_ADMIN',
+            is_staff=True, is_superuser=True, email='admin@example.test')
+        self.target = User.objects.create_user(
+            username='coverage-target', password='pass', role='REQUESTER',
+            first_name='Target', last_name='User', email='target@example.test')
+        self.member_user = User.objects.create_user(
+            username='coverage-member', password='pass', role='MEMBER',
+            first_name='Member', last_name='User')
+        self.technique = Technique.objects.create(name='Coverage technique', category='Molecular')
+        self.service = Service.objects.create(
+            code='COVER-SA', name='Coverage service', description='Before',
+            channel_availability='BOTH', ibtikar_price=100, genoclab_price=200)
+        self.req = Request.objects.create(
+            display_id='COVER-SA-1', title='Coverage request', channel='IBTIKAR',
+            status='SUBMITTED', requester=self.target, service=self.service)
+        self.content = PlatformContent.objects.create(
+            key='coverage.key', lang='fr', value='Initial', updated_by=self.admin)
+        self.announcement = Announcement.objects.create(
+            title='Coverage', message='Initial message', created_by=self.admin)
+        self.client.force_login(self.admin)
+
+    def post(self, path, data=None):
+        return self.client.post(path, data or {}, HTTP_REFERER='/dashboard/home/')
+
+    def test_index_exports_content_and_catalog_crud(self):
+        from accounts.models import Technique
+        from core.models import Announcement, PlatformContent, Service
+        self.assertEqual(self.client.get(
+            '/dashboard/home/?user_q=target&user_role=REQUESTER&sa_channel=IBTIKAR&sa_status=SUBMITTED&sa_q=COVER'
+        ).status_code, 200)
+        csv_response = self.client.get('/dashboard/home/?export=requests_csv')
+        self.assertEqual(csv_response.status_code, 200)
+        self.assertIn('text/csv', csv_response['Content-Type'])
+        self.post(f'/dashboard/home/user/{self.target.pk}/toggle/')
+        self.post(f'/dashboard/home/member/{self.member_user.member_profile.pk}/toggle/')
+        self.post(f'/dashboard/home/member/{self.member_user.member_profile.pk}/techniques/',
+                  {'techniques': [str(self.technique.pk)]})
+        self.post('/dashboard/home/service/create/', {
+            'code': 'COVER-NEW', 'name': 'New service', 'description': 'Created',
+            'channel_availability': 'BOTH', 'ibtikar_price': '10',
+            'genoclab_price': '20', 'turnaround_days': '5'})
+        new_service = Service.objects.get(code='COVER-NEW')
+        self.post(f'/dashboard/home/service/{new_service.pk}/delete/')
+        self.post(f'/dashboard/home/service/{new_service.pk}/reactivate/')
+        self.post('/dashboard/home/technique/create/', {'name': 'New technique', 'category': 'Genomics'})
+        new_technique = Technique.objects.get(name='New technique')
+        self.post(f'/dashboard/home/technique/{new_technique.pk}/edit/', {'name': '', 'category': ''})
+        self.post(f'/dashboard/home/technique/{new_technique.pk}/edit/',
+                  {'name': 'Renamed technique', 'category': 'Bio'})
+        self.post(f'/dashboard/home/technique/{new_technique.pk}/delete/')
+        self.post(f'/dashboard/home/technique/{new_technique.pk}/reactivate/')
+        self.post('/dashboard/home/content/update/', {'key': '', 'value': 'x'})
+        self.post('/dashboard/home/content/update/',
+                  {'key': 'coverage.single', 'lang': 'xx', 'value': 'Single'})
+        self.post('/dashboard/home/content/save/', {'key': ''})
+        self.post('/dashboard/home/content/save/', {
+            'key': 'coverage.multi', 'value_fr': 'FR', 'value_en': 'EN', 'value_ar': 'AR'})
+        self.post('/dashboard/home/content/delete-key/', {'key': ''})
+        self.post('/dashboard/home/content/delete-key/', {'key': 'coverage.multi'})
+        self.post(f'/dashboard/home/content/{self.content.pk}/delete/')
+        self.assertFalse(PlatformContent.objects.filter(pk=self.content.pk).exists())
+        self.post('/dashboard/home/announcement/create/', {'title': '', 'message': ''})
+        self.post('/dashboard/home/announcement/create/', {
+            'title': 'Published', 'message': 'Coverage announcement',
+            'level': 'invalid', 'audience': 'invalid'})
+        published = Announcement.objects.get(title='Published')
+        self.post(f'/dashboard/home/announcement/{published.pk}/toggle/')
+        self.post(f'/dashboard/home/announcement/{published.pk}/delete/')
+
+    def test_security_service_users_backup_and_restore(self):
+        from accounts.models import User
+        from core.models import PaymentMethod, ServiceFormField
+        self.target.totp_enabled = True
+        self.target.totp_secret = 'secret'
+        self.target.save(update_fields=['totp_enabled', 'totp_secret'])
+        self.post(f'/dashboard/home/user/{self.target.pk}/reset-2fa/', {'reason': 'short'})
+        self.post(f'/dashboard/home/user/{self.target.pk}/reset-2fa/',
+                  {'reason': 'Verified recovery request from account owner'})
+        self.assertEqual(self.client.get(
+            f'/dashboard/home/service/{self.service.pk}/edit/').status_code, 200)
+        updated = self.post(f'/dashboard/home/service/{self.service.pk}/edit/', {
+            'name': 'Coverage service updated', 'description': 'After',
+            'channel_availability': 'BOTH', 'ibtikar_price': '125.5',
+            'genoclab_price': '250', 'turnaround_days': '7',
+            'field_name': ['quality', ''], 'field_label': ['Quality', 'Ignored'],
+            'field_type': ['choice', 'string'], 'field_category': ['invalid', 'parameter'],
+            'field_required': ['0'], 'field_options': ['High,Low', ''],
+            'field_affects_pricing': ['0'], 'field_price_modifier_type': ['FIXED'],
+            'field_price_modifier_value': ['bad'], 'field_condition_note_fr': ['Note'],
+            'field_condition_note_en': ['Note'], 'field_option_pricing': ['bad-json'],
+            'field_conditional_logic': ['bad-json'], 'pd_base_non_pathogenic': '100',
+            'pd_base_pathogenic': 'bad', 'pd_multiplier_param': 'mode',
+            'pd_mult_key': ['fast', ''], 'pd_mult_factor': ['1.5', 'bad']})
+        self.assertEqual(updated.status_code, 302)
+        self.assertTrue(ServiceFormField.objects.filter(service=self.service, name='quality').exists())
+        self.assertEqual(self.client.get(
+            '/dashboard/audit-log/?date_from=2020-01-01&date_to=2030-01-01&action=RESET&user=admin'
+        ).status_code, 200)
+        self.assertEqual(self.client.get('/dashboard/revenue-archives/').status_code, 200)
+        self.post('/dashboard/home/user/create/', {
+            'username': 'created-coverage', 'email': 'created@example.test',
+            'first_name': 'Created', 'last_name': 'User', 'role': 'CLIENT',
+            'password': 'StrongPass!234'})
+        created = User.objects.get(username='created-coverage')
+        self.assertEqual(self.client.get(f'/dashboard/home/user/{created.pk}/edit/').status_code, 200)
+        self.post(f'/dashboard/home/user/{created.pk}/edit/', {
+            'username': 'created-coverage', 'email': 'changed@example.test',
+            'first_name': 'Changed', 'last_name': 'User', 'role': 'CLIENT', 'is_active': 'on'})
+        self.post('/dashboard/home/payment-method/create/', {'name': ''})
+        self.post('/dashboard/home/payment-method/create/',
+                  {'name': 'Bank transfer', 'instructions': 'Use invoice reference'})
+        self.assertTrue(PaymentMethod.objects.filter(name='Bank transfer').exists())
+
+        backup_path = Path(tempfile.mkdtemp()) / 'backup.sqlite3'
+        backup_path.write_bytes(b'SQLite format 3')
+        with patch('core.db_backup.perform_backup', return_value=backup_path):
+            self.assertEqual(self.post('/dashboard/home/backup/').status_code, 200)
+        with patch('core.db_backup.perform_backup', side_effect=RuntimeError('unavailable')):
+            self.assertEqual(self.post('/dashboard/home/backup/').status_code, 302)
+        self.assertEqual(self.client.get('/dashboard/home/export-emails/').status_code, 200)
+        self.post(f'/dashboard/home/force-transition/{self.req.pk}/', {'to_status': ''})
+        self.post(f'/dashboard/home/budget-override/{self.req.pk}/',
+                  {'amount': 'bad', 'justification': 'short'})
+        invalid = SimpleUploadedFile('backup.txt', b'not a database', 'text/plain')
+        self.post('/dashboard/home/restore/', {'backup_file': invalid})
+        valid = SimpleUploadedFile('backup.sqlite3', b'SQLite format 3', 'application/octet-stream')
+        with patch('core.db_backup.perform_restore', side_effect=ValueError('invalid backup')):
+            self.post('/dashboard/home/restore/', {'backup_file': valid})
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class AdminOperationsCoverageTests(TestCase):
+    """Cover assignment, review, pricing and payment operations end to end."""
+
+    def setUp(self):
+        from accounts.models import Technique, User
+        from core.models import Request, Service
+        self.admin = User.objects.create_user(
+            username='ops-coverage', password='pass', role='PLATFORM_ADMIN', is_staff=True)
+        self.owner = User.objects.create_user(
+            username='ops-owner', password='pass', role='CLIENT', email='owner@example.test')
+        self.member_user = User.objects.create_user(
+            username='ops-member', password='pass', role='MEMBER', first_name='Ana')
+        self.other_member_user = User.objects.create_user(
+            username='ops-member-2', password='pass', role='MEMBER', first_name='Bob')
+        self.service = Service.objects.create(
+            code='OPS-COVER', name='Ops service', channel_availability='BOTH',
+            ibtikar_price=100, genoclab_price=200)
+        technique = Technique.objects.create(name='OPS-COVER')
+        self.member_user.member_profile.techniques.add(technique)
+        self.other_member_user.member_profile.techniques.add(technique)
+        self.req = Request.objects.create(
+            display_id='OPS-COVER-1', title='Ops coverage', channel='GENOCLAB',
+            status='REQUEST_CREATED', requester=self.owner, service=self.service,
+            sample_table=[{'sample': 'A'}], service_params={})
+        self.client.force_login(self.admin)
+
+    def post(self, path, data=None):
+        return self.client.post(path, data or {}, HTTP_REFERER='/dashboard/ops/')
+
+    def test_dashboard_assignment_observers_rewards_and_review(self):
+        from core.models import RequestHistory
+        self.assertEqual(self.client.get(
+            '/dashboard/ops/?channel=GENOCLAB&status=REQUEST_CREATED&q=OPS'
+        ).status_code, 200)
+        self.assertEqual(self.client.get(f'/dashboard/ops/request/{self.req.pk}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/dashboard/ops/transition/{self.req.pk}/').status_code, 403)
+        with patch('dashboard.views.admin_ops.transition') as transition_mock:
+            self.post(f'/dashboard/ops/transition/{self.req.pk}/',
+                      {'to_status': 'QUOTE_DRAFT', 'notes': 'Prepared'})
+            transition_mock.assert_called_once()
+
+        self.post(f'/dashboard/ops/assign/{self.req.pk}/', {})
+        self.post(f'/dashboard/ops/assign/{self.req.pk}/',
+                  {'member_id': self.member_user.member_profile.pk})
+        self.req.status = 'INVOICE_GENERATED'
+        self.req.save(update_fields=['status'])
+        with patch('dashboard.views.admin_ops.transition'):
+            self.post(f'/dashboard/ops/assign/{self.req.pk}/',
+                      {'member_id': self.member_user.member_profile.pk})
+
+        self.post(f'/dashboard/ops/observers/{self.req.pk}/', {})
+        self.post(f'/dashboard/ops/observers/{self.req.pk}/', {
+            'action': 'add', 'member_id': self.other_member_user.member_profile.pk})
+        self.post(f'/dashboard/ops/observers/{self.req.pk}/', {
+            'action': 'add', 'member_id': self.other_member_user.member_profile.pk})
+        self.post(f'/dashboard/ops/observers/{self.req.pk}/', {
+            'action': 'remove', 'member_id': self.other_member_user.member_profile.pk})
+        self.assertTrue(RequestHistory.objects.exists())
+
+        member_pk = self.member_user.member_profile.pk
+        self.post(f'/dashboard/ops/points/{member_pk}/', {'points': '0'})
+        self.post(f'/dashboard/ops/points/{member_pk}/',
+                  {'points': '120', 'reason': 'Excellent quality'})
+        self.post(f'/dashboard/ops/cheer/{member_pk}/', {'message': 'Excellent work'})
+        self.post(f'/dashboard/ops/gift/{member_pk}/', {})
+        bad_image = SimpleUploadedFile('gift.png', b'not-image', 'image/png')
+        self.post(f'/dashboard/ops/gift/{member_pk}/', {'gift_image': bad_image})
+
+        self.post(f'/dashboard/ops/appointment/{self.req.pk}/', {'appointment_date': 'bad'})
+        self.post(f'/dashboard/ops/appointment/{self.req.pk}/', {'appointment_date': '2026-09-01'})
+        self.assertEqual(self.client.get(f'/dashboard/ops/report/{self.req.pk}/').status_code, 200)
+        with patch('dashboard.views.admin_ops.transition'):
+            self.post(f'/dashboard/ops/report/{self.req.pk}/', {'action': 'validate'})
+            self.post(f'/dashboard/ops/report/{self.req.pk}/',
+                      {'action': 'send_back', 'revision_notes': 'Clarify conclusion'})
+
+    def test_cost_quote_invoice_and_payment_validation(self):
+        from core.models import Invoice
+        self.post(f'/dashboard/ops/cost/{self.req.pk}/', {})
+        self.post(f'/dashboard/ops/cost/{self.req.pk}/',
+                  {'admin_price': '100', 'cost_justification': 'short'})
+        self.post(f'/dashboard/ops/cost/{self.req.pk}/', {
+            'admin_price': '1250.50',
+            'cost_justification': 'Documented correction after technical review'})
+
+        self.assertEqual(self.client.get(f'/dashboard/ops/quote/{self.req.pk}/').status_code, 200)
+        self.post(f'/dashboard/ops/quote/{self.req.pk}/', {})
+        self.post(f'/dashboard/ops/quote/{self.req.pk}/', {
+            'item_label_0': 'Sequencing', 'item_unit_price_0': '1000',
+            'item_quantity_0': '2', 'admin_fees': '100', 'report_fees': '50',
+            'vat_rate': '19', 'quote_notes': 'Prepared', 'action': 'save'})
+        self.req.refresh_from_db()
+        self.assertTrue(self.req.quote_detail)
+
+        # Invalid status is rejected without leaving a partial invoice.
+        self.post(f'/dashboard/ops/invoice/{self.req.pk}/')
+        self.assertFalse(Invoice.objects.filter(request=self.req).exists())
+        self.req.status = 'ORDER_UPLOADED'
+        self.req.save(update_fields=['status'])
+        with patch('dashboard.views.admin_ops.transition'):
+            self.post(f'/dashboard/ops/invoice/{self.req.pk}/')
+        self.assertTrue(Invoice.objects.filter(request=self.req).exists())
+
+        self.post(f'/dashboard/ops/payment/{self.req.pk}/', {'verification_note': 'x'})
+        self.req.status = 'PAYMENT_PROOF_UPLOADED'
+        self.req.save(update_fields=['status'])
+        with patch('dashboard.views.admin_ops.transition'):
+            self.post(f'/dashboard/ops/payment/{self.req.pk}/',
+                      {'verification_note': 'Receipt checked'})
+        self.req.refresh_from_db()
+        self.assertEqual(self.req.payment_verification_note, 'Receipt checked')
+
+    def test_internal_document_download_authorization(self):
+        from core.models import Invoice
+        from decimal import Decimal
+
+        generated = Path(tempfile.mkdtemp(prefix='ops-docs-')) / 'generated.docx'
+        generated.write_bytes(b'document')
+        self.req.channel = 'IBTIKAR'
+        self.req.status = 'SUBMITTED'
+        self.req.save(update_fields=['channel', 'status'])
+        # Status gate rejects premature platform notes.
+        self.assertEqual(
+            self.client.get(f'/dashboard/ops/platform-note/{self.req.pk}/').status_code,
+            302,
+        )
+        self.req.status = 'ASSIGNED'
+        self.req.save(update_fields=['status'])
+        with patch('documents.generators.generate_platform_note', return_value=str(generated)):
+            self.assertEqual(
+                self.client.get(f'/dashboard/ops/platform-note/{self.req.pk}/').status_code,
+                200,
+            )
+
+        self.req.channel = 'GENOCLAB'
+        self.req.status = 'QUOTE_DRAFT'
+        self.req.quote_detail = {'items': [{'label': 'Service'}]}
+        self.req.save(update_fields=['channel', 'status', 'quote_detail'])
+        with patch('documents.generators.generate_quote', return_value=str(generated)):
+            self.assertEqual(
+                self.client.get(f'/dashboard/ops/quote/{self.req.pk}/download/').status_code,
+                200,
+            )
+        invoice = Invoice.objects.create(
+            invoice_number='OPS-INV-1', request=self.req, client=self.owner,
+            line_items=[], subtotal_ht=Decimal('100'), vat_rate=Decimal('0.19'),
+            vat_amount=Decimal('19'), total_ttc=Decimal('119'), created_by=self.admin,
+        )
+        with patch('documents.generators.generate_invoice_document', return_value=str(generated)):
+            self.assertEqual(
+                self.client.get(f'/dashboard/ops/invoice/{invoice.pk}/download/').status_code,
+                200,
+            )
