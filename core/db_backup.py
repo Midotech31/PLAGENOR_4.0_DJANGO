@@ -78,17 +78,27 @@ def perform_backup(keep: int = 30) -> Path:
                 pass
             raise RuntimeError(f"pg_dump failed: {result.stderr.strip() or 'unknown error'}")
 
-    _prune_old_backups(out_dir, keep=keep)
+    _prune_old_backups(out_dir, keep=keep, protected=out)
     return out
 
 
-def _prune_old_backups(out_dir: Path, keep: int) -> None:
+def _prune_old_backups(out_dir: Path, keep: int, protected: Path | None = None) -> None:
+    """Prune old backups without deleting the backup just created.
+
+    SQLite ``copy2`` intentionally preserves the source mtime, which can be
+    older than existing backups. Sorting only by mtime could therefore delete
+    the fresh artifact immediately. ``protected`` is placed first whenever at
+    least one backup is retained.
+    """
     backups = sorted(
         list(out_dir.glob(f'plagenor_*{SQLITE_BACKUP_SUFFIX}'))
         + list(out_dir.glob(f'plagenor_*{POSTGRES_BACKUP_SUFFIX}')),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
+    if keep > 0 and protected in backups:
+        backups.remove(protected)
+        backups.insert(0, protected)
     for old in backups[keep:]:
         try:
             old.unlink()

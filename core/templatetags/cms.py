@@ -1,3 +1,4 @@
+import logging
 import time
 
 from django import template
@@ -7,6 +8,7 @@ from django.utils.translation import get_language
 from core.models import PlatformContent
 
 register = template.Library()
+logger = logging.getLogger(__name__)
 
 # In-process cache: {(key, lang): (value, expires_at)}. Avoids a DB hit per
 # {% cms %} call (a content page can reference dozens of keys). Entries carry a
@@ -55,5 +57,5 @@ def cms(key, default=''):
         if value:
             return value
     except Exception:
-        pass
+        logger.exception("CMS lookup failed for key=%s lang=%s", key, lang)
     return default

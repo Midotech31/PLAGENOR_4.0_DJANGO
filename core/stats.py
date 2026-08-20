@@ -24,6 +24,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Iterable, Optional
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import (
     Avg, Count, DecimalField, F, IntegerField, Q, Sum, Value,
 )
@@ -263,8 +264,11 @@ def stats_for_user(user, **filters) -> dict:
     if role == 'MEMBER':
         try:
             mp_id = user.member_profile.id
-        except Exception:
-            mp_id = None
+        except ObjectDoesNotExist:
+            # Fail closed. Passing None would make _apply_filters omit the
+            # analyst scope entirely and expose platform-wide statistics to a
+            # MEMBER whose profile was missing/corrupt.
+            mp_id = -1
         filters = dict(filters, assigned_member_id=mp_id)
         return {
             'scope': 'analyst',

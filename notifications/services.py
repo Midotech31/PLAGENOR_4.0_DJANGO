@@ -1,4 +1,11 @@
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
+
 from .models import Notification
+
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_assigned_user(request_obj):
@@ -7,7 +14,13 @@ def _safe_assigned_user(request_obj):
         return None
     try:
         return request_obj.assigned_to.user
+    except ObjectDoesNotExist:
+        return None
     except Exception:
+        logger.exception(
+            "Unable to resolve assigned analyst for request=%s",
+            getattr(request_obj, 'pk', None),
+        )
         return None
 
 

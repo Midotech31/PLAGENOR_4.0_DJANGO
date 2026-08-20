@@ -1,18 +1,16 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# PLAGENOR French translations.
+# Copyright (C) 2026 PLAGENOR contributors
+# This file is distributed under the same license as PLAGENOR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-25 10:46+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"PO-Revision-Date: 2026-08-20 14:20+0100\n"
+"Last-Translator: PLAGENOR contributors\n"
+"Language-Team: French\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -90,9 +88,6 @@ msgstr ""
 msgid "Email requis."
 msgstr ""
 
-msgid "Un compte avec cet email existe déjà."
-msgstr ""
-
 msgid "Vérification de votre adresse — PLAGENOR 4.0"
 msgstr ""
 
@@ -125,16 +120,28 @@ msgstr ""
 msgid "Votre mot de passe a été mis à jour avec succès."
 msgstr ""
 
+msgid "Trop de codes incorrects. Veuillez vous reconnecter."
+msgstr "Trop de codes incorrects. Veuillez vous reconnecter."
+
 msgid "Code invalide ou expiré. Réessayez."
 msgstr ""
 
 msgid "La double authentification est déjà activée."
 msgstr ""
 
+msgid "Trop de codes incorrects. Veuillez recommencer."
+msgstr "Trop de codes incorrects. Veuillez recommencer."
+
 msgid "Double authentification activée."
 msgstr ""
 
 msgid "Code invalide. Vérifiez l'heure de votre appareil et réessayez."
+msgstr ""
+
+msgid "La double authentification n'est pas activée."
+msgstr "La double authentification n'est pas activée."
+
+msgid "Mot de passe ou code 2FA invalide."
 msgstr ""
 
 msgid "Double authentification désactivée."
@@ -155,13 +162,19 @@ msgstr ""
 msgid "Vous ne pouvez pas réinitialiser votre propre compte."
 msgstr ""
 
+msgid ""
+"Réinitialisation annulée : ce compte ne possède pas d’adresse email vérifiée."
+msgstr ""
+
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
 msgstr ""
 
-#, python-format
 msgid ""
-"Le compte de %(username)s a été réinitialisé avec succès. Un email contenant "
-"les instructions a été envoyé."
+"Réinitialisation annulée : l’email d’instructions n’a pas pu être livré."
+msgstr ""
+
+#, python-format
+msgid "Le compte de %(username)s a été réinitialisé avec succès."
 msgstr ""
 
 msgid "Créer un compte"
@@ -464,6 +477,13 @@ msgstr ""
 msgid "Photo de profil"
 msgstr ""
 
+msgid ""
+"L’adresse de connexion ne peut être modifiée qu’après vérification par un "
+"administrateur."
+msgstr ""
+"L’adresse de connexion ne peut être modifiée qu’après vérification par un "
+"administrateur."
+
 msgid "Organisation / Université"
 msgstr ""
 
@@ -473,8 +493,19 @@ msgstr ""
 msgid "Laissez vide pour utiliser la langue détectée par votre navigateur."
 msgstr ""
 
-msgid "Techniques maîtrisées"
+msgid "Techniques validées"
+msgstr "Techniques validées"
+
+msgid "Aucune technique validée. Contactez un administrateur de la plateforme."
 msgstr ""
+"Aucune technique validée. Contactez un administrateur de la plateforme."
+
+msgid ""
+"Ces compétences contrôlent l’éligibilité aux affectations et ne sont pas "
+"auto-déclarables."
+msgstr ""
+"Ces compétences contrôlent l’éligibilité aux affectations et ne sont pas "
+"auto-déclarables."
 
 msgid "Mettre à jour"
 msgstr ""
@@ -487,6 +518,12 @@ msgstr ""
 
 msgid "Votre compte est protégé par un code à usage unique à chaque connexion."
 msgstr ""
+
+msgid "Mot de passe actuel"
+msgstr ""
+
+msgid "Code 2FA actuel"
+msgstr "Code 2FA actuel"
 
 msgid "Désactiver la double authentification ?"
 msgstr ""
@@ -720,9 +757,6 @@ msgid "En attente de réponse du client"
 msgstr ""
 
 msgid "Générer facture"
-msgstr ""
-
-msgid "Confirmer paiement"
 msgstr ""
 
 msgid "Contacter par email"
@@ -1360,6 +1394,9 @@ msgstr ""
 msgid "Le rapport peut être délivré au client"
 msgstr ""
 
+msgid "Preuve reçue — vérification finance en attente."
+msgstr "Preuve reçue — vérification finance en attente."
+
 msgid "Documents"
 msgstr ""
 
@@ -1409,6 +1446,9 @@ msgid "Préparer / Modifier le devis"
 msgstr ""
 
 msgid "Générer la facture"
+msgstr ""
+
+msgid "Référence / note de vérification"
 msgstr ""
 
 msgid "Confirmer le paiement"
@@ -2441,6 +2481,9 @@ msgstr ""
 msgid "Réinitialiser / Reset Account"
 msgstr ""
 
+msgid "Raison obligatoire"
+msgstr ""
+
 msgid "Réinitialiser la 2FA (perte du téléphone)"
 msgstr ""
 
@@ -2844,7 +2887,7 @@ msgstr ""
 msgid "Modifier le service"
 msgstr ""
 
-msgid "Prix IBTIKAR (DZD)"
+msgid "Prix IBTIKAR (DA)"
 msgstr ""
 
 msgid ""
@@ -2852,7 +2895,7 @@ msgid ""
 "ci-dessous)"
 msgstr ""
 
-msgid "Prix GENOCLAB (DZD)"
+msgid "Prix GENOCLAB (DA)"
 msgstr ""
 
 msgid "Image actuelle"
@@ -3012,7 +3055,7 @@ msgstr ""
 msgid "Les deux"
 msgstr ""
 
-msgid "Montant (DZD)"
+msgid "Montant (DA)"
 msgstr ""
 
 msgid "Unité"
@@ -3971,8 +4014,7 @@ msgid "Suivi de votre demande"
 msgstr ""
 
 msgid ""
-"Entrez le token de suivi reçu par e-mail pour consulter l'état "
-"d'avancement."
+"Entrez le token de suivi reçu par e-mail pour consulter l'état d'avancement."
 msgstr ""
 
 msgid "Collez votre token de suivi..."

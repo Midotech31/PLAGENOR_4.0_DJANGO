@@ -59,3 +59,13 @@ class InvoiceLockError(PlagenorError):
 class AuthorizationError(PlagenorError):
     """Raised when a user lacks permission for an action."""
     pass
+
+
+class PricingConfigurationError(PlagenorError, ValueError):
+    """Raised when an authoritative pricing source is missing or malformed."""
+    pass
+
+
+class FinancialValidationError(PlagenorError, ValueError):
+    """Raised when money, tax, quantity, or invoice data is invalid."""
+    pass

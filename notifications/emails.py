@@ -24,9 +24,9 @@ def send_email_notification(to_email, subject, body_html):
             html_message=body_html,
             fail_silently=False,
         )
-        logger.info("Email sent to %s: %s", to_email, subject)
+        logger.info("Email notification sent: %s", subject)
     except Exception as e:
-        logger.error("Failed to send email to %s: %s", to_email, e)
+        logger.error("Failed to send email notification %s: %s", subject, e)
 
 
 def _email_ctx(request_obj, **extra):
@@ -124,9 +124,7 @@ def notify_appointment(request_obj):
                             _email_ctx(request_obj,
                                        appointment_date=getattr(request_obj, 'appointment_date', None),
                                        appointment_time=getattr(request_obj, 'appointment_time', ''),
-                                       appointment_note=getattr(request_obj, 'appointment_note', ''),
-                                       analyst_name=(request_obj.assigned_to.user.get_full_name()
-                                                     if request_obj.assigned_to else '')))
+                                       appointment_note=getattr(request_obj, 'appointment_note', '')))
     send_email_notification(
         to_email,
         f"[PLAGENOR] Rendez-vous programmé — {request_obj.display_id}",

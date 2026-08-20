@@ -3,6 +3,7 @@ from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
@@ -10,9 +11,15 @@ from accounts.models import MemberProfile, Cheer, PointsHistory
 from core.models import Request, RequestHistory, RequestComment, Invoice
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
+from core.assignment import member_is_eligible
 from core.registry import get_service_def
 from core.pricing import calculate_price
-from core.exceptions import InvalidTransitionError, AuthorizationError
+from core.exceptions import (
+    InvalidTransitionError, AuthorizationError, FinancialValidationError,
+)
+from core.financial import compute_invoice_totals, parse_money
+from core.uploads import validate_upload
+from django.core.exceptions import ValidationError
 from notifications.models import Notification
 
 
@@ -234,6 +241,12 @@ def assign_request(request, pk):
         messages.error(request, "Veuillez sélectionner un analyste.")
         return redirect_to_detail(request, req, 'dashboard:admin_ops')
     member = get_object_or_404(MemberProfile, pk=member_id)
+    if not member_is_eligible(member, req.service):
+        messages.error(
+            request,
+            "Cet analyste n'est pas éligible: vérifiez son activation, sa "
+            "disponibilité, sa charge et ses techniques certifiées.")
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
     previous = req.assigned_to  # may be None
     reason = (request.POST.get('reason', '') or '').strip()
@@ -603,6 +616,11 @@ def upload_gift(request, member_pk):
     member = get_object_or_404(MemberProfile, pk=member_pk)
     gift_image = request.FILES.get('gift_image')
     if gift_image:
+        try:
+            gift_image = validate_upload(gift_image, 'image')
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+            return redirect_back(request, 'dashboard:admin_ops')
         member.gift_image = gift_image
         member.gift_unlocked = True
         member.gift_collected = False
@@ -701,37 +719,47 @@ def adjust_cost(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     new_price = request.POST.get('admin_price', '')
-    justification = request.POST.get('cost_justification', '')
+    justification = request.POST.get('cost_justification', '').strip()
     
     if not new_price:
         messages.error(request, "Veuillez saisir un montant.")
         return redirect_to_detail(request, req, 'dashboard:admin_ops')
     
-    try:
-        price = float(new_price)
-    except ValueError:
-        messages.error(request, "Montant invalide.")
+    if len(justification) < 10:
+        messages.error(request, "La justification doit comporter au moins 10 caractères.")
         return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+    try:
+        price = parse_money(new_price, field='Montant', allow_zero=False)
+    except FinancialValidationError as exc:
+        messages.error(request, str(exc))
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+    with transaction.atomic():
+        req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+        old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
+        req.admin_validated_price = price
+        req.save(update_fields=['admin_validated_price'])
+
+        # Keep the financial mutation and its audit evidence indivisible.
+        from core.audit import log_action
+        log_action(
+            action='COST_ADJUSTMENT',
+            entity_type='REQUEST',
+            entity_id=str(req.id),
+            actor=request.user,
+            details={
+                'old_price': str(old_price),
+                'new_price': str(price),
+                'justification': justification,
+            }
+        )
     
-    old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
-    req.admin_validated_price = price
-    req.save(update_fields=['admin_validated_price'])
-    
-    # Log to audit
-    from core.audit import log_action
-    log_action(
-        action='COST_ADJUSTMENT',
-        entity_type='REQUEST',
-        entity_id=str(req.id),
-        actor=request.user,
-        details={
-            'old_price': str(old_price),
-            'new_price': str(price),
-            'justification': justification,
-        }
+    messages.success(
+        request,
+        f"Coût ajusté pour {req.display_id}: {price:,.0f} DA. "
+        f"Justification: {justification}",
     )
-    
-    messages.success(request, f"Coût ajusté pour {req.display_id}: {price:,.0f} DA. {f'Justification: {justification}' if justification else ''}")
     return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
 
@@ -741,30 +769,58 @@ def prepare_quote(request, pk):
     req = get_object_or_404(Request, pk=pk)
 
     if request.method == 'POST':
-        # Parse form data for line items
-        items = []
-        idx = 0
-        while f'item_label_{idx}' in request.POST:
-            label = request.POST.get(f'item_label_{idx}', '')
-            unit_price = safe_float(request.POST.get(f'item_unit_price_{idx}'))
-            quantity = safe_int(request.POST.get(f'item_quantity_{idx}'))
-            total = unit_price * quantity
-            if label:
+        try:
+            # Parse form data strictly: malformed financial input must not
+            # silently become a zero-value quote.
+            items = []
+            idx = 0
+            while f'item_label_{idx}' in request.POST:
+                label = request.POST.get(f'item_label_{idx}', '').strip()
+                unit_price = parse_money(
+                    request.POST.get(f'item_unit_price_{idx}'),
+                    field=f'Prix unitaire de la ligne {idx + 1}',
+                    allow_zero=False,
+                )
+                try:
+                    quantity = int(request.POST.get(f'item_quantity_{idx}', ''))
+                except (TypeError, ValueError) as exc:
+                    raise FinancialValidationError(
+                        f'Quantité de la ligne {idx + 1} invalide.') from exc
+                if quantity <= 0:
+                    raise FinancialValidationError(
+                        f'Quantité de la ligne {idx + 1} doit être strictement positive.')
+                if not label:
+                    raise FinancialValidationError(
+                        f'Libellé de la ligne {idx + 1} obligatoire.')
+                total = unit_price * quantity
                 items.append({
                     'label': label,
-                    'unit_price': unit_price,
+                    'unit_price': float(unit_price),
                     'quantity': quantity,
-                    'total': total,
+                    'total': float(total),
                 })
-            idx += 1
+                idx += 1
 
-        admin_fees = safe_float(request.POST.get('admin_fees'))
-        report_fees = safe_float(request.POST.get('report_fees'))
-        vat_rate = safe_float(request.POST.get('vat_rate'), default=19) / 100
+            if not items:
+                raise FinancialValidationError('Le devis doit contenir au moins une ligne.')
+
+            admin_fees = parse_money(
+                request.POST.get('admin_fees'), field='Frais administratifs')
+            report_fees = parse_money(
+                request.POST.get('report_fees'), field='Frais de rapport')
+            vat_percent = parse_money(
+                request.POST.get('vat_rate', 19), field='Taux de TVA')
+            if vat_percent > 100:
+                raise FinancialValidationError(
+                    'Le taux de TVA doit être compris entre 0 et 100.')
+            vat_rate = vat_percent / 100
+            totals = compute_invoice_totals(
+                items, admin_fees, report_fees, vat_rate)
+        except FinancialValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect('dashboard:admin_prepare_quote', pk=req.pk)
+
         notes = request.POST.get('quote_notes', '')
-
-        from core.financial import compute_invoice_totals
-        totals = compute_invoice_totals(items, admin_fees, report_fees, vat_rate)
         total_ttc = totals['total_ttc']
 
         quote_detail = {'items': items, 'notes': notes, **totals}
@@ -824,75 +880,112 @@ def _compute_auto_estimate(req, yaml_def):
 @admin_required
 def generate_invoice(request, pk):
     """Generate an invoice from a GENOCLAB request's quote."""
-    req = get_object_or_404(Request, pk=pk)
-
     if request.method == 'POST':
-        # The state machine only permits ORDER_UPLOADED → INVOICE_GENERATED, so
-        # block any other source state up-front to avoid creating an orphan
-        # invoice row that fails to advance the workflow.
-        if req.status != 'ORDER_UPLOADED':
-            messages.error(
-                request,
-                f"La facture ne peut être générée que depuis le statut « Bon de Commande Uploadé » "
-                f"(statut actuel: {req.get_status_display()})."
-            )
-            return redirect('dashboard:admin_request_detail', pk=req.pk)
-
-        quote = req.quote_detail or {}
-        items = quote.get('items', [])
-
-        # Build invoice line items from quote
-        line_items = []
-        for item in items:
-            line_items.append({
-                'description': item['label'],
-                'unit_price': item['unit_price'],
-                'quantity': item['quantity'],
-                'total': item['total'],
-            })
-        if quote.get('admin_fees', 0) > 0:
-            line_items.append({'description': 'Frais administratifs', 'unit_price': quote['admin_fees'], 'quantity': 1, 'total': quote['admin_fees']})
-        if quote.get('report_fees', 0) > 0:
-            line_items.append({'description': 'Frais de rapport', 'unit_price': quote['report_fees'], 'quantity': 1, 'total': quote['report_fees']})
-
-        # Generate invoice number atomically (no .count()+1 race).
-        from datetime import datetime
-        from core.sequences import next_display_id
-        year = datetime.now().year
-        invoice_number = next_display_id(
-            'GCL-INV', year,
-            initial_value_fn=lambda: Invoice.objects.filter(
-                created_at__year=year,
-                invoice_number__startswith=f'GCL-INV-{year}-',
-            ).count(),
-        )
-
-        subtotal_ht = quote.get('subtotal_before_tax', float(req.quote_amount))
-        vat_rate = quote.get('vat_rate', 0.19)
-        vat_amount = quote.get('vat_amount', round(subtotal_ht * vat_rate, 2))
-        total_ttc = quote.get('total_ttc', round(subtotal_ht + vat_amount, 2))
-
-        Invoice.objects.create(
-            invoice_number=invoice_number,
-            request=req,
-            client=req.requester,
-            line_items=line_items,
-            subtotal_ht=subtotal_ht,
-            vat_rate=vat_rate,
-            vat_amount=vat_amount,
-            total_ttc=total_ttc,
-            created_by=request.user,
-        )
-
-        # Transition to INVOICE_GENERATED
         try:
-            transition(req, 'INVOICE_GENERATED', request.user, notes=f'Facture {invoice_number} générée')
-            messages.success(request, f"Facture {invoice_number} générée pour {req.display_id}.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+            with transaction.atomic():
+                req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+                if req.status != 'ORDER_UPLOADED':
+                    raise InvalidTransitionError(
+                        "La facture ne peut être générée que depuis le statut "
+                        f"« Bon de Commande Uploadé » (statut actuel: {req.get_status_display()}).")
+
+                quote = req.quote_detail or {}
+                items = quote.get('items', [])
+                if not items:
+                    raise FinancialValidationError(
+                        'Le devis validé ne contient aucune ligne facturable.')
+
+                canonical_items = []
+                for index, item in enumerate(items, start=1):
+                    label = str(item.get('label', '')).strip()
+                    if not label:
+                        raise FinancialValidationError(
+                            f'Libellé de la ligne {index} obligatoire.')
+                    unit_price = parse_money(
+                        item.get('unit_price'),
+                        field=f'Prix unitaire de la ligne {index}',
+                        allow_zero=False,
+                    )
+                    try:
+                        quantity = int(item.get('quantity'))
+                    except (TypeError, ValueError) as exc:
+                        raise FinancialValidationError(
+                            f'Quantité de la ligne {index} invalide.') from exc
+                    if quantity <= 0:
+                        raise FinancialValidationError(
+                            f'Quantité de la ligne {index} doit être strictement positive.')
+                    canonical_items.append({
+                        'label': label,
+                        'unit_price': float(unit_price),
+                        'quantity': quantity,
+                        # Recompute; never trust a stale/tampered JSON total.
+                        'total': float(unit_price * quantity),
+                    })
+
+                totals = compute_invoice_totals(
+                    canonical_items,
+                    quote.get('admin_fees', 0),
+                    quote.get('report_fees', 0),
+                    quote.get('vat_rate', 0.19),
+                )
+                line_items = [
+                    {
+                        'description': item['label'],
+                        'unit_price': item['unit_price'],
+                        'quantity': item['quantity'],
+                        'total': item['total'],
+                    }
+                    for item in canonical_items
+                ]
+                if totals['admin_fees'] > 0:
+                    line_items.append({
+                        'description': 'Frais administratifs',
+                        'unit_price': totals['admin_fees'], 'quantity': 1,
+                        'total': totals['admin_fees'],
+                    })
+                if totals['report_fees'] > 0:
+                    line_items.append({
+                        'description': 'Frais de rapport',
+                        'unit_price': totals['report_fees'], 'quantity': 1,
+                        'total': totals['report_fees'],
+                    })
+
+                from datetime import datetime
+                from core.sequences import next_display_id
+                year = datetime.now().year
+                invoice_number = next_display_id(
+                    'GCL-INV', year,
+                    initial_value_fn=lambda: Invoice.objects.filter(
+                        created_at__year=year,
+                        invoice_number__startswith=f'GCL-INV-{year}-',
+                    ).count(),
+                )
+                Invoice.objects.create(
+                    invoice_number=invoice_number,
+                    request=req,
+                    client=req.requester,
+                    line_items=line_items,
+                    subtotal_ht=totals['subtotal_before_tax'],
+                    vat_rate=totals['vat_rate'],
+                    vat_amount=totals['vat_amount'],
+                    total_ttc=totals['total_ttc'],
+                    created_by=request.user,
+                )
+                # If this transition fails, the surrounding transaction also
+                # removes the invoice and sequence allocation.
+                transition(
+                    req, 'INVOICE_GENERATED', request.user,
+                    notes=f'Facture {invoice_number} générée')
+        except (InvalidTransitionError, AuthorizationError,
+                FinancialValidationError, ValueError) as e:
             messages.error(request, str(e))
+        else:
+            messages.success(
+                request, f"Facture {invoice_number} générée pour {req.display_id}.")
 
         return redirect('dashboard:admin_request_detail', pk=req.pk)
 
+    req = get_object_or_404(Request, pk=pk)
     return redirect('dashboard:admin_request_detail', pk=req.pk)
 
 
@@ -901,9 +994,24 @@ def confirm_payment(request, pk):
     """Admin confirms payment for a GENOCLAB request."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk)
+    note = request.POST.get('verification_note', '').strip()
+    if len(note) < 3:
+        messages.error(request, "Une note de vérification est obligatoire.")
+        return redirect('dashboard:admin_request_detail', pk=pk)
     try:
-        transition(req, 'PAYMENT_CONFIRMED', request.user, notes='Paiement confirmé par admin')
+        from django.db import transaction
+        with transaction.atomic():
+            req = get_object_or_404(
+                Request.objects.select_for_update(), pk=pk,
+                status='PAYMENT_PROOF_UPLOADED')
+            req.payment_verified_at = timezone.now()
+            req.payment_verified_by = request.user
+            req.payment_verification_note = note
+            req.save(update_fields=[
+                'payment_verified_at', 'payment_verified_by',
+                'payment_verification_note'])
+            transition(req, 'PAYMENT_CONFIRMED', request.user,
+                       notes='Preuve de paiement vérifiée par admin')
         messages.success(request, f"Paiement confirmé pour {req.display_id}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))

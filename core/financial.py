@@ -11,7 +11,7 @@ from typing import Optional
 from django.conf import settings
 from django.db.models import Count, Sum
 
-from core.exceptions import BudgetExceededError
+from core.exceptions import BudgetExceededError, FinancialValidationError
 
 logger = logging.getLogger('plagenor.financial')
 
@@ -19,12 +19,20 @@ logger = logging.getLogger('plagenor.financial')
 # ═══════════════════════════════════════════════════════════════════════════
 # GENOCLAB — Invoice / quote totals (HT → VAT → TTC)
 # ═══════════════════════════════════════════════════════════════════════════
-def _money(value) -> Decimal:
-    """Coerce a value to Decimal via str() so float artefacts don't leak in."""
+def parse_money(value, *, field: str = 'Montant', allow_zero: bool = True) -> Decimal:
+    """Parse a finite, non-negative money value or fail closed.
+
+    Blank values are treated as zero only for optional fee fields. Callers
+    that require a strictly positive value set ``allow_zero=False``.
+    """
     try:
-        return Decimal(str(value if value not in (None, '') else 0))
-    except (InvalidOperation, ValueError, TypeError):
-        return Decimal('0')
+        amount = Decimal(str(value if value not in (None, '') else 0))
+    except (InvalidOperation, ValueError, TypeError) as exc:
+        raise FinancialValidationError(f"{field} invalide.") from exc
+    if not amount.is_finite() or amount < 0 or (not allow_zero and amount == 0):
+        qualifier = "strictement positif" if not allow_zero else "positif ou nul"
+        raise FinancialValidationError(f"{field} doit être un nombre fini {qualifier}.")
+    return amount
 
 
 def _q2(amount: Decimal) -> Decimal:
@@ -44,10 +52,15 @@ def compute_invoice_totals(line_items, admin_fees=0, report_fees=0, vat_rate=0.1
     so the result stays JSON-serialisable for ``Request.quote_detail`` and
     assignable to the ``DecimalField`` invoice columns, exactly as before.
     """
-    admin_fees = _money(admin_fees)
-    report_fees = _money(report_fees)
-    vat_rate = _money(vat_rate)
-    subtotal_ht = sum((_money(i.get('total', 0)) for i in line_items), Decimal('0'))
+    admin_fees = parse_money(admin_fees, field='Frais administratifs')
+    report_fees = parse_money(report_fees, field='Frais de rapport')
+    vat_rate = parse_money(vat_rate, field='Taux de TVA')
+    if vat_rate > 1:
+        raise FinancialValidationError("Le taux de TVA doit être compris entre 0 et 1.")
+    subtotal_ht = sum((
+        parse_money(i.get('total', 0), field=f"Total de la ligne {index}")
+        for index, i in enumerate(line_items, start=1)
+    ), Decimal('0'))
     subtotal_before_tax = subtotal_ht + admin_fees + report_fees
     vat_amount = _q2(subtotal_before_tax * vat_rate)
     total_ttc = _q2(subtotal_before_tax + vat_amount)
@@ -166,7 +179,7 @@ def check_ibtikar_budget(amount, requester=None, request_obj=None) -> dict:
     return result
 
 
-def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
+def deduct_ibtikar_balance(requester, amount: Decimal, reason: str = '') -> dict:
     """Deduct a resolved request cost from the requester's declared
     IBTIKAR balance. Called when an IBTIKAR request reaches COMPLETED
     (report delivered + receipt confirmed).
@@ -190,8 +203,9 @@ def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
         )
         return {'deducted': 0.0, 'remaining': None, 'skipped': True}
 
-    before = float(requester.ibtikar_declared_balance)
-    after = max(0.0, before - float(amount))
+    before = Decimal(requester.ibtikar_declared_balance)
+    amount = parse_money(amount, field='Montant à déduire')
+    after = max(Decimal('0.00'), before - amount)
     requester.ibtikar_declared_balance = after
     requester.ibtikar_balance_declared_at = timezone.now()
     requester.save(update_fields=[
@@ -201,7 +215,7 @@ def deduct_ibtikar_balance(requester, amount: float, reason: str = '') -> dict:
         "IBTIKAR deduction: requester=%s amount=%s before=%s after=%s reason=%s",
         requester.id, amount, before, after, reason,
     )
-    return {'deducted': float(amount), 'remaining': after, 'skipped': False}
+    return {'deducted': amount, 'remaining': after, 'skipped': False}
 
 
 def approve_with_budget_override(request_obj, actor, amount: float, justification: str) -> dict:

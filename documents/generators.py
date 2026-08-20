@@ -24,15 +24,20 @@ Phase 3.7 refactor highlights:
 """
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from docx import Document
 from docx.document import Document as DocumentType
 from docx.shared import Pt
+
+
+logger = logging.getLogger(__name__)
 
 from documents.docx_helpers import (
     _find_anchor_for_position,
@@ -138,8 +143,10 @@ def _assigned_name(request_obj, placeholder='Non assigné'):
         if request_obj.assigned_to and request_obj.assigned_to.user:
             user = request_obj.assigned_to.user
             return user.get_full_name() or user.username or placeholder
+    except ObjectDoesNotExist:
+        return placeholder
     except Exception:
-        pass
+        logger.exception("Unable to resolve assigned analyst name")
     return placeholder
 
 
@@ -147,8 +154,10 @@ def _assigned_email(request_obj, placeholder=''):
     try:
         if request_obj.assigned_to and request_obj.assigned_to.user:
             return _safe_attr(request_obj.assigned_to.user, 'email', placeholder)
+    except ObjectDoesNotExist:
+        return placeholder
     except Exception:
-        pass
+        logger.exception("Unable to resolve assigned analyst email")
     return placeholder
 
 
@@ -525,7 +534,11 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
             if file_path.exists():
                 return file_path
     except Exception:
-        pass
+        logger.exception(
+            "Unable to load uploaded template service_id=%s type=%s",
+            getattr(service, 'pk', None),
+            template_type,
+        )
     return None
 
 
@@ -943,7 +956,10 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
                 if multiplier is None:
                     multiplier = mult_map.get(mult_key)
         except Exception:
-            pass
+            logger.exception(
+                "Unable to load fallback pricing for service=%s",
+                getattr(request_obj.service, 'code', ''),
+            )
 
     # Default to a 1× multiplier when the mode carries none (e.g. a single
     # 'simple' analysis) so the tariff line never stays at "—".
@@ -1359,14 +1375,17 @@ def _field_label_map(request_obj) -> dict:
             if c.get('name'):
                 labels[c['name']] = c.get('label') or c['name']
     except Exception:
-        pass
+        logger.exception("Unable to load registry field labels for service=%s", code)
     try:
         if svc is not None:
             for f in svc.custom_fields.all():
                 if f.name:
                     labels[f.name] = f.label or f.name
     except Exception:
-        pass
+        logger.exception(
+            "Unable to load custom field labels for service_id=%s",
+            getattr(svc, 'pk', None),
+        )
     return labels
 
 

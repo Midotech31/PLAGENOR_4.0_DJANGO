@@ -157,43 +157,10 @@
         return true;
     }
 
-    // Check email uniqueness via AJAX
-    let emailCheckTimeout = null;
+    // Email uniqueness is validated only on form submission. A public live
+    // lookup would be a reusable account-enumeration oracle.
     function checkEmailUniqueness(field) {
-        if (!field.name.includes('email')) return Promise.resolve(true);
-        
-        const value = field.value.trim();
-        if (!value || !CONFIG.emailRegex.test(value)) return Promise.resolve(true);
-
-        return new Promise((resolve) => {
-            if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
-            
-            emailCheckTimeout = setTimeout(() => {
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-                
-                fetch('/accounts/check-email/', {  // This will be resolved by Django URL routing
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify({ email: value })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exists) {
-                        showError(field, t('emailExists'));
-                        resolve(false);
-                    } else {
-                        clearError(field);
-                        resolve(true);
-                    }
-                })
-                .catch(() => {
-                    resolve(true);
-                });
-            }, CONFIG.debounceDelay);
-        });
+        return Promise.resolve(true);
     }
 
     // Validate entire form

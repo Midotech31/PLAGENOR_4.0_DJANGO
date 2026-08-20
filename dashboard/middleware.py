@@ -1,6 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.utils import timezone, translation
 from django.shortcuts import redirect
+
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateLastSeenMiddleware:
@@ -17,7 +22,7 @@ class UpdateLastSeenMiddleware:
                 from accounts.models import User
                 User.objects.filter(pk=request.user.pk).update(last_seen=timezone.now())
             except Exception:
-                pass
+                logger.exception("Unable to update last_seen for user_id=%s", request.user.pk)
         return response
 
 
@@ -78,3 +83,48 @@ class ForcePasswordChangeMiddleware:
         ):
             return redirect('/accounts/force-change-password/')
         return self.get_response(request)
+
+
+class PrivilegedMFAMiddleware:
+    """Require TOTP enrollment for every privileged interactive account."""
+
+    PRIVILEGED_ROLES = {'SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER'}
+    EXEMPT_PATHS = (
+        '/accounts/2fa/setup/', '/accounts/2fa/verify/', '/accounts/logout/',
+        '/static/', '/healthz', '/readyz',
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, 'user', None)
+        if (settings.PRIVILEGED_MFA_ENFORCEMENT
+                and user is not None and user.is_authenticated
+                and getattr(user, 'role', '') in self.PRIVILEGED_ROLES
+                and not user.totp_enabled
+                and not any(request.path.startswith(p) for p in self.EXEMPT_PATHS)):
+            return redirect('/accounts/2fa/setup/')
+        return self.get_response(request)
+
+
+class ContentSecurityPolicyMiddleware:
+    """Staged CSP. Report-only is the default until inline UI is migrated."""
+
+    POLICY = (
+        "default-src 'self'; base-uri 'self'; object-src 'none'; "
+        "frame-ancestors 'none'; form-action 'self'; "
+        "img-src 'self' data: blob:; font-src 'self' data:; "
+        "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+        "connect-src 'self'"
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        header = ('Content-Security-Policy-Report-Only'
+                  if settings.CSP_REPORT_ONLY else 'Content-Security-Policy')
+        response.setdefault(header, self.POLICY)
+        return response

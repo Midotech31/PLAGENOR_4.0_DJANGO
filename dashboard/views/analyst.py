@@ -10,6 +10,8 @@ from core.models import Request
 from core.workflow import get_allowed_transitions, transition
 from core.productivity import compute_member_productivity
 from core.exceptions import InvalidTransitionError, AuthorizationError
+from core.uploads import validate_upload
+from django.core.exceptions import ValidationError
 from notifications.models import Notification
 
 
@@ -384,14 +386,10 @@ def upload_report(request, pk):
     # Whitelist report formats — same policy as the client uploads. Without
     # this, an arbitrary file (e.g. .html) would be stored and later streamed
     # inline by protected_report_media, opening a stored-XSS vector.
-    import os as _os
-    _allowed = {'.pdf', '.doc', '.docx'}
-    _ext = _os.path.splitext(request.FILES['report_file'].name)[1].lower()
-    if _ext not in _allowed:
-        messages.error(
-            request,
-            f"Type de fichier non autorisé pour le rapport. Formats acceptés: "
-            f"{', '.join(sorted(_allowed))}")
+    try:
+        validate_upload(request.FILES['report_file'], 'report')
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect_to_detail(request, req, 'dashboard:analyst')
     # Stage the file and run the transition in a single DB transaction so a
     # transition failure rolls back the report_file column (preventing a

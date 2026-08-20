@@ -272,6 +272,8 @@
                                 {% if u.totp_enabled %}
                                 <form method="post" action="{% url 'dashboard:superadmin_reset_2fa' u.pk %}" style="display:inline;">
                                     {% csrf_token %}
+                                    <input type="text" name="reason" required minlength="10"
+                                           placeholder="{% trans 'Raison obligatoire' %}">
                                     <button type="submit" class="btn btn-sm btn-outline"
                                             title="{% trans 'Réinitialiser la 2FA (perte du téléphone)' %}"
                                             onclick="return confirm('{% trans "Réinitialiser la double authentification de cet utilisateur ?" %}')">

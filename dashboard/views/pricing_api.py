@@ -55,8 +55,9 @@ def _apply_form_to_tier(tier: ServicePricing, post, user) -> tuple[ServicePricin
     """Apply POST values onto ``tier`` (a fresh-or-existing ServicePricing).
 
     Returns ``(tier, None)`` on success, ``(None, error_message)`` otherwise.
-    Tolerant: blank numbers / garbage decimals fall through to sensible
-    defaults rather than 500.
+    Numeric input is validated strictly. A malformed tariff must never be
+    silently converted to zero because that can produce an authoritative
+    under-priced quote.
     """
     name = (post.get('name') or '').strip()
     if not name:
@@ -70,34 +71,64 @@ def _apply_form_to_tier(tier: ServicePricing, post, user) -> tuple[ServicePricin
     if channel not in {c for c, _ in ServicePricing.CHANNEL_CHOICES}:
         return None, f'Canal invalide : {channel}'
 
-    def _dec(v, default=None):
+    def _dec(v, label, *, default=None, allow_zero=True):
         if v is None or str(v).strip() == '':
             return default
         try:
-            return Decimal(str(v))
-        except (InvalidOperation, ValueError):
-            return default
+            value = Decimal(str(v).strip())
+        except (InvalidOperation, ValueError, TypeError):
+            raise ValueError(f'{label} invalide.')
+        if not value.is_finite() or value < 0 or (not allow_zero and value == 0):
+            qualifier = 'strictement positif' if not allow_zero else 'positif ou nul'
+            raise ValueError(f'{label} doit être un nombre fini {qualifier}.')
+        return value
 
-    def _int(v, default=None):
+    def _int(v, label, *, default=None, minimum=None):
         if v is None or str(v).strip() == '':
             return default
         try:
-            return int(v)
+            value = int(str(v).strip())
         except (TypeError, ValueError):
-            return default
+            raise ValueError(f'{label} invalide.')
+        if minimum is not None and value < minimum:
+            raise ValueError(f'{label} doit être supérieur ou égal à {minimum}.')
+        return value
+
+    is_active = post.get('is_active') in ('on', 'true', '1', True)
+    try:
+        amount = _dec(
+            post.get('amount'), 'Montant', default=None,
+            allow_zero=not is_active,
+        )
+        if amount is None:
+            raise ValueError('Le montant est obligatoire.')
+        min_quantity = _int(
+            post.get('min_quantity'), 'Quantité minimum', default=1, minimum=1)
+        max_quantity = _int(
+            post.get('max_quantity'), 'Quantité maximum', minimum=1)
+        min_amount = _dec(post.get('min_amount'), 'Montant minimum')
+        max_amount = _dec(post.get('max_amount'), 'Montant maximum')
+        priority = _int(post.get('priority'), 'Priorité', default=0)
+    except ValueError as exc:
+        return None, str(exc)
+
+    if max_quantity is not None and max_quantity < min_quantity:
+        return None, 'La quantité maximum doit être supérieure ou égale à la quantité minimum.'
+    if min_amount is not None and max_amount is not None and max_amount < min_amount:
+        return None, 'Le montant maximum doit être supérieur ou égal au montant minimum.'
 
     tier.name = name
     tier.pricing_type = ptype
     tier.channel = channel
-    tier.amount = _dec(post.get('amount'), Decimal('0')) or Decimal('0')
+    tier.amount = amount
     tier.unit = (post.get('unit') or 'forfait').strip() or 'forfait'
     tier.description = (post.get('description') or '').strip()
-    tier.min_quantity = _int(post.get('min_quantity'), 1) or 1
-    tier.max_quantity = _int(post.get('max_quantity'), None)
-    tier.min_amount = _dec(post.get('min_amount'), None)
-    tier.max_amount = _dec(post.get('max_amount'), None)
-    tier.priority = _int(post.get('priority'), 0) or 0
-    tier.is_active = post.get('is_active') in ('on', 'true', '1', True)
+    tier.min_quantity = min_quantity
+    tier.max_quantity = max_quantity
+    tier.min_amount = min_amount
+    tier.max_amount = max_amount
+    tier.priority = priority
+    tier.is_active = is_active
     tier.updated_by = user
     return tier, None
 

@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -13,6 +15,11 @@ from core.models import Service, Request, PlatformContent, Invoice, PaymentMetho
 from core.templatetags.cms import clear_cms_cache
 from core.financial import get_budget_dashboard
 from core.productivity import get_all_productivity_stats
+from core.uploads import validate_upload
+from django.core.exceptions import ValidationError
+
+
+logger = logging.getLogger(__name__)
 
 
 def superadmin_required(view_func):
@@ -241,6 +248,13 @@ def member_assign_techniques(request, pk):
 def service_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
+    image = request.FILES.get('image')
+    if image:
+        try:
+            image = validate_upload(image, 'image')
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+            return redirect_back(request, 'dashboard:superadmin')
     Service.objects.create(
         code=request.POST.get('code', ''),
         name=request.POST.get('name', ''),
@@ -249,7 +263,7 @@ def service_create(request):
         ibtikar_price=request.POST.get('ibtikar_price', 0),
         genoclab_price=request.POST.get('genoclab_price', 0),
         turnaround_days=request.POST.get('turnaround_days', 7),
-        image=request.FILES.get('image'),
+        image=image,
     )
     messages.success(request, "Service créé avec succès.")
     return redirect_back(request, 'dashboard:superadmin')
@@ -419,9 +433,22 @@ def reset_2fa(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     target = get_object_or_404(User, pk=pk)
+    reason = request.POST.get('reason', '').strip()
+    if len(reason) < 10:
+        messages.error(request, "Une raison d'au moins 10 caractères est obligatoire.")
+        return redirect_back(request, 'dashboard:superadmin')
     target.totp_secret = ''
     target.totp_enabled = False
     target.save(update_fields=['totp_secret', 'totp_enabled'])
+    from core.audit import log_action
+    log_action('ADMIN_2FA_RESET', 'USER', str(target.pk), request.user,
+               {'reason': reason})
+    from notifications.models import Notification
+    Notification.objects.create(
+        user=target,
+        message=("Votre double authentification a été réinitialisée par un "
+                 "administrateur. Réinscrivez un appareil avant de continuer."),
+        notification_type='SECURITY')
     messages.success(request, f"2FA réinitialisée pour {target.username}.")
     return redirect_back(request, 'dashboard:superadmin')
 
@@ -538,7 +565,11 @@ def service_edit(request, pk):
         service.genoclab_price = request.POST.get('genoclab_price', service.genoclab_price)
         service.turnaround_days = request.POST.get('turnaround_days', service.turnaround_days)
         if 'image' in request.FILES:
-            service.image = request.FILES['image']
+            try:
+                service.image = validate_upload(request.FILES['image'], 'image')
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+                return redirect('dashboard:superadmin_service_edit', pk=service.pk)
         service.save()
 
         # ---- Custom form fields: wipe + recreate (simple, low-volume data)
@@ -910,8 +941,10 @@ def upload_template(request):
         messages.error(request, "Type de template invalide.")
         return redirect_back(request, 'dashboard:superadmin')
     upload = request.FILES['template_file']
-    if not upload.name.endswith('.docx'):
-        messages.error(request, "Seuls les fichiers .docx sont acceptés.")
+    try:
+        validate_upload(upload, 'docx_template')
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect_back(request, 'dashboard:superadmin')
     dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
     if dest.exists():
@@ -1045,31 +1078,28 @@ def reset_account(request, pk):
         return redirect_back(request, 'dashboard:superadmin')
 
     if request.method == 'POST':
+        if not target_user.email:
+            messages.error(
+                request,
+                _("Réinitialisation annulée : ce compte ne possède pas d’adresse email vérifiée."),
+            )
+            return redirect_back(request, 'dashboard:superadmin')
+
         # Generate secure temporary password (16 chars: upper, lower, digit, symbol)
         alphabet = string.ascii_letters + string.digits + '!@#$%^&*()'
         temp_password = ''.join(secrets.choice(alphabet) for _ in range(16))
 
-        # Set password and flag
-        target_user.set_password(temp_password)
-        target_user.must_change_password = True
-        target_user.save(update_fields=['password', 'must_change_password'])
+        # Password change, delivery and audit are one logical operation. A
+        # failed delivery raises inside the transaction so the old password
+        # remains valid and the user cannot be locked out by an SMTP outage.
+        try:
+            from django.db import transaction
+            with transaction.atomic():
+                target_user = User.objects.select_for_update().get(pk=target_user.pk)
+                target_user.set_password(temp_password)
+                target_user.must_change_password = True
+                target_user.save(update_fields=['password', 'must_change_password'])
 
-        # Audit log
-        log_action(
-            action='ACCOUNT_RESET',
-            entity_type='USER',
-            entity_id=str(target_user.pk),
-            actor=request.user,
-            details={
-                'target_username': target_user.username,
-                'target_role': target_user.role,
-                'reset_by': request.user.username,
-            },
-        )
-
-        # Send email to the user
-        if target_user.email:
-            try:
                 subject = _("Réinitialisation de votre compte PLAGENOR 4.0")
                 email_ctx = {
                     'user': target_user,
@@ -1079,20 +1109,40 @@ def reset_account(request, pk):
                     'login_url': request.build_absolute_uri('/accounts/login/'),
                 }
                 html_body = render_to_string('accounts/email/account_reset.html', email_ctx, request=request)
-                send_mail(
+                delivered = send_mail(
                     subject=subject,
                     message='',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[target_user.email],
                     html_message=html_body,
-                    fail_silently=True,
+                    fail_silently=False,
                 )
-            except Exception:
-                pass
+                if delivered != 1:
+                    raise RuntimeError("SMTP backend did not confirm delivery")
+
+                log_action(
+                    action='ACCOUNT_RESET',
+                    entity_type='USER',
+                    entity_id=str(target_user.pk),
+                    actor=request.user,
+                    details={
+                        'target_username': target_user.username,
+                        'target_role': target_user.role,
+                        'reset_by': request.user.username,
+                    },
+                )
+        except Exception:
+            logger.exception("Account reset aborted for user_id=%s", target_user.pk)
+            messages.error(
+                request,
+                _("Réinitialisation annulée : l’email d’instructions n’a pas pu être livré."),
+            )
+            return redirect_back(request, 'dashboard:superadmin')
 
         messages.success(
             request,
-            _("Le compte de %(username)s a été réinitialisé avec succès. Un email contenant les instructions a été envoyé.") % {'username': target_user.username}
+            _("Le compte de %(username)s a été réinitialisé avec succès.")
+            % {'username': target_user.username}
         )
         return redirect_back(request, 'dashboard:superadmin')
 

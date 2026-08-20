@@ -4,7 +4,8 @@ and country, plus duplicate-email rejection.
 from django.test import TestCase
 
 from accounts.forms import RegistrationForm
-from accounts.models import User
+from accounts.models import MemberProfile, Technique, User
+from notifications.models import Notification
 
 
 def _base_data(**over):
@@ -128,16 +129,16 @@ class TwoFactorTests(TestCase):
     def _enable_totp(self, user):
         import pyotp
         secret = pyotp.random_base32()
-        user.totp_secret = secret
+        user.set_totp_secret(secret)
         user.totp_enabled = True
         user.save(update_fields=['totp_secret', 'totp_enabled'])
         return secret
 
-    def test_user_without_2fa_logs_in_directly(self):
+    def test_privileged_user_without_2fa_is_sent_to_enrollment(self):
         resp = self.client.post('/accounts/login/',
                                 {'username': 'tfa', 'password': 'RightPass!42'})
         self.assertEqual(resp.status_code, 302)
-        self.assertNotIn('/2fa/verify', resp.url)
+        self.assertEqual(resp.url, '/accounts/2fa/setup/')
 
     def test_2fa_user_is_redirected_to_verify_and_not_logged_in(self):
         self._enable_totp(self.user)
@@ -179,7 +180,9 @@ class TwoFactorTests(TestCase):
         self.assertEqual(r2.status_code, 302)
         self.user.refresh_from_db()
         self.assertTrue(self.user.totp_enabled)
-        self.assertEqual(self.user.totp_secret, secret)
+        self.assertNotEqual(self.user.totp_secret, secret)
+        self.assertTrue(self.user.totp_secret.startswith('fernet$'))
+        self.assertEqual(self.user.get_totp_secret(), secret)
 
     def test_2fa_brute_force_is_capped(self):
         """Regression: the password step already succeeded, so the account
@@ -214,11 +217,75 @@ class TwoFactorTests(TestCase):
             username='sa-2fa', password='x', role='SUPER_ADMIN',
             is_superuser=True, is_staff=True)
         self.client.force_login(admin)
-        resp = self.client.post(f'/dashboard/home/user/{self.user.pk}/reset-2fa/')
+        resp = self.client.post(
+            f'/dashboard/home/user/{self.user.pk}/reset-2fa/',
+            {'reason': 'Lost authenticator device'})
         self.assertEqual(resp.status_code, 302)
         self.user.refresh_from_db()
         self.assertFalse(self.user.totp_enabled)
         self.assertEqual(self.user.totp_secret, '')
+        self.assertTrue(Notification.objects.filter(
+            user=self.user, notification_type='SECURITY').exists())
+
+    def test_superadmin_reset_requires_a_reason(self):
+        self._enable_totp(self.user)
+        admin = User.objects.create_user(
+            username='sa-no-reason', password='x', role='SUPER_ADMIN',
+            is_superuser=True, is_staff=True)
+        self.client.force_login(admin)
+        self.client.post(
+            f'/dashboard/home/user/{self.user.pk}/reset-2fa/',
+            {'reason': 'short'})
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.totp_enabled)
+
+    def test_self_disable_requires_password_and_current_totp(self):
+        import pyotp
+        secret = self._enable_totp(self.user)
+        self.client.force_login(self.user)
+        self.client.post('/accounts/2fa/disable/', {
+            'password': 'wrong', 'code': pyotp.TOTP(secret).now(),
+        })
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.totp_enabled)
+        self.client.post('/accounts/2fa/disable/', {
+            'password': 'RightPass!42', 'code': pyotp.TOTP(secret).now(),
+        })
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.totp_enabled)
+
+    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=True)
+    def test_middleware_blocks_privileged_session_until_enrollment(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/dashboard/analyst/')
+        self.assertRedirects(response, '/accounts/2fa/setup/')
+
+    def test_plaintext_totp_migration_is_idempotent(self):
+        from django.core.management import call_command
+        self.user.totp_secret = 'JBSWY3DPEHPK3PXP'
+        self.user.totp_enabled = True
+        self.user.save(update_fields=['totp_secret', 'totp_enabled'])
+        call_command('migrate_totp_secrets', verbosity=0)
+        self.user.refresh_from_db()
+        encrypted = self.user.totp_secret
+        self.assertTrue(encrypted.startswith('fernet$'))
+        self.assertEqual(self.user.get_totp_secret(), 'JBSWY3DPEHPK3PXP')
+        call_command('migrate_totp_secrets', verbosity=0)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.totp_secret, encrypted)
+
+    def test_enrollment_brute_force_discards_pending_secret(self):
+        self.client.force_login(self.user)
+        self.client.get('/accounts/2fa/setup/')
+        original = self.client.session['pending_totp_secret']
+        for _ in range(5):
+            response = self.client.post('/accounts/2fa/setup/', {'code': '000000'})
+            self.assertEqual(response.status_code, 200)
+        response = self.client.post('/accounts/2fa/setup/', {'code': '000000'})
+        self.assertRedirects(
+            response, '/accounts/2fa/setup/', fetch_redirect_response=False)
+        self.assertNotEqual(self.client.session.get('pending_totp_secret'), original)
+        self.assertNotIn('pending_totp_attempts', self.client.session)
 
 
 @override_settings(
@@ -265,9 +332,75 @@ class PasswordResetFlowTests(TestCase):
         r1 = self.client.get(f'/accounts/password-reset/confirm/{uidb64}/{token}/')
         self.assertEqual(r1.status_code, 302)
         r2 = self.client.post(r1.url, {
-            'new_password1': 'BrandNew!99', 'new_password2': 'BrandNew!99'})
+            'new_password1': 'BrandNew!9942', 'new_password2': 'BrandNew!9942'})
         self.assertEqual(r2.status_code, 302)
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('BrandNew!99'))
+        self.assertTrue(self.user.check_password('BrandNew!9942'))
         self.assertEqual(self.user.login_attempts, 0)
         self.assertIsNone(self.user.locked_until)
+
+
+@override_settings(
+    STORAGES=_TEST_STORAGES,
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class AccountPrivacyAndProfileTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_live_email_enumeration_endpoint_is_removed(self):
+        User.objects.create_user(
+            username='private-account', email='private@example.com',
+            password='StrongPass!42', role='CLIENT')
+        response = self.client.post(
+            '/accounts/check-email/',
+            data='{"email":"private@example.com"}',
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_guest_conversion_does_not_disclose_existing_account(self):
+        from django.core import mail
+        User.objects.create_user(
+            username='already', email='already@example.com',
+            password='StrongPass!42', role='CLIENT')
+        response = self.client.post(
+            '/accounts/convert-guest/', {'email': 'already@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['sent'])
+        self.assertNotContains(response, 'Un compte avec cet email existe déjà')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_member_cannot_self_assign_validated_techniques(self):
+        user = User.objects.create_user(
+            username='member-profile', email='member@example.com',
+            password='StrongPass!42', role='MEMBER')
+        profile, _ = MemberProfile.objects.get_or_create(user=user)
+        existing = Technique.objects.create(name='PCR', active=True)
+        attempted = Technique.objects.create(name='WGS', active=True)
+        profile.techniques.add(existing)
+        self.client.force_login(user)
+        response = self.client.post('/accounts/profile/', {
+            'first_name': 'Member', 'last_name': 'One',
+            'email': 'attacker-controlled@example.com',
+            'techniques': [attempted.pk],
+        })
+        self.assertEqual(response.status_code, 302)
+        user.refresh_from_db()
+        profile.refresh_from_db()
+        self.assertEqual(user.email, 'member@example.com')
+        self.assertEqual(list(profile.techniques.all()), [existing])
+
+    def test_member_profile_renders_competencies_read_only(self):
+        user = User.objects.create_user(
+            username='member-readonly', email='readonly@example.com',
+            password='StrongPass!42', role='MEMBER')
+        profile, _ = MemberProfile.objects.get_or_create(user=user)
+        technique = Technique.objects.create(name='MALDI-TOF', active=True)
+        profile.techniques.add(technique)
+        self.client.force_login(user)
+        response = self.client.get('/accounts/profile/')
+        self.assertContains(response, 'MALDI-TOF')
+        self.assertNotContains(response, 'name="techniques"')
+        self.assertContains(response, 'readonly')

@@ -2,13 +2,21 @@ name: Django CI
 
 on:
   push:
-    branches: [ "main", "claude/**" ]
+    branches: [ "**" ]
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: django-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  sqlite:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       # Settings require a SECRET_KEY unless DEBUG; DATABASE_URL is left unset
       # so the suite runs on the SQLite fallback.
@@ -28,18 +36,99 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: System check
-      run: python manage.py check
+        pip install -r requirements-dev.txt
+        pip check
+    - name: Validate Django, migrations, templates and translations
+      run: |
+        python manage.py check
+        python manage.py makemigrations --check --dry-run
+        python manage.py compilemessages
+        python manage.py shell -c "from django.template.loader import engines; from pathlib import Path; e=engines['django'].engine; fs=list(Path('templates').rglob('*.html'))+list(Path('notifications/templates').rglob('*.html')); [e.get_template(str(p.relative_to('templates')) if str(p).startswith('templates/') else str(p.relative_to('notifications/templates'))) for p in fs]; print(f'TEMPLATES_OK={len(fs)}')"
     - name: Run tests with coverage
       run: |
-        pip install coverage
         coverage run manage.py test
-        coverage report
-    - name: Dependency vulnerability audit (informational)
-      # Non-blocking: surfaces known CVEs in dependencies without failing the
-      # build, so a vulnerable transitive package never silently blocks merges.
-      continue-on-error: true
+        # Current measured floor. Raise it as regression tests are added;
+        # never claim a threshold the suite does not yet meet.
+        coverage report --fail-under=50
+    - name: Dependency vulnerability audit
       run: |
-        pip install pip-audit
-        pip-audit || true
+        pip-audit -r requirements.txt
+    - name: Static security scan
+      run: |
+        bandit -r accounts core dashboard documents notifications plagenor \
+          -x '*/migrations/*,*/tests.py' -ll
+
+  postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: plagenor
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: plagenor_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U plagenor -d plagenor_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "false"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgresql://plagenor:ci-only-password@127.0.0.1:5432/plagenor_ci
+      DATABASE_SSL_REQUIRE: "false"
+      # The Django test client sends plain HTTP requests. Production keeps the
+      # secure default because this override exists only inside this CI job.
+      SECURE_SSL_REDIRECT: "false"
+      TOTP_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      PRIVILEGED_MFA_ENFORCEMENT: "false"
+      REQUIRE_PERSISTENT_MEDIA_STORAGE: "false"
+      REQUIRE_SMTP: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          pip install -r requirements-dev.txt
+          pip check
+      - run: python manage.py migrate --noinput
+      - run: python manage.py check --deploy
+      - run: python manage.py test
+      - name: Synthetic PostgreSQL backup and restore
+        env:
+          PGPASSWORD: ci-only-password
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          dump_file="$(mktemp --suffix=.dump)"
+          trap 'rm -f "$dump_file"' EXIT
+          pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges --file="$dump_file"
+          pg_restore --list "$dump_file" >/dev/null
+          dropdb --if-exists -h 127.0.0.1 -U plagenor plagenor_restore_ci
+          createdb -h 127.0.0.1 -U plagenor plagenor_restore_ci
+          pg_restore -h 127.0.0.1 -U plagenor -d plagenor_restore_ci \
+            --no-owner --no-privileges "$dump_file"
+          psql -h 127.0.0.1 -U plagenor -d plagenor_restore_ci \
+            -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM django_migrations;' >/dev/null
+          dropdb -h 127.0.0.1 -U plagenor plagenor_restore_ci
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: sqlite
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build --tag plagenor-ci:${{ github.sha }} .
+      - name: Verify non-root runtime and Django startup
+        run: |
+          test "$(docker image inspect plagenor-ci:${{ github.sha }} --format '{{.Config.User}}')" = "plagenor"
+          docker run --rm \
+            -e DEBUG=true \
+            -e SECRET_KEY=container-ci-only-key \
+            -e REQUIRE_PERSISTENT_MEDIA_STORAGE=false \
+            -e REQUIRE_SMTP=false \
+            plagenor-ci:${{ github.sha }} python manage.py check

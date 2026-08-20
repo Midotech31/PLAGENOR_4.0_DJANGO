@@ -1,11 +1,12 @@
 {% load i18n %}
+{% load l10n %}
 {% load dashboard_extras %}
 {% if parameters or db_fields %}
 <div class="service-params-section" style="margin-top:16px; padding:16px; background:var(--slate-50, #f8fafc); border-radius:8px;">
     {% for param in parameters %}
     {% if not sample_table.enabled or param.name not in sample_table.column_names %}
     <div class="form-group"
-         {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if param.pricing_info %}data-pricing-field="{{ param.name }}" data-pricing-type="{{ param.pricing_info.modifier_type }}" data-pricing-value="{{ param.pricing_info.modifier_value|default:''|unlocalize }}"{% endif %}
          {% if param.option_pricing %}data-option-pricing='{{ param.option_pricing|as_json }}'{% endif %}
          {% if param.conditional_logic %}data-conditional-logic='{{ param.conditional_logic|as_json }}'{% endif %}>
         {% if param.type == 'boolean' %}
@@ -37,7 +38,7 @@
 
     {% for field in db_fields %}
     <div class="form-group"
-         {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:'' }}"{% endif %}
+         {% if field.pricing_info %}data-pricing-field="{{ field.name }}" data-pricing-type="{{ field.pricing_info.modifier_type }}" data-pricing-value="{{ field.pricing_info.modifier_value|default:''|unlocalize }}"{% endif %}
          {% if field.option_pricing %}data-option-pricing='{{ field.option_pricing|as_json }}'{% endif %}
          {% if field.conditional_logic %}data-conditional-logic='{{ field.conditional_logic|as_json }}' data-original-required="{{ field.required|yesno:'true,false' }}"{% endif %}>
         {% if field.field_type == 'boolean' %}
