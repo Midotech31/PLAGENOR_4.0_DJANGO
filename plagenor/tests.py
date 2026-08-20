@@ -20,6 +20,7 @@ class ProductionSettingsTests(SimpleTestCase):
             'SMTP_FROM', 'SUPABASE_S3_ENDPOINT',
             'SUPABASE_S3_ACCESS_KEY_ID', 'SUPABASE_S3_SECRET_ACCESS_KEY',
             'DATABASE_SSL_REQUIRE',
+            'REQUIRE_PERSISTENT_MEDIA_STORAGE', 'REQUIRE_SMTP',
         ):
             env.pop(key, None)
         env.update({
