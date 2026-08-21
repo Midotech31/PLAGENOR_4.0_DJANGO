@@ -16,6 +16,8 @@ services:
         generateValue: true            # Render generates a strong key
       - key: PYTHON_VERSION
         value: "3.11.9"
+      - key: WEB_CONCURRENCY
+        value: "2"                     # conservative default for Render free memory
       - key: DATABASE_URL
         sync: false                    # paste your Supabase connection string
       - key: TOTP_ENCRYPTION_KEY
