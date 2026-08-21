@@ -96,3 +96,31 @@ class ProductionSettingsTests(SimpleTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn('sslmode', result.stdout)
+
+
+class ObservabilityCompatibilityTests(SimpleTestCase):
+    """Keep Sentry opt-in, privacy-preserving, and independent of console logs."""
+
+    def test_sentry_initialization_disables_pii_and_blanket_log_export(self):
+        code = '''
+import json
+import sentry_sdk
+captured = {}
+sentry_sdk.init = lambda **kwargs: captured.update(kwargs)
+import plagenor.settings
+print(json.dumps({
+    "send_default_pii": captured.get("send_default_pii"),
+    "enable_logs_present": "enable_logs" in captured,
+    "integrations_present": "integrations" in captured,
+}))
+'''
+        result = ProductionSettingsTests()._import_settings(
+            code=code,
+            REQUIRE_PERSISTENT_MEDIA_STORAGE='false',
+            REQUIRE_SMTP='false',
+            SENTRY_DSN='https://public@example.invalid/1',
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('"send_default_pii": false', result.stdout)
+        self.assertIn('"enable_logs_present": false', result.stdout)
+        self.assertIn('"integrations_present": false', result.stdout)
