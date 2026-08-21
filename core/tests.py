@@ -1386,3 +1386,63 @@ class QrCodeUtilityContractTests(SimpleTestCase):
         self.assertTrue(info['has_report_qr'])
         self.assertEqual(
             report, f'qr:https://plagenor.invalid/report/{report_token}/')
+
+
+class QRCodeCompatibilityTests(SimpleTestCase):
+    """Exercise the QR generation contract across qrcode major upgrades."""
+
+    def test_tracking_qr_is_a_valid_png_data_url(self):
+        import base64
+        import io
+        from PIL import Image
+        from core.qrcode_utils import generate_qr_data_url
+
+        encoded = generate_qr_data_url(
+            '/track/?q=00000000-0000-0000-0000-000000000001')
+        self.assertTrue(encoded.startswith('data:image/png;base64,'))
+        payload = base64.b64decode(encoded.split(',', 1)[1], validate=True)
+        self.assertTrue(payload.startswith(b'\x89PNG\r\n\x1a\n'))
+        image = Image.open(io.BytesIO(payload))
+        image.verify()
+        self.assertEqual(image.format, 'PNG')
+
+    def test_request_qr_variants_preserve_canonical_urls(self):
+        import uuid
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from core.qrcode_utils import (
+            generate_ibtikar_id_qr, generate_reception_qr,
+            generate_report_qr, generate_request_tracking_qr,
+        )
+
+        request_obj = SimpleNamespace(
+            guest_token=uuid.UUID('00000000-0000-0000-0000-000000000001'),
+            report_token=uuid.UUID('00000000-0000-0000-0000-000000000002'),
+        )
+        with patch('core.qrcode_utils.generate_qr_data_url',
+                   side_effect=lambda value: value):
+            expected_tracking = (
+                'https://plagenor.example.test/track/'
+                '?q=00000000-0000-0000-0000-000000000001'
+            )
+            self.assertEqual(
+                generate_request_tracking_qr(
+                    request_obj, 'https://plagenor.example.test'),
+                expected_tracking,
+            )
+            self.assertEqual(
+                generate_ibtikar_id_qr(
+                    request_obj, 'https://plagenor.example.test'),
+                expected_tracking,
+            )
+            self.assertEqual(
+                generate_reception_qr(
+                    request_obj, 'https://plagenor.example.test'),
+                expected_tracking,
+            )
+            self.assertEqual(
+                generate_report_qr(
+                    request_obj, 'https://plagenor.example.test'),
+                'https://plagenor.example.test/report/'
+                '00000000-0000-0000-0000-000000000002/',
+            )
