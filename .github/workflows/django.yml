@@ -131,3 +131,27 @@ jobs:
             -e REQUIRE_PERSISTENT_MEDIA_STORAGE=false \
             -e REQUIRE_SMTP=false \
             plagenor-ci:${{ github.sha }} python manage.py check
+      - name: Start Gunicorn and verify HTTP health endpoints
+        run: |
+          set -euo pipefail
+          container_id=$(docker run --detach --publish 18000:8000 \
+            -e DEBUG=true \
+            -e SECRET_KEY=container-ci-only-key \
+            -e REQUIRE_PERSISTENT_MEDIA_STORAGE=false \
+            -e REQUIRE_SMTP=false \
+            -e WEB_CONCURRENCY=2 \
+            plagenor-ci:${{ github.sha }} \
+            sh -c 'python manage.py migrate --noinput && exec gunicorn plagenor.wsgi:application --workers "$WEB_CONCURRENCY" --bind 0.0.0.0:8000 --access-logfile - --error-logfile -')
+          trap 'docker logs "$container_id"; docker rm --force "$container_id" >/dev/null' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:18000/healthz >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "Gunicorn did not become healthy" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://127.0.0.1:18000/readyz | grep -Eq '"status"[[:space:]]*:[[:space:]]*"ok"'
+          test "$(docker inspect "$container_id" --format '{{.State.Running}}')" = "true"
