@@ -13,7 +13,8 @@ Usage:
 After running, log in at /accounts/login/ as any of the printed users
 to exercise the matching role's dashboard.
 """
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from accounts.models import User, MemberProfile
 
 
@@ -40,6 +41,11 @@ class Command(BaseCommand):
         parser.add_argument('--quiet', action='store_true', help='Suppress per-row output.')
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError(
+                'seed_accounts is disabled when DEBUG is False because it '
+                'creates privileged accounts with public demo credentials.'
+            )
         quiet = options.get('quiet', False)
         created_n = updated_n = 0
 

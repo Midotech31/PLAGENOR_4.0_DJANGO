@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"POT-Creation-Date: 2026-09-01 19:18+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: English\n"
@@ -268,25 +268,17 @@ msgstr "Hello %(name)s,"
 msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
 msgstr "Your account on %(platform)s has been reset by %(admin)s."
 
-msgid "Mot de passe temporaire"
-msgstr "Temporary password"
+msgid "Ce lien expire après 24 heures."
+msgstr "This link expires after 24 hours."
 
-msgid ""
-"Ce mot de passe temporaire expire après 24 heures ou dès la première "
-"utilisation."
-msgstr "This temporary password expires after 24 hours or upon first use."
-
-msgid ""
-"Vous serez immédiatement invité à définir un nouveau mot de passe après "
-"connexion."
-msgstr ""
-"You will be prompted to set a new password immediately after signing in."
+msgid "Ce lien ne peut être utilisé qu'une seule fois."
+msgstr "This link can only be used once."
 
 msgid "Ne partagez jamais votre mot de passe avec quiconque."
 msgstr "Never share your password with anyone."
 
-msgid "Se connecter"
-msgstr "Sign in"
+msgid "Définir le nouveau mot de passe"
+msgstr "Set new password"
 
 msgid ""
 "Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter "
@@ -318,9 +310,6 @@ msgstr ""
 
 msgid "Vérifier mon adresse et créer mon compte"
 msgstr "Verify my address and create my account"
-
-msgid "Ce lien expire après 24 heures."
-msgstr "This link expires after 24 hours."
 
 msgid ""
 "Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
@@ -405,9 +394,6 @@ msgstr "Please correct the errors below."
 msgid "Minimum 8 caractères."
 msgstr "Minimum 8 characters."
 
-msgid "Définir le nouveau mot de passe"
-msgstr "Set new password"
-
 msgid "Identifiant ou mot de passe incorrect."
 msgstr "Incorrect username or password."
 
@@ -428,6 +414,9 @@ msgstr "Remember me"
 
 msgid "Mot de passe oublié ?"
 msgstr "Forgot your password?"
+
+msgid "Se connecter"
+msgstr "Sign in"
 
 msgid "ou"
 msgstr "or"
@@ -2879,8 +2868,8 @@ msgstr "Backup"
 msgid "Télécharger une sauvegarde"
 msgstr "Download a backup"
 
-msgid "Télécharge une copie de la base de données SQLite."
-msgstr "Downloads a copy of the SQLite database."
+msgid "Télécharge une sauvegarde contrôlée de la base de données."
+msgstr "Downloads a controlled database backup."
 
 msgid "Restaurer une sauvegarde"
 msgstr "Restore a backup"
@@ -2953,28 +2942,18 @@ msgstr ""
 "preserved.\n"
 "            "
 
-msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
-msgstr "A secure temporary password (16 characters) will be generated."
+msgid "Le mot de passe actuel sera immédiatement invalidé."
+msgstr "The current password will be invalidated immediately."
 
-msgid ""
-"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
-msgstr ""
-"The user will be required to change their password at the next sign in."
+msgid "Le lien sécurisé est à usage unique et expire après 24 heures."
+msgstr "The secure link is single-use and expires after 24 hours."
 
 #, python-format
-msgid ""
-"Un email avec le mot de passe temporaire sera envoyé à <strong>%(email)s</"
-"strong>."
-msgstr ""
-"An email with the temporary password will be sent to <strong>%(email)s</"
-"strong>."
+msgid "Un lien de réinitialisation sera envoyé à <strong>%(email)s</strong>."
+msgstr "A reset link will be sent to <strong>%(email)s</strong>."
 
-msgid ""
-"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
-"notification."
-msgstr ""
-"No email configured — the temporary password will be shown in the "
-"notification."
+msgid "Aucun email vérifié : la réinitialisation est impossible."
+msgstr "No verified email address: the reset cannot proceed."
 
 msgid "Cette action est enregistrée dans le journal d'audit."
 msgstr "This action is logged in the audit log."
@@ -4277,6 +4256,35 @@ msgstr "No results"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "No request found with this ID. Please check and try again."
+
+#~ msgid "Mot de passe temporaire"
+#~ msgstr "Temporary password"
+
+#~ msgid ""
+#~ "Ce mot de passe temporaire expire après 24 heures ou dès la première "
+#~ "utilisation."
+#~ msgstr "This temporary password expires after 24 hours or upon first use."
+
+#~ msgid ""
+#~ "Vous serez immédiatement invité à définir un nouveau mot de passe après "
+#~ "connexion."
+#~ msgstr ""
+#~ "You will be prompted to set a new password immediately after signing in."
+
+#~ msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+#~ msgstr "A secure temporary password (16 characters) will be generated."
+
+#~ msgid ""
+#~ "L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+#~ msgstr ""
+#~ "The user will be required to change their password at the next sign in."
+
+#~ msgid ""
+#~ "Aucun email configuré — le mot de passe temporaire sera affiché dans la "
+#~ "notification."
+#~ msgstr ""
+#~ "No email configured — the temporary password will be shown in the "
+#~ "notification."
 
 #~ msgid ""
 #~ "L’email d’instructions n’a pas pu être envoyé. Transmettez les "

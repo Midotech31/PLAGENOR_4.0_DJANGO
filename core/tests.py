@@ -10,7 +10,7 @@ from decimal import Decimal
 from unittest.mock import call, patch
 
 from django.conf import settings
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -45,6 +45,7 @@ from core.assignment import member_is_eligible
 class ManagementCommandCoverageTests(TestCase):
     """Smoke-test operational commands without touching an external database."""
 
+    @override_settings(DEBUG=True)
     def test_account_notification_revenue_and_demo_seed_commands(self):
         from django.core.management import call_command
         from accounts.models import User
@@ -72,6 +73,15 @@ class ManagementCommandCoverageTests(TestCase):
             balance=170000, verbosity=0,
         )
         self.assertEqual(Request.objects.filter(display_id__startswith='IBT-DEMO-').count(), 1)
+
+    def test_demo_seed_commands_refuse_non_debug_environments(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        with override_settings(DEBUG=False):
+            with self.assertRaisesRegex(CommandError, 'seed_accounts is disabled'):
+                call_command('seed_accounts', quiet=True, verbosity=0)
+            with self.assertRaisesRegex(CommandError, 'seed_demo_request is disabled'):
+                call_command('seed_demo_request', verbosity=0)
 
     def test_backup_restore_commands_success_and_errors(self):
         from django.core.management import call_command

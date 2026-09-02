@@ -205,6 +205,8 @@ def index(request):
         # KPI
         'avg_rating': avg_rating,
     }
+    context['allow_web_database_restore'] = settings.ALLOW_WEB_DATABASE_RESTORE
+    context['database_engine'] = settings.DATABASES['default']['ENGINE'].rsplit('.', 1)[-1]
     return render(request, 'dashboard/superadmin/index.html', context)
 
 
@@ -1030,6 +1032,15 @@ def restore_db(request):
     `pg_dump --format=custom` archive. The file is validated before any
     destructive operation runs.
     """
+    if not settings.ALLOW_WEB_DATABASE_RESTORE:
+        logger.warning(
+            "Blocked web database restore attempt by user_id=%s",
+            getattr(request.user, 'pk', None),
+        )
+        return HttpResponseForbidden(
+            "La restauration web est désactivée. Utilisez la procédure "
+            "de reprise isolée documentée."
+        )
     if request.method != 'POST' or 'db_file' not in request.FILES:
         messages.error(request, "Aucun fichier sélectionné.")
         return redirect_back(request, 'dashboard:superadmin')
@@ -1063,11 +1074,13 @@ def restore_db(request):
 
 @superadmin_required
 def reset_account(request, pk):
-    """Reset a user's password and force them to change it on next login."""
-    import secrets
-    import string
+    """Invalidate an account password and email a signed reset link."""
+    from django.contrib.auth.tokens import default_token_generator
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
+    from django.urls import reverse
+    from django.utils.encoding import force_bytes
+    from django.utils.http import urlsafe_base64_encode
     from core.audit import log_action
 
     target_user = get_object_or_404(User, pk=pk)
@@ -1085,28 +1098,31 @@ def reset_account(request, pk):
             )
             return redirect_back(request, 'dashboard:superadmin')
 
-        # Generate secure temporary password (16 chars: upper, lower, digit, symbol)
-        alphabet = string.ascii_letters + string.digits + '!@#$%^&*()'
-        temp_password = ''.join(secrets.choice(alphabet) for _ in range(16))
-
-        # Password change, delivery and audit are one logical operation. A
-        # failed delivery raises inside the transaction so the old password
-        # remains valid and the user cannot be locked out by an SMTP outage.
+        # Password invalidation, token delivery and audit are one logical
+        # operation. A failed delivery rolls the transaction back so an SMTP
+        # outage cannot lock the user out. The token is one-time and governed
+        # by PASSWORD_RESET_TIMEOUT (24 hours by default).
         try:
             from django.db import transaction
             with transaction.atomic():
                 target_user = User.objects.select_for_update().get(pk=target_user.pk)
-                target_user.set_password(temp_password)
+                target_user.set_unusable_password()
                 target_user.must_change_password = True
                 target_user.save(update_fields=['password', 'must_change_password'])
+
+                uidb64 = urlsafe_base64_encode(force_bytes(target_user.pk))
+                token = default_token_generator.make_token(target_user)
+                reset_url = request.build_absolute_uri(reverse(
+                    'accounts:password_reset_confirm',
+                    kwargs={'uidb64': uidb64, 'token': token},
+                ))
 
                 subject = _("Réinitialisation de votre compte PLAGENOR 4.0")
                 email_ctx = {
                     'user': target_user,
-                    'temp_password': temp_password,
+                    'reset_url': reset_url,
                     'admin_name': request.user.get_full_name() or request.user.username,
                     'platform_name': 'PLAGENOR 4.0',
-                    'login_url': request.build_absolute_uri('/accounts/login/'),
                 }
                 html_body = render_to_string('accounts/email/account_reset.html', email_ctx, request=request)
                 delivered = send_mail(
