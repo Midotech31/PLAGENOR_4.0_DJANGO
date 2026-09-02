@@ -77,7 +77,7 @@ class FinanceTransactionTests(TestCase):
 
     def make_budget_request(self, suffix='1'):
         return Request.objects.create(
-            display_id=f'IBT-PHASE2-{suffix}', title='Budget validation',
+            display_id=f'P2-{suffix[:17]}', title='Budget validation',
             channel='IBTIKAR', status='VALIDATION_FINANCE',
             requester=self.client_user, service=self.service,
             budget_amount=Decimal('1250.00'), rejection_reason='')
