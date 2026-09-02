@@ -21,6 +21,7 @@ class ProductionSettingsTests(SimpleTestCase):
             'SUPABASE_S3_ACCESS_KEY_ID', 'SUPABASE_S3_SECRET_ACCESS_KEY',
             'DATABASE_SSL_REQUIRE',
             'REQUIRE_PERSISTENT_MEDIA_STORAGE', 'REQUIRE_SMTP',
+            'RATE_LIMIT_BACKEND', 'RATE_LIMIT_FAIL_CLOSED',
         ):
             env.pop(key, None)
         env.update({
@@ -96,6 +97,28 @@ class ProductionSettingsTests(SimpleTestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn('sslmode', result.stdout)
+
+    def test_production_rate_limit_is_shared_and_fails_closed(self):
+        result = self._import_settings(
+            code=(
+                'from plagenor.settings import '
+                'RATE_LIMIT_BACKEND, RATE_LIMIT_FAIL_CLOSED; '
+                'print(RATE_LIMIT_BACKEND, RATE_LIMIT_FAIL_CLOSED)'
+            ),
+            REQUIRE_PERSISTENT_MEDIA_STORAGE='false',
+            REQUIRE_SMTP='false',
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'database True')
+
+    def test_invalid_rate_limit_backend_is_rejected(self):
+        result = self._import_settings(
+            REQUIRE_PERSISTENT_MEDIA_STORAGE='false',
+            REQUIRE_SMTP='false',
+            RATE_LIMIT_BACKEND='memory-ish',
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('RATE_LIMIT_BACKEND must be either', result.stderr)
 
 
 class ObservabilityCompatibilityTests(SimpleTestCase):

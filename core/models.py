@@ -4,6 +4,18 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
+class RateLimitBucket(models.Model):
+    """Shared, privacy-preserving counter for public endpoint throttles."""
+
+    key_hash = models.CharField(max_length=64, primary_key=True)
+    count = models.PositiveIntegerField(default=1)
+    expires_at = models.DateTimeField(db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'rate_limit_buckets'
+
+
 class Service(models.Model):
     CHANNEL_CHOICES = [
         ('BOTH', 'IBTIKAR & GENOCLAB'),

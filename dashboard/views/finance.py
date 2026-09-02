@@ -3,12 +3,14 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
 from core.models import Request, Invoice
 from core.workflow import transition
 from core.financial import get_budget_dashboard, get_revenue_summary
+from core.audit import log_financial_action
 from core.exceptions import InvalidTransitionError, AuthorizationError
 
 
@@ -75,25 +77,30 @@ def index(request):
 def validate_budget(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk)
     action = request.POST.get('action', '')
-    if action == 'approve':
-        req.admin_validated_price = req.budget_amount
-        req.save(update_fields=['admin_validated_price'])
-        try:
-            transition(req, 'PLATFORM_NOTE_GENERATED', request.user, notes='Budget validé par finance')
-            messages.success(request, f"Budget validé pour {req.display_id}.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
-    elif action == 'reject':
-        reason = request.POST.get('reason', '')
-        req.rejection_reason = reason
-        req.save(update_fields=['rejection_reason'])
-        try:
-            transition(req, 'REJECTED', request.user, notes=f'Rejeté par finance: {reason}')
-            messages.success(request, f"Demande {req.display_id} rejetée.")
-        except (InvalidTransitionError, AuthorizationError, ValueError) as e:
-            messages.error(request, str(e))
+    try:
+        with transaction.atomic():
+            req = get_object_or_404(
+                Request.objects.select_for_update(), pk=pk)
+            if action == 'approve':
+                req.admin_validated_price = req.budget_amount
+                req.save(update_fields=['admin_validated_price'])
+                transition(
+                    req, 'PLATFORM_NOTE_GENERATED', request.user,
+                    notes='Budget validé par finance')
+                messages.success(request, f"Budget validé pour {req.display_id}.")
+            elif action == 'reject':
+                reason = request.POST.get('reason', '').strip()
+                if not reason:
+                    raise ValueError("Le motif du rejet est obligatoire.")
+                req.rejection_reason = reason
+                req.save(update_fields=['rejection_reason'])
+                transition(
+                    req, 'REJECTED', request.user,
+                    notes=f'Rejeté par finance: {reason}')
+                messages.success(request, f"Demande {req.display_id} rejetée.")
+    except (InvalidTransitionError, AuthorizationError, ValueError) as e:
+        messages.error(request, str(e))
     return redirect_back(request, 'dashboard:finance')
 
 
@@ -101,11 +108,18 @@ def validate_budget(request, pk):
 def update_payment_status(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    invoice = get_object_or_404(Invoice, pk=pk)
     new_status = request.POST.get('payment_status', '')
     if new_status in dict(Invoice.PAYMENT_STATUS_CHOICES):
-        invoice.payment_status = new_status
-        invoice.save(update_fields=['payment_status'])
+        with transaction.atomic():
+            invoice = get_object_or_404(
+                Invoice.objects.select_for_update(), pk=pk)
+            invoice.payment_status = new_status
+            invoice.save(update_fields=['payment_status'])
+            log_financial_action(
+                'PAYMENT_STATUS_CHANGED', str(invoice.pk), request.user,
+                amount=float(invoice.total_ttc),
+                details={'payment_status': new_status},
+            )
         messages.success(request, f"Statut de paiement mis à jour: {invoice.get_payment_status_display()}")
     else:
         messages.error(request, "Statut invalide.")

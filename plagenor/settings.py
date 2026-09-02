@@ -26,6 +26,16 @@ TRUST_PROXY_HEADERS = _env_bool(
     'TRUST_PROXY_HEADERS',
     'true' if os.getenv('RENDER_EXTERNAL_HOSTNAME') else 'false',
 )
+RATE_LIMIT_BACKEND = os.getenv(
+    'RATE_LIMIT_BACKEND', 'cache' if DEBUG else 'database'
+).strip().lower()
+if RATE_LIMIT_BACKEND not in {'cache', 'database'}:
+    raise ImproperlyConfigured(
+        "RATE_LIMIT_BACKEND must be either 'cache' or 'database'."
+    )
+RATE_LIMIT_FAIL_CLOSED = _env_bool(
+    'RATE_LIMIT_FAIL_CLOSED', 'false' if DEBUG else 'true'
+)
 
 # SECRET_KEY is required in production. We allow a known-insecure fallback
 # only when DEBUG is on, so a misconfigured production deploy fails fast

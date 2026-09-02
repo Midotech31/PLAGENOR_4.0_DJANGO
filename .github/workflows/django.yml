@@ -48,7 +48,7 @@ jobs:
       run: |
         coverage run manage.py test
         # Enforced regression floor, verified by the full Django suite.
-        coverage report --fail-under=80
+        coverage report --fail-under=90
     - name: Dependency vulnerability audit
       run: |
         pip-audit -r requirements.txt
