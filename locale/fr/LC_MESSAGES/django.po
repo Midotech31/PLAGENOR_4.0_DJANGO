@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"POT-Creation-Date: 2026-09-01 19:18+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: French\n"
@@ -259,23 +259,16 @@ msgstr ""
 msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
 msgstr ""
 
-msgid "Mot de passe temporaire"
+msgid "Ce lien expire après 24 heures."
 msgstr ""
 
-msgid ""
-"Ce mot de passe temporaire expire après 24 heures ou dès la première "
-"utilisation."
-msgstr ""
-
-msgid ""
-"Vous serez immédiatement invité à définir un nouveau mot de passe après "
-"connexion."
+msgid "Ce lien ne peut être utilisé qu'une seule fois."
 msgstr ""
 
 msgid "Ne partagez jamais votre mot de passe avec quiconque."
 msgstr ""
 
-msgid "Se connecter"
+msgid "Définir le nouveau mot de passe"
 msgstr ""
 
 msgid ""
@@ -301,9 +294,6 @@ msgid ""
 msgstr ""
 
 msgid "Vérifier mon adresse et créer mon compte"
-msgstr ""
-
-msgid "Ce lien expire après 24 heures."
 msgstr ""
 
 msgid ""
@@ -372,9 +362,6 @@ msgstr ""
 msgid "Minimum 8 caractères."
 msgstr ""
 
-msgid "Définir le nouveau mot de passe"
-msgstr ""
-
 msgid "Identifiant ou mot de passe incorrect."
 msgstr ""
 
@@ -394,6 +381,9 @@ msgid "Se souvenir de moi"
 msgstr ""
 
 msgid "Mot de passe oublié ?"
+msgstr ""
+
+msgid "Se connecter"
 msgstr ""
 
 msgid "ou"
@@ -2770,7 +2760,7 @@ msgstr ""
 msgid "Télécharger une sauvegarde"
 msgstr ""
 
-msgid "Télécharge une copie de la base de données SQLite."
+msgid "Télécharge une sauvegarde contrôlée de la base de données."
 msgstr ""
 
 msgid "Restaurer une sauvegarde"
@@ -2833,22 +2823,17 @@ msgid ""
 "            "
 msgstr ""
 
-msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+msgid "Le mot de passe actuel sera immédiatement invalidé."
 msgstr ""
 
-msgid ""
-"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+msgid "Le lien sécurisé est à usage unique et expire après 24 heures."
 msgstr ""
 
 #, python-format
-msgid ""
-"Un email avec le mot de passe temporaire sera envoyé à <strong>%(email)s</"
-"strong>."
+msgid "Un lien de réinitialisation sera envoyé à <strong>%(email)s</strong>."
 msgstr ""
 
-msgid ""
-"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
-"notification."
+msgid "Aucun email vérifié : la réinitialisation est impossible."
 msgstr ""
 
 msgid "Cette action est enregistrée dans le journal d'audit."

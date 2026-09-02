@@ -37,7 +37,7 @@ to a full account.
 | URL | https://plagenor.onrender.com |
 | Database | **Supabase Postgres** (free) via `DATABASE_URL` |
 | Media | **Supabase Storage** (S3-compatible, **private** bucket `media`) |
-| Deploy branch | **`claude/great-newton-6Ce7v`** (Render auto-deploys on push) |
+| Deploy branch | **`main`** (Render auto-deploys the protected canonical branch) |
 | Build | `./build.sh` → `gunicorn plagenor.wsgi` |
 | Repo | `Midotech31/PLAGENOR_4.0_DJANGO` |
 
@@ -53,7 +53,7 @@ to a full account.
 
 ## 3. Tech stack
 
-- **Django 5.1**, Python **3.11**
+- **Django 5.2 LTS**, Python **3.11**
 - DB: PostgreSQL (`dj-database-url`, `psycopg2-binary`); SQLite fallback in dev
 - Storage: `django-storages` + `boto3` (Supabase S3); WhiteNoise for static
 - Docs: `python-docx`, `openpyxl` (Excel bilans), `qrcode`, `Pillow`
@@ -216,12 +216,14 @@ SECRET_KEY=dummy DEBUG=true DATABASE_URL="" python manage.py test
 
 ## 11. Tests & CI
 
-- **49 tests** in `core/tests.py`, `accounts/tests.py`, `dashboard/tests.py`
-  covering pricing, IBTIKAR budget + deduction, workflow transitions/permissions,
-  invoice/VAT totals, the report-access gate, and registration.
-- CI: `.github/workflows/django.yml` runs `check` + tests on Python 3.11 for
-  pushes to `main` / `claude/**` and PRs to `main`. Plus a non-blocking
-  `pip-audit` step. **Dependabot** opens weekly dependency-update PRs.
+- More than **250 tests** across the Django apps cover pricing, budgets,
+  workflows, invoices, protected reports/media, role isolation, MFA, uploads,
+  notifications, backups and operational commands. Overall coverage is gated
+  at **80%** without excluding the large dashboard/document modules.
+- CI runs on every branch push and pull request. It validates SQLite and
+  PostgreSQL, migrations, templates, translations, dependency vulnerabilities,
+  Bandit findings, a synthetic PostgreSQL backup/restore, and the non-root
+  production Docker image. **Dependabot** opens weekly update PRs.
 
 ---
 

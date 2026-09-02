@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 14:44+0100\n"
+"POT-Creation-Date: 2026-09-01 19:18+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: Arabic\n"
@@ -167,7 +167,8 @@ msgstr "لا يمكنك إعادة تعيين حسابك الخاص."
 
 msgid ""
 "Réinitialisation annulée : ce compte ne possède pas d’adresse email vérifiée."
-msgstr "تم إلغاء إعادة التعيين: لا يحتوي هذا الحساب على عنوان بريد إلكتروني موثّق."
+msgstr ""
+"تم إلغاء إعادة التعيين: لا يحتوي هذا الحساب على عنوان بريد إلكتروني موثّق."
 
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
 msgstr "إعادة تعيين حسابك على PLAGENOR 4.0"
@@ -266,24 +267,17 @@ msgstr "مرحباً %(name)s،"
 msgid "Votre compte sur %(platform)s a été réinitialisé par %(admin)s."
 msgstr "تمت إعادة تعيين حسابك على %(platform)s من قِبل %(admin)s."
 
-msgid "Mot de passe temporaire"
-msgstr "كلمة مرور مؤقتة"
+msgid "Ce lien expire après 24 heures."
+msgstr "تنتهي صلاحية هذا الرابط بعد 24 ساعة."
 
-msgid ""
-"Ce mot de passe temporaire expire après 24 heures ou dès la première "
-"utilisation."
-msgstr "تنتهي صلاحية كلمة المرور المؤقتة بعد 24 ساعة أو عند أول استخدام."
-
-msgid ""
-"Vous serez immédiatement invité à définir un nouveau mot de passe après "
-"connexion."
-msgstr "سيُطلب منك فور تسجيل الدخول تعيين كلمة مرور جديدة."
+msgid "Ce lien ne peut être utilisé qu'une seule fois."
+msgstr "لا يمكن استخدام هذا الرابط إلا مرة واحدة."
 
 msgid "Ne partagez jamais votre mot de passe avec quiconque."
 msgstr "لا تُشارك كلمة المرور مع أي شخص أبداً."
 
-msgid "Se connecter"
-msgstr "تسجيل الدخول"
+msgid "Définir le nouveau mot de passe"
+msgstr "تعيين كلمة المرور الجديدة"
 
 msgid ""
 "Si vous n'étiez pas au courant de cette réinitialisation, veuillez contacter "
@@ -312,9 +306,6 @@ msgstr "لإكمال إنشاء حسابك وربط طلباتك كزائر، ا
 
 msgid "Vérifier mon adresse et créer mon compte"
 msgstr "تحقَّق من عنواني وأنشئ حسابي"
-
-msgid "Ce lien expire après 24 heures."
-msgstr "تنتهي صلاحية هذا الرابط بعد 24 ساعة."
 
 msgid ""
 "Si vous n'avez pas demandé la création d'un compte, ignorez simplement ce "
@@ -395,9 +386,6 @@ msgstr "يرجى تصحيح الأخطاء أدناه."
 msgid "Minimum 8 caractères."
 msgstr "8 أحرف على الأقل."
 
-msgid "Définir le nouveau mot de passe"
-msgstr "تعيين كلمة المرور الجديدة"
-
 msgid "Identifiant ou mot de passe incorrect."
 msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
 
@@ -418,6 +406,9 @@ msgstr "تذكَّرني"
 
 msgid "Mot de passe oublié ?"
 msgstr "هل نسيت كلمة المرور؟"
+
+msgid "Se connecter"
+msgstr "تسجيل الدخول"
 
 msgid "ou"
 msgstr "أو"
@@ -2840,8 +2831,8 @@ msgstr "النسخ الاحتياطي"
 msgid "Télécharger une sauvegarde"
 msgstr "تنزيل نسخة احتياطية"
 
-msgid "Télécharge une copie de la base de données SQLite."
-msgstr "يتم تنزيل نسخة من قاعدة بيانات SQLite."
+msgid "Télécharge une sauvegarde contrôlée de la base de données."
+msgstr "يتم تنزيل نسخة احتياطية مضبوطة من قاعدة البيانات."
 
 msgid "Restaurer une sauvegarde"
 msgstr "استعادة نسخة احتياطية"
@@ -2911,25 +2902,18 @@ msgstr ""
 "            ستُحفظ جميع البيانات المرتبطة (الطلبات، التقارير، السجل).\n"
 "            "
 
-msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
-msgstr "سيتم توليد كلمة مرور مؤقتة آمنة (16 حرفاً)."
+msgid "Le mot de passe actuel sera immédiatement invalidé."
+msgstr "سيتم إبطال كلمة المرور الحالية فوراً."
 
-msgid ""
-"L'utilisateur devra changer son mot de passe dès la prochaine connexion."
-msgstr "سيُطلب من المستخدم تغيير كلمة المرور عند تسجيل الدخول التالي."
+msgid "Le lien sécurisé est à usage unique et expire après 24 heures."
+msgstr "الرابط الآمن صالح للاستخدام مرة واحدة وتنتهي صلاحيته بعد 24 ساعة."
 
 #, python-format
-msgid ""
-"Un email avec le mot de passe temporaire sera envoyé à <strong>%(email)s</"
-"strong>."
-msgstr ""
-"سيتم إرسال بريد إلكتروني يتضمن كلمة المرور المؤقتة إلى <strong>%(email)s</"
-"strong>."
+msgid "Un lien de réinitialisation sera envoyé à <strong>%(email)s</strong>."
+msgstr "سيتم إرسال رابط إعادة التعيين إلى <strong>%(email)s</strong>."
 
-msgid ""
-"Aucun email configuré — le mot de passe temporaire sera affiché dans la "
-"notification."
-msgstr "لا يوجد بريد إلكتروني مُكوَّن — ستظهر كلمة المرور المؤقتة في الإشعار."
+msgid "Aucun email vérifié : la réinitialisation est impossible."
+msgstr "لا يوجد بريد إلكتروني موثّق: لا يمكن تنفيذ إعادة التعيين."
 
 msgid "Cette action est enregistrée dans le journal d'audit."
 msgstr "يُسجَّل هذا الإجراء في سجل التدقيق."
@@ -4188,6 +4172,31 @@ msgstr "لا توجد نتائج"
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التحقُّق والمحاولة مجدداً."
+
+#~ msgid "Mot de passe temporaire"
+#~ msgstr "كلمة مرور مؤقتة"
+
+#~ msgid ""
+#~ "Ce mot de passe temporaire expire après 24 heures ou dès la première "
+#~ "utilisation."
+#~ msgstr "تنتهي صلاحية كلمة المرور المؤقتة بعد 24 ساعة أو عند أول استخدام."
+
+#~ msgid ""
+#~ "Vous serez immédiatement invité à définir un nouveau mot de passe après "
+#~ "connexion."
+#~ msgstr "سيُطلب منك فور تسجيل الدخول تعيين كلمة مرور جديدة."
+
+#~ msgid "Un mot de passe temporaire sécurisé (16 caractères) sera généré."
+#~ msgstr "سيتم توليد كلمة مرور مؤقتة آمنة (16 حرفاً)."
+
+#~ msgid ""
+#~ "L'utilisateur devra changer son mot de passe dès la prochaine connexion."
+#~ msgstr "سيُطلب من المستخدم تغيير كلمة المرور عند تسجيل الدخول التالي."
+
+#~ msgid ""
+#~ "Aucun email configuré — le mot de passe temporaire sera affiché dans la "
+#~ "notification."
+#~ msgstr "لا يوجد بريد إلكتروني مُكوَّن — ستظهر كلمة المرور المؤقتة في الإشعار."
 
 #~ msgid ""
 #~ "L’email d’instructions n’a pas pu être envoyé. Transmettez les "

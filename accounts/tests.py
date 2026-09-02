@@ -321,7 +321,10 @@ class PasswordResetFlowTests(TestCase):
         # Lock the account first, then reset.
         self.user.login_attempts = 5
         self.user.locked_until = timezone.now() + timezone.timedelta(minutes=15)
-        self.user.save(update_fields=['login_attempts', 'locked_until'])
+        self.user.must_change_password = True
+        self.user.save(update_fields=[
+            'login_attempts', 'locked_until', 'must_change_password',
+        ])
 
         self.client.post('/accounts/password-reset/', {'email': 'reset@example.com'})
         # Extract uid/token from the emailed confirm link.
@@ -338,6 +341,7 @@ class PasswordResetFlowTests(TestCase):
         self.assertTrue(self.user.check_password('BrandNew!9942'))
         self.assertEqual(self.user.login_attempts, 0)
         self.assertIsNone(self.user.locked_until)
+        self.assertFalse(self.user.must_change_password)
 
 
 @override_settings(

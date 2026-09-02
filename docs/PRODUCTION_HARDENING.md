@@ -24,6 +24,16 @@ Keep `DEBUG=false` and `PRIVILEGED_MFA_ENFORCEMENT=true`. Losing or rotating
 `TOTP_ENCRYPTION_KEY` before re-enrolling users makes existing encrypted TOTP
 seeds unreadable.
 
+Keep `CSP_REPORT_ONLY=false` after the validated baseline is deployed. The
+current policy is enforced in production while inline frontend code is migrated
+incrementally toward a nonce/hash policy. Password-reset links expire after
+`PASSWORD_RESET_TIMEOUT=86400` seconds by default.
+
+`ALLOW_WEB_DATABASE_RESTORE` must remain `false` in normal operation. A live
+database restore inside an HTTP request is intentionally disabled; use the
+isolated recovery procedure below. The `seed_accounts` and
+`seed_demo_request` commands also refuse to run whenever `DEBUG` is false.
+
 ## Deploy and rollback
 
 Render deploys the Docker image described by `Dockerfile`. Its entrypoint runs
@@ -38,6 +48,12 @@ Before a production deploy:
 4. Deploy the reviewed commit from protected `main`.
 5. Smoke-test login, MFA, one request per channel, authorized document access,
    payment-proof review, and the three locales.
+
+If the scheduled `Database Backup` workflow fails at **Require backup
+secrets**, restore the repository secrets `DATABASE_URL` and
+`BACKUP_AGE_RECIPIENT`, then run the workflow manually. Do not consider backup
+coverage restored until the encrypted artifact is produced and a controlled
+restore drill succeeds.
 
 To roll back application code, deploy the last known-good commit from Render.
 Do not reverse a database migration until its data impact has been reviewed.

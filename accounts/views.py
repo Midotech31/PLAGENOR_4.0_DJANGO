@@ -120,10 +120,16 @@ class ForgotPasswordConfirmView(PasswordResetConfirmView):
     def form_valid(self, form):
         # A completed reset clears any brute-force lockout on the account.
         user = form.user
+        update_fields = []
         if user.login_attempts or user.locked_until:
             user.login_attempts = 0
             user.locked_until = None
-            user.save(update_fields=['login_attempts', 'locked_until'])
+            update_fields.extend(['login_attempts', 'locked_until'])
+        if user.must_change_password:
+            user.must_change_password = False
+            update_fields.append('must_change_password')
+        if update_fields:
+            user.save(update_fields=update_fields)
         return super().form_valid(form)
 
 

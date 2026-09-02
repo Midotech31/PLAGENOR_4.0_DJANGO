@@ -342,17 +342,39 @@ class AccountResetDeliveryTests(TestCase):
 
     def test_reset_does_not_show_delivery_warning_when_email_is_sent(self):
         from django.contrib.messages import get_messages
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.http import urlsafe_base64_decode
         from unittest.mock import patch
+        import re
 
-        with patch('django.core.mail.send_mail', return_value=1):
+        with patch('django.core.mail.send_mail', return_value=1) as send_mail:
             response = self._post()
 
         queued = [(message.tags, str(message)) for message in get_messages(response.wsgi_request)]
         self.target.refresh_from_db()
         self.assertTrue(self.target.must_change_password)
+        self.assertFalse(self.target.has_usable_password())
         self.assertFalse(self.target.check_password('old-password'))
+        html = send_mail.call_args.kwargs['html_message']
+        self.assertNotIn('Mot de passe temporaire', html)
+        match = re.search(r'/password-reset/confirm/([^/]+)/([^/]+)/', html)
+        self.assertIsNotNone(match)
+        uidb64, token = match.groups()
+        self.assertEqual(int(urlsafe_base64_decode(uidb64)), self.target.pk)
+        self.assertTrue(default_token_generator.check_token(self.target, token))
         self.assertTrue(any('success' in tags for tags, _ in queued))
         self.assertFalse(any('error' in tags for tags, _ in queued))
+
+    def test_web_database_restore_is_disabled_by_default(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.urls import reverse
+
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse('dashboard:superadmin_restore'),
+            {'db_file': SimpleUploadedFile('backup.db', b'not-a-database')},
+        )
+        self.assertEqual(response.status_code, 403)
 
     def test_reset_without_verified_email_is_rejected(self):
         from django.contrib.messages import get_messages
@@ -381,6 +403,19 @@ class HealthEndpointTests(TestCase):
         resp = self.client.get('/readyz')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()['database'], 'ok')
+
+    @override_settings(CSP_REPORT_ONLY=False)
+    def test_csp_is_enforced_when_report_only_is_disabled(self):
+        resp = self.client.get('/healthz')
+        self.assertIn('Content-Security-Policy', resp)
+        self.assertNotIn('Content-Security-Policy-Report-Only', resp)
+        self.assertIn("object-src 'none'", resp['Content-Security-Policy'])
+
+    @override_settings(CSP_REPORT_ONLY=True)
+    def test_csp_report_only_mode_remains_available_for_diagnostics(self):
+        resp = self.client.get('/healthz')
+        self.assertIn('Content-Security-Policy-Report-Only', resp)
+        self.assertNotIn('Content-Security-Policy', resp)
 
 
 class TemplateEscapingTests(SimpleTestCase):

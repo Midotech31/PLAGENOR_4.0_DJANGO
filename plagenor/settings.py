@@ -18,7 +18,10 @@ DEBUG = _env_bool('DEBUG', 'False')
 PRIVILEGED_MFA_ENFORCEMENT = os.getenv(
     'PRIVILEGED_MFA_ENFORCEMENT', 'false' if DEBUG else 'true'
 ).lower() == 'true'
-CSP_REPORT_ONLY = os.getenv('CSP_REPORT_ONLY', 'true').lower() == 'true'
+CSP_REPORT_ONLY = _env_bool(
+    'CSP_REPORT_ONLY',
+    'true' if DEBUG else 'false',
+)
 TRUST_PROXY_HEADERS = _env_bool(
     'TRUST_PROXY_HEADERS',
     'true' if os.getenv('RENDER_EXTERNAL_HOSTNAME') else 'false',
@@ -294,6 +297,7 @@ LANGUAGE_COOKIE_SAMESITE = 'Lax'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+PASSWORD_RESET_TIMEOUT = int(os.getenv('PASSWORD_RESET_TIMEOUT', '86400'))
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600  # 1 hour
@@ -305,6 +309,12 @@ INVOICE_PREFIX = os.getenv('INVOICE_PREFIX', 'GENOCLAB-INV')
 PLATFORM_VERSION = '4.0.0'
 PLATFORM_AUTHOR = 'Prof. Mohamed Merzoug'
 PLATFORM_INSTITUTION = 'ESSBO'
+
+# Restoring a live database inside an ordinary web request is deliberately
+# disabled by default. Recovery must normally use the documented isolated
+# restore drill; an operator may opt in only for a controlled maintenance
+# window after accepting the availability and rollback risks.
+ALLOW_WEB_DATABASE_RESTORE = _env_bool('ALLOW_WEB_DATABASE_RESTORE', 'False')
 
 # Render generated documents to PDF via LibreOffice headless.
 # Requires `libreoffice-writer` + `default-jre-headless` on the host.

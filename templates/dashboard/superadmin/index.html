@@ -1184,9 +1184,10 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary">{% trans "Télécharger une sauvegarde" %}</button>
                 </form>
-                <p class="text-muted text-sm" style="margin-top:8px;">{% trans "Télécharge une copie de la base de données SQLite." %}</p>
+                <p class="text-muted text-sm" style="margin-top:8px;">{% trans "Télécharge une sauvegarde contrôlée de la base de données." %}</p>
             </div>
         </div>
+        {% if allow_web_database_restore %}
         <div class="card" style="margin-bottom:24px;">
             <div class="card-header"><h3>{% trans "Restaurer une sauvegarde" %}</h3></div>
             <div class="card-body">
@@ -1204,6 +1205,7 @@
                 </form>
             </div>
         </div>
+        {% endif %}
         <div class="grid-2">
             <div class="card">
                 <div class="card-header"><h3>{% trans "Informations plateforme" %}</h3></div>
@@ -1212,7 +1214,7 @@
                         <div class="data-card-row"><strong>{% trans "Version" %}</strong><span class="font-mono">4.0.0</span></div>
                         <div class="data-card-row"><strong>{% trans "Auteur" %}</strong><span>Prof. Mohamed Merzoug</span></div>
                         <div class="data-card-row"><strong>{% trans "Institution" %}</strong><span>École Supérieure en Sciences Biologiques d'Oran (ESSBO)</span></div>
-                        <div class="data-card-row"><strong>{% trans "Base de données" %}</strong><span>SQLite3</span></div>
+                        <div class="data-card-row"><strong>{% trans "Base de données" %}</strong><span>{{ database_engine }}</span></div>
                         <div class="data-card-row"><strong>{% trans "Framework" %}</strong><span>Django 5.x</span></div>
                     </div>
                 </div>

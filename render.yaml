@@ -25,7 +25,7 @@ services:
       - key: PRIVILEGED_MFA_ENFORCEMENT
         value: "true"
       - key: CSP_REPORT_ONLY
-        value: "true"                  # staged rollout; monitor before enforcing
+        value: "false"                 # enforce the validated same-origin baseline
       - key: TRUST_PROXY_HEADERS
         value: "true"                  # Render owns the final X-Forwarded-For hop
       - key: REQUIRE_PERSISTENT_MEDIA_STORAGE

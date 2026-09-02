@@ -46,12 +46,12 @@
         </div>
 
         <ul style="color:#475569;font-size:0.875rem;line-height:1.7;padding-inline-start:20px;margin-bottom:24px;">
-            <li>{% trans "Un mot de passe temporaire sécurisé (16 caractères) sera généré." %}</li>
-            <li>{% trans "L'utilisateur devra changer son mot de passe dès la prochaine connexion." %}</li>
+            <li>{% trans "Le mot de passe actuel sera immédiatement invalidé." %}</li>
+            <li>{% trans "Le lien sécurisé est à usage unique et expire après 24 heures." %}</li>
             {% if target_user.email %}
-            <li>{% blocktrans with email=target_user.email %}Un email avec le mot de passe temporaire sera envoyé à <strong>{{ email }}</strong>.{% endblocktrans %}</li>
+            <li>{% blocktrans with email=target_user.email %}Un lien de réinitialisation sera envoyé à <strong>{{ email }}</strong>.{% endblocktrans %}</li>
             {% else %}
-            <li style="color:#dc2626;">{% icon 'alert-triangle' size=14 %} {% trans "Aucun email configuré — le mot de passe temporaire sera affiché dans la notification." %}</li>
+            <li style="color:#dc2626;">{% icon 'alert-triangle' size=14 %} {% trans "Aucun email vérifié : la réinitialisation est impossible." %}</li>
             {% endif %}
             <li>{% trans "Cette action est enregistrée dans le journal d'audit." %}</li>
         </ul>

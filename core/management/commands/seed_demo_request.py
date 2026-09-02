@@ -23,7 +23,8 @@ from datetime import datetime
 import uuid
 import json
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
@@ -90,6 +91,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError(
+                'seed_demo_request is disabled when DEBUG is False because '
+                'it creates demo identities and deletes prior demo rows.'
+            )
         target_status = options['status']
         balance = options['balance']
 
