@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
 from django.urls import NoReverseMatch
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 # Role → request-detail URL name. After a per-request action we send the
@@ -33,7 +34,11 @@ def safe_float(value, default=0.0):
 def redirect_back(request, fallback_url='dashboard:router'):
     """Redirect to the referring page, preserving tab context."""
     referer = request.META.get('HTTP_REFERER', '')
-    if referer:
+    if referer and url_has_allowed_host_and_scheme(
+        referer,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
         return redirect(referer)
     try:
         return redirect(fallback_url)

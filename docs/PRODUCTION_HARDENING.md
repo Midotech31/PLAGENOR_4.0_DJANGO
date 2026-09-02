@@ -19,6 +19,10 @@ in Git, tickets, screenshots, or chat:
   written to service logs.
 - `TRUST_PROXY_HEADERS=true` on Render only; rate limiting then consumes the
   right-most valid address added by the trusted proxy.
+- `RATE_LIMIT_BACKEND=database` shares public POST throttles across every
+  worker without storing raw client addresses. Keep
+  `RATE_LIMIT_FAIL_CLOSED=true` so a limiter failure returns HTTP 503 rather
+  than silently bypassing the protection.
 
 Keep `DEBUG=false` and `PRIVILEGED_MFA_ENFORCEMENT=true`. Losing or rotating
 `TOTP_ENCRYPTION_KEY` before re-enrolling users makes existing encrypted TOTP

@@ -28,6 +28,10 @@ services:
         value: "false"                 # enforce the validated same-origin baseline
       - key: TRUST_PROXY_HEADERS
         value: "true"                  # Render owns the final X-Forwarded-For hop
+      - key: RATE_LIMIT_BACKEND
+        value: "database"              # exact cross-worker throttling
+      - key: RATE_LIMIT_FAIL_CLOSED
+        value: "true"                  # never bypass abuse controls silently
       - key: REQUIRE_PERSISTENT_MEDIA_STORAGE
         value: "true"                  # fail boot rather than lose uploads on ephemeral disk
       - key: REQUIRE_SMTP

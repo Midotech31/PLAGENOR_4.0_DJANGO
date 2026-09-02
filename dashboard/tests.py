@@ -129,8 +129,11 @@ class ReportGateTests(TestCase):
         self.assertEqual(len(req.rating_comment), 2000)
 
 
-@override_settings(STORAGES=_TEST_STORAGES,
-                   EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+@override_settings(
+    STORAGES=_TEST_STORAGES,
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    RATE_LIMIT_BACKEND='cache',
+)
 class RateLimitTests(TestCase):
     def setUp(self):
         from django.core.cache import cache
