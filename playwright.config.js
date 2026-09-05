@@ -25,15 +25,24 @@ module.exports = defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        extraHTTPHeaders: { 'X-Forwarded-For': '192.0.2.10' },
+      },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        extraHTTPHeaders: { 'X-Forwarded-For': '192.0.2.11' },
+      },
     },
     {
       name: 'mobile-chromium',
-      use: { ...devices['Pixel 7'] },
+      use: {
+        ...devices['Pixel 7'],
+        extraHTTPHeaders: { 'X-Forwarded-For': '192.0.2.12' },
+      },
     },
   ],
 });
