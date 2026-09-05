@@ -9,6 +9,7 @@ DATABASES = {
         'NAME': DATA_DIR / 'plagenor-e2e.sqlite3',  # noqa: F405
     },
 }
+ROOT_URLCONF = 'plagenor.urls_e2e'
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 PRIVILEGED_MFA_ENFORCEMENT = False

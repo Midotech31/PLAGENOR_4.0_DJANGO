@@ -3,11 +3,61 @@ import subprocess
 import sys
 from pathlib import Path
 
-from django.test import SimpleTestCase
+from django.contrib.auth import SESSION_KEY
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import Http404
+from django.test import RequestFactory, SimpleTestCase, TestCase
+
+from accounts.models import User
+from plagenor.urls_e2e import create_e2e_session
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FERNET_TEST_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+
+
+class E2ESessionBootstrapTests(TestCase):
+    """The browser shortcut must remain test-only and loopback-only."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='admin', role='SUPER_ADMIN', password=None,
+        )
+        self.factory = RequestFactory()
+
+    def _request(self, *, method='post', remote_addr='127.0.0.1'):
+        request = getattr(self.factory, method)(
+            '/__e2e__/session/admin/', REMOTE_ADDR=remote_addr,
+        )
+        SessionMiddleware(lambda _request: None).process_request(request)
+        request.session.save()
+        return request
+
+    def test_loopback_post_authenticates_seeded_fixture(self):
+        request = self._request()
+
+        response = create_e2e_session(request, 'admin')
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(request.session[SESSION_KEY], str(self.user.pk))
+
+    def test_external_peer_is_rejected(self):
+        with self.assertRaises(Http404):
+            create_e2e_session(
+                self._request(remote_addr='198.51.100.20'), 'admin',
+            )
+
+    def test_non_post_request_is_rejected(self):
+        with self.assertRaises(Http404):
+            create_e2e_session(self._request(method='get'), 'admin')
+
+    def test_unapproved_username_is_rejected(self):
+        with self.assertRaises(Http404):
+            create_e2e_session(self._request(), 'outsider')
+
+    def test_missing_seeded_fixture_is_rejected(self):
+        with self.assertRaises(Http404):
+            create_e2e_session(self._request(), 'client')
 
 
 class ProductionSettingsTests(SimpleTestCase):

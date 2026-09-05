@@ -13,11 +13,10 @@ async function expectAccessible(page, context) {
   expect(summary, `${context}: ${JSON.stringify(summary, null, 2)}`).toEqual([]);
 }
 
-async function login(page, username, password) {
-  await page.goto('/accounts/login/');
-  await page.locator('input[name="username"]').fill(username);
-  await page.locator('input[name="password"]').fill(password);
-  await page.locator('button.btn-primary[type="submit"]').click();
+async function login(page, username) {
+  const response = await page.request.post(`/__e2e__/session/${username}/`);
+  expect(response.status()).toBe(204);
+  await page.goto('/dashboard/');
   await expect(page).toHaveURL(/\/dashboard\//);
 }
 
@@ -43,17 +42,17 @@ for (const [name, path] of publicPages) {
 }
 
 const roleAccounts = [
-  ['superadmin', 'admin', 'admin1234', /\/dashboard\/home\//],
-  ['platform admin', 'admin_ops', 'platform1234', /\/dashboard\/ops\//],
-  ['analyst', 'analyst', 'analyst1234', /\/dashboard\/analyst\//],
-  ['finance', 'finance', 'finance1234', /\/dashboard\/finance\//],
-  ['requester', 'amina', 'demo1234', /\/dashboard\/requester\//],
-  ['client', 'client', 'client1234', /\/dashboard\/client\//],
+  ['superadmin', 'admin', /\/dashboard\/home\//],
+  ['platform admin', 'admin_ops', /\/dashboard\/ops\//],
+  ['analyst', 'analyst', /\/dashboard\/analyst\//],
+  ['finance', 'finance', /\/dashboard\/finance\//],
+  ['requester', 'amina', /\/dashboard\/requester\//],
+  ['client', 'client', /\/dashboard\/client\//],
 ];
 
-for (const [role, username, password, target] of roleAccounts) {
+for (const [role, username, target] of roleAccounts) {
   test(`${role} dashboard is routed correctly and accessible`, async ({ page }) => {
-    await login(page, username, password);
+    await login(page, username);
     await expect(page).toHaveURL(target);
     await expect(page.locator('main')).toBeVisible();
     await expectAccessible(page, `${role} dashboard`);
@@ -86,7 +85,10 @@ test('skip link provides keyboard access to main content', async ({ page }) => {
 });
 
 test('non-superadmin cannot open the superadmin dashboard', async ({ page }) => {
-  await login(page, 'admin_ops', 'platform1234');
-  const response = await page.goto('/dashboard/home/');
+  await login(page, 'admin_ops');
+  // Firefox treats an intentionally empty 403 document as a network error.
+  // The context-bound request client carries the authenticated cookies and
+  // lets us assert the authorization contract directly across all engines.
+  const response = await page.request.get('/dashboard/home/');
   expect(response.status()).toBe(403);
 });
