@@ -34,6 +34,10 @@ plagenor_data_clean.json
 .coverage
 htmlcov/
 .venv/
+.venv_*/
+node_modules/
+playwright-report/
+test-results/
 
 # Never commit database snapshots, exports, restores, or backup material.
 *.sqlite3

@@ -256,7 +256,9 @@
     /* Text */
     --text: #0F172A;
     --text-secondary: #475569;
-    --text-muted: #94A3B8;
+    /* Slate 500 is the lightest neutral that remains readable at normal
+       text sizes on both white and the public #f8fafc surface (WCAG AA). */
+    --text-muted: #64748B;
 
     /* Sidebar */
     --sidebar-bg: #0F172A;
@@ -324,6 +326,7 @@ body {
 }
 a { color: var(--primary); text-decoration: none; transition: color var(--transition); }
 a:hover { color: var(--primary-dark); }
+main p a:not(.btn) { text-decoration: underline; text-underline-offset: 0.15em; }
 img { max-width: 100%; display: block; }
 
 /* Safety net against page-wide horizontal scroll on phones: a single
@@ -403,7 +406,7 @@ input, select, textarea { font-family: inherit; }
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--slate-500);
+    color: var(--slate-400);
 }
 .sidebar-nav a,
 .nav-item {
@@ -507,6 +510,8 @@ input, select, textarea { font-family: inherit; }
 .sidebar-actions {
     display: flex;
     gap: 8px;
+    --language-switcher-text: var(--slate-300);
+    --language-switcher-border: rgba(255,255,255,0.24);
 }
 .sidebar-actions button,
 .sidebar-actions a {
@@ -1623,7 +1628,7 @@ tbody tr:hover { background: var(--primary-50); }
     padding-top: 20px;
     text-align: center;
     font-size: 0.78rem;
-    color: var(--slate-500);
+    color: var(--slate-400);
 }
 
 /* ============================================================

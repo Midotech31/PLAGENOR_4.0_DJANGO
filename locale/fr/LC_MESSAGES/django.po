@@ -4016,3 +4016,18 @@ msgstr ""
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr ""
+
+msgid "Fermer la notification"
+msgstr "Fermer la notification"
+
+msgid "Ouvrir ou fermer le menu"
+msgstr "Ouvrir ou fermer le menu"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "Rechercher dans le tableau de bord"
+
+msgid "Ouvrir les notifications"
+msgstr "Ouvrir les notifications"
+
+msgid "Ouvrir le menu du profil"
+msgstr "Ouvrir le menu du profil"

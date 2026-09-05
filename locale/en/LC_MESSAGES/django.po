@@ -4365,3 +4365,18 @@ msgstr "No request found with this ID. Please check and try again."
 #~ msgstr ""
 #~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and "
 #~ "can convert your submission into a full account later."
+
+msgid "Fermer la notification"
+msgstr "Close notification"
+
+msgid "Ouvrir ou fermer le menu"
+msgstr "Toggle menu"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "Search the dashboard"
+
+msgid "Ouvrir les notifications"
+msgstr "Open notifications"
+
+msgid "Ouvrir le menu du profil"
+msgstr "Open profile menu"

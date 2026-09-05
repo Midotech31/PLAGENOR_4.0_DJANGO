@@ -69,7 +69,8 @@ class CustomLoginView(LoginView):
             self.request.session['pending_2fa_next'] = self.get_success_url()
             return redirect('accounts:two_factor_verify')
         response = super().form_valid(form)
-        if user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER'):
+        if (settings.PRIVILEGED_MFA_ENFORCEMENT
+                and user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER')):
             return redirect('accounts:two_factor_setup')
         return response
 

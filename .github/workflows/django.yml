@@ -155,3 +155,38 @@ jobs:
           done
           curl --fail --silent --show-error http://127.0.0.1:18000/readyz | grep -Eq '"status"[[:space:]]*:[[:space:]]*"ok"'
           test "$(docker inspect "$container_id" --format '{{.State.Running}}')" = "true"
+
+  browser-accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SECRET_KEY: e2e-only-secret-key
+      DEBUG: "true"
+      DJANGO_SETTINGS_MODULE: plagenor.settings_e2e
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install application and browser-test dependencies
+        run: |
+          pip install -r requirements.txt
+          npm ci
+          npm audit --audit-level=high
+          npx playwright install --with-deps chromium firefox
+      - name: Run browser E2E and WCAG 2.2 AA gates
+        run: npm run test:e2e
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-accessibility-evidence
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 30
