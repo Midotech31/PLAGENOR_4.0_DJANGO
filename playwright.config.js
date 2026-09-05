@@ -5,7 +5,9 @@ module.exports = defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : 1,
+  // The suite intentionally shares one isolated SQLite database and Django
+  // server. Serial execution avoids cross-browser lock/contention flakes.
+  workers: 1,
   reporter: [
     ['line'],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
