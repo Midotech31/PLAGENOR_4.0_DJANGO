@@ -38,7 +38,7 @@
                     {% endif %}
                 </div>
                 <span class="toast-text">{{ message }}</span>
-                <button class="toast-close" onclick="this.closest('.toast').remove()">&times;</button>
+                <button class="toast-close" onclick="this.closest('.toast').remove()" aria-label="{% trans 'Fermer la notification' %}">&times;</button>
             </div>
             {% endfor %}
             </div>

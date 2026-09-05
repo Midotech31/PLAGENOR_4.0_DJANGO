@@ -4274,3 +4274,18 @@ msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التح
 #~ msgstr ""
 #~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
 #~ "تحويل تقديمك إلى حساب كامل لاحقًا."
+
+msgid "Fermer la notification"
+msgstr "إغلاق الإشعار"
+
+msgid "Ouvrir ou fermer le menu"
+msgstr "فتح القائمة أو إغلاقها"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "البحث في لوحة التحكم"
+
+msgid "Ouvrir les notifications"
+msgstr "فتح الإشعارات"
+
+msgid "Ouvrir le menu du profil"
+msgstr "فتح قائمة الملف الشخصي"

@@ -42,7 +42,7 @@
     {% for message in messages %}
     <div class="toast toast-{{ message.tags }}" role="alert">
         <span class="toast-text">{{ message }}</span>
-        <button class="toast-close" onclick="this.closest('.toast').remove()">&times;</button>
+        <button class="toast-close" onclick="this.closest('.toast').remove()" aria-label="{% trans 'Fermer la notification' %}">&times;</button>
     </div>
     {% endfor %}
     </div>

@@ -39,7 +39,7 @@ from core.workflow import (
     _send_transition_emails, check_role_permission, force_transition, transition,
 )
 from core.uploads import validate_upload
-from core.assignment import member_is_eligible
+from core.assignment import compute_member_score, member_is_eligible
 
 
 class ManagementCommandCoverageTests(TestCase):
@@ -281,6 +281,11 @@ class AssignmentEligibilityTests(TestCase):
         self.technique.name = 'UNRELATED'
         self.technique.save(update_fields=['name'])
         self.assertFalse(member_is_eligible(self.profile, self.service))
+
+    def test_matching_member_score_rewards_skill_and_capacity(self):
+        score = compute_member_score(self.profile, self.service)
+        self.assertGreaterEqual(score, 80.0)
+        self.assertLessEqual(score, 100.0)
 
 
 # ---------------------------------------------------------------------------
@@ -938,6 +943,31 @@ class ManagementCommandTests(TestCase):
         before = User.objects.count()
         call_command('ensure_superuser')  # no env → skip, no error
         self.assertEqual(User.objects.count(), before)
+
+    def test_ensure_superuser_repairs_existing_account_and_rotates_credentials(self):
+        import os
+        from unittest.mock import patch
+        from django.core.management import call_command
+        from accounts.models import User
+
+        user = User.objects.create_user(
+            username='existing-admin', password='OldPass!42',
+            email='old@example.test', role='REQUESTER',
+        )
+        env = {
+            'DJANGO_SUPERUSER_USERNAME': user.username,
+            'DJANGO_SUPERUSER_PASSWORD': 'NewPass!84',
+            'DJANGO_SUPERUSER_EMAIL': 'new@example.test',
+        }
+        with patch.dict(os.environ, env, clear=False):
+            call_command('ensure_superuser', update_password=True)
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertEqual(user.role, 'SUPER_ADMIN')
+        self.assertEqual(user.email, 'new@example.test')
+        self.assertTrue(user.check_password('NewPass!84'))
 
     def test_seed_services_and_content_run(self):
         from django.core.management import call_command

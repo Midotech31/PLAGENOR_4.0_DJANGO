@@ -134,11 +134,20 @@ class TwoFactorTests(TestCase):
         user.save(update_fields=['totp_secret', 'totp_enabled'])
         return secret
 
+    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=True)
     def test_privileged_user_without_2fa_is_sent_to_enrollment(self):
         resp = self.client.post('/accounts/login/',
                                 {'username': 'tfa', 'password': 'RightPass!42'})
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(resp.url, '/accounts/2fa/setup/')
+
+    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=False)
+    def test_disabled_enforcement_does_not_force_enrollment(self):
+        resp = self.client.post('/accounts/login/',
+                                {'username': 'tfa', 'password': 'RightPass!42'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertNotEqual(resp.url, '/accounts/2fa/setup/')
+        self.assertIn('_auth_user_id', self.client.session)
 
     def test_2fa_user_is_redirected_to_verify_and_not_logged_in(self):
         self._enable_totp(self.user)
