@@ -106,6 +106,49 @@ class ManagementCommandCoverageTests(TestCase):
             with self.assertRaises(CommandError):
                 call_command('restore_db', input=str(backup), verbosity=0)
 
+    def test_email_delivery_verification_command(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        smtp_backend = 'django.core.mail.backends.smtp.EmailBackend'
+        configured = {
+            'EMAIL_BACKEND': smtp_backend,
+            'DEFAULT_FROM_EMAIL': 'plagenor@example.test',
+            'SMTP_SMOKE_RECIPIENT': 'operations@example.test',
+        }
+        with self.settings(**configured):
+            with patch(
+                'core.management.commands.verify_email_delivery.send_mail',
+                return_value=1,
+            ) as send:
+                call_command('verify_email_delivery', verbosity=0)
+            self.assertEqual(send.call_args.kwargs['fail_silently'], False)
+            self.assertEqual(
+                send.call_args.kwargs['recipient_list'],
+                ['operations@example.test'],
+            )
+
+            with patch(
+                'core.management.commands.verify_email_delivery.send_mail',
+                return_value=0,
+            ):
+                with self.assertRaisesRegex(CommandError, 'expected 1'):
+                    call_command('verify_email_delivery', verbosity=0)
+
+            with patch(
+                'core.management.commands.verify_email_delivery.send_mail',
+                side_effect=OSError('connection refused'),
+            ):
+                with self.assertRaisesRegex(CommandError, 'verification failed'):
+                    call_command('verify_email_delivery', verbosity=0)
+
+        with self.settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            with self.assertRaisesRegex(CommandError, 'backend is not active'):
+                call_command('verify_email_delivery', verbosity=0)
+        with self.settings(EMAIL_BACKEND=smtp_backend, SMTP_SMOKE_RECIPIENT=''):
+            with self.assertRaisesRegex(CommandError, 'must be configured'):
+                call_command('verify_email_delivery', verbosity=0)
+
     def test_programmatic_template_builders_create_valid_docx_files(self):
         from django.core.management import call_command
         from pathlib import Path
