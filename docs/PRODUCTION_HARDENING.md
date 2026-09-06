@@ -48,9 +48,13 @@ Before a production deploy:
 
 1. Confirm CI passes on SQLite and PostgreSQL.
 2. Confirm `/healthz` and `/readyz` on the current release.
-3. Create and verify an encrypted database backup.
-4. Deploy the reviewed commit from protected `main`.
-5. Smoke-test login, MFA, one request per channel, authorized document access,
+3. Set `SMTP_SMOKE_RECIPIENT` to a monitored mailbox and run
+   `python manage.py verify_email_delivery` from a one-off production shell.
+   Record the command result and the received-message timestamp; the command
+   never includes user or request data.
+4. Create and verify an encrypted database backup.
+5. Deploy the reviewed commit from protected `main`.
+6. Smoke-test login, MFA, one request per channel, authorized document access,
    payment-proof review, and the three locales.
 
 If the scheduled `Database Backup` workflow fails at **Require backup
@@ -68,8 +72,10 @@ production cutover.
 
 The `Database Backup` GitHub Action requires repository secrets
 `DATABASE_URL` and `BACKUP_AGE_RECIPIENT`. It creates a PostgreSQL custom dump,
-validates its table of contents, encrypts it with `age`, deletes the plaintext
-temporary file, and uploads only `*.dump.age` with a 90-day retention.
+restores it into an isolated PostgreSQL 16 service, validates the Django
+migration ledger, encrypts the dump with `age`, deletes the plaintext temporary
+file, and uploads only the ciphertext plus its SHA-256 manifest with a 90-day
+retention.
 
 Keep the matching age private key outside GitHub and Render in an approved
 password manager, with a second controlled recovery copy. Quarterly restore

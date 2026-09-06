@@ -22,6 +22,18 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      restore-target:
+        image: postgres:16
+        env:
+          POSTGRES_USER: restore_operator
+          POSTGRES_PASSWORD: restore-only-password
+          POSTGRES_DB: plagenor_restore
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U restore_operator -d plagenor_restore"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Require backup secrets
         env:
@@ -51,15 +63,32 @@ jobs:
           /usr/lib/postgresql/16/bin/pg_dump "$DATABASE_URL" \
             --format=custom --no-owner --no-privileges --file="$plain"
           /usr/lib/postgresql/16/bin/pg_restore --list "$plain" >/dev/null
+
+          # Prove that the production dump is actually restorable. This target
+          # is an isolated, disposable PostgreSQL service inside the CI run.
+          export PGPASSWORD=restore-only-password
+          /usr/lib/postgresql/16/bin/pg_restore \
+            --host=127.0.0.1 --port=55432 --username=restore_operator \
+            --dbname=plagenor_restore --no-owner --no-privileges \
+            --exit-on-error "$plain"
+          /usr/lib/postgresql/16/bin/psql \
+            --host=127.0.0.1 --port=55432 --username=restore_operator \
+            --dbname=plagenor_restore --no-psqlrc --set=ON_ERROR_STOP=1 \
+            --command='SELECT count(*) FROM django_migrations;' >/dev/null
+
           age --recipient "$BACKUP_AGE_RECIPIENT" \
             --output "plagenor-backup-$ts.dump.age" "$plain"
           test -s "plagenor-backup-$ts.dump.age"
+          sha256sum "plagenor-backup-$ts.dump.age" \
+            > "plagenor-backup-$ts.dump.age.sha256"
           rm -f "$plain"
 
       - name: Upload backup artifact
         uses: actions/upload-artifact@v7
         with:
           name: db-backup
-          path: plagenor-backup-*.dump.age
+          path: |
+            plagenor-backup-*.dump.age
+            plagenor-backup-*.dump.age.sha256
           if-no-files-found: error
           retention-days: 90
