@@ -43,7 +43,7 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
 # PAYMENT_PROOF_UPLOADED → PAYMENT_CONFIRMED →
 # REPORT_UPLOADED → REPORT_VALIDATED → SENT_TO_CLIENT → COMPLETED → ARCHIVED
 # REJECTED possible at any validation step
-# NOTE: Purchase Order (Bon de commande) is mandatory per Algerian commercial code
+# Purchase orders are required by the platform commercial workflow.
 # NOTE: INVOICE_GENERATED is an optional step — admin may issue the invoice after
 #       the purchase order, or assign directly. Payment is confirmed later.
 # NOTE: Payment must be received BEFORE report delivery

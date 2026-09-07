@@ -2,13 +2,17 @@ from notifications.models import Notification
 
 
 def notifications(request):
+    from core.models import FinancialVisibility
+    estimates_visible = FinancialVisibility.estimates_visible()
+
     if request.user.is_authenticated:
         unread = Notification.objects.filter(user=request.user, read=False)
         return {
+            'estimates_visible': estimates_visible,
             'unread_count': unread.count(),
             'recent_notifications': unread.order_by('-created_at')[:10],
         }
-    return {}
+    return {'estimates_visible': estimates_visible}
 
 
 def announcements(request):

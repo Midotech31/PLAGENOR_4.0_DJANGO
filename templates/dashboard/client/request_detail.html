@@ -117,7 +117,7 @@
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
             <div class="card-body">
-                {% if req.quote_amount %}
+                {% if req.client_quote_visible %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Montant du devis" %}</span><strong>{{ req.quote_amount }} DA</strong></div>
                 {% endif %}
                 {% if req.budget_amount %}

@@ -30,3 +30,15 @@ def sync_load_on_request_save(sender, instance, **kwargs):
 def sync_load_on_request_delete(sender, instance, **kwargs):
     if instance.assigned_to_id:
         recalculate_member_load(instance.assigned_to_id)
+
+
+from core.models import Service, ServicePricing, ServiceFormField, FinancialVisibility
+
+
+@receiver(post_save, sender=Service)
+@receiver(post_save, sender=ServicePricing)
+@receiver(post_save, sender=ServiceFormField)
+@receiver(post_delete, sender=ServicePricing)
+@receiver(post_delete, sender=ServiceFormField)
+def suspend_estimates_after_tariff_change(sender, **kwargs):
+    FinancialVisibility.objects.filter(pk=1, show_estimates=True).update(show_estimates=False)

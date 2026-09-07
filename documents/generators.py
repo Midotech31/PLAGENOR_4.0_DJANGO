@@ -1131,9 +1131,21 @@ def generate_quote(request_obj) -> str:
 
     # Quote number — sequential, atomic.
     from core.sequences import next_value
-    year = datetime.now().year
-    seq = next_value(f'GENOCLAB-QUOTE-{year}')
-    quote_number = f"GENOCLAB-DEV-{year}-{seq:04d}"
+    from django.db import transaction
+    from django.utils import timezone
+    from core.models import Request
+    with transaction.atomic():
+        locked = Request.objects.select_for_update().get(pk=request_obj.pk)
+        if not locked.quote_number:
+            year = timezone.localdate().year
+            prefix = 'OHB' if locked.billing_channel == 'OHB' else 'GENOCLAB'
+            seq = next_value(f'{prefix}-QUOTE-{year}')
+            locked.quote_number = f'{prefix}-DEV-{year}-{seq:04d}'
+            locked.quote_date = timezone.localdate()
+            locked.save(update_fields=['quote_number', 'quote_date'])
+        request_obj.quote_number = locked.quote_number
+        request_obj.quote_date = locked.quote_date
+    quote_number = request_obj.quote_number
     field_map['QUOTE_NUMBER'] = quote_number
     field_map['INVOICE_NUMBER'] = quote_number  # legacy alias
 
@@ -1186,13 +1198,16 @@ def _build_genoclab_doc(
         if phone: client_lines.append(f"Tél : {phone}")
         if email: client_lines.append(email)
 
+    from core.commercial import document_identity
+    identity = (request_obj.quote_detail or {}).get('identity') or document_identity(request_obj)
+    client_name, client_lines = identity['client_name'], identity['client_lines']
     add_genoclab_header(
         doc,
         title=cms_get(title_key),
         doc_number=doc_number,
-        doc_date=datetime.now().strftime('%d/%m/%Y'),
+        doc_date=(request_obj.quote_date or request_obj.created_at.date()).strftime('%d/%m/%Y'),
         client_name=client_name,
-        client_lines=client_lines,
+        client_lines=client_lines, identity=identity,
     )
 
     # Add a small spacer paragraph.
@@ -1214,7 +1229,7 @@ def _build_genoclab_doc(
                        'total': float(report_fees)})
 
     grand_total = add_prestation_table(doc, items + extras, vat_rate=vat_rate)
-    add_genoclab_footer(doc, total_amount=grand_total)
+    add_genoclab_footer(doc, total_amount=grand_total, identity=identity)
     return doc
 
 
@@ -1557,13 +1572,19 @@ def generate_invoice_document(invoice_obj) -> str:
     elif invoice_obj.request and invoice_obj.request.requester:
         client_name = invoice_obj.request.requester.get_full_name() or ''
 
+    identity = invoice_obj.document_snapshot or None
+    if identity:
+        client_name, client_lines = identity['client_name'], identity['client_lines']
+    elif invoice_obj.request and not client:
+        client_name = invoice_obj.request.guest_name
+        client_lines = [invoice_obj.request.guest_email, invoice_obj.request.guest_phone]
     add_genoclab_header(
         doc,
         title=cms_get('genoclab_invoice_title'),
         doc_number=invoice_obj.invoice_number,
         doc_date=invoice_obj.created_at.strftime('%d/%m/%Y'),
         client_name=client_name,
-        client_lines=client_lines,
+        client_lines=client_lines, identity=identity,
     )
     doc.add_paragraph()
 
@@ -1577,8 +1598,8 @@ def generate_invoice_document(invoice_obj) -> str:
             'total': it.get('total'),
         })
 
-    grand_total = add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate or 0.19))
-    add_genoclab_footer(doc, total_amount=grand_total)
+    grand_total = add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate))
+    add_genoclab_footer(doc, total_amount=grand_total, identity=identity)
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)

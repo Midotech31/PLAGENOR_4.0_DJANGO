@@ -48,6 +48,8 @@ def _serialize(tier: ServicePricing) -> dict:
         'max_amount': float(tier.max_amount) if tier.max_amount is not None else None,
         'priority': tier.priority,
         'is_active': tier.is_active,
+        'valid_from': tier.valid_from.isoformat() if tier.valid_from else '',
+        'valid_until': tier.valid_until.isoformat() if tier.valid_until else '',
     }
 
 
@@ -117,6 +119,16 @@ def _apply_form_to_tier(tier: ServicePricing, post, user) -> tuple[ServicePricin
     if min_amount is not None and max_amount is not None and max_amount < min_amount:
         return None, 'Le montant maximum doit être supérieur ou égal au montant minimum.'
 
+    from datetime import date
+    try:
+        valid_from = date.fromisoformat(post['valid_from']) if post.get('valid_from') else None
+        valid_until = date.fromisoformat(post['valid_until']) if post.get('valid_until') else None
+    except (ValueError, TypeError):
+        return None, 'Période tarifaire invalide.'
+    if valid_from and valid_until and valid_from > valid_until:
+        return None, 'La fin de validité précède le début.'
+    tier.valid_from = valid_from
+    tier.valid_until = valid_until
     tier.name = name
     tier.pricing_type = ptype
     tier.channel = channel

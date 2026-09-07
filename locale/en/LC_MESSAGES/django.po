@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-01 19:18+0100\n"
+"POT-Creation-Date: 2026-09-07 10:20+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: English\n"
@@ -662,6 +662,9 @@ msgstr "Verify"
 msgid "Aller au contenu principal"
 msgstr "Skip to main content"
 
+msgid "Fermer la notification"
+msgstr "Close notification"
+
 msgid "Navigation principale"
 msgstr "Main navigation"
 
@@ -697,6 +700,22 @@ msgstr "Request tracking"
 
 msgid "Confidentialité"
 msgstr "Privacy"
+
+msgid "Visibilité des estimations financières"
+msgstr "Financial estimate visibility"
+
+msgid "Afficher les estimations financières au client"
+msgstr "Show financial estimates to the client"
+
+msgid ""
+"Les devis émis restent accessibles. Les montants internes sont conservés."
+msgstr ""
+
+msgid "Fin de validité"
+msgstr "Valid until"
+
+msgid "Enregistrer"
+msgstr "Save"
 
 msgid "Administration"
 msgstr "Administration"
@@ -1227,6 +1246,12 @@ msgstr "Back"
 
 msgid "Détail demande"
 msgstr "Request details"
+
+msgid "Affectation administrative interne"
+msgstr "Internal administrative assignment"
+
+msgid "Opérations Hors Budget"
+msgstr "Off-budget operations"
 
 msgid "Créée le"
 msgstr "Created on"
@@ -2226,9 +2251,6 @@ msgstr "New IBTIKAR balance (DA)"
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
 msgstr "Annual cap set by DGRSDT: %(cap)s DA."
 
-msgid "Enregistrer"
-msgstr "Save"
-
 msgid "Solde IBTIKAR non déclaré"
 msgstr "IBTIKAR balance not declared"
 
@@ -3179,6 +3201,9 @@ msgstr "flat rate, per sample"
 msgid "Priorité"
 msgstr "Priority"
 
+msgid "Début de validité"
+msgstr "Valid from"
+
 msgid "Conditions avancées (quantité, seuils)"
 msgstr "Advanced conditions (quantity, thresholds)"
 
@@ -3656,11 +3681,23 @@ msgstr "Validation & Assignment"
 msgid "Déconnexion"
 msgstr "Sign out"
 
+msgid "Ouvrir ou fermer le menu"
+msgstr "Toggle menu"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "Search the dashboard"
+
+msgid "Ouvrir les notifications"
+msgstr "Open notifications"
+
 msgid "non lues"
 msgstr "unread"
 
 msgid "Aucune notification"
 msgstr "No notifications"
+
+msgid "Ouvrir le menu du profil"
+msgstr "Open profile menu"
 
 msgid "Suivi du workflow"
 msgstr "Workflow tracking"
@@ -4365,18 +4402,3 @@ msgstr "No request found with this ID. Please check and try again."
 #~ msgstr ""
 #~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and "
 #~ "can convert your submission into a full account later."
-
-msgid "Fermer la notification"
-msgstr "Close notification"
-
-msgid "Ouvrir ou fermer le menu"
-msgstr "Toggle menu"
-
-msgid "Rechercher dans le tableau de bord"
-msgstr "Search the dashboard"
-
-msgid "Ouvrir les notifications"
-msgstr "Open notifications"
-
-msgid "Ouvrir le menu du profil"
-msgstr "Open profile menu"

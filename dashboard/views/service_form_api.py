@@ -144,6 +144,26 @@ def service_form_fragment(request, service_code):
         sample_table['columns'] = merged
         sample_table['column_names'] = [c.get('name') for c in merged if c.get('name')]
 
+    from core.models import FinancialVisibility
+    from copy import deepcopy
+    internal = getattr(getattr(request, 'user', None), 'role', '') in (
+        'SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER')
+    if not internal and not FinancialVisibility.estimates_visible():
+        pricing = {}
+        parameters, db_fields, sample_table = deepcopy((parameters, db_fields, sample_table))
+        def redact(value):
+            if isinstance(value, dict):
+                for key in list(value):
+                    if key in ('pricing_info', 'option_pricing', 'pricing', 'affects_pricing', 'price_modifier_value'):
+                        value.pop(key)
+                    else:
+                        redact(value[key])
+            elif isinstance(value, list):
+                for item in value:
+                    redact(item)
+        redact(parameters)
+        redact(db_fields)
+        redact(sample_table)
     html = render_to_string('includes/service_form_fields.html', {
         'parameters': parameters,
         'sample_table': sample_table,

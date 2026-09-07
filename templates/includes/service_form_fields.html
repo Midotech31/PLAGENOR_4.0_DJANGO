@@ -158,6 +158,7 @@
 </div>
 {% endif %}
 
+{% if pricing %}
 <div id="cost-estimate-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px;"
      data-pricing='{{ pricing_json }}'>
     <div style="font-weight:600; font-size:0.85rem;">{% trans "Coût estimé" %}: <span id="cost-estimate">—</span></div>
@@ -168,6 +169,7 @@
     </div>
 </div>
 
+{% endif %}
 <script>
 (function() {
     // Read pricing data from DOM - fresh read every time
@@ -191,7 +193,6 @@
         
         try {
             var data = JSON.parse(pricingAttr);
-            console.log('Parsed pricing data:', data);
             return data;
         } catch(e) {
             console.error('Failed to parse pricing data:', e, 'Raw:', pricingAttr);
@@ -237,7 +238,6 @@
     };
 
     window.updateCostEstimate = function() {
-        console.log('updateCostEstimate called');
         
         var costEl = document.getElementById('cost-estimate');
         var summaryEl = document.getElementById('pricing-modifiers-summary');
@@ -249,24 +249,19 @@
         }
 
         var pricingData = getPricingData();
-        console.log('Pricing data:', pricingData);
 
         var baseCost = 0;
         var surcharges = [];
         var multipliers = [];
 
-        console.log('Calculating cost, pricingData:', JSON.stringify(pricingData));
 
         // Handle pricing.configs format (from ServicePricing DB)
         if (pricingData.configs && pricingData.configs.length > 0) {
-            console.log('Using pricing.configs format with', pricingData.configs.length, 'configs');
             pricingData.configs.forEach(function(cfg) {
-                console.log('Processing config:', cfg);
                 // BASE or PER_SAMPLE both set the base per-sample cost
                 if (cfg.pricing_type === 'BASE' || cfg.pricing_type === 'PER_SAMPLE') {
                     if (cfg.pricing_type === 'BASE' || baseCost === 0) {
                         baseCost = parseFloat(cfg.amount) || 0;
-                        console.log('Base cost from', cfg.pricing_type, ':', baseCost);
                     }
                 } else if (cfg.pricing_type === 'URGENCY_SURCHARGE') {
                     surcharges.push(parseFloat(cfg.amount) || 0);
@@ -278,7 +273,6 @@
         
         // Fallback to base_price if no configs found
         if (baseCost === 0 && pricingData.base_price) {
-            console.log('Using base_price format');
             var bp = pricingData.base_price;
             if (typeof bp === 'number') {
                 baseCost = bp;
@@ -289,14 +283,12 @@
         
         // Fallback to unit_price for per_sample_fixed model
         if (baseCost === 0 && pricingData.unit_price) {
-            console.log('Using unit_price:', pricingData.unit_price);
             baseCost = parseFloat(pricingData.unit_price) || 0;
         }
         
         if (baseCost === 0) {
             console.error('WARNING: Base cost is 0 - pricing may not be configured correctly');
         } else {
-            console.log('Final base cost:', baseCost);
         }
 
         // Process pricing field modifiers from field-level pricing
@@ -335,7 +327,6 @@
                     if (multValue > 0 && multValue !== 1) {
                         // This is a multiplier (e.g., Duplicata ×2, Triplicata ×3)
                         // Apply multiplier to base cost
-                        console.log('Option pricing multiplier for', fieldName, ':', selectedValue, '×', multValue);
                         multipliers.push(multValue);
                         isActive = true;
                     } else if (multValue === 1) {
@@ -346,7 +337,6 @@
                     // Legacy: option price treated as surcharge/addition
                     effectiveValue = optionPrice;
                     isActive = true;
-                    console.log('Per-option pricing for', fieldName, ':', optionPrice);
                 } else if (input.value !== '') {
                     isActive = true;
                 }
@@ -358,7 +348,6 @@
             if (input.type === 'checkbox' && isActive && pricingType === 'multiply' && pricingValue > 0) {
                 multipliers.push(pricingValue);
             } else if (isActive && effectiveValue > 0) {
-                console.log('Applying modifier:', fieldName, pricingType, effectiveValue);
                 if (pricingType === 'multiply') {
                     multipliers.push(effectiveValue);
                 } else if (pricingType === 'set') {
@@ -371,20 +360,16 @@
         
         var sampleRows = document.querySelectorAll('#sample-table-body tr');
         var sampleCount = sampleRows.length || 1;
-        console.log('Sample count:', sampleCount);
         
         var total = baseCost * sampleCount;
-        console.log('Base total:', total);
         
         surcharges.forEach(function(val) {
             total += val * sampleCount;
         });
-        console.log('After surcharges:', total, surcharges);
         
         multipliers.forEach(function(mult) {
             total = total * mult;
         });
-        console.log('After multipliers:', total, multipliers);
         
         costEl.textContent = total.toLocaleString('fr-FR') + ' DA';
         

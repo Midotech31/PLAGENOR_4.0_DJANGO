@@ -15,7 +15,7 @@ The defaults match the model file supplied by the owner.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -164,7 +164,7 @@ def amount_in_words_fr(amount) -> str:
     are rendered as a fraction so the legal phrasing stays unambiguous.
     """
     try:
-        amt = float(amount)
+        amt = Decimal(str(amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     except (TypeError, ValueError):
         return ''
     if amt < 0:
@@ -255,13 +255,15 @@ def _shade_cell(cell, hex_color: str) -> None:
 
 def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
                         doc_date: str, client_name: str = '',
-                        client_lines: Optional[Iterable[str]] = None) -> None:
+                        client_lines: Optional[Iterable[str]] = None, identity=None) -> None:
     """Write the GENOCLAB document header: logo top-left, big title,
     then a two-column block — issuer (CMS-editable) on the left, client
     coordinates on the right, with the date / document number below.
     """
+    get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
+    ohb = bool(identity and identity.get('billing_channel') == 'OHB')
     # Logo. Sized at ~6 cm wide, leaves comfortable whitespace next to it.
-    if _GENOCLAB_LOGO.exists():
+    if _GENOCLAB_LOGO.exists() and not ohb:
         p = doc.add_paragraph()
         run = p.add_run()
         run.add_picture(str(_GENOCLAB_LOGO), width=Cm(7))
@@ -288,14 +290,14 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
 
     # Issuer block (left)
     _multi_para(issuer_cell, [
-        (cms_get('genoclab_issuer_name'),     {'bold': True, 'size': SIZE_BODY + 1}),
-        (cms_get('genoclab_issuer_address1'), {}),
-        (cms_get('genoclab_issuer_address2'), {}),
-        (cms_get('genoclab_issuer_address3'), {}),
-        (cms_get('genoclab_issuer_treasury'), {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (cms_get('genoclab_issuer_nif'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (cms_get('genoclab_issuer_ccp'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (cms_get('genoclab_issuer_phone'),    {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+        (get_value('genoclab_issuer_name'),     {'bold': True, 'size': SIZE_BODY + 1}),
+        (get_value('genoclab_issuer_address1'), {}),
+        (get_value('genoclab_issuer_address2'), {}),
+        (get_value('genoclab_issuer_address3'), {}),
+        (get_value('genoclab_issuer_treasury'), {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+        (get_value('genoclab_issuer_nif'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+        (get_value('genoclab_issuer_ccp'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+        (get_value('genoclab_issuer_phone'),    {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
     ])
 
     # Client block (right)
@@ -392,8 +394,10 @@ def add_prestation_table(doc: DocumentType, line_items,
         _set_cell_text(cells[3], _money_int(total), align=WD_ALIGN_PARAGRAPH.RIGHT)
 
     # Totals (subtotal HT, VAT, total TTC) — right-aligned, label in col 0-2 merged.
-    vat_amount = float(subtotal_ht) * vat_rate
-    total_ttc = float(subtotal_ht) + vat_amount
+    from core.financial import compute_invoice_totals
+    totals = compute_invoice_totals([{'total': subtotal_ht}], vat_rate=vat_rate)
+    vat_amount = totals['vat_amount']
+    total_ttc = totals['total_ttc']
 
     def _total_row(row_idx, label, value, *, big=False):
         # Merge first three cells under the label so the layout reads
@@ -447,7 +451,7 @@ def _apply_thin_borders(table) -> None:
                 el.set(qn('w:color'), 'E2E8F0')
 
 
-def add_genoclab_footer(doc: DocumentType, *, total_amount=None) -> None:
+def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None) -> None:
     """Legal & office block at the bottom of the document.
 
     Renders three CMS-editable blocks:
@@ -463,7 +467,10 @@ def add_genoclab_footer(doc: DocumentType, *, total_amount=None) -> None:
     """
     doc.add_paragraph()  # spacer
 
-    legal_text = cms_get('genoclab_footer_legal')
+    get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
+    if identity and identity.get('billing_channel') == 'OHB':
+        doc.add_paragraph('TVA non applicable — établissement non assujetti.')
+    legal_text = get_value('genoclab_footer_legal')
     if total_amount is not None:
         words = amount_in_words_fr(total_amount).strip()
         figures = _money_int(total_amount)
@@ -498,13 +505,13 @@ def add_genoclab_footer(doc: DocumentType, *, total_amount=None) -> None:
     doc.add_paragraph()  # spacer
 
     office = doc.add_paragraph()
-    run = office.add_run(cms_get('genoclab_footer_office'))
+    run = office.add_run(get_value('genoclab_footer_office'))
     run.font.name = BRAND_FONT
     run.font.size = Pt(SIZE_CAPTION + 1)
     run.font.color.rgb = BRAND_MUTED
 
     contact = doc.add_paragraph()
-    run = contact.add_run(cms_get('genoclab_footer_contact'))
+    run = contact.add_run(get_value('genoclab_footer_contact'))
     run.font.name = BRAND_FONT
     run.font.size = Pt(SIZE_CAPTION + 1)
     run.font.color.rgb = BRAND_MUTED

@@ -4,6 +4,18 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
+class FinancialVisibility(models.Model):
+    show_estimates = models.BooleanField(default=False, verbose_name='Afficher les estimations financières au client')
+    valid_until = models.DateField(null=True, blank=True, verbose_name='Validité de publication des estimations')
+
+    @classmethod
+    def estimates_visible(cls):
+        from django.utils import timezone
+        policy = cls.objects.filter(pk=1).first()
+        return bool(policy and policy.show_estimates and policy.valid_until
+                    and policy.valid_until >= timezone.localdate())
+
+
 class RateLimitBucket(models.Model):
     """Shared, privacy-preserving counter for public endpoint throttles."""
 
@@ -162,7 +174,8 @@ class ServicePricing(models.Model):
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
         ('GENOCLAB', 'GENOCLAB'),
-        ('BOTH', 'Les deux'),
+        ('OHB', 'OHB'),
+        ('BOTH', 'Tous les canaux'),
     ]
     
     service = models.ForeignKey(
@@ -210,6 +223,8 @@ class ServicePricing(models.Model):
         blank=True,
         verbose_name='Montant maximum'
     )
+    valid_from = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True, verbose_name='Actif')
     priority = models.IntegerField(default=0, verbose_name='Priorité')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -268,6 +283,11 @@ class ServicePricing(models.Model):
 
 
 class Request(models.Model):
+    @property
+    def client_quote_visible(self):
+        return bool(self.quote_detail and self.status not in (
+            'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_REJECTED_BY_CLIENT', 'REJECTED'))
+
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
         ('GENOCLAB', 'GENOCLAB'),
@@ -319,6 +339,10 @@ class Request(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(default='', blank=True)
     channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES)
+    billing_channel = models.CharField(max_length=10, default='GENOCLAB',
+        choices=[('GENOCLAB', 'GenoClab'), ('OHB', 'OHB — Opérations Hors Budget')])
+    quote_number = models.CharField(max_length=50, blank=True, default='')
+    quote_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='DRAFT')
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='Normal')
 
@@ -505,6 +529,7 @@ class Invoice(models.Model):
     invoice_number = models.CharField(max_length=50, unique=True)
     request = models.ForeignKey(Request, on_delete=models.SET_NULL, null=True, blank=True)
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    document_snapshot = models.JSONField(default=dict, blank=True)
     line_items = models.JSONField(default=list)
     subtotal_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=0.19)

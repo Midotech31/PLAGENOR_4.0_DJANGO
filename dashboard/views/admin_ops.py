@@ -737,6 +737,8 @@ def adjust_cost(request, pk):
 
     with transaction.atomic():
         req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+        if req.channel == 'GENOCLAB' and req.status not in ('REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_REJECTED_BY_CLIENT'):
+            return HttpResponseForbidden('Le devis émis est verrouillé.')
         old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
         req.admin_validated_price = price
         req.save(update_fields=['admin_validated_price'])
@@ -764,9 +766,13 @@ def adjust_cost(request, pk):
 
 
 @admin_required
+@transaction.atomic
 def prepare_quote(request, pk):
-    """Admin prepares/edits a detailed quote for a GENOCLAB request."""
-    req = get_object_or_404(Request, pk=pk)
+    """Prepare a commercial quote before publication."""
+    req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+    if req.channel != 'GENOCLAB' or req.status not in (
+            'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_REJECTED_BY_CLIENT'):
+        return HttpResponseForbidden('Le devis émis est verrouillé.')
 
     if request.method == 'POST':
         try:
@@ -813,7 +819,7 @@ def prepare_quote(request, pk):
             if vat_percent > 100:
                 raise FinancialValidationError(
                     'Le taux de TVA doit être compris entre 0 et 100.')
-            vat_rate = vat_percent / 100
+            vat_rate = 0 if req.billing_channel == 'OHB' else vat_percent / 100
             totals = compute_invoice_totals(
                 items, admin_fees, report_fees, vat_rate)
         except FinancialValidationError as exc:
@@ -823,7 +829,8 @@ def prepare_quote(request, pk):
         notes = request.POST.get('quote_notes', '')
         total_ttc = totals['total_ttc']
 
-        quote_detail = {'items': items, 'notes': notes, **totals}
+        from core.commercial import document_identity
+        quote_detail = {'items': items, 'notes': notes, 'identity': document_identity(req), **totals}
 
         req.quote_detail = quote_detail
         req.quote_amount = total_ttc
@@ -833,7 +840,7 @@ def prepare_quote(request, pk):
         if action == 'send':
             # Transition to QUOTE_DRAFT first (if still REQUEST_CREATED), then to QUOTE_SENT
             try:
-                if req.status == 'REQUEST_CREATED':
+                if req.status in ('REQUEST_CREATED', 'QUOTE_REJECTED_BY_CLIENT'):
                     transition(req, 'QUOTE_DRAFT', request.user, notes='Devis préparé')
                 if req.status == 'QUOTE_DRAFT':
                     transition(req, 'QUOTE_SENT', request.user, notes='Devis envoyé au client')
@@ -842,7 +849,7 @@ def prepare_quote(request, pk):
                 messages.error(request, str(e))
         else:
             # Just save as draft
-            if req.status == 'REQUEST_CREATED':
+            if req.status in ('REQUEST_CREATED', 'QUOTE_REJECTED_BY_CLIENT'):
                 try:
                     transition(req, 'QUOTE_DRAFT', request.user, notes='Devis en brouillon')
                 except (InvalidTransitionError, AuthorizationError, ValueError) as e:
@@ -868,10 +875,11 @@ def prepare_quote(request, pk):
 
 def _compute_auto_estimate(req, yaml_def):
     """Compute auto price estimate from YAML pricing + sample table."""
-    if not yaml_def:
+    if not req.service:
         return None
     try:
-        result = calculate_price(yaml_def, req.service_params or {}, req.sample_table or [])
+        from core.pricing import resolve_cost
+        result = resolve_cost(req.service, req.billing_channel, req.sample_table or [], req.service_params or {}, req.urgency)
         return result
     except Exception:
         return None
@@ -926,7 +934,7 @@ def generate_invoice(request, pk):
                     canonical_items,
                     quote.get('admin_fees', 0),
                     quote.get('report_fees', 0),
-                    quote.get('vat_rate', 0.19),
+                    0 if req.billing_channel == 'OHB' else quote.get('vat_rate', 0.19),
                 )
                 line_items = [
                     {
@@ -953,17 +961,19 @@ def generate_invoice(request, pk):
                 from datetime import datetime
                 from core.sequences import next_display_id
                 year = datetime.now().year
+                prefix = 'OHB-INV' if req.billing_channel == 'OHB' else 'GCL-INV'
                 invoice_number = next_display_id(
-                    'GCL-INV', year,
+                    prefix, year,
                     initial_value_fn=lambda: Invoice.objects.filter(
                         created_at__year=year,
-                        invoice_number__startswith=f'GCL-INV-{year}-',
+                        invoice_number__startswith=f'{prefix}-{year}-',
                     ).count(),
                 )
                 Invoice.objects.create(
                     invoice_number=invoice_number,
                     request=req,
                     client=req.requester,
+                    document_snapshot=quote.get('identity', {}),
                     line_items=line_items,
                     subtotal_ht=totals['subtotal_before_tax'],
                     vat_rate=totals['vat_rate'],
@@ -1016,3 +1026,43 @@ def confirm_payment(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:admin_request_detail', pk=req.pk)
+
+
+@admin_required
+@transaction.atomic
+def assign_billing(request, pk):
+    from core.commercial import assign_billing_channel
+    from django.http import HttpResponseNotAllowed
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        assign_billing_channel(pk, request.POST.get('billing_channel'), request.user)
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    return redirect('dashboard:admin_request_detail', pk=pk)
+
+
+@admin_required
+def financial_visibility(request):
+    from core.models import FinancialVisibility
+    from datetime import date
+    policy, _ = FinancialVisibility.objects.get_or_create(pk=1)
+    if request.method == 'POST':
+        try:
+            until = date.fromisoformat(request.POST.get('valid_until', ''))
+            if until < timezone.localdate():
+                raise ValueError
+        except ValueError:
+            until = None
+        enabled = request.POST.get('show_estimates') == 'on'
+        if enabled and until is None:
+            messages.error(request, 'Une date de validité future est obligatoire.')
+        else:
+            policy.show_estimates = enabled
+            policy.valid_until = until
+            policy.save()
+            from core.audit import log_action
+            log_action(action='FINANCIAL_VISIBILITY', entity_type='POLICY', entity_id='1',
+                       actor=request.user, details={'show_estimates':enabled, 'valid_until':str(until)})
+            return redirect('dashboard:financial_visibility')
+    return render(request, 'dashboard/admin_ops/financial_visibility.html', {'policy':policy})
