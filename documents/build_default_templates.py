@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from django.conf import settings
 
 from docx import Document
 from docx.document import Document as DocumentType
@@ -28,7 +29,7 @@ from docx.shared import Pt
 from documents.docx_helpers import apply_house_style, ensure_institutional_header
 
 
-TEMPLATE_DIR = Path(__file__).resolve().parent / 'docx_templates'
+TEMPLATE_DIR = Path(settings.BASE_DIR) / 'documents' / 'docx_templates'
 
 
 def _backup(path: Path) -> None:

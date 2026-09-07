@@ -217,7 +217,6 @@ class _LibreOfficeDaemon:
                     self.shutdown()
                     if attempt == 2:
                         raise _UnoConversionError(str(exc))
-            raise _UnoConversionError("unreachable")
 
 
 _daemon: Optional[_LibreOfficeDaemon] = None

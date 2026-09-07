@@ -1,0 +1,11 @@
+# Couverture applicative complète — 7 septembre 2026
+
+La suite complète locale réussit : **424 tests, 8 908 lignes exécutables couvertes sur 8 908, 100,00 %, aucune ligne manquante**, sur 91 fichiers mesurés. Mesure indépendante avec `coverage run manage.py test --noinput`, puis `coverage report`. Le seuil de `.coveragerc` et du workflow Django CI est porté de 90 à **100**. La CI distante doit confirmer la livraison avant fusion.
+
+64 tests supplémentaires vérifient les contrats des modèles et services, tarifs et périodes de validité, droits de téléchargement, transitions et erreurs, comptes et MFA, notifications, caches de documents, importations DOCX, devis/factures archivés, styles, exports Excel, convertisseur PDF, commandes de maintenance et limites de saisie des invités. Les dépendances externes en panne sont simulées ; les modèles, transactions, fichiers temporaires et rendus DOCX/Excel utilisent leurs implémentations réelles.
+
+Corrections : conversion des montants invalides/non finis en lettres ; avertissement effectif lors de la sélection de l’analyste déjà affecté ; simplification des validations déjà effectuées avant mutation des tarifs (les multiplicateurs vides restent ignorés) ; API XML native pour les polices ; répertoire des modèles aligné sur `BASE_DIR`. Deux exceptions finales inaccessibles ont été supprimées après des boucles qui retournent ou lèvent déjà une exception à leur dernière tentative. Ces changements expliquent le passage de 8 922 à 8 908 lignes mesurables : aucune nouvelle exclusion de couverture n’a été ajoutée.
+
+Le scan Bandit au seuil CI ne détecte aucun problème de sévérité moyenne ou élevée. Les contrôles distants PostgreSQL, navigateur/accessibilité et conteneur sont consignés dans la PR de livraison.
+
+Il s’agit de couverture des **lignes Python dans le périmètre déclaré**, pas d’une mesure des branches ni d’une garantie d’absence de bugs. Les exclusions préexistantes (migrations, tests, initialisation, points d’entrée et paramètres généraux) restent explicites dans `.coveragerc`. La réception SMTP réelle et la restauration d’une sauvegarde de production ne sont pas prouvées par ces tests. Les validations opérationnelles et administratives résiduelles du bilan précédent restent applicables. Aucun changement d’abonnement Render n’est effectué.

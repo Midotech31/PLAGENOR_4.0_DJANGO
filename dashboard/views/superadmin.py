@@ -634,10 +634,7 @@ def service_edit(request, pk):
             raw = (raw or '').strip()
             if not raw:
                 return fallback
-            try:
-                return json.loads(raw)
-            except (json.JSONDecodeError, ValueError):
-                return fallback
+            return json.loads(raw)  # Validated before any service mutation.
 
         for i, name in enumerate(field_names):
             if not name.strip():
@@ -650,10 +647,7 @@ def service_edit(request, pk):
                     opts = [o.strip() for o in field_options[i].split(',') if o.strip()]
 
             mod_value = _at(field_mod_value, i).strip()
-            try:
-                mod_value = Decimal(mod_value) if mod_value else None
-            except (InvalidOperation, ValueError):
-                mod_value = None
+            mod_value = Decimal(mod_value) if mod_value else None
 
             category = _at(field_categories, i, 'parameter').strip()
             if category not in ('parameter', 'sample_column'):
@@ -695,12 +689,9 @@ def service_edit(request, pk):
         multipliers = {}
         for k, f in zip(mult_keys, mult_factors):
             k = (k or '').strip()
-            if not k:
+            if not k or not f.strip():
                 continue
-            try:
-                multipliers[k] = float(f)
-            except (TypeError, ValueError):
-                continue
+            multipliers[k] = float(f)  # Validated above with parse_money.
         if bp_non is not None or bp_pat is not None or multipliers or mult_param:
             new_pdata = dict(service.pricing_data or {})
             new_pdata['base_price'] = {
