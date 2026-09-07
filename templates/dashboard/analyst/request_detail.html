@@ -30,7 +30,7 @@
 <div class="card mb-4">
     <div class="card-header"><h3>{% trans "Pipeline GENOCLAB" %}</h3></div>
     <div class="card-body">
-        <div class="pipeline">
+        <div class="pipeline" tabindex="0" role="region" aria-label="{{ req.display_id }}">
             {% with s=req.status %}
             <div class="pipeline-step">
                 <div class="pipeline-node"><div class="pipeline-dot{% if s != 'REQUEST_CREATED' and s != 'QUOTE_DRAFT' %} done{% endif %}"></div></div>

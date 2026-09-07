@@ -18,6 +18,8 @@ async function login(page, username) {
   expect(response.status()).toBe(204);
   await page.goto('/dashboard/');
   await expect(page).toHaveURL(/\/dashboard\//);
+  await page.locator('button[name="language"][value="fr"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', /^fr/);
 }
 
 const publicPages = [
@@ -100,7 +102,7 @@ for (const [name, path] of [
   test(`Admin Ops can manage ${name} with accessible controls`, async ({ page }) => {
     await login(page, 'admin_ops');
     await page.goto(path);
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('main h1')).toBeVisible();
     await expectAccessible(page, name);
   });
 }
@@ -116,6 +118,10 @@ test('OHB is assigned internally and goes from quote to invoice without VAT', as
   await page.goto(`/dashboard/ops/quote/${id}/`);
   await expect(page.locator('#vat_rate_input')).toHaveValue('0');
   await expect(page.locator('#vat_rate_input')).toHaveAttribute('readonly', '');
+  await page.getByRole('button', { name: /Ajouter une ligne/ }).click();
+  await page.locator('.line-item-row').first().getByRole('button', { name: 'Supprimer', exact: true }).click();
+  await expect(page.locator('#item_label_0')).toHaveCount(1);
+  await expect(page.locator('#item_label_1')).toHaveCount(0);
   await page.locator('[name="item_label_0"]').fill('Prestation de recette');
   await page.locator('[name="item_unit_price_0"]').fill('123.45');
   await page.locator('[name="item_quantity_0"]').fill('2');

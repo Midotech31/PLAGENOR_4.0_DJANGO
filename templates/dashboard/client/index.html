@@ -90,7 +90,7 @@
                     </div>
 
                     <!-- Pipeline visualization -->
-                    <div class="pipeline mt-2">
+                    <div class="pipeline mt-2" tabindex="0" role="region" aria-label="{{ req.display_id }}">
                         {% with s=req.status %}
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>

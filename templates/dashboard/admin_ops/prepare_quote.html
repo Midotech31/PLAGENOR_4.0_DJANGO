@@ -262,8 +262,15 @@
             r.querySelectorAll('input[name^="item_"]').forEach(function(inp) {
                 const nameParts = inp.name.split('_');
                 nameParts[nameParts.length - 1] = i;
+                const oldId = inp.id;
                 inp.name = nameParts.join('_');
+                inp.id = inp.name;
+                r.querySelectorAll('label').forEach(label => { if (label.htmlFor === oldId) label.htmlFor = inp.id; });
             });
+            const total = r.querySelector('.line-total');
+            const oldTotalId = total.id;
+            total.id = 'line_total_' + i;
+            r.querySelectorAll('label').forEach(label => { if (label.htmlFor === oldTotalId) label.htmlFor = total.id; });
             itemCount = i + 1;
         });
         recalcTotals();
