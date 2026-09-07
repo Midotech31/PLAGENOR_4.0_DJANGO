@@ -22,11 +22,11 @@ msgstr "البريد الإلكتروني"
 
 #: accounts/forms.py:19
 msgid "Demandeur IBTIKAR (étudiant/chercheur)"
-msgstr "مُقدِّم طلب IBTIKAR (طالب/باحث)"
+msgstr "مُقدِّم طلب منصة إبتكار (طالب/باحث)"
 
 #: accounts/forms.py:20
 msgid "Client GENOCLAB (externe)"
-msgstr "عميل GENOCLAB (خارجي)"
+msgstr "عميل جينوصيلاب (خارجي)"
 
 #: accounts/forms.py:21 templates/dashboard/superadmin/index.html:174 templates/dashboard/superadmin/index.html:216 templates/dashboard/superadmin/index.html:237 templates/dashboard/superadmin/reset_account_confirm.html:43 templates/dashboard/superadmin/user_edit.html:37
 msgid "Rôle"
@@ -78,7 +78,7 @@ msgstr "المشرف العلمي"
 
 #: accounts/forms.py:58 templates/accounts/register.html:131 templates/pages/guest_submit.html:88
 msgid "Identifiant IBTIKAR-DGRSDT"
-msgstr "معرّف IBTIKAR-DGRSDT"
+msgstr "معرّف منصة إبتكار — المديرية العامة للبحث العلمي و التطوير التكنولوجي"
 
 #: accounts/forms.py:59 templates/accounts/register.html:133 templates/pages/guest_submit.html:90
 msgid "Format: IDGRSTDXXXXX"
@@ -209,11 +209,11 @@ msgstr "تم إصدار المذكرة"
 
 #: core/models.py:309 templates/dashboard/admin_ops/index.html:447
 msgid "En attente soumission IBTIKAR"
-msgstr "بانتظار الإرسال إلى IBTIKAR"
+msgstr "بانتظار الإرسال إلى منصة إبتكار"
 
 #: core/models.py:310 templates/dashboard/admin_ops/index.html:448 templates/includes/ibtikar_submission_workflow.html:89
 msgid "Code IBTIKAR soumis"
-msgstr "تم إرسال رمز IBTIKAR"
+msgstr "تم إرسال رمز منصة إبتكار"
 
 #: core/models.py:311 templates/dashboard/admin_ops/index.html:431 templates/dashboard/admin_ops/index.html:479 templates/dashboard/requester/index.html:285 templates/includes/request_card.html:13
 msgid "Assigné"
@@ -313,7 +313,7 @@ msgstr "مُؤرشَف"
 
 #: dashboard/views/superadmin.py:199 templates/dashboard/admin_ops/request_detail.html:454 templates/dashboard/requester/index.html:226 templates/dashboard/requester/request_detail.html:158
 msgid "Formulaire IBTIKAR"
-msgstr "نموذج IBTIKAR"
+msgstr "نموذج منصة إبتكار"
 
 #: dashboard/views/superadmin.py:200 templates/dashboard/admin_ops/request_detail.html:298 templates/dashboard/analyst/request_detail.html:94
 msgid "Note de plateforme"
@@ -1022,7 +1022,7 @@ msgstr "التكلفة المُعتمَدة"
 #: templates/dashboard/requester/index.html:59
 #: templates/dashboard/requester/request_detail.html:126
 msgid "Solde IBTIKAR déclaré"
-msgstr "رصيد IBTIKAR المصرّح به"
+msgstr "رصيد منصة إبتكار المصرّح به"
 
 #: templates/dashboard/admin_ops/index.html:110
 msgid "Ajuster le coût (DA)"
@@ -1278,11 +1278,11 @@ msgstr "لا"
 
 #: templates/dashboard/admin_ops/index.html:600 templates/dashboard/finance/index.html:14 templates/dashboard/superadmin/index.html:810
 msgid "Budget IBTIKAR (virtuel)"
-msgstr "ميزانية IBTIKAR (افتراضية)"
+msgstr "ميزانية منصة إبتكار (افتراضية)"
 
 #: templates/dashboard/admin_ops/index.html:601 templates/dashboard/finance/index.html:15 templates/dashboard/superadmin/index.html:816
 msgid "Revenus GENOCLAB (réel)"
-msgstr "إيرادات GENOCLAB (فعلية)"
+msgstr "إيرادات جينوصيلاب (فعلية)"
 
 #: templates/dashboard/admin_ops/index.html:613
 msgid "Performance & Points"
@@ -1451,7 +1451,7 @@ msgstr "الرمز"
 
 #: templates/dashboard/admin_ops/prepare_quote.html:100 templates/dashboard/superadmin/index.html:433
 msgid "Prix GENOCLAB"
-msgstr "سعر GENOCLAB"
+msgstr "سعر جينوصيلاب"
 
 #: templates/dashboard/admin_ops/prepare_quote.html:112
 msgid "Lignes du devis"
@@ -1609,11 +1609,11 @@ msgstr "المؤسسة"
 
 #: templates/dashboard/admin_ops/request_detail.html:63
 msgid "ID IBTIKAR"
-msgstr "معرّف IBTIKAR"
+msgstr "معرّف منصة إبتكار"
 
 #: templates/dashboard/admin_ops/request_detail.html:69
 msgid "Code IBTIKAR-DGRSDT"
-msgstr "رمز IBTIKAR-DGRSDT"
+msgstr "رمز منصة إبتكار — المديرية العامة للبحث العلمي و التطوير التكنولوجي"
 
 #: templates/dashboard/admin_ops/request_detail.html:72
 msgid "Aucun demandeur associé."
@@ -1741,7 +1741,7 @@ msgstr "لم يُسنَد بعد."
 
 #: templates/dashboard/admin_ops/request_detail.html:300
 msgid "Devis interne IBTIKAR : justification détaillée du tarif (type d'analyse, mode, prix de base, multiplicateur, nombre d'échantillons, total). À partager manuellement avec le demandeur."
-msgstr "عرض سعر داخلي لـ IBTIKAR: تبرير مفصّل للسعر (نوع التحليل، الوضع، السعر الأساسي، المُعامِل، عدد العينات، الإجمالي). يُشارَك يدويًا مع مقدّم الطلب."
+msgstr "عرض سعر داخلي لـ منصة إبتكار: تبرير مفصّل للسعر (نوع التحليل، الوضع، السعر الأساسي، المُعامِل، عدد العينات، الإجمالي). يُشارَك يدويًا مع مقدّم الطلب."
 
 #: templates/dashboard/admin_ops/request_detail.html:306 templates/dashboard/analyst/request_detail.html:101
 msgid "Télécharger la note (.docx)"
@@ -1905,7 +1905,7 @@ msgstr "الإجراءات"
 
 #: templates/dashboard/admin_ops/request_detail.html:611
 msgid "Notifier le demandeur (soumission IBTIKAR)"
-msgstr "إشعار المُقدِّم (الإرسال إلى IBTIKAR)"
+msgstr "إشعار المُقدِّم (الإرسال إلى منصة إبتكار)"
 
 #: templates/dashboard/admin_ops/request_detail.html:615
 msgid "Transmettre le rapport au demandeur"
@@ -2218,7 +2218,7 @@ msgstr "العودة إلى لوحة التحكم"
 
 #: templates/dashboard/analyst/request_detail.html:31
 msgid "Pipeline GENOCLAB"
-msgstr "مسار GENOCLAB"
+msgstr "مسار جينوصيلاب"
 
 #: templates/dashboard/analyst/request_detail.html:37 templates/dashboard/client/index.html:97
 msgid "Créée"
@@ -2298,11 +2298,11 @@ msgstr "عرض التقرير"
 
 #: templates/dashboard/client/index.html:4 templates/pages/help.html:55
 msgid "Client GENOCLAB"
-msgstr "عميل GENOCLAB"
+msgstr "عميل جينوصيلاب"
 
 #: templates/dashboard/client/index.html:9
 msgid "Espace GENOCLAB"
-msgstr "فضاء GENOCLAB"
+msgstr "فضاء جينوصيلاب"
 
 #: templates/dashboard/client/index.html:17 templates/dashboard/requester/index.html:17 templates/dashboard/stats.html:121
 msgid "Rejetées"
@@ -2322,7 +2322,7 @@ msgstr "الأرشيف"
 
 #: templates/dashboard/client/index.html:37
 msgid "Soumettre une nouvelle demande GENOCLAB"
-msgstr "إرسال طلب GENOCLAB جديد"
+msgstr "إرسال طلب جينوصيلاب جديد"
 
 #: templates/dashboard/client/index.html:44 templates/dashboard/requester/index.html:129 templates/pages/guest_submit.html:100
 msgid "Sélectionner un service..."
@@ -2550,7 +2550,7 @@ msgstr "المالية"
 
 #: templates/dashboard/finance/index.html:9
 msgid "Gestion financière IBTIKAR, GenoClab et OHB"
-msgstr "الإدارة المالية لـ IBTIKAR وGenoClab وOHB"
+msgstr "الإدارة المالية لـ منصة إبتكار وGenoClab وOHB"
 
 #: templates/dashboard/finance/index.html:16
 msgid "Revenus OHB"
@@ -2558,19 +2558,19 @@ msgstr "إيرادات OHB"
 
 #: templates/dashboard/finance/index.html:18
 msgid "Étudiants IBTIKAR"
-msgstr "طلاب IBTIKAR"
+msgstr "طلاب منصة إبتكار"
 
 #: templates/dashboard/finance/index.html:29 templates/includes/sidebar.html:153
 msgid "Validation IBTIKAR"
-msgstr "التحقُّق من IBTIKAR"
+msgstr "التحقُّق من منصة إبتكار"
 
 #: templates/dashboard/finance/index.html:31 templates/dashboard/finance/index.html:104
 msgid "Factures GenoClab / OHB"
-msgstr "فواتير GenoClab / OHB"
+msgstr "فواتير جينوصيلاب / OHB"
 
 #: templates/dashboard/finance/index.html:39
 msgid "Demandes IBTIKAR — Validation financière"
-msgstr "طلبات IBTIKAR — التحقُّق المالي"
+msgstr "طلبات منصة إبتكار — التحقُّق المالي"
 
 #: templates/dashboard/finance/index.html:49
 msgid "Solde déclaré"
@@ -2590,7 +2590,7 @@ msgstr "لا توجد طلبات بانتظار التحقُّق المالي."
 
 #: templates/dashboard/finance/index.html:78
 msgid "Budget IBTIKAR par statut"
-msgstr "ميزانية IBTIKAR حسب الحالة"
+msgstr "ميزانية منصة إبتكار حسب الحالة"
 
 #: templates/dashboard/finance/index.html:83
 msgid "Budget total"
@@ -2626,11 +2626,11 @@ msgstr "أرشيف الإيرادات"
 
 #: templates/dashboard/finance/index.html:160
 msgid "IBTIKAR complétés"
-msgstr "IBTIKAR المكتملة"
+msgstr "منصة إبتكار المكتملة"
 
 #: templates/dashboard/finance/index.html:163
 msgid "GenoClab / OHB complétés"
-msgstr "عمليات GenoClab / OHB المكتملة"
+msgstr "عمليات جينوصيلاب / OHB المكتملة"
 
 #: templates/dashboard/finance/index.html:173
 msgid "Historique financier"
@@ -2638,11 +2638,11 @@ msgstr "السجل المالي"
 
 #: templates/dashboard/finance/index.html:176
 msgid "Total IBTIKAR (virtuel)"
-msgstr "إجمالي IBTIKAR (افتراضي)"
+msgstr "إجمالي منصة إبتكار (افتراضي)"
 
 #: templates/dashboard/finance/index.html:177
 msgid "Total GENOCLAB (réel)"
-msgstr "إجمالي GENOCLAB (فعلي)"
+msgstr "إجمالي جينوصيلاب (فعلي)"
 
 #: templates/dashboard/finance/index.html:178
 msgid "Factures émises"
@@ -2702,7 +2702,7 @@ msgstr "ممتاز — شكرًا جزيلًا، هذا يعني الكثير ل
 
 #: templates/dashboard/report_viewer.html:542
 msgid "Plateforme de Gestion des Opérations Scientifiques — ESSBO"
-msgstr "منصة إدارة العمليات العلمية — ESSBO"
+msgstr "منصة إدارة العمليات العلمية — المدرسة العليا في العلوم البيولوجية بوهران"
 
 #: templates/dashboard/report_viewer.html:546
 msgid "Merci pour votre confiance"
@@ -2738,7 +2738,7 @@ msgstr "نسخ"
 
 #: templates/dashboard/report_viewer.html:618
 msgid "Cette recherche a été réalisée au sein de la Plateforme de Technologie Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
-msgstr "أُجريَ هذا البحث في منصة التكنولوجيا الجينومية بالمدرسة العليا لعلوم الأحياء بوهران (ESSBO). نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات وتفسيرها."
+msgstr "أُجريَ هذا البحث في منصة التكنولوجيا الجينومية بالمدرسة العليا في العلوم البيولوجية بوهران. نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات وتفسيرها."
 
 #: templates/dashboard/report_viewer.html:623
 msgid "Veuillez également vous assurer que toute contribution substantielle du personnel de la plateforme est reconnue conformément aux directives standard en matière d'auteurs scientifiques."
@@ -2774,24 +2774,24 @@ msgstr "شارك رأيي"
 
 #: templates/dashboard/requester/index.html:4 templates/pages/help.html:54
 msgid "Demandeur IBTIKAR"
-msgstr "مُقدِّم طلب IBTIKAR"
+msgstr "مُقدِّم طلب منصة إبتكار"
 
 #: templates/dashboard/requester/index.html:9
 msgid "Espace IBTIKAR"
-msgstr "فضاء IBTIKAR"
+msgstr "فضاء منصة إبتكار"
 
 #: templates/dashboard/requester/index.html:36
 msgid "Déclarez votre solde IBTIKAR"
-msgstr "أعلن عن رصيد IBTIKAR الخاص بك"
+msgstr "أعلن عن رصيد منصة إبتكار الخاص بك"
 
 #: templates/dashboard/requester/index.html:39
 #, python-format
 msgid "Avant toute soumission, indiquez le montant résiduel disponible sur votre compte IBTIKAR (entre 0 et %(cap)s DA). C'est ce montant qui servira de plafond pour l'estimation et la validation de votre demande. Vous pourrez l'ajuster avant chaque nouvelle demande pour refléter l'état réel de votre compte DGRSDT."
-msgstr "قبل أي تقديم، أدخِل المبلغ المتبقّي المتاح في حساب IBTIKAR الخاص بك (بين 0 و %(cap)s دج). سيُستخدَم هذا المبلغ كحد أقصى لتقدير طلبك والتحقق منه. يمكنك تعديله قبل كل طلب جديد ليعكس الحالة الفعلية لحساب DGRSDT الخاص بك."
+msgstr "قبل أي تقديم، أدخِل المبلغ المتبقّي المتاح في حساب منصة إبتكار الخاص بك (بين 0 و %(cap)s دج). سيُستخدَم هذا المبلغ كحد أقصى لتقدير طلبك والتحقق منه. يمكنك تعديله قبل كل طلب جديد ليعكس الحالة الفعلية لحساب المديرية العامة للبحث العلمي و التطوير التكنولوجي الخاص بك."
 
 #: templates/dashboard/requester/index.html:44
 msgid "Solde IBTIKAR résiduel (DA)"
-msgstr "رصيد IBTIKAR المتبقي (دج)"
+msgstr "رصيد منصة إبتكار المتبقي (دج)"
 
 #: templates/dashboard/requester/index.html:49
 msgid "Valider mon solde"
@@ -2812,7 +2812,7 @@ msgstr "الرصيد المعلن المتاح"
 
 #: templates/dashboard/requester/index.html:73
 msgid "Rappel : vérifiez le solde affiché sur votre compte IBTIKAR (DGRSDT) avant de soumettre une nouvelle demande. Le budget IBTIKAR peut être consommé par d'autres plateformes — mettez à jour ce montant ci-dessous si nécessaire."
-msgstr "تذكير: تحقّق من الرصيد المعروض في حساب IBTIKAR (DGRSDT) قبل تقديم طلب جديد. قد تستهلك منصّات أخرى ميزانية IBTIKAR — حدِّث هذا المبلغ أدناه عند الحاجة."
+msgstr "تذكير: تحقّق من الرصيد المعروض في حساب منصة إبتكار (المديرية العامة للبحث العلمي و التطوير التكنولوجي) قبل تقديم طلب جديد. قد تستهلك منصّات أخرى ميزانية منصة إبتكار — حدِّث هذا المبلغ أدناه عند الحاجة."
 
 #: templates/dashboard/requester/index.html:78
 msgid "Mettre à jour mon solde"
@@ -2820,24 +2820,24 @@ msgstr "تحديث رصيدي"
 
 #: templates/dashboard/requester/index.html:84
 msgid "Nouveau solde IBTIKAR (DA)"
-msgstr "رصيد IBTIKAR الجديد (دج)"
+msgstr "رصيد منصة إبتكار الجديد (دج)"
 
 #: templates/dashboard/requester/index.html:89
 #, python-format
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
-msgstr "الحد الأقصى السنوي المحدّد من DGRSDT: %(cap)s دج."
+msgstr "الحد الأقصى السنوي المحدّد من المديرية العامة للبحث العلمي و التطوير التكنولوجي: %(cap)s دج."
 
 #: templates/dashboard/requester/index.html:114
 msgid "Solde IBTIKAR non déclaré"
-msgstr "رصيد IBTIKAR غير معلن"
+msgstr "رصيد منصة إبتكار غير معلن"
 
 #: templates/dashboard/requester/index.html:116
 msgid "Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir soumettre une demande."
-msgstr "أعلِن أولًا عن رصيد IBTIKAR المتبقّي أعلاه لتتمكّن من تقديم طلب."
+msgstr "أعلِن أولًا عن رصيد منصة إبتكار المتبقّي أعلاه لتتمكّن من تقديم طلب."
 
 #: templates/dashboard/requester/index.html:122
 msgid "Soumettre une nouvelle demande IBTIKAR"
-msgstr "إرسال طلب IBTIKAR جديد"
+msgstr "إرسال طلب منصة إبتكار جديد"
 
 #: templates/dashboard/requester/index.html:138
 msgid "Ex: Analyse DRX échantillon..."
@@ -2846,7 +2846,7 @@ msgstr "مثال: تحليل DRX لعيِّنة..."
 #: templates/dashboard/requester/index.html:153
 #, python-format
 msgid "Plafond pour cette demande : <strong>%(rem)s DA</strong> (votre solde IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous avez vérifié votre compte DGRSDT."
-msgstr "الحد الأقصى لهذا الطلب: <strong>%(rem)s دج</strong> (رصيد IBTIKAR المُعلَن). حدِّث هذا الرصيد في البطاقة أعلاه إذا تحقّقت من حساب DGRSDT الخاص بك."
+msgstr "الحد الأقصى لهذا الطلب: <strong>%(rem)s دج</strong> (رصيد منصة إبتكار المُعلَن). حدِّث هذا الرصيد في البطاقة أعلاه إذا تحقّقت من حساب المديرية العامة للبحث العلمي و التطوير التكنولوجي الخاص بك."
 
 #: templates/dashboard/requester/index.html:176
 msgid "supérieur à votre solde déclaré"
@@ -2971,11 +2971,11 @@ msgstr "معدل الإنجاز"
 
 #: templates/dashboard/stats.html:125
 msgid "Revenu virtuel IBTIKAR"
-msgstr "الإيراد الافتراضي IBTIKAR"
+msgstr "الإيراد الافتراضي منصة إبتكار"
 
 #: templates/dashboard/stats.html:126
 msgid "Revenu GENOCLAB"
-msgstr "إيراد GENOCLAB"
+msgstr "إيراد جينوصيلاب"
 
 #: templates/dashboard/stats.html:133
 msgid "Par service"
@@ -3111,11 +3111,11 @@ msgstr "التقنيات"
 
 #: templates/dashboard/superadmin/index.html:40
 msgid "Budget IBTIKAR (DA)"
-msgstr "ميزانية IBTIKAR (دج)"
+msgstr "ميزانية منصة إبتكار (دج)"
 
 #: templates/dashboard/superadmin/index.html:41
 msgid "Revenue GENOCLAB (DA)"
-msgstr "إيرادات GENOCLAB (دج)"
+msgstr "إيرادات جينوصيلاب (دج)"
 
 #: templates/dashboard/superadmin/index.html:42
 msgid "Note moyenne / 5"
@@ -3291,7 +3291,7 @@ msgstr "إضافة خدمة"
 
 #: templates/dashboard/superadmin/index.html:429
 msgid "Prix IBTIKAR"
-msgstr "سعر IBTIKAR"
+msgstr "سعر منصة إبتكار"
 
 #: templates/dashboard/superadmin/index.html:437 templates/dashboard/superadmin/service_edit.html:42
 msgid "Délai (jours)"
@@ -3311,11 +3311,11 @@ msgstr "الخدمات الموجودة"
 
 #: templates/dashboard/superadmin/index.html:463 templates/includes/sidebar.html:173
 msgid "IBTIKAR"
-msgstr "IBTIKAR"
+msgstr "منصة إبتكار"
 
 #: templates/dashboard/superadmin/index.html:464 templates/includes/sidebar.html:196
 msgid "GENOCLAB"
-msgstr "GENOCLAB"
+msgstr "جينوصيلاب"
 
 #: templates/dashboard/superadmin/index.html:488 templates/dashboard/superadmin/index.html:562
 msgid "Réactiver"
@@ -3583,7 +3583,7 @@ msgstr "عرض سجل التدقيق"
 
 #: templates/dashboard/superadmin/index.html:1166
 msgid "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR."
-msgstr "اطّلع على الأرشيف الشهري لإيرادات GENOCLAB وميزانيات IBTIKAR."
+msgstr "اطّلع على الأرشيف الشهري لإيرادات جينوصيلاب وميزانيات IBTIKAR."
 
 #: templates/dashboard/superadmin/index.html:1169
 msgid "Voir les archives"
@@ -3713,7 +3713,7 @@ msgstr "أرشيف الإيرادات"
 
 #: templates/dashboard/superadmin/revenue_archives.html:9
 msgid "Archives mensuelles des revenus IBTIKAR & GENOCLAB"
-msgstr "الأرشيف الشهري لإيرادات IBTIKAR و GENOCLAB"
+msgstr "الأرشيف الشهري لإيرادات منصة إبتكار و جينوصيلاب"
 
 #: templates/dashboard/superadmin/revenue_archives.html:13
 msgid "Archives mensuelles"
@@ -3753,7 +3753,7 @@ msgstr "تعديل الخدمة"
 
 #: templates/dashboard/superadmin/service_edit.html:33
 msgid "Prix IBTIKAR (DA)"
-msgstr "سعر IBTIKAR (دج)"
+msgstr "سعر منصة إبتكار (دج)"
 
 #: templates/dashboard/superadmin/service_edit.html:35
 msgid "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie ci-dessous)"
@@ -3761,7 +3761,7 @@ msgstr "سعر إجمالي (يُستخدَم إذا لم تُحدَّد أي ق
 
 #: templates/dashboard/superadmin/service_edit.html:38
 msgid "Prix GENOCLAB (DA)"
-msgstr "سعر GENOCLAB (دج)"
+msgstr "سعر جينوصيلاب (دج)"
 
 #: templates/dashboard/superadmin/service_edit.html:53
 msgid "Image actuelle"
@@ -4129,7 +4129,7 @@ msgstr "كتل محتوى المستندات"
 
 #: templates/documents/block_list.html:9
 msgid "Ajoutez ou modifiez des paragraphes injectés dans les documents générés (formulaire IBTIKAR, note de plateforme, devis, fiche de réception)."
-msgstr "أضف أو عدّل الفقرات المُدرَجة في الوثائق المُولَّدة (استمارة IBTIKAR، مذكرة المنصة، عرض السعر، استمارة الاستلام)."
+msgstr "أضف أو عدّل الفقرات المُدرَجة في الوثائق المُولَّدة (استمارة منصة إبتكار، مذكرة المنصة، عرض السعر، استمارة الاستلام)."
 
 #: templates/documents/block_list.html:14
 msgid "Modèles DOCX"
@@ -4257,7 +4257,7 @@ msgstr "اسم القالب"
 
 #: templates/documents/template_form.html:52
 msgid "ex: Formulaire IBTIKAR CAN 2024"
-msgstr "مثال: نموذج IBTIKAR CAN 2024"
+msgstr "مثال: نموذج منصة إبتكار CAN 2024"
 
 #: templates/documents/template_form.html:58
 msgid "Décrivez ce modèle et son utilisation..."
@@ -4410,31 +4410,31 @@ msgstr "يرجى اتباع الخطوات أدناه:"
 
 #: templates/includes/ibtikar_submission_workflow.html:28
 msgid "Téléchargez le formulaire IBTIKAR"
-msgstr "نزِّل نموذج IBTIKAR"
+msgstr "نزِّل نموذج منصة إبتكار"
 
 #: templates/includes/ibtikar_submission_workflow.html:40
 msgid "Soumettez votre demande sur IBTIKAR-DGRSDT"
-msgstr "أرسل طلبك على IBTIKAR-DGRSDT"
+msgstr "أرسل طلبك على منصة إبتكار — المديرية العامة للبحث العلمي و التطوير التكنولوجي"
 
 #: templates/includes/ibtikar_submission_workflow.html:44
 msgid "Accéder à IBTIKAR-DGRSDT"
-msgstr "الوصول إلى IBTIKAR-DGRSDT"
+msgstr "الوصول إلى منصة إبتكار — المديرية العامة للبحث العلمي و التطوير التكنولوجي"
 
 #: templates/includes/ibtikar_submission_workflow.html:52
 msgid "Revenez ici et saisissez votre code IBTIKAR"
-msgstr "عُد إلى هنا وأدخل رمز IBTIKAR"
+msgstr "عُد إلى هنا وأدخل رمز منصة إبتكار"
 
 #: templates/includes/ibtikar_submission_workflow.html:53
 msgid "Une fois votre demande soumise sur IBTIKAR, saisissez le code pour qu'on vous fixe un rendez-vous."
-msgstr "بمجرد إرسال طلبك على IBTIKAR، أدخل الرمز ليتم تحديد موعد لك."
+msgstr "بمجرد إرسال طلبك على منصة إبتكار، أدخل الرمز ليتم تحديد موعد لك."
 
 #: templates/includes/ibtikar_submission_workflow.html:61
 msgid "Saisissez votre code IBTIKAR"
-msgstr "أدخل رمز IBTIKAR"
+msgstr "أدخل رمز منصة إبتكار"
 
 #: templates/includes/ibtikar_submission_workflow.html:65
 msgid "Code de votre demande IBTIKAR"
-msgstr "رمز طلب IBTIKAR"
+msgstr "رمز طلب منصة إبتكار"
 
 #: templates/includes/ibtikar_submission_workflow.html:66
 msgid "Ex: IBK-DGRSDT-2026-XXXX"
@@ -4626,7 +4626,7 @@ msgstr "تأكيد المواعيد والتنزيل الآمن للتقارير
 
 #: templates/pages/guest_submit.html:25
 msgid "Demandeur IBTIKAR : suivi de votre budget DGRSDT restant"
-msgstr "مقدّم طلب IBTIKAR: تتبّع ميزانية DGRSDT المتبقية"
+msgstr "مقدّم طلب منصة إبتكار: تتبّع ميزانية المديرية العامة للبحث العلمي و التطوير التكنولوجي المتبقية"
 
 #: templates/pages/guest_submit.html:36
 msgid "Vos informations"
@@ -4674,7 +4674,7 @@ msgstr "أكاديمي"
 
 #: templates/pages/guest_submit.html:93
 msgid "Solde IBTIKAR déclaré (DA)"
-msgstr "الرصيد المُصرَّح به في IBTIKAR (دج)"
+msgstr "الرصيد المُصرَّح به في منصة إبتكار (دج)"
 
 #: templates/pages/guest_submit.html:112
 msgid "Ex: Analyse DRX..."
@@ -4770,7 +4770,7 @@ msgstr "انقر على <strong>التسجيل</strong> أعلى اليمين و
 
 #: templates/pages/help.html:72
 msgid "Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> (étudiant/chercheur, budget annuel encadré) ou <strong>Client GENOCLAB</strong> (prestation commerciale avec devis)."
-msgstr "اختر ملفك: <strong>مقدِّم طلب IBTIKAR</strong> (طالب/باحث، ميزانية سنوية مؤطَّرة) أو <strong>عميل GENOCLAB</strong> (خدمة تجارية مع عرض سعر)."
+msgstr "اختر ملفك: <strong>مقدِّم طلب منصة إبتكار</strong> (طالب/باحث، ميزانية سنوية مؤطَّرة) أو <strong>عميل جينوصيلاب</strong> (خدمة تجارية مع عرض سعر)."
 
 #: templates/pages/help.html:73
 msgid "Connectez-vous : vous arrivez sur votre tableau de bord personnel."
@@ -4802,7 +4802,7 @@ msgstr "تتلقّى <strong>إشعارات فورية</strong> داخل الت�
 
 #: templates/pages/help.html:85
 msgid "<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : retrouvez devis, bons de commande, factures et paiements au même endroit."
-msgstr "<strong>مقدّم طلب IBTIKAR</strong>: تتبّع <strong>ميزانية DGRSDT المتبقية</strong> قبل التقديم. <strong>عميل GENOCLAB</strong>: اعثر على عروض الأسعار وأوامر الشراء والفواتير والمدفوعات في مكان واحد."
+msgstr "<strong>مقدّم طلب منصة إبتكار</strong>: تتبّع <strong>ميزانية المديرية العامة للبحث العلمي و التطوير التكنولوجي المتبقية</strong> قبل التقديم. <strong>عميل جينوصيلاب</strong>: اعثر على عروض الأسعار وأوامر الشراء والفواتير والمدفوعات في مكان واحد."
 
 #: templates/pages/help.html:86
 msgid "Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : vos demandes existantes sont automatiquement rattachées à votre nouveau compte."
@@ -4811,7 +4811,7 @@ msgstr "سبق أن قدّمت كزائر؟ استخدم <strong>«التحوي�
 #: templates/pages/help.html:91
 msgctxt "help"
 msgid "Soumettre une demande IBTIKAR"
-msgstr "تقديم طلب IBTIKAR"
+msgstr "تقديم طلب منصة إبتكار"
 
 #: templates/pages/help.html:91 templates/pages/help.html:103
 msgid "Vous"
@@ -4835,7 +4835,7 @@ msgstr "املأ <strong>أسئلة الخدمة</strong> (نوع العدّة،
 
 #: templates/pages/help.html:97
 msgid "Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en haut — la demande est bloquée si elle dépasse le plafond."
-msgstr "تحقّق من <strong>ميزانية IBTIKAR السنوية المتبقية</strong> المعروضة في الأعلى — يُحظَر الطلب إذا تجاوز السقف."
+msgstr "تحقّق من <strong>ميزانية منصة إبتكار السنوية المتبقية</strong> المعروضة في الأعلى — يُحظَر الطلب إذا تجاوز السقف."
 
 #: templates/pages/help.html:98
 msgid "Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une confirmation par e-mail avec votre identifiant de demande."
@@ -4844,7 +4844,7 @@ msgstr "انقر على <strong>المراجعة والإرسال</strong>. ست
 #: templates/pages/help.html:103
 msgctxt "help"
 msgid "Demande GENOCLAB (commercial)"
-msgstr "طلب GENOCLAB (تجاري)"
+msgstr "طلب جينوصيلاب (تجاري)"
 
 #: templates/pages/help.html:104
 msgid "Pour les entreprises, laboratoires et institutions externes."
@@ -4905,7 +4905,7 @@ msgstr "استمارات رسمية تُملأ تلقائيًا."
 
 #: templates/pages/help.html:129
 msgid "Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-rempli avec vos informations et vos échantillons."
-msgstr "تُولَّد <strong>استمارة IBTIKAR</strong> تلقائيًا، معبّأة مسبقًا بمعلوماتك وعيّناتك."
+msgstr "تُولَّد <strong>استمارة منصة إبتكار</strong> تلقائيًا، معبّأة مسبقًا بمعلوماتك وعيّناتك."
 
 #: templates/pages/help.html:130
 msgid "La <strong>note de plateforme</strong>, le <strong>devis</strong> et la <strong>fiche de réception</strong> sont disponibles au téléchargement (PDF)."
@@ -4913,7 +4913,7 @@ msgstr "تتوفّر <strong>مذكرة المنصة</strong> و<strong>عرض �
 
 #: templates/pages/help.html:131
 msgid "Tous portent l'<strong>en-tête institutionnel officiel</strong> (République algérienne, Ministère, ESSBO, PLAGENOR)."
-msgstr "تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية الجزائرية، الوزارة، ESSBO، PLAGENOR)."
+msgstr "تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية الجزائرية، الوزارة، المدرسة العليا في العلوم البيولوجية بوهران، PLAGENOR)."
 
 #: templates/pages/help.html:136
 msgid "Questions fréquentes"
@@ -4933,11 +4933,11 @@ msgstr "استخدم محدِّد FR / EN / ع أعلى يمين كل صفحة. 
 
 #: templates/pages/help.html:144
 msgid "Qu'est-ce que le budget IBTIKAR ?"
-msgstr "ما هي ميزانية IBTIKAR؟"
+msgstr "ما هي ميزانية منصة إبتكار؟"
 
 #: templates/pages/help.html:145
 msgid "C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord ; une demande qui le dépasse est bloquée automatiquement."
-msgstr "هي ميزانية افتراضية سنوية تؤطّرها DGRSDT، تُمنَح لكل طالب/باحث. يظهر رصيدك المتبقي على لوحة التحكم؛ ويُحظَر تلقائيًا أي طلب يتجاوزه."
+msgstr "هي ميزانية افتراضية سنوية تؤطّرها المديرية العامة للبحث العلمي و التطوير التكنولوجي، تُمنَح لكل طالب/باحث. يظهر رصيدك المتبقي على لوحة التحكم؛ ويُحظَر تلقائيًا أي طلب يتجاوزه."
 
 #: templates/pages/help.html:148
 msgid "Comment est calculé le coût d'une analyse ?"
@@ -5056,7 +5056,7 @@ msgstr "الإرسال دون حساب"
 
 #: templates/pages/service_landing.html:49
 msgid "Canal IBTIKAR: votre identifiant IBTIKAR-DGRSDT sera requis."
-msgstr "قناة IBTIKAR: سيكون معرّف IBTIKAR-DGRSDT مطلوباً."
+msgstr "قناة منصة إبتكار: سيكون معرّف منصة إبتكار — المديرية العامة للبحث العلمي و التطوير التكنولوجي مطلوباً."
 
 #: templates/pages/services.html:8
 msgid "Nos Services"
@@ -5209,3 +5209,9 @@ msgstr "المخرجات المسلّمة"
 
 msgid "Chaque champ doit avoir un libellé en français, arabe et anglais."
 msgstr "يجب أن يكون لكل حقل تسمية بالفرنسية والعربية والإنجليزية."
+
+msgid "DGRSDT"
+msgstr "المديرية العامة للبحث العلمي و التطوير التكنولوجي"
+
+msgid "ESSBO"
+msgstr "المدرسة العليا في العلوم البيولوجية بوهران"
