@@ -114,3 +114,38 @@ test('Ops can open the catalogue and financial visibility controls', async ({pag
   await expectAccessible(page, 'Estimate visibility');
   await page.screenshot({path:testInfo.outputPath('visibility.png'), fullPage:true});
 });
+
+for (const [lang, name, option, heading] of [
+  ['fr', 'Contrôle qualité des acides nucléiques', 'Simple', 'Vérification de la demande'],
+  ['ar', 'مراقبة جودة الأحماض النووية', 'مفرد', 'مراجعة الطلب'],
+  ['en', 'Nucleic Acid Quality Control', 'Single', 'Review your request'],
+]) {
+  test(`catalogue, service form and request preview are translated in ${lang}`, async ({page}, testInfo) => {
+    await page.goto('/services/');
+    await page.locator(`button[name="language"][value="${lang}"]`).first().click();
+    await expect(page.locator('main')).toContainText(name);
+    await expectAccessible(page, `service catalogue ${lang}`);
+    await page.screenshot({path:testInfo.outputPath(`services-${lang}.png`), fullPage:true});
+    const fragment = await page.request.get('/dashboard/api/service-form/EGTP-IMT/');
+    expect(await fragment.text()).toMatch(new RegExp(`value="Simple"[^>]*>${option}</option>`));
+    await login(page, 'client');
+    // Account preferences may override an anonymous visitor's locale.
+    await page.locator(`button[name="language"][value="${lang}"]`).first().click();
+    await page.goto('/dashboard/client/?tab=new');
+    await page.locator('[name="title"]').fill('<img src=x onerror="window.previewInjected=true">');
+    await page.locator('[onclick*="showFormPreview"]').click();
+    await expect(page.locator('#form-preview-overlay h2')).toHaveText(heading);
+    await expect(page.locator('#form-preview-overlay')).toContainText('<img src=x');
+    await expect(page.locator('#form-preview-overlay img')).toHaveCount(0);
+    expect(await page.evaluate(() => window.previewInjected)).toBeUndefined();
+  });
+}
+
+test('new service form exposes six required language fields from the start', async ({page}) => {
+  await login(page, 'admin');
+  for (const lang of ['fr', 'ar', 'en']) {
+    for (const field of ['name', 'description']) {
+      await expect(page.locator(`[name="${field}_${lang}"]`).first()).toHaveAttribute('required', '');
+    }
+  }
+});

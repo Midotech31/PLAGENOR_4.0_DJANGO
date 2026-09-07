@@ -1,5 +1,5 @@
 {% extends 'base_public.html' %}
-{% load i18n %}
+{% load i18n dashboard_extras %}
 
 {% block title %}{{ service.name }} — PLAGENOR 4.0{% endblock %}
 
@@ -64,17 +64,28 @@
             <h4 style="font-size:0.95rem; margin-bottom:12px;">{% trans "Exigences & conformité" %}</h4>
             {% if yaml_def.requirements %}
             <ul style="padding-inline-start:20px; font-size:0.85rem; color:var(--text-secondary);">
-                {% for req in yaml_def.requirements %}
+                {% for req in yaml_def.requirements|catalogue_items %}
                 <li style="margin-bottom:6px;">{{ req }}</li>
                 {% endfor %}
             </ul>
             {% endif %}
             {% if yaml_def.compliance %}
-            <p class="text-muted text-sm" style="margin-top:8px;">{{ yaml_def.compliance }}</p>
+            <ul class="text-muted text-sm" style="padding-inline-start:20px;">
+                {% for item in yaml_def.compliance|catalogue_items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
             {% endif %}
         </div>
     </div>
     {% endif %}
+    {% endif %}
+
+    {% if yaml_def.deliverables %}
+    <div class="card" style="margin-bottom:20px;"><div class="card-body" style="padding:20px;">
+        <h4>{% trans "Livrables" %}</h4>
+        <ul class="text-muted text-sm" style="padding-inline-start:20px;">
+            {% for item in yaml_def.deliverables|catalogue_items %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div></div>
     {% endif %}
 
     <!-- CTA -->

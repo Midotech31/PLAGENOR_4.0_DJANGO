@@ -497,7 +497,7 @@ class CompleteViewContracts(TestCase):
         from django.utils import timezone
         from datetime import timedelta
         service=Service.objects.create(code='BLANK-CONFIG',name='Blank')
-        self.call(superadmin.service_edit,'SUPER_ADMIN',data={'field_name':['detail'],'field_label':['Detail'],'pd_mult_key':['empty'],'pd_mult_factor':[' ']} ,pk=service.pk)
+        self.call(superadmin.service_edit,'SUPER_ADMIN',data={'field_name':['detail'],**{f'field_label_{lang}':['Detail'] for lang in ('fr','ar','en')},'pd_mult_key':['empty'],'pd_mult_factor':[' ']} ,pk=service.pk)
         self.assertEqual(service.custom_fields.get().option_pricing,{})
         older=PlatformContent.objects.create(key='latest-translation',lang='ar',value='قديم')
         newer=PlatformContent.objects.create(key='latest-translation',lang='fr',value='Récent')
@@ -508,7 +508,7 @@ class CompleteViewContracts(TestCase):
         from documents import views as dv
         from dashboard.views.qrcode_view import report_qr
         service=Service.objects.create(code='INVALID-MODEL',name='Original')
-        self.call(superadmin.service_edit,'SUPER_ADMIN',data={'name':'x'*201},pk=service.pk)
+        self.call(superadmin.service_edit,'SUPER_ADMIN',data={'ibtikar_price':'99999999999999999999999999999'},pk=service.pk)
         service.refresh_from_db();self.assertEqual(service.name,'Original')
         self.assertEqual(self.call(dv.quote_view,'CLIENT',method='get',request_id=self.req.pk).status_code,403)
         with self.assertRaises(Http404):self.call(report_qr,'REQUESTER',method='get',pk=self.req.pk)

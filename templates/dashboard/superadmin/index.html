@@ -412,10 +412,6 @@
                             <input type="text" name="code" class="form-control" required placeholder="ANA-001">
                         </div>
                         <div class="form-group">
-                            <label>{% trans "Nom" %}</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
                             <label>{% trans "Canal" %}</label>
                             <select name="channel_availability" class="form-control">
                                 <option value="BOTH">IBTIKAR & GENOCLAB</option>
@@ -438,10 +434,7 @@
                             <input type="number" name="turnaround_days" class="form-control" value="7">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>{% trans "Description" %}</label>
-                        <textarea name="description" class="form-control" rows="2"></textarea>
-                    </div>
+                    {% include "includes/service_translations.html" %}
                     <div class="form-group">
                         <label>{% trans "Image" %}</label>
                         <input type="file" name="image" class="form-control" accept="image/*">

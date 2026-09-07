@@ -59,3 +59,9 @@ def filename(path):
         return path.name
     # Handle string paths
     return path.split('/')[-1].split('\\')[-1]
+
+
+# Normal strings retain Django's autoescaping, including administrator-authored copy.
+from core.catalogue import catalogue_text, catalogue_items
+register.filter('catalogue_text', catalogue_text)
+register.filter('catalogue_items', catalogue_items)

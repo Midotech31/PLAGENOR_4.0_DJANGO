@@ -28,6 +28,17 @@
             checking: 'Vérification en cours...',
             copied: 'Copié !'
         },
+        ar: {
+            requiredField: 'هذا الحقل إلزامي',
+            invalidEmail: 'صيغة البريد الإلكتروني غير صحيحة',
+            invalidDate: 'صيغة التاريخ غير صحيحة (المطلوب: يوم/شهر/سنة)',
+            invalidPhone: 'صيغة رقم الهاتف غير صحيحة',
+            emailExists: 'هذا البريد الإلكتروني مسجّل مسبقاً',
+            fillRequired: 'يرجى ملء جميع الحقول الإلزامية',
+            formSuccess: 'تم إرسال الاستمارة بنجاح',
+            checking: 'جارٍ التحقق...',
+            copied: 'تم النسخ!'
+        },
         en: {
             requiredField: 'This field is required',
             invalidEmail: 'Invalid email format',
@@ -44,7 +55,8 @@
     // Get current language
     function getCurrentLanguage() {
         const htmlLang = document.documentElement.lang;
-        return htmlLang && htmlLang.startsWith('en') ? 'en' : 'fr';
+        const language = (htmlLang || 'fr').split('-')[0];
+        return TRANSLATIONS[language] ? language : 'fr';
     }
 
     // Get translation

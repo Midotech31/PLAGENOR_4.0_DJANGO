@@ -134,3 +134,22 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: Séquençage du génome entier microbien (Illumina)
+    description: Séquençage du génome entier (WGS) d’isolats microbiens par la technologie Illumina à haut débit.
+      La prestation comprend l’extraction de l’ADN génomique à partir de cultures pures, le contrôle qualité des
+      acides nucléiques, la préparation des banques Illumina, le séquençage à lectures appariées et la remise des
+      données brutes de séquençage.
+  ar:
+    name: تسلسل الجينوم الميكروبي الكامل (Illumina)
+    description: تسلسل الجينوم الكامل (WGS) للعزلات الميكروبية بتقنية Illumina عالية الإنتاجية. تشمل الخدمة استخلاص
+      الحمض النووي الجينومي من مزارع نقية، ومراقبة جودة الأحماض النووية، وتحضير مكتبات Illumina، والتسلسل بقراءات
+      مزدوجة النهاية، وتسليم بيانات التسلسل الخام.
+  en:
+    name: Microbial Whole Genome Sequencing (Illumina)
+    description: Whole Genome Sequencing (WGS) of microbial isolates using Illumina high-throughput sequencing technology.
+      The service includes genomic DNA extraction from pure cultures, nucleic acid quality control, Illumina library
+      preparation, paired-end sequencing, and delivery of raw sequencing data.

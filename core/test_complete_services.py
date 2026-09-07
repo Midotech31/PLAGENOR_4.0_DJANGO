@@ -322,7 +322,7 @@ class CompleteServiceContracts(TestCase):
             params,rows=cmd._build_service_aware_samples(self.service);self.assertEqual(len(rows),2)
         Service.objects.update(active=False)
         with self.assertRaises(SystemExit):cmd._ensure_service(None)
-        with patch('core.management.commands.seed_services.load_service_registry',return_value={'NO-RATE':{'name':'Unpriced'}}):
+        with patch('core.management.commands.seed_services.load_service_registry',return_value={'NO-RATE':{'translations':{lang:{'name':'Unpriced','description':'Unpriced test service'} for lang in ('fr','ar','en')}}}):
             call_command('seed_services',stdout=io.StringIO())
         self.assertEqual(Service.objects.get(code='NO-RATE').genoclab_price,0)
         with override_settings(DEBUG=True):call_command('seed_accounts',stdout=io.StringIO())

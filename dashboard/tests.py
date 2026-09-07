@@ -1428,7 +1428,7 @@ class SuperadminWorkflowCoverageTests(TestCase):
         self.post(f'/dashboard/home/member/{self.member_user.member_profile.pk}/techniques/',
                   {'techniques': [str(self.technique.pk)]})
         self.post('/dashboard/home/service/create/', {
-            'code': 'COVER-NEW', 'name': 'New service', 'description': 'Created',
+            'code': 'COVER-NEW', **{f'{field}_{lang}': 'Service créé' for field in ('name', 'description') for lang in ('fr', 'ar', 'en')},
             'channel_availability': 'BOTH', 'ibtikar_price': '10',
             'genoclab_price': '20', 'turnaround_days': '5'})
         new_service = Service.objects.get(code='COVER-NEW')
@@ -1474,7 +1474,7 @@ class SuperadminWorkflowCoverageTests(TestCase):
             'name': 'Coverage service updated', 'description': 'After',
             'channel_availability': 'BOTH', 'ibtikar_price': '125.5',
             'genoclab_price': '250', 'turnaround_days': '7',
-            'field_name': ['quality', ''], 'field_label': ['Quality', 'Ignored'],
+            'field_name': ['quality', ''], **{f'field_label_{lang}': ['Quality', 'Ignored'] for lang in ('fr', 'ar', 'en')},
             'field_type': ['choice', 'string'], 'field_category': ['invalid', 'parameter'],
             'field_required': ['0'], 'field_options': ['High,Low', ''],
             'field_affects_pricing': ['0'], 'field_price_modifier_type': ['FIXED'],

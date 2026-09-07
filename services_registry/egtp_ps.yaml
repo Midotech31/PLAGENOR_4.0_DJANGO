@@ -140,3 +140,24 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: Synthèse d’amorces d’ADN sur mesure
+    description: Synthèse sur mesure de paires d’amorces oligonucléotidiques d’ADN (sens et antisens) sur un synthétiseur
+      à phosphoramidites MerMade 4. Les amorces sont synthétisées strictement selon les séquences fournies par le
+      demandeur. La prestation comprend une purification standard par dessalage au butanol et une livraison à concentration
+      définie. Aucune conception d’amorces, validation ou vérification des séquences n’est réalisée.
+  ar:
+    name: تصنيع بادئات الحمض النووي DNA حسب الطلب
+    description: تصنيع أزواج من بادئات الحمض النووي DNA (أمامية وعكسية) حسب الطلب باستخدام جهاز MerMade 4 القائم
+      على كيمياء الفوسفوراميديت. تُصنّع البادئات حصراً وفق التسلسلات التي يقدّمها صاحب الطلب. تشمل الخدمة التنقية
+      القياسية بإزالة الأملاح بالبوتانول والتسليم بتركيز محدد. لا تشمل الخدمة تصميم البادئات أو اعتماد التسلسلات
+      أو التحقق منها.
+  en:
+    name: Custom DNA Primer Synthesis
+    description: Custom synthesis of DNA oligonucleotide primer pairs (Forward + Reverse) performed on a MerMade
+      4 phosphoramidite synthesizer. Primers are synthesized strictly according to sequences provided by the requester.
+      The service includes standard butanol desalting purification and delivery at defined concentration. No primer
+      design, validation, or sequence verification is performed.

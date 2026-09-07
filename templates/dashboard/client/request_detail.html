@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n dashboard_extras %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -69,8 +69,8 @@
             <div class="card-body">
                 {% for label, value in params_display %}
                 <div class="data-card-row">
-                    <span class="text-muted">{{ label }}</span>
-                    <strong>{{ value }}</strong>
+                    <span class="text-muted">{{ label|catalogue_text }}</span>
+                    <strong>{{ value|catalogue_text }}</strong>
                 </div>
                 {% endfor %}
             </div>
@@ -89,7 +89,7 @@
                             <tr>
                                 <th>#</th>
                                 {% for header in sample_headers %}
-                                <th>{{ header }}</th>
+                                <th>{{ header|catalogue_text }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
@@ -99,7 +99,7 @@
                             <tr>
                                 <td>{{ forloop.counter }}</td>
                                 {% for key, val in row.items %}
-                                <td>{{ val|default:"—" }}</td>
+                                <td>{{ val|default:"—"|catalogue_text }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}

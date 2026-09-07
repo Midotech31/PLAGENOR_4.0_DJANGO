@@ -177,3 +177,22 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: PCR — Réaction en chaîne par polymérase
+    description: La réaction en chaîne par polymérase (PCR) est une technique de biologie moléculaire permettant
+      d’amplifier des séquences d’ADN spécifiques. La prestation comprend la préparation de la réaction avec les
+      amorces fournies par le demandeur, l’amplification sur un thermocycleur à gradient et la vérification par
+      électrophorèse sur gel d’agarose.
+  ar:
+    name: تفاعل البوليميراز المتسلسل (PCR)
+    description: تفاعل البوليميراز المتسلسل (PCR) تقنية في البيولوجيا الجزيئية لتضخيم تسلسلات محددة من الحمض النووي
+      DNA. تشمل الخدمة تحضير التفاعل باستخدام البادئات التي يقدّمها صاحب الطلب، والتضخيم بجهاز تدوير حراري ذي تدرّج
+      حراري، والتحقق بالرحلان الكهربائي على هلام الأغاروز.
+  en:
+    name: PCR (Polymerase Chain Reaction)
+    description: PCR (Polymerase Chain Reaction) is a molecular biology technique used to amplify specific DNA sequences.
+      The service includes reaction setup using requester-supplied primers, amplification on a gradient thermal
+      cycler, and verification by agarose gel electrophoresis.

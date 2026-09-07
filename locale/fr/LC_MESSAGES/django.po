@@ -1000,17 +1000,23 @@ msgstr ""
 msgid "Coût de la prestation"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:91 templates/dashboard/requester/index.html:176 templates/includes/service_form_fields.html:164
+#: templates/dashboard/admin_ops/index.html:91
+#: templates/dashboard/requester/index.html:176
+#: templates/includes/service_form_fields.html:164
 msgid "Coût estimé"
-msgstr ""
+msgstr "Coût estimé"
 
 #: templates/dashboard/admin_ops/index.html:96
 msgid "Coût validé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:102 templates/dashboard/admin_ops/request_detail.html:66 templates/dashboard/admin_ops/request_detail.html:173 templates/dashboard/requester/index.html:59 templates/dashboard/requester/request_detail.html:126
+#: templates/dashboard/admin_ops/index.html:102
+#: templates/dashboard/admin_ops/request_detail.html:66
+#: templates/dashboard/admin_ops/request_detail.html:173
+#: templates/dashboard/requester/index.html:59
+#: templates/dashboard/requester/request_detail.html:126
 msgid "Solde IBTIKAR déclaré"
-msgstr ""
+msgstr "Solde IBTIKAR déclaré"
 
 #: templates/dashboard/admin_ops/index.html:110
 msgid "Ajuster le coût (DA)"
@@ -1204,9 +1210,22 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:475 templates/dashboard/admin_ops/request_detail.html:97 templates/dashboard/analyst/index.html:271 templates/dashboard/analyst/index.html:312 templates/dashboard/client/index.html:333 templates/dashboard/client/request_detail.html:54 templates/dashboard/requester/index.html:372 templates/dashboard/requester/request_detail.html:56 templates/dashboard/superadmin/index.html:716 templates/dashboard/superadmin/index.html:970 templates/dashboard/superadmin/index.html:1102 templates/dashboard/superadmin/index.html:1127 templates/documents/block_confirm_delete.html:23 templates/documents/block_list.html:66
+#: templates/dashboard/admin_ops/index.html:475
+#: templates/dashboard/admin_ops/request_detail.html:97
+#: templates/dashboard/analyst/index.html:271
+#: templates/dashboard/analyst/index.html:312
+#: templates/dashboard/client/index.html:333
+#: templates/dashboard/client/request_detail.html:54
+#: templates/dashboard/requester/index.html:372
+#: templates/dashboard/requester/request_detail.html:56
+#: templates/dashboard/superadmin/index.html:716
+#: templates/dashboard/superadmin/index.html:970
+#: templates/dashboard/superadmin/index.html:1102
+#: templates/dashboard/superadmin/index.html:1127
+#: templates/documents/block_confirm_delete.html:23
+#: templates/documents/block_list.html:66
 msgid "Titre"
-msgstr ""
+msgstr "Titre"
 
 #: templates/dashboard/admin_ops/index.html:476 templates/dashboard/admin_ops/report_review.html:16 templates/dashboard/report_viewer.html:560 templates/dashboard/stats.html:35 templates/dashboard/superadmin/index.html:419 templates/dashboard/superadmin/index.html:462 templates/dashboard/superadmin/index.html:682 templates/dashboard/superadmin/index.html:717 templates/dashboard/superadmin/index.html:971 templates/dashboard/superadmin/revenue_archives.html:20 templates/dashboard/superadmin/service_edit.html:23 templates/dashboard/superadmin/service_edit.html:289 templates/pages/guest_submit.html:80 templates/pages/track.html:26
 msgid "Canal"
@@ -1256,13 +1275,41 @@ msgstr ""
 msgid "Disponible"
 msgstr ""
 
-#: templates/dashboard/admin_ops/index.html:553 templates/dashboard/admin_ops/request_detail.html:252 templates/dashboard/admin_ops/request_detail.html:257 templates/dashboard/analyst/index.html:353 templates/dashboard/analyst/request_detail.html:183 templates/dashboard/client/request_detail.html:310 templates/dashboard/client/request_detail.html:312 templates/dashboard/client/request_detail.html:317 templates/dashboard/requester/request_detail.html:139 templates/dashboard/requester/request_detail.html:141 templates/dashboard/requester/request_detail.html:146 templates/dashboard/superadmin/audit_log.html:66 templates/dashboard/superadmin/index.html:357 templates/dashboard/superadmin/index.html:477 templates/dashboard/superadmin/index.html:851 templates/dashboard/superadmin/index.html:1080 templates/dashboard/superadmin/index.html:1133 templates/documents/block_list.html:91
+#: templates/dashboard/admin_ops/index.html:553
+#: templates/dashboard/admin_ops/request_detail.html:252
+#: templates/dashboard/admin_ops/request_detail.html:257
+#: templates/dashboard/analyst/index.html:353
+#: templates/dashboard/analyst/request_detail.html:183
+#: templates/dashboard/client/request_detail.html:310
+#: templates/dashboard/client/request_detail.html:312
+#: templates/dashboard/client/request_detail.html:317
+#: templates/dashboard/requester/request_detail.html:139
+#: templates/dashboard/requester/request_detail.html:141
+#: templates/dashboard/requester/request_detail.html:146
+#: templates/dashboard/superadmin/audit_log.html:66
+#: templates/dashboard/superadmin/index.html:357
+#: templates/dashboard/superadmin/index.html:477
+#: templates/dashboard/superadmin/index.html:851
+#: templates/dashboard/superadmin/index.html:1080
+#: templates/dashboard/superadmin/index.html:1133
+#: templates/documents/block_list.html:91
 msgid "Oui"
-msgstr ""
+msgstr "Oui"
 
-#: templates/dashboard/admin_ops/index.html:555 templates/dashboard/admin_ops/request_detail.html:257 templates/dashboard/analyst/index.html:353 templates/dashboard/analyst/request_detail.html:183 templates/dashboard/client/request_detail.html:317 templates/dashboard/requester/request_detail.html:146 templates/dashboard/superadmin/index.html:359 templates/dashboard/superadmin/index.html:477 templates/dashboard/superadmin/index.html:851 templates/dashboard/superadmin/index.html:1080 templates/dashboard/superadmin/index.html:1133 templates/documents/block_list.html:93
+#: templates/dashboard/admin_ops/index.html:555
+#: templates/dashboard/admin_ops/request_detail.html:257
+#: templates/dashboard/analyst/index.html:353
+#: templates/dashboard/analyst/request_detail.html:183
+#: templates/dashboard/client/request_detail.html:317
+#: templates/dashboard/requester/request_detail.html:146
+#: templates/dashboard/superadmin/index.html:359
+#: templates/dashboard/superadmin/index.html:477
+#: templates/dashboard/superadmin/index.html:851
+#: templates/dashboard/superadmin/index.html:1080
+#: templates/dashboard/superadmin/index.html:1133
+#: templates/documents/block_list.html:93
 msgid "Non"
-msgstr ""
+msgstr "Non"
 
 #: templates/dashboard/admin_ops/index.html:600 templates/dashboard/finance/index.html:14 templates/dashboard/superadmin/index.html:810
 msgid "Budget IBTIKAR (virtuel)"
@@ -1412,17 +1459,46 @@ msgstr ""
 msgid "Total estimé"
 msgstr ""
 
-#: templates/dashboard/admin_ops/prepare_quote.html:48 templates/dashboard/admin_ops/request_detail.html:111 templates/dashboard/analyst/request_detail.html:124 templates/dashboard/client/request_detail.html:68 templates/dashboard/requester/request_detail.html:70
+#: templates/dashboard/admin_ops/prepare_quote.html:48
+#: templates/dashboard/admin_ops/request_detail.html:111
+#: templates/dashboard/analyst/request_detail.html:124
+#: templates/dashboard/client/request_detail.html:68
+#: templates/dashboard/requester/request_detail.html:70
 msgid "Paramètres du service"
-msgstr ""
+msgstr "Paramètres du service"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:63 templates/dashboard/admin_ops/request_detail.html:126 templates/dashboard/analyst/request_detail.html:139 templates/dashboard/client/request_detail.html:83 templates/dashboard/requester/request_detail.html:85
+#: templates/dashboard/admin_ops/prepare_quote.html:63
+#: templates/dashboard/admin_ops/request_detail.html:126
+#: templates/dashboard/analyst/request_detail.html:139
+#: templates/dashboard/client/request_detail.html:83
+#: templates/dashboard/requester/request_detail.html:85
 msgid "Tableau des échantillons"
-msgstr ""
+msgstr "Tableau des échantillons"
 
-#: templates/dashboard/admin_ops/prepare_quote.html:96 templates/dashboard/admin_ops/report_review.html:17 templates/dashboard/analyst/index.html:272 templates/dashboard/analyst/index.html:313 templates/dashboard/client/index.html:42 templates/dashboard/client/index.html:334 templates/dashboard/report_viewer.html:556 templates/dashboard/requester/index.html:127 templates/dashboard/requester/index.html:373 templates/dashboard/stats.html:136 templates/dashboard/superadmin/index.html:719 templates/dashboard/superadmin/index.html:1066 templates/documents/block_list.html:30 templates/documents/block_list.html:63 templates/documents/template_confirm_delete.html:33 templates/documents/template_detail.html:35 templates/documents/template_form.html:24 templates/documents/template_form.html:142 templates/documents/template_list.html:34 templates/documents/template_list.html:68 templates/pages/guest_submit.html:98 templates/pages/guest_submit_success.html:25 templates/pages/track.html:35
+#: templates/dashboard/admin_ops/prepare_quote.html:96
+#: templates/dashboard/admin_ops/report_review.html:17
+#: templates/dashboard/analyst/index.html:272
+#: templates/dashboard/analyst/index.html:313
+#: templates/dashboard/client/index.html:42
+#: templates/dashboard/client/index.html:334
+#: templates/dashboard/report_viewer.html:556
+#: templates/dashboard/requester/index.html:127
+#: templates/dashboard/requester/index.html:373
+#: templates/dashboard/stats.html:136
+#: templates/dashboard/superadmin/index.html:719
+#: templates/dashboard/superadmin/index.html:1066
+#: templates/documents/block_list.html:30
+#: templates/documents/block_list.html:63
+#: templates/documents/template_confirm_delete.html:33
+#: templates/documents/template_detail.html:35
+#: templates/documents/template_form.html:24
+#: templates/documents/template_form.html:142
+#: templates/documents/template_list.html:34
+#: templates/documents/template_list.html:68
+#: templates/pages/guest_submit.html:98
+#: templates/pages/guest_submit_success.html:25 templates/pages/track.html:35
 msgid "Service"
-msgstr ""
+msgstr "Service"
 
 #: templates/dashboard/admin_ops/prepare_quote.html:98 templates/dashboard/admin_ops/request_detail.html:82 templates/dashboard/admin_ops/services.html:8 templates/dashboard/analyst/request_detail.html:112 templates/dashboard/client/request_detail.html:41 templates/dashboard/requester/request_detail.html:43 templates/dashboard/superadmin/index.html:411 templates/dashboard/superadmin/index.html:460
 msgid "Code"
@@ -1601,9 +1677,25 @@ msgstr ""
 msgid "Détails du service"
 msgstr ""
 
-#: templates/dashboard/admin_ops/request_detail.html:85 templates/dashboard/admin_ops/request_detail.html:100 templates/dashboard/admin_ops/request_detail.html:205 templates/dashboard/analyst/request_detail.html:115 templates/dashboard/client/index.html:56 templates/dashboard/client/request_detail.html:44 templates/dashboard/client/request_detail.html:57 templates/dashboard/client/request_detail.html:147 templates/dashboard/requester/index.html:141 templates/dashboard/requester/request_detail.html:46 templates/dashboard/requester/request_detail.html:59 templates/dashboard/superadmin/index.html:442 templates/dashboard/superadmin/service_edit.html:47 templates/documents/template_detail.html:46 templates/documents/template_detail.html:89 templates/documents/template_form.html:56 templates/pages/guest_submit.html:115
+#: templates/dashboard/admin_ops/request_detail.html:85
+#: templates/dashboard/admin_ops/request_detail.html:100
+#: templates/dashboard/admin_ops/request_detail.html:205
+#: templates/dashboard/analyst/request_detail.html:115
+#: templates/dashboard/client/index.html:56
+#: templates/dashboard/client/request_detail.html:44
+#: templates/dashboard/client/request_detail.html:57
+#: templates/dashboard/client/request_detail.html:147
+#: templates/dashboard/requester/index.html:141
+#: templates/dashboard/requester/request_detail.html:46
+#: templates/dashboard/requester/request_detail.html:59
+#: templates/dashboard/superadmin/index.html:442
+#: templates/dashboard/superadmin/service_edit.html:47
+#: templates/documents/template_detail.html:46
+#: templates/documents/template_detail.html:89
+#: templates/documents/template_form.html:56
+#: templates/pages/guest_submit.html:115
 msgid "Description"
-msgstr ""
+msgstr "Description"
 
 #: templates/dashboard/admin_ops/request_detail.html:87
 msgid "Disponibilité"
@@ -1617,13 +1709,21 @@ msgstr ""
 msgid "jours"
 msgstr ""
 
-#: templates/dashboard/admin_ops/request_detail.html:95 templates/dashboard/client/request_detail.html:52 templates/dashboard/requester/request_detail.html:54 templates/pages/guest_submit.html:78
+#: templates/dashboard/admin_ops/request_detail.html:95
+#: templates/dashboard/client/request_detail.html:52
+#: templates/dashboard/requester/request_detail.html:54
+#: templates/pages/guest_submit.html:78
 msgid "Détails de la demande"
-msgstr ""
+msgstr "Détails de la demande"
 
-#: templates/dashboard/admin_ops/request_detail.html:104 templates/dashboard/client/index.html:60 templates/dashboard/client/request_detail.html:61 templates/dashboard/requester/index.html:145 templates/dashboard/requester/request_detail.html:63 templates/pages/guest_submit.html:119
+#: templates/dashboard/admin_ops/request_detail.html:104
+#: templates/dashboard/client/index.html:60
+#: templates/dashboard/client/request_detail.html:61
+#: templates/dashboard/requester/index.html:145
+#: templates/dashboard/requester/request_detail.html:63
+#: templates/pages/guest_submit.html:119
 msgid "Urgence"
-msgstr ""
+msgstr "Urgence"
 
 #: templates/dashboard/admin_ops/request_detail.html:161 templates/dashboard/client/request_detail.html:118 templates/dashboard/requester/request_detail.html:120
 msgid "Informations financières"
@@ -1937,9 +2037,18 @@ msgstr "Les documents déjà émis conservent leurs montants et leur version ori
 msgid "Prestation"
 msgstr "Prestation"
 
-#: templates/dashboard/admin_ops/services.html:9 templates/dashboard/superadmin/index.html:256 templates/dashboard/superadmin/index.html:479 templates/dashboard/superadmin/index.html:553 templates/dashboard/superadmin/index.html:632 templates/dashboard/superadmin/index.html:1051 templates/dashboard/superadmin/service_edit.html:468 templates/documents/block_list.html:97 templates/documents/template_detail.html:117 templates/documents/template_list.html:102
+#: templates/dashboard/admin_ops/services.html:9
+#: templates/dashboard/superadmin/index.html:256
+#: templates/dashboard/superadmin/index.html:479
+#: templates/dashboard/superadmin/index.html:553
+#: templates/dashboard/superadmin/index.html:632
+#: templates/dashboard/superadmin/index.html:1051
+#: templates/dashboard/superadmin/service_edit.html:468
+#: templates/documents/block_list.html:97
+#: templates/documents/template_detail.html:117
+#: templates/documents/template_list.html:102
 msgid "Modifier"
-msgstr ""
+msgstr "Modifier"
 
 #: templates/dashboard/analyst/index.html:10
 msgid "Espace analyste"
@@ -5083,3 +5192,24 @@ msgstr ""
 #: templates/pages/track.html:87
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr ""
+
+
+msgid "Vérification de la demande"
+msgstr "Vérification de la demande"
+
+msgid "Veuillez vérifier les informations avant de soumettre."
+msgstr "Veuillez vérifier les informations avant de soumettre."
+
+msgid "Confirmer et soumettre"
+msgstr "Confirmer et soumettre"
+
+msgid ""
+"Le nom et la description sont obligatoires en français, arabe et anglais."
+msgstr ""
+"Le nom et la description sont obligatoires en français, arabe et anglais."
+
+msgid "Livrables"
+msgstr "Livrables"
+
+msgid "Chaque champ doit avoir un libellé en français, arabe et anglais."
+msgstr "Chaque champ doit avoir un libellé en français, arabe et anglais."

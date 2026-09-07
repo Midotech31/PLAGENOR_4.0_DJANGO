@@ -165,3 +165,20 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: Contrôle qualité des acides nucléiques
+    description: Contrôle qualité des acides nucléiques (ADN ou ARN), comprenant la quantification fluorimétrique
+      et l’évaluation de l’intégrité par électrophorèse sur gel d’agarose. Cette prestation permet d’évaluer l’adéquation
+      des échantillons avant les analyses moléculaires ultérieures.
+  ar:
+    name: مراقبة جودة الأحماض النووية
+    description: مراقبة جودة الأحماض النووية (DNA أو RNA)، وتشمل القياس الكمي بالتألق وتقييم سلامتها بالرحلان الكهربائي
+      على هلام الأغاروز. تهدف هذه الخدمة إلى تقييم مدى ملاءمة العينات للتحليلات الجزيئية اللاحقة.
+  en:
+    name: Nucleic Acid Quality Control
+    description: Quality control of nucleic acids (DNA or RNA) including fluorimetric quantification and integrity
+      assessment by agarose gel electrophoresis. This service is intended to assess sample suitability prior to
+      downstream molecular analyses.

@@ -125,3 +125,22 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: Séquençage de l’ADN par la méthode Sanger
+    description: Séquençage de haute qualité de l’ADN par la méthode Sanger pour les amplicons PCR. La prestation
+      prend en charge les produits PCR purifiés ou non purifiés, avec des lectures sens, antisens ou bidirectionnelles.
+      Les résultats sont remis sous forme de chromatogrammes et de fichiers de séquences FASTA. Aucune identification
+      ni interprétation n’est incluse.
+  ar:
+    name: تسلسل الحمض النووي DNA بطريقة سانغر
+    description: تسلسل عالي الجودة للحمض النووي DNA بطريقة سانغر لنواتج تضخيم PCR. تدعم الخدمة نواتج PCR المنقّاة
+      وغير المنقّاة، بقراءات أمامية أو عكسية أو في الاتجاهين. تُسلّم النتائج في صورة مخططات كروماتوغرافية وملفات
+      تسلسل FASTA. لا تشمل الخدمة التعرّف على الكائنات أو تفسير النتائج.
+  en:
+    name: DNA Sequencing via Sanger Method
+    description: High-quality DNA sequencing using the Sanger method for PCR amplicons. The service supports sequencing
+      of purified or non-purified PCR products using forward, reverse, or bidirectional reads. Results are delivered
+      as chromatograms and FASTA sequence files. No identification or interpretation is included.
