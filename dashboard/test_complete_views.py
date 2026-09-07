@@ -19,6 +19,13 @@ from dashboard.views import admin_ops,analyst,client,requester,superadmin
 @override_settings(STORAGES={'default':{'BACKEND':'django.core.files.storage.FileSystemStorage'},'staticfiles':{'BACKEND':'django.contrib.staticfiles.storage.StaticFilesStorage'}})
 class CompleteViewContracts(TestCase):
     def setUp(self):
+        # RequestFactory does not manage Django's HTTP lifecycle. Closing a
+        # FileResponse emits request_finished, which would close PostgreSQL's
+        # connection while TestCase still owns its outer transaction.
+        from django.core.signals import request_finished
+        from django.db import close_old_connections
+        request_finished.disconnect(close_old_connections)
+        self.addCleanup(request_finished.connect, close_old_connections)
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.media=override_settings(MEDIA_ROOT=self.tmp.name);self.media.enable();self.addCleanup(self.media.disable)
         self.users={r:User.objects.create_user('complete-'+r,role=r) for r in ('SUPER_ADMIN','PLATFORM_ADMIN','MEMBER','CLIENT','REQUESTER','FINANCE')}
