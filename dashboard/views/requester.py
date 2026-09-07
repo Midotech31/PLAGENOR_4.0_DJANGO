@@ -1,3 +1,4 @@
+from django.db.models import F
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -124,7 +125,7 @@ def request_detail(request, pk):
 
     # Workflow history — same view as the analyst's, so the requester
     # can follow the progress of their own request step by step.
-    history = req.history.select_related('actor').order_by('created_at')
+    history = req.history.exclude(from_status=F('to_status')).select_related('actor').order_by('created_at')
 
     context = {
         'req': req,

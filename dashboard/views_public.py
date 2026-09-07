@@ -1,3 +1,4 @@
+from django.db.models import F
 import uuid as uuid_lib
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
@@ -103,7 +104,7 @@ def track(request):
                 if tracked_request.report_file and not tracked_request.report_token:
                     tracked_request.report_token = uuid_lib.uuid4()
                     tracked_request.save(update_fields=['report_token'])
-                history = tracked_request.history.select_related('actor').order_by('created_at')
+                history = tracked_request.history.exclude(from_status=F('to_status')).select_related('actor').order_by('created_at')
     return render(request, 'pages/track.html', {
         'tracked_request': tracked_request,
         'history': history,

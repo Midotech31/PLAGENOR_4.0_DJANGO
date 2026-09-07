@@ -225,6 +225,8 @@ def quote_view(request, request_id):
     req = get_object_or_404(Request, pk=request_id)
     if not _can_download_request_doc(request.user, req):
         return HttpResponseForbidden()
+    if request.user.role in ('CLIENT', 'REQUESTER') and not req.client_quote_visible:
+        return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'QUOTE', generate_quote,
         f"QUOTE_{req.display_id}",

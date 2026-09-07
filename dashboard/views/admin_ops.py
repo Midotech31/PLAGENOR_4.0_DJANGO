@@ -18,6 +18,7 @@ from core.exceptions import (
     InvalidTransitionError, AuthorizationError, FinancialValidationError,
 )
 from core.financial import compute_invoice_totals, parse_money
+from core.commercial import document_identity
 from core.uploads import validate_upload
 from django.core.exceptions import ValidationError
 from notifications.models import Notification
@@ -50,7 +51,7 @@ def index(request):
             'REPORT_UPLOADED', 'REPORT_VALIDATED',
             'COMPLETED',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
             'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         ]
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')[:50]
@@ -60,14 +61,14 @@ def index(request):
         status__in=[
             'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED',
         ]
     ).select_related('service', 'requester').order_by('-created_at')
 
     # Requests ready for assignment — newly-ready requests plus tasks an
     # analyst declined (back to ASSIGNED with no assignee).
     assignable_requests = Request.objects.filter(
-        Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'ORDER_UPLOADED', 'INVOICE_GENERATED'])
+        Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED'])
         | Q(status='ASSIGNED', assigned_to__isnull=True)
     ).select_related('service', 'requester').order_by('-created_at')
 
@@ -212,6 +213,10 @@ def request_detail(request, pk):
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
         'can_reassign_active': req.status in REASSIGN_ACTIVE_STATES,
+        'invoices': Invoice.objects.filter(request=req),
+        'can_issue_invoice': req.channel == 'GENOCLAB' and bool(req.quote_detail.get('items'))
+            and req.status not in ('REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'REJECTED')
+            and not Invoice.objects.filter(request=req, cancelled_at__isnull=True).exists(),
     }
     return render(request, 'dashboard/admin_ops/request_detail.html', context)
 
@@ -274,7 +279,7 @@ def assign_request(request, pk):
         and req.status in REASSIGN_ACTIVE_STATES
     )
     is_initial_assign = req.status in (
-        'IBTIKAR_CODE_SUBMITTED', 'ORDER_UPLOADED', 'INVOICE_GENERATED',
+        'IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED',
     )
 
     if not (is_decline_rebound or is_active_reassignment or is_initial_assign):
@@ -830,11 +835,21 @@ def prepare_quote(request, pk):
         total_ttc = totals['total_ttc']
 
         from core.commercial import document_identity
-        quote_detail = {'items': items, 'notes': notes, 'identity': document_identity(req), **totals}
+        identity = document_identity(req)
+        old_identity = (req.quote_detail or {}).get('identity', {})
+        for key in ('billing_client_details', 'payment_terms', 'commercial_terms'):
+            identity[key] = request.POST.get(key, old_identity.get(key, '')).strip()[:3000]
+        if identity['billing_client_details']:
+            identity['client_lines'].extend(identity['billing_client_details'].splitlines())
+        identity['client_name'] = request.POST.get('billing_client_name', '').strip()[:250] or identity['client_name']
+        quote_detail = {'items': items, 'notes': notes, 'identity': identity, **totals}
 
+        if req.status == 'QUOTE_REJECTED_BY_CLIENT':
+            req.quote_number = ''
+            req.quote_date = None
         req.quote_detail = quote_detail
         req.quote_amount = total_ttc
-        req.save(update_fields=['quote_detail', 'quote_amount'])
+        req.save(update_fields=['quote_detail', 'quote_amount', 'quote_number', 'quote_date'])
 
         action = request.POST.get('action', 'save')
         if action == 'send':
@@ -892,10 +907,14 @@ def generate_invoice(request, pk):
         try:
             with transaction.atomic():
                 req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
-                if req.status != 'ORDER_UPLOADED':
-                    raise InvalidTransitionError(
-                        "La facture ne peut être générée que depuis le statut "
-                        f"« Bon de Commande Uploadé » (statut actuel: {req.get_status_display()}).")
+                if req.channel != 'GENOCLAB' or req.status in (
+                        'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT', 'QUOTE_VALIDATED_BY_CLIENT',
+                        'QUOTE_REJECTED_BY_CLIENT', 'REJECTED'):
+                    raise InvalidTransitionError('La facture exige un devis accepté et un bon de commande reçu.')
+                if Invoice.objects.filter(request=req, cancelled_at__isnull=True).exists():
+                    raise FinancialValidationError('Une facture active existe déjà pour cette demande.')
+                if req.status != 'ORDER_UPLOADED' and not request.POST.get('reason', '').strip():
+                    raise FinancialValidationError('Une justification est obligatoire pour régulariser une facture.')
 
                 quote = req.quote_detail or {}
                 items = quote.get('items', [])
@@ -969,11 +988,11 @@ def generate_invoice(request, pk):
                         invoice_number__startswith=f'{prefix}-{year}-',
                     ).count(),
                 )
-                Invoice.objects.create(
+                invoice = Invoice.objects.create(
                     invoice_number=invoice_number,
                     request=req,
                     client=req.requester,
-                    document_snapshot=quote.get('identity', {}),
+                    document_snapshot=quote.get('identity') or document_identity(req),
                     line_items=line_items,
                     subtotal_ht=totals['subtotal_before_tax'],
                     vat_rate=totals['vat_rate'],
@@ -981,11 +1000,15 @@ def generate_invoice(request, pk):
                     total_ttc=totals['total_ttc'],
                     created_by=request.user,
                 )
+                from documents.generators import generate_invoice_document
+                generate_invoice_document(invoice)
                 # If this transition fails, the surrounding transaction also
                 # removes the invoice and sequence allocation.
-                transition(
-                    req, 'INVOICE_GENERATED', request.user,
-                    notes=f'Facture {invoice_number} générée')
+                if req.status == 'ORDER_UPLOADED':
+                    transition(req, 'INVOICE_GENERATED', request.user, notes=f'Facture {invoice_number} générée')
+                else:
+                    RequestHistory.objects.create(request=req, from_status=req.status, to_status=req.status,
+                        actor=request.user, notes=f'Régularisation facture {invoice_number}: {request.POST["reason"].strip()}')
         except (InvalidTransitionError, AuthorizationError,
                 FinancialValidationError, ValueError) as e:
             messages.error(request, str(e))
@@ -1014,12 +1037,15 @@ def confirm_payment(request, pk):
             req = get_object_or_404(
                 Request.objects.select_for_update(), pk=pk,
                 status='PAYMENT_PROOF_UPLOADED')
+            if not req.payment_receipt_file:
+                raise ValueError('Une pièce de paiement est nécessaire à la vérification.')
             req.payment_verified_at = timezone.now()
             req.payment_verified_by = request.user
             req.payment_verification_note = note
             req.save(update_fields=[
                 'payment_verified_at', 'payment_verified_by',
                 'payment_verification_note'])
+            Invoice.objects.filter(request=req, cancelled_at__isnull=True).update(payment_status='COMPLETED')
             transition(req, 'PAYMENT_CONFIRMED', request.user,
                        notes='Preuve de paiement vérifiée par admin')
         messages.success(request, f"Paiement confirmé pour {req.display_id}.")
@@ -1066,3 +1092,28 @@ def financial_visibility(request):
                        actor=request.user, details={'show_estimates':enabled, 'valid_until':str(until)})
             return redirect('dashboard:financial_visibility')
     return render(request, 'dashboard/admin_ops/financial_visibility.html', {'policy':policy})
+
+
+@login_required
+def cancel_invoice(request, pk):
+    from core.commercial import cancel_unpaid_invoice
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+    if request.user.role not in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'):
+        return HttpResponseForbidden()
+    get_object_or_404(Invoice, pk=pk)
+    try:
+        cancel_unpaid_invoice(pk, request.user, request.POST.get('reason', ''))
+        messages.success(request, 'Facture annulée et conservée dans les archives.')
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    return redirect_back(request, 'dashboard:router')
+
+
+@admin_required
+def services(request):
+    from core.models import Service
+    return render(request, 'dashboard/admin_ops/services.html', {
+        'services': Service.objects.order_by('code'),
+    })

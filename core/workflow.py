@@ -60,7 +60,6 @@ ROLE_PERMISSIONS = {
     ('QUOTE_REJECTED_BY_CLIENT', 'QUOTE_DRAFT'): _ADMINS,  # admin renegotiates after rejection
     ('QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED'): _ADMINS + ['CLIENT'],
     ('ORDER_UPLOADED', 'INVOICE_GENERATED'): _ADMINS + ['FINANCE'],
-    ('ORDER_UPLOADED', 'ASSIGNED'): _ADMINS,
     ('INVOICE_GENERATED', 'ASSIGNED'): _ADMINS,
     ('ANALYSIS_FINISHED', 'PAYMENT_PENDING'): _ADMINS + ['MEMBER'],
     ('PAYMENT_PENDING', 'PAYMENT_PROOF_UPLOADED'): _ADMINS + ['CLIENT'],
@@ -110,6 +109,8 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     with transaction.atomic():
         locked = Request.objects.select_for_update().get(pk=request_obj.pk)
         old_status = locked.status
+        if force and (getattr(actor, 'role', '') != 'SUPER_ADMIN' or not notes.strip()):
+            raise AuthorizationError('Un forçage exige le Superadmin et une justification.')
 
         if not force:
             allowed = get_allowed_next_states(locked.channel, old_status)
@@ -124,6 +125,13 @@ def transition(request_obj, to_status, actor, notes='', force=False):
                     f"{old_status} -> {to_status}"
                 )
 
+        if locked.channel == 'GENOCLAB' and to_status in ('INVOICE_GENERATED', 'ASSIGNED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED'):
+            from core.models import Invoice
+            if not Invoice.objects.filter(request=locked, cancelled_at__isnull=True).exists():
+                raise InvalidTransitionError('Une facture active doit être émise avant cette étape.')
+        if to_status == 'QUOTE_SENT' and not (locked.quote_detail or {}).get('items'):
+            raise InvalidTransitionError('Préparez les lignes du devis avant son envoi.')
+
         if to_status == 'PAYMENT_CONFIRMED' and (
                 not locked.payment_verified_at
                 or not locked.payment_verified_by_id
@@ -133,6 +141,9 @@ def transition(request_obj, to_status, actor, notes='', force=False):
 
         locked.status = to_status
         locked.save(update_fields=['status', 'updated_at'])
+        if to_status == 'QUOTE_SENT':
+            from documents.generators import generate_quote
+            generate_quote(locked)
 
         RequestHistory.objects.create(
             request=locked,
@@ -224,11 +235,11 @@ def _create_notifications(request_obj, to_status):
 
         # Always notify admins for important transitions
         if to_status in (
-            'SUBMITTED', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
+            'SUBMITTED', 'VALIDATION_FINANCE', 'IBTIKAR_CODE_SUBMITTED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'REPORT_UPLOADED', 'REQUEST_CREATED',
             # GENOCLAB admin-relevant states
-            'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'PAYMENT_CONFIRMED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'QUOTE_REJECTED_BY_CLIENT', 'ORDER_UPLOADED', 'PAYMENT_PROOF_UPLOADED', 'PAYMENT_CONFIRMED',
         ):
-            admins = User.objects.filter(role__in=['SUPER_ADMIN', 'PLATFORM_ADMIN'], is_active=True)
+            admins = User.objects.filter(role__in=(['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'] if to_status in ('VALIDATION_FINANCE', 'PAYMENT_PROOF_UPLOADED', 'PAYMENT_CONFIRMED') else ['SUPER_ADMIN', 'PLATFORM_ADMIN']), is_active=True)
             for admin in admins:
                 Notification.objects.create(
                     user=admin,
@@ -278,7 +289,7 @@ def _send_transition_emails(request_obj, old_status, to_status):
         _safe(nem.notify_assignment, request_obj, request_obj.assigned_to)
     elif to_status in ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'):
         _safe(nem.notify_appointment, request_obj)
-    elif to_status in ('REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT'):
+    elif to_status in ('SENT_TO_REQUESTER', 'SENT_TO_CLIENT'):
         _safe(nem.notify_report_delivery, request_obj)
 
     # Generic status-change email so the requester/client gets a paper
@@ -304,7 +315,8 @@ def _send_transition_emails(request_obj, old_status, to_status):
         'PAYMENT_PENDING',            # gentle nudge
         'SENT_TO_CLIENT',             # report is ready
     }
-    if to_status in _IMPORTANT_EMAIL_STATUSES:
+    if to_status in _IMPORTANT_EMAIL_STATUSES and to_status not in {
+            'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT'}:
         _safe(nem.notify_status_change, request_obj, old_status, to_status)
 
 

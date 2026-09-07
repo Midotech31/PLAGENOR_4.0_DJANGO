@@ -150,10 +150,9 @@
                         {% elif req.status == 'QUOTE_SENT' %}
                         <span class="text-sm text-muted">{% trans "En attente de réponse du client" %}</span>
 
-                        {% elif req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
-                        <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+                        {% elif req.status == 'ORDER_UPLOADED' %}
+                        <form method="post" action="{% url 'dashboard:admin_generate_invoice' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <input type="hidden" name="to_status" value="INVOICE_GENERATED">
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Générer facture" %}</button>
                         </form>
 

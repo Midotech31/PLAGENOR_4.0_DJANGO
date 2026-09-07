@@ -62,6 +62,7 @@ CMS_DEFAULTS = {
     'genoclab_issuer_treasury':   "Cpte Trésor : 00831001131000208471",
     'genoclab_issuer_nif':        "N.I.F : 415020000310784",
     'genoclab_issuer_ccp':        "Cpte CCP Agent comptable de l'ESSBO : 007999990000",
+    'genoclab_issuer_legal_details': '',
     'genoclab_issuer_phone':      "Téléphone / Fax : +213 41 24 63 59",
     'genoclab_quote_title':       "Facture Proforma",
     'genoclab_invoice_title':     "Facture",
@@ -297,6 +298,7 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
         (get_value('genoclab_issuer_treasury'), {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
         (get_value('genoclab_issuer_nif'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
         (get_value('genoclab_issuer_ccp'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+        (get_value('genoclab_issuer_legal_details'), {'size': SIZE_CAPTION + 1}),
         (get_value('genoclab_issuer_phone'),    {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
     ])
 
@@ -307,6 +309,8 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
     for line in (client_lines or []):
         if line:
             client_paras.append((line, {}))
+    if identity and identity.get('payment_terms'):
+        client_paras.append((identity['payment_terms'], {}))
     client_paras.append(("", {}))  # spacer
     client_paras.append((f"Date : {doc_date}", {'bold': True}))
     client_paras.append((f"N° : {doc_number}", {'bold': True}))
@@ -496,6 +500,8 @@ def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None) 
                 legal_text = legal_text.rstrip(' .') + f" {words_upper}"
             legal_text = legal_text.rstrip(' .') + f" (soit {figures} DA)."
 
+    if identity and identity.get('commercial_terms'):
+        doc.add_paragraph(identity['commercial_terms'])
     legal = doc.add_paragraph(legal_text)
     for run in legal.runs:
         run.font.name = BRAND_FONT

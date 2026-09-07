@@ -27,10 +27,15 @@ def _safe_assigned_user(request_obj):
 def notify_user(user, message, notification_type='INFO', request_obj=None,
                link_url='', link_text='', action_url='', action_text=''):
     """Create an in-app notification for a user with deep linking support."""
-    # Auto-generate link URL if request_obj is provided
-    if not link_url and request_obj:
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
-        link_text = f"Voir la demande {request_obj.display_id}"
+    # Resolve request links for the recipient, never the sender's role.
+    if request_obj:
+        link_url = Notification(user=user, request=request_obj).get_absolute_url()
+        lang = getattr(user, 'preferred_language', 'fr')
+        label = {'fr': 'Voir la demande', 'en': 'View request', 'ar': 'عرض الطلب'}.get(lang, 'Voir la demande')
+        link_text = f"{label} {request_obj.display_id}"
+        if action_url:
+            action_url = link_url
+
     
     Notification.objects.create(
         user=user,
@@ -198,7 +203,7 @@ def mark_all_as_read(user):
 def notify_purchase_order_uploaded(request_obj):
     """Notify admin that client has uploaded purchase order (Bon de commande).
     
-    Per Algerian commercial code, purchase order is mandatory for commercial transactions.
+    Purchase orders are required by the internal commercial workflow.
     """
     from accounts.models import User
     
@@ -257,24 +262,39 @@ def notify_payment_received(request_obj):
 
 
 def notify_payment_request(request_obj):
-    """Notify client that they need to pay to receive their report.
-    
-    This is triggered when analysis is finished - client must pay before
-    receiving the analysis report.
-    """
-    link_url = f"/dashboard/client/request/{request_obj.pk}/"
-    link_text = f"Demande {request_obj.display_id}"
-    
-    if request_obj.requester:
-        # Calculate the amount to pay
-        amount = request_obj.admin_validated_price or request_obj.quote_amount or 0
-        
-        notify_user(
-            request_obj.requester,
-            f"Votre analyse pour {request_obj.display_id} est terminée. Paiement de {amount:,.0f} DZD requis pour recevoir le rapport.",
-            'PAYMENT',
-            request_obj,
-            link_url=link_url,
-            link_text=link_text,
-            action_text='Effectuer le paiement',
-        )
+    """Request payment against the issued invoice, never a mutable estimate."""
+    from core.models import Invoice
+
+    if not request_obj.requester or request_obj.channel != 'GENOCLAB':
+        return False
+    invoice = Invoice.objects.filter(
+        request=request_obj, cancelled_at__isnull=True,
+    ).first()
+    if (invoice is None or invoice.payment_status == 'COMPLETED'
+            or invoice.total_ttc <= 0):
+        return False
+
+    lang = getattr(request_obj.requester, 'preferred_language', 'fr')
+    reference = invoice.invoice_number
+    # The legacy PARTIAL status does not record an amount paid. Do not invent
+    # a remaining balance or demand the full original invoice again.
+    if invoice.payment_status == 'PARTIAL':
+        texts = {
+            'fr': f"Votre analyse est terminée. Contactez le service financier pour le solde de la facture {reference}.",
+            'en': f"Your analysis is complete. Contact the finance team for the outstanding balance of invoice {reference}.",
+            'ar': f"اكتمل التحليل. يرجى الاتصال بالمصلحة المالية لمعرفة الرصيد المتبقي للفاتورة {reference}.",
+        }
+    else:
+        amount = f"{invoice.total_ttc:,.2f}"
+        texts = {
+            'fr': f"Votre analyse est terminée. Facture {reference} : {amount} DZD à régler avant la transmission du rapport.",
+            'en': f"Your analysis is complete. Invoice {reference}: {amount} DZD payable before report delivery.",
+            'ar': f"اكتمل التحليل. الفاتورة {reference}: يرجى تسديد {amount} دج قبل إرسال التقرير.",
+        }
+    notify_user(
+        request_obj.requester,
+        f"{texts.get(lang, texts['fr'])} — {request_obj.display_id}",
+        'PAYMENT', request_obj,
+        action_text={'fr': 'Voir la facture', 'en': 'View invoice', 'ar': 'عرض الفاتورة'}.get(lang, 'Voir la facture'),
+    )
+    return True

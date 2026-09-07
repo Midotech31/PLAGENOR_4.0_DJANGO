@@ -89,7 +89,7 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
 
     # Determine base price — defensive coercion in case the registry value
     # is mistyped (e.g. quoted "1000" with a thousand-separator).
-    pathogenic = bool(params.get('pathogenic', False))
+    pathogenic = str(params.get('pathogenic', '')).strip().lower() in ('true', '1', 'yes', 'on', 'oui')
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
     if base_key not in base_prices and 'default' not in base_prices:
         raise PricingConfigurationError(f"Missing base price for {base_key}.")
@@ -351,6 +351,9 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     ).order_by('priority', 'pk')
 
     if not pricing_configs.exists():
+        configured = service.pricing_configs.filter(models.Q(channel=channel) | models.Q(channel='BOTH'))
+        if configured.exists():
+            raise PricingConfigurationError('Aucun tarif en vigueur pour ce canal.')
         # Fall back to service's base price
         base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
         sample_count = len([s for s in sample_table if s]) if sample_table else 1
@@ -379,6 +382,15 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
     override_total = Decimal('0')
 
     for config in pricing_configs:
+        quantity_basis = max(sample_count, 1)
+        if config.min_quantity is not None and quantity_basis < config.min_quantity:
+            continue
+        if config.max_quantity is not None and quantity_basis > config.max_quantity:
+            continue
+        if config.min_amount is not None and total < config.min_amount:
+            continue
+        if config.max_amount is not None and total > config.max_amount:
+            continue
         config_total = Decimal('0')
         quantity = 1
 

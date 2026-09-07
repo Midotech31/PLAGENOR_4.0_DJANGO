@@ -54,12 +54,13 @@ def index(request):
         channel='IBTIKAR', status__in=['COMPLETED', 'CLOSED']
     ).aggregate(total=Sum('budget_amount'))['total'] or 0
     completed_genoclab = Invoice.objects.filter(
-        request__status__in=['COMPLETED', 'CLOSED']
+        request__status__in=['COMPLETED', 'ARCHIVED'], cancelled_at__isnull=True
     ).aggregate(total=Sum('total_ttc'))['total'] or 0
 
     context = {
         'ibtikar_virtual': ibtikar_virtual,
         'genoclab_real': genoclab_real,
+        'ohb_real': budget_data['ohb']['total'],
         'total_invoices': total_invoices,
         'ibtikar_students': ibtikar_students,
         'budget_data': budget_data,
@@ -109,18 +110,30 @@ def update_payment_status(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     new_status = request.POST.get('payment_status', '')
-    if new_status in dict(Invoice.PAYMENT_STATUS_CHOICES):
+    note = request.POST.get('verification_note', '').strip()
+    if new_status not in dict(Invoice.PAYMENT_STATUS_CHOICES) or len(note) < 3:
+        messages.error(request, "Un statut valide et une note de vérification sont obligatoires.")
+        return redirect_back(request, 'dashboard:finance')
+    try:
         with transaction.atomic():
-            invoice = get_object_or_404(
-                Invoice.objects.select_for_update(), pk=pk)
+            invoice = get_object_or_404(Invoice, pk=pk)
+            req = Request.objects.select_for_update().get(pk=invoice.request_id) if invoice.request_id else None
+            invoice = Invoice.objects.select_for_update().get(pk=pk)
+            if invoice.cancelled_at or (invoice.payment_status == 'COMPLETED' and new_status != 'COMPLETED'):
+                raise ValueError("Une facture annulée ou un paiement confirmé ne peut être modifié ici.")
+            if new_status == 'COMPLETED' and req and req.status != 'PAYMENT_CONFIRMED':
+                if req.status != 'PAYMENT_PROOF_UPLOADED' or not req.payment_receipt_file:
+                    raise ValueError("Une preuve de paiement doit être reçue et vérifiée avant confirmation.")
+                req.payment_verified_at = timezone.now()
+                req.payment_verified_by = request.user
+                req.payment_verification_note = note
+                req.save(update_fields=['payment_verified_at', 'payment_verified_by', 'payment_verification_note'])
+                transition(req, 'PAYMENT_CONFIRMED', request.user, notes=note)
             invoice.payment_status = new_status
             invoice.save(update_fields=['payment_status'])
-            log_financial_action(
-                'PAYMENT_STATUS_CHANGED', str(invoice.pk), request.user,
-                amount=float(invoice.total_ttc),
-                details={'payment_status': new_status},
-            )
-        messages.success(request, f"Statut de paiement mis à jour: {invoice.get_payment_status_display()}")
-    else:
-        messages.error(request, "Statut invalide.")
+            log_financial_action('PAYMENT_STATUS_CHANGED', str(invoice.pk), request.user,
+                amount=float(invoice.total_ttc), details={'payment_status': new_status, 'verification_note': note})
+        messages.success(request, "Paiement mis à jour.")
+    except (ValueError, InvalidTransitionError, AuthorizationError) as exc:
+        messages.error(request, str(exc))
     return redirect_back(request, 'dashboard:finance')

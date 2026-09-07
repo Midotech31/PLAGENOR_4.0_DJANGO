@@ -16,7 +16,7 @@ DEFAULTS_FR = {
 
     # Channel cards
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR.",
+    'ibtikar_description': 'IBTIKAR s’adresse aux étudiants algériens, quel que soit leur établissement. Soumettez vos demandes d’analyses pour vos projets d’études et de recherche, selon les conditions du dispositif IBTIKAR.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques.",
 
@@ -30,11 +30,11 @@ DEFAULTS_FR = {
     # Organization section
     'org_title': 'Organisation',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': "L'École Supérieure des Sciences Biologiques d'Oran (ESSBO) héberge la plateforme PLAGENOR, qui gère deux canaux de service : IBTIKAR pour la communauté académique interne, et GENOCLAB pour les prestations externes.",
+    'org_description': 'PLAGENOR est la plateforme technologique de génomique de l’École Supérieure en Sciences Biologiques d’Oran (ESSBO). Elle accueille les demandes des étudiants algériens via IBTIKAR et les demandes de prestations scientifiques et techniques.',
 
     # Footer
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': "Plateforme de Gestion des Opérations Scientifiques de l'ESSBO. Développée pour la gestion des canaux IBTIKAR et GENOCLAB.",
+    'footer_description': 'PLAGENOR — Plateforme technologique de génomique de l’ESSBO. Demandes d’analyses, suivi des prestations et remise des résultats.',
     'footer_copyright': '© 2026 ESSBO — Tous droits réservés',
     'footer_credit': 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO',
     'footer_contact_1': "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
@@ -44,7 +44,7 @@ DEFAULTS_FR = {
     'about_title': 'À propos de PLAGENOR',
     'about_intro': "L'ESSBO (École Supérieure en Sciences Biologiques d'Oran) héberge PLAGENOR, un service commun de recherche financé par la DGRSDT (Direction Générale de la Recherche Scientifique et du Développement Technologique).",
     'about_genoclab': "PLAGENOR héberge GENOCLAB, la filiale commerciale (SPA) de l'ESSBO, régie par le code de commerce algérien.",
-    'about_plagenor': "PLAGENOR 4.0 est la plateforme numérique de gestion de toutes les activités de PLAGENOR — agissant comme un ERP interne pour organiser les flux de travail, gérer les demandes IBTIKAR et les clients GENOCLAB.",
+    'about_plagenor': 'PLAGENOR 4.0 permet de soumettre et de suivre les demandes d’analyses, de gérer les prestations et de consulter les documents et résultats.',
     'about_missions_title': 'Deux missions',
     'about_ibtikar_mission': "Canal académique : réaliser des analyses génomiques pour les étudiants de fin de cycle (Master, Ingéniorat) et les doctorants de toutes les universités algériennes, afin de promouvoir la recherche scientifique en Algérie. Chaque étudiant éligible dispose d'un budget annuel virtuel de 200 000 DA géré par la DGRSDT.",
     'about_genoclab_mission': "Canal commercial : fournir les mêmes analyses génomiques aux clients externes (entreprises, hôpitaux, laboratoires privés, particuliers) sur une base commerciale avec facturation, TVA 19%, et paiement réel.",
@@ -113,7 +113,7 @@ DEFAULTS_EN = {
     'hero_btn_services': 'View services',
     'hero_btn_track': 'Track request',
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "Channel dedicated to ESSBO students and researchers. Submit your analysis requests as part of your research projects with funding framed by the IBTIKAR budget.",
+    'ibtikar_description': 'IBTIKAR is open to Algerian students, regardless of their institution. Submit analysis requests for your study and research projects, subject to the IBTIKAR programme’s conditions.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "Channel for external clients — universities, companies, laboratories. Request a quote, receive an invoice, and benefit from our scientific analysis services.",
     'institutions_title': 'INSTITUTIONS & PARTNERS',
@@ -121,9 +121,9 @@ DEFAULTS_EN = {
     'services_subtitle': 'Scientific and technical analyses offered by the ESSBO laboratory',
     'org_title': 'Organization',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': "The Higher School of Biological Sciences of Oran (ESSBO) hosts the PLAGENOR platform, which manages two service channels: IBTIKAR for the internal academic community, and GENOCLAB for external services.",
+    'org_description': 'PLAGENOR is the genomics technology platform of the Higher School of Biological Sciences of Oran (ESSBO). It handles requests from Algerian students through IBTIKAR and requests for scientific and technical services.',
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': "ESSBO Scientific Operations Management Platform. Developed for managing the IBTIKAR and GENOCLAB channels.",
+    'footer_description': 'PLAGENOR — ESSBO Genomics Technology Platform. Analysis requests, service tracking and delivery of results.',
     'footer_copyright': '© 2026 ESSBO — All rights reserved',
     'footer_credit': 'PLAGENOR 4.0 — Designed by Prof. Mohamed Merzoug | ESSBO',
     'footer_contact_1': "Higher School of Biological Sciences of Oran (ESSBO)",
@@ -131,7 +131,7 @@ DEFAULTS_EN = {
     'about_title': 'About PLAGENOR',
     'about_intro': "ESSBO (Higher School of Biological Sciences of Oran) hosts PLAGENOR, a shared research service funded by DGRSDT (General Directorate for Scientific Research and Technological Development).",
     'about_genoclab': "PLAGENOR hosts GENOCLAB, the commercial subsidiary (SPA) of ESSBO, governed by Algerian commercial code.",
-    'about_plagenor': "PLAGENOR 4.0 is the digital platform managing all PLAGENOR activities — acting as an internal ERP to organize workflows, handle IBTIKAR requests and GENOCLAB clients.",
+    'about_plagenor': 'PLAGENOR 4.0 lets you submit and track analysis requests, manage services, and access documents and results.',
     'about_missions_title': 'Two missions',
     'about_ibtikar_mission': "Academic channel: perform genomic analyses for graduating students (Master, Engineering) and doctoral candidates from all Algerian universities, to promote scientific research in Algeria. Each eligible student has an annual virtual budget of 200,000 DA managed by DGRSDT.",
     'about_genoclab_mission': "Commercial channel: provide the same genomic analyses to external clients (companies, hospitals, private laboratories, individuals) on a commercial basis with invoicing, 19% VAT, and real payment.",
@@ -168,7 +168,7 @@ DEFAULTS_AR = {
     'hero_btn_services': 'عرض الخدمات',
     'hero_btn_track': 'تتبع الطلب',
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "قناة مخصصة لطلاب وباحثي ESSBO. أرسل طلبات التحليل في إطار مشاريعك البحثية بتمويل من ميزانية IBTIKAR.",
+    'ibtikar_description': 'خدمات IBTIKAR متاحة للطلبة الجزائريين، مهما كانت مؤسسة انتمائهم. قدّموا طلبات التحليل لمشاريعكم الدراسية والبحثية وفق شروط برنامج IBTIKAR.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "قناة للعملاء الخارجيين — جامعات وشركات ومخابر. اطلب عرض أسعار، استلم فاتورة، واستفد من خدمات التحليل العلمي لدينا.",
     'institutions_title': 'المؤسسات والشركاء',
@@ -176,9 +176,9 @@ DEFAULTS_AR = {
     'services_subtitle': 'التحاليل العلمية والتقنية المقدمة من مخبر ESSBO',
     'org_title': 'التنظيم',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': "تستضيف المدرسة العليا للعلوم البيولوجية بوهران (ESSBO) منصة PLAGENOR التي تدير قناتين: IBTIKAR للمجتمع الأكاديمي الداخلي وGENOCLAB للخدمات الخارجية.",
+    'org_description': 'PLAGENOR هي منصة تكنولوجيا الجينوم التابعة للمدرسة العليا للعلوم البيولوجية بوهران (ESSBO). تستقبل طلبات الطلبة الجزائريين عبر IBTIKAR وطلبات الخدمات العلمية والتقنية.',
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': "منصة إدارة العمليات العلمية لـ ESSBO. مطورة لإدارة قناتي IBTIKAR وGENOCLAB.",
+    'footer_description': 'PLAGENOR — منصة تكنولوجيا الجينوم التابعة لـ ESSBO. طلبات التحليل ومتابعة الخدمات وتسليم النتائج.',
     'footer_copyright': '© 2026 ESSBO — جميع الحقوق محفوظة',
     'footer_credit': 'PLAGENOR 4.0 — تصميم البروفيسور محمد مرزوق | ESSBO',
     'footer_contact_1': "ESSBO — المدرسة العليا للعلوم البيولوجية بوهران",
@@ -186,7 +186,7 @@ DEFAULTS_AR = {
     'about_title': 'حول PLAGENOR',
     'about_intro': "تستضيف ESSBO منصة PLAGENOR، خدمة بحثية مشتركة ممولة من DGRSDT.",
     'about_genoclab': "تستضيف PLAGENOR شركة GENOCLAB، الفرع التجاري لـ ESSBO، الخاضع لقانون التجارة الجزائري.",
-    'about_plagenor': "PLAGENOR 4.0 هي المنصة الرقمية لإدارة جميع أنشطة PLAGENOR، تعمل كنظام ERP داخلي لتنظيم سير العمل وإدارة طلبات IBTIKAR وعملاء GENOCLAB.",
+    'about_plagenor': 'تتيح PLAGENOR 4.0 تقديم طلبات التحليل ومتابعتها وإدارة الخدمات والاطلاع على الوثائق والنتائج.',
     'about_missions_title': 'مهمتان',
     'about_ibtikar_mission': "القناة الأكاديمية: إجراء تحاليل جينومية لطلبة نهاية الدراسة (ماستر، مهندس) وطلبة الدكتوراه من جميع الجامعات الجزائرية لتعزيز البحث العلمي في الجزائر. لكل طالب مؤهل ميزانية افتراضية سنوية قدرها 200،000 دج تديرها DGRSDT.",
     'about_genoclab_mission': "القناة التجارية: تقديم نفس التحاليل الجينومية للعملاء الخارجيين (شركات، مستشفيات، مخابر خاصة، أفراد) على أساس تجاري مع فوترة ورسم القيمة المضافة 19٪ ودفع فعلي.",
@@ -224,6 +224,14 @@ class Command(BaseCommand):
     help = 'Seed default PlatformContent entries for every supported language'
 
     def handle(self, *args, **options):
+        # Explicit CMS entries make issuer details discoverable without code changes.
+        from documents.genoclab_layout import CMS_DEFAULTS
+        from core.commercial import ESSBO_NAME
+        DEFAULTS_FR.setdefault('genoclab_issuer_legal_details', '')
+        for key in CMS_DEFAULTS:
+            if key.startswith(('genoclab_issuer_', 'genoclab_footer_')):
+                DEFAULTS_FR.setdefault(key.replace('genoclab_', 'ohb_'),
+                    ESSBO_NAME if key == 'genoclab_issuer_name' else '')
         total = 0
         for lang, entries in DEFAULTS_BY_LANG.items():
             for key, value in entries.items():

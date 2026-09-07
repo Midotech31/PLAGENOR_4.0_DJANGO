@@ -36,16 +36,15 @@ IBTIKAR_TRANSITIONS: dict[str, set[str]] = {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# GENOCLAB Official Workflow with Payment Gate (Algerian Commercial Code)
+# Commercial workflow with verified-payment gate
 # REQUEST_CREATED → QUOTE_DRAFT → QUOTE_SENT → QUOTE_VALIDATED_BY_CLIENT →
-# ORDER_UPLOADED → [INVOICE_GENERATED] → ASSIGNED → SAMPLE_RECEIVED →
+# ORDER_UPLOADED → INVOICE_GENERATED → ASSIGNED → SAMPLE_RECEIVED →
 # ANALYSIS_STARTED → ANALYSIS_FINISHED → PAYMENT_PENDING →
 # PAYMENT_PROOF_UPLOADED → PAYMENT_CONFIRMED →
 # REPORT_UPLOADED → REPORT_VALIDATED → SENT_TO_CLIENT → COMPLETED → ARCHIVED
 # REJECTED possible at any validation step
 # Purchase orders are required by the platform commercial workflow.
-# NOTE: INVOICE_GENERATED is an optional step — admin may issue the invoice after
-#       the purchase order, or assign directly. Payment is confirmed later.
+# Invoice issuance is required before the first assignment.
 # NOTE: Payment must be received BEFORE report delivery
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -54,7 +53,7 @@ GENOCLAB_TRANSITIONS: dict[str, set[str]] = {
     "QUOTE_DRAFT":              {"QUOTE_SENT", "REJECTED"},
     "QUOTE_SENT":               {"QUOTE_VALIDATED_BY_CLIENT", "QUOTE_REJECTED_BY_CLIENT"},
     "QUOTE_VALIDATED_BY_CLIENT": {"ORDER_UPLOADED"},  # Client uploads purchase order
-    "ORDER_UPLOADED":           {"INVOICE_GENERATED", "ASSIGNED"},  # invoice optional, then assign
+    "ORDER_UPLOADED":           {"INVOICE_GENERATED"},  # invoice required before assignment
     "INVOICE_GENERATED":        {"ASSIGNED"},  # Admin assigns after invoice issued
     "QUOTE_REJECTED_BY_CLIENT": {"QUOTE_DRAFT"},  # admin revises and re-sends
     "ASSIGNED":                 {"APPOINTMENT_PROPOSED"},

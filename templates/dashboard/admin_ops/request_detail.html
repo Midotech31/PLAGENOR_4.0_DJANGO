@@ -580,6 +580,20 @@
     </div>
 </div>
 
+{% if req.channel == 'GENOCLAB' %}
+<div class="card mb-4"><div class="card-header"><h3>{% trans "Factures" %}</h3></div><div class="card-body">
+{% for inv in invoices %}
+<p><a href="{% url 'dashboard:download_invoice' inv.pk %}">{{ inv.invoice_number }}</a> — {{ inv.total_ttc }} DA</p>
+{% if inv.cancelled_at %}<p>{% trans "Facture annulée" %} — {{ inv.cancellation_reason }}</p>{% elif inv.payment_status == 'PENDING' %}
+<form method="post" action="{% url 'dashboard:cancel_invoice' inv.pk %}">{% csrf_token %}
+<label for="cancel-{{ inv.pk }}">{% trans "Motif d’annulation" %}</label><input id="cancel-{{ inv.pk }}" name="reason" required minlength="5" class="form-control">
+<button class="btn btn-sm btn-danger" type="submit">{% trans "Annuler la facture" %}</button></form>{% endif %}
+{% endfor %}
+{% if can_issue_invoice and req.status != 'ORDER_UPLOADED' %}
+<form method="post" action="{% url 'dashboard:admin_generate_invoice' req.pk %}">{% csrf_token %}
+<label for="invoice-reason">{% trans "Justification de régularisation" %}</label><input id="invoice-reason" name="reason" required class="form-control">
+<button class="btn btn-primary" type="submit">{% trans "Émettre la facture" %}</button></form>{% endif %}
+</div></div>{% endif %}
 <!-- Actions -->
 <div class="card mb-4">
     <div class="card-header"><h3>{% trans "Actions" %}</h3></div>
@@ -588,7 +602,7 @@
 
             {# Transition buttons based on allowed transitions #}
             {% for t in allowed_transitions %}
-            <form method="post" action="{% url 'dashboard:admin_transition' req.pk %}" style="display:inline;">
+            <form method="post" action="{% if t == 'INVOICE_GENERATED' %}{% url 'dashboard:admin_generate_invoice' req.pk %}{% else %}{% url 'dashboard:admin_transition' req.pk %}{% endif %}" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="to_status" value="{{ t }}">
                 {% if t == 'REJECTED' %}
@@ -614,7 +628,7 @@
             {% endfor %}
 
             {# Assignment form #}
-            {% if req.status == 'IBTIKAR_CODE_SUBMITTED' or req.status == 'PAYMENT_CONFIRMED' or req.status == 'ORDER_UPLOADED' %}
+            {% if req.status == 'IBTIKAR_CODE_SUBMITTED' or req.status == 'INVOICE_GENERATED' %}
             <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
                 {% csrf_token %}
                 <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>

@@ -578,7 +578,7 @@ class FinancialReportingTests(TestCase):
         now = timezone.now()
         first = archive_monthly_revenue(now.month, now.year)
         second = archive_monthly_revenue(now.month, now.year)
-        self.assertEqual({row['channel'] for row in first}, {'IBTIKAR', 'GENOCLAB'})
+        self.assertEqual({row['channel'] for row in first}, {'IBTIKAR', 'GENOCLAB', 'OHB'})
         self.assertTrue(all(row['created'] for row in first))
         self.assertTrue(all(not row['created'] for row in second))
         dashboard = get_budget_dashboard()
@@ -765,11 +765,7 @@ class WorkflowSideEffectTests(TestCase):
             self.request, self.member_user.member_profile)
         appointment.assert_called_once_with(self.request)
         delivery.assert_called_once_with(self.request)
-        self.assertEqual(status_change.call_count, 2)
-        status_change.assert_has_calls([
-            call(self.request, 'ASSIGNED', 'APPOINTMENT_PROPOSED'),
-            call(self.request, 'REPORT_VALIDATED', 'SENT_TO_CLIENT'),
-        ])
+        status_change.assert_not_called()
 
     def test_document_hooks_are_explicit_and_channel_safe(self):
         from documents import generators
@@ -853,10 +849,17 @@ class EndToEndPipelineTests(TestCase):
             assigned_to=self.analyst, quote_amount=Decimal('50000'))
 
         self._step(req, 'QUOTE_DRAFT', self.admin)
+        req.quote_detail = {'items': [{'label': 'Prestation', 'unit_price': 100, 'quantity': 1, 'total': 100}]}
+        req.save(update_fields=['quote_detail'])
         self._step(req, 'QUOTE_SENT', self.admin)
         self._step(req, 'QUOTE_VALIDATED_BY_CLIENT', client)
         self._step(req, 'ORDER_UPLOADED', client)
-        self._step(req, 'INVOICE_GENERATED', self.finance)
+        from django.urls import reverse
+        self.client.force_login(self.admin)
+        self.client.post(reverse('dashboard:admin_generate_invoice', args=[req.pk]))
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'INVOICE_GENERATED')
+        self.assertTrue(Invoice.objects.filter(request=req).exists())
         self._step(req, 'ASSIGNED', self.admin)
         self._step(req, 'APPOINTMENT_PROPOSED', self.analyst_user)
         self._step(req, 'APPOINTMENT_CONFIRMED', client)
@@ -908,6 +911,7 @@ class EndToEndPipelineTests(TestCase):
             'payment_verified_at', 'payment_verified_by',
             'payment_verification_note',
         ])
+        Invoice.objects.create(invoice_number='PAYMENT-PROOF-INV', request=req, total_ttc=100)
         transition(req, 'PAYMENT_CONFIRMED', self.finance)
         req.refresh_from_db()
         self.assertEqual(req.status, 'PAYMENT_CONFIRMED')
@@ -916,6 +920,7 @@ class EndToEndPipelineTests(TestCase):
     def test_payment_confirmation_requires_verification_audit(self):
         req = Request.objects.create(
             channel='GENOCLAB', status='PAYMENT_PROOF_UPLOADED')
+        Invoice.objects.create(invoice_number='PAYMENT-PROOF-INV', request=req, total_ttc=100)
         with self.assertRaises(InvalidTransitionError):
             transition(req, 'PAYMENT_CONFIRMED', self.finance)
 

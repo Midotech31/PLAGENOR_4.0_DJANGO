@@ -414,6 +414,9 @@ class DocumentViewCoverageTests(TestCase):
         self.client.force_login(self.other)
         denied = self.client.get(f'/documents/quote/{self.req.pk}/')
         self.assertEqual(denied.status_code, 403)
+        self.req.status = 'QUOTE_SENT'
+        self.req.quote_detail = {'items': [{'label': 'Prestation', 'unit_price': 100, 'quantity': 1}]}
+        self.req.save()
         self.client.force_login(self.owner)
         with patch('documents.views.generate_quote', generator):
             allowed = self.client.get(f'/documents/quote/{self.req.pk}/')

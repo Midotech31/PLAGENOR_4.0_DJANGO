@@ -3,11 +3,11 @@
 
 {% block email_content %}
 <h2 style="margin: 0 0 20px; color: #1f2937;">
-    {% if language == 'en' %}Request Status Update{% else %}Mise à jour du statut de votre demande{% endif %}
+    {% if language == 'ar' %}تحديث حالة الطلب{% elif language == 'en' %}Request Status Update{% else %}Mise à jour du statut de votre demande{% endif %}
 </h2>
 
 <p style="color: #4b5563; margin-bottom: 24px;">
-    {% if language == 'en' %}
+    {% if language == 'ar' %}مرحبًا {{ user_name }}،{% elif language == 'en' %}
     Hello {{ user_name }},
     {% else %}
     Bonjour {{ user_name }},
@@ -15,7 +15,7 @@
 </p>
 
 <p style="color: #4b5563; margin-bottom: 24px;">
-    {% if language == 'en' %}
+    {% if language == 'ar' %}تم تحديث طلبكم. التفاصيل أدناه:{% elif language == 'en' %}
     Your request has been updated. Here are the details:
     {% else %}
     Votre demande a été mise à jour. Voici les détails :
@@ -23,7 +23,7 @@
 </p>
 
 <div class="request-id">
-    <div class="label">{% if language == 'en' %}Request ID{% else %}Identifiant de demande{% endif %}</div>
+    <div class="label">{% if language == 'ar' %}رقم الطلب{% elif language == 'en' %}Request ID{% else %}Identifiant de demande{% endif %}</div>
     <div class="value">{{ request.display_id }}</div>
 </div>
 
@@ -33,16 +33,16 @@
 
 <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
     <div class="info-row">
-        <span class="info-label">{% if language == 'en' %}Service{% else %}Service{% endif %}</span>
+        <span class="info-label">{% if language == 'ar' %}الخدمة{% elif language == 'en' %}Service{% else %}Service{% endif %}</span>
         <span class="info-value">{{ request.service.name }}</span>
     </div>
     <div class="info-row">
-        <span class="info-label">{% if language == 'en' %}Channel{% else %}Canal{% endif %}</span>
+        <span class="info-label">{% if language == 'ar' %}المسار{% elif language == 'en' %}Channel{% else %}Canal{% endif %}</span>
         <span class="info-value">{{ request.get_channel_display }}</span>
     </div>
     {% if request.title %}
     <div class="info-row">
-        <span class="info-label">{% if language == 'en' %}Title{% else %}Titre{% endif %}</span>
+        <span class="info-label">{% if language == 'ar' %}العنوان{% elif language == 'en' %}Title{% else %}Titre{% endif %}</span>
         <span class="info-value">{{ request.title|truncatechars:40 }}</span>
     </div>
     {% endif %}
@@ -56,12 +56,12 @@
 
 <div style="text-align: center; margin: 30px 0;">
     <a href="{{ dashboard_url }}" class="button">
-        {% if language == 'en' %}View Request Details{% else %}Voir les détails de la demande{% endif %}
+        {% if language == 'ar' %}عرض تفاصيل الطلب{% elif language == 'en' %}View Request Details{% else %}Voir les détails de la demande{% endif %}
     </a>
 </div>
 
 {% if next_steps %}
-<h3 style="color: #1f2937; margin-top: 30px;">{% if language == 'en' %}Next Steps{% else %}Prochaines étapes{% endif %}</h3>
+<h3 style="color: #1f2937; margin-top: 30px;">{% if language == 'ar' %}الخطوات التالية{% elif language == 'en' %}Next Steps{% else %}Prochaines étapes{% endif %}</h3>
 <ul style="color: #4b5563;">
     {% for step in next_steps %}
     <li>{{ step }}</li>
@@ -70,7 +70,7 @@
 {% endif %}
 
 <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 30px;">
-    {% if language == 'en' %}
+    {% if language == 'ar' %}للاستفسار، يُرجى التواصل عبر <a href="mailto:{{ support_email }}">{{ support_email }}</a>.{% elif language == 'en' %}
     If you have any questions, please contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
     {% else %}
     Si vous avez des questions, contactez-nous à <a href="mailto:{{ support_email }}">{{ support_email }}</a>.

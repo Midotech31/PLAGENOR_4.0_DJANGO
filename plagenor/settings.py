@@ -443,3 +443,6 @@ if SENTRY_DSN:
         traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0')),
         send_default_pii=False,
     )
+
+# Canonical origin for links in background notifications.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "plagenor.onrender.com")).rstrip("/")

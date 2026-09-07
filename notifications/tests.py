@@ -86,7 +86,7 @@ class NotificationWorkflowTests(TestCase):
         self.assertEqual(Notification.objects.filter(user=self.requester).count(), 3)
         assignment = Notification.objects.get(user=self.analyst)
         self.assertEqual(assignment.notification_type, 'ASSIGNMENT')
-        self.assertIn('/accept/', assignment.action_url)
+        self.assertEqual(assignment.action_url, f'/dashboard/analyst/request/{self.request.pk}/')
 
     def test_status_change_does_not_notify_actor(self):
         services.notify_status_change(self.request, 'DRAFT', 'SUBMITTED', self.requester)
@@ -108,14 +108,47 @@ class NotificationWorkflowTests(TestCase):
         self.assertEqual(Notification.objects.filter(notification_type='PAYMENT').count(), 3)
         self.assertFalse(Notification.objects.filter(user=outsider).exists())
 
-    def test_payment_request_uses_admin_price_precedence(self):
+    def test_payment_request_uses_issued_invoice_not_changed_estimate(self):
+        from core.models import Invoice
         from decimal import Decimal
 
         self.request.admin_validated_price = Decimal('3456')
-        self.request.save(update_fields=['admin_validated_price'])
-        services.notify_payment_request(self.request)
+        Invoice.objects.create(request=self.request, client=self.requester,
+                               invoice_number='N-001', total_ttc=Decimal('1190.25'))
+        self.assertTrue(services.notify_payment_request(self.request))
         notification = Notification.objects.get(user=self.requester)
-        self.assertIn('3,456', notification.message)
+        self.assertIn('1,190.25', notification.message)
+        self.assertNotIn('3,456', notification.message)
+        self.assertIn('N-001', notification.message)
+
+    def test_no_payment_demand_without_active_unpaid_invoice(self):
+        from core.models import Invoice
+        from django.utils import timezone
+
+        self.assertFalse(services.notify_payment_request(self.request))
+        invoice = Invoice.objects.create(request=self.request,
+                                          invoice_number='N-002', total_ttc=100)
+        for updates in ({'payment_status': 'COMPLETED'},
+                        {'payment_status': 'PENDING', 'cancelled_at': timezone.now()},
+                        {'cancelled_at': None, 'total_ttc': 0}):
+            for field, value in updates.items():
+                setattr(invoice, field, value)
+            invoice.save()
+            self.assertFalse(services.notify_payment_request(self.request))
+        self.assertFalse(Notification.objects.exists())
+
+    def test_partial_payment_does_not_invent_balance_and_uses_recipient_language(self):
+        from core.models import Invoice
+
+        Invoice.objects.create(request=self.request, invoice_number='N-003',
+                               total_ttc=1190, payment_status='PARTIAL')
+        self.requester.preferred_language = 'en'
+        self.assertTrue(services.notify_payment_request(self.request))
+        notification = Notification.objects.get(user=self.requester)
+        self.assertIn('outstanding balance', notification.message)
+        self.assertNotIn('1,190', notification.message)
+        self.assertEqual(notification.action_text, 'View invoice')
+        self.assertIn('View request', notification.link_text)
 
 
 class NotificationEmailTests(TestCase):

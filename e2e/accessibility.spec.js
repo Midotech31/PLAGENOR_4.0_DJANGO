@@ -92,3 +92,25 @@ test('non-superadmin cannot open the superadmin dashboard', async ({ page }) => 
   const response = await page.request.get('/dashboard/home/');
   expect(response.status()).toBe(403);
 });
+
+for (const [lang, phrase] of [['fr', 'étudiants algériens'], ['en', 'Algerian students'], ['ar', 'الطلبة الجزائريين']]) {
+  test(`IBTIKAR national scope is published in ${lang}`, async ({page}, testInfo) => {
+    await page.goto('/');
+    await page.locator(`button[name="language"][value="${lang}"]`).first().click();
+    await expect(page.locator('main')).toContainText(phrase);
+    await expect(page.locator('main')).not.toContainText("Canal dédié aux étudiants et chercheurs de l'ESSBO");
+    await expectAccessible(page, `IBTIKAR ${lang}`);
+    await page.screenshot({path: testInfo.outputPath(`home-${lang}.png`), fullPage:true});
+  });
+}
+
+test('Ops can open the catalogue and financial visibility controls', async ({page}, testInfo) => {
+  await login(page, 'admin_ops');
+  await page.goto('/dashboard/ops/services/');
+  await expect(page.locator('main')).toContainText(/Prestations et tarifs|Services and pricing/);
+  await expectAccessible(page, 'Ops catalogue');
+  await page.goto('/dashboard/ops/financial-visibility/');
+  await expect(page.locator('[name="show_estimates"]')).toBeVisible();
+  await expectAccessible(page, 'Estimate visibility');
+  await page.screenshot({path:testInfo.outputPath('visibility.png'), fullPage:true});
+});

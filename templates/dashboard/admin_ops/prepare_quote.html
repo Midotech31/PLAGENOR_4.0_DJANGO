@@ -25,7 +25,7 @@
         <!-- Auto-estimate from YAML -->
         {% if auto_estimate %}
         <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Estimation automatique (YAML)" %}</h3></div>
+            <div class="card-header"><h3>{% trans "Estimation automatique" %}</h3></div>
             <div class="card-body">
                 <div class="data-card-row"><span class="text-muted">{% trans "Modèle de tarification" %}</span><strong>{{ auto_estimate.pricing_model }}</strong></div>
                 <div class="data-card-row"><span class="text-muted">{% trans "Nombre d'unités" %}</span><strong>{{ auto_estimate.number_of_units }}</strong></div>
@@ -155,11 +155,21 @@
                 </div>
             </div>
 
+            <div class="card mb-4"><div class="card-body">
+                <label for="billing-client-name">{% trans 'Raison sociale du client' %}</label>
+                <input id="billing-client-name" name="billing_client_name" class="form-control" maxlength="250" value="{{ existing_quote.identity.client_name|default:'' }}">
+                <label for="billing-client-details">{% trans 'Adresse et identifiants du client (RC, NIF, NIS selon le cas)' %}</label>
+                <textarea id="billing-client-details" name="billing_client_details" class="form-control" maxlength="3000" rows="3">{{ existing_quote.identity.billing_client_details|default:'' }}</textarea>
+                <label for="payment-terms">{% trans 'Mode et échéance de paiement convenus' %}</label>
+                <textarea id="payment-terms" name="payment_terms" class="form-control" maxlength="3000">{{ existing_quote.identity.payment_terms|default:'' }}</textarea>
+                <label for="commercial-terms">{% trans 'Conditions communiquées au client' %}</label>
+                <textarea id="commercial-terms" name="commercial_terms" class="form-control" maxlength="3000">{{ existing_quote.identity.commercial_terms|default:'' }}</textarea>
+            </div></div>
             <!-- Notes -->
             <div class="card mb-4">
                 <div class="card-header"><h3>{% trans "Notes" %}</h3></div>
                 <div class="card-body">
-                    <textarea name="quote_notes" class="form-control" rows="3" placeholder="{% trans 'Notes internes ou commentaires pour le client...' %}">{{ existing_quote.notes|default:"" }}</textarea>
+                    <textarea name="quote_notes" class="form-control" rows="3" placeholder="{% trans 'Notes internes — non communiquées au client' %}">{{ existing_quote.notes|default:"" }}</textarea>
                 </div>
             </div>
 

@@ -4,6 +4,10 @@ import logging
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.utils.html import strip_tags
+from urllib.parse import urljoin
+from notifications.models import Notification
+from django.utils.translation import override
 
 logger = logging.getLogger('plagenor.email')
 
@@ -16,17 +20,21 @@ def send_email_notification(to_email, subject, body_html):
     instead of being silently swallowed twice.
     """
     try:
-        send_mail(
+        sent = send_mail(
             subject=subject,
-            message='',
+            message=strip_tags(body_html),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[to_email] if isinstance(to_email, str) else to_email,
             html_message=body_html,
             fail_silently=False,
         )
-        logger.info("Email notification sent: %s", subject)
+        if sent != 1:
+            raise RuntimeError("SMTP backend did not accept the message")
+        logger.info("Email notification accepted by backend: %s", subject)
+        return True
     except Exception as e:
         logger.error("Failed to send email notification %s: %s", subject, e)
+        return False
 
 
 def _email_ctx(request_obj, **extra):
@@ -45,14 +53,22 @@ def _email_ctx(request_obj, **extra):
         'request_obj': request_obj,    # legacy callers + safety
         'language': getattr(getattr(request_obj, 'requester', None),
                              'preferred_language', 'fr') or 'fr',
-        'base_url': '',
-        'dashboard_url': '',
+        'base_url': settings.PUBLIC_BASE_URL,
+        'dashboard_url': urljoin(settings.PUBLIC_BASE_URL, Notification(
+            user=request_obj.requester, request=request_obj).get_absolute_url())
+            if request_obj.requester else urljoin(settings.PUBLIC_BASE_URL, f'/track/?q={request_obj.guest_token}'),
         'support_email': 'genomicsplatform.essbo@gmail.com',
         'user_name': (request_obj.requester.get_full_name()
                        if request_obj.requester else
                        (request_obj.guest_name or '')),
     }
-    ctx.update(extra)
+    member = extra.get('member')
+    if member:
+        ctx['language'] = getattr(member.user, 'preferred_language', 'fr') or 'fr'
+        ctx['user_name'] = member.user.get_full_name() or member.user.username
+        ctx['dashboard_url'] = urljoin(settings.PUBLIC_BASE_URL, Notification(user=member.user, request=request_obj).get_absolute_url())
+    for key, value in extra.items():
+        ctx[key] = urljoin(settings.PUBLIC_BASE_URL, value) if key.endswith('_url') and value else value
     return ctx
 
 
@@ -65,11 +81,11 @@ def notify_submission_confirmation(request_obj):
     else:
         return
 
-    body = render_to_string('notifications/email/submission_confirmation.html',
+    body = _render_email('notifications/email/submission_confirmation.html',
                             _email_ctx(request_obj))
     send_email_notification(
         to_email,
-        f"[PLAGENOR] Demande {request_obj.display_id} — Confirmation de soumission",
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Confirmation de soumission', 'Submission received', 'تأكيد استلام الطلب'),
         body,
     )
 
@@ -84,14 +100,14 @@ def notify_status_change(request_obj, old_status, new_status):
         return
 
     new_status_display = dict(request_obj.STATUS_CHOICES).get(new_status, new_status)
-    body = render_to_string('notifications/email/request_status_change.html',
+    body = _render_email('notifications/email/request_status_change.html',
                             _email_ctx(request_obj,
                                        old_status=old_status,
                                        new_status=new_status,
                                        new_status_display=new_status_display))
     send_email_notification(
         to_email,
-        f"[PLAGENOR] Demande {request_obj.display_id} — Mise à jour de statut",
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Mise à jour de statut', 'Status update', 'تحديث حالة الطلب'),
         body,
     )
 
@@ -102,11 +118,11 @@ def notify_assignment(request_obj, member_profile):
     if not to_email:
         return
 
-    body = render_to_string('notifications/email/assignment_notification.html',
+    body = _render_email('notifications/email/assignment_notification.html',
                             _email_ctx(request_obj, member=member_profile))
     send_email_notification(
         to_email,
-        f"[PLAGENOR] Nouvelle assignation — {request_obj.display_id}",
+        _subject(request_obj.display_id, getattr(member_profile.user, 'preferred_language', 'fr'), 'Nouvelle assignation', 'New assignment', 'تكليف جديد'),
         body,
     )
 
@@ -120,14 +136,14 @@ def notify_appointment(request_obj):
     else:
         return
 
-    body = render_to_string('notifications/email/appointment_notification.html',
+    body = _render_email('notifications/email/appointment_notification.html',
                             _email_ctx(request_obj,
                                        appointment_date=getattr(request_obj, 'appointment_date', None),
                                        appointment_time=getattr(request_obj, 'appointment_time', ''),
                                        appointment_note=getattr(request_obj, 'appointment_note', '')))
     send_email_notification(
         to_email,
-        f"[PLAGENOR] Rendez-vous programmé — {request_obj.display_id}",
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Rendez-vous programmé', 'Appointment scheduled', 'تم تحديد الموعد'),
         body,
     )
 
@@ -142,12 +158,12 @@ def notify_report_delivery(request_obj):
         return
 
     token = getattr(request_obj, 'report_token', None)
-    body = render_to_string('notifications/email/report_delivery.html',
+    body = _render_email('notifications/email/report_delivery.html',
                             _email_ctx(request_obj,
                                        report_url=f'/report/{token}/' if token else ''))
     send_email_notification(
         to_email,
-        f"[PLAGENOR] Rapport disponible — {request_obj.display_id}",
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Rapport disponible', 'Report available', 'التقرير متاح'),
         body,
     )
 
@@ -157,13 +173,22 @@ def notify_guest_tracking_code(request_obj):
     if not request_obj.guest_email:
         return
 
-    body = render_to_string('notifications/email/guest_tracking_code.html',
+    body = _render_email('notifications/email/guest_tracking_code.html',
                             _email_ctx(request_obj,
                                        guest_name=request_obj.guest_name or '',
                                        tracking_url=f'/track/?q={request_obj.guest_token}',
                                        register_url='/accounts/register/'))
     send_email_notification(
         request_obj.guest_email,
-        f"[PLAGENOR] Votre code de suivi — {request_obj.display_id}",
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Votre code de suivi', 'Your tracking code', 'رمز تتبع طلبك'),
         body,
     )
+
+
+def _render_email(template, context):
+    with override(context.get('language', 'fr')):
+        return render_to_string(template, context)
+
+
+def _subject(reference, language, fr, en, ar):
+    return f"[PLAGENOR] {reference} — {dict(fr=fr, en=en, ar=ar).get(language, fr)}"

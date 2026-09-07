@@ -34,7 +34,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from docx import Document
 from docx.document import Document as DocumentType
-from docx.shared import Pt
+from docx.shared import Cm, Pt
 
 
 logger = logging.getLogger(__name__)
@@ -111,6 +111,9 @@ _PARAM_LABELS = {
     'isolation_date': "Date d'isolement",
     'culture_medium': "Milieu de culture",
     'culture_conditions': "Conditions de culture",
+    'quality_level': 'Niveau de qualité', 'paired_end': 'Lecture appariée',
+    'replicates': 'Répétitions', 'sample_id': 'Identifiant échantillon',
+    'organism_type': 'Type d’organisme',
     'remarks': "Remarques",
 }
 _PARAM_VALUES = {
@@ -267,10 +270,20 @@ def build_field_map(request_obj) -> dict[str, str]:
         svc_turnaround = 'N/A'
         svc_type = ''
 
-    quote_amount = float(req.quote_amount or 0)
-    vat_rate = float(getattr(settings, 'VAT_RATE', 0.19) or 0)
-    vat_amount = round(quote_amount * vat_rate, 2)
-    total_ttc = round(quote_amount + vat_amount, 2)
+    from core.financial import compute_invoice_totals
+    detail = req.quote_detail or {}
+    vat_rate = 0 if req.billing_channel == 'OHB' else detail.get('vat_rate', getattr(settings, 'VAT_RATE', 0.19))
+    if detail.get('items'):
+        totals = compute_invoice_totals(detail['items'], detail.get('admin_fees', 0),
+                                        detail.get('report_fees', 0), vat_rate)
+        quote_amount = totals['subtotal_before_tax']
+        vat_amount = totals['vat_amount']
+        total_ttc = totals['total_ttc']
+    else:
+        # quote_amount stores TTC; do not apply VAT a second time.
+        total_ttc = float(req.quote_amount or 0)
+        quote_amount = round(total_ttc / (1 + float(vat_rate)), 2)
+        vat_amount = round(total_ttc - quote_amount, 2)
 
     field_map = {
         # ----- Dates --------------------------------------------------------
@@ -329,8 +342,8 @@ def build_field_map(request_obj) -> dict[str, str]:
         'ANALYSIS_FRAME': (req.service_params or {}).get('analysis_frame', ''),
 
         # ----- Financial ----------------------------------------------------
-        'BUDGET_AMOUNT': _money(req.budget_amount),
-        'IBTIKAR_BUDGET': _money(req.budget_amount),
+        'BUDGET_AMOUNT': _money(req.admin_validated_price if req.admin_validated_price is not None else req.budget_amount),
+        'IBTIKAR_BUDGET': _money(req.admin_validated_price if req.admin_validated_price is not None else req.budget_amount),
         'IBTIKAR_BALANCE': _money(req.declared_ibtikar_balance),
         'FINAL_COST': _money(req.admin_validated_price, placeholder='En attente'),
         'QUOTE_AMOUNT': _money_2dp(quote_amount),
@@ -571,6 +584,10 @@ def _save_document(doc: DocumentType, prefix: str, request_obj,
         apply_house_style(doc)
     if not skip_institutional:
         ensure_institutional_header(doc)
+        if not skip_house_style:
+            for section in doc.sections:
+                section.top_margin = Cm(3.5)
+                section.header_distance = Cm(0.8)
     if not skip_brand_footer:
         add_brand_footer(doc)
     if style_tables:
@@ -678,9 +695,23 @@ def generate_ibtikar_form(request_obj) -> str:
         # from scratch), render its questions and sample table — with proper
         # human labels — so the generated document carries everything the
         # requester entered.
+        # Replace the generic template's manual-entry placeholder and keep
+        # the generated data before the signature block.
+        for paragraph in list(doc.paragraphs):
+            if '[Tableau des échantillons à remplir]' in paragraph.text:
+                previous = paragraph._p.getprevious()
+                if previous is not None and 'Tableau des échantillons' in ''.join(previous.itertext()):
+                    previous.getparent().remove(previous)
+                paragraph._p.getparent().remove(paragraph._p)
+        signature = next((p._p for p in doc.paragraphs if 'Signature du demandeur' in p.text), None)
+        existing = set(doc._element.body)
         _labels = _field_label_map(request_obj)
         _render_service_params(doc, request_obj.service_params, _labels)
         _render_sample_table(doc, request_obj.sample_table, _labels)
+        if signature is not None:
+            for element in list(doc._element.body):
+                if element not in existing:
+                    signature.addprevious(element)
     strip_unresolved_placeholders(doc)
     ensure_institutional_header(doc)
     _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)
@@ -1127,6 +1158,11 @@ def generate_quote(request_obj) -> str:
     legal footer block. No ESSBO/PLAGENOR institutional banner — this
     is the commercial side of the platform, not academic.
     """
+    from documents.archives import restore_original, preserve_original
+    if request_obj.client_quote_visible:
+        archived = restore_original('QUOTE', request_obj.quote_number)
+        if archived:
+            return archived
     field_map = build_field_map(request_obj)
 
     # Quote number — sequential, atomic.
@@ -1161,12 +1197,15 @@ def generate_quote(request_obj) -> str:
     _inject_document_blocks(doc, 'QUOTE', request_obj)
     # Skip the ESSBO institutional header + ESSBO/PLAGENOR footer —
     # GENOCLAB documents have their own header/footer built above.
-    return _save_document(
+    path = _save_document(
         doc, 'DEVIS', request_obj,
         style_tables=False,        # tables are already styled by our layout
         skip_institutional=True,   # GENOCELAB header instead
         skip_brand_footer=True,    # GENOCLAB-specific footer text
     )
+    if request_obj.client_quote_visible:
+        preserve_original('QUOTE', quote_number, path)
+    return path
 
 
 def _build_genoclab_doc(
@@ -1416,7 +1455,7 @@ def _render_sample_table(doc: DocumentType, sample_table, label_map=None) -> Non
     table = doc.add_table(rows=len(samples) + 1, cols=len(headers))
     table.style = 'Light Grid Accent 1'
     for j, h in enumerate(headers):
-        table.rows[0].cells[j].text = label_map.get(h) or h.replace('_', ' ').capitalize()
+        table.rows[0].cells[j].text = label_map.get(h) or _fr_param_label(h)
     for i, sample in enumerate(samples):
         for j, h in enumerate(headers):
             table.rows[i + 1].cells[j].text = str(sample.get(h, ''))
@@ -1434,8 +1473,8 @@ def _render_service_params(doc: DocumentType, service_params, label_map=None) ->
     table.style = 'Light Grid Accent 1'
     for i, (key, value) in enumerate(non_empty):
         clean = key.replace('param_', '')
-        table.rows[i].cells[0].text = label_map.get(clean) or clean.replace('_', ' ').capitalize()
-        table.rows[i].cells[1].text = str(value)
+        table.rows[i].cells[0].text = label_map.get(clean) or _fr_param_label(clean)
+        table.rows[i].cells[1].text = _fr_param_value(value)
 
 
 def _render_footer(doc: DocumentType) -> None:
@@ -1497,7 +1536,7 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
     ]
     for i, (label, value) in enumerate(rows):
         kpi_table.rows[i].cells[0].text = label
-        kpi_table.rows[i].cells[1].text = str(value)
+        kpi_table.rows[i].cells[1].text = _fr_param_value(value)
 
     def _section(title, key, col1='Catégorie'):
         data = bundle.get(key)
@@ -1550,6 +1589,12 @@ def generate_invoice_document(invoice_obj) -> str:
     (Facture, from the genoclab_invoice_title CMS key) and the source
     of the line items (the Invoice's line_items JSON).
     """
+    from documents.archives import restore_original, preserve_original
+    archived = restore_original('INVOICE', invoice_obj.invoice_number)
+    if archived:
+        if invoice_obj.cancelled_at:
+            _mark_cancelled_invoice(archived, invoice_obj)
+        return archived
     from documents.genoclab_layout import (
         add_genoclab_header, add_prestation_table, add_genoclab_footer,
         cms_get,
@@ -1606,4 +1651,23 @@ def generate_invoice_document(invoice_obj) -> str:
     filename = f"FACTURE_{invoice_obj.invoice_number}.docx"
     filepath = out_dir / filename
     doc.save(str(filepath))
+    preserve_original('INVOICE', invoice_obj.invoice_number, filepath)
+    if invoice_obj.cancelled_at:
+        _mark_cancelled_invoice(filepath, invoice_obj)
     return str(filepath)
+
+
+def _mark_cancelled_invoice(path, invoice):
+    """Keep original lines and identify the retained cancelled copy."""
+    from docx.shared import Pt, RGBColor
+    doc = Document(path)
+    for section in doc.sections:
+        p = section.header.add_paragraph()
+        run = p.add_run('FACTURE ANNULÉE')
+        run.bold = True
+        run.font.size = Pt(18)
+        run.font.color.rgb = RGBColor.from_string('B42318')
+        from documents.watermark import add_cancellation_watermark
+        add_cancellation_watermark(p)
+    doc.add_paragraph(f'Annulation du {invoice.cancelled_at:%d/%m/%Y} : {invoice.cancellation_reason}')
+    doc.save(str(path))

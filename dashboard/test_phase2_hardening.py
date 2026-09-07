@@ -124,13 +124,15 @@ class FinanceTransactionTests(TestCase):
         self.assertEqual(req.status, 'PLATFORM_NOTE_GENERATED')
         self.assertEqual(req.admin_validated_price, Decimal('1250.00'))
 
+        paid_req = Request.objects.create(display_id='PAYMENT-AUDIT', channel='GENOCLAB',
+            status='PAYMENT_PROOF_UPLOADED', payment_receipt_file='payments/proof.pdf', requester=self.client_user)
         invoice = Invoice.objects.create(
-            invoice_number='PHASE2-INV-1', request=req, client=self.client_user,
+            invoice_number='PHASE2-INV-1', request=paid_req, client=self.client_user,
             line_items=[], total_ttc=Decimal('1250.00'))
         with patch('dashboard.views.finance.log_financial_action') as audit:
             response = self.client.post(
                 f'/dashboard/finance/payment/{invoice.pk}/',
-                {'payment_status': 'COMPLETED'},
+                {'payment_status': 'COMPLETED', 'verification_note': 'Paiement vérifié'},
             )
         self.assertEqual(response.status_code, 302)
         invoice.refresh_from_db()
