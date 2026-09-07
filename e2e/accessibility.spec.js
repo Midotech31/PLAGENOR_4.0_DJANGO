@@ -129,8 +129,16 @@ for (const [lang, name, option, heading] of [
     const fragment = await page.request.get('/dashboard/api/service-form/EGTP-IMT/');
     expect(await fragment.text()).toMatch(new RegExp(`value="Simple"[^>]*>${option}</option>`));
     await login(page, 'client');
-    // Account preferences may override an anonymous visitor's locale.
-    await page.locator(`button[name="language"][value="${lang}"]`).first().click();
+    // Use the visible topbar switcher; the first copy is in the closed mobile sidebar.
+    const menu = page.locator('.topbar-hamburger');
+    if (await menu.isVisible()) {
+      await expect(page.locator('.sidebar')).not.toBeInViewport();
+      await menu.click();
+      await expect(page.locator('.sidebar')).toBeInViewport({ratio: 0.9});
+      await page.locator('.sidebar-overlay').click({position: {x: lang === 'ar' ? 5 : page.viewportSize().width - 5, y: 10}});
+      await expect(page.locator('.sidebar')).not.toBeInViewport();
+    }
+    await page.locator(`.topbar button[name="language"][value="${lang}"]`).click();
     await page.goto('/dashboard/client/?tab=new');
     await page.locator('[name="title"]').fill('<img src=x onerror="window.previewInjected=true">');
     await page.locator('[onclick*="showFormPreview"]').click();

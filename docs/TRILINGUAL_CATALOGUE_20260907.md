@@ -43,3 +43,7 @@ Références :
 - [Thermo Fisher — Quantification fluorimétrique](https://www.thermofisher.com/fr/fr/home/industrial/spectroscopy-elemental-isotope-analysis/molecular-spectroscopy/fluorometers/qubit.html) : quantification des acides nucléiques.
 
 Les noms de technologies et de formats (Illumina, Sanger, MALDI-TOF MS, FASTA, FASTQ) restent reconnaissables. Les traductions conservent les limites des prestations, notamment l’absence d’identification/interprétation pour le séquençage Sanger seul et l’absence de conception des amorces pour leur synthèse.
+
+## Correction RTL sur mobile
+
+Le contrôle navigateur a révélé que le menu latéral arabe fermé était déplacé vers l’intérieur de l’écran. La transformation CSS tient désormais compte de l’ancrage à droite. Les scénarios mobiles vérifient le menu fermé hors écran, son ouverture, sa fermeture et le changement de langue depuis la barre supérieure. Les trois scénarios ciblés FR/AR/EN passent localement.
