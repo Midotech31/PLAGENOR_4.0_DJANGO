@@ -3,6 +3,7 @@ source = accounts,core,dashboard,documents,notifications,plagenor
 omit =
     */migrations/*
     */tests.py
+    */test_*.py
     */__init__.py
     manage.py
     */wsgi.py

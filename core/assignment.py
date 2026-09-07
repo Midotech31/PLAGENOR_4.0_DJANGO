@@ -71,7 +71,9 @@ def compute_member_score(member_profile: MemberProfile, service=None) -> float:
     availability_penalty = 0 if member_profile.available else 50
 
     # Productivity score
-    prod_score = member_profile.productivity_score or 50.0
+    prod_score = member_profile.productivity_score
+    if prod_score is None:
+        prod_score = 50.0
 
     # Weighted calculation
     score = (

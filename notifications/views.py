@@ -20,9 +20,7 @@ def notification_click(request, pk):
     notif = get_object_or_404(Notification, pk=pk, user=request.user)
 
     # Mark as read
-    if not notif.read:
-        notif.read = True
-        notif.save(update_fields=['read'])
+    notif.mark_as_read()
 
     # Priority 1: Use explicit link_url if available (deep linking)
     if notif.link_url:
@@ -94,5 +92,6 @@ def _get_detail_url(user, req):
 def mark_all_read(request):
     """Mark all notifications as read for the current user."""
     if request.method == 'POST':
-        Notification.objects.filter(user=request.user, read=False).update(read=True)
+        from .services import mark_all_as_read
+        mark_all_as_read(request.user)
     return redirect('dashboard:router')

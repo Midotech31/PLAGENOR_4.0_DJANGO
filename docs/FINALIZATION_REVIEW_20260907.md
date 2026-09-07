@@ -54,3 +54,13 @@ La relance après analyse utilise maintenant la facture active émise, et non le
 Le commit précédent de la PR #28 a réussi les quatre contrôles GitHub (SQLite, PostgreSQL, 72 scénarios navigateur dont Firefox, conteneur), avec 351 tests et 90,88 % de couverture. Les résultats de ce complément sont à distinguer de cette exécution.
 
 Validation du complément : 353 tests locaux réussis en 51,311 s ; couverture 90,86 %, seuil 90 % conservé. Les 21 tests de notifications passent également isolément.
+
+## Mesure de couverture et disponibilité Render
+
+La configuration précédente incluait par erreur les fichiers `test_*.py` : 1 169 lignes de tests exécutées gonflaient le résultat de 89,66 % (code applicatif) à 90,86 %. Le motif d’exclusion est corrigé, sans exclure de nouveau code applicatif ni réduire le seuil CI de 90 %.
+
+Sept tests de contrats supplémentaires couvrent les dates de lecture et leur stabilité, la séparation des comptes, les redirections externes, les rôles, les tarifs invalides et leurs mises à jour atomiques, les priorités de calcul et la charge des analystes. Deux défauts sont corrigés : dates de lecture non enregistrées par les vues et productivité zéro remplacée par la valeur par défaut. Validation locale : 359 tests puis les 7 tests ciblés (360 tests distincts au total), tous réussis. Couverture combinée : 90,29 %, 866 lignes manquantes sur 8 922. L’objectif 99,99 % n’est pas atteint ; avec ce périmètre il nécessiterait de couvrir toutes les lignes. La couverture des lignes n’est pas une preuve d’exhaustivité fonctionnelle ou de couverture des branches.
+
+Le service Render `plagenor`, associé au dépôt attendu et à `main`, utilise le plan `free` avec déploiement automatique activé. La documentation officielle confirme la veille après 15 minutes d’inactivité et le blocage SMTP sortant sur 25/465/587 pour ce plan. Une instance de calcul payante élimine la veille ; l’offre d’entrée est annoncée à 7 USD/mois pour le calcul seul. Aucun changement payant n’a été appliqué sans accord sur le coût. Un changement du plan de l’espace de travail seul ne supprime pas la veille des instances gratuites.
+
+Sources : https://render.com/docs/free ; https://render.com/docs/faq ; https://render.com/pricing.
