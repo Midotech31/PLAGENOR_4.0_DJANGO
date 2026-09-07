@@ -10,7 +10,7 @@
         <h1 style="margin-bottom:4px;">{% trans "Préparer le devis" %} — {{ req.display_id }}</h1>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
-            <span class="badge-status genoclab">GENOCLAB</span>
+            <span class="badge-status genoclab">{{ req.get_billing_channel_display }}</span>
         </div>
         <p class="text-sm text-muted" style="margin-top:6px;">{{ req.title|truncatechars:80 }}</p>
     </div>

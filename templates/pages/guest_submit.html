@@ -101,8 +101,8 @@
                         {% for s in services %}
                         <option value="{{ s.pk }}" data-code="{{ s.code }}"
                                 data-channel-availability="{{ s.channel_availability }}"
-                                data-ibtikar-price="{{ s.ibtikar_price }}"
-                                data-genoclab-price="{{ s.genoclab_price }}">{{ s.code }} — {{ s.name }}</option>
+                                data-ibtikar-price="{% if estimates_visible %}{{ s.ibtikar_price }}{% endif %}"
+                                data-genoclab-price="{% if estimates_visible %}{{ s.genoclab_price }}{% endif %}">{{ s.code }} — {{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>

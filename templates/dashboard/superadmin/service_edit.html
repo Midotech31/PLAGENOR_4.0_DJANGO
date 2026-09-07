@@ -287,7 +287,7 @@
             </div>
             <div class="form-group">
                 <label>{% trans "Canal" %}</label>
-                <select id="pricing-channel" class="form-control">
+                <select id="pricing-channel" class="form-control"><option value="OHB">OHB</option>
                     <option value="BOTH">{% trans "Les deux" %}</option>
                     <option value="IBTIKAR">IBTIKAR</option>
                     <option value="GENOCLAB">GENOCLAB</option>
@@ -306,6 +306,10 @@
             </div>
             <div class="form-group">
                 <label>{% trans "Priorité" %}</label>
+                <label for="pricing-valid-from">{% trans "Début de validité" %}</label>
+                <input type="date" id="pricing-valid-from" class="form-control">
+                <label for="pricing-valid-until">{% trans "Fin de validité" %}</label>
+                <input type="date" id="pricing-valid-until" class="form-control">
                 <input type="number" id="pricing-priority" class="form-control" value="0">
             </div>
         </div>
@@ -476,6 +480,8 @@ function showAddPricingModal() {
     document.getElementById('pricing-channel').value = 'BOTH';
     document.getElementById('pricing-amount').value = '0';
     document.getElementById('pricing-priority').value = '0';
+    document.getElementById('pricing-valid-from').value = '';
+    document.getElementById('pricing-valid-until').value = '';
     document.getElementById('pricing-unit').value = 'forfait';
     document.getElementById('pricing-description').value = '';
     document.getElementById('pricing-min-quantity').value = '1';
@@ -500,6 +506,8 @@ function editPricing(configId) {
             document.getElementById('pricing-channel').value = cfg.channel;
             document.getElementById('pricing-amount').value = cfg.amount;
             document.getElementById('pricing-priority').value = cfg.priority;
+            document.getElementById('pricing-valid-from').value = cfg.valid_from || '';
+            document.getElementById('pricing-valid-until').value = cfg.valid_until || '';
             document.getElementById('pricing-unit').value = cfg.unit || '';
             document.getElementById('pricing-description').value = cfg.description || '';
             document.getElementById('pricing-min-quantity').value = cfg.min_quantity || 1;
@@ -523,6 +531,8 @@ function savePricing() {
     var fd = new FormData();
     fd.append('name', name);
     fd.append('pricing_type', document.getElementById('pricing-type').value);
+    fd.append('valid_from', document.getElementById('pricing-valid-from').value);
+    fd.append('valid_until', document.getElementById('pricing-valid-until').value);
     fd.append('channel', document.getElementById('pricing-channel').value);
     fd.append('amount', document.getElementById('pricing-amount').value);
     fd.append('priority', document.getElementById('pricing-priority').value);

@@ -213,9 +213,17 @@ def resolve_cost(
     service_params = service_params or {}
     if not service:
         raise PricingConfigurationError("Service is required.")
-    if channel not in ('IBTIKAR', 'GENOCLAB'):
+    if channel not in ('IBTIKAR', 'GENOCLAB', 'OHB'):
         raise PricingConfigurationError(f"Unsupported pricing channel: {channel}.")
 
+    from django.utils import timezone
+    today = timezone.localdate()
+    configured = service.pricing_configs.filter(models.Q(channel=channel) | models.Q(channel='BOTH'))
+    effective = configured.filter(is_active=True).filter(
+        models.Q(valid_from__isnull=True) | models.Q(valid_from__lte=today)).filter(
+        models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=today))
+    if configured.exists() and not effective.exists():
+        raise PricingConfigurationError('Aucun tarif validé en vigueur pour ce canal.')
     # 1) DB tiers — what the SuperAdmin actually configured
     has_tiers = service.pricing_configs.filter(
         is_active=True,
@@ -334,9 +342,11 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
         return {'error': 'Service is required', 'total': 0}
 
     # Get active pricing configs for this service
-    pricing_configs = service.pricing_configs.filter(
-        is_active=True
-    ).filter(
+    from django.utils import timezone
+    today = timezone.localdate()
+    pricing_configs = service.pricing_configs.filter(is_active=True).filter(
+        models.Q(valid_from__isnull=True) | models.Q(valid_from__lte=today)).filter(
+        models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=today)).filter(
         models.Q(channel=channel) | models.Q(channel='BOTH')
     ).order_by('priority', 'pk')
 

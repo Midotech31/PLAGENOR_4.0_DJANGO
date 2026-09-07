@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-01 19:18+0100\n"
+"POT-Creation-Date: 2026-09-07 10:20+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: French\n"
@@ -620,6 +620,9 @@ msgstr ""
 msgid "Aller au contenu principal"
 msgstr ""
 
+msgid "Fermer la notification"
+msgstr "Fermer la notification"
+
 msgid "Navigation principale"
 msgstr ""
 
@@ -654,6 +657,22 @@ msgid "Suivi de demande"
 msgstr ""
 
 msgid "Confidentialité"
+msgstr ""
+
+msgid "Visibilité des estimations financières"
+msgstr "Visibilité des estimations financières"
+
+msgid "Afficher les estimations financières au client"
+msgstr "Afficher les estimations financières au client"
+
+msgid ""
+"Les devis émis restent accessibles. Les montants internes sont conservés."
+msgstr ""
+
+msgid "Fin de validité"
+msgstr "Fin de validité"
+
+msgid "Enregistrer"
 msgstr ""
 
 msgid "Administration"
@@ -1184,6 +1203,12 @@ msgstr ""
 
 msgid "Détail demande"
 msgstr ""
+
+msgid "Affectation administrative interne"
+msgstr "Affectation administrative interne"
+
+msgid "Opérations Hors Budget"
+msgstr "Opérations Hors Budget"
 
 msgid "Créée le"
 msgstr ""
@@ -2140,9 +2165,6 @@ msgstr ""
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
 msgstr ""
 
-msgid "Enregistrer"
-msgstr ""
-
 msgid "Solde IBTIKAR non déclaré"
 msgstr ""
 
@@ -3052,6 +3074,9 @@ msgstr ""
 msgid "Priorité"
 msgstr ""
 
+msgid "Début de validité"
+msgstr "Début de validité"
+
 msgid "Conditions avancées (quantité, seuils)"
 msgstr ""
 
@@ -3500,11 +3525,23 @@ msgstr ""
 msgid "Déconnexion"
 msgstr ""
 
+msgid "Ouvrir ou fermer le menu"
+msgstr "Ouvrir ou fermer le menu"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "Rechercher dans le tableau de bord"
+
+msgid "Ouvrir les notifications"
+msgstr "Ouvrir les notifications"
+
 msgid "non lues"
 msgstr ""
 
 msgid "Aucune notification"
 msgstr ""
+
+msgid "Ouvrir le menu du profil"
+msgstr "Ouvrir le menu du profil"
 
 msgid "Suivi du workflow"
 msgstr ""
@@ -4016,18 +4053,3 @@ msgstr ""
 
 msgid "Aucune demande trouvée avec cet identifiant. Vérifiez et réessayez."
 msgstr ""
-
-msgid "Fermer la notification"
-msgstr "Fermer la notification"
-
-msgid "Ouvrir ou fermer le menu"
-msgstr "Ouvrir ou fermer le menu"
-
-msgid "Rechercher dans le tableau de bord"
-msgstr "Rechercher dans le tableau de bord"
-
-msgid "Ouvrir les notifications"
-msgstr "Ouvrir les notifications"
-
-msgid "Ouvrir le menu du profil"
-msgstr "Ouvrir le menu du profil"

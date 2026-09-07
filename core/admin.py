@@ -19,12 +19,19 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = ('display_id', 'title', 'channel', 'status', 'urgency', 'requester', 'assigned_to', 'created_at')
     list_filter = ('channel', 'status', 'urgency', 'archived')
     search_fields = ('display_id', 'title', 'guest_name', 'guest_email')
-    readonly_fields = ('id', 'display_id', 'created_at', 'updated_at')
+    readonly_fields = ('id', 'display_id', 'created_at', 'updated_at', 'billing_channel', 'quote_number', 'quote_date', 'quote_detail', 'quote_amount')
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'client', 'total_ttc', 'locked', 'created_at')
+    readonly_fields = tuple(f.name for f in Invoice._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Message)
@@ -93,3 +100,23 @@ class ServicePricingAdmin(TranslationAdmin):
             'classes': ('collapse',)
         }),
     )
+
+from .models import FinancialVisibility
+
+
+@admin.register(FinancialVisibility)
+class FinancialVisibilityAdmin(admin.ModelAdmin):
+    list_display = ('show_estimates', 'valid_until')
+
+    def has_add_permission(self, request):
+        return request.user.role == 'SUPER_ADMIN' and not FinancialVisibility.objects.exists()
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        obj.pk = 1
+        super().save_model(request, obj, form, change)

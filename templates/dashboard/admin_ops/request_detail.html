@@ -5,6 +5,18 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% if request.user.role == 'PLATFORM_ADMIN' and req.channel == 'GENOCLAB' %}
+<form method="post" action="{% url 'dashboard:admin_assign_billing' req.pk %}" class="card card-body">
+{% csrf_token %}
+<label for="billing-channel">{% trans "Affectation administrative interne" %}</label>
+<select id="billing-channel" name="billing_channel">
+<option value="GENOCLAB" {% if req.billing_channel == 'GENOCLAB' %}selected{% endif %}>GenoClab</option>
+<option value="OHB" {% if req.billing_channel == 'OHB' %}selected{% endif %}>OHB — {% trans "Opérations Hors Budget" %}</option>
+</select>
+<button class="btn btn-primary" type="submit">{% trans "Enregistrer" %}</button>
+</form>
+{% endif %}
+
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>

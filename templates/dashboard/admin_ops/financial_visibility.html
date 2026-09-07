@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="card card-body">
+<h1>{% trans "Visibilité des estimations financières" %}</h1>
+<form method="post">{% csrf_token %}
+<label><input name="show_estimates" type="checkbox" {% if policy.show_estimates %}checked{% endif %}> {% trans "Afficher les estimations financières au client" %}</label>
+<p>{% trans "Les devis émis restent accessibles. Les montants internes sont conservés." %}</p>
+<label for="valid-until">{% trans "Fin de validité" %}</label>
+<input id="valid-until" name="valid_until" type="date" value="{{ policy.valid_until|date:'Y-m-d' }}" class="form-control">
+<button class="btn btn-primary" type="submit">{% trans "Enregistrer" %}</button>
+</form></div>
+{% endblock %}

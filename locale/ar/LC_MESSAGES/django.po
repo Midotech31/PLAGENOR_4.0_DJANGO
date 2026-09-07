@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PLAGENOR 4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-01 19:18+0100\n"
+"POT-Creation-Date: 2026-09-07 10:20+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
 "Last-Translator: PLAGENOR contributors\n"
 "Language-Team: Arabic\n"
@@ -648,6 +648,9 @@ msgstr "تحقّق"
 msgid "Aller au contenu principal"
 msgstr "الانتقال إلى المحتوى الرئيسي"
 
+msgid "Fermer la notification"
+msgstr "إغلاق الإشعار"
+
 msgid "Navigation principale"
 msgstr "التنقّل الرئيسي"
 
@@ -683,6 +686,22 @@ msgstr "تتبُّع الطلب"
 
 msgid "Confidentialité"
 msgstr "الخصوصية"
+
+msgid "Visibilité des estimations financières"
+msgstr "إظهار التقديرات المالية"
+
+msgid "Afficher les estimations financières au client"
+msgstr "إظهار التقديرات المالية للعميل"
+
+msgid ""
+"Les devis émis restent accessibles. Les montants internes sont conservés."
+msgstr ""
+
+msgid "Fin de validité"
+msgstr "نهاية الصلاحية"
+
+msgid "Enregistrer"
+msgstr "حفظ"
 
 msgid "Administration"
 msgstr "الإدارة"
@@ -1212,6 +1231,12 @@ msgstr "رجوع"
 
 msgid "Détail demande"
 msgstr "تفاصيل الطلب"
+
+msgid "Affectation administrative interne"
+msgstr "التعيين الإداري الداخلي"
+
+msgid "Opérations Hors Budget"
+msgstr "العمليات خارج الميزانية"
 
 msgid "Créée le"
 msgstr "تاريخ الإنشاء"
@@ -2195,9 +2220,6 @@ msgstr "رصيد IBTIKAR الجديد (دج)"
 msgid "Plafond annuel encadré par la DGRSDT : %(cap)s DA."
 msgstr "الحد الأقصى السنوي المحدّد من DGRSDT: %(cap)s دج."
 
-msgid "Enregistrer"
-msgstr "حفظ"
-
 msgid "Solde IBTIKAR non déclaré"
 msgstr "رصيد IBTIKAR غير معلن"
 
@@ -3138,6 +3160,9 @@ msgstr "سعر ثابت، لكل عيّنة"
 msgid "Priorité"
 msgstr "الأولوية"
 
+msgid "Début de validité"
+msgstr "بداية الصلاحية"
+
 msgid "Conditions avancées (quantité, seuils)"
 msgstr "شروط متقدمة (الكمية، العتبات)"
 
@@ -3597,11 +3622,23 @@ msgstr "التحقُّق والإسناد"
 msgid "Déconnexion"
 msgstr "تسجيل الخروج"
 
+msgid "Ouvrir ou fermer le menu"
+msgstr "فتح القائمة أو إغلاقها"
+
+msgid "Rechercher dans le tableau de bord"
+msgstr "البحث في لوحة التحكم"
+
+msgid "Ouvrir les notifications"
+msgstr "فتح الإشعارات"
+
 msgid "non lues"
 msgstr "غير مقروءة"
 
 msgid "Aucune notification"
 msgstr "لا توجد إشعارات"
+
+msgid "Ouvrir le menu du profil"
+msgstr "فتح قائمة الملف الشخصي"
 
 msgid "Suivi du workflow"
 msgstr "تتبُّع سير العمل"
@@ -4274,18 +4311,3 @@ msgstr "لم يُعثر على طلب بهذا المعرّف. يرجى التح
 #~ msgstr ""
 #~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
 #~ "تحويل تقديمك إلى حساب كامل لاحقًا."
-
-msgid "Fermer la notification"
-msgstr "إغلاق الإشعار"
-
-msgid "Ouvrir ou fermer le menu"
-msgstr "فتح القائمة أو إغلاقها"
-
-msgid "Rechercher dans le tableau de bord"
-msgstr "البحث في لوحة التحكم"
-
-msgid "Ouvrir les notifications"
-msgstr "فتح الإشعارات"
-
-msgid "Ouvrir le menu du profil"
-msgstr "فتح قائمة الملف الشخصي"

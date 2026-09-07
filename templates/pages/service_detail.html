@@ -30,13 +30,13 @@
         <div class="card">
             <div class="card-body" style="padding:20px;">
                 <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Tarification" %}</h4>
-                {% if service.ibtikar_price %}
+                {% if estimates_visible and service.ibtikar_price %}
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span class="text-muted text-sm">IBTIKAR</span>
                     <strong>{{ service.ibtikar_price|floatformat:0 }} DA</strong>
                 </div>
                 {% endif %}
-                {% if service.genoclab_price %}
+                {% if estimates_visible and service.genoclab_price %}
                 <div style="display:flex; justify-content:space-between;">
                     <span class="text-muted text-sm">GENOCLAB</span>
                     <strong>{{ service.genoclab_price|floatformat:0 }} DA</strong>

@@ -43,7 +43,7 @@
                         <select name="service_id" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
-                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} {% if estimates_visible %}({{ s.genoclab_price }} DA){% endif %}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -164,7 +164,7 @@
                     <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:8px;">
                         <div style="font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                             <span>{% trans "Devis reçu" %}</span>
-                            <strong style="color:#059669; font-size:1.05rem;">{{ req.quote_amount|floatformat:2 }} DA</strong>
+                            <strong style="color:#059669; font-size:1.05rem;">{% if req.client_quote_visible %}{{ req.quote_amount|floatformat:2 }} DA{% else %}—{% endif %}</strong>
                         </div>
                         {% if req.quote_detail and req.quote_detail.items %}
                         <div style="font-size:0.8rem; margin-bottom:8px;">

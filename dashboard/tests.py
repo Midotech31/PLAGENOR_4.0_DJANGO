@@ -433,6 +433,11 @@ class TemplateEscapingTests(SimpleTestCase):
 
 @override_settings(STORAGES=_TEST_STORAGES)
 class ServiceFormFragmentTests(TestCase):
+    def setUp(self):
+        self.visibility = patch('core.models.FinancialVisibility.estimates_visible', return_value=True)
+        self.visibility.start()
+        self.addCleanup(self.visibility.stop)
+
     def _url(self, code):
         from django.urls import reverse
         return reverse('dashboard:service_form_fragment', args=[code])
@@ -698,7 +703,7 @@ class QuoteTemplateSecurityTests(TestCase):
             username='quote-admin', password='x', role='PLATFORM_ADMIN')
         service = Service.objects.create(code='QUOTE-XSS', name='Quote service')
         req = Request.objects.create(
-            channel='GENOCLAB', service=service, display_id='GCL-QUOTE-XSS',
+            channel='GENOCLAB', status='QUOTE_DRAFT', service=service, display_id='GCL-QUOTE-XSS',
             quote_detail={'items': [{'label': '</script><script>alert(1)</script>',
                                      'unit_price': 1, 'quantity': 1}]},
         )
