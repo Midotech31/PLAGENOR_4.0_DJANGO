@@ -2730,7 +2730,7 @@ msgstr "شكراً لاستخدامك PLAGENOR 4.0! تقريرك جاهز."
 
 #: templates/dashboard/report_viewer.html:607
 msgid "Pour reconnaître le soutien et les contributions de notre Plateforme de Technologie Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
-msgstr "تقديراً لدعم ومساهمات منصة التكنولوجيا الجينومية لدينا، يرجى تضمين الاستشهاد التالي في أي نشر أو عرض يستند إلى البيانات أو التحاليل المُنجزة:"
+msgstr "تقديراً لدعم ومساهمات الأرضية التكنولوجية للجينوميك لدينا، يرجى تضمين الاستشهاد التالي في أي نشر أو عرض يستند إلى البيانات أو التحاليل المُنجزة:"
 
 #: templates/dashboard/report_viewer.html:611
 msgid "Copier"
@@ -2738,7 +2738,7 @@ msgstr "نسخ"
 
 #: templates/dashboard/report_viewer.html:618
 msgid "Cette recherche a été réalisée au sein de la Plateforme de Technologie Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
-msgstr "أُجريَ هذا البحث في منصة التكنولوجيا الجينومية بالمدرسة العليا في العلوم البيولوجية بوهران. نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات وتفسيرها."
+msgstr "أُجريَ هذا البحث في الأرضية التكنولوجية للجينوميك بالمدرسة العليا في العلوم البيولوجية بوهران. نشكر بحرارة فريق المنصة على مساعدته في تحليل البيانات وتفسيرها."
 
 #: templates/dashboard/report_viewer.html:623
 msgid "Veuillez également vous assurer que toute contribution substantielle du personnel de la plateforme est reconnue conformément aux directives standard en matière d'auteurs scientifiques."
