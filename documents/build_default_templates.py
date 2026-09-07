@@ -29,6 +29,11 @@ from docx.shared import Pt
 from documents.docx_helpers import apply_house_style, ensure_institutional_header
 
 
+if __name__ == '__main__':
+    import os
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plagenor.settings')
+
+
 TEMPLATE_DIR = Path(settings.BASE_DIR) / 'documents' / 'docx_templates'
 
 
@@ -226,8 +231,6 @@ def build_all():
 
 
 if __name__ == '__main__':
-    import os
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plagenor.settings')
     import django
     django.setup()
     for p in build_all():
