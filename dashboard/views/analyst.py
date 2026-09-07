@@ -199,8 +199,11 @@ def workflow_action(request, pk):
         # For GENOCLAB: when analysis is finished, notify client to pay before report delivery
         if to_status == 'ANALYSIS_FINISHED' and req.channel == 'GENOCLAB':
             from notifications.services import notify_payment_request
-            notify_payment_request(req)
-            messages.success(request, f"Demande {req.display_id} mise à jour. Le client a été notifié pour le paiement.")
+            notified = notify_payment_request(req)
+            if notified:
+                messages.success(request, f"Demande {req.display_id} mise à jour. Le client a été notifié pour le paiement.")
+            else:
+                messages.success(request, f"Demande {req.display_id} mise à jour.")
         else:
             messages.success(request, f"Demande {req.display_id} mise à jour.")
             

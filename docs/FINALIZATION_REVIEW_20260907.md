@@ -36,7 +36,7 @@ L’objectif 9,9/10 **n’est pas certifié**. L’appréciation technique provi
 
 La base de cette branche est `eaec23d262e72e3afca1f68b0c10d888b31cc6b2`, PR #27 déjà fusionnée. Les résultats de CI et le déploiement de cette nouvelle livraison doivent être établis séparément.
 
-La connexion Render a été signalée comme réussie par le client, mais aucune commande Render n’était exposée dans le registre des outils de cette session lors des vérifications. Ce constat concerne les capacités de la session, pas l’état du compte Render.
+Les commandes Render sont désormais accessibles. Le connecteur exige la confirmation de l’espace « My Workspace » avant de consulter les services. La fusion de la PR #28 a été rejetée par le contrôle automatique d’approbation, faute d’autorisation de fusion/déploiement jugée explicite. Aucun déploiement de cette PR n’est confirmé.
 
 Restent indispensables : sauvegarde/restauration de production avec chiffrement et manifeste, réception SMTP externe, validation des identités de facturation et revue des réserves fonctionnelles ci-dessus. Aucun secret n’est enregistré dans ce bilan.
 
@@ -46,3 +46,11 @@ Restent indispensables : sauvegarde/restauration de production avec chiffrement 
 - [Ministère du Commerce — Facture](https://www.commerce.gov.dz/fr/questions-frequentes/themes/facture) : mentions du vendeur et de l’acheteur, numérotation/date, taxes et identification d’une facture annulée.
 - [Décret exécutif n° 05-468](https://www.commerce.gov.dz/fr/reglementation/decret-executif-n05-468) : cadre de facturation cité par le ministère.
 - Le bon de commande obligatoire dans cette application relève du **workflow interne demandé**. La réception d’un ordre de paiement n’est pas assimilée à une confirmation bancaire d’encaissement.
+
+## Complément — notifications de règlement
+
+La relance après analyse utilise maintenant la facture active émise, et non le prix mutable de la demande. Aucune relance n’est créée sans facture, pour une facture annulée, payée ou à zéro. Un statut de paiement partiel ne comportant pas de montant encaissé, le message invite à contacter le service financier sans inventer de solde. Le montant conserve ses décimales ; le message et son lien respectent la langue FR/EN/AR du destinataire. L’écran analyste n’annonce plus un envoi lorsque la relance a été omise.
+
+Le commit précédent de la PR #28 a réussi les quatre contrôles GitHub (SQLite, PostgreSQL, 72 scénarios navigateur dont Firefox, conteneur), avec 351 tests et 90,88 % de couverture. Les résultats de ce complément sont à distinguer de cette exécution.
+
+Validation du complément : 353 tests locaux réussis en 51,311 s ; couverture 90,86 %, seuil 90 % conservé. Les 21 tests de notifications passent également isolément.
