@@ -2726,16 +2726,16 @@ msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
 msgstr "Thank you for using PLAGENOR 4.0! Your report is ready."
 
 #: templates/dashboard/report_viewer.html:607
-msgid "Pour reconnaître le soutien et les contributions de notre Plateforme de Technologie Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
-msgstr "To acknowledge the support and contributions of our Genomic Technology Platform, please include the following citation in any publication or presentation arising from the data or analyses performed:"
+msgid "Pour reconnaître le soutien et les contributions de notre Plateforme Technologique en Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
+msgstr "To acknowledge the support and contributions of our Genomics Technology Platform, please include the following citation in any publication or presentation arising from the data or analyses performed:"
 
 #: templates/dashboard/report_viewer.html:611
 msgid "Copier"
 msgstr "Copy"
 
 #: templates/dashboard/report_viewer.html:618
-msgid "Cette recherche a été réalisée au sein de la Plateforme de Technologie Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
-msgstr "This research was carried out at the Genomic Technology Platform of the Higher School of Biological Sciences of Oran (ESSBO). We warmly thank the platform staff for their assistance in analyzing and interpreting the data."
+msgid "Cette recherche a été réalisée au sein de la Plateforme Technologique en Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
+msgstr "This research was carried out at the Genomics Technology Platform of the Higher School of Biological Sciences of Oran (ESSBO). We warmly thank the platform staff for their assistance in analyzing and interpreting the data."
 
 #: templates/dashboard/report_viewer.html:623
 msgid "Veuillez également vous assurer que toute contribution substantielle du personnel de la plateforme est reconnue conformément aux directives standard en matière d'auteurs scientifiques."

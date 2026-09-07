@@ -2816,7 +2816,7 @@ msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
 msgstr ""
 
 #: templates/dashboard/report_viewer.html:607
-msgid "Pour reconnaître le soutien et les contributions de notre Plateforme de Technologie Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
+msgid "Pour reconnaître le soutien et les contributions de notre Plateforme Technologique en Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
 msgstr ""
 
 #: templates/dashboard/report_viewer.html:611
@@ -2824,7 +2824,7 @@ msgid "Copier"
 msgstr ""
 
 #: templates/dashboard/report_viewer.html:618
-msgid "Cette recherche a été réalisée au sein de la Plateforme de Technologie Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
+msgid "Cette recherche a été réalisée au sein de la Plateforme Technologique en Génomique de l'École Supérieure des Sciences Biologiques d'Oran (ESSBO). Nous remercions chaleureusement le personnel de la plateforme pour son aide dans l'analyse et l'interprétation des données."
 msgstr ""
 
 #: templates/dashboard/report_viewer.html:623

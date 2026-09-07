@@ -7,7 +7,7 @@ DEFAULTS_FR = {
 
     # Hero section
     'hero_title': 'PLAGENOR 4.0',
-    'hero_subtitle': 'Plateforme Technologique de Génomique — ESSBO · ORAN',
+    'hero_subtitle': 'Plateforme Technologique en Génomique — ESSBO · ORAN',
     'hero_description': "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO.",
     'hero_btn_submit': 'Soumettre une demande',
     'hero_btn_guest': 'Soumission invité',
@@ -30,11 +30,11 @@ DEFAULTS_FR = {
     # Organization section
     'org_title': 'Organisation',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': 'PLAGENOR est la plateforme technologique de génomique de l’École Supérieure en Sciences Biologiques d’Oran (ESSBO). Elle accueille les demandes des étudiants algériens via IBTIKAR et les demandes de prestations scientifiques et techniques.',
+    'org_description': 'PLAGENOR est la Plateforme Technologique en Génomique de l’École Supérieure en Sciences Biologiques d’Oran (ESSBO). Elle accueille les demandes des étudiants algériens via IBTIKAR et les demandes de prestations scientifiques et techniques.',
 
     # Footer
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': 'PLAGENOR — Plateforme technologique de génomique de l’ESSBO. Demandes d’analyses, suivi des prestations et remise des résultats.',
+    'footer_description': 'PLAGENOR — Plateforme Technologique en Génomique de l’ESSBO. Demandes d’analyses, suivi des prestations et remise des résultats.',
     'footer_copyright': '© 2026 ESSBO — Tous droits réservés',
     'footer_credit': 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO',
     'footer_contact_1': "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
@@ -121,7 +121,7 @@ DEFAULTS_EN = {
     'services_subtitle': 'Scientific and technical analyses offered by the ESSBO laboratory',
     'org_title': 'Organization',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': 'PLAGENOR is the genomics technology platform of the Higher School of Biological Sciences of Oran (ESSBO). It handles requests from Algerian students through IBTIKAR and requests for scientific and technical services.',
+    'org_description': 'PLAGENOR is the Genomics Technology Platform of the Higher School of Biological Sciences of Oran (ESSBO). It handles requests from Algerian students through IBTIKAR and requests for scientific and technical services.',
     'footer_brand': 'PLAGENOR 4.0',
     'footer_description': 'PLAGENOR — ESSBO Genomics Technology Platform. Analysis requests, service tracking and delivery of results.',
     'footer_copyright': '© 2026 ESSBO — All rights reserved',
