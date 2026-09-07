@@ -262,10 +262,7 @@ def apply_house_style(doc: DocumentType) -> None:
         # whatever Word fell back to. Force them all to Arial so the AR
         # glyphs use a clean fallback when Amiri isn't installed.
         rpr = normal.element.get_or_add_rPr()
-        rfonts = rpr.find(qn('w:rFonts'))
-        if rfonts is None:
-            rfonts = OxmlElement('w:rFonts')
-            rpr.insert(0, rfonts)
+        rfonts = rpr.get_or_add_rFonts()
         for attr in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
             rfonts.set(qn(f'w:{attr}'), BRAND_FONT)
         normal.font.size = Pt(SIZE_BODY)
@@ -305,10 +302,7 @@ def _style_heading(doc, style_name, size_pt, *, bold, color, space_before, space
         return
     style.font.name = BRAND_FONT
     rpr = style.element.get_or_add_rPr()
-    rfonts = rpr.find(qn('w:rFonts'))
-    if rfonts is None:
-        rfonts = OxmlElement('w:rFonts')
-        rpr.insert(0, rfonts)
+    rfonts = rpr.get_or_add_rFonts()
     for attr in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
         rfonts.set(qn(f'w:{attr}'), BRAND_FONT)
     style.font.size = Pt(size_pt)

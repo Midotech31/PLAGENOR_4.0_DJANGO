@@ -255,6 +255,9 @@ def assign_request(request, pk):
 
     previous = req.assigned_to  # may be None
     reason = (request.POST.get('reason', '') or '').strip()
+    if previous is not None and previous.pk == member.pk:
+        messages.warning(request, "L'analyste sélectionné est déjà l'assigné de cette demande.")
+        return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
     # Reassignment paths
     # ──────────────────
@@ -296,10 +299,6 @@ def assign_request(request, pk):
             "Une raison (retard, absence, congé, surcharge…) d'au moins "
             "5 caractères est obligatoire pour réassigner une demande en cours.",
         )
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    if (is_decline_rebound or is_active_reassignment) and previous is not None and previous.pk == member.pk:
-        messages.warning(request, "L'analyste sélectionné est déjà l'assigné de cette demande.")
         return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
     req.assigned_to = member

@@ -58,7 +58,6 @@ def _database_counter(cache_key: str, limit: int, window: int) -> tuple[bool, in
         except IntegrityError:
             if attempt:
                 raise
-    raise RuntimeError("Unable to update rate-limit counter")
 
 
 def _cache_counter(cache_key: str, limit: int, window: int) -> tuple[bool, int]:

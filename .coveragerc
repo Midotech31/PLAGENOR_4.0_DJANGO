@@ -16,5 +16,5 @@ show_missing = False
 skip_covered = False
 precision = 2
 # Enforced production regression floor, backed by the full Django suite.
-# Raise it as tests grow — never down.
-fail_under = 90
+# All measured application statements must remain covered.
+fail_under = 100

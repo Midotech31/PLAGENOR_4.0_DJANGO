@@ -166,7 +166,9 @@ def amount_in_words_fr(amount) -> str:
     """
     try:
         amt = Decimal(str(amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    except (TypeError, ValueError):
+        if not amt.is_finite():
+            return ''
+    except (InvalidOperation, TypeError, ValueError):
         return ''
     if amt < 0:
         return f"moins {amount_in_words_fr(-amt)}"
