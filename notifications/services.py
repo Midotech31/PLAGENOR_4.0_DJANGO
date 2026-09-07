@@ -27,10 +27,13 @@ def _safe_assigned_user(request_obj):
 def notify_user(user, message, notification_type='INFO', request_obj=None,
                link_url='', link_text='', action_url='', action_text=''):
     """Create an in-app notification for a user with deep linking support."""
-    # Auto-generate link URL if request_obj is provided
-    if not link_url and request_obj:
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+    # Resolve request links for the recipient, never the sender's role.
+    if request_obj:
+        link_url = Notification(user=user, request=request_obj).get_absolute_url()
         link_text = f"Voir la demande {request_obj.display_id}"
+        if action_url:
+            action_url = link_url
+
     
     Notification.objects.create(
         user=user,
@@ -198,7 +201,7 @@ def mark_all_as_read(user):
 def notify_purchase_order_uploaded(request_obj):
     """Notify admin that client has uploaded purchase order (Bon de commande).
     
-    Per Algerian commercial code, purchase order is mandatory for commercial transactions.
+    Purchase orders are required by the internal commercial workflow.
     """
     from accounts.models import User
     

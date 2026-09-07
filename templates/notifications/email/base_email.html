@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ language|default:'fr' }}">
+<html lang="{{ language|default:'fr' }}" dir="{% if language == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,14 +30,14 @@
     <div class="container">
         <div class="header">
             <h1>PLAGENOR 4.0</h1>
-            <p>{% if language == 'en' %}Scientific Operations Management Platform{% else %}Plateforme de Gestion des Opérations Scientifiques{% endif %}</p>
+            <p>{% if language == 'ar' %}منصة إدارة العمليات العلمية{% elif language == 'en' %}Scientific Operations Management Platform{% else %}Plateforme de Gestion des Opérations Scientifiques{% endif %}</p>
         </div>
         <div class="content">
             {% block email_content %}{% endblock %}
         </div>
         <div class="footer">
             <p>
-                {% if language == 'en' %}
+                {% if language == 'ar' %}هذه رسالة آلية من PLAGENOR 4.0. يُرجى عدم الرد عليها.<br>{% elif language == 'en' %}
                 This is an automated message from PLAGENOR 4.0. Please do not reply to this email.<br>
                 {% else %}
                 Ceci est un message automatique de PLAGENOR 4.0. Merci de ne pas répondre à cet email.<br>

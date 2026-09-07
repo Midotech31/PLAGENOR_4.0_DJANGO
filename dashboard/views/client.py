@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
@@ -121,7 +122,7 @@ def request_detail(request, pk):
 
     # Workflow history — same view as the analyst's, so the client
     # can follow the progress of their own request step by step.
-    history = req.history.select_related('actor').order_by('created_at')
+    history = req.history.exclude(from_status=F('to_status')).select_related('actor').order_by('created_at')
 
     context = {
         'req': req,
@@ -196,7 +197,7 @@ def accept_quote(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
     try:
         transition(req, 'QUOTE_VALIDATED_BY_CLIENT', request.user, notes='Devis accepté par client')
-        messages.success(request, f"Devis accepté pour {req.display_id}. Veuillez maintenant télécharger votre Bon de Commande (obligatoire selon le code de commerce algérien).")
+        messages.success(request, f"Devis accepté pour {req.display_id}. Veuillez maintenant déposer votre bon de commande pour poursuivre le traitement.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     return redirect('dashboard:client_request_detail', pk=pk)
@@ -217,7 +218,7 @@ def reject_quote(request, pk):
 
 @client_required
 def upload_order(request, pk):
-    """Upload purchase order (Bon de commande) - mandatory per Algerian commercial code."""
+    """Upload the purchase order required by the platform's commercial workflow."""
     if request.method != 'POST':
         return HttpResponseForbidden()
     order_file = request.FILES.get('order_file')
@@ -242,8 +243,6 @@ def upload_order(request, pk):
             req.order_uploaded_at = timezone.now()
             req.save(update_fields=['order_file', 'order_uploaded_at'])
             transition(req, 'ORDER_UPLOADED', request.user, notes='Bon de commande téléchargé par le client')
-            from notifications.services import notify_purchase_order_uploaded
-            transaction.on_commit(lambda: notify_purchase_order_uploaded(req))
         messages.success(request, f"Bon de Commande téléchargé avec succès pour {req.display_id}. L'administrateur va maintenant assigner votre demande à un analyste.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
@@ -278,8 +277,6 @@ def upload_payment_receipt(request, pk):
             req.payment_uploaded_at = timezone.now()
             req.save(update_fields=['payment_receipt_file', 'payment_uploaded_at'])
             transition(req, 'PAYMENT_PROOF_UPLOADED', request.user, notes='Reçu de paiement téléchargé par le client')
-            from notifications.services import notify_payment_received
-            transaction.on_commit(lambda: notify_payment_received(req))
         messages.success(request, f"Preuve de paiement reçue pour {req.display_id}. Elle doit maintenant être vérifiée par la finance.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))

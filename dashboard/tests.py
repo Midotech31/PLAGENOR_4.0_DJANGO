@@ -1478,11 +1478,11 @@ class SuperadminWorkflowCoverageTests(TestCase):
             'field_type': ['choice', 'string'], 'field_category': ['invalid', 'parameter'],
             'field_required': ['0'], 'field_options': ['High,Low', ''],
             'field_affects_pricing': ['0'], 'field_price_modifier_type': ['FIXED'],
-            'field_price_modifier_value': ['bad'], 'field_condition_note_fr': ['Note'],
-            'field_condition_note_en': ['Note'], 'field_option_pricing': ['bad-json'],
-            'field_conditional_logic': ['bad-json'], 'pd_base_non_pathogenic': '100',
-            'pd_base_pathogenic': 'bad', 'pd_multiplier_param': 'mode',
-            'pd_mult_key': ['fast', ''], 'pd_mult_factor': ['1.5', 'bad']})
+            'field_price_modifier_value': ['10'], 'field_condition_note_fr': ['Note'],
+            'field_condition_note_en': ['Note'], 'field_option_pricing': ['{}'],
+            'field_conditional_logic': ['[]'], 'pd_base_non_pathogenic': '100',
+            'pd_base_pathogenic': '150', 'pd_multiplier_param': 'mode',
+            'pd_mult_key': ['fast', ''], 'pd_mult_factor': ['1.5', '']})
         self.assertEqual(updated.status_code, 302)
         self.assertTrue(ServiceFormField.objects.filter(service=self.service, name='quality').exists())
         self.assertEqual(self.client.get(
@@ -1626,7 +1626,8 @@ class AdminOperationsCoverageTests(TestCase):
 
         self.post(f'/dashboard/ops/payment/{self.req.pk}/', {'verification_note': 'x'})
         self.req.status = 'PAYMENT_PROOF_UPLOADED'
-        self.req.save(update_fields=['status'])
+        self.req.payment_receipt_file = 'payments/receipt.pdf'
+        self.req.save(update_fields=['status', 'payment_receipt_file'])
         with patch('dashboard.views.admin_ops.transition'):
             self.post(f'/dashboard/ops/payment/{self.req.pk}/',
                       {'verification_note': 'Receipt checked'})

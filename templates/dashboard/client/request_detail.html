@@ -120,7 +120,7 @@
                 {% if req.client_quote_visible %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Montant du devis" %}</span><strong>{{ req.quote_amount }} DA</strong></div>
                 {% endif %}
-                {% if req.budget_amount %}
+                {% if estimates_visible and req.budget_amount %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
                 {% endif %}
                 {% if not req.budget_amount and not req.quote_amount %}

@@ -6,6 +6,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
+from django.db import transaction
+from dashboard.views.admin_ops import admin_required
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.conf import settings
@@ -537,7 +539,8 @@ def audit_log(request):
     return render(request, 'dashboard/superadmin/audit_log.html', context)
 
 
-@superadmin_required
+@admin_required
+@transaction.atomic
 def service_edit(request, pk):
     """Edit a service, its custom form fields, and its detailed pricing tiers.
 
@@ -560,18 +563,50 @@ def service_edit(request, pk):
     pricing_tiers = service.pricing_configs.order_by('priority', 'pk')
 
     if request.method == 'POST':
+        # Validate the complete form before changing the service or replacing fields.
+        import json
+        from core.financial import parse_money
+        from core.exceptions import FinancialValidationError
+        try:
+            for key in ('ibtikar_price', 'genoclab_price', 'pd_base_non_pathogenic', 'pd_base_pathogenic'):
+                if request.POST.get(key):
+                    parse_money(request.POST[key], field=key)
+            for key in ('pd_mult_factor', 'field_price_modifier_value'):
+                for value in request.POST.getlist(key):
+                    if value.strip():
+                        parse_money(value, field=key)
+            days = int(request.POST.get('turnaround_days') or service.turnaround_days or 0)
+            if days < 0 or days > 3650:
+                raise ValueError('Délai invalide.')
+            names = [n.strip() for n in request.POST.getlist('field_name') if n.strip()]
+            if len(names) != len(set(names)):
+                raise ValueError('Les noms des champs doivent être uniques.')
+            for key, expected in [('field_option_pricing', dict), ('field_conditional_logic', list)]:
+                for raw in request.POST.getlist(key):
+                    if raw.strip() and not isinstance(json.loads(raw), expected):
+                        raise ValueError('Configuration des champs invalide.')
+            if request.POST.get('channel_availability', service.channel_availability) not in ('BOTH', 'IBTIKAR', 'GENOCLAB'):
+                raise ValueError('Canal invalide.')
+        except (FinancialValidationError, ValueError, TypeError) as exc:
+            messages.error(request, str(exc))
+            return redirect('dashboard:superadmin_service_edit', pk=pk)
         service.name = request.POST.get('name', service.name)
         service.description = request.POST.get('description', service.description)
         service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
-        service.ibtikar_price = request.POST.get('ibtikar_price', service.ibtikar_price)
-        service.genoclab_price = request.POST.get('genoclab_price', service.genoclab_price)
-        service.turnaround_days = request.POST.get('turnaround_days', service.turnaround_days)
+        service.ibtikar_price = request.POST.get('ibtikar_price') or service.ibtikar_price
+        service.genoclab_price = request.POST.get('genoclab_price') or service.genoclab_price
+        service.turnaround_days = days
         if 'image' in request.FILES:
             try:
                 service.image = validate_upload(request.FILES['image'], 'image')
             except ValidationError as exc:
                 messages.error(request, exc.messages[0])
                 return redirect('dashboard:superadmin_service_edit', pk=service.pk)
+        try:
+            service.full_clean()
+        except ValidationError as exc:
+            messages.error(request, '; '.join(exc.messages))
+            return redirect('dashboard:superadmin_service_edit', pk=pk)
         service.save()
 
         # ---- Custom form fields: wipe + recreate (simple, low-volume data)
@@ -685,7 +720,7 @@ def service_edit(request, pk):
             service.save(update_fields=['pricing_data'])
 
         messages.success(request, f"Service {service.name} mis à jour.")
-        return redirect_back(request, 'dashboard:superadmin')
+        return redirect('dashboard:ops_services' if request.user.role == 'PLATFORM_ADMIN' else 'dashboard:superadmin')
 
     # Build the pricing_data view context. If the admin hasn't authored any
     # DB pricing yet for one of the 9 legacy services, pre-fill the form from

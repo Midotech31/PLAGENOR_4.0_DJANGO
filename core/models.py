@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -300,38 +301,38 @@ class Request(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ('DRAFT', 'Brouillon'),
-        ('SUBMITTED', 'Soumis'),
-        ('VALIDATION_PEDAGOGIQUE', 'Validation Pédagogique'),
-        ('VALIDATION_FINANCE', 'Validation Finance'),
-        ('PLATFORM_NOTE_GENERATED', 'Note Générée'),
-        ('IBTIKAR_SUBMISSION_PENDING', 'En attente soumission IBTIKAR'),
-        ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
-        ('ASSIGNED', 'Assigné'),
-        ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
-        ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
-        ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
-        ('ANALYSIS_STARTED', 'Analyse Démarrée'),
-        ('ANALYSIS_FINISHED', 'Analyse Terminée'),
-        ('REPORT_UPLOADED', 'Rapport Uploadé'),
-        ('REPORT_VALIDATED', 'Rapport Validé'),
-        ('SENT_TO_REQUESTER', 'Transmis Demandeur'),
-        ('COMPLETED', 'Complété'),
-        ('CLOSED', 'Clôturé'),
-        ('REJECTED', 'Rejeté'),
+        ('DRAFT', _('Brouillon')),
+        ('SUBMITTED', _('Soumis')),
+        ('VALIDATION_PEDAGOGIQUE', _('Validation Pédagogique')),
+        ('VALIDATION_FINANCE', _('Validation Finance')),
+        ('PLATFORM_NOTE_GENERATED', _('Note Générée')),
+        ('IBTIKAR_SUBMISSION_PENDING', _('En attente soumission IBTIKAR')),
+        ('IBTIKAR_CODE_SUBMITTED', _('Code IBTIKAR soumis')),
+        ('ASSIGNED', _('Assigné')),
+        ('APPOINTMENT_PROPOSED', _('RDV Proposé')),
+        ('APPOINTMENT_CONFIRMED', _('RDV Confirmé')),
+        ('SAMPLE_RECEIVED', _('Échantillon Reçu')),
+        ('ANALYSIS_STARTED', _('Analyse Démarrée')),
+        ('ANALYSIS_FINISHED', _('Analyse Terminée')),
+        ('REPORT_UPLOADED', _('Rapport Uploadé')),
+        ('REPORT_VALIDATED', _('Rapport Validé')),
+        ('SENT_TO_REQUESTER', _('Transmis Demandeur')),
+        ('COMPLETED', _('Complété')),
+        ('CLOSED', _('Clôturé')),
+        ('REJECTED', _('Rejeté')),
         # GENOCLAB-specific
-        ('REQUEST_CREATED', 'Demande Créée'),
-        ('QUOTE_DRAFT', 'Devis En Cours'),
-        ('QUOTE_SENT', 'Devis Envoyé'),
-        ('QUOTE_VALIDATED_BY_CLIENT', 'Devis Accepté'),
-        ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
-        ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
-        ('INVOICE_GENERATED', 'Facture Générée'),
-        ('PAYMENT_PENDING', 'En Attente Paiement'),
-        ('PAYMENT_PROOF_UPLOADED', 'Preuve de Paiement Téléversée'),
-        ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
-        ('SENT_TO_CLIENT', 'Transmis Client'),
-        ('ARCHIVED', 'Archivé'),
+        ('REQUEST_CREATED', _('Demande Créée')),
+        ('QUOTE_DRAFT', _('Devis En Cours')),
+        ('QUOTE_SENT', _('Devis Envoyé')),
+        ('QUOTE_VALIDATED_BY_CLIENT', _('Devis Accepté')),
+        ('QUOTE_REJECTED_BY_CLIENT', _('Devis Refusé')),
+        ('ORDER_UPLOADED', _('Bon de Commande Uploadé')),
+        ('INVOICE_GENERATED', _('Facture Générée')),
+        ('PAYMENT_PENDING', _('En Attente Paiement')),
+        ('PAYMENT_PROOF_UPLOADED', _('Preuve de Paiement Téléversée')),
+        ('PAYMENT_CONFIRMED', _('Paiement Confirmé')),
+        ('SENT_TO_CLIENT', _('Transmis Client')),
+        ('ARCHIVED', _('Archivé')),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -537,6 +538,9 @@ class Invoice(models.Model):
     total_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='PENDING')
     locked = models.BooleanField(default=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True, default='')
+    cancelled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+')
 
@@ -695,3 +699,15 @@ class RevenueArchive(models.Model):
 
     def __str__(self):
         return f"{self.channel} {self.month}/{self.year} — {self.total_revenue} DA"
+
+
+class IssuedDocument(models.Model):
+    """Immutable generated originals; retained with the database backup."""
+    kind = models.CharField(max_length=12)
+    number = models.CharField(max_length=50)
+    content = models.BinaryField(editable=False)
+    sha256 = models.CharField(max_length=64, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['kind', 'number'], name='issued_document_number_unique')]

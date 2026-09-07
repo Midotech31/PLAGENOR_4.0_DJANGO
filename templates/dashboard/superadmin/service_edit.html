@@ -59,7 +59,7 @@
             <hr style="margin:32px 0 16px;">
             <h4 style="margin-bottom:6px;">{% trans "Prix de base & multiplicateurs" %}</h4>
             <p class="text-sm text-muted" style="margin:0 0 16px;">
-                {% blocktrans %}Formule : <strong>Prix de base × Multiplicateur × Nombre d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des consommables change — les nouvelles valeurs s'appliquent immédiatement aux estimations et aux devis.{% endblocktrans %}
+                {% blocktrans %}Formule : <strong>Prix de base × Multiplicateur × Nombre d'échantillons</strong>. Ajustez ici quand le prix des réactifs ou des consommables change — les nouvelles valeurs s'appliquent aux prochaines estimations et aux devis en préparation.{% endblocktrans %}
                 {% if pricing_data_view.has_yaml_default and not pricing_data_view.has_db_override %}
                 <br><em>{% trans "Valeurs YAML par défaut affichées — premier enregistrement les copiera en base." %}</em>
                 {% endif %}
@@ -255,7 +255,7 @@
             <hr style="margin:32px 0 16px;">
             <div style="display:flex; gap:8px;">
                 <button type="submit" class="btn btn-primary">{% trans "Enregistrer toutes les modifications" %}</button>
-                <a href="{% url 'dashboard:superadmin' %}?tab=services" class="btn btn-outline">{% trans "Annuler" %}</a>
+                <a href="{% url 'dashboard:router' %}" class="btn btn-outline">{% trans "Annuler" %}</a>
             </div>
         </form>
     </div>

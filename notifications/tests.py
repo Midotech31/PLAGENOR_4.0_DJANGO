@@ -86,7 +86,7 @@ class NotificationWorkflowTests(TestCase):
         self.assertEqual(Notification.objects.filter(user=self.requester).count(), 3)
         assignment = Notification.objects.get(user=self.analyst)
         self.assertEqual(assignment.notification_type, 'ASSIGNMENT')
-        self.assertIn('/accept/', assignment.action_url)
+        self.assertEqual(assignment.action_url, f'/dashboard/analyst/request/{self.request.pk}/')
 
     def test_status_change_does_not_notify_actor(self):
         services.notify_status_change(self.request, 'DRAFT', 'SUBMITTED', self.requester)

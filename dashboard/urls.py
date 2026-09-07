@@ -5,6 +5,7 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
+    path('ops/services/', admin_ops.services, name='ops_services'),
     # Router
     path('', views.dashboard_router, name='router'),
 
@@ -57,6 +58,8 @@ urlpatterns = [
     path('ops/report/<uuid:pk>/', admin_ops.report_review, name='admin_report_review'),
     path('ops/cost/<uuid:pk>/', admin_ops.adjust_cost, name='admin_adjust_cost'),
     path('ops/appointment/<uuid:pk>/', admin_ops.modify_appointment, name='admin_modify_appointment'),
+    path('ops/invoice/<uuid:pk>/cancel/', admin_ops.cancel_invoice, name='cancel_invoice'),
+    path('api/service/<str:service_code>/estimate/', service_form_api.cost_estimate, name='cost_estimate'),
     path('ops/financial-visibility/', admin_ops.financial_visibility, name='financial_visibility'),
     path('ops/billing/<uuid:pk>/', admin_ops.assign_billing, name='admin_assign_billing'),
     path('ops/quote/<uuid:pk>/', admin_ops.prepare_quote, name='admin_prepare_quote'),

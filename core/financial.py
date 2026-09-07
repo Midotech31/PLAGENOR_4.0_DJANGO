@@ -9,7 +9,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Optional
 
 from django.conf import settings
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 
 from core.exceptions import BudgetExceededError, FinancialValidationError
 
@@ -243,10 +243,13 @@ def approve_with_budget_override(request_obj, actor, amount: float, justificatio
 # from the request's accepted quote.
 # ═══════════════════════════════════════════════════════════════════════════
 
-def get_revenue_summary() -> dict:
+def get_revenue_summary(billing_channel=None) -> dict:
     """GENOCLAB real revenue from invoices."""
     from core.models import Invoice
-    invoices = Invoice.objects.all()
+    invoices = Invoice.objects.filter(cancelled_at__isnull=True)
+    if billing_channel:
+        ohb = Q(document_snapshot__billing_channel='OHB') | Q(request__billing_channel='OHB')
+        invoices = invoices.filter(ohb) if billing_channel == 'OHB' else invoices.exclude(pk__in=invoices.filter(ohb).values('pk'))
     agg = invoices.aggregate(total=Sum('total_ttc'), count=Count('id'))
     return {
         'total': float(agg['total'] or 0),
@@ -269,7 +272,7 @@ def archive_monthly_revenue(month: int = None, year: int = None) -> list:
         year = now.year if now.month > 1 else now.year - 1
 
     results = []
-    for channel in ['IBTIKAR', 'GENOCLAB']:
+    for channel in ['IBTIKAR', 'GENOCLAB', 'OHB']:
         if channel == 'IBTIKAR':
             qs = Request.objects.filter(
                 channel='IBTIKAR',
@@ -280,9 +283,12 @@ def archive_monthly_revenue(month: int = None, year: int = None) -> list:
             count = qs.count()
         else:
             qs = Invoice.objects.filter(
+                cancelled_at__isnull=True,
                 created_at__month=month,
                 created_at__year=year,
             )
+            ohb = Q(document_snapshot__billing_channel='OHB') | Q(request__billing_channel='OHB')
+            qs = qs.filter(ohb) if channel == 'OHB' else qs.exclude(pk__in=qs.filter(ohb).values('pk'))
             total = float(qs.aggregate(total=Sum('total_ttc'))['total'] or 0)
             count = qs.count()
 
@@ -311,7 +317,8 @@ def archive_monthly_revenue(month: int = None, year: int = None) -> list:
 def get_budget_dashboard() -> dict:
     """Return symmetric data for both IBTIKAR and GENOCLAB revenue display."""
     ibtikar = get_ibtikar_virtual_revenue()
-    genoclab = get_revenue_summary()
+    genoclab = get_revenue_summary('GENOCLAB')
+    ohb = get_revenue_summary('OHB')
 
     return {
         'ibtikar': {
@@ -321,6 +328,7 @@ def get_budget_dashboard() -> dict:
             'budget_per_student': settings.IBTIKAR_BUDGET_CAP,
             'label': 'Revenus virtuels IBTIKAR',
         },
+        'ohb': {**ohb, 'label': 'Revenus OHB'},
         'genoclab': {
             'total': genoclab['total'],
             'count': genoclab['count'],

@@ -41,7 +41,7 @@ def service_form_fragment(request, service_code):
     sample_table['column_names'] = [
         c.get('name') for c in (sample_table.get('columns') or []) if c.get('name')
     ]
-    pricing = definition.get('pricing', {}) or {}
+    pricing = definition.get('pricing', {}) or {'model': 'server'}
 
     # SuperAdmin-edited pricing_data (Service.pricing_data) takes precedence
     # over the YAML pricing block — reagent/consumable cost changes the admin
@@ -165,6 +165,7 @@ def service_form_fragment(request, service_code):
         redact(db_fields)
         redact(sample_table)
     html = render_to_string('includes/service_form_fields.html', {
+        'service_code': service_code,
         'parameters': parameters,
         'sample_table': sample_table,
         'pricing': pricing,
@@ -175,3 +176,38 @@ def service_form_fragment(request, service_code):
         'db_fields': db_fields,
     })
     return HttpResponse(html)
+
+
+from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
+
+
+@require_POST
+@never_cache
+def cost_estimate(request, service_code):
+    """Read-only calculation through the same resolver used at submission."""
+    from django.http import JsonResponse
+    from django.shortcuts import get_object_or_404
+    from core.models import Service, FinancialVisibility
+    from core.pricing import resolve_cost
+    from core.exceptions import PricingConfigurationError
+    role = getattr(request.user, 'role', '')
+    internal = role in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER')
+    if not internal and not FinancialVisibility.estimates_visible():
+        return JsonResponse({'visible': False})
+    svc = get_object_or_404(Service, code=service_code, active=True)
+    channel = request.POST.get('channel') or ('IBTIKAR' if role == 'REQUESTER' else 'GENOCLAB')
+    if channel not in ('IBTIKAR', 'GENOCLAB') or svc.channel_availability not in ('BOTH', channel):
+        return JsonResponse({'visible': False}, status=400)
+    params = {k[6:]: v for k, v in request.POST.items() if k.startswith('param_')}
+    samples = {}
+    for key, value in request.POST.items():
+        if key.startswith('sample_'):
+            parts = key.split('_', 2)
+            if len(parts) == 3 and parts[1].isdigit():
+                samples.setdefault(parts[1], {})[parts[2]] = value
+    try:
+        result = resolve_cost(svc, channel, list(samples.values()), params, request.POST.get('urgency', 'Normal'))
+    except (PricingConfigurationError, ValueError, TypeError):
+        return JsonResponse({'visible': False, 'unavailable': True})
+    return JsonResponse({'visible': True, 'total': str(result['total']), 'currency': 'DZD'})

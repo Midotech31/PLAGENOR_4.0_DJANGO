@@ -3,7 +3,7 @@ from modeltranslation.admin import TranslationAdmin
 from .models import (
     Service, Request, RequestHistory, RequestComment, Invoice,
     PlatformContent, PaymentMethod, Message, RevenueArchive, ServiceFormField,
-    ServicePricing,
+    ServicePricing, IssuedDocument,
 )
 
 
@@ -120,3 +120,16 @@ class FinancialVisibilityAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.pk = 1
         super().save_model(request, obj, form, change)
+
+
+@admin.register(IssuedDocument)
+class IssuedDocumentAdmin(admin.ModelAdmin):
+    list_display = ('kind', 'number', 'sha256', 'created_at')
+    readonly_fields = ('kind', 'number', 'sha256', 'created_at')
+    exclude = ('content',)
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False

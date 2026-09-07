@@ -47,3 +47,28 @@ def assign_billing_channel(pk, channel, actor):
         RequestHistory.objects.create(request=req, from_status=req.status, to_status=req.status,
                                       actor=actor, notes=f'Affectation interne : {previous} → {channel}')
     return req
+
+
+@transaction.atomic
+def cancel_unpaid_invoice(invoice_id, actor, reason):
+    from django.utils import timezone
+    if actor.role not in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'):
+        raise PermissionDenied
+    if len(reason.strip()) < 5:
+        raise ValidationError('Le motif d’annulation est obligatoire (5 caractères minimum).')
+    invoice = Invoice.objects.get(pk=invoice_id)
+    if invoice.request_id:
+        Request.objects.select_for_update().get(pk=invoice.request_id)
+    invoice = Invoice.objects.select_for_update().get(pk=invoice_id)
+    if invoice.cancelled_at:
+        return invoice
+    if invoice.payment_status != 'PENDING':
+        raise ValidationError('Une facture encaissée, même partiellement, nécessite un traitement comptable par avoir.')
+    invoice.cancelled_at = timezone.now()
+    invoice.cancelled_by = actor
+    invoice.cancellation_reason = reason.strip()
+    invoice.save(update_fields=['cancelled_at', 'cancelled_by', 'cancellation_reason'])
+    from core.audit import log_financial_action
+    log_financial_action('INVOICE_CANCELLED', str(invoice.pk), actor,
+        amount=float(invoice.total_ttc), details={'reason': reason.strip(), 'invoice_number': invoice.invoice_number})
+    return invoice
