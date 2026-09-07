@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n icons %}
 {% load static %}
 {% block title %}{% trans "Statistiques" %} — PLAGENOR 4.0{% endblock %}
 
@@ -83,7 +83,7 @@
     {% for key, val in filters.items %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endfor %}
     <input type="hidden" name="format" value="xlsx">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <span style="font-size:1.6rem;">📊</span>
+        {% icon "bar-chart-2" size=28 %}
         <div>
             <h3 style="margin:0;">{% trans "Générer un bilan d'activité (Excel)" %}</h3>
             <p class="text-sm text-muted" style="margin:2px 0 0;">{% trans "Choisissez les dimensions, la granularité de la période et la portée (filtres ci-dessus). Le bilan inclut effectifs, parts (%) et montants par canal." %}</p>

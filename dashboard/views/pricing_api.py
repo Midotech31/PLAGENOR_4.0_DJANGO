@@ -20,6 +20,9 @@ from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
+from django.db import transaction
+from django.utils.dateparse import parse_date
+from core.audit import log_action
 
 from core.models import Service, ServicePricing
 from dashboard.views.admin_ops import admin_required
@@ -48,6 +51,8 @@ def _serialize(tier: ServicePricing) -> dict:
         'max_amount': float(tier.max_amount) if tier.max_amount is not None else None,
         'priority': tier.priority,
         'is_active': tier.is_active,
+        'valid_from': tier.valid_from.isoformat() if tier.valid_from else '',
+        'valid_until': tier.valid_until.isoformat() if tier.valid_until else '',
     }
 
 
@@ -130,6 +135,22 @@ def _apply_form_to_tier(tier: ServicePricing, post, user) -> tuple[ServicePricin
     tier.priority = priority
     tier.is_active = is_active
     tier.updated_by = user
+    try:
+        tier.valid_from = parse_date(post['valid_from']) if post.get('valid_from') else None
+        tier.valid_until = parse_date(post['valid_until']) if post.get('valid_until') else None
+        if (post.get('valid_from') and not tier.valid_from) or (post.get('valid_until') and not tier.valid_until):
+            raise ValueError()
+    except ValueError:
+        return None, 'Date de validité invalide.'
+    if tier.valid_from and tier.valid_until and tier.valid_until < tier.valid_from:
+        return None, 'La fin de validité doit suivre le début.'
+    try:
+        tier.full_clean()
+    except Exception as exc:
+        from django.core.exceptions import ValidationError
+        if not isinstance(exc, ValidationError):
+            raise
+        return None, '; '.join(exc.messages)
     return tier, None
 
 
@@ -148,6 +169,7 @@ def pricing_list(request, service_pk):
 
 @admin_required
 @require_POST
+@transaction.atomic
 def pricing_add(request, service_pk):
     """Create a new pricing tier for a service."""
     service = get_object_or_404(Service, pk=service_pk)
@@ -155,25 +177,31 @@ def pricing_add(request, service_pk):
     if err:
         return JsonResponse({'error': err}, status=400)
     tier.save()
+    log_action('TARIFF_CREATED', 'SERVICE_PRICING', str(tier.pk), request.user, details={'after': _serialize(tier)})
     return JsonResponse({'ok': True, 'config': _serialize(tier)}, status=201)
 
 
 @admin_required
 @require_POST
+@transaction.atomic
 def pricing_update(request, pricing_pk):
     """Update an existing pricing tier."""
-    tier = get_object_or_404(ServicePricing, pk=pricing_pk)
+    tier = get_object_or_404(ServicePricing.objects.select_for_update(), pk=pricing_pk)
+    before = _serialize(tier)
     tier, err = _apply_form_to_tier(tier, request.POST, request.user)
     if err:
         return JsonResponse({'error': err}, status=400)
     tier.save()
+    log_action('TARIFF_UPDATED', 'SERVICE_PRICING', str(tier.pk), request.user, details={'before': before, 'after': _serialize(tier)})
     return JsonResponse({'ok': True, 'config': _serialize(tier)})
 
 
 @admin_required
 @require_POST
+@transaction.atomic
 def pricing_delete(request, pricing_pk):
     """Delete a pricing tier."""
     tier = get_object_or_404(ServicePricing, pk=pricing_pk)
+    log_action('TARIFF_DELETED', 'SERVICE_PRICING', str(tier.pk), request.user, details={'before': _serialize(tier)})
     tier.delete()
     return JsonResponse({'ok': True})

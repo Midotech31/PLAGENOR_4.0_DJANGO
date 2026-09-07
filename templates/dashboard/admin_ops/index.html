@@ -5,6 +5,7 @@
 {% block title %}{% trans "Administration" %} — PLAGENOR 4.0{% endblock %}
 
 {% block content %}
+<a class="btn btn-outline mb-4" href="{% url 'dashboard:financial_settings' %}">{% trans "Tarifs et visibilité financière" %}</a>
 <div class="page-header">
     <h1 class="greeting">{% trans "Bonjour" %}, {{ request.user.first_name|default:request.user.username }}</h1>
     <p class="greeting-date">{{ now|date:"l d F Y" }} — {% trans "Gestion des demandes et assignations" %}</p>
@@ -423,6 +424,7 @@
                         <option value="">{% trans "Tous les canaux" %}</option>
                         <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
                         <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                        <option value="OHB" {% if channel_filter == 'OHB' %}selected{% endif %}>OHB</option>
                     </select>
                     <select name="status" class="form-control" style="width:auto;">
                         <option value="">{% trans "Tous les statuts" %}</option>

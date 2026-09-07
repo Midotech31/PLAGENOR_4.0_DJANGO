@@ -101,8 +101,7 @@
                         {% for s in services %}
                         <option value="{{ s.pk }}" data-code="{{ s.code }}"
                                 data-channel-availability="{{ s.channel_availability }}"
-                                data-ibtikar-price="{{ s.ibtikar_price }}"
-                                data-genoclab-price="{{ s.genoclab_price }}">{{ s.code }} — {{ s.name }}</option>
+>{{ s.code }} — {{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -168,10 +167,7 @@
             if (show) {
                 if (!matchedFirst) matchedFirst = opt;
                 if (opt.value === serviceSelect.value) selectedStillVisible = true;
-                // Refresh the price suffix to the active channel's price
-                var price = opt.getAttribute(ch === 'IBTIKAR' ? 'data-ibtikar-price' : 'data-genoclab-price') || '0';
-                var label = opt.textContent.replace(/\s*\([^)]*\)\s*$/, '');
-                opt.textContent = label + ' (' + price + ' DA)';
+
             }
         }
         if (!selectedStillVisible) serviceSelect.value = '';

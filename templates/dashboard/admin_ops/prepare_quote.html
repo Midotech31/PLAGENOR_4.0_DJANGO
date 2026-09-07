@@ -1,16 +1,17 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n l10n %}
 
 {% block title %}{% trans "Préparer le devis" %} — {{ req.display_id }}{% endblock %}
 
 {% block content %}
+<style>@media (max-width: 680px) { .line-item-row { grid-template-columns: 1fr 1fr !important; } .line-item-row > div:first-child { grid-column: 1 / -1; } }</style>
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
         <h1 style="margin-bottom:4px;">{% trans "Préparer le devis" %} — {{ req.display_id }}</h1>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
-            <span class="badge-status genoclab">GENOCLAB</span>
+            <span class="badge-status genoclab">{{ req.get_billing_channel_display }}</span>
         </div>
         <p class="text-sm text-muted" style="margin-top:6px;">{{ req.title|truncatechars:80 }}</p>
     </div>
@@ -25,19 +26,10 @@
         <!-- Auto-estimate from YAML -->
         {% if auto_estimate %}
         <div class="card mb-4">
-            <div class="card-header"><h3>{% trans "Estimation automatique (YAML)" %}</h3></div>
+            <div class="card-header"><h3>{% trans "Estimation au tarif en vigueur" %}</h3></div>
             <div class="card-body">
-                <div class="data-card-row"><span class="text-muted">{% trans "Modèle de tarification" %}</span><strong>{{ auto_estimate.pricing_model }}</strong></div>
-                <div class="data-card-row"><span class="text-muted">{% trans "Nombre d'unités" %}</span><strong>{{ auto_estimate.number_of_units }}</strong></div>
-                <div class="data-card-row"><span class="text-muted">{% trans "Prix unitaire" %}</span><strong>{{ auto_estimate.unit_price }} DA</strong></div>
                 <div class="data-card-row"><span class="text-muted">{% trans "Total estimé" %}</span><strong style="color:#059669; font-size:1.1rem;">{{ auto_estimate.total }} DA</strong></div>
-                {% if auto_estimate.breakdown %}
-                <div style="margin-top:8px; padding:8px 12px; background:var(--slate-50, #f8fafc); border-radius:6px; font-size:0.85rem;">
-                    {% for key, val in auto_estimate.breakdown.items %}
-                    <div class="data-card-row"><span class="text-muted">{{ key }}</span><strong>{{ val }}</strong></div>
-                    {% endfor %}
-                </div>
-                {% endif %}
+
             </div>
         </div>
         {% endif %}
@@ -125,16 +117,16 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="text-sm">{% trans "Frais administratifs (DA)" %}</label>
-                            <input type="number" name="admin_fees" id="admin_fees" step="0.01" value="{{ existing_quote.admin_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                            <input type="number" name="admin_fees" id="admin_fees" step="0.01" value="{{ existing_quote.admin_fees|default:0|unlocalize }}" class="form-control" oninput="recalcTotals()">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="text-sm">{% trans "Frais de rapport (DA)" %}</label>
-                            <input type="number" name="report_fees" id="report_fees" step="0.01" value="{{ existing_quote.report_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                            <input type="number" name="report_fees" id="report_fees" step="0.01" value="{{ existing_quote.report_fees|default:0|unlocalize }}" class="form-control" oninput="recalcTotals()">
                         </div>
                     </div>
                     <div class="form-group" style="margin-top:12px;">
                         <label class="text-sm">{% trans "Taux TVA (%)" %}</label>
-                        <input type="number" name="vat_rate" id="vat_rate_input" step="0.01" value="19" class="form-control" style="width:120px;" oninput="recalcTotals()">
+                        <input type="number" name="vat_rate" id="vat_rate_input" step="0.01" value="{% if req.billing_channel == 'OHB' %}0{% else %}19{% endif %}" {% if req.billing_channel == 'OHB' %}readonly{% endif %} class="form-control" style="width:120px;" oninput="recalcTotals()">
                     </div>
                 </div>
             </div>
@@ -155,11 +147,13 @@
                 </div>
             </div>
 
+            <div class="form-group"><label for="quote-valid-until">{% trans "Devis valable jusqu’au" %}</label>
+            <input id="quote-valid-until" type="date" name="quote_valid_until" class="form-control" value="{{ req.quote_valid_until|date:'Y-m-d' }}"></div>
             <!-- Notes -->
             <div class="card mb-4">
                 <div class="card-header"><h3>{% trans "Notes" %}</h3></div>
                 <div class="card-body">
-                    <textarea name="quote_notes" class="form-control" rows="3" placeholder="{% trans 'Notes internes ou commentaires pour le client...' %}">{{ existing_quote.notes|default:"" }}</textarea>
+                    <textarea name="quote_notes" class="form-control" rows="3" placeholder="{% trans 'Conditions et commentaires communiqués au client...' %}">{{ existing_quote.notes|default:"" }}</textarea>
                 </div>
             </div>
 
@@ -200,23 +194,23 @@
         div.style.cssText = 'display:grid; grid-template-columns:2fr 1fr 80px 1fr 40px; gap:8px; align-items:end; margin-bottom:8px; padding:8px; background:var(--slate-50, #f8fafc); border-radius:8px;';
         div.innerHTML = `
             <div>
-                <label class="text-xs text-muted">Description</label>
-                <input type="text" name="item_label_${idx}" value="${escapeHtml(data.label || '')}" class="form-control" style="font-size:0.85rem;" placeholder="Ex: Analyse par échantillon">
+                <label for="item_label_${idx}" class="text-xs text-muted">{% trans "Description" %}</label>
+                <input type="text" id="item_label_${idx}" name="item_label_${idx}" value="${escapeHtml(data.label || '')}" class="form-control" style="font-size:0.85rem;" placeholder="{% trans 'Description' %}">
             </div>
             <div>
-                <label class="text-xs text-muted">P.U. (DA)</label>
-                <input type="number" name="item_unit_price_${idx}" value="${data.unit_price || 0}" step="0.01" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
+                <label for="item_unit_price_${idx}" class="text-xs text-muted">{% trans "P.U. (DA)" %}</label>
+                <input type="number" id="item_unit_price_${idx}" name="item_unit_price_${idx}" value="${data.unit_price || 0}" step="0.01" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
             </div>
             <div>
-                <label class="text-xs text-muted">Qté</label>
-                <input type="number" name="item_quantity_${idx}" value="${data.quantity || 1}" min="0" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
+                <label for="item_quantity_${idx}" class="text-xs text-muted">{% trans "Qté" %}</label>
+                <input type="number" id="item_quantity_${idx}" name="item_quantity_${idx}" value="${data.quantity || 1}" min="0" class="form-control" style="font-size:0.85rem;" oninput="recalcTotals()">
             </div>
             <div>
-                <label class="text-xs text-muted">Total</label>
-                <input type="text" class="form-control line-total" style="font-size:0.85rem; background:var(--slate-100, #f1f5f9);" readonly value="0.00 DA">
+                <label for="line_total_${idx}" class="text-xs text-muted">{% trans "Total" %}</label>
+                <input type="text" id="line_total_${idx}" class="form-control line-total" style="font-size:0.85rem; background:var(--slate-100, #f1f5f9);" readonly value="0.00 DA">
             </div>
             <div style="text-align:center;">
-                <button type="button" class="btn btn-sm" style="color:#dc2626; background:transparent; border:none; font-size:1.2rem; cursor:pointer;" onclick="removeLineItem(this)" title="Supprimer">&times;</button>
+                <button type="button" class="btn btn-sm" style="color:#dc2626; background:transparent; border:none; font-size:1.2rem; cursor:pointer;" onclick="removeLineItem(this)" title="{% trans 'Supprimer' %}">&times;</button>
             </div>
         `;
         return div;
@@ -305,8 +299,8 @@
     };
 
     // Set VAT rate from existing quote (stored as decimal, display as %)
-    {% if existing_quote.vat_rate %}
-    document.getElementById('vat_rate_input').value = {{ existing_quote.vat_rate }} * 100;
+    {% if existing_quote.vat_rate != None and req.billing_channel != 'OHB' %}
+    document.getElementById('vat_rate_input').value = {{ existing_quote.vat_rate|unlocalize }} * 100;
     {% endif %}
 
     // Init on DOM ready

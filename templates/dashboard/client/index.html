@@ -43,7 +43,7 @@
                         <select name="service_id" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
-                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.genoclab_price }} DA)</option>
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }}</option>
                             {% endfor %}
                         </select>
                     </div>

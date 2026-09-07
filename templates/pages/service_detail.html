@@ -1,5 +1,5 @@
 {% extends 'base_public.html' %}
-{% load i18n %}
+{% load i18n financial_visibility %}
 
 {% block title %}{{ service.name }} — PLAGENOR 4.0{% endblock %}
 
@@ -30,18 +30,10 @@
         <div class="card">
             <div class="card-body" style="padding:20px;">
                 <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:12px;">{% trans "Tarification" %}</h4>
-                {% if service.ibtikar_price %}
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span class="text-muted text-sm">IBTIKAR</span>
-                    <strong>{{ service.ibtikar_price|floatformat:0 }} DA</strong>
-                </div>
-                {% endif %}
-                {% if service.genoclab_price %}
-                <div style="display:flex; justify-content:space-between;">
-                    <span class="text-muted text-sm">GENOCLAB</span>
-                    <strong>{{ service.genoclab_price|floatformat:0 }} DA</strong>
-                </div>
-                {% endif %}
+                {% if service|estimates_visible %}
+                <p>{% trans "Le montant est calculé dans le formulaire selon les paramètres et les échantillons de votre demande." %}</p>
+                {% else %}<p>{% trans "Estimation en cours de validation. Le montant sera communiqué après vérification." %}</p>{% endif %}
+
             </div>
         </div>
 

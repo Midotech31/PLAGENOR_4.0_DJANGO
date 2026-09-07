@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n l10n icons %}
 {% load dashboard_extras %}
 
 {% block title %}{% trans "Modifier service" %} — PLAGENOR 4.0{% endblock %}
 
 {% block content %}
+<a href="{% url 'dashboard:financial_settings' %}">{% trans "Tarifs et visibilité financière" %}</a>
 <div class="page-header">
     <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
 </div>
@@ -14,6 +15,7 @@
     <div class="card-body">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+<label><input type="checkbox" name="estimates_enabled" {% if service.estimates_enabled %}checked{% endif %}> {% trans "Afficher les estimations de cette prestation" %}</label>
             <div class="form-row">
                 <div class="form-group">
                     <label>{% trans "Nom" %}</label>
@@ -31,12 +33,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>{% trans "Prix IBTIKAR (DA)" %}</label>
-                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price|unlocalize }}">
                     <small class="text-muted">{% trans "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie ci-dessous)" %}</small>
                 </div>
                 <div class="form-group">
                     <label>{% trans "Prix GENOCLAB (DA)" %}</label>
-                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
+                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price|unlocalize }}">
                 </div>
                 <div class="form-group">
                     <label>{% trans "Délai (jours)" %}</label>
@@ -207,7 +209,7 @@
                     </div>
                   </div>
                   <details class="field-pricing-advanced" style="margin-top:8px;" {% if field.affects_pricing or field.option_pricing or field.conditional_logic %}open{% endif %}>
-                    <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 {% trans "Tarification conditionnelle & logique d'affichage" %}</summary>
+                    <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">{% icon "dollar-sign" size=16 %} {% trans "Tarification conditionnelle & logique d'affichage" %}</summary>
                     <div style="padding-top:10px; display:flex; flex-direction:column; gap:10px;">
                         <label style="font-size:0.8rem; font-weight:500;">
                             <input type="checkbox" name="field_affects_pricing" value="{{ forloop.counter0 }}" {% if field.affects_pricing %}checked{% endif %}>
@@ -350,7 +352,8 @@
             </label>
         </div>
 
-        <div style="display:flex; gap:8px; margin-top:16px;">
+        <div class="form-row"><div class="form-group"><label for="pricing-valid-from">{% trans "Valide à partir du" %}</label><input class="form-control" type="date" id="pricing-valid-from"></div><div class="form-group"><label for="pricing-valid-until">{% trans "Valide jusqu'au" %}</label><input class="form-control" type="date" id="pricing-valid-until"></div></div>
+<div style="display:flex; gap:8px; margin-top:16px;">
             <button type="button" class="btn btn-primary" onclick="savePricing()">{% trans "Enregistrer" %}</button>
             <button type="button" class="btn btn-outline" onclick="closePricingModal()">{% trans "Annuler" %}</button>
         </div>
@@ -376,7 +379,7 @@ function addFieldRow() {
         '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + idx + '"> Requis</label></div>' +
         '</div>' +
         '<details class="field-pricing-advanced" style="margin-top:8px;">' +
-        '<summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 Tarification conditionnelle & logique d\'affichage</summary>' +
+        '<summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">{% icon "dollar-sign" size=16 %} Tarification conditionnelle & logique d\'affichage</summary>' +
         '<div style="padding-top:10px; display:flex; flex-direction:column; gap:10px;">' +
         '<label style="font-size:0.8rem; font-weight:500;"><input type="checkbox" name="field_affects_pricing" value="' + idx + '"> Ce champ modifie le prix</label>' +
         '<div class="form-row" style="align-items:flex-end;">' +
@@ -461,7 +464,7 @@ function renderPricingConfigs(configs) {
                 qty + desc +
             '</div>' +
             '<div style="display:flex; gap:6px;">' +
-                '<button type="button" class="btn btn-sm btn-outline" onclick="editPricing(' + cfg.id + ')" title="{% trans "Modifier" %}">✏️</button>' +
+                '<button type="button" class="btn btn-sm btn-outline" onclick="editPricing(' + cfg.id + ')" title="{% trans "Modifier" %}">{% icon "edit" size=16 %}</button>' +
                 '<button type="button" class="btn btn-sm btn-danger" onclick="deletePricing(' + cfg.id + ')" title="{% trans "Supprimer" %}">🗑</button>' +
             '</div>' +
         '</div>';
@@ -507,6 +510,8 @@ function editPricing(configId) {
             document.getElementById('pricing-min-amount').value = cfg.min_amount != null ? cfg.min_amount : '';
             document.getElementById('pricing-max-amount').value = cfg.max_amount != null ? cfg.max_amount : '';
             document.getElementById('pricing-is-active').checked = !!cfg.is_active;
+            document.getElementById('pricing-valid-from').value = cfg.valid_from || '';
+            document.getElementById('pricing-valid-until').value = cfg.valid_until || '';
             document.getElementById('pricing-modal').style.display = 'flex';
         });
 }
@@ -522,6 +527,8 @@ function savePricing() {
     var url = editId ? PRICING_API.update(editId) : PRICING_API.add;
     var fd = new FormData();
     fd.append('name', name);
+    fd.append('valid_from', document.getElementById('pricing-valid-from').value);
+    fd.append('valid_until', document.getElementById('pricing-valid-until').value);
     fd.append('pricing_type', document.getElementById('pricing-type').value);
     fd.append('channel', document.getElementById('pricing-channel').value);
     fd.append('amount', document.getElementById('pricing-amount').value);

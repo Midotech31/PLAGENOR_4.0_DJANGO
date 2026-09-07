@@ -1,4 +1,5 @@
 import logging
+from dashboard.views.admin_ops import admin_required
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
@@ -537,7 +538,24 @@ def audit_log(request):
     return render(request, 'dashboard/superadmin/audit_log.html', context)
 
 
-@superadmin_required
+def validated_service_edit(view):
+    """Rollback the whole editor when any financial/form setting is invalid."""
+    from functools import wraps
+    from django.db import transaction
+    from decimal import InvalidOperation
+    @wraps(view)
+    def wrapped(request, pk):
+        try:
+            with transaction.atomic():
+                return view(request, pk)
+        except (ValidationError, ValueError, InvalidOperation) as exc:
+            messages.error(request, str(exc))
+            return redirect('dashboard:superadmin_service_edit', pk=pk)
+    return wrapped
+
+
+@admin_required
+@validated_service_edit
 def service_edit(request, pk):
     """Edit a service, its custom form fields, and its detailed pricing tiers.
 
@@ -555,11 +573,12 @@ def service_edit(request, pk):
     from core.models import ServiceFormField, ServicePricing
     from decimal import Decimal, InvalidOperation
 
-    service = get_object_or_404(Service, pk=pk)
+    service = get_object_or_404(Service.objects.select_for_update(), pk=pk)
     custom_fields = service.custom_fields.all()
     pricing_tiers = service.pricing_configs.order_by('priority', 'pk')
 
     if request.method == 'POST':
+        service.estimates_enabled = request.POST.get('estimates_enabled') == 'on'
         service.name = request.POST.get('name', service.name)
         service.description = request.POST.get('description', service.description)
         service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
@@ -572,6 +591,17 @@ def service_edit(request, pk):
             except ValidationError as exc:
                 messages.error(request, exc.messages[0])
                 return redirect('dashboard:superadmin_service_edit', pk=service.pk)
+        from core.financial import parse_money
+        from core.audit import log_action
+        from django.forms.models import model_to_dict
+        before = Service.objects.get(pk=pk)
+        before_tariffs = {'ibtikar_price': str(before.ibtikar_price), 'genoclab_price': str(before.genoclab_price),
+                          'pricing_data': before.pricing_data, 'estimates_enabled': before.estimates_enabled}
+        service.ibtikar_price = parse_money(service.ibtikar_price, field='Tarif IBTIKAR')
+        service.genoclab_price = parse_money(service.genoclab_price, field='Tarif commercial')
+        service.full_clean(exclude=['image'])
+        if service.turnaround_days < 0:
+            raise ValidationError('Le délai doit être positif.')
         service.save()
 
         # ---- Custom form fields: wipe + recreate (simple, low-volume data)
@@ -601,8 +631,8 @@ def service_edit(request, pk):
                 return fallback
             try:
                 return json.loads(raw)
-            except (json.JSONDecodeError, ValueError):
-                return fallback
+            except (json.JSONDecodeError, ValueError) as exc:
+                raise ValidationError('Configuration JSON invalide.') from exc
 
         for i, name in enumerate(field_names):
             if not name.strip():
@@ -617,14 +647,16 @@ def service_edit(request, pk):
             mod_value = _at(field_mod_value, i).strip()
             try:
                 mod_value = Decimal(mod_value) if mod_value else None
-            except (InvalidOperation, ValueError):
-                mod_value = None
+            except (InvalidOperation, ValueError) as exc:
+                raise ValidationError('Valeur du modificateur tarifaire invalide.') from exc
+            if mod_value is not None and (not mod_value.is_finite() or mod_value < 0):
+                raise ValidationError('Valeur du modificateur tarifaire invalide.')
 
             category = _at(field_categories, i, 'parameter').strip()
             if category not in ('parameter', 'sample_column'):
                 category = 'parameter'
 
-            ServiceFormField.objects.create(
+            field = ServiceFormField(
                 service=service,
                 name=name.strip(),
                 label=field_labels[i].strip() if i < len(field_labels) else name.strip(),
@@ -641,6 +673,8 @@ def service_edit(request, pk):
                 option_pricing=_parse_json(_at(field_option_pricing, i), {}),
                 conditional_logic=_parse_json(_at(field_conditional, i), []),
             )
+            field.full_clean()
+            field.save()
 
         # ---- Pricing tiers are managed by the modal UI via the JSON API
         #     (dashboard.views.pricing_api). They're saved instantly on each
@@ -652,6 +686,9 @@ def service_edit(request, pk):
         # Same formula as before: base_price (pathogenic / non_pathogenic) ×
         # multiplier (chosen via multiplier_param) × N_samples. The admin
         # adjusts the numbers here when reagent/consumable costs vary.
+        for key in ('pd_base_non_pathogenic', 'pd_base_pathogenic'):
+            if request.POST.get(key, '').strip():
+                parse_money(request.POST[key], field='Prix de base')
         bp_non = _to_decimal_or_none(request.POST.get('pd_base_non_pathogenic'))
         bp_pat = _to_decimal_or_none(request.POST.get('pd_base_pathogenic'))
         mult_param = (request.POST.get('pd_multiplier_param') or '').strip()
@@ -663,9 +700,12 @@ def service_edit(request, pk):
             if not k:
                 continue
             try:
-                multipliers[k] = float(f)
-            except (TypeError, ValueError):
-                continue
+                factor = Decimal(f)
+                if not factor.is_finite() or factor <= 0:
+                    raise ValidationError('Un multiplicateur doit être strictement positif.')
+                multipliers[k] = float(factor)
+            except (TypeError, ValueError, InvalidOperation) as exc:
+                raise ValidationError('Multiplicateur invalide.') from exc
         if bp_non is not None or bp_pat is not None or multipliers or mult_param:
             new_pdata = dict(service.pricing_data or {})
             new_pdata['base_price'] = {
@@ -684,8 +724,12 @@ def service_edit(request, pk):
             service.pricing_data = new_pdata
             service.save(update_fields=['pricing_data'])
 
+        log_action('TARIFF_SERVICE_UPDATED', 'SERVICE', str(service.pk), request.user, details={
+            'before': before_tariffs, 'after': {'ibtikar_price': str(service.ibtikar_price),
+            'genoclab_price': str(service.genoclab_price), 'pricing_data': service.pricing_data,
+            'estimates_enabled': service.estimates_enabled}})
         messages.success(request, f"Service {service.name} mis à jour.")
-        return redirect_back(request, 'dashboard:superadmin')
+        return redirect('dashboard:financial_settings')
 
     # Build the pricing_data view context. If the admin hasn't authored any
     # DB pricing yet for one of the 9 legacy services, pre-fill the form from

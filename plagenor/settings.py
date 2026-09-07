@@ -377,6 +377,7 @@ EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWO
 DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')
 EMAIL_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '15'))
 SMTP_SMOKE_RECIPIENT = os.getenv('SMTP_SMOKE_RECIPIENT', '')
+PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'https://plagenor.onrender.com').rstrip('/')
 
 # ─── Production security headers ─────────────────────────────────────────
 if not DEBUG:

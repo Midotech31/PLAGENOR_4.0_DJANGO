@@ -15,7 +15,8 @@ The defaults match the model file supplied by the owner.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from django.conf import settings
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -83,6 +84,10 @@ CMS_DEFAULTS = {
 def cms_get(key: str, default: str = '') -> str:
     """Read an editable string from PlatformContent. Falls back to the
     CMS_DEFAULTS dict, then to the provided default."""
+    from documents.financial_snapshot import active_snapshot
+    snapshot = active_snapshot.get()
+    if snapshot and key in snapshot.get('cms', {}):
+        return snapshot['cms'][key]
     try:
         from core.models import PlatformContent
         obj = PlatformContent.objects.filter(key=key, lang='fr').first()
@@ -115,6 +120,8 @@ def _two_digits(n: int) -> str:
     if tens in (7, 9):
         # 70-79 → soixante-dix, soixante-onze, …
         # 90-99 → quatre-vingt-dix, quatre-vingt-onze, …
+        if tens == 7 and units == 1:
+            return 'soixante et onze'
         return f"{base}-{_UNITS[10 + units]}" if units else f"{base}-{_UNITS[10]}"
     if tens == 8 and units == 0:
         return 'quatre-vingts'
@@ -164,13 +171,15 @@ def amount_in_words_fr(amount) -> str:
     are rendered as a fraction so the legal phrasing stays unambiguous.
     """
     try:
-        amt = float(amount)
-    except (TypeError, ValueError):
+        amt = Decimal(str(amount)).quantize(Decimal('0.01'))
+        if not amt.is_finite():
+            return ''
+    except (InvalidOperation, TypeError, ValueError):
         return ''
     if amt < 0:
         return f"moins {amount_in_words_fr(-amt)}"
     integer_part = int(amt)
-    cents = round((amt - integer_part) * 100)
+    cents = int((amt - integer_part) * 100)
 
     if integer_part == 0:
         words = 'zéro'
@@ -261,10 +270,13 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
     coordinates on the right, with the date / document number below.
     """
     # Logo. Sized at ~6 cm wide, leaves comfortable whitespace next to it.
-    if _GENOCLAB_LOGO.exists():
+    from documents.financial_snapshot import active_snapshot
+    is_ohb = (active_snapshot.get() or {}).get('billing_channel') == 'OHB'
+    logo = Path(settings.BASE_DIR) / 'static' / 'images' / 'essbo_logo.png' if is_ohb else _GENOCLAB_LOGO
+    if logo.exists():
         p = doc.add_paragraph()
         run = p.add_run()
-        run.add_picture(str(_GENOCLAB_LOGO), width=Cm(7))
+        run.add_picture(str(logo), width=Cm(2.2 if is_ohb else 7))
 
     # Document title (e.g. "Facture Proforma" or "Facture") — large, brand colour.
     p = doc.add_paragraph()
@@ -392,8 +404,8 @@ def add_prestation_table(doc: DocumentType, line_items,
         _set_cell_text(cells[3], _money_int(total), align=WD_ALIGN_PARAGRAPH.RIGHT)
 
     # Totals (subtotal HT, VAT, total TTC) — right-aligned, label in col 0-2 merged.
-    vat_amount = float(subtotal_ht) * vat_rate
-    total_ttc = float(subtotal_ht) + vat_amount
+    vat_amount = (subtotal_ht * Decimal(str(vat_rate))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total_ttc = subtotal_ht + vat_amount
 
     def _total_row(row_idx, label, value, *, big=False):
         # Merge first three cells under the label so the layout reads
@@ -419,7 +431,10 @@ def add_prestation_table(doc: DocumentType, line_items,
 
     base_row = 1 + len(line_items)
     _total_row(base_row,     "Sous-total HT",                                                       float(subtotal_ht))
-    _total_row(base_row + 1, f"TVA ({int(round(vat_rate * 100))} %)",                                 vat_amount)
+    rate_label = format(Decimal(str(vat_rate)) * 100, 'f')
+    if '.' in rate_label:
+        rate_label = rate_label.rstrip('0').rstrip('.')
+    _total_row(base_row + 1, f"TVA ({rate_label} %)", vat_amount)
     _total_row(base_row + 2, "Total TTC",                                                              total_ttc, big=True)
 
     # Thin slate-200 borders on every cell of the table (data area).

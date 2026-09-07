@@ -19,12 +19,28 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = ('display_id', 'title', 'channel', 'status', 'urgency', 'requester', 'assigned_to', 'created_at')
     list_filter = ('channel', 'status', 'urgency', 'archived')
     search_fields = ('display_id', 'title', 'guest_name', 'guest_email')
-    readonly_fields = ('id', 'display_id', 'created_at', 'updated_at')
+    readonly_fields = ('id', 'display_id', 'created_at', 'updated_at', 'billing_channel',
+        'billing_assigned_by', 'billing_assigned_at', 'quote_number', 'quote_issued_at', 'quote_snapshot')
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(self.readonly_fields)
+        if obj and obj.quote_issued_at:
+            fields += ['quote_amount', 'quote_detail', 'quote_valid_until']
+        return fields
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'client', 'total_ttc', 'locked', 'created_at')
+
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields] if obj and obj.locked else []
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Message)
@@ -86,7 +102,7 @@ class ServicePricingAdmin(TranslationAdmin):
             'fields': ('amount', 'unit', 'min_quantity', 'max_quantity', 'min_amount', 'max_amount')
         }),
         ('Options', {
-            'fields': ('is_active', 'priority')
+            'fields': ('is_active', 'priority', 'valid_from', 'valid_until')
         }),
         ('Métadonnées', {
             'fields': ('updated_by', 'created_at', 'updated_at'),

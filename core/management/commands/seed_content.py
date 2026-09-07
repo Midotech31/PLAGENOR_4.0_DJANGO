@@ -16,7 +16,7 @@ DEFAULTS_FR = {
 
     # Channel cards
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "Canal dédié aux étudiants et chercheurs de l'ESSBO. Soumettez vos demandes d'analyses dans le cadre de vos projets de recherche avec un financement encadré par le budget IBTIKAR.",
+    'ibtikar_description': 'Canal ouvert à tous les étudiants algériens, quel que soit leur établissement. Soumettez vos demandes d’analyses dans le cadre de vos projets de recherche, avec une prise en charge soumise à la validation du dossier et du financement IBTIKAR.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "Canal pour les clients externes — universités, entreprises, laboratoires. Demandez un devis, recevez une facture et bénéficiez de nos services d'analyses scientifiques.",
 
@@ -113,7 +113,7 @@ DEFAULTS_EN = {
     'hero_btn_services': 'View services',
     'hero_btn_track': 'Track request',
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "Channel dedicated to ESSBO students and researchers. Submit your analysis requests as part of your research projects with funding framed by the IBTIKAR budget.",
+    'ibtikar_description': 'Open to all Algerian students, regardless of their institution. Submit analysis requests for your research projects, with funding subject to approval of your application and IBTIKAR financing.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "Channel for external clients — universities, companies, laboratories. Request a quote, receive an invoice, and benefit from our scientific analysis services.",
     'institutions_title': 'INSTITUTIONS & PARTNERS',
@@ -168,7 +168,7 @@ DEFAULTS_AR = {
     'hero_btn_services': 'عرض الخدمات',
     'hero_btn_track': 'تتبع الطلب',
     'ibtikar_title': 'IBTIKAR',
-    'ibtikar_description': "قناة مخصصة لطلاب وباحثي ESSBO. أرسل طلبات التحليل في إطار مشاريعك البحثية بتمويل من ميزانية IBTIKAR.",
+    'ibtikar_description': 'قناة مفتوحة لجميع الطلبة الجزائريين، مهما كانت مؤسساتهم. أرسلوا طلبات التحليل في إطار مشاريعكم البحثية، مع تكفّل يخضع للموافقة على الملف وتمويل ابتكار.',
     'genoclab_title': 'GENOCLAB',
     'genoclab_description': "قناة للعملاء الخارجيين — جامعات وشركات ومخابر. اطلب عرض أسعار، استلم فاتورة، واستفد من خدمات التحليل العلمي لدينا.",
     'institutions_title': 'المؤسسات والشركاء',

@@ -29,7 +29,7 @@ def notify_user(user, message, notification_type='INFO', request_obj=None,
     """Create an in-app notification for a user with deep linking support."""
     # Auto-generate link URL if request_obj is provided
     if not link_url and request_obj:
-        link_url = f"/dashboard/ops/request/{request_obj.pk}/"
+        link_url = Notification(user=user, request=request_obj).get_absolute_url()
         link_text = f"Voir la demande {request_obj.display_id}"
     
     Notification.objects.create(
@@ -198,7 +198,7 @@ def mark_all_as_read(user):
 def notify_purchase_order_uploaded(request_obj):
     """Notify admin that client has uploaded purchase order (Bon de commande).
     
-    Per Algerian commercial code, purchase order is mandatory for commercial transactions.
+    Purchase orders are required by the platform's internal commercial workflow.
     """
     from accounts.models import User
     

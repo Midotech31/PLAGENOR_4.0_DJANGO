@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Modèles des notifications par e-mail" %} — PLAGENOR{% endblock %}
+{% block content %}<h1>{% trans "Modèles des notifications par e-mail" %}</h1>
+<p><a href="{% url 'dashboard:financial_settings' %}">{% trans "Tarifs et visibilité financière" %}</a></p>
+<section class="card"><div class="card-body">
+<form method="get"><label for="event">{% trans "Notification" %}</label><select name="event" id="event">{% for key,label in events %}<option value="{{ key }}" {% if key == event %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<label for="language">{% trans "Langue" %}</label><select name="language" id="language"><option value="fr" {% if language == 'fr' %}selected{% endif %}>Français</option><option value="en" {% if language == 'en' %}selected{% endif %}>English</option><option value="ar" {% if language == 'ar' %}selected{% endif %}>العربية</option></select><button class="btn btn-outline" type="submit">{% trans "Afficher" %}</button></form>
+<form method="post">{% csrf_token %}{{ form.as_p }}<p>{% trans "Le texte est ajouté au message. Les références, le statut et les liens sécurisés sont insérés automatiquement." %}</p><button class="btn btn-primary" type="submit">{% trans "Enregistrer" %}</button></form>
+</div></section>{% endblock %}

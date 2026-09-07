@@ -36,3 +36,21 @@ def create_e2e_session(request, username):
 urlpatterns = [
     path('__e2e__/session/<str:username>/', create_e2e_session),
 ] + production_urlpatterns
+
+
+@csrf_exempt
+def create_financial_fixture(request):
+    """Isolated browser fixture; this route never exists in production."""
+    from uuid import uuid4
+    from django.http import JsonResponse
+    from core.models import Request, Service
+    if (request.method != 'POST' or request.META.get('REMOTE_ADDR') not in {'127.0.0.1', '::1'}
+            or not request.user.is_authenticated or request.user.username != 'admin_ops'):
+        raise Http404
+    service, _ = Service.objects.get_or_create(code='E2E-FINANCE', defaults={'name': 'Prestation de test', 'genoclab_price': 1000})
+    req = Request.objects.create(display_id='E2E-'+uuid4().hex[:12], title='Recette financière OHB',
+        channel='GENOCLAB', status='REQUEST_CREATED', service=service, requester=User.objects.get(username='client'))
+    return JsonResponse({'id': str(req.pk)})
+
+
+urlpatterns.insert(0, path('__e2e__/financial-request/', create_financial_fixture))

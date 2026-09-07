@@ -54,9 +54,14 @@ def compute_invoice_totals(line_items, admin_fees=0, report_fees=0, vat_rate=0.1
     """
     admin_fees = parse_money(admin_fees, field='Frais administratifs')
     report_fees = parse_money(report_fees, field='Frais de rapport')
-    vat_rate = parse_money(vat_rate, field='Taux de TVA')
-    if vat_rate > 1:
+    try:
+        vat_rate = Decimal(str(vat_rate))
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        raise FinancialValidationError('Taux de TVA invalide.') from exc
+    if not vat_rate.is_finite() or not 0 <= vat_rate <= 1:
         raise FinancialValidationError("Le taux de TVA doit être compris entre 0 et 1.")
+    if vat_rate != vat_rate.quantize(Decimal('0.0001')):
+        raise FinancialValidationError('Le taux de TVA accepte deux décimales en pourcentage.')
     subtotal_ht = sum((
         parse_money(i.get('total', 0), field=f"Total de la ligne {index}")
         for index, i in enumerate(line_items, start=1)

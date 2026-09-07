@@ -698,7 +698,7 @@ class QuoteTemplateSecurityTests(TestCase):
             username='quote-admin', password='x', role='PLATFORM_ADMIN')
         service = Service.objects.create(code='QUOTE-XSS', name='Quote service')
         req = Request.objects.create(
-            channel='GENOCLAB', service=service, display_id='GCL-QUOTE-XSS',
+            channel='GENOCLAB', status='QUOTE_DRAFT', service=service, display_id='GCL-QUOTE-XSS',
             quote_detail={'items': [{'label': '</script><script>alert(1)</script>',
                                      'unit_price': 1, 'quantity': 1}]},
         )
@@ -1479,6 +1479,19 @@ class SuperadminWorkflowCoverageTests(TestCase):
             'pd_base_pathogenic': 'bad', 'pd_multiplier_param': 'mode',
             'pd_mult_key': ['fast', ''], 'pd_mult_factor': ['1.5', 'bad']})
         self.assertEqual(updated.status_code, 302)
+        # A malformed configuration must roll back the complete editor.
+        self.assertFalse(ServiceFormField.objects.filter(service=self.service, name='quality').exists())
+        valid = self.post(f'/dashboard/home/service/{self.service.pk}/edit/', {
+            'name': 'Coverage service updated', 'description': 'After',
+            'channel_availability':'BOTH', 'ibtikar_price':'125.5', 'genoclab_price':'250',
+            'turnaround_days':'7', 'field_name':['quality'], 'field_label':['Quality'],
+            'field_type':['enum'], 'field_category':['parameter'], 'field_options':['High,Low'],
+            'field_affects_pricing':['0'], 'field_price_modifier_type':['add'],
+            'field_price_modifier_value':['50'], 'field_option_pricing':['{}'],
+            'field_conditional_logic':['[]'], 'pd_base_non_pathogenic':'100',
+            'pd_base_pathogenic':'150', 'pd_multiplier_param':'quality',
+            'pd_mult_key':['High','Low'], 'pd_mult_factor':['1.5','1']})
+        self.assertEqual(valid.status_code,302)
         self.assertTrue(ServiceFormField.objects.filter(service=self.service, name='quality').exists())
         self.assertEqual(self.client.get(
             '/dashboard/audit-log/?date_from=2020-01-01&date_to=2030-01-01&action=RESET&user=admin'

@@ -218,7 +218,7 @@ def protected_report_media(request, path):
 # cards). Everything else carries business data and is authorised below.
 _PUBLIC_MEDIA_PREFIXES = ('avatars/', 'service_images/')
 # Purchase orders / payment receipts: confidential commercial documents.
-_OWNER_MEDIA_PREFIXES = ('orders/', 'payments/')
+_OWNER_MEDIA_PREFIXES = ('orders/', 'payments/', 'payment_orders/')
 
 
 def _may_access_media(user, path) -> bool:
@@ -239,7 +239,7 @@ def _may_access_media(user, path) -> bool:
         if not getattr(user, 'is_authenticated', False):
             return False
         return Request.objects.filter(
-            Q(order_file=path) | Q(payment_receipt_file=path),
+            Q(order_file=path) | Q(payment_receipt_file=path) | Q(payment_order_file=path),
             requester=user,
         ).exists()
     return _is_internal_staff(user)

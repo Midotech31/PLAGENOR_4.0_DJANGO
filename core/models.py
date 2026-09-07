@@ -1,7 +1,10 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 import uuid
+from decimal import Decimal
 
 
 class RateLimitBucket(models.Model):
@@ -34,6 +37,7 @@ class Service(models.Model):
     turnaround_days = models.IntegerField(default=7)
     image = models.ImageField(upload_to='service_images/', null=True, blank=True)
     active = models.BooleanField(default=True)
+    estimates_enabled = models.BooleanField(default=True, verbose_name=_("Afficher les estimations de cette prestation"))
     # Unified base-price + multipliers table the SuperAdmin edits to adjust
     # tariffs when reagent/consumable costs vary. Shape, when present:
     #   {
@@ -211,6 +215,8 @@ class ServicePricing(models.Model):
         verbose_name='Montant maximum'
     )
     is_active = models.BooleanField(default=True, verbose_name='Actif')
+    valid_from = models.DateField(null=True, blank=True, verbose_name=_("Valide à partir du"))
+    valid_until = models.DateField(null=True, blank=True, verbose_name=_("Valide jusqu'au"))
     priority = models.IntegerField(default=0, verbose_name='Priorité')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -231,6 +237,11 @@ class ServicePricing(models.Model):
             models.CheckConstraint(
                 condition=models.Q(amount__gte=0),
                 name='service_pricing_amount_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(valid_from__isnull=True) | models.Q(valid_until__isnull=True)
+                           | models.Q(valid_until__gte=models.F('valid_from'))),
+                name='service_pricing_dates_ordered',
             ),
             models.CheckConstraint(
                 condition=models.Q(min_quantity__gte=1),
@@ -268,6 +279,7 @@ class ServicePricing(models.Model):
 
 
 class Request(models.Model):
+    BILLING_CHANNEL_CHOICES = [('GENOCLAB', 'GenoClab'), ('OHB', _('OHB — Opérations Hors Budget'))]
     CHANNEL_CHOICES = [
         ('IBTIKAR', 'IBTIKAR'),
         ('GENOCLAB', 'GENOCLAB'),
@@ -280,38 +292,38 @@ class Request(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ('DRAFT', 'Brouillon'),
-        ('SUBMITTED', 'Soumis'),
-        ('VALIDATION_PEDAGOGIQUE', 'Validation Pédagogique'),
-        ('VALIDATION_FINANCE', 'Validation Finance'),
-        ('PLATFORM_NOTE_GENERATED', 'Note Générée'),
-        ('IBTIKAR_SUBMISSION_PENDING', 'En attente soumission IBTIKAR'),
-        ('IBTIKAR_CODE_SUBMITTED', 'Code IBTIKAR soumis'),
-        ('ASSIGNED', 'Assigné'),
-        ('APPOINTMENT_PROPOSED', 'RDV Proposé'),
-        ('APPOINTMENT_CONFIRMED', 'RDV Confirmé'),
-        ('SAMPLE_RECEIVED', 'Échantillon Reçu'),
-        ('ANALYSIS_STARTED', 'Analyse Démarrée'),
-        ('ANALYSIS_FINISHED', 'Analyse Terminée'),
-        ('REPORT_UPLOADED', 'Rapport Uploadé'),
-        ('REPORT_VALIDATED', 'Rapport Validé'),
-        ('SENT_TO_REQUESTER', 'Transmis Demandeur'),
-        ('COMPLETED', 'Complété'),
-        ('CLOSED', 'Clôturé'),
-        ('REJECTED', 'Rejeté'),
+        ('DRAFT', _('Brouillon')),
+        ('SUBMITTED', _('Soumis')),
+        ('VALIDATION_PEDAGOGIQUE', _('Validation Pédagogique')),
+        ('VALIDATION_FINANCE', _('Validation Finance')),
+        ('PLATFORM_NOTE_GENERATED', _('Note Générée')),
+        ('IBTIKAR_SUBMISSION_PENDING', _('En attente soumission IBTIKAR')),
+        ('IBTIKAR_CODE_SUBMITTED', _('Code IBTIKAR soumis')),
+        ('ASSIGNED', _('Assigné')),
+        ('APPOINTMENT_PROPOSED', _('RDV Proposé')),
+        ('APPOINTMENT_CONFIRMED', _('RDV Confirmé')),
+        ('SAMPLE_RECEIVED', _('Échantillon Reçu')),
+        ('ANALYSIS_STARTED', _('Analyse Démarrée')),
+        ('ANALYSIS_FINISHED', _('Analyse Terminée')),
+        ('REPORT_UPLOADED', _('Rapport déposé')),
+        ('REPORT_VALIDATED', _('Rapport Validé')),
+        ('SENT_TO_REQUESTER', _('Transmis Demandeur')),
+        ('COMPLETED', _('Complété')),
+        ('CLOSED', _('Clôturé')),
+        ('REJECTED', _('Rejeté')),
         # GENOCLAB-specific
-        ('REQUEST_CREATED', 'Demande Créée'),
-        ('QUOTE_DRAFT', 'Devis En Cours'),
-        ('QUOTE_SENT', 'Devis Envoyé'),
-        ('QUOTE_VALIDATED_BY_CLIENT', 'Devis Accepté'),
-        ('QUOTE_REJECTED_BY_CLIENT', 'Devis Refusé'),
-        ('ORDER_UPLOADED', 'Bon de Commande Uploadé'),
-        ('INVOICE_GENERATED', 'Facture Générée'),
-        ('PAYMENT_PENDING', 'En Attente Paiement'),
-        ('PAYMENT_PROOF_UPLOADED', 'Preuve de Paiement Téléversée'),
-        ('PAYMENT_CONFIRMED', 'Paiement Confirmé'),
-        ('SENT_TO_CLIENT', 'Transmis Client'),
-        ('ARCHIVED', 'Archivé'),
+        ('REQUEST_CREATED', _('Demande Créée')),
+        ('QUOTE_DRAFT', _('Devis En Cours')),
+        ('QUOTE_SENT', _('Devis Envoyé')),
+        ('QUOTE_VALIDATED_BY_CLIENT', _('Devis Accepté')),
+        ('QUOTE_REJECTED_BY_CLIENT', _('Devis Refusé')),
+        ('ORDER_UPLOADED', _('Bon de commande déposé')),
+        ('INVOICE_GENERATED', _('Facture Générée')),
+        ('PAYMENT_PENDING', _('En Attente Paiement')),
+        ('PAYMENT_PROOF_UPLOADED', _('Preuve de Paiement Téléversée')),
+        ('PAYMENT_CONFIRMED', _('Paiement Confirmé')),
+        ('SENT_TO_CLIENT', _('Transmis Client')),
+        ('ARCHIVED', _('Archivé')),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -345,8 +357,16 @@ class Request(models.Model):
     quote_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quote_detail = models.JSONField(default=dict, blank=True, verbose_name='Détail du devis')
     admin_validated_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    estimate_hidden = models.BooleanField(default=False, verbose_name=_("Masquer l'estimation pour cette demande"))
+    quote_number = models.CharField(max_length=50, blank=True, default='')
+    quote_issued_at = models.DateTimeField(null=True, blank=True)
+    quote_valid_until = models.DateField(null=True, blank=True)
+    quote_snapshot = models.JSONField(default=dict, blank=True)
+    billing_channel = models.CharField(max_length=10, choices=BILLING_CHANNEL_CHOICES, default='GENOCLAB')
+    billing_assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    billing_assigned_at = models.DateTimeField(null=True, blank=True)
     
-    # GENOCLAB: Purchase Order (Bon de commande - mandatory per Algerian commercial code)
+    # Purchase order required by the platform's commercial workflow.
     order_file = models.FileField(upload_to='orders/', null=True, blank=True, verbose_name='Bon de commande')
     order_uploaded_at = models.DateTimeField(null=True, blank=True)
     
@@ -358,6 +378,10 @@ class Request(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         blank=True, related_name='payments_verified')
     payment_verification_note = models.TextField(default='', blank=True)
+    payment_order_file = models.FileField(upload_to='payment_orders/', null=True, blank=True)
+    payment_order_reference = models.CharField(max_length=100, blank=True, default='')
+    payment_order_date = models.DateField(null=True, blank=True)
+    payment_order_uploaded_at = models.DateTimeField(null=True, blank=True)
 
     # Appointment
     appointment_date = models.DateField(null=True, blank=True)
@@ -467,6 +491,23 @@ class Request(models.Model):
     def __str__(self):
         return f"{self.display_id} — {self.title}"
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).first()
+            from core.financial_visibility import quote_released
+            if previous and previous.channel == 'GENOCLAB' and quote_released(previous):
+                fields = ('billing_channel', 'quote_number', 'quote_issued_at', 'quote_valid_until',
+                          'quote_snapshot', 'quote_detail', 'quote_amount')
+                # Legacy records may receive missing archival metadata once.
+                fields = tuple(field for field in fields if field in ('billing_channel', 'quote_detail', 'quote_amount') or getattr(previous, field))
+                updated = kwargs.get('update_fields')
+                if updated is not None:
+                    fields = tuple(field for field in fields if field in updated)
+                if any(getattr(previous, field) != (Decimal(str(getattr(self, field))).quantize(Decimal('0.01'))
+                       if field == 'quote_amount' else getattr(self, field)) for field in fields):
+                    raise ValidationError(_("Le devis émis est verrouillé. Une révision tracée est nécessaire."))
+        return super().save(*args, **kwargs)
+
 
 class RequestHistory(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='history')
@@ -507,11 +548,15 @@ class Invoice(models.Model):
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     line_items = models.JSONField(default=list)
     subtotal_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=0.19)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=4, default=Decimal('0.19'))
     vat_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='PENDING')
     locked = models.BooleanField(default=True)
+    billing_channel = models.CharField(max_length=10, choices=Request.BILLING_CHANNEL_CHOICES, default='GENOCLAB')
+    document_snapshot = models.JSONField(default=dict, blank=True)
+    payment_method = models.CharField(max_length=150, blank=True, default='')
+    due_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='+')
 
@@ -536,10 +581,56 @@ class Invoice(models.Model):
                 condition=models.Q(total_ttc__gte=0),
                 name='invoice_total_nonnegative',
             ),
+            models.CheckConstraint(
+                condition=(~models.Q(billing_channel='OHB') | (models.Q(vat_rate=0) & models.Q(vat_amount=0))),
+                name='ohb_invoice_without_vat',
+            ),
         ]
 
     def __str__(self):
         return self.invoice_number
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk, locked=True).first()
+            if previous:
+                immutable = ('invoice_number', 'request_id', 'client_id', 'line_items',
+                             'subtotal_ht', 'vat_rate', 'vat_amount', 'total_ttc',
+                             'document_snapshot', 'locked', 'payment_method', 'due_date', 'billing_channel')
+                def normalized(obj, name):
+                    field = self._meta.get_field(name)
+                    return field.to_python(getattr(obj, name)).quantize(Decimal(1).scaleb(-field.decimal_places)) if isinstance(field, models.DecimalField) else getattr(obj, name)
+                if any(normalized(previous, f) != normalized(self, f) for f in immutable):
+                    raise ValidationError(_("Une facture émise ne peut pas être modifiée."))
+        if self.billing_channel == 'OHB' and (self.vat_rate != 0 or self.vat_amount != 0):
+            raise ValidationError(_("Le circuit OHB n'applique pas de TVA."))
+        return super().save(*args, **kwargs)
+
+
+class FinancialSettings(models.Model):
+    """One operational policy, independent of financial records."""
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    show_estimates = models.BooleanField(default=True, verbose_name=_("Afficher les estimations financières au client"))
+    invoice_payment_method = models.CharField(max_length=150, default='Virement bancaire', verbose_name=_("Mode de paiement des factures"))
+    invoice_payment_days = models.PositiveSmallIntegerField(default=30, validators=[MaxValueValidator(3650)], verbose_name=_("Délai de paiement en jours"))
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        return super().save(*args, **kwargs)
+
+
+class FinancialAudit(models.Model):
+    action = models.CharField(max_length=100)
+    entity_type = models.CharField(max_length=50)
+    entity_id = models.CharField(max_length=100)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
 
 
 class PlatformContent(models.Model):

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n icons %}
+{% block title %}{% trans "Tarifs et visibilité financière" %} — PLAGENOR{% endblock %}
+{% block content %}
+<h1>{% trans "Tarifs et visibilité financière" %}</h1>
+<p><a class="btn btn-outline" href="{% url 'dashboard:email_templates' %}">{% trans "Modèles des notifications par e-mail" %}</a></p>
+<section class="card mb-4"><div class="card-body">
+<form method="post">{% csrf_token %}{{ form.as_p }}
+<p>{% trans "Le masquage concerne les estimations indicatives. Les devis communiqués et les factures émises restent accessibles à leur destinataire." %}</p>
+<button class="btn btn-primary" type="submit">{% trans "Enregistrer" %}</button></form>
+</div></section>
+{% for issuer in issuer_forms %}<section class="card mb-4"><div class="card-body"><h2>{{ issuer.label }} — {% trans "Émetteur des documents" %}</h2>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="{{ issuer.channel }}">{{ issuer.form.as_p }}
+{% if issuer.channel == 'ohb' %}<p>{% trans "OHB : TVA non applicable. Les tarifs commerciaux servent de base de calcul avant validation du devis." %}</p>{% endif %}
+<p>{% trans "Ces informations seront utilisées pour les prochains documents. Les documents déjà émis restent inchangés." %}</p>
+<button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button></form></div></section>{% endfor %}
+<section class="card mb-4"><div class="card-body"><h2>{% trans "Prestations et tarifs" %}</h2>
+<div class="table-wrapper"><table><thead><tr><th>{% trans "Prestation" %}</th><th>{% trans "Canal" %}</th><th>{% trans "Gestion" %}</th></tr></thead><tbody>
+{% for service in services %}<tr><td>{{ service.code }} — {{ service.name }}</td><td>{{ service.get_channel_availability_display }}</td><td><a class="btn btn-outline" href="{% url 'dashboard:superadmin_service_edit' service.pk %}">{% icon "edit" size=16 %} {% trans "Modifier" %}</a></td></tr>{% endfor %}
+</tbody></table></div></div></section>
+<section class="card"><div class="card-body"><h2>{% trans "Historique financier" %}</h2>
+{% for entry in audit_entries %}<p>{{ entry.created_at|date:"d/m/Y H:i" }} · {{ entry.actor }} · {{ entry.action }} · {{ entry.entity_id }}</p>{% empty %}<p>{% trans "Aucune modification enregistrée." %}</p>{% endfor %}
+</div></section>
+{% endblock %}
