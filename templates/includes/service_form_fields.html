@@ -12,23 +12,23 @@
         {% if param.type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ param.name }}" value="true" id="param_{{ param.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
-            <label for="param_{{ param.name }}" style="margin:0; font-weight:500;">{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+            <label for="param_{{ param.name }}" style="margin:0; font-weight:500;">{{ param.label|default:param.name|catalogue_text }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
             {% if param.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">{% icon 'dollar-sign' size=14 %}</span>{% endif %}
         </div>
         {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% else %}
-        <label>{{ param.label|default:param.name }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <label>{{ param.label|default:param.name|catalogue_text }}{% if param.required %} <span style="color:red;">*</span>{% endif %}</label>
             {% if param.type == 'select' or param.type == 'enum' or param.type == 'dropdown' %}
         <select name="param_{{ param.name }}" id="select_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} onchange="handlePricingChange(this)">
             <option value="">{% trans "Choisir" %}{% if param.required %} *{% endif %}</option>
             {% for opt in param.options %}
-            <option value="{{ opt }}" {% if param.option_pricing and opt in param.option_pricing %}data-option-price="{{ param.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if param.option_pricing and opt in param.option_pricing %}data-option-price="{{ param.option_pricing|get_item:opt }}"{% endif %}>{{ opt|catalogue_text }}</option>
             {% endfor %}
         </select>
         {% elif param.type == 'number' or param.type == 'integer' or param.type == 'float' %}
-        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
+        <input type="number" name="param_{{ param.name }}" class="form-control" step="{% if param.type == 'float' %}0.01{% else %}1{% endif %}" {% if param.required %}required{% endif %} placeholder="{{ param.label|catalogue_text }}">
         {% else %}
-        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.label }}">
+        <input type="text" name="param_{{ param.name }}" class="form-control" {% if param.required %}required{% endif %} placeholder="{{ param.label|catalogue_text }}">
         {% endif %}
         {% if param.pricing_info %}<div class="pricing-warning-{{ param.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% endif %}
@@ -44,28 +44,28 @@
         {% if field.field_type == 'boolean' %}
         <div style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" name="param_{{ field.name }}" value="true" id="param_{{ field.name }}" style="width:18px; height:18px;" onchange="handlePricingChange(this)">
-            <label for="param_{{ field.name }}" style="margin:0; font-weight:500;">{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+            <label for="param_{{ field.name }}" style="margin:0; font-weight:500;">{{ field.label|catalogue_text }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
             {% if field.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:4px;">{% icon 'dollar-sign' size=14 %}</span>{% endif %}
         </div>
         {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% elif field.field_type == 'select' or field.field_type == 'dropdown' or field.field_type == 'enum' %}
-        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <label>{{ field.label|catalogue_text }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
         <select name="param_{{ field.name }}" id="select_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} onchange="handlePricingChange(this)">
             <option value="">{% trans "Choisir" %}{% if field.required %} *{% endif %}</option>
             {% for opt in field.options %}
-            <option value="{{ opt }}" {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>{{ opt|catalogue_text }}</option>
             {% endfor %}
         </select>
         {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% elif field.field_type == 'multiselect' %}
-        <label>{{ field.label }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
+        <label>{{ field.label|catalogue_text }}{% if field.required %} <span style="color:red;">*</span>{% endif %}</label>
         <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
             {% for opt in field.options %}
             <label style="display:flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
                 <input type="checkbox" name="param_{{ field.name }}" value="{{ opt }}" style="width:18px; height:18px;" 
                        onchange="handlePricingChange(this)"
                        {% if field.option_pricing and opt in field.option_pricing %}data-option-price="{{ field.option_pricing|get_item:opt }}"{% endif %}>
-                <span>{{ opt }}</span>
+                <span>{{ opt|catalogue_text }}</span>
                 {% if field.option_pricing and opt in field.option_pricing %}
                 <span style="font-size:0.75rem; color:#92400e; background:#fef3c7; padding:2px 6px; border-radius:4px;">+{{ field.option_pricing|get_item:opt }} DA</span>
                 {% endif %}
@@ -74,7 +74,7 @@
         </div>
         {% if field.pricing_info %}<div class="pricing-warning-{{ field.name }}" style="display:none; margin-top:6px; padding:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:0.85rem;"></div>{% endif %}
         {% else %}
-        <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label }}{% if field.required %} *{% endif %}">
+        <input type="{% if field.field_type == 'number' %}number{% else %}text{% endif %}" name="param_{{ field.name }}" class="form-control" {% if field.required %}required{% endif %} placeholder="{{ field.label|catalogue_text }}{% if field.required %} *{% endif %}">
         {% endif %}
     </div>
     {% endfor %}
@@ -89,7 +89,7 @@
             <tr>
                 {% for col in sample_table.columns %}
                 <th data-col="{{ col.name }}" data-type="{{ col.type }}" style="padding:8px; border:1px solid #e2e8f0; background:#fff;">
-                    {{ col.label|default:col.name }}
+                    {{ col.label|default:col.name|catalogue_text }}
                     {% if col.pricing_info %}<span class="pricing-badge" style="background:#fef3c7; color:#92400e; padding:2px 4px; border-radius:3px; font-size:0.65rem; margin-left:4px;">{% icon 'dollar-sign' size=14 %}</span>{% endif %}
                 </th>
                 {% endfor %}
@@ -106,7 +106,7 @@
                     <select name="sample_0_{{ col.name }}" class="form-control" style="font-size:0.85rem;" onchange="handlePricingChange(this)">
                         <option value="">{% trans "Choisir" %}</option>
                         {% for opt in col.options %}
-                        <option value="{{ opt }}">{{ opt }}</option>
+                        <option value="{{ opt }}">{{ opt|catalogue_text }}</option>
                         {% endfor %}
                     </select>
                     {% elif col.type == 'number' or col.type == 'integer' or col.type == 'float' %}

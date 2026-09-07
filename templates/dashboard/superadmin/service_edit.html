@@ -16,10 +16,6 @@
             {% csrf_token %}
             <div class="form-row">
                 <div class="form-group">
-                    <label>{% trans "Nom" %}</label>
-                    <input type="text" name="name" class="form-control" value="{{ service.name }}" required>
-                </div>
-                <div class="form-group">
                     <label>{% trans "Canal" %}</label>
                     <select name="channel_availability" class="form-control">
                         <option value="BOTH" {% if service.channel_availability == 'BOTH' %}selected{% endif %}>IBTIKAR & GENOCLAB</option>
@@ -43,10 +39,7 @@
                     <input type="number" name="turnaround_days" class="form-control" value="{{ service.turnaround_days }}">
                 </div>
             </div>
-            <div class="form-group">
-                <label>{% trans "Description" %}</label>
-                <textarea name="description" class="form-control" rows="3">{{ service.description }}</textarea>
-            </div>
+            {% include "includes/service_translations.html" %}
             <div class="form-group">
                 <label>{% trans "Image" %}</label>
                 <input type="file" name="image" class="form-control" accept="image/*">
@@ -176,10 +169,19 @@
                         <label style="font-size:0.78rem;">{% trans "Nom" %}</label>
                         <input type="text" name="field_name" class="form-control" value="{{ field.name }}">
                     </div>
-                    <div class="form-group">
-                        <label style="font-size:0.78rem;">{% trans "Label" %}</label>
-                        <input type="text" name="field_label" class="form-control" value="{{ field.label }}">
+                    <div class="form-group" lang="fr" dir="ltr">
+                        <label style="font-size:0.78rem;">{% trans "Label" %} (Français)
+                        <input type="text" name="field_label_fr" class="form-control" value="{{ field.label_fr|default_if_none:'' }}" required></label>
                     </div>
+                    <div class="form-group" lang="ar" dir="rtl">
+                        <label style="font-size:0.78rem;">{% trans "Label" %} (العربية)
+                        <input type="text" name="field_label_ar" class="form-control" value="{{ field.label_ar|default_if_none:'' }}" required></label>
+                    </div>
+                    <div class="form-group" lang="en" dir="ltr">
+                        <label style="font-size:0.78rem;">{% trans "Label" %} (English)
+                        <input type="text" name="field_label_en" class="form-control" value="{{ field.label_en|default_if_none:'' }}" required></label>
+                    </div>
+
                     <div class="form-group">
                         <label style="font-size:0.78rem;">{% trans "Nature" %}</label>
                         <select name="field_category" class="form-control">
@@ -373,7 +375,9 @@ function addFieldRow() {
         '<div class="custom-field-row" style="border:1px solid #e5e7eb; border-radius:6px; padding:10px; background:#fafafa;">' +
         '<div class="form-row" style="align-items:flex-end;">' +
         '<div class="form-group"><label style="font-size:0.78rem;">Nom</label><input type="text" name="field_name" class="form-control"></div>' +
-        '<div class="form-group"><label style="font-size:0.78rem;">Label</label><input type="text" name="field_label" class="form-control"></div>' +
+        '<div class="form-group" lang="fr" dir="ltr"><label style="font-size:0.78rem;">Libellé (FR)<input type="text" name="field_label_fr" class="form-control" required></label></div>' +
+        '<div class="form-group" lang="ar" dir="rtl"><label style="font-size:0.78rem;">التسمية (AR)<input type="text" name="field_label_ar" class="form-control" required></label></div>' +
+        '<div class="form-group" lang="en" dir="ltr"><label style="font-size:0.78rem;">Label (EN)<input type="text" name="field_label_en" class="form-control" required></label></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Nature</label><select name="field_category" class="form-control"><option value="parameter">Question</option><option value="sample_column">Colonne échantillon</option></select></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Type</label><select name="field_type" class="form-control"><option value="string">Texte</option><option value="enum">Liste</option><option value="boolean">Oui/Non</option><option value="number">Nombre</option></select></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;">Options</label><input type="text" name="field_options" class="form-control"></div>' +

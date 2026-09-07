@@ -1,0 +1,1028 @@
+[
+  [
+    "Fluorimetric quantification",
+    "Quantification fluorimétrique",
+    "Fluorimetric quantification",
+    "القياس الكمي بالتألق"
+  ],
+  [
+    "Agarose gel electrophoresis",
+    "Électrophorèse sur gel d’agarose",
+    "Agarose gel electrophoresis",
+    "الرحلان الكهربائي على هلام الأغاروز"
+  ],
+  [
+    "Agarose gel percentage",
+    "Pourcentage d’agarose du gel",
+    "Agarose gel percentage",
+    "نسبة الأغاروز في الهلام"
+  ],
+  [
+    "Autre",
+    "Autre",
+    "Other",
+    "أخرى"
+  ],
+  [
+    "Bacterium",
+    "Bactérie",
+    "Bacterium",
+    "بكتيريا"
+  ],
+  [
+    "Yeast",
+    "Levure",
+    "Yeast",
+    "خميرة"
+  ],
+  [
+    "Mould",
+    "Moisissure",
+    "Mould",
+    "عفن"
+  ],
+  [
+    "Butanol desalting",
+    "Dessalage au butanol",
+    "Butanol desalting",
+    "إزالة الأملاح بالبوتانول"
+  ],
+  [
+    "Cadre de l’analyse",
+    "Cadre de l’analyse",
+    "Analysis context",
+    "إطار التحليل"
+  ],
+  [
+    "Chromosomal",
+    "Chromosomique",
+    "Chromosomal",
+    "صبغي"
+  ],
+  [
+    "Code",
+    "Code",
+    "Code",
+    "الرمز"
+  ],
+  [
+    "Code isolat",
+    "Code de l’isolat",
+    "Isolate code",
+    "رمز العزلة"
+  ],
+  [
+    "Condition de stockage / Etat de l’échantillon",
+    "Conditions de stockage / État de l’échantillon",
+    "Storage conditions / Sample condition",
+    "ظروف التخزين / حالة العينة"
+  ],
+  [
+    "Conditions de culture",
+    "Conditions de culture",
+    "Culture conditions",
+    "ظروف الزرع"
+  ],
+  [
+    "Conditions de culture (Température, type respiratoire, durée d’incubation)",
+    "Conditions de culture (température, type respiratoire, durée d’incubation)",
+    "Culture conditions (temperature, respiratory type, incubation time)",
+    "ظروف الزرع (درجة الحرارة، نمط التنفس، مدة الحضانة)"
+  ],
+  [
+    "Conditions de stockage initiales",
+    "Conditions de stockage initiales",
+    "Initial storage conditions",
+    "ظروف التخزين الأولية"
+  ],
+  [
+    "Date de l’extraction",
+    "Date d’extraction",
+    "Extraction date",
+    "تاريخ الاستخلاص"
+  ],
+  [
+    "Date de prélèvement",
+    "Date de prélèvement",
+    "Sampling date",
+    "تاريخ أخذ العينة"
+  ],
+  [
+    "Date d’isolement",
+    "Date d’isolement",
+    "Isolation date",
+    "تاريخ العزل"
+  ],
+  [
+    "Delivery format",
+    "Format de livraison",
+    "Delivery format",
+    "صيغة التسليم"
+  ],
+  [
+    "Disposable",
+    "À usage unique",
+    "Disposable",
+    "للاستخدام مرة واحدة"
+  ],
+  [
+    "Dried",
+    "À sec",
+    "Dried",
+    "مجفّف"
+  ],
+  [
+    "Duplicate",
+    "En double",
+    "Duplicate",
+    "مكرّر مرتين"
+  ],
+  [
+    "Durée (unités de 24 h)",
+    "Durée (unités de 24 h)",
+    "Duration (24-hour units)",
+    "المدة (بوحدات من 24 ساعة)"
+  ],
+  [
+    "Environmental",
+    "Environnementale",
+    "Environmental",
+    "بيئية"
+  ],
+  [
+    "Extraction method",
+    "Méthode d’extraction",
+    "Extraction method",
+    "طريقة الاستخلاص"
+  ],
+  [
+    "Food",
+    "Alimentaire",
+    "Food",
+    "غذائية"
+  ],
+  [
+    "Forward",
+    "Sens",
+    "Forward",
+    "أمامي"
+  ],
+  [
+    "Forward + Reverse",
+    "Sens et antisens",
+    "Forward + Reverse",
+    "أمامي وعكسي"
+  ],
+  [
+    "Fourniture de cultures fraîches",
+    "Fourniture de cultures fraîches",
+    "Fresh cultures supplied",
+    "توفير مزارع حديثة"
+  ],
+  [
+    "GC-Rich",
+    "Riche en GC",
+    "GC-rich",
+    "غني بـ GC"
+  ],
+  [
+    "Gel",
+    "Gel",
+    "Gel",
+    "هلام"
+  ],
+  [
+    "Genomic",
+    "Génomique",
+    "Genomic",
+    "جينومي"
+  ],
+  [
+    "Gène cible / Taille de l’amplicon",
+    "Gène cible / Taille de l’amplicon",
+    "Target gene / Amplicon size",
+    "الجين المستهدف / حجم ناتج التضخيم"
+  ],
+  [
+    "High",
+    "Élevée",
+    "High",
+    "مرتفعة"
+  ],
+  [
+    "High-Fidelity",
+    "Haute fidélité",
+    "High-fidelity",
+    "عالي الدقة"
+  ],
+  [
+    "Hospital / Clinical",
+    "Hospitalière / Clinique",
+    "Hospital / Clinical",
+    "استشفائية / سريرية"
+  ],
+  [
+    "Isolat pathogène ou clinique",
+    "Isolat pathogène ou clinique",
+    "Pathogenic or clinical isolate",
+    "عزلة ممرضة أو سريرية"
+  ],
+  [
+    "Marqueur de taille",
+    "Marqueur de taille",
+    "Size marker",
+    "واسم الحجم"
+  ],
+  [
+    "Microorganisme",
+    "Microorganisme",
+    "Microorganism",
+    "الكائن الحي الدقيق"
+  ],
+  [
+    "Milieu de culture",
+    "Milieu de culture",
+    "Culture medium",
+    "وسط الزرع"
+  ],
+  [
+    "Milieu de culture approprié",
+    "Milieu de culture approprié",
+    "Suitable culture medium",
+    "وسط الزرع الملائم"
+  ],
+  [
+    "Mode d’analyse",
+    "Mode d’analyse",
+    "Analysis mode",
+    "نمط التحليل"
+  ],
+  [
+    "Méthode de l’extraction d’ADN",
+    "Méthode d’extraction de l’ADN",
+    "DNA extraction method",
+    "طريقة استخلاص DNA"
+  ],
+  [
+    "Méthode d’extraction utilisée",
+    "Méthode d’extraction utilisée",
+    "Extraction method used",
+    "طريقة الاستخلاص المستخدمة"
+  ],
+  [
+    "Niveau de desiccation (primaire/secondaire)",
+    "Niveau de dessiccation (primaire/secondaire)",
+    "Drying stage (primary/secondary)",
+    "مرحلة التجفيف (أولية/ثانوية)"
+  ],
+  [
+    "Niveau de lyophilisation",
+    "Niveau de lyophilisation",
+    "Freeze-drying stage",
+    "مرحلة التجفيف بالتجميد"
+  ],
+  [
+    "Nom de l’amorces",
+    "Nom de l’amorce",
+    "Primer name",
+    "اسم البادئ"
+  ],
+  [
+    "Nom du Géne ciblé",
+    "Nom du gène ciblé",
+    "Target gene name",
+    "اسم الجين المستهدف"
+  ],
+  [
+    "Nom du géne",
+    "Nom du gène",
+    "Gene name",
+    "اسم الجين"
+  ],
+  [
+    "Non-purified",
+    "Non purifié",
+    "Non-purified",
+    "غير منقّى"
+  ],
+  [
+    "None",
+    "Aucun",
+    "None",
+    "لا يوجد"
+  ],
+  [
+    "Numéro d’accession du Gene",
+    "Numéro d’accession du gène",
+    "Gene accession number",
+    "رقم إيداع الجين"
+  ],
+  [
+    "Origin of nucleic acids",
+    "Origine des acides nucléiques",
+    "Origin of nucleic acids",
+    "مصدر الأحماض النووية"
+  ],
+  [
+    "Origine",
+    "Origine",
+    "Origin",
+    "المصدر"
+  ],
+  [
+    "Origine de l’ADN",
+    "Origine de l’ADN",
+    "DNA origin",
+    "مصدر DNA"
+  ],
+  [
+    "Origine des isolats",
+    "Origine des isolats",
+    "Isolate origin",
+    "مصدر العزلات"
+  ],
+  [
+    "Origine des échantillons",
+    "Origine des échantillons",
+    "Sample origin",
+    "مصدر العينات"
+  ],
+  [
+    "PCR product status",
+    "État du produit PCR",
+    "PCR product status",
+    "حالة ناتج PCR"
+  ],
+  [
+    "PFE Classique",
+    "Projet de fin d’études classique",
+    "Standard final-year project",
+    "مشروع تخرّج كلاسيكي"
+  ],
+  [
+    "Pathogenic isolate",
+    "Isolat pathogène",
+    "Pathogenic isolate",
+    "عزلة ممرضة"
+  ],
+  [
+    "Plantes",
+    "Plantes",
+    "Plants",
+    "نباتات"
+  ],
+  [
+    "Plasmidic",
+    "Plasmidique",
+    "Plasmidic",
+    "بلازميدي"
+  ],
+  [
+    "Primaire",
+    "Primaire",
+    "Primary",
+    "أولية"
+  ],
+  [
+    "Primer length category",
+    "Catégorie de longueur des amorces",
+    "Primer length category",
+    "فئة طول البادئات"
+  ],
+  [
+    "Projet de doctorat",
+    "Projet de doctorat",
+    "Doctoral project",
+    "مشروع دكتوراه"
+  ],
+  [
+    "Purification method",
+    "Méthode de purification",
+    "Purification method",
+    "طريقة التنقية"
+  ],
+  [
+    "Purified",
+    "Purifié",
+    "Purified",
+    "منقّى"
+  ],
+  [
+    "Remarques",
+    "Remarques",
+    "Remarks",
+    "ملاحظات"
+  ],
+  [
+    "Remarques particulières",
+    "Remarques particulières",
+    "Additional remarks",
+    "ملاحظات خاصة"
+  ],
+  [
+    "Reusable",
+    "Réutilisable",
+    "Reusable",
+    "قابل لإعادة الاستخدام"
+  ],
+  [
+    "Reverse",
+    "Antisens",
+    "Reverse",
+    "عكسي"
+  ],
+  [
+    "Récupération du produit de PCR",
+    "Récupération du produit PCR",
+    "PCR product recovery",
+    "استرجاع ناتج PCR"
+  ],
+  [
+    "ScanDrop + Gel",
+    "ScanDrop + Gel",
+    "ScanDrop + Gel",
+    "ScanDrop + هلام"
+  ],
+  [
+    "Secondaire",
+    "Secondaire",
+    "Secondary",
+    "ثانوية"
+  ],
+  [
+    "Sequencing depth",
+    "Profondeur de séquençage",
+    "Sequencing depth",
+    "عمق التسلسل"
+  ],
+  [
+    "Sequencing direction",
+    "Sens du séquençage",
+    "Sequencing direction",
+    "اتجاه التسلسل"
+  ],
+  [
+    "Sequencing mode",
+    "Mode de séquençage",
+    "Sequencing mode",
+    "نمط التسلسل"
+  ],
+  [
+    "Simple",
+    "Simple",
+    "Single",
+    "مفرد"
+  ],
+  [
+    "Source d’isolement (environnementale, alimentaire, clinique, etc.)",
+    "Source d’isolement (environnementale, alimentaire, clinique, etc.)",
+    "Isolation source (environmental, food, clinical, etc.)",
+    "مصدر العزل (بيئي، غذائي، سريري، إلخ)"
+  ],
+  [
+    "Source of isolation",
+    "Source d’isolement",
+    "Source of isolation",
+    "مصدر العزل"
+  ],
+  [
+    "Source/origine de l’échantillon",
+    "Source / Origine de l’échantillon",
+    "Sample source / Origin",
+    "مصدر / منشأ العينة"
+  ],
+  [
+    "Standard",
+    "Standard",
+    "Standard",
+    "قياسي"
+  ],
+  [
+    "Standard Taq",
+    "Taq standard",
+    "Standard Taq",
+    "Taq قياسي"
+  ],
+  [
+    "Séquence nucléotidique (5’-3’)",
+    "Séquence nucléotidique (5’–3’)",
+    "Nucleotide sequence (5′–3′)",
+    "التسلسل النوكليوتيدي (5′–3′)"
+  ],
+  [
+    "Séquences des amorces utilisées (5’-3’)",
+    "Séquences des amorces utilisées (5’–3’)",
+    "Primer sequences used (5′–3′)",
+    "تسلسلات البادئات المستخدمة (5′–3′)"
+  ],
+  [
+    "Taille (pb)",
+    "Taille (pb)",
+    "Size (bp)",
+    "الحجم (زوج قاعدي)"
+  ],
+  [
+    "Taille du géne (pb)",
+    "Taille du gène (pb)",
+    "Gene size (bp)",
+    "حجم الجين (زوج قاعدي)"
+  ],
+  [
+    "Target genetic marker",
+    "Marqueur génétique ciblé",
+    "Target genetic marker",
+    "الواسم الجيني المستهدف"
+  ],
+  [
+    "Techniques de contrôle qualité",
+    "Techniques de contrôle qualité",
+    "Quality control techniques",
+    "تقنيات مراقبة الجودة"
+  ],
+  [
+    "Titre du projet",
+    "Titre du projet",
+    "Project title",
+    "عنوان المشروع"
+  ],
+  [
+    "Triplicate",
+    "En triple",
+    "Triplicate",
+    "مكرّر ثلاث مرات"
+  ],
+  [
+    "Type de L’échantillon (Bactérie, plantes)",
+    "Type d’échantillon (bactérie, plante)",
+    "Sample type (bacterium, plant)",
+    "نوع العينة (بكتيريا، نبات)"
+  ],
+  [
+    "Type de cible MALDI",
+    "Type de cible MALDI",
+    "MALDI target type",
+    "نوع صفيحة MALDI"
+  ],
+  [
+    "Type de kit PCR",
+    "Type de kit PCR",
+    "PCR kit type",
+    "نوع طقم PCR"
+  ],
+  [
+    "Type de l’ADN",
+    "Type d’ADN",
+    "DNA type",
+    "نوع DNA"
+  ],
+  [
+    "Type de microorganisme",
+    "Type de microorganisme",
+    "Type of microorganism",
+    "نوع الكائن الحي الدقيق"
+  ],
+  [
+    "Type de microorganisme (Bactérie, levure, moisissure)",
+    "Type de microorganisme (bactérie, levure, moisissure)",
+    "Microorganism type (bacterium, yeast, mould)",
+    "نوع الكائن الحي الدقيق (بكتيريا، خميرة، عفن)"
+  ],
+  [
+    "Type d’acides nucléiques (plasmidique, chromosomique)",
+    "Type d’acides nucléiques (plasmidique, chromosomique)",
+    "Nucleic acid type (plasmidic, chromosomal)",
+    "نوع الأحماض النووية (بلازميدية، صبغية)"
+  ],
+  [
+    "Type d’échantillon",
+    "Type d’échantillon",
+    "Sample type",
+    "نوع العينة"
+  ],
+  [
+    "Type d’échantillon (Sang, bactérie, tissu animal...)",
+    "Type d’échantillon (sang, bactérie, tissu animal…)",
+    "Sample type (blood, bacterium, animal tissue…)",
+    "نوع العينة (دم، بكتيريا، نسيج حيواني…)"
+  ],
+  [
+    "Type of nucleic acid",
+    "Type d’acide nucléique",
+    "Type of nucleic acid",
+    "نوع الحمض النووي"
+  ],
+  [
+    "Volume (µl) / Quantité (g)",
+    "Volume (µL) / Quantité (g)",
+    "Volume (µL) / Quantity (g)",
+    "الحجم (µL) / الكمية (g)"
+  ],
+  [
+    "Volume du produit de PCR à récupérer après amplification",
+    "Volume de produit PCR à récupérer après amplification",
+    "PCR product volume to recover after amplification",
+    "حجم ناتج PCR المراد استرجاعه بعد التضخيم"
+  ],
+  [
+    "Volume par échantillon (mL)",
+    "Volume par échantillon (mL)",
+    "Volume per sample (mL)",
+    "الحجم لكل عينة (mL)"
+  ],
+  [
+    "Volume/poids initial (ml/g)",
+    "Volume / Poids initial (mL/g)",
+    "Initial volume / Weight (mL/g)",
+    "الحجم / الوزن الأولي (mL/g)"
+  ],
+  [
+    "from_26_to_30_nt",
+    "De 26 à 30 nucléotides",
+    "26–30 nucleotides",
+    "من 26 إلى 30 نوكليوتيداً"
+  ],
+  [
+    "from_31_to_40_nt",
+    "De 31 à 40 nucléotides",
+    "31–40 nucleotides",
+    "من 31 إلى 40 نوكليوتيداً"
+  ],
+  [
+    "up_to_25_nt",
+    "Jusqu’à 25 nucléotides",
+    "Up to 25 nucleotides",
+    "حتى 25 نوكليوتيداً"
+  ],
+  [
+    "1_uM_in_water",
+    "1 µM dans l’eau",
+    "1 µM in water",
+    "1 µM في الماء"
+  ],
+  [
+    "Échantillon pathogène",
+    "Échantillon pathogène",
+    "Pathogenic sample",
+    "عينة ممرضة"
+  ],
+  [
+    "100 bp ladder",
+    "Marqueur de taille 100 pb",
+    "100 bp ladder",
+    "واسم حجم 100 زوج قاعدي"
+  ],
+  [
+    "1 kb ladder",
+    "Marqueur de taille 1 kb",
+    "1 kb ladder",
+    "واسم حجم 1 kb"
+  ],
+  [
+    "Nom et prénom",
+    "Nom et prénom",
+    "Full name",
+    "الاسم واللقب"
+  ],
+  [
+    "Université / École",
+    "Université / École",
+    "University / School",
+    "الجامعة / المدرسة"
+  ],
+  [
+    "Laboratoire",
+    "Laboratoire",
+    "Laboratory",
+    "المخبر"
+  ],
+  [
+    "Fonction / Poste",
+    "Fonction / Poste",
+    "Position / Role",
+    "الوظيفة / المنصب"
+  ],
+  [
+    "Numéro de téléphone",
+    "Numéro de téléphone",
+    "Phone number",
+    "رقم الهاتف"
+  ],
+  [
+    "Adresse e-mail",
+    "Adresse e-mail",
+    "Email address",
+    "البريد الإلكتروني"
+  ],
+  [
+    "Directeur de recherche",
+    "Directeur de recherche",
+    "Research supervisor",
+    "المشرف على البحث"
+  ],
+  [
+    "Samples must be clearly labeled and properly sealed.",
+    "Les échantillons doivent être clairement étiquetés et correctement fermés.",
+    "Samples must be clearly labeled and properly sealed.",
+    "يجب أن تكون العينات موسومة بوضوح ومحكمة الإغلاق."
+  ],
+  [
+    "Samples must be transported at 4°C or on dry ice depending on stability.",
+    "Les échantillons doivent être transportés à 4 °C ou sur glace carbonique selon leur stabilité.",
+    "Samples must be transported at 4°C or on dry ice depending on stability.",
+    "يجب نقل العينات في درجة حرارة 4 °م أو على الثلج الجاف بحسب استقرارها."
+  ],
+  [
+    "Minimum volume",
+    "Volume minimal",
+    "Minimum volume",
+    "الحجم الأدنى"
+  ],
+  [
+    "10 µL for fluorimetry, 15 µL for gel electrophoresis.",
+    "10 µL pour la fluorimétrie, 15 µL pour l’électrophorèse sur gel.",
+    "10 µL for fluorimetry, 15 µL for gel electrophoresis.",
+    "10 µL للقياس بالتألق، و15 µL للرحلان الكهربائي على الهلام."
+  ],
+  [
+    "Fresh, pure cultures are mandatory.",
+    "Des cultures fraîches et pures sont obligatoires.",
+    "Fresh, pure cultures are mandatory.",
+    "يجب تقديم مزارع حديثة ونقية."
+  ],
+  [
+    "Biosafety declaration required for clinical or pathogenic isolates.",
+    "Une déclaration de risque biologique est requise pour les isolats cliniques ou pathogènes.",
+    "Biosafety declaration required for clinical or pathogenic isolates.",
+    "يلزم تصريح بالسلامة البيولوجية للعزلات السريرية أو الممرضة."
+  ],
+  [
+    "Transport must comply with PLAGENOR biosafety rules.",
+    "Le transport doit respecter les règles de biosécurité de PLAGENOR.",
+    "Transport must comply with PLAGENOR biosafety rules.",
+    "يجب أن يتوافق النقل مع قواعد السلامة البيولوجية لمنصة PLAGENOR."
+  ],
+  [
+    "Cultures fraîches obligatoires",
+    "Cultures fraîches obligatoires",
+    "Fresh cultures required",
+    "يشترط تقديم مزارع حديثة"
+  ],
+  [
+    "Déclaration de risque biologique si applicable",
+    "Déclaration de risque biologique si applicable",
+    "Biological risk declaration, if applicable",
+    "تصريح بالمخاطر البيولوجية عند الاقتضاء"
+  ],
+  [
+    "Déclaration de risque biologique obligatoire si applicable",
+    "Déclaration de risque biologique obligatoire si applicable",
+    "Biological risk declaration required, if applicable",
+    "يلزم تصريح بالمخاطر البيولوجية عند الاقتضاء"
+  ],
+  [
+    "Respect des règles de transport et de biosécurité PLAGENOR",
+    "Respect des règles de transport et de biosécurité PLAGENOR",
+    "Compliance with PLAGENOR transport and biosafety rules",
+    "الالتزام بقواعد النقل والسلامة البيولوجية لمنصة PLAGENOR"
+  ],
+  [
+    "Minimum of 10 µL DNA per reaction at 50–300 ng required",
+    "Au moins 10 µL d’ADN par réaction, pour une quantité de 50 à 300 ng, sont requis",
+    "Minimum of 10 µL DNA per reaction at 50–300 ng required",
+    "يلزم ما لا يقل عن 10 µL من DNA لكل تفاعل، بكمية من 50 إلى 300 ng"
+  ],
+  [
+    "Forward and reverse primers (10 µM) must be supplied",
+    "Les amorces sens et antisens (10 µM) doivent être fournies",
+    "Forward and reverse primers (10 µM) must be supplied",
+    "يجب توفير البادئات الأمامية والعكسية (10 µM)"
+  ],
+  [
+    "Biosafety declaration required for clinical DNA",
+    "Déclaration de risque biologique requise pour l’ADN d’origine clinique",
+    "Biosafety declaration required for clinical DNA",
+    "يلزم تصريح بالسلامة البيولوجية للحمض النووي ذي المصدر السريري"
+  ],
+  [
+    "Primer sequences must be provided in 5’–3’ orientation",
+    "Les séquences des amorces doivent être fournies dans le sens 5’–3’",
+    "Primer sequences must be provided in 5’–3’ orientation",
+    "يجب تقديم تسلسلات البادئات في الاتجاه 5′–3′"
+  ],
+  [
+    "Primer length must be between 18 and 40 nucleotides",
+    "La longueur des amorces doit être comprise entre 18 et 40 nucléotides",
+    "Primer length must be between 18 and 40 nucleotides",
+    "يجب أن يتراوح طول البادئات بين 18 و40 نوكليوتيداً"
+  ],
+  [
+    "The requester assumes responsibility for sequence correctness",
+    "Le demandeur est responsable de l’exactitude des séquences",
+    "The requester assumes responsibility for sequence correctness",
+    "يتحمّل صاحب الطلب مسؤولية صحة التسلسلات"
+  ],
+  [
+    "Pure cultures or adequate biological material are mandatory",
+    "Des cultures pures ou du matériel biologique adapté sont obligatoires",
+    "Pure cultures or adequate biological material are mandatory",
+    "يشترط تقديم مزارع نقية أو مواد بيولوجية ملائمة"
+  ],
+  [
+    "Minimum input quantities must be respected",
+    "Les quantités minimales requises doivent être respectées",
+    "Minimum input quantities must be respected",
+    "يجب الالتزام بالكميات الدنيا المطلوبة"
+  ],
+  [
+    "Clinical or hospital samples require biosafety declaration",
+    "Les échantillons cliniques ou hospitaliers nécessitent une déclaration de risque biologique",
+    "Clinical or hospital samples require biosafety declaration",
+    "تستلزم العينات السريرية أو الاستشفائية تصريحاً بالسلامة البيولوجية"
+  ],
+  [
+    "Minimum volume and concentration requirements must be respected",
+    "Les volumes et concentrations minimaux requis doivent être respectés",
+    "Minimum volume and concentration requirements must be respected",
+    "يجب الالتزام بالحدود الدنيا المطلوبة للحجم والتركيز"
+  ],
+  [
+    "PCR products must be clearly labeled",
+    "Les produits PCR doivent être clairement étiquetés",
+    "PCR products must be clearly labeled",
+    "يجب وسم نواتج PCR بوضوح"
+  ],
+  [
+    "Primers must be supplied separately",
+    "Les amorces doivent être fournies séparément",
+    "Primers must be supplied separately",
+    "يجب توفير البادئات بشكل منفصل"
+  ],
+  [
+    "Non-compliant samples may be rejected",
+    "Les échantillons non conformes peuvent être refusés",
+    "Non-compliant samples may be rejected",
+    "قد تُرفض العينات غير المطابقة"
+  ],
+  [
+    "PDF quality control report per sample including",
+    "Rapport PDF de contrôle qualité par échantillon comprenant",
+    "PDF quality control report per sample including",
+    "تقرير مراقبة الجودة بصيغة PDF لكل عينة يشمل"
+  ],
+  [
+    "Nucleic acid concentration",
+    "Concentration en acides nucléiques",
+    "Nucleic acid concentration",
+    "تركيز الأحماض النووية"
+  ],
+  [
+    "Integrity assessment",
+    "Évaluation de l’intégrité",
+    "Integrity assessment",
+    "تقييم السلامة"
+  ],
+  [
+    "Gel image (if applicable)",
+    "Image du gel (le cas échéant)",
+    "Gel image (if applicable)",
+    "صورة الهلام (عند الاقتضاء)"
+  ],
+  [
+    "Technical comments",
+    "Commentaires techniques",
+    "Technical comments",
+    "تعليقات تقنية"
+  ],
+  [
+    "Paired-end FASTQ files",
+    "Fichiers FASTQ à lectures appariées",
+    "Paired-end FASTQ files",
+    "ملفات FASTQ بقراءات مزدوجة النهاية"
+  ],
+  [
+    "Basic sequencing run quality metrics",
+    "Indicateurs de base de la qualité du séquençage",
+    "Basic sequencing run quality metrics",
+    "مؤشرات أساسية لجودة تشغيل التسلسل"
+  ],
+  [
+    "Rapport PDF par isolat incluant",
+    "Rapport PDF par isolat incluant",
+    "PDF report for each isolate including",
+    "تقرير PDF لكل عزلة يشمل"
+  ],
+  [
+    "Nom de l’organisme identifié",
+    "Nom de l’organisme identifié",
+    "Identified organism name",
+    "اسم الكائن الحي الذي تم التعرّف عليه"
+  ],
+  [
+    "Score de confiance",
+    "Score de confiance",
+    "Confidence score",
+    "درجة الثقة"
+  ],
+  [
+    "Commentaire d’interprétation",
+    "Commentaire d’interprétation",
+    "Interpretation comment",
+    "تعليق تفسيري"
+  ],
+  [
+    "Produit lyophilisé sec remis au demandeur",
+    "Produit lyophilisé sec remis au demandeur",
+    "Dry freeze-dried product returned to the requester",
+    "تسليم المنتج المجفّف بالتجميد إلى صاحب الطلب"
+  ],
+  [
+    "Notification de fin de traitement",
+    "Notification de fin de traitement",
+    "Processing completion notification",
+    "إشعار بانتهاء المعالجة"
+  ],
+  [
+    "Observations techniques si anomalies détectées",
+    "Observations techniques si anomalies détectées",
+    "Technical observations if anomalies are detected",
+    "ملاحظات تقنية في حال رصد حالات غير طبيعية"
+  ],
+  [
+    "Gel image confirming amplification",
+    "Image du gel confirmant l’amplification",
+    "Gel image confirming amplification",
+    "صورة الهلام التي تؤكد التضخيم"
+  ],
+  [
+    "Optional recovered PCR product",
+    "Produit PCR récupéré (en option)",
+    "Optional recovered PCR product",
+    "ناتج PCR المسترجع (اختياري)"
+  ],
+  [
+    "QC results if applicable",
+    "Résultats du contrôle qualité, le cas échéant",
+    "QC results if applicable",
+    "نتائج مراقبة الجودة عند الاقتضاء"
+  ],
+  [
+    "Forward and Reverse primers per set",
+    "Amorces sens et antisens pour chaque paire",
+    "Forward and Reverse primers per set",
+    "بادئات أمامية وعكسية لكل مجموعة"
+  ],
+  [
+    "Delivered at 1 µM in nuclease-free water or dried",
+    "Livraison à 1 µM dans de l’eau exempte de nucléases ou à sec",
+    "Delivered at 1 µM in nuclease-free water or dried",
+    "تُسلّم بتركيز 1 µM في ماء خالٍ من النوكليازات أو مجفّفة"
+  ],
+  [
+    "OD260-based yield measurement",
+    "Mesure du rendement par absorbance à 260 nm",
+    "OD260-based yield measurement",
+    "قياس المردود بالامتصاص عند 260 nm"
+  ],
+  [
+    "ABI chromatogram file(s) (.ab1)",
+    "Fichier(s) de chromatogrammes ABI (.ab1)",
+    "ABI chromatogram file(s) (.ab1)",
+    "ملفات مخططات كروماتوغرافية ABI (.ab1)"
+  ],
+  [
+    "FASTA sequence file(s)",
+    "Fichier(s) de séquences FASTA",
+    "FASTA sequence file(s)",
+    "ملفات التسلسل FASTA"
+  ],
+  [
+    "Sequencing quality control summary",
+    "Synthèse du contrôle qualité du séquençage",
+    "Sequencing quality control summary",
+    "ملخّص مراقبة جودة التسلسل"
+  ],
+  [
+    "Basic sequencing quality check",
+    "Contrôle de base de la qualité du séquençage",
+    "Basic sequencing quality check",
+    "فحص أساسي لجودة التسلسل"
+  ],
+  [
+    "PCR kit",
+    "Type de kit PCR",
+    "PCR kit",
+    "نوع طقم PCR"
+  ],
+  [
+    "Quality control level",
+    "Techniques de contrôle qualité",
+    "Quality control level",
+    "تقنيات مراقبة الجودة"
+  ],
+  [
+    "Size marker for agarose gel electrophoresis",
+    "Marqueur de taille",
+    "Size marker for agarose gel electrophoresis",
+    "واسم الحجم للرحلان الكهربائي على هلام الأغاروز"
+  ]
+]

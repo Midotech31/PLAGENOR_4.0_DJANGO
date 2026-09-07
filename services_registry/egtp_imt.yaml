@@ -205,3 +205,18 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  en:
+    name: Microbial Identification by MALDI-TOF MS
+    description: Rapid and reliable identification of bacteria, yeasts and moulds by MALDI-TOF mass spectrometry
+      (protein profiling) on the MALDI Biotyper platform.
+  ar:
+    name: التعرّف على الكائنات الحية الدقيقة بتقنية MALDI-TOF MS
+    description: التعرّف السريع والموثوق على البكتيريا والخمائر والعفن باستخدام مطيافية الكتلة MALDI-TOF (البصمة
+      البروتينية) على منصة MALDI Biotyper.
+  fr:
+    name: Identification microbienne via MALDI-TOF MS
+    description: Identification microbienne rapide et fiable des bactéries, levures et moisissures par spectrométrie
+      de masse MALDI-TOF (profil protéique) sur plateforme MALDI Biotyper.

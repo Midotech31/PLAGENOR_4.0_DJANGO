@@ -133,3 +133,24 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  fr:
+    name: Identification microbienne par séquençage
+    description: Identification taxonomique des microorganismes par séquençage Sanger d’amplicons PCR, à l’aide
+      de marqueurs génétiques universels tels que l’ARNr 16S, l’ITS et l’ARNr 18S. La prestation comprend l’extraction
+      de l’ADN, l’amplification PCR, la purification des amplicons et le séquençage Sanger. L’identification est
+      rapportée au niveau de l’espèce lorsque la qualité des séquences et la couverture des bases de données le
+      permettent.
+  ar:
+    name: التعرّف على الكائنات الحية الدقيقة بالتسلسل
+    description: التعرّف التصنيفي على الكائنات الحية الدقيقة بتسلسل سانغر لنواتج تضخيم PCR، باستخدام واسمات جينية
+      عامة مثل الرنا الريبوسومي 16S وITS والرنا الريبوسومي 18S. تشمل الخدمة استخلاص DNA، والتضخيم بتقنية PCR، وتنقية
+      نواتج التضخيم، وتسلسل سانغر. يُحدّد الكائن على مستوى النوع عندما تسمح جودة التسلسل وتغطية قواعد البيانات بذلك.
+  en:
+    name: Microbial Identification via Sequencing
+    description: Accurate taxonomic identification of microorganisms using PCR amplicon Sanger sequencing with universal
+      genetic markers such as 16S rRNA, ITS, and 18S rRNA. The workflow includes DNA extraction, PCR amplification,
+      amplicon cleanup, and Sanger sequencing. Identification is reported at species level when sequence quality
+      and database coverage allow.

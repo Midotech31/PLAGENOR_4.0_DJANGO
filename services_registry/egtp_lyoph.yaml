@@ -152,3 +152,19 @@ override_policy:
   admin_override_allowed: true
   justification_required: true
   audit_required: true
+
+# Names and descriptions are required in all three interface languages.
+translations:
+  en:
+    name: Freeze-drying — Lyophilisation
+    description: Freeze-drying of biological samples to remove water by sublimation under vacuum at low temperature,
+      using the Beta 2-8 LSCplus freeze dryer (Martin Christ, Germany).
+  ar:
+    name: التجفيف بالتجميد تحت التفريغ
+    description: تجفيف العينات البيولوجية بالتجميد لإزالة الماء بالتسامي تحت التفريغ وفي درجة حرارة منخفضة، باستخدام
+      جهاز التجفيف بالتجميد Beta 2-8 LSCplus (Martin Christ، ألمانيا).
+  fr:
+    name: Séchage à froid sous vide – Lyophilisation
+    description: Lyophilisation (séchage à froid sous vide) d’échantillons biologiques afin d’éliminer l’eau par
+      sublimation sous vide à basse température, en utilisant le lyophilisateur Beta 2-8 LSCplus (Martin Christ,
+      Allemagne).

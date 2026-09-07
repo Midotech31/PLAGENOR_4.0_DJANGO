@@ -1,0 +1,23 @@
+{% load i18n %}
+<p class="text-muted">{% trans "Le nom et la description sont obligatoires en français, arabe et anglais." %}</p>
+<fieldset lang="fr" dir="ltr" style="margin-bottom:20px; padding:16px; border:1px solid var(--border-color, #e2e8f0); border-radius:8px;">
+<legend>Français</legend>
+<div class="form-group"><label for="service_name_fr">{% trans "Nom" %} (Français) *</label>
+<input id="service_name_fr" type="text" name="name_fr" class="form-control" maxlength="200" value="{{ service.name_fr|default_if_none:'' }}" required></div>
+<div class="form-group"><label for="service_description_fr">{% trans "Description" %} (Français) *</label>
+<textarea id="service_description_fr" name="description_fr" class="form-control" rows="3" required>{{ service.description_fr|default_if_none:'' }}</textarea></div>
+</fieldset>
+<fieldset lang="ar" dir="rtl" style="margin-bottom:20px; padding:16px; border:1px solid var(--border-color, #e2e8f0); border-radius:8px;">
+<legend>العربية</legend>
+<div class="form-group"><label for="service_name_ar">{% trans "Nom" %} (العربية) *</label>
+<input id="service_name_ar" type="text" name="name_ar" class="form-control" maxlength="200" value="{{ service.name_ar|default_if_none:'' }}" required></div>
+<div class="form-group"><label for="service_description_ar">{% trans "Description" %} (العربية) *</label>
+<textarea id="service_description_ar" name="description_ar" class="form-control" rows="3" required>{{ service.description_ar|default_if_none:'' }}</textarea></div>
+</fieldset>
+<fieldset lang="en" dir="ltr" style="margin-bottom:20px; padding:16px; border:1px solid var(--border-color, #e2e8f0); border-radius:8px;">
+<legend>English</legend>
+<div class="form-group"><label for="service_name_en">{% trans "Nom" %} (English) *</label>
+<input id="service_name_en" type="text" name="name_en" class="form-control" maxlength="200" value="{{ service.name_en|default_if_none:'' }}" required></div>
+<div class="form-group"><label for="service_description_en">{% trans "Description" %} (English) *</label>
+<textarea id="service_description_en" name="description_en" class="form-control" rows="3" required>{{ service.description_en|default_if_none:'' }}</textarea></div>
+</fieldset>

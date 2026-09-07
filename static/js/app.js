@@ -1,3 +1,11 @@
+// Translations are supplied by the active Django locale.
+function uiText(key) { return (window.PLAGENOR_I18N || {})[key] || key; }
+function escapePreview(value) {
+    var node = document.createElement('span');
+    node.textContent = String(value);
+    return node.innerHTML;
+}
+
 /* PLAGENOR 4.0 — Main JS */
 
 // =============================================================================
@@ -344,7 +352,7 @@ function showFormPreview(formEl) {
     var balanceInput = formEl.querySelector('[name="declared_balance"]');
     var balanceHtml = '';
     if (balanceInput) {
-        balanceHtml = '<div class="preview-row"><span class="preview-label">Solde IBTIKAR déclaré</span><span class="preview-value">' + parseFloat(balanceInput.value || 0).toLocaleString('fr-FR') + ' DA</span></div>';
+        balanceHtml = '<div class="preview-row"><span class="preview-label">' + uiText('Solde IBTIKAR déclaré') + '</span><span class="preview-value">' + parseFloat(balanceInput.value || 0).toLocaleString('fr-FR') + ' DA</span></div>';
     }
 
     var paramsHtml = '';
@@ -362,7 +370,7 @@ function showFormPreview(formEl) {
         if (!label) label = name.replace(/_/g, ' ');
 
         if (input.type === 'checkbox') {
-            value = input.checked ? 'Oui' : 'Non';
+            value = input.checked ? uiText('Oui') : uiText('Non');
         } else if (input.tagName === 'SELECT') {
             value = input.options[input.selectedIndex] ? input.options[input.selectedIndex].text : input.value;
         } else if (input.type === 'hidden') {
@@ -372,7 +380,7 @@ function showFormPreview(formEl) {
         }
 
         if (value) {
-            paramsHtml += '<div class="preview-row"><span class="preview-label">' + label + '</span><span class="preview-value">' + value + '</span></div>';
+            paramsHtml += '<div class="preview-row"><span class="preview-label">' + escapePreview(label) + '</span><span class="preview-value">' + escapePreview(value) + '</span></div>';
         }
     });
 
@@ -410,7 +418,7 @@ function showFormPreview(formEl) {
                 return o ? (o.text || o.value || '') : '';
             }
             if (el.type === 'checkbox' || el.type === 'radio') {
-                return el.checked ? 'Oui' : '';
+                return el.checked ? uiText('Oui') : '';
             }
             return el.value || '';
         }
@@ -436,16 +444,16 @@ function showFormPreview(formEl) {
         if (headers.length > 0 && rows.length > 0) {
             sampleHtml = '<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">';
             sampleHtml += '<thead><tr>';
-            sampleHtml += '<th style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; text-align:left; font-weight:600;">#</th>';
+            sampleHtml += '<th style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; text-align:start; font-weight:600;">#</th>';
             headers.forEach(function(h) {
-                sampleHtml += '<th style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; text-align:left; font-weight:600;">' + h + '</th>';
+                sampleHtml += '<th style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; text-align:start; font-weight:600;">' + escapePreview(h) + '</th>';
             });
             sampleHtml += '</tr></thead><tbody>';
             rows.forEach(function(row, idx) {
                 sampleHtml += '<tr>';
                 sampleHtml += '<td style="padding:6px 10px; border:1px solid #e2e8f0;">' + (idx + 1) + '</td>';
                 row.forEach(function(cell) {
-                    sampleHtml += '<td style="padding:6px 10px; border:1px solid #e2e8f0;">' + cell + '</td>';
+                    sampleHtml += '<td style="padding:6px 10px; border:1px solid #e2e8f0;">' + escapePreview(cell) + '</td>';
                 });
                 sampleHtml += '</tr>';
             });
@@ -460,43 +468,43 @@ function showFormPreview(formEl) {
     html += '<div style="background:#fff; border-radius:16px; max-width:700px; width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.15); animation:slideUp 0.3s ease;">';
 
     html += '<div style="padding:24px 28px 16px; border-bottom:1px solid #e2e8f0;">';
-    html += '<h2 style="margin:0; font-size:1.25rem; color:#1e293b;">Vérification de la demande</h2>';
-    html += '<p style="margin:6px 0 0; font-size:0.85rem; color:#64748b;">Veuillez vérifier les informations avant de soumettre.</p>';
+    html += '<h2 style="margin:0; font-size:1.25rem; color:#1e293b;">' + uiText('Vérification de la demande') + '</h2>';
+    html += '<p style="margin:6px 0 0; font-size:0.85rem; color:#64748b;">' + uiText('Veuillez vérifier les informations avant de soumettre.') + '</p>';
     html += '</div>';
 
     html += '<div style="padding:20px 28px;">';
 
     html += '<div class="preview-section">';
-    html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Service</h4>';
-    html += '<div style="padding:10px 14px; background:#f8fafc; border-radius:8px; font-weight:600;">' + serviceName + '</div>';
+    html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">' + uiText('Service') + '</h4>';
+    html += '<div style="padding:10px 14px; background:#f8fafc; border-radius:8px; font-weight:600;">' + escapePreview(serviceName) + '</div>';
     html += '</div>';
 
     if (paramsHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
-        html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Paramètres du service</h4>';
+        html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">' + uiText('Paramètres du service') + '</h4>';
         html += '<div style="background:#f8fafc; border-radius:8px; padding:8px 14px;">' + paramsHtml + '</div>';
         html += '</div>';
     }
 
     if (sampleHtml) {
         html += '<div class="preview-section" style="margin-top:18px;">';
-        html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Tableau des échantillons</h4>';
+        html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">' + uiText('Tableau des échantillons') + '</h4>';
         html += '<div style="border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;">' + sampleHtml + '</div>';
         html += '</div>';
     }
 
     if (costText && costText !== '—') {
         html += '<div class="preview-section" style="margin-top:18px;">';
-        html += '<div style="padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-weight:600;">Coût estimé: ' + costText + '</div>';
+        html += '<div style="padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-weight:600;">' + uiText('Coût estimé') + ': ' + escapePreview(costText) + '</div>';
         html += '</div>';
     }
 
     html += '<div class="preview-section" style="margin-top:18px;">';
-    html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">Détails de la demande</h4>';
+    html += '<h4 style="font-size:0.9rem; color:#475569; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.5px;">' + uiText('Détails de la demande') + '</h4>';
     html += '<div style="background:#f8fafc; border-radius:8px; padding:8px 14px;">';
-    html += '<div class="preview-row"><span class="preview-label">Titre</span><span class="preview-value">' + title + '</span></div>';
-    html += '<div class="preview-row"><span class="preview-label">Description</span><span class="preview-value">' + description + '</span></div>';
-    html += '<div class="preview-row"><span class="preview-label">Urgence</span><span class="preview-value">' + urgency + '</span></div>';
+    html += '<div class="preview-row"><span class="preview-label">' + uiText('Titre') + '</span><span class="preview-value">' + escapePreview(title) + '</span></div>';
+    html += '<div class="preview-row"><span class="preview-label">' + uiText('Description') + '</span><span class="preview-value">' + escapePreview(description) + '</span></div>';
+    html += '<div class="preview-row"><span class="preview-label">' + uiText('Urgence') + '</span><span class="preview-value">' + escapePreview(urgency) + '</span></div>';
     html += balanceHtml;
     html += '</div>';
     html += '</div>';
@@ -504,15 +512,15 @@ function showFormPreview(formEl) {
     html += '</div>';
 
     html += '<div style="padding:16px 28px 24px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid #e2e8f0;">';
-    html += '<button type="button" onclick="closeFormPreview()" style="padding:10px 24px; border:1px solid #d1d5db; background:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; color:#475569; transition:all 0.15s;">Modifier</button>';
-    html += '<button type="button" onclick="confirmFormSubmit()" style="padding:10px 24px; border:none; background:#2563eb; color:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.15s;">Confirmer et soumettre</button>';
+    html += '<button type="button" onclick="closeFormPreview()" style="padding:10px 24px; border:1px solid #d1d5db; background:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; color:#475569; transition:all 0.15s;">' + uiText('Modifier') + '</button>';
+    html += '<button type="button" onclick="confirmFormSubmit()" style="padding:10px 24px; border:none; background:#2563eb; color:#fff; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.15s;">' + uiText('Confirmer et soumettre') + '</button>';
     html += '</div>';
 
     html += '</div></div>';
 
     var style = document.createElement('style');
     style.id = 'preview-modal-styles';
-    style.textContent = '.preview-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;}.preview-row:last-child{border-bottom:none;}.preview-label{color:#64748b;font-size:0.85rem;}.preview-value{font-weight:500;color:#1e293b;font-size:0.85rem;max-width:60%;text-align:right;}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}';
+    style.textContent = '.preview-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;}.preview-row:last-child{border-bottom:none;}.preview-label{color:#64748b;font-size:0.85rem;}.preview-value{font-weight:500;color:#1e293b;font-size:0.85rem;max-width:60%;text-align:end;}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}';
     if (!document.getElementById('preview-modal-styles')) document.head.appendChild(style);
 
     document.body.insertAdjacentHTML('beforeend', html);

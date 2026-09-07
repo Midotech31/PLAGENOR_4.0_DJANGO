@@ -259,16 +259,16 @@ def service_create(request):
         except ValidationError as exc:
             messages.error(request, exc.messages[0])
             return redirect_back(request, 'dashboard:superadmin')
-    Service.objects.create(
-        code=request.POST.get('code', ''),
-        name=request.POST.get('name', ''),
-        description=request.POST.get('description', ''),
-        channel_availability=request.POST.get('channel_availability', 'BOTH'),
-        ibtikar_price=request.POST.get('ibtikar_price', 0),
-        genoclab_price=request.POST.get('genoclab_price', 0),
-        turnaround_days=request.POST.get('turnaround_days', 7),
-        image=image,
-    )
+    from core.forms import ServiceCreateForm
+    data = request.POST.copy()
+    for key, default in [('channel_availability', 'BOTH'), ('ibtikar_price', '0'),
+                         ('genoclab_price', '0'), ('turnaround_days', '7')]:
+        data.setdefault(key, default)
+    form = ServiceCreateForm(data, request.FILES)
+    if not form.is_valid():
+        messages.error(request, form.errors.as_text())
+        return redirect_back(request, 'dashboard:superadmin')
+    form.save()
     messages.success(request, "Service créé avec succès.")
     return redirect_back(request, 'dashboard:superadmin')
 
@@ -581,6 +581,13 @@ def service_edit(request, pk):
             names = [n.strip() for n in request.POST.getlist('field_name') if n.strip()]
             if len(names) != len(set(names)):
                 raise ValueError('Les noms des champs doivent être uniques.')
+            for index, name in enumerate(request.POST.getlist('field_name')):
+                if name.strip():
+                    for lang in ('fr', 'ar', 'en'):
+                        labels = request.POST.getlist(f'field_label_{lang}')
+                        if index >= len(labels) or not labels[index].strip():
+                            from django.utils.translation import gettext
+                            raise ValueError(gettext('Chaque champ doit avoir un libellé en français, arabe et anglais.'))
             for key, expected in [('field_option_pricing', dict), ('field_conditional_logic', list)]:
                 for raw in request.POST.getlist(key):
                     if raw.strip() and not isinstance(json.loads(raw), expected):
@@ -590,8 +597,14 @@ def service_edit(request, pk):
         except (FinancialValidationError, ValueError, TypeError) as exc:
             messages.error(request, str(exc))
             return redirect('dashboard:superadmin_service_edit', pk=pk)
-        service.name = request.POST.get('name', service.name)
-        service.description = request.POST.get('description', service.description)
+        from core.forms import ServiceTextForm, SERVICE_TEXT_FIELDS
+        # Operational edits that omit text fields preserve all translations.
+        if any(key in request.POST for key in SERVICE_TEXT_FIELDS):
+            text_form = ServiceTextForm(request.POST, instance=service)
+            if not text_form.is_valid():
+                messages.error(request, text_form.errors.as_text())
+                return redirect('dashboard:superadmin_service_edit', pk=pk)
+            service = text_form.save(commit=False)
         service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
         service.ibtikar_price = request.POST.get('ibtikar_price') or service.ibtikar_price
         service.genoclab_price = request.POST.get('genoclab_price') or service.genoclab_price
@@ -613,7 +626,6 @@ def service_edit(request, pk):
         import json
         service.custom_fields.all().delete()
         field_names = request.POST.getlist('field_name')
-        field_labels = request.POST.getlist('field_label')
         field_types = request.POST.getlist('field_type')
         field_categories = request.POST.getlist('field_category')
         field_required = request.POST.getlist('field_required')
@@ -656,7 +668,8 @@ def service_edit(request, pk):
             ServiceFormField.objects.create(
                 service=service,
                 name=name.strip(),
-                label=field_labels[i].strip() if i < len(field_labels) else name.strip(),
+                **{f'label_{lang}': request.POST.getlist(f'field_label_{lang}')[i].strip()
+                   for lang in ('fr', 'ar', 'en')},
                 field_type=field_types[i] if i < len(field_types) else 'string',
                 field_category=category,
                 required=str(i) in field_required,

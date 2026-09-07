@@ -1,5 +1,5 @@
 """Seed Service objects from YAML registry files."""
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from core.registry import load_service_registry
 from core.models import Service
 
@@ -9,6 +9,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         registry = load_service_registry()
+        for code, defn in registry.items():
+            translations = defn.get('translations', {})
+            for lang in ('fr', 'ar', 'en'):
+                for field in ('name', 'description'):
+                    value = translations.get(lang, {}).get(field)
+                    if not isinstance(value, str) or not value.strip():
+                        raise CommandError(f'{code}: translation required: {field}_{lang}')
         for code, defn in registry.items():
             pricing = defn.get('pricing', {})
             base_price = pricing.get('base_price', {})
@@ -25,11 +32,12 @@ class Command(BaseCommand):
                 ibtikar_price = 0
                 genoclab_price = 0
 
-            svc, created = Service.objects.update_or_create(
+            svc, created = Service.objects.get_or_create(
                 code=code,
                 defaults={
-                    'name': defn.get('service_name', code),
-                    'description': defn.get('description', ''),
+                    **{f'{field}_{lang}': value.strip()
+                       for lang, texts in defn['translations'].items()
+                       for field, value in texts.items() if field in ('name', 'description')},
                     'channel_availability': 'BOTH',
                     'ibtikar_price': ibtikar_price,
                     'genoclab_price': genoclab_price,
@@ -37,5 +45,15 @@ class Command(BaseCommand):
                     'active': True,
                 }
             )
-            status = 'Created' if created else 'Updated'
+            if not created:
+                # Startup imports must not reset administrator-managed catalogue data.
+                missing = {}
+                for lang in ('fr', 'ar', 'en'):
+                    for field in ('name', 'description'):
+                        key = f'{field}_{lang}'
+                        if not (getattr(svc, key) or '').strip():
+                            missing[key] = defn['translations'][lang][field].strip()
+                if missing:
+                    Service.objects.filter(pk=svc.pk).update(**missing)
+            status = 'Created' if created else 'Preserved'
             self.stdout.write(self.style.SUCCESS(f'[{status}] {code}: {svc.name}'))

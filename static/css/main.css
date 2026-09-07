@@ -2066,6 +2066,10 @@ a:has(.service-card):hover .service-card,
         transform: translateX(0);
         box-shadow: var(--shadow-xl);
     }
+    /* In RTL the sidebar is anchored on the right: hide it to that side. */
+    [dir="rtl"] .sidebar:not(.open) {
+        transform: translateX(100%);
+    }
     .sidebar.open + .sidebar-overlay {
         display: block;
     }
