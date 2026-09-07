@@ -1,9 +1,18 @@
 {% extends "base.html" %}
+{% load financial_visibility %}
 {% load i18n %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% if req.invoice_set.exists %}<section class="card mb-4"><div class="card-body"><h2>{% trans "Ordre de paiement" %}</h2>
+<p>{% trans "Un ordre ou mandat de paiement ne constitue pas une confirmation d'encaissement." %}</p>
+{% if req.payment_order_file %}<p>{{ req.payment_order_reference }} · {{ req.payment_order_date|date:"d/m/Y" }}</p><a href="{{ req.payment_order_file.url }}">{% trans "Consulter la pièce" %}</a>
+{% else %}<form method="post" enctype="multipart/form-data" action="{% url 'dashboard:client_upload_payment_order' req.pk %}">{% csrf_token %}
+<label for="payment-order-ref">{% trans "Référence" %}</label><input id="payment-order-ref" class="form-control" name="payment_order_reference" maxlength="100" required>
+<label for="payment-order-date">{% trans "Date" %}</label><input id="payment-order-date" class="form-control" type="date" name="payment_order_date" required>
+<label for="payment-order-file">{% trans "Ordre ou mandat de paiement" %}</label><input id="payment-order-file" class="form-control" type="file" name="payment_order_file" required>
+<button type="submit" class="btn btn-primary">{% trans "Déposer" %}</button></form>{% endif %}</div></section>{% endif %}
 {% url 'dashboard:client_confirm_appointment' req.pk as appt_confirm_url %}
 {% url 'dashboard:client_alt_date' req.pk as appt_alt_url %}
 {% include 'includes/appointment_banner.html' with confirm_url=appt_confirm_url alt_url=appt_alt_url %}
@@ -114,13 +123,14 @@
     <!-- RIGHT COLUMN -->
     <div>
         <!-- Financial -->
+{% if not req|financials_visible %}<p class="text-muted">{% trans "Estimation en cours de validation. Le montant sera communiqué après vérification." %}</p>{% endif %}
         <div class="card mb-4">
             <div class="card-header"><h3>{% trans "Informations financières" %}</h3></div>
             <div class="card-body">
-                {% if req.quote_amount %}
+                {% if req|financials_visible and req.quote_amount %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Montant du devis" %}</span><strong>{{ req.quote_amount }} DA</strong></div>
                 {% endif %}
-                {% if req.budget_amount %}
+                {% if req|financials_visible and req.budget_amount %}
                 <div class="data-card-row"><span class="text-muted">{% trans "Budget estimé" %}</span><strong>{{ req.budget_amount }} DA</strong></div>
                 {% endif %}
                 {% if not req.budget_amount and not req.quote_amount %}
@@ -130,7 +140,7 @@
         </div>
 
         <!-- Detailed Quote Display -->
-        {% if req.quote_detail and req.quote_detail.items %}
+        {% if req|financials_visible and req.quote_detail and req.quote_detail.items %}
         <div class="card mb-4">
             <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                 <h3 style="margin:0;">{% trans "Détail du devis" %}</h3>
@@ -221,7 +231,7 @@
         </div>
         {% endif %}
 
-        {# Purchase Order Upload (Bon de commande - mandatory per Algerian commercial code) #}
+        {# Purchase Order Upload (Bon de commande - mandatory under the internal commercial workflow) #}
         {% if req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
         <div class="card mb-4" style="border:2px solid #f59e0b; background:linear-gradient(135deg, #fffbeb, #fef3c7);">
             <div class="card-header" style="background:linear-gradient(135deg, #fef3c7, #fde68a);">
@@ -232,7 +242,7 @@
             </div>
             <div class="card-body">
                 <p style="color:#92400e; margin-bottom:16px;">
-                    {% trans "Selon le Code de Commerce Algérien, vous devez fournir un Bon de Commande (BC) pour toute transaction commerciale. Veuillez télécharger votre BC ci-dessous." %}
+                    {% trans "Dans le cadre du workflow commercial de PLAGENOR, déposez votre bon de commande après acceptation du devis pour permettre l’émission de la facture." %}
                 </p>
                 {% if req.order_file %}
                 <div style="padding:12px; background:#dcfce7; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
@@ -271,7 +281,7 @@
                 <p style="color:#991b1b; margin-bottom:12px;">
                     {% trans "Votre analyse est terminée. Pour recevoir votre rapport, veuillez effectuer le paiement et télécharger le reçu ci-dessous." %}
                 </p>
-                {% if req.quote_detail.total_ttc %}
+                {% if req|financials_visible and req.quote_detail.total_ttc %}
                 <div style="padding:12px; background:#fef2f2; border-radius:8px; margin-bottom:12px; text-align:center;">
                     <span style="font-size:1.5rem; font-weight:700; color:#dc2626;">{{ req.quote_detail.total_ttc|floatformat:2 }} DA</span>
                     <span style="color:#991b1b; font-size:0.85rem; display:block;">{% trans "Montant à payer" %}</span>

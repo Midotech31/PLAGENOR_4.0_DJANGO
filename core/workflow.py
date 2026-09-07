@@ -60,7 +60,6 @@ ROLE_PERMISSIONS = {
     ('QUOTE_REJECTED_BY_CLIENT', 'QUOTE_DRAFT'): _ADMINS,  # admin renegotiates after rejection
     ('QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED'): _ADMINS + ['CLIENT'],
     ('ORDER_UPLOADED', 'INVOICE_GENERATED'): _ADMINS + ['FINANCE'],
-    ('ORDER_UPLOADED', 'ASSIGNED'): _ADMINS,
     ('INVOICE_GENERATED', 'ASSIGNED'): _ADMINS,
     ('ANALYSIS_FINISHED', 'PAYMENT_PENDING'): _ADMINS + ['MEMBER'],
     ('PAYMENT_PENDING', 'PAYMENT_PROOF_UPLOADED'): _ADMINS + ['CLIENT'],
@@ -111,6 +110,9 @@ def transition(request_obj, to_status, actor, notes='', force=False):
         locked = Request.objects.select_for_update().get(pk=request_obj.pk)
         old_status = locked.status
 
+        if force and getattr(actor, 'role', '') != 'SUPER_ADMIN':
+            raise AuthorizationError('Seul le Superadmin peut forcer une transition.')
+
         if not force:
             allowed = get_allowed_next_states(locked.channel, old_status)
             if to_status not in allowed:
@@ -130,6 +132,41 @@ def transition(request_obj, to_status, actor, notes='', force=False):
                 or not locked.payment_verification_note.strip()):
             raise InvalidTransitionError(
                 "La preuve de paiement doit être vérifiée et auditée avant confirmation.")
+
+        if locked.channel == 'GENOCLAB':
+            if to_status == 'ORDER_UPLOADED' and not locked.order_file:
+                raise InvalidTransitionError('Le bon de commande doit être déposé avant cette étape.')
+            if to_status == 'INVOICE_GENERATED' and not locked.invoice_set.exists():
+                raise InvalidTransitionError('La facture doit être générée avant cette étape.')
+            if to_status == 'QUOTE_DRAFT' and old_status == 'QUOTE_REJECTED_BY_CLIENT':
+                from core.audit import log_action
+                log_action('QUOTE_REVISION', 'REQUEST', str(locked.pk), actor, details={
+                    'number': locked.quote_number, 'detail': locked.quote_detail,
+                    'snapshot': locked.quote_snapshot, 'issued_at': str(locked.quote_issued_at),
+                    'valid_until': str(locked.quote_valid_until), 'reason': notes,
+                })
+                # This explicit, audited revision is the only path that can
+                # retire a rejected issued quote. The old reference is kept
+                # in the immutable audit record and never reused.
+                Request.objects.filter(pk=locked.pk).update(quote_issued_at=None,
+                    quote_number='', quote_snapshot={}, quote_valid_until=None)
+                locked.refresh_from_db()
+
+        if locked.channel == 'GENOCLAB' and to_status == 'QUOTE_SENT':
+            from documents.financial_snapshot import capture_snapshot, ensure_quote_number
+            from django.utils import timezone
+            if not (locked.quote_detail or {}).get('items'):
+                raise InvalidTransitionError('Un devis détaillé est requis avant envoi.')
+            if not locked.billing_assigned_by_id or not locked.billing_assigned_at:
+                raise InvalidTransitionError('L’Admin Ops doit confirmer le circuit de facturation avant envoi.')
+            ensure_quote_number(locked)
+            locked.quote_issued_at = timezone.now()
+            locked.quote_snapshot = capture_snapshot(locked)
+            locked.save(update_fields=['quote_issued_at', 'quote_snapshot'])
+        if to_status == 'QUOTE_VALIDATED_BY_CLIENT':
+            from django.utils import timezone
+            if locked.quote_valid_until and locked.quote_valid_until < timezone.localdate():
+                raise InvalidTransitionError('Ce devis a expiré. Une nouvelle validation administrative est requise.')
 
         locked.status = to_status
         locked.save(update_fields=['status', 'updated_at'])
@@ -157,6 +194,8 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     request_obj.status = locked.status
     request_obj.updated_at = locked.updated_at
     request_obj.budget_deducted = locked.budget_deducted
+    for field in ('quote_issued_at', 'quote_number', 'quote_snapshot', 'quote_valid_until'):
+        setattr(request_obj, field, getattr(locked, field))
 
     return request_obj
 
@@ -278,8 +317,10 @@ def _send_transition_emails(request_obj, old_status, to_status):
         _safe(nem.notify_assignment, request_obj, request_obj.assigned_to)
     elif to_status in ('APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED'):
         _safe(nem.notify_appointment, request_obj)
-    elif to_status in ('REPORT_VALIDATED', 'SENT_TO_REQUESTER', 'SENT_TO_CLIENT'):
+        return
+    elif to_status in ('SENT_TO_REQUESTER', 'SENT_TO_CLIENT'):
         _safe(nem.notify_report_delivery, request_obj)
+        return
 
     # Generic status-change email so the requester/client gets a paper
     # trail of every meaningful step. Sent ON TOP of dedicated templates

@@ -185,6 +185,9 @@ def ibtikar_form_view(request, request_id):
     req = get_object_or_404(Request, pk=request_id)
     if not _can_download_request_doc(request.user, req):
         return HttpResponseForbidden()
+    from core.financial_visibility import request_financials_visible
+    if not request.user.is_admin and not request_financials_visible(req):
+        return HttpResponseForbidden('Le document financier est en cours de validation.')
     return _cached_serve_doc(
         req, 'IBTIKAR_FORM', generate_ibtikar_form,
         f"IBTIKAR_FORM_{req.display_id}",
@@ -203,6 +206,9 @@ def guest_ibtikar_form_view(request, token):
         submitted_as_guest=True,
         channel='IBTIKAR',
     )
+    from core.financial_visibility import request_financials_visible
+    if not request_financials_visible(req):
+        return HttpResponseForbidden('Le document financier est en cours de validation.')
     return _cached_serve_doc(
         req, 'IBTIKAR_FORM', generate_ibtikar_form,
         f"IBTIKAR_FORM_{req.display_id}",
@@ -224,6 +230,9 @@ def platform_note_view(request, request_id):
 def quote_view(request, request_id):
     req = get_object_or_404(Request, pk=request_id)
     if not _can_download_request_doc(request.user, req):
+        return HttpResponseForbidden()
+    from core.financial_visibility import quote_released
+    if not request.user.is_admin and not quote_released(req):
         return HttpResponseForbidden()
     return _cached_serve_doc(
         req, 'QUOTE', generate_quote,

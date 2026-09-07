@@ -1,5 +1,6 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="{{ language|default:'fr' }}">
+<html lang="{{ language|default:'fr' }}" dir="{% if language == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,21 +31,17 @@
     <div class="container">
         <div class="header">
             <h1>PLAGENOR 4.0</h1>
-            <p>{% if language == 'en' %}Scientific Operations Management Platform{% else %}Plateforme de Gestion des Opérations Scientifiques{% endif %}</p>
+            <p>{% trans "Plateforme de Gestion des Opérations Scientifiques" %}</p>
         </div>
         <div class="content">
             {% block email_content %}{% endblock %}
         </div>
         <div class="footer">
             <p>
-                {% if language == 'en' %}
-                This is an automated message from PLAGENOR 4.0. Please do not reply to this email.<br>
-                {% else %}
-                Ceci est un message automatique de PLAGENOR 4.0. Merci de ne pas répondre à cet email.<br>
-                {% endif %}
+                {% trans "Ceci est un message automatique de PLAGENOR. Consultez votre espace pour répondre ou agir sur votre demande." %}<br>
                 <a href="{{ base_url }}">{{ base_url }}</a>
             </p>
-            <p>École Supérieure en Sciences Biologiques d'Oran (ESSBO) © 2026</p>
+            <p>École Supérieure en Sciences Biologiques d'Oran (ESSBO) © {% now "Y" %}</p>
         </div>
     </div>
 </body>

@@ -22,8 +22,14 @@ def log_action(
     actor_role = getattr(actor, 'role', 'SYSTEM') if actor else 'SYSTEM'
     logger.info(
         "[%s] %s:%s by %s (%s) — %s",
-        action, entity_type, entity_id, actor_name, actor_role, details or '',
+        action, entity_type, entity_id, actor_name, actor_role,
+        sorted((details or {}).keys()),
     )
+    if action.startswith(('TARIFF_', 'ESTIMATE_', 'QUOTE_', 'INVOICE_')) or action == 'COST_ADJUSTMENT':
+        from core.models import FinancialAudit
+        FinancialAudit.objects.create(action=action, entity_type=entity_type,
+                                      entity_id=entity_id, actor=actor,
+                                      details=details or {})
 
 
 def log_workflow_transition(request_obj, from_state: str, to_state: str,

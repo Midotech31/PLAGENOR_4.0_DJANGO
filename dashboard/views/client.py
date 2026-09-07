@@ -217,7 +217,7 @@ def reject_quote(request, pk):
 
 @client_required
 def upload_order(request, pk):
-    """Upload purchase order (Bon de commande) - mandatory per Algerian commercial code."""
+    """Upload purchase order (Bon de commande) - required by the internal PLAGENOR workflow."""
     if request.method != 'POST':
         return HttpResponseForbidden()
     order_file = request.FILES.get('order_file')
@@ -284,6 +284,41 @@ def upload_payment_receipt(request, pk):
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, str(e))
     
+    return redirect('dashboard:client_request_detail', pk=pk)
+
+
+@client_required
+def upload_payment_order(request, pk):
+    """Keep the client's payment instruction separate from receipt verification."""
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    from django.utils.dateparse import parse_date
+    try:
+        upload = request.FILES.get('payment_order_file')
+        reference = request.POST.get('payment_order_reference', '').strip()
+        issued = parse_date(request.POST.get('payment_order_date', ''))
+        if not upload or not reference or len(reference) > 100 or not issued or issued > timezone.localdate():
+            raise ValidationError('Pièce, référence et date valides obligatoires.')
+        validate_upload(upload, 'business_document')
+        with transaction.atomic():
+            req = get_object_or_404(Request.objects.select_for_update(), pk=pk, requester=request.user, channel='GENOCLAB')
+            if not req.invoice_set.exists() or req.payment_order_file:
+                raise ValidationError('Une facture est requise et la pièce déposée ne peut pas être écrasée.')
+            req.payment_order_file = upload
+            req.payment_order_reference = reference
+            req.payment_order_date = issued
+            req.payment_order_uploaded_at = timezone.now()
+            req.save(update_fields=['payment_order_file','payment_order_reference','payment_order_date','payment_order_uploaded_at'])
+            from core.audit import log_action
+            log_action('INVOICE_PAYMENT_ORDER', 'REQUEST', str(pk), request.user, details={'reference': reference, 'date': issued.isoformat()})
+            from notifications.services import notify_user
+            from accounts.models import User
+            for recipient in User.objects.filter(is_active=True, role__in=['PLATFORM_ADMIN', 'FINANCE']):
+                notify_user(recipient, f'Ordre de paiement reçu : {req.display_id} — {reference}',
+                            notification_type='PAYMENT', request_obj=req)
+        messages.success(request, 'Ordre de paiement reçu. Le paiement reste soumis à vérification.')
+    except (ValidationError, ValueError) as exc:
+        messages.error(request, str(exc))
     return redirect('dashboard:client_request_detail', pk=pk)
 
 

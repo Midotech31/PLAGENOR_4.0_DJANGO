@@ -1,0 +1,22 @@
+{% extends "notifications/email/base_email.html" %}
+{% load i18n %}
+{% block email_content %}
+<h2>{{ subject }}</h2>
+<p>{% trans "Bonjour" %} {{ user_name }},</p>
+<p>{{ intro|linebreaksbr }}</p>
+<div class="request-id"><div class="label">{% trans "Identifiant de demande" %}</div><div class="value" dir="ltr">{{ request.display_id }}</div></div>
+{% if request.service %}<p><strong>{% trans "Prestation" %} :</strong> {{ request.service.name }}</p>{% endif %}
+{% if request.title %}<p><strong>{% trans "Titre" %} :</strong> {{ request.title }}</p>{% endif %}
+<p><strong>{% trans "Statut" %} :</strong> {{ status_display }}</p>
+{% if event == 'appointment_notification' %}
+{% if request.appointment_date %}<p><strong>{% trans "Rendez-vous" %} :</strong> {{ request.appointment_date|date:"d/m/Y H:i" }}</p>{% endif %}
+{% if request.appointment_note %}<p>{{ request.appointment_note|linebreaksbr }}</p>{% endif %}
+{% endif %}
+{% if event == 'guest_tracking_code' %}<p dir="ltr">{{ request.guest_token }}</p>{% endif %}
+<p style="text-align:center;"><a href="{{ primary_url }}" class="button">{% if event == 'report_delivery' %}{% trans "Télécharger le rapport" %}{% else %}{% trans "Consulter la demande" %}{% endif %}</a></p>
+{% if event == 'submission_confirmation' and request.channel == 'GENOCLAB' %}
+<p>{% trans "Après validation du devis, déposez votre bon de commande. La facture et les instructions de paiement seront disponibles dans votre espace." %}</p>
+{% endif %}
+{% if register_url %}<p><a href="{{ register_url }}">{% trans "Créer un compte" %}</a></p>{% endif %}
+<p>{% trans "Pour toute question, contactez notre équipe." %} <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+{% endblock %}

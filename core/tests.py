@@ -765,11 +765,7 @@ class WorkflowSideEffectTests(TestCase):
             self.request, self.member_user.member_profile)
         appointment.assert_called_once_with(self.request)
         delivery.assert_called_once_with(self.request)
-        self.assertEqual(status_change.call_count, 2)
-        status_change.assert_has_calls([
-            call(self.request, 'ASSIGNED', 'APPOINTMENT_PROPOSED'),
-            call(self.request, 'REPORT_VALIDATED', 'SENT_TO_CLIENT'),
-        ])
+        status_change.assert_not_called()
 
     def test_document_hooks_are_explicit_and_channel_safe(self):
         from documents import generators
@@ -848,14 +844,22 @@ class EndToEndPipelineTests(TestCase):
     def test_genoclab_full_pipeline(self):
         from accounts.models import User
         client = User.objects.create(username='e2e-client', role='CLIENT')
+        ops = User.objects.create(username='e2e-routing-ops', role='PLATFORM_ADMIN')
         req = Request.objects.create(
             channel='GENOCLAB', status='REQUEST_CREATED', requester=client,
-            assigned_to=self.analyst, quote_amount=Decimal('50000'))
+            billing_assigned_by=ops, billing_assigned_at=timezone.now(),
+            assigned_to=self.analyst, quote_amount=Decimal('50000'),
+            quote_detail={'items': [{'label': 'Analysis', 'unit_price': 50000, 'quantity': 1, 'total': 50000}]} )
 
         self._step(req, 'QUOTE_DRAFT', self.admin)
         self._step(req, 'QUOTE_SENT', self.admin)
         self._step(req, 'QUOTE_VALIDATED_BY_CLIENT', client)
+        req.order_file='orders/e2e-order.pdf'
+        req.save(update_fields=['order_file'])
         self._step(req, 'ORDER_UPLOADED', client)
+        from core.models import Invoice
+        Invoice.objects.create(request=req, client=client, invoice_number='E2E-INV-001',
+                               subtotal_ht=50000, vat_rate=0, vat_amount=0, total_ttc=50000)
         self._step(req, 'INVOICE_GENERATED', self.finance)
         self._step(req, 'ASSIGNED', self.admin)
         self._step(req, 'APPOINTMENT_PROPOSED', self.analyst_user)

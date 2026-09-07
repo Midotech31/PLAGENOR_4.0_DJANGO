@@ -165,6 +165,9 @@ def _format_date(value, placeholder='Non défini'):
     if not value:
         return placeholder
     try:
+        from django.utils import timezone
+        if isinstance(value, datetime) and timezone.is_aware(value):
+            value = timezone.localtime(value)
         return value.strftime('%d/%m/%Y')
     except Exception:
         return placeholder
@@ -229,6 +232,10 @@ def build_field_map(request_obj) -> dict[str, str]:
     Legacy short-names (FULL_NAME, EMAIL, PHONE, etc.) are also emitted so
     pre-existing templates keep working — both forms are valid.
     """
+    from documents.financial_snapshot import active_snapshot
+    snapshot = active_snapshot.get() or {}
+    if snapshot.get('field_map'):
+        return dict(snapshot['field_map'])
     req = request_obj
     requester = req.requester
 
@@ -267,10 +274,12 @@ def build_field_map(request_obj) -> dict[str, str]:
         svc_turnaround = 'N/A'
         svc_type = ''
 
-    quote_amount = float(req.quote_amount or 0)
-    vat_rate = float(getattr(settings, 'VAT_RATE', 0.19) or 0)
-    vat_amount = round(quote_amount * vat_rate, 2)
-    total_ttc = round(quote_amount + vat_amount, 2)
+    from decimal import Decimal, ROUND_HALF_UP
+    detail = req.quote_detail or {}
+    vat_rate = Decimal('0') if req.billing_channel == 'OHB' else Decimal(str(detail.get('vat_rate', getattr(settings, 'VAT_RATE', 0.19)) or 0))
+    total_ttc = Decimal(str(detail.get('total_ttc', req.quote_amount) or 0))
+    quote_amount = Decimal(str(detail.get('subtotal_before_tax', total_ttc / (1 + vat_rate)))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    vat_amount = (total_ttc - quote_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     field_map = {
         # ----- Dates --------------------------------------------------------
@@ -329,8 +338,8 @@ def build_field_map(request_obj) -> dict[str, str]:
         'ANALYSIS_FRAME': (req.service_params or {}).get('analysis_frame', ''),
 
         # ----- Financial ----------------------------------------------------
-        'BUDGET_AMOUNT': _money(req.budget_amount),
-        'IBTIKAR_BUDGET': _money(req.budget_amount),
+        'BUDGET_AMOUNT': _money_2dp(req.admin_validated_price if req.admin_validated_price is not None else req.budget_amount),
+        'IBTIKAR_BUDGET': _money_2dp(req.admin_validated_price if req.admin_validated_price is not None else req.budget_amount),
         'IBTIKAR_BALANCE': _money(req.declared_ibtikar_balance),
         'FINAL_COST': _money(req.admin_validated_price, placeholder='En attente'),
         'QUOTE_AMOUNT': _money_2dp(quote_amount),
@@ -425,6 +434,11 @@ def _inject_document_blocks(doc: DocumentType, template_type: str, request_obj) 
             service=request_obj.service,
             language=settings.LANGUAGE_CODE,
         ))
+    from documents.financial_snapshot import active_snapshot
+    snapshot = active_snapshot.get() or {}
+    if template_type == 'QUOTE' and 'quote_blocks' in snapshot:
+        from types import SimpleNamespace
+        blocks = [SimpleNamespace(**block) for block in snapshot['quote_blocks']]
     if not blocks:
         return
 
@@ -575,6 +589,8 @@ def _save_document(doc: DocumentType, prefix: str, request_obj,
         add_brand_footer(doc)
     if style_tables:
         _apply_brand_table_style_everywhere(doc)
+    from documents.docx_helpers import keep_table_rows_together
+    keep_table_rows_together(doc)
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -672,6 +688,13 @@ def generate_ibtikar_form(request_obj) -> str:
         # used at most once. Without this, the Section 4 questions stayed
         # blank even when the requester answered them online.
         populate_legacy_param_questions(doc, request_obj)
+        # Printed legacy forms contain old tariff examples. They cannot be
+        # authoritative after an admin updates the pricing catalogue.
+        from documents.docx_helpers import _substitute_in_runs, iter_paragraphs
+        for paragraph in iter_paragraphs(doc):
+            matches = re.findall(r"\b\d[\d\s,.]*\s+(?:DA|DZD)\b", paragraph.text)
+            if matches:
+                _substitute_in_runs(paragraph, {match: 'selon tarif validé' for match in matches})
     elif using_generic:
         # The generic template only carries identity placeholders. For a
         # service with no branded egtp form (e.g. one a SuperAdmin created
@@ -889,93 +912,30 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
       * Total = base × multiplicateur × N (utilise admin_validated_price
         si l'admin_ops a réajusté le tarif)
 
-    Source of truth: re-runs ``resolve_cost`` from ``core.pricing`` so the
-    figures here are the SAME ones the requester saw live in the form.
-    Defensive against missing data — every label degrades to "—".
+    Source of truth: the recorded pricing snapshot and approved amount.
+    Current catalogue prices never change a historical document.
     """
-    from core.pricing import resolve_cost
-
     doc.add_heading('Justification du tarif', level=2)
-
     params = request_obj.service_params or {}
     samples = request_obj.sample_table or []
-    n = len([s for s in samples if isinstance(s, dict) and any(v not in (None, '', [], {}) for v in s.values())])
-    if n == 0:
-        n = len(samples) or 1
-
-    result = {}
-    if request_obj.service:
-        try:
-            result = resolve_cost(
-                request_obj.service, request_obj.channel,
-                sample_table=samples, service_params=params,
-                urgency=request_obj.urgency or 'Normal',
-            )
-        except Exception:
-            result = {}
-
-    breakdown = result.get('breakdown', {}) or {}
-    # resolve_cost returns a dict for the YAML/programmatic paths and a
-    # list for the DB-tier path. Accept either and back-fill the missing
-    # fields directly from the service_params + YAML when we got a list.
-    if isinstance(breakdown, list):
+    n = len([sample for sample in samples if isinstance(sample, dict) and any(sample.values())]) or len(samples) or 1
+    # Documents use the calculation recorded at submission. Reading today's
+    # prices here would silently re-price a historical platform note.
+    result = getattr(request_obj, 'pricing', {})
+    result = result if isinstance(result, dict) else {}
+    breakdown = result.get('yaml_breakdown') or result.get('breakdown') or {}
+    if not isinstance(breakdown, dict):
         breakdown = {}
-
-    # First pass: lift whatever the dict-breakdown gave us.
     base_price = breakdown.get('base_price')
     multiplier = breakdown.get('multiplier')
-    mult_key = breakdown.get('multiplier_key')
+    mult_key = breakdown.get('multiplier_key') or next((params[key] for key in
+        ('analysis_mode', 'qc_level', 'sequencing_mode', 'drying_level', 'primer_type') if params.get(key)), None)
     pathogenic = breakdown.get('pathogenic')
-
-    # Second pass: fall back to the service definition + params when the
-    # cost path didn't provide a dict breakdown (DB tiers, OVERRIDE, …).
     if pathogenic is None and 'pathogenic' in params:
-        pathogenic = bool(params.get('pathogenic'))
-    if mult_key is None:
-        for k in ('analysis_mode', 'qc_level', 'sequencing_mode',
-                  'drying_level', 'primer_type'):
-            v = params.get(k)
-            if v:
-                mult_key = str(v)
-                break
-    # If still missing, dig into the YAML registry for base price /
-    # multiplier so the four target fields never stay at "—" on a
-    # well-priced service.
-    if base_price is None or multiplier is None:
-        try:
-            from core.registry import get_service_def
-            sdef = get_service_def(getattr(request_obj.service, 'code', '')) or {}
-            pricing = sdef.get('pricing', {}) or {}
-            bp_map = pricing.get('base_price', {}) or {}
-            mult_map = pricing.get('multipliers', {}) or {}
-            if base_price is None:
-                key = 'pathogenic' if pathogenic else 'non_pathogenic'
-                base_price = bp_map.get(key) or bp_map.get('default')
-            if multiplier is None and mult_key is not None:
-                multiplier = mult_map.get(str(mult_key))
-                if multiplier is None:
-                    multiplier = mult_map.get(mult_key)
-        except Exception:
-            logger.exception(
-                "Unable to load fallback pricing for service=%s",
-                getattr(request_obj.service, 'code', ''),
-            )
-
-    # Default to a 1× multiplier when the mode carries none (e.g. a single
-    # 'simple' analysis) so the tariff line never stays at "—".
-    if multiplier is None:
-        multiplier = 1
-
-    # Total — prefer admin_validated_price (admin re-pricing post-
-    # submission) over the live resolver result, over the saved
-    # budget_amount.
-    admin_price = getattr(request_obj, 'admin_validated_price', None)
-    if admin_price:
-        total = float(admin_price)
-        price_source = 'Réajusté par administration'
-    else:
-        total = result.get('total') or request_obj.budget_amount or 0
-        price_source = None
+        pathogenic = str(params['pathogenic']).casefold() in ('true', '1', 'yes', 'oui', 'on')
+    admin_price = request_obj.admin_validated_price
+    total = admin_price if admin_price is not None else request_obj.budget_amount
+    price_source = 'Réajusté par administration' if admin_price is not None else 'Montant enregistré sur la demande'
 
     # Sample summary — count total + breakdown by primary categorical
     # column (organism_type, etc.) when the column is heterogeneous.
@@ -988,14 +948,12 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
         ("Caractère pathogène",
          '—' if pathogenic is None else ('Oui' if pathogenic else 'Non')),
         ("Prix de base unitaire",
-         f"{float(base_price):,.0f} DA".replace(',', ' ')
-         if isinstance(base_price, (int, float)) else '—'),
+         _money_2dp(base_price) if base_price is not None else '—'),
         ("Multiplicateur appliqué",
          f"× {multiplier}" if multiplier not in (None, '—') else '—'),
         ("Nombre d'échantillons", samples_label),
         ("Total",
-         f"{float(total):,.0f} DA".replace(',', ' ')
-         if isinstance(total, (int, float)) else str(total)),
+         _money_2dp(total)),
     ]
     if price_source:
         rows.append(("Source du tarif", price_source))
@@ -1016,12 +974,11 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
 
     # When the admin re-priced the request, the unit figures above are
     # indicative — the total is the validated amount, not their product.
-    if price_source:
+    if admin_price is not None:
         note = ("Montant total arrêté par réajustement administratif ; "
                 "les valeurs unitaires ci-dessus sont fournies à titre indicatif.")
     else:
-        note = ("Formule appliquée : Prix de base × Multiplicateur × "
-                "Nombre d'échantillons.")
+        note = "Montant enregistré lors de la demande ; les tarifs ultérieurs ne modifient pas ce document."
     doc.add_paragraph(
         note,
         style='Intense Quote' if 'Intense Quote' in [s.name for s in doc.styles] else None,
@@ -1118,6 +1075,13 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
 
 
 def generate_quote(request_obj) -> str:
+    from documents.financial_snapshot import frozen_document, capture_snapshot, preserve_legacy_snapshot
+    preserve_legacy_snapshot(request_obj)
+    with frozen_document(request_obj.quote_snapshot or (capture_snapshot(request_obj) if request_obj.billing_channel == 'OHB' else {})):
+        return _generate_quote(request_obj)
+
+
+def _generate_quote(request_obj) -> str:
     """GENOCLAB quote (Facture Proforma).
 
     Renders the SAIDAL-style commercial layout: GENOCELAB logo,
@@ -1129,11 +1093,8 @@ def generate_quote(request_obj) -> str:
     """
     field_map = build_field_map(request_obj)
 
-    # Quote number — sequential, atomic.
-    from core.sequences import next_value
-    year = datetime.now().year
-    seq = next_value(f'GENOCLAB-QUOTE-{year}')
-    quote_number = f"GENOCLAB-DEV-{year}-{seq:04d}"
+    from documents.financial_snapshot import ensure_quote_number
+    quote_number = ensure_quote_number(request_obj)
     field_map['QUOTE_NUMBER'] = quote_number
     field_map['INVOICE_NUMBER'] = quote_number  # legacy alias
 
@@ -1144,7 +1105,7 @@ def generate_quote(request_obj) -> str:
         line_items=(request_obj.quote_detail or {}).get('items') or [],
         admin_fees=(request_obj.quote_detail or {}).get('admin_fees', 0),
         report_fees=(request_obj.quote_detail or {}).get('report_fees', 0),
-        vat_rate=(request_obj.quote_detail or {}).get('vat_rate'),
+        vat_rate=0 if request_obj.billing_channel == 'OHB' else (request_obj.quote_detail or {}).get('vat_rate'),
     )
     _inject_document_blocks(doc, 'QUOTE', request_obj)
     # Skip the ESSBO institutional header + ESSBO/PLAGENOR footer —
@@ -1186,15 +1147,24 @@ def _build_genoclab_doc(
         if phone: client_lines.append(f"Tél : {phone}")
         if email: client_lines.append(email)
 
+    from documents.financial_snapshot import active_snapshot
+    snapshot = active_snapshot.get()
+    if snapshot:
+        client_name = snapshot['client_name']
+        client_lines = snapshot['client_lines']
+
     add_genoclab_header(
         doc,
         title=cms_get(title_key),
         doc_number=doc_number,
-        doc_date=datetime.now().strftime('%d/%m/%Y'),
+        doc_date=_format_date(request_obj.quote_issued_at or request_obj.created_at),
         client_name=client_name,
         client_lines=client_lines,
     )
 
+    doc.add_paragraph(f"Référence de demande : {(snapshot or {}).get('request_reference', request_obj.display_id)}")
+    if request_obj.quote_valid_until:
+        doc.add_paragraph(f"Devis valable jusqu’au : {request_obj.quote_valid_until.strftime('%d/%m/%Y')}")
     # Add a small spacer paragraph.
     doc.add_paragraph()
 
@@ -1215,6 +1185,9 @@ def _build_genoclab_doc(
 
     grand_total = add_prestation_table(doc, items + extras, vat_rate=vat_rate)
     add_genoclab_footer(doc, total_amount=grand_total)
+    from documents.financial_snapshot import active_snapshot
+    if (active_snapshot.get() or {}).get('billing_channel') == 'OHB':
+        doc.add_paragraph('TVA non applicable — établissement non assujetti.')
     return doc
 
 
@@ -1527,7 +1500,14 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
 
 
 def generate_invoice_document(invoice_obj) -> str:
-    """GENOCLAB invoice (final, post-payment).
+    from documents.financial_snapshot import frozen_document, preserve_legacy_snapshot
+    preserve_legacy_snapshot(invoice_obj)
+    with frozen_document(invoice_obj.document_snapshot):
+        return _generate_invoice_document(invoice_obj)
+
+
+def _generate_invoice_document(invoice_obj) -> str:
+    """Commercial invoice, issued after the purchase order and before payment.
 
     Same SAIDAL-style layout as the quote (generate_quote): GENOCELAB
     logo, CMS-editable issuer block, client block, prestation grid,
@@ -1557,15 +1537,26 @@ def generate_invoice_document(invoice_obj) -> str:
     elif invoice_obj.request and invoice_obj.request.requester:
         client_name = invoice_obj.request.requester.get_full_name() or ''
 
+    if invoice_obj.document_snapshot:
+        client_name = invoice_obj.document_snapshot['client_name']
+        client_lines = invoice_obj.document_snapshot['client_lines']
+
     add_genoclab_header(
         doc,
         title=cms_get('genoclab_invoice_title'),
         doc_number=invoice_obj.invoice_number,
-        doc_date=invoice_obj.created_at.strftime('%d/%m/%Y'),
+        doc_date=_format_date(invoice_obj.created_at),
         client_name=client_name,
         client_lines=client_lines,
     )
-    doc.add_paragraph()
+    snapshot = invoice_obj.document_snapshot or {}
+    for label, value in [('Demande', snapshot.get('request_reference')),
+                         ('Devis / proforma', snapshot.get('quote_number')),
+                         ('Bon de commande', snapshot.get('order_document')),
+                         ('Mode de paiement', invoice_obj.payment_method),
+                         ('Échéance de paiement', invoice_obj.due_date.strftime('%d/%m/%Y') if invoice_obj.due_date else '')]:
+        if value:
+            doc.add_paragraph(f'{label} : {value}')
 
     # line_items on Invoice carries 'description' instead of 'label'.
     items = []
@@ -1577,12 +1568,17 @@ def generate_invoice_document(invoice_obj) -> str:
             'total': it.get('total'),
         })
 
-    grand_total = add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate or 0.19))
+    grand_total = add_prestation_table(doc, items, vat_rate=invoice_obj.vat_rate)
     add_genoclab_footer(doc, total_amount=grand_total)
+    from documents.financial_snapshot import active_snapshot
+    if (active_snapshot.get() or {}).get('billing_channel') == 'OHB':
+        doc.add_paragraph('TVA non applicable — établissement non assujetti.')
 
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"FACTURE_{invoice_obj.invoice_number}.docx"
     filepath = out_dir / filename
+    from documents.docx_helpers import keep_table_rows_together
+    keep_table_rows_together(doc)
     doc.save(str(filepath))
     return str(filepath)

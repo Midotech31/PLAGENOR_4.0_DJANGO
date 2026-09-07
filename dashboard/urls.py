@@ -1,3 +1,4 @@
+from dashboard.views import financial_settings
 from django.urls import path
 from .views import superadmin, admin_ops, analyst, finance, requester, client, messaging, service_form_api, qrcode_view, pricing_api, stats
 from . import views
@@ -5,6 +6,12 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
+    path('api/estimate/<str:service_code>/', service_form_api.estimate, name='estimate'),
+    path('client/payment-order/<uuid:pk>/upload/', client.upload_payment_order, name='client_upload_payment_order'),
+    path('ops/billing-channel/<uuid:pk>/', financial_settings.assign_billing_channel, name='assign_billing_channel'),
+    path('ops/email-templates/', financial_settings.email_templates, name='email_templates'),
+    path('ops/financial-settings/', financial_settings.index, name='financial_settings'),
+    path('ops/visibility/<uuid:pk>/', financial_settings.request_visibility, name='request_visibility'),
     # Router
     path('', views.dashboard_router, name='router'),
 

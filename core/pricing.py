@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.db import models
 
@@ -89,7 +89,7 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
 
     # Determine base price — defensive coercion in case the registry value
     # is mistyped (e.g. quoted "1000" with a thousand-separator).
-    pathogenic = bool(params.get('pathogenic', False))
+    pathogenic = str(params.get('pathogenic', False)).strip().casefold() in ('true', '1', 'yes', 'oui', 'on')
     base_key = 'pathogenic' if pathogenic else 'non_pathogenic'
     if base_key not in base_prices and 'default' not in base_prices:
         raise PricingConfigurationError(f"Missing base price for {base_key}.")
@@ -100,7 +100,8 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
 
     # Determine multiplier key
     mult_key = (
-        params.get('analysis_mode') or params.get('qc_level')
+        params.get(pricing.get('multiplier_param', ''))
+        or params.get('analysis_mode') or params.get('qc_level')
         or params.get('sequencing_mode') or params.get('drying_level')
         or params.get('primer_type')
     )
@@ -192,7 +193,33 @@ def format_price(amount, currency: str = 'DZD') -> str:
 # of who's clicking.
 # ============================================================================
 
-def resolve_cost(
+def resolve_cost(service, channel, sample_table=None, service_params=None, urgency='Normal'):
+    result = _resolve_base_cost(service, channel, sample_table, service_params, urgency)
+    total = _decimal(result['total'], key='total')
+    params = service_params or {}
+    for field in service.custom_fields.filter(affects_pricing=True).order_by('sort_order', 'pk'):
+        value = params.get(field.name)
+        if value in (None, '', False) or (field.field_type == 'boolean' and str(value).lower() in ('false', '0', 'non', 'no')):
+            continue
+        options = field.option_pricing or {}
+        modifier = options.get(str(value), field.price_modifier_value)
+        amount = _decimal(modifier, key=f'field/{field.name}')
+        previous = total
+        if field.price_modifier_type == 'add':
+            total += amount
+        elif field.price_modifier_type == 'set':
+            total = amount
+        elif field.price_modifier_type == 'multiply':
+            total *= amount
+        else:
+            raise PricingConfigurationError(f'Invalid field pricing modifier: {field.name}.')
+        result.setdefault('breakdown', []).append({'name': str(field.label), 'type': field.price_modifier_type,
+                                                   'amount': str(amount), 'subtotal': str(total - previous)})
+    result['total'] = total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    return result
+
+
+def _resolve_base_cost(
     service,
     channel: str,
     sample_table=None,
@@ -251,6 +278,7 @@ def resolve_cost(
             'currency': pdata.get('currency', 'DZD'),
             'base_price': pdata.get('base_price') or {},
             'multipliers': pdata.get('multipliers') or {},
+            'multiplier_param': pdata.get('multiplier_param', ''),
         }
 
     # 2b) YAML registry — for the legacy 9 IBTIKAR services (fallback when
@@ -334,13 +362,20 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
         return {'error': 'Service is required', 'total': 0}
 
     # Get active pricing configs for this service
+    from django.utils import timezone
+    today = timezone.localdate()
     pricing_configs = service.pricing_configs.filter(
         is_active=True
     ).filter(
         models.Q(channel=channel) | models.Q(channel='BOTH')
+    ).filter(
+        models.Q(valid_from__isnull=True) | models.Q(valid_from__lte=today),
+        models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=today),
     ).order_by('priority', 'pk')
 
     if not pricing_configs.exists():
+        if service.pricing_configs.filter(is_active=True).filter(models.Q(channel=channel) | models.Q(channel='BOTH')).exists():
+            raise PricingConfigurationError('Aucun tarif valide pour la période actuelle.')
         # Fall back to service's base price
         base_price = service.ibtikar_price if channel == 'IBTIKAR' else service.genoclab_price
         sample_count = len([s for s in sample_table if s]) if sample_table else 1

@@ -53,6 +53,26 @@ SIZE_CAPTION = 9
 _PLACEHOLDER_RE = re.compile(r'\{\{[A-Z0-9_]+\}\}')
 
 
+def iter_paragraphs(container):
+    """Body and nested table paragraphs, in their existing containers."""
+    yield from container.paragraphs
+    for table in container.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                yield from iter_paragraphs(cell)
+
+
+def keep_table_rows_together(doc):
+    """Prevent a sample, amount, or signature row breaking across pages."""
+    for row in doc.element.body.iter(qn('w:tr')):
+        properties = row.find(qn('w:trPr'))
+        if properties is None:
+            properties = OxmlElement('w:trPr')
+            row.insert(0, properties)
+        if properties.find(qn('w:cantSplit')) is None:
+            properties.append(OxmlElement('w:cantSplit'))
+
+
 def _substitute_in_runs(paragraph, replacements: Mapping[str, str]) -> None:
     """Replace ``{{KEY}}`` placeholders in a paragraph while preserving runs.
 

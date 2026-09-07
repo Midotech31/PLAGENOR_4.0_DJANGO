@@ -7,6 +7,8 @@ Both are unauthenticated, cheap, and cache-free so an external monitor
 (UptimeRobot, Render health check, …) can poll them.
 """
 import logging
+import os
+import re
 
 from django.db import connection
 from django.http import JsonResponse
@@ -15,9 +17,17 @@ from django.views.decorators.cache import never_cache
 logger = logging.getLogger('plagenor')
 
 
+def revision_response(payload, status=200):
+    response = JsonResponse(payload, status=status)
+    revision = os.environ.get('RENDER_GIT_COMMIT', '')
+    if re.fullmatch(r'[0-9a-fA-F]{40}', revision):
+        response['X-PLAGENOR-Revision'] = revision.lower()
+    return response
+
+
 @never_cache
 def healthz(request):
-    return JsonResponse({'status': 'ok'})
+    return revision_response({'status': 'ok'})
 
 
 @never_cache
@@ -30,6 +40,6 @@ def readyz(request):
         # Log the detail server-side; never return it — the driver message can
         # disclose the host, database and user to an unauthenticated caller.
         logger.exception('readyz: database check failed')
-        return JsonResponse(
+        return revision_response(
             {'status': 'error', 'database': 'unavailable'}, status=503)
-    return JsonResponse({'status': 'ok', 'database': 'ok'})
+    return revision_response({'status': 'ok', 'database': 'ok'})

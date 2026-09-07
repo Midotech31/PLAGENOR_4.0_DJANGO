@@ -1,4 +1,6 @@
 from django.contrib.auth.decorators import login_required
+from documents.financial_snapshot import capture_snapshot
+from decimal import Decimal
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float
@@ -6,6 +8,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
 from core.models import Request, RequestHistory, RequestComment, Invoice
@@ -50,7 +53,7 @@ def index(request):
             'REPORT_UPLOADED', 'REPORT_VALIDATED',
             'COMPLETED',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED', 'PAYMENT_CONFIRMED',
             'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         ]
     ).select_related('service', 'requester', 'assigned_to__user').order_by('-created_at')[:50]
@@ -60,14 +63,14 @@ def index(request):
         status__in=[
             'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'VALIDATION_FINANCE',
             'REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_SENT',
-            'QUOTE_VALIDATED_BY_CLIENT', 'INVOICE_GENERATED',
+            'QUOTE_VALIDATED_BY_CLIENT', 'ORDER_UPLOADED', 'INVOICE_GENERATED',
         ]
     ).select_related('service', 'requester').order_by('-created_at')
 
     # Requests ready for assignment — newly-ready requests plus tasks an
     # analyst declined (back to ASSIGNED with no assignee).
     assignable_requests = Request.objects.filter(
-        Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'ORDER_UPLOADED', 'INVOICE_GENERATED'])
+        Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED'])
         | Q(status='ASSIGNED', assigned_to__isnull=True)
     ).select_related('service', 'requester').order_by('-created_at')
 
@@ -95,7 +98,11 @@ def index(request):
     search_q = request.GET.get('q', '')
 
     all_requests = Request.objects.select_related('service', 'requester', 'assigned_to__user')
-    if channel_filter:
+    if channel_filter == 'OHB':
+        all_requests = all_requests.filter(channel='GENOCLAB', billing_channel='OHB')
+    elif channel_filter == 'GENOCLAB':
+        all_requests = all_requests.filter(channel='GENOCLAB', billing_channel='GENOCLAB')
+    elif channel_filter:
         all_requests = all_requests.filter(channel=channel_filter)
     if status_filter:
         all_requests = all_requests.filter(status=status_filter)
@@ -462,6 +469,10 @@ def download_quote(request, pk):
     if not (is_admin or is_owner or is_assignee):
         return HttpResponseForbidden()
 
+    from core.financial_visibility import quote_released
+    if not is_admin and not quote_released(req):
+        return HttpResponseForbidden()
+
     from documents.generators import generate_quote
     from django.http import FileResponse
     path = generate_quote(req)
@@ -737,6 +748,9 @@ def adjust_cost(request, pk):
 
     with transaction.atomic():
         req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+        if req.quote_issued_at or req.budget_deducted or Invoice.objects.filter(request=req).exists() or (req.channel == 'GENOCLAB' and req.status not in ('REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_REJECTED_BY_CLIENT')):
+            messages.error(request, "Le montant validé est verrouillé. Une correction doit être tracée séparément.")
+            return redirect_to_detail(request, req, 'dashboard:admin_ops')
         old_price = req.admin_validated_price or req.budget_amount or req.quote_amount
         req.admin_validated_price = price
         req.save(update_fields=['admin_validated_price'])
@@ -764,9 +778,12 @@ def adjust_cost(request, pk):
 
 
 @admin_required
+@transaction.atomic
 def prepare_quote(request, pk):
     """Admin prepares/edits a detailed quote for a GENOCLAB request."""
-    req = get_object_or_404(Request, pk=pk)
+    req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+    if req.channel != 'GENOCLAB' or req.status not in ('REQUEST_CREATED', 'QUOTE_DRAFT', 'QUOTE_REJECTED_BY_CLIENT') or (req.quote_issued_at and req.status != 'QUOTE_REJECTED_BY_CLIENT'):
+        return HttpResponseForbidden("Le devis communiqué est verrouillé.")
 
     if request.method == 'POST':
         try:
@@ -814,6 +831,8 @@ def prepare_quote(request, pk):
                 raise FinancialValidationError(
                     'Le taux de TVA doit être compris entre 0 et 100.')
             vat_rate = vat_percent / 100
+            if req.billing_channel == 'OHB':
+                vat_rate = Decimal('0')
             totals = compute_invoice_totals(
                 items, admin_fees, report_fees, vat_rate)
         except FinancialValidationError as exc:
@@ -825,9 +844,18 @@ def prepare_quote(request, pk):
 
         quote_detail = {'items': items, 'notes': notes, **totals}
 
+        if req.status == 'QUOTE_REJECTED_BY_CLIENT':
+            transition(req, 'QUOTE_DRAFT', request.user, notes='Révision après refus du client')
+        from django.utils.dateparse import parse_date
+        validity = request.POST.get('quote_valid_until', '').strip()
+        valid_until = parse_date(validity) if validity else None
+        if validity and (not valid_until or valid_until < timezone.localdate()):
+            messages.error(request, _('Date de validité du devis invalide.'))
+            return redirect('dashboard:admin_prepare_quote', pk=req.pk)
+        req.quote_valid_until = valid_until
         req.quote_detail = quote_detail
         req.quote_amount = total_ttc
-        req.save(update_fields=['quote_detail', 'quote_amount'])
+        req.save(update_fields=['quote_detail', 'quote_amount', 'quote_valid_until'])
 
         action = request.POST.get('action', 'save')
         if action == 'send':
@@ -867,13 +895,15 @@ def prepare_quote(request, pk):
 
 
 def _compute_auto_estimate(req, yaml_def):
-    """Compute auto price estimate from YAML pricing + sample table."""
-    if not yaml_def:
+    """Use the authoritative resolver, including effective DB tariffs."""
+    if not req.service:
         return None
+    from core.pricing import resolve_cost
+    from core.exceptions import PricingConfigurationError
     try:
-        result = calculate_price(yaml_def, req.service_params or {}, req.sample_table or [])
-        return result
-    except Exception:
+        return resolve_cost(req.service, req.channel, sample_table=req.sample_table or [],
+                            service_params=req.service_params or {}, urgency=req.urgency)
+    except PricingConfigurationError:
         return None
 
 
@@ -884,7 +914,7 @@ def generate_invoice(request, pk):
         try:
             with transaction.atomic():
                 req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
-                if req.status != 'ORDER_UPLOADED':
+                if req.channel != 'GENOCLAB' or req.status != 'ORDER_UPLOADED':
                     raise InvalidTransitionError(
                         "La facture ne peut être générée que depuis le statut "
                         f"« Bon de Commande Uploadé » (statut actuel: {req.get_status_display()}).")
@@ -926,7 +956,7 @@ def generate_invoice(request, pk):
                     canonical_items,
                     quote.get('admin_fees', 0),
                     quote.get('report_fees', 0),
-                    quote.get('vat_rate', 0.19),
+                    0 if req.billing_channel == 'OHB' else quote.get('vat_rate', 0.19),
                 )
                 line_items = [
                     {
@@ -953,15 +983,21 @@ def generate_invoice(request, pk):
                 from datetime import datetime
                 from core.sequences import next_display_id
                 year = datetime.now().year
+                prefix = 'ESSBO-INV' if req.billing_channel == 'OHB' else 'GCL-INV'
                 invoice_number = next_display_id(
-                    'GCL-INV', year,
+                    prefix, year,
                     initial_value_fn=lambda: Invoice.objects.filter(
                         created_at__year=year,
-                        invoice_number__startswith=f'GCL-INV-{year}-',
+                        invoice_number__startswith=f'{prefix}-{year}-',
                     ).count(),
                 )
+                from core.models import FinancialSettings
+                from documents.financial_snapshot import capture_invoice_snapshot
+                from datetime import timedelta
+                policy = FinancialSettings.objects.filter(pk=1).first() or FinancialSettings()
                 Invoice.objects.create(
                     invoice_number=invoice_number,
+                    billing_channel=req.billing_channel,
                     request=req,
                     client=req.requester,
                     line_items=line_items,
@@ -970,6 +1006,9 @@ def generate_invoice(request, pk):
                     vat_amount=totals['vat_amount'],
                     total_ttc=totals['total_ttc'],
                     created_by=request.user,
+                    document_snapshot=capture_invoice_snapshot(req),
+                    payment_method=policy.invoice_payment_method,
+                    due_date=timezone.localdate() + timedelta(days=policy.invoice_payment_days),
                 )
                 # If this transition fails, the surrounding transaction also
                 # removes the invoice and sequence allocation.

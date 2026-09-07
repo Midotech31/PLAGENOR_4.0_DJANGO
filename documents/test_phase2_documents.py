@@ -343,22 +343,17 @@ class ProgrammaticDocumentBuilderTests(TestCase):
         )
         from documents.models import DocumentBlock
 
-        # A list-shaped pricing breakdown exercises the database-tier fallback
-        # to registry pricing and request parameters.
+        # Only the stored calculation is used; changing today's catalogue
+        # must never re-price an already approved platform note.
         tariff_doc = Document()
-        registry = {
-            'pricing': {
-                'base_price': {'pathogenic': 1100, 'default': 900},
-                'multipliers': {'duplicate': 2},
-            },
-        }
-        with patch('core.pricing.resolve_cost', return_value={
-            'total': 4400, 'breakdown': [{'label': 'tier'}],
-        }), patch('core.registry.get_service_def', return_value=registry):
+        self.request_obj.pricing = {'yaml_breakdown': {'base_price': 1100, 'multiplier': 2}}
+        with patch('core.pricing.resolve_cost', side_effect=AssertionError('live pricing')), \
+             patch('core.registry.get_service_def', side_effect=AssertionError('live registry')):
             _render_tariff_breakdown(tariff_doc, self.request_obj)
         tariff_text = '\n'.join(p.text for p in tariff_doc.paragraphs)
-        self.assertIn('1 100 DA', tariff_text)
+        self.assertIn('1 100.00 DA', tariff_text)
         self.assertIn('× 2', tariff_text)
+        self.assertIn('4 500.00 DA', tariff_text)
 
         # Pricing/registry failures must still yield a readable document.
         no_price = SimpleNamespace(
@@ -370,7 +365,7 @@ class ProgrammaticDocumentBuilderTests(TestCase):
         with patch('core.pricing.resolve_cost', side_effect=RuntimeError('pricing')), \
              patch('core.registry.get_service_def', side_effect=RuntimeError('registry')):
             _render_tariff_breakdown(fallback_doc, no_price)
-        self.assertIn('indisponible', '\n'.join(p.text for p in fallback_doc.paragraphs))
+        self.assertIn('Total : N/A', '\n'.join(p.text for p in fallback_doc.paragraphs))
 
         for priority, position in enumerate(
             ('TOP', 'AFTER_REQUESTER', 'AFTER_SAMPLES',

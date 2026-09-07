@@ -128,7 +128,7 @@
                         <select name="service_id" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
-                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }} ({{ s.ibtikar_price }} DA)</option>
+                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -170,7 +170,7 @@
                         var costEl = document.getElementById('cost-estimate');
                         var estimated = 0;
                         if (costEl && costEl.textContent && costEl.textContent !== '—') {
-                            estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
+                            estimated = Number(costEl.dataset.amount) || 0;
                         }
                         if (estimated > 0 && estimated > DECLARED_BALANCE) {
                             warning.innerHTML = '{% trans "Coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "supérieur à votre solde déclaré" %} (' + DECLARED_BALANCE.toLocaleString('fr-FR') + ' DA).';
@@ -268,7 +268,7 @@
                     {% endif %}
 
                     <!-- Pipeline visualization -->
-                    <div class="pipeline mt-2">
+                    <div class="pipeline mt-2" tabindex="0" role="region" aria-label="{{ req.display_id }}">
                         {% with s=req.status %}
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>

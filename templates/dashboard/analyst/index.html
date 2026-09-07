@@ -106,7 +106,7 @@
                     </div>
                     {# Compact Pipeline for GENOCLAB requests #}
                     {% if req.channel == 'GENOCLAB' %}
-                    <div class="pipeline mt-2">
+                    <div class="pipeline mt-2" tabindex="0" role="region" aria-label="{{ req.display_id }}">
                         {% with s=req.status %}
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot{% if s != 'REQUEST_CREATED' and s != 'QUOTE_DRAFT' %} done{% endif %}"></div></div>

@@ -1,9 +1,14 @@
 """API endpoint that returns HTML form fragment for a service's YAML-defined parameters."""
 import logging
 import json
+from copy import deepcopy
 from django.http import HttpResponse
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from core.registry import get_service_def
+from core.ratelimit import rate_limit
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +35,7 @@ def service_form_fragment(request, service_code):
             return HttpResponse('<p class="text-muted">Service non trouvé.</p>')
         definition = {}
 
+    definition = deepcopy(definition)
     parameters = definition.get('parameters', [])
     # Copy so we can augment without mutating the cached registry dict.
     sample_table = dict(definition.get('sample_table', {}) or {})
@@ -102,6 +108,7 @@ def service_form_fragment(request, service_code):
     # config), fields tagged ``sample_column`` become extra columns of the
     # per-sample table — so a brand-new service with no YAML still renders a
     # complete online form and a complete generated document.
+    svc = None
     db_fields = []
     db_columns = []
     try:
@@ -144,7 +151,16 @@ def service_form_fragment(request, service_code):
         sample_table['columns'] = merged
         sample_table['column_names'] = [c.get('name') for c in merged if c.get('name')]
 
+    from core.financial_visibility import estimates_visible
+    show_estimates = bool(getattr(request.user, 'is_admin', False)) or estimates_visible(service=svc)
+    if not show_estimates:
+        pricing = {}
+        for field in parameters + db_fields + sample_table.get('columns', []):
+            field.pop('pricing_info', None)
+            field.pop('option_pricing', None)
+
     html = render_to_string('includes/service_form_fields.html', {
+        'show_estimates': show_estimates,
         'parameters': parameters,
         'sample_table': sample_table,
         'pricing': pricing,
@@ -152,6 +168,43 @@ def service_form_fragment(request, service_code):
         # JSON (not a Python dict repr) for ``JSON.parse`` to consume.
         'pricing_json': json.dumps(pricing, ensure_ascii=False),
         'service_code': service_code,
+        'estimate_channel': request.GET.get('channel', 'GENOCLAB'),
         'db_fields': db_fields,
     })
-    return HttpResponse(html)
+    response = HttpResponse(html)
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@require_POST
+@rate_limit('financial_estimate', limit=120, window=60)
+def estimate(request, service_code):
+    """Use the submission resolver for browser estimates; never accept a price."""
+    from core.models import Service
+    from core.financial_visibility import estimates_visible
+    from core.pricing import resolve_cost
+    from core.exceptions import PricingConfigurationError
+    service = get_object_or_404(Service, code=service_code, active=True)
+    channel = request.POST.get('channel', 'GENOCLAB')
+    if channel not in ('IBTIKAR', 'GENOCLAB') or service.channel_availability not in ('BOTH', channel):
+        return JsonResponse({'error': 'Invalid channel'}, status=400)
+    if not estimates_visible(service=service):
+        response = JsonResponse({'visible': False})
+    else:
+        params = {k[6:]: v for k,v in request.POST.items() if k.startswith('param_')}
+        samples = {}
+        for key, value in request.POST.items():
+            if key.startswith('sample_'):
+                parts = key.split('_', 2)
+                if len(parts) == 3:
+                    samples.setdefault(parts[1], {})[parts[2]] = value
+        if len(samples) > 500:
+            return JsonResponse({'error': 'Too many samples'}, status=400)
+        try:
+            result = resolve_cost(service, channel, sample_table=list(samples.values()), service_params=params,
+                                  urgency=request.POST.get('urgency','Normal'))
+            response = JsonResponse({'visible': True, 'total': str(result['total']), 'currency': 'DZD'})
+        except PricingConfigurationError:
+            response = JsonResponse({'visible': False, 'unavailable': True})
+    response['Cache-Control'] = 'private, no-store'
+    return response

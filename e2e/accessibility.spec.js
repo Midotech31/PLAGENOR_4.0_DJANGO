@@ -18,6 +18,8 @@ async function login(page, username) {
   expect(response.status()).toBe(204);
   await page.goto('/dashboard/');
   await expect(page).toHaveURL(/\/dashboard\//);
+  await page.locator('button[name="language"][value="fr"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', /^fr/);
 }
 
 const publicPages = [
@@ -91,4 +93,55 @@ test('non-superadmin cannot open the superadmin dashboard', async ({ page }) => 
   // lets us assert the authorization contract directly across all engines.
   const response = await page.request.get('/dashboard/home/');
   expect(response.status()).toBe(403);
+});
+
+for (const [name, path] of [
+  ['financial settings', '/dashboard/ops/financial-settings/'],
+  ['email templates', '/dashboard/ops/email-templates/'],
+]) {
+  test(`Admin Ops can manage ${name} with accessible controls`, async ({ page }) => {
+    await login(page, 'admin_ops');
+    await page.goto(path);
+    await expect(page.locator('main h1')).toBeVisible();
+    await expectAccessible(page, name);
+  });
+}
+
+test('OHB is assigned internally and goes from quote to invoice without VAT', async ({ page }) => {
+  await login(page, 'admin_ops');
+  const fixture = await page.request.post('/__e2e__/financial-request/');
+  expect(fixture.status()).toBe(200);
+  const { id } = await fixture.json();
+  await page.goto(`/dashboard/ops/request/${id}/`);
+  await page.locator('[name="billing_channel"]').selectOption('OHB');
+  await page.locator('form').filter({ has: page.locator('[name="billing_channel"]') }).getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await page.goto(`/dashboard/ops/quote/${id}/`);
+  await expect(page.locator('#vat_rate_input')).toHaveValue('0');
+  await expect(page.locator('#vat_rate_input')).toHaveAttribute('readonly', '');
+  await page.getByRole('button', { name: /Ajouter une ligne/ }).click();
+  await page.locator('.line-item-row').first().getByRole('button', { name: 'Supprimer', exact: true }).click();
+  await expect(page.locator('#item_label_0')).toHaveCount(1);
+  await expect(page.locator('#item_label_1')).toHaveCount(0);
+  await page.locator('[name="item_label_0"]').fill('Prestation de recette');
+  await page.locator('[name="item_unit_price_0"]').fill('123.45');
+  await page.locator('[name="item_quantity_0"]').fill('2');
+  await expect(page.locator('#total_ttc')).toContainText('246.90');
+  await page.locator('button[name="action"][value="send"]').click();
+  await expect(page).toHaveURL(new RegExp(`/dashboard/ops/request/${id}/`));
+  await expect(page.locator('[name="billing_channel"]')).toHaveCount(0);
+  await login(page, 'client');
+  await page.goto(`/dashboard/client/request/${id}/`);
+  await expect(page.locator('[name="billing_channel"]')).toHaveCount(0);
+  await expect(page.locator('main')).not.toContainText('Opérations Hors Budget');
+  await page.locator('form[action$="/accept/"] button').click();
+  await page.locator('[name="order_file"]').setInputFiles({ name: 'order.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n% Synthetic purchase order for CI\n%%EOF') });
+  await page.locator('form').filter({ has: page.locator('[name="order_file"]') }).locator('button[type="submit"]').click();
+  await login(page, 'admin_ops');
+  await page.goto(`/dashboard/ops/request/${id}/`);
+  await page.locator(`form[action="/dashboard/ops/invoice/${id}/"] button`).click();
+  await expect(page.locator('main')).toContainText('ESSBO-INV');
+  await login(page, 'client');
+  await page.goto(`/dashboard/client/request/${id}/`);
+  await expect(page.locator('[name="payment_order_reference"]')).toBeVisible();
+  await expect(page.locator('[name="billing_channel"]')).toHaveCount(0);
 });

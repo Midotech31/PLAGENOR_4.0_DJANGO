@@ -5,6 +5,21 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% if req.invoice_set.exists %}<section class="card mb-4"><div class="card-body"><h2>{% trans "Ordre de paiement" %}</h2>
+<p>{% trans "Un ordre ou mandat de paiement ne constitue pas une confirmation d'encaissement." %}</p>
+{% if req.payment_order_file %}<p>{{ req.payment_order_reference }} · {{ req.payment_order_date|date:"d/m/Y" }}</p><a href="{{ req.payment_order_file.url }}">{% trans "Consulter la pièce" %}</a>
+{% endif %}</div></section>{% endif %}
+{% if req.channel == 'GENOCLAB' %}<section class="card mb-4"><div class="card-body"><h2>{% trans "Circuit de facturation interne" %}</h2>
+<p>{{ req.get_billing_channel_display }}{% if req.billing_assigned_by %} · {{ req.billing_assigned_by }} · {{ req.billing_assigned_at|date:"d/m/Y H:i" }}{% endif %}</p>
+{% if request.user.role == 'PLATFORM_ADMIN' and not req.quote_issued_at %}
+<form method="post" action="{% url 'dashboard:assign_billing_channel' req.pk %}">{% csrf_token %}
+<label for="billing-channel">{% trans "Affectation administrative" %}</label>
+<select id="billing-channel" name="billing_channel" class="form-control"><option value="GENOCLAB" {% if req.billing_channel == 'GENOCLAB' %}selected{% endif %}>GenoClab</option><option value="OHB" {% if req.billing_channel == 'OHB' %}selected{% endif %}>{% trans "OHB — Opérations Hors Budget" %}</option></select>
+<button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button></form>{% endif %}
+</div></section>{% endif %}
+<form method="post" action="{% url 'dashboard:request_visibility' req.pk %}" class="card mb-4"><div class="card-body">{% csrf_token %}
+<label><input type="checkbox" name="estimate_hidden" {% if req.estimate_hidden %}checked{% endif %}> {% trans "Masquer l'estimation pour cette demande" %}</label>
+<button type="submit" class="btn btn-outline">{% trans "Enregistrer" %}</button></div></form>
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -381,7 +396,7 @@
                     </div>
                     {% else %}
                     <p style="margin:0; font-size:0.85rem; color:#92400e;">
-                        {% trans "Le client doit uploader le Bon de Commande (pièce obligatoire selon le Code de Commerce Algérien) après validation du devis." %}
+                        {% trans "Après acceptation du devis, le client doit déposer son bon de commande avant l’émission de la facture, conformément au workflow interne de PLAGENOR." %}
                     </p>
                     {% endif %}
                 </div>
@@ -623,8 +638,8 @@
             </a>
             {% endif %}
 
-            {# GENOCLAB: Invoice generation button #}
-            {% if req.channel == 'GENOCLAB' and req.status == 'QUOTE_VALIDATED_BY_CLIENT' %}
+            {# GENOCLAB/OHB: issue only after the purchase order #}
+            {% if req.channel == 'GENOCLAB' and req.status == 'ORDER_UPLOADED' %}
             <form method="post" action="{% url 'dashboard:admin_generate_invoice' req.pk %}" style="display:inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-primary">
