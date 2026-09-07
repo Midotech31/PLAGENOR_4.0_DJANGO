@@ -20,7 +20,7 @@
             <p>{{ service.description|truncatewords:25 }}</p>
             <div style="margin-top:12px;display:flex;gap:16px;font-size:.78rem;color:var(--slate-500);">
                 {% if service.channel_availability == 'BOTH' %}
-                <span>IBTIKAR &amp; GENOCLAB</span>
+                <span>{% trans "IBTIKAR" %} &amp; {% trans "GENOCLAB" %}</span>
                 {% else %}
                 <span>{{ service.get_channel_availability_display }}</span>
                 {% endif %}

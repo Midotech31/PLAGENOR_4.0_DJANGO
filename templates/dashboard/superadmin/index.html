@@ -414,9 +414,9 @@
                         <div class="form-group">
                             <label>{% trans "Canal" %}</label>
                             <select name="channel_availability" class="form-control">
-                                <option value="BOTH">IBTIKAR & GENOCLAB</option>
-                                <option value="IBTIKAR">IBTIKAR</option>
-                                <option value="GENOCLAB">GENOCLAB</option>
+                                <option value="BOTH">{% trans "IBTIKAR" %} &amp; {% trans "GENOCLAB" %}</option>
+                                <option value="IBTIKAR">{% trans "IBTIKAR" %}</option>
+                                <option value="GENOCLAB">{% trans "GENOCLAB" %}</option>
                             </select>
                         </div>
                     </div>
@@ -675,8 +675,8 @@
                             <label>{% trans "Canal" %}</label>
                             <select name="sa_channel" class="form-control">
                                 <option value="">{% trans "Tous" %}</option>
-                                <option value="IBTIKAR" {% if sa_channel == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
-                                <option value="GENOCLAB" {% if sa_channel == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                                <option value="IBTIKAR" {% if sa_channel == 'IBTIKAR' %}selected{% endif %}>{% trans "IBTIKAR" %}</option>
+                                <option value="GENOCLAB" {% if sa_channel == 'GENOCLAB' %}selected{% endif %}>{% trans "GENOCLAB" %}</option>
                             </select>
                         </div>
                         <div class="form-group">

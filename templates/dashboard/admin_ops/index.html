@@ -422,8 +422,8 @@
                     <input type="hidden" name="tab" value="all">
                     <select name="channel" class="form-control" style="width:auto;">
                         <option value="">{% trans "Tous les canaux" %}</option>
-                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
-                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>GENOCLAB</option>
+                        <option value="IBTIKAR" {% if channel_filter == 'IBTIKAR' %}selected{% endif %}>{% trans "IBTIKAR" %}</option>
+                        <option value="GENOCLAB" {% if channel_filter == 'GENOCLAB' %}selected{% endif %}>{% trans "GENOCLAB" %}</option>
                     </select>
                     <select name="status" class="form-control" style="width:auto;">
                         <option value="">{% trans "Tous les statuts" %}</option>

@@ -31,13 +31,13 @@
                 <label class="role-option {% if form.role.value == 'REQUESTER' or not form.role.value %}selected{% endif %}">
                     <input type="radio" name="role" value="REQUESTER" {% if form.role.value == 'REQUESTER' or not form.role.value %}checked{% endif %}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
-                    <div class="role-name">IBTIKAR</div>
+                    <div class="role-name">{% trans "IBTIKAR" %}</div>
                     <div class="role-desc">{% trans "Étudiant / Chercheur" %}</div>
                 </label>
                 <label class="role-option {% if form.role.value == 'CLIENT' %}selected{% endif %}">
                     <input type="radio" name="role" value="CLIENT" {% if form.role.value == 'CLIENT' %}checked{% endif %}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    <div class="role-name">GENOCLAB</div>
+                    <div class="role-name">{% trans "GENOCLAB" %}</div>
                     <div class="role-desc">{% trans "Client externe" %}</div>
                 </label>
             </div>
