@@ -64,103 +64,60 @@
     </p>
     {% endif %}
 
-    <div class="help-section help-searchable" id="getting-started">
-        <h2><span class="h2-ic">{% icon 'rocket' size=20 %}</span>{% trans "Bien démarrer" %}</h2>
-        <p class="sub">{% trans "Créer un compte et comprendre les deux canaux." %}</p>
+<div class="help-section help-searchable" id="getting-started"><h2>{% trans "Bien démarrer" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}Cliquez sur <strong>Inscription</strong> en haut à droite et remplissez vos informations (nom, établissement, wilaya, e-mail).{% endblocktrans %}</li>
-            <li>{% blocktrans %}Choisissez votre profil : <strong>Demandeur IBTIKAR</strong> (étudiant/chercheur, budget annuel encadré) ou <strong>Client GENOCLAB</strong> (prestation commerciale avec devis).{% endblocktrans %}</li>
-            <li>{% blocktrans %}Connectez-vous : vous arrivez sur votre tableau de bord personnel.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Vous pouvez aussi soumettre <strong>sans compte</strong> via « Soumission invité » et suivre votre demande avec le code reçu par e-mail.{% endblocktrans %}</li>
+            <li>{% trans "Utilisez « Créer un compte », renseignez vos coordonnées et choisissez le profil Demandeur IBTIKAR ou Client GENOCLAB. IBTIKAR est destiné aux étudiants algériens, quel que soit leur établissement." context "help-current" %}</li>
+            <li>{% trans "Connectez-vous pour accéder au tableau de bord de votre profil. Les actions proposées dépendent du statut de la demande et de vos permissions." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="account-vs-guest">
-        <h2><span class="h2-ic">{% icon 'unlock' size=20 %}</span>{% trans "Compte ou soumission invité ?" %}</h2>
-        <p class="sub">{% trans "Les deux fonctionnent — mais un compte vous donne le contrôle complet." %}</p>
+<div class="help-section help-searchable" id="account-vs-guest"><h2>{% trans "Compte ou soumission invité ?" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}<strong>En invité</strong>, vous soumettez sans créer de compte et recevez un <strong>code de suivi</strong> par e-mail. C'est rapide, mais le suivi se fait demande par demande, via ce code uniquement.{% endblocktrans %}</li>
-            <li>{% blocktrans %}<strong>Avec un compte</strong>, toutes vos demandes sont réunies sur un <strong>tableau de bord unique</strong> avec leur <strong>historique complet</strong> et la timeline détaillée de chaque étape.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Vous recevez des <strong>notifications en temps réel</strong> dans l'application (et par e-mail aux étapes clés), vous <strong>confirmez vos rendez-vous</strong> et téléchargez vos <strong>rapports</strong> de façon sécurisée.{% endblocktrans %}</li>
-            <li>{% blocktrans %}<strong>Demandeur IBTIKAR</strong> : suivez votre <strong>budget DGRSDT restant</strong> avant de soumettre. <strong>Client GENOCLAB</strong> : retrouvez devis, bons de commande, factures et paiements au même endroit.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Déjà soumis en invité ? Utilisez <strong>« Convertir en compte »</strong> : vos demandes existantes sont automatiquement rattachées à votre nouveau compte.{% endblocktrans %}</li>
+            <li>{% trans "Sans compte, sélectionnez une prestation et utilisez la soumission invité. Conservez le code affiché sur la page de confirmation pour consulter le suivi." context "help-current" %}</li>
+            <li>{% trans "Avec un compte, retrouvez vos demandes, documents, notifications et actions disponibles dans votre tableau de bord." context "help-current" %}</li>
+            <li>{% trans "Pour convertir une soumission invité en compte, utilisez la même adresse e-mail, ouvrez le lien de vérification reçu puis complétez votre inscription. Les demandes admissibles associées à cette adresse sont rattachées au compte." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="requester">
-        <h2><span class="h2-ic">{% icon 'graduation-cap' size=20 %}</span>{% trans "Soumettre une demande IBTIKAR" context "help" %}{% if user_role == 'REQUESTER' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
-        <p class="sub">{% trans "Pour les étudiants algériens, quel que soit leur établissement." %}</p>
+<div class="help-section help-searchable" id="requester"><h2>{% trans "Parcours IBTIKAR" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}Dans votre tableau de bord, ouvrez l'onglet <strong>Nouvelle demande</strong>.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Sélectionnez le <strong>service</strong> souhaité (ex. PCR, MALDI-TOF, Séquençage…).{% endblocktrans %}</li>
-            <li>{% blocktrans %}Remplissez les <strong>questions du service</strong> (type de kit, contrôle qualité…) et le <strong>tableau d'échantillons</strong>. Le <strong>coût estimé se met à jour en direct</strong>.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Vérifiez votre <strong>budget IBTIKAR annuel restant</strong> affiché en haut — la demande est bloquée si elle dépasse le plafond.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Cliquez sur <strong>Vérifier et soumettre</strong>. Vous recevez une confirmation par e-mail avec votre identifiant de demande.{% endblocktrans %}</li>
+            <li>{% trans "Avant une nouvelle demande, déclarez votre solde IBTIKAR résiduel dans le tableau de bord. Actualisez-le selon votre solde réel, y compris après des prestations effectuées sur une autre plateforme." context "help-current" %}</li>
+            <li>{% trans "Ouvrez « Nouvelle demande », sélectionnez le service, renseignez les paramètres et les échantillons, puis vérifiez et soumettez. Le coût calculé est contrôlé par rapport au solde déclaré." context "help-current" %}</li>
+            <li>{% trans "La demande passe par les validations pédagogique et financière, puis par la génération de la note de plateforme. Attendez les instructions de soumission IBTIKAR dans le suivi." context "help-current" %}</li>
+            <li>{% trans "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe." context "help-current" %}</li>
+            <li>{% trans "Après transmission du code, la plateforme affecte la demande et propose un rendez-vous. Confirmez la date ou proposez une autre date avec les actions affichées." context "help-current" %}</li>
+            <li>{% trans "La réception des échantillons et les étapes de réalisation sont enregistrées dans le suivi. Le rapport est déposé, validé puis transmis. Téléchargez-le et confirmez sa réception ; la plateforme peut ensuite clôturer la demande." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="client">
-        <h2><span class="h2-ic">{% icon 'building' size=20 %}</span>{% trans "Demande GENOCLAB (commercial)" context "help" %}{% if user_role == 'CLIENT' %}<span class="role-badge">{% trans "Vous" %}</span>{% endif %}</h2>
-        <p class="sub">{% trans "Pour les entreprises, laboratoires et institutions externes." %}</p>
+<div class="help-section help-searchable" id="client"><h2>{% trans "Parcours des prestations sur devis" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}Soumettez votre demande avec les détails de l'analyse et vos échantillons.{% endblocktrans %}</li>
-            <li>{% blocktrans %}La plateforme prépare un <strong>devis détaillé</strong> que vous recevez par e-mail.{% endblocktrans %}</li>
-            <li>{% blocktrans %}<strong>Acceptez ou refusez</strong> le devis. En cas de refus, l'équipe peut vous en proposer un nouveau.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Téléversez votre <strong>bon de commande</strong>, puis réglez selon la <strong>facture</strong> émise.{% endblocktrans %}</li>
-            <li>{% blocktrans %}L'analyse démarre ; vous recevez le <strong>rapport final</strong> avec la facture.{% endblocktrans %}</li>
+            <li>{% trans "Soumettez les informations de la prestation et des échantillons. La plateforme prépare puis envoie le devis ; consultez-le dans votre demande." context "help-current" %}</li>
+            <li>{% trans "Acceptez ou refusez le devis avec les boutons disponibles. Après un refus, la plateforme peut préparer une nouvelle proposition. Après acceptation, déposez le bon de commande." context "help-current" %}</li>
+            <li>{% trans "La plateforme émet la facture après le dépôt du bon de commande, puis affecte la prestation. Confirmez le rendez-vous proposé ou suggérez une autre date ; la réception des échantillons et la réalisation sont ensuite suivies dans la demande." context "help-current" %}</li>
+            <li>{% trans "Après la fin de la réalisation, au statut « En attente paiement », réglez selon la facture et déposez le justificatif demandé. Un bon ou ordre de paiement déposé ne confirme pas à lui seul le règlement." context "help-current" %}</li>
+            <li>{% trans "Le responsable habilité vérifie le paiement. Si le justificatif est refusé, la demande revient en attente de paiement. Après confirmation, le rapport peut être déposé, validé et transmis." context "help-current" %}</li>
+            <li>{% trans "Téléchargez le rapport transmis et confirmez sa réception. La plateforme peut ensuite archiver la demande." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="tracking">
-        <h2><span class="h2-ic">{% icon 'search' size=20 %}</span>{% trans "Suivre une demande & récupérer un rapport" %}</h2>
-        <p class="sub">{% trans "Où en est votre analyse, à tout moment." %}</p>
+<div class="help-section help-searchable" id="tracking"><h2>{% trans "Suivi, rendez-vous et notifications" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}Connecté : chaque demande affiche son <strong>statut en temps réel</strong> et son historique complet sur votre tableau de bord.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Invité : utilisez la page <strong>Suivi</strong> avec le <strong>code</strong> reçu par e-mail à la soumission.{% endblocktrans %}</li>
-            <li>{% blocktrans %}Vous recevez un <strong>e-mail à chaque étape</strong> (validation, assignation, rendez-vous, rapport prêt).{% endblocktrans %}</li>
-            <li>{% blocktrans %}Quand le rapport est validé, un <strong>lien de téléchargement</strong> sécurisé vous est envoyé.{% endblocktrans %}</li>
+            <li>{% trans "Consultez le statut et l’historique de la demande dans votre tableau de bord, ou la page « Suivi » avec votre code si vous avez soumis en invité." context "help-current" %}</li>
+            <li>{% trans "Les actions apparaissent aux étapes où elles sont autorisées : saisie du code IBTIKAR, réponse au devis, dépôt de documents, confirmation de rendez-vous ou de réception du rapport." context "help-current" %}</li>
+            <li>{% trans "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="documents">
-        <h2><span class="h2-ic">{% icon 'file-text' size=20 %}</span>{% trans "Documents générés" context "help" %}</h2>
-        <p class="sub">{% trans "Formulaires officiels remplis automatiquement." %}</p>
+<div class="help-section help-searchable" id="documents"><h2>{% trans "Documents et corrections" context "help-current" %}</h2>
         <ol class="help-steps">
-            <li>{% blocktrans %}Le <strong>formulaire IBTIKAR</strong> est généré automatiquement, pré-rempli avec vos informations et vos échantillons.{% endblocktrans %}</li>
-            <li>{% blocktrans %}La <strong>note de plateforme</strong>, le <strong>devis</strong> et la <strong>fiche de réception</strong> sont disponibles au téléchargement (PDF).{% endblocktrans %}</li>
-            <li>{% blocktrans %}Tous portent l'<strong>en-tête institutionnel officiel</strong> (République algérienne, Ministère, ESSBO, PLAGENOR).{% endblocktrans %}</li>
+            <li>{% trans "Les documents disponibles dépendent du parcours et du statut : formulaire IBTIKAR, note de plateforme, fiche de réception, devis, facture et rapport. Utilisez les liens proposés dans votre demande." context "help-current" %}</li>
+            <li>{% trans "Le bon de commande et le justificatif de paiement sont des pièces que le client dépose. Vérifiez les informations et les références avant tout envoi." context "help-current" %}</li>
+            <li>{% trans "Pour une erreur dans un document émis, une correction ou une annulation, contactez la plateforme avec la référence de la demande. Ne modifiez pas vous-même un devis ou une facture émis." context "help-current" %}</li>
         </ol>
     </div>
-
-    <div class="help-section help-searchable" id="faq">
-        <h2><span class="h2-ic">{% icon 'help-circle' size=20 %}</span>{% trans "Questions fréquentes" %}</h2>
-        <p class="sub">{% trans "Réponses rapides aux questions courantes." %}</p>
-
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment changer la langue de l'interface ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Utilisez le sélecteur FR / EN / ع en haut à droite de chaque page. L'interface bascule immédiatement, y compris en arabe avec mise en page de droite à gauche." %}</p></div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Qu'est-ce que le budget IBTIKAR ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "C'est un budget virtuel annuel encadré par la DGRSDT, attribué à chaque étudiant/chercheur. Votre solde restant s'affiche sur votre tableau de bord ; une demande qui le dépasse est bloquée automatiquement." %}</p></div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Comment est calculé le coût d'une analyse ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Coût = Prix de base × Multiplicateur × Nombre d'échantillons. Le prix de base dépend du caractère pathogène, le multiplicateur du mode d'analyse (simple, duplicata, triplicata…). L'estimation s'affiche en direct pendant la saisie." %}</p></div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Puis-je soumettre sans créer de compte ?" context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos demandes sur un tableau de bord, ajoute les notifications en temps réel, la confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez convertir une soumission invité en compte à tout moment, et vos demandes existantes y seront rattachées." %}</p></div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "Je ne reçois pas les e-mails de notification ?" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Vérifiez votre dossier spam. Les notifications restent toujours consultables dans la cloche en haut de votre tableau de bord, même sans e-mail." %}</p></div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-q" onclick="helpToggle(this)">{% trans "J'ai oublié mon mot de passe." context "help" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button>
-            <div class="faq-a"><p>{% trans "Contactez l'administrateur de la plateforme via la page Contact ; il pourra réinitialiser votre accès en toute sécurité." %}</p></div>
-        </div>
-    </div>
+<div class="help-section help-searchable" id="faq"><h2>{% trans "Questions fréquentes" context "help-current" %}</h2>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Comment changer la langue ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "Utilisez FR, EN ou ع dans la navigation. Sur mobile, ces commandes sont également accessibles dans la barre supérieure." context "help-current" %}</p></div></div>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Pourquoi une estimation n’est-elle pas affichée ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "La plateforme peut masquer les estimations pendant la validation ou la mise à jour des tarifs. Cela ne supprime pas les données financières ni les contrôles de budget. Le montant contractuel figure sur le devis émis." context "help-current" %}</p></div></div>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Pourquoi ma demande IBTIKAR est-elle bloquée ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "Vérifiez que vous avez déclaré un solde résiduel suffisant et rempli les champs obligatoires. Si la tarification doit être corrigée, contactez la plateforme. N’augmentez le solde déclaré qu’après vérification de votre solde réel." context "help-current" %}</p></div></div>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Comment le coût est-il calculé ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "Le calcul dépend du service, des options, des échantillons et des tarifs applicables. Une estimation affichée reste indicative ; consultez le devis transmis pour une prestation sur devis." context "help-current" %}</p></div></div>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Que faire si un e-mail n’arrive pas ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "Vérifiez les courriers indésirables et votre adresse e-mail, puis consultez le suivi et les notifications dans l’application. Contactez la plateforme si un lien de vérification ou de réinitialisation reste introuvable." context "help-current" %}</p></div></div>
+        <div class="faq-item"><button class="faq-q" type="button" onclick="helpToggle(this)">{% trans "Comment réinitialiser mon mot de passe ?" context "help-current" %}<span class="chev">{% icon 'chevron-down' size=18 %}</span></button><div class="faq-a"><p>{% trans "Sur la page de connexion, choisissez « Mot de passe oublié ? », saisissez votre adresse e-mail puis suivez le lien reçu. Si vous n’avez plus accès à cette adresse, contactez la plateforme." context "help-current" %}</p></div></div></div>
 
     <div class="help-empty" id="help-empty">
         {% trans "Aucun résultat. Essayez d'autres mots-clés ou consultez la page" %} <a href="{% url 'contact' %}">{% trans "Contact" %}</a>.

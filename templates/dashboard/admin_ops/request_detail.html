@@ -23,7 +23,7 @@
         <h1 style="margin-bottom:4px;">{{ req.display_id }} — {{ req.title|truncatechars:60 }}</h1>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
             <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
-            <span class="badge-status {{ req.channel|lower }}">{{ req.get_channel_display }}</span>
+            <span class="badge-status {{ req.channel|lower }}">{% trans req.get_channel_display context "channel-label" %}</span>
             {% if req.urgency != 'Normal' %}
             <span class="badge-status" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">{{ req.get_urgency_display }}</span>
             {% endif %}

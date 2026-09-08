@@ -5,7 +5,7 @@
         <span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span>
     </div>
     <div class="data-card-row text-sm text-muted">
-        <span>{{ req.get_channel_display }} &middot; {{ req.service.name|default:"—" }}</span>
+        <span>{% trans req.get_channel_display context "channel-label" %} &middot; {{ req.service.name|default:"—" }}</span>
         <span>{{ req.created_at|date:"d/m/Y" }}</span>
     </div>
     {% if req.assigned_to %}

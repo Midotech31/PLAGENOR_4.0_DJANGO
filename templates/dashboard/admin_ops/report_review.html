@@ -13,7 +13,7 @@
     <div class="card-body">
         <div class="grid-2 mb-4">
             <div class="data-card">
-                <div class="data-card-row"><strong>{% trans "Canal" %}</strong><span>{{ req.get_channel_display }}</span></div>
+                <div class="data-card-row"><strong>{% trans "Canal" %}</strong><span>{% trans req.get_channel_display context "channel-label" %}</span></div>
                 <div class="data-card-row"><strong>{% trans "Service" %}</strong><span>{{ req.service.name|default:"—" }}</span></div>
                 <div class="data-card-row"><strong>{% trans "Analyste" %}</strong><span>{{ req.assigned_to.user.get_full_name|default:"—" }}</span></div>
                 <div class="data-card-row"><strong>{% trans "Statut" %}</strong><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></div>

@@ -5213,3 +5213,237 @@ msgstr "Livrables"
 
 msgid "Chaque champ doit avoir un libellé en français, arabe et anglais."
 msgstr "Chaque champ doit avoir un libellé en français, arabe et anglais."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Bien démarrer"
+msgstr "Bien démarrer"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez « Créer un compte », renseignez vos coordonnées et choisissez le profil Demandeur IBTIKAR ou Client GENOCLAB. IBTIKAR est destiné aux étudiants algériens, quel que soit leur établissement."
+msgstr "Utilisez « Créer un compte », renseignez vos coordonnées et choisissez le profil Demandeur IBTIKAR ou Client GENOCLAB. IBTIKAR est destiné aux étudiants algériens, quel que soit leur établissement."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Connectez-vous pour accéder au tableau de bord de votre profil. Les actions proposées dépendent du statut de la demande et de vos permissions."
+msgstr "Connectez-vous pour accéder au tableau de bord de votre profil. Les actions proposées dépendent du statut de la demande et de vos permissions."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Compte ou soumission invité ?"
+msgstr "Compte ou soumission invité ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sans compte, sélectionnez une prestation et utilisez la soumission invité. Conservez le code affiché sur la page de confirmation pour consulter le suivi."
+msgstr "Sans compte, sélectionnez une prestation et utilisez la soumission invité. Conservez le code affiché sur la page de confirmation pour consulter le suivi."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avec un compte, retrouvez vos demandes, documents, notifications et actions disponibles dans votre tableau de bord."
+msgstr "Avec un compte, retrouvez vos demandes, documents, notifications et actions disponibles dans votre tableau de bord."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour convertir une soumission invité en compte, utilisez la même adresse e-mail, ouvrez le lien de vérification reçu puis complétez votre inscription. Les demandes admissibles associées à cette adresse sont rattachées au compte."
+msgstr "Pour convertir une soumission invité en compte, utilisez la même adresse e-mail, ouvrez le lien de vérification reçu puis complétez votre inscription. Les demandes admissibles associées à cette adresse sont rattachées au compte."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours IBTIKAR"
+msgstr "Parcours IBTIKAR"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avant une nouvelle demande, déclarez votre solde IBTIKAR résiduel dans le tableau de bord. Actualisez-le selon votre solde réel, y compris après des prestations effectuées sur une autre plateforme."
+msgstr "Avant une nouvelle demande, déclarez votre solde IBTIKAR résiduel dans le tableau de bord. Actualisez-le selon votre solde réel, y compris après des prestations effectuées sur une autre plateforme."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Ouvrez « Nouvelle demande », sélectionnez le service, renseignez les paramètres et les échantillons, puis vérifiez et soumettez. Le coût calculé est contrôlé par rapport au solde déclaré."
+msgstr "Ouvrez « Nouvelle demande », sélectionnez le service, renseignez les paramètres et les échantillons, puis vérifiez et soumettez. Le coût calculé est contrôlé par rapport au solde déclaré."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La demande passe par les validations pédagogique et financière, puis par la génération de la note de plateforme. Attendez les instructions de soumission IBTIKAR dans le suivi."
+msgstr "La demande passe par les validations pédagogique et financière, puis par la génération de la note de plateforme. Attendez les instructions de soumission IBTIKAR dans le suivi."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe."
+msgstr "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après transmission du code, la plateforme affecte la demande et propose un rendez-vous. Confirmez la date ou proposez une autre date avec les actions affichées."
+msgstr "Après transmission du code, la plateforme affecte la demande et propose un rendez-vous. Confirmez la date ou proposez une autre date avec les actions affichées."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La réception des échantillons et les étapes de réalisation sont enregistrées dans le suivi. Le rapport est déposé, validé puis transmis. Téléchargez-le et confirmez sa réception ; la plateforme peut ensuite clôturer la demande."
+msgstr "La réception des échantillons et les étapes de réalisation sont enregistrées dans le suivi. Le rapport est déposé, validé puis transmis. Téléchargez-le et confirmez sa réception ; la plateforme peut ensuite clôturer la demande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours des prestations sur devis"
+msgstr "Parcours des prestations sur devis"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Soumettez les informations de la prestation et des échantillons. La plateforme prépare puis envoie le devis ; consultez-le dans votre demande."
+msgstr "Soumettez les informations de la prestation et des échantillons. La plateforme prépare puis envoie le devis ; consultez-le dans votre demande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Acceptez ou refusez le devis avec les boutons disponibles. Après un refus, la plateforme peut préparer une nouvelle proposition. Après acceptation, déposez le bon de commande."
+msgstr "Acceptez ou refusez le devis avec les boutons disponibles. Après un refus, la plateforme peut préparer une nouvelle proposition. Après acceptation, déposez le bon de commande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme émet la facture après le dépôt du bon de commande, puis affecte la prestation. Confirmez le rendez-vous proposé ou suggérez une autre date ; la réception des échantillons et la réalisation sont ensuite suivies dans la demande."
+msgstr "La plateforme émet la facture après le dépôt du bon de commande, puis affecte la prestation. Confirmez le rendez-vous proposé ou suggérez une autre date ; la réception des échantillons et la réalisation sont ensuite suivies dans la demande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après la fin de la réalisation, au statut « En attente paiement », réglez selon la facture et déposez le justificatif demandé. Un bon ou ordre de paiement déposé ne confirme pas à lui seul le règlement."
+msgstr "Après la fin de la réalisation, au statut « En attente paiement », réglez selon la facture et déposez le justificatif demandé. Un bon ou ordre de paiement déposé ne confirme pas à lui seul le règlement."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le responsable habilité vérifie le paiement. Si le justificatif est refusé, la demande revient en attente de paiement. Après confirmation, le rapport peut être déposé, validé et transmis."
+msgstr "Le responsable habilité vérifie le paiement. Si le justificatif est refusé, la demande revient en attente de paiement. Après confirmation, le rapport peut être déposé, validé et transmis."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Téléchargez le rapport transmis et confirmez sa réception. La plateforme peut ensuite archiver la demande."
+msgstr "Téléchargez le rapport transmis et confirmez sa réception. La plateforme peut ensuite archiver la demande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Suivi, rendez-vous et notifications"
+msgstr "Suivi, rendez-vous et notifications"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez le statut et l’historique de la demande dans votre tableau de bord, ou la page « Suivi » avec votre code si vous avez soumis en invité."
+msgstr "Consultez le statut et l’historique de la demande dans votre tableau de bord, ou la page « Suivi » avec votre code si vous avez soumis en invité."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les actions apparaissent aux étapes où elles sont autorisées : saisie du code IBTIKAR, réponse au devis, dépôt de documents, confirmation de rendez-vous ou de réception du rapport."
+msgstr "Les actions apparaissent aux étapes où elles sont autorisées : saisie du code IBTIKAR, réponse au devis, dépôt de documents, confirmation de rendez-vous ou de réception du rapport."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement."
+msgstr "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Documents et corrections"
+msgstr "Documents et corrections"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les documents disponibles dépendent du parcours et du statut : formulaire IBTIKAR, note de plateforme, fiche de réception, devis, facture et rapport. Utilisez les liens proposés dans votre demande."
+msgstr "Les documents disponibles dépendent du parcours et du statut : formulaire IBTIKAR, note de plateforme, fiche de réception, devis, facture et rapport. Utilisez les liens proposés dans votre demande."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le bon de commande et le justificatif de paiement sont des pièces que le client dépose. Vérifiez les informations et les références avant tout envoi."
+msgstr "Le bon de commande et le justificatif de paiement sont des pièces que le client dépose. Vérifiez les informations et les références avant tout envoi."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour une erreur dans un document émis, une correction ou une annulation, contactez la plateforme avec la référence de la demande. Ne modifiez pas vous-même un devis ou une facture émis."
+msgstr "Pour une erreur dans un document émis, une correction ou une annulation, contactez la plateforme avec la référence de la demande. Ne modifiez pas vous-même un devis ou une facture émis."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Questions fréquentes"
+msgstr "Questions fréquentes"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment changer la langue ?"
+msgstr "Comment changer la langue ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez FR, EN ou ع dans la navigation. Sur mobile, ces commandes sont également accessibles dans la barre supérieure."
+msgstr "Utilisez FR, EN ou ع dans la navigation. Sur mobile, ces commandes sont également accessibles dans la barre supérieure."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi une estimation n’est-elle pas affichée ?"
+msgstr "Pourquoi une estimation n’est-elle pas affichée ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme peut masquer les estimations pendant la validation ou la mise à jour des tarifs. Cela ne supprime pas les données financières ni les contrôles de budget. Le montant contractuel figure sur le devis émis."
+msgstr "La plateforme peut masquer les estimations pendant la validation ou la mise à jour des tarifs. Cela ne supprime pas les données financières ni les contrôles de budget. Le montant contractuel figure sur le devis émis."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi ma demande IBTIKAR est-elle bloquée ?"
+msgstr "Pourquoi ma demande IBTIKAR est-elle bloquée ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez que vous avez déclaré un solde résiduel suffisant et rempli les champs obligatoires. Si la tarification doit être corrigée, contactez la plateforme. N’augmentez le solde déclaré qu’après vérification de votre solde réel."
+msgstr "Vérifiez que vous avez déclaré un solde résiduel suffisant et rempli les champs obligatoires. Si la tarification doit être corrigée, contactez la plateforme. N’augmentez le solde déclaré qu’après vérification de votre solde réel."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment le coût est-il calculé ?"
+msgstr "Comment le coût est-il calculé ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le calcul dépend du service, des options, des échantillons et des tarifs applicables. Une estimation affichée reste indicative ; consultez le devis transmis pour une prestation sur devis."
+msgstr "Le calcul dépend du service, des options, des échantillons et des tarifs applicables. Une estimation affichée reste indicative ; consultez le devis transmis pour une prestation sur devis."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Que faire si un e-mail n’arrive pas ?"
+msgstr "Que faire si un e-mail n’arrive pas ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez les courriers indésirables et votre adresse e-mail, puis consultez le suivi et les notifications dans l’application. Contactez la plateforme si un lien de vérification ou de réinitialisation reste introuvable."
+msgstr "Vérifiez les courriers indésirables et votre adresse e-mail, puis consultez le suivi et les notifications dans l’application. Contactez la plateforme si un lien de vérification ou de réinitialisation reste introuvable."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment réinitialiser mon mot de passe ?"
+msgstr "Comment réinitialiser mon mot de passe ?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sur la page de connexion, choisissez « Mot de passe oublié ? », saisissez votre adresse e-mail puis suivez le lien reçu. Si vous n’avez plus accès à cette adresse, contactez la plateforme."
+msgstr "Sur la page de connexion, choisissez « Mot de passe oublié ? », saisissez votre adresse e-mail puis suivez le lien reçu. Si vous n’avez plus accès à cette adresse, contactez la plateforme."
+
+#: templates/dashboard/client/request_detail.html
+msgid "Déposer le justificatif de paiement"
+msgstr "Déposer le justificatif de paiement"
+
+#: templates/dashboard/client/request_detail.html
+msgid "Justificatif de paiement à déposer :"
+msgstr "Justificatif de paiement à déposer :"
+
+msgctxt "channel-label"
+msgid "IBTIKAR"
+msgstr "IBTIKAR"
+
+msgctxt "channel-label"
+msgid "GENOCLAB"
+msgstr "GENOCLAB"
+
+msgctxt "channel-label"
+msgid "IBTIKAR uniquement"
+msgstr "IBTIKAR uniquement"
+
+msgctxt "channel-label"
+msgid "GENOCLAB uniquement"
+msgstr "GENOCLAB uniquement"

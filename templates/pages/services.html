@@ -22,7 +22,7 @@
                 {% if service.channel_availability == 'BOTH' %}
                 <span>{% trans "IBTIKAR" %} &amp; {% trans "GENOCLAB" %}</span>
                 {% else %}
-                <span>{{ service.get_channel_availability_display }}</span>
+                <span>{% trans service.get_channel_availability_display context "channel-label" %}</span>
                 {% endif %}
                 <span>{{ service.turnaround_days }} {% trans "jours" %}</span>
             </div>

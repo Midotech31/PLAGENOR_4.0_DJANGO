@@ -36,7 +36,7 @@
             <select name="channel" class="form-control">
                 <option value="">— {% trans "Tous" %} —</option>
                 {% for c,l in channels %}
-                <option value="{{ c }}" {% if filters.channel == c %}selected{% endif %}>{{ l }}</option>
+                <option value="{{ c }}" {% if filters.channel == c %}selected{% endif %}>{% trans l context "channel-label" %}</option>
                 {% endfor %}
             </select>
         </div>

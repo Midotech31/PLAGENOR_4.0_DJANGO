@@ -3583,7 +3583,7 @@ msgstr "عرض سجل التدقيق"
 
 #: templates/dashboard/superadmin/index.html:1166
 msgid "Consultez les archives mensuelles des revenus GENOCLAB et des budgets IBTIKAR."
-msgstr "اطّلع على الأرشيف الشهري لإيرادات جينوصيلاب وميزانيات IBTIKAR."
+msgstr "اطّلع على الأرشيف الشهري لإيرادات جينوصيلاب وميزانيات إبتكار."
 
 #: templates/dashboard/superadmin/index.html:1169
 msgid "Voir les archives"
@@ -4954,7 +4954,7 @@ msgstr "هل يمكنني التقديم دون إنشاء حساب؟"
 
 #: templates/pages/help.html:153
 msgid "Oui. Utilisez « Soumission invité » : vous recevez un code de suivi par e-mail. Un compte gratuit reste toutefois recommandé — il réunit toutes vos demandes sur un tableau de bord, ajoute les notifications en temps réel, la confirmation des rendez-vous et le suivi de budget IBTIKAR. Vous pouvez convertir une soumission invité en compte à tout moment, et vos demandes existantes y seront rattachées."
-msgstr "نعم. استخدم «التقديم كزائر»: تتلقّى رمز تتبّع عبر البريد الإلكتروني. ومع ذلك، يبقى الحساب المجاني موصى به — فهو يجمع كل طلباتك في لوحة تحكّم واحدة ويضيف الإشعارات الفورية وتأكيد المواعيد وتتبّع ميزانية IBTIKAR. يمكنك تحويل تقديم الزائر إلى حساب في أي وقت، وستُربَط طلباتك الحالية به."
+msgstr "نعم. استخدم «التقديم كزائر»: تتلقّى رمز تتبّع عبر البريد الإلكتروني. ومع ذلك، يبقى الحساب المجاني موصى به — فهو يجمع كل طلباتك في لوحة تحكّم واحدة ويضيف الإشعارات الفورية وتأكيد المواعيد وتتبّع ميزانية إبتكار. يمكنك تحويل تقديم الزائر إلى حساب في أي وقت، وستُربَط طلباتك الحالية به."
 
 #: templates/pages/help.html:156
 msgid "Je ne reçois pas les e-mails de notification ?"
@@ -5215,3 +5215,237 @@ msgstr "المديرية العامة للبحث العلمي و التطوير 
 
 msgid "ESSBO"
 msgstr "المدرسة العليا في العلوم البيولوجية بوهران"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Bien démarrer"
+msgstr "البدء"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez « Créer un compte », renseignez vos coordonnées et choisissez le profil Demandeur IBTIKAR ou Client GENOCLAB. IBTIKAR est destiné aux étudiants algériens, quel que soit leur établissement."
+msgstr "اختر «إنشاء حساب»، وأدخل بياناتك وحدّد ملف صاحب طلب إبتكار أو عميل جينوصيلاب. إبتكار موجّه للطلبة الجزائريين مهما كانت مؤسسة انتمائهم."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Connectez-vous pour accéder au tableau de bord de votre profil. Les actions proposées dépendent du statut de la demande et de vos permissions."
+msgstr "سجّل الدخول للوصول إلى لوحة التحكم الخاصة بملفك. تعتمد الإجراءات المتاحة على حالة الطلب وصلاحياتك."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Compte ou soumission invité ?"
+msgstr "حساب أم تقديم كزائر؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sans compte, sélectionnez une prestation et utilisez la soumission invité. Conservez le code affiché sur la page de confirmation pour consulter le suivi."
+msgstr "دون حساب، اختر خدمة وقدّم الطلب كزائر. احتفظ بالرمز المعروض في صفحة التأكيد لتتبّع طلبك."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avec un compte, retrouvez vos demandes, documents, notifications et actions disponibles dans votre tableau de bord."
+msgstr "عند استخدام حساب، تجد طلباتك ووثائقك وإشعاراتك والإجراءات المتاحة في لوحة التحكم."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour convertir une soumission invité en compte, utilisez la même adresse e-mail, ouvrez le lien de vérification reçu puis complétez votre inscription. Les demandes admissibles associées à cette adresse sont rattachées au compte."
+msgstr "لتحويل طلب الزائر إلى حساب، استخدم عنوان البريد الإلكتروني نفسه، وافتح رابط التحقّق ثم أكمل التسجيل. تُربط بالحساب الطلبات المؤهّلة المرتبطة بهذا العنوان."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours IBTIKAR"
+msgstr "مسار إبتكار"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avant une nouvelle demande, déclarez votre solde IBTIKAR résiduel dans le tableau de bord. Actualisez-le selon votre solde réel, y compris après des prestations effectuées sur une autre plateforme."
+msgstr "قبل تقديم طلب جديد، صرّح برصيد إبتكار المتبقي في لوحة التحكم. حدّثه وفق رصيدك الفعلي، مع احتساب الخدمات المنجزة لدى أرضيات أخرى."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Ouvrez « Nouvelle demande », sélectionnez le service, renseignez les paramètres et les échantillons, puis vérifiez et soumettez. Le coût calculé est contrôlé par rapport au solde déclaré."
+msgstr "افتح «طلب جديد»، واختر الخدمة وأدخل المعطيات والعينات، ثم راجع الطلب وأرسله. تُقارن التكلفة المحسوبة بالرصيد المصرّح به."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La demande passe par les validations pédagogique et financière, puis par la génération de la note de plateforme. Attendez les instructions de soumission IBTIKAR dans le suivi."
+msgstr "يمرّ الطلب بالمصادقة البيداغوجية والمالية، ثم بإصدار مذكرة الأرضية. انتظر ظهور تعليمات التقديم على إبتكار في صفحة التتبّع."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe."
+msgstr "عند ظهور التعليمات، حمّل استمارة إبتكار، وقدّم طلبك على موقع إبتكار التابع للمديرية العامة للبحث العلمي و التطوير التكنولوجي عبر الرابط المتاح، ثم عد إلى PLAGENOR وأدخل رمز الطلب الخارجي."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après transmission du code, la plateforme affecte la demande et propose un rendez-vous. Confirmez la date ou proposez une autre date avec les actions affichées."
+msgstr "بعد إرسال الرمز، تُسند الأرضية الطلب ويُقترح موعد. أكّد التاريخ أو اقترح تاريخًا بديلًا باستخدام الإجراءات المعروضة."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La réception des échantillons et les étapes de réalisation sont enregistrées dans le suivi. Le rapport est déposé, validé puis transmis. Téléchargez-le et confirmez sa réception ; la plateforme peut ensuite clôturer la demande."
+msgstr "تُسجّل عملية استلام العينات ومراحل الإنجاز في التتبّع. يُرفع التقرير ويُعتمد ثم يُرسل إليك. حمّله وأكّد استلامه، ثم يمكن للأرضية إغلاق الطلب."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours des prestations sur devis"
+msgstr "مسار الخدمات بعرض سعر"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Soumettez les informations de la prestation et des échantillons. La plateforme prépare puis envoie le devis ; consultez-le dans votre demande."
+msgstr "قدّم بيانات الخدمة والعينات. تُعدّ الأرضية عرض السعر ثم ترسله؛ اطّلع عليه ضمن طلبك."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Acceptez ou refusez le devis avec les boutons disponibles. Après un refus, la plateforme peut préparer une nouvelle proposition. Après acceptation, déposez le bon de commande."
+msgstr "اقبل عرض السعر أو ارفضه باستخدام الأزرار المتاحة. بعد الرفض، يمكن للأرضية إعداد عرض جديد. بعد القبول، ارفع سند الطلب."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme émet la facture après le dépôt du bon de commande, puis affecte la prestation. Confirmez le rendez-vous proposé ou suggérez une autre date ; la réception des échantillons et la réalisation sont ensuite suivies dans la demande."
+msgstr "تُصدر الأرضية الفاتورة بعد رفع سند الطلب، ثم تُسند الخدمة. أكّد الموعد المقترح أو اقترح تاريخًا آخر؛ ويُتابع بعدها استلام العينات وإنجاز الخدمة ضمن الطلب."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après la fin de la réalisation, au statut « En attente paiement », réglez selon la facture et déposez le justificatif demandé. Un bon ou ordre de paiement déposé ne confirme pas à lui seul le règlement."
+msgstr "بعد انتهاء الإنجاز، وعند حالة «بانتظار الدفع»، سدّد وفق الفاتورة وارفع المستند المطلوب. رفع سند أو أمر بالدفع لا يؤكّد وحده حصول التسديد."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le responsable habilité vérifie le paiement. Si le justificatif est refusé, la demande revient en attente de paiement. Après confirmation, le rapport peut être déposé, validé et transmis."
+msgstr "يتحقّق المسؤول المخوّل من الدفع. إذا رُفض المستند، يعود الطلب إلى حالة انتظار الدفع. بعد التأكيد، يمكن رفع التقرير واعتماده وإرساله."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Téléchargez le rapport transmis et confirmez sa réception. La plateforme peut ensuite archiver la demande."
+msgstr "حمّل التقرير المرسل وأكّد استلامه. يمكن للأرضية بعد ذلك أرشفة الطلب."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Suivi, rendez-vous et notifications"
+msgstr "التتبّع والمواعيد والإشعارات"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez le statut et l’historique de la demande dans votre tableau de bord, ou la page « Suivi » avec votre code si vous avez soumis en invité."
+msgstr "اطّلع على حالة الطلب وسجلّه في لوحة التحكم، أو استخدم صفحة «التتبّع» مع رمزك إذا قدّمت الطلب كزائر."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les actions apparaissent aux étapes où elles sont autorisées : saisie du code IBTIKAR, réponse au devis, dépôt de documents, confirmation de rendez-vous ou de réception du rapport."
+msgstr "تظهر الإجراءات في المراحل المسموح بها: إدخال رمز إبتكار، والردّ على عرض السعر، ورفع الوثائق، وتأكيد الموعد أو استلام التقرير."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement."
+msgstr "راجع الإشعارات داخل التطبيق. ترافق رسائل البريد بعض الأحداث بحسب الإعدادات؛ ويبقى التتبّع في PLAGENOR المرجع لمعرفة تقدّم الطلب."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Documents et corrections"
+msgstr "الوثائق والتصحيحات"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les documents disponibles dépendent du parcours et du statut : formulaire IBTIKAR, note de plateforme, fiche de réception, devis, facture et rapport. Utilisez les liens proposés dans votre demande."
+msgstr "تعتمد الوثائق المتاحة على المسار والحالة: استمارة إبتكار، ومذكرة الأرضية، واستمارة استلام العينات، وعرض السعر، والفاتورة، والتقرير. استخدم الروابط المعروضة ضمن طلبك."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le bon de commande et le justificatif de paiement sont des pièces que le client dépose. Vérifiez les informations et les références avant tout envoi."
+msgstr "يرفع العميل سند الطلب ومستند الدفع. تحقّق من البيانات والمراجع قبل الإرسال."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour une erreur dans un document émis, une correction ou une annulation, contactez la plateforme avec la référence de la demande. Ne modifiez pas vous-même un devis ou une facture émis."
+msgstr "للإبلاغ عن خطأ في وثيقة صادرة أو طلب تصحيح أو إلغاء، تواصل مع الأرضية مع ذكر مرجع الطلب. لا تعدّل بنفسك عرض سعر أو فاتورة صادرين."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Questions fréquentes"
+msgstr "الأسئلة الشائعة"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment changer la langue ?"
+msgstr "كيف أغيّر اللغة؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez FR, EN ou ع dans la navigation. Sur mobile, ces commandes sont également accessibles dans la barre supérieure."
+msgstr "استخدم FR أو EN أو ع في شريط التنقّل. تتوفّر هذه الأزرار أيضًا في الشريط العلوي على الهاتف."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi une estimation n’est-elle pas affichée ?"
+msgstr "لماذا لا يظهر التقدير المالي؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme peut masquer les estimations pendant la validation ou la mise à jour des tarifs. Cela ne supprime pas les données financières ni les contrôles de budget. Le montant contractuel figure sur le devis émis."
+msgstr "قد تخفي الأرضية التقديرات أثناء اعتماد التعريفات أو تحديثها. لا يحذف ذلك البيانات المالية ولا يلغي مراقبة الميزانية. يظهر المبلغ التعاقدي في عرض السعر الصادر."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi ma demande IBTIKAR est-elle bloquée ?"
+msgstr "لماذا يتعذّر إرسال طلب إبتكار؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez que vous avez déclaré un solde résiduel suffisant et rempli les champs obligatoires. Si la tarification doit être corrigée, contactez la plateforme. N’augmentez le solde déclaré qu’après vérification de votre solde réel."
+msgstr "تحقّق من التصريح برصيد متبقٍ كافٍ ومن ملء الحقول الإلزامية. إذا احتاجت التعريفة إلى تصحيح، تواصل مع الأرضية. لا ترفع الرصيد المصرّح به إلا بعد التحقّق من رصيدك الفعلي."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment le coût est-il calculé ?"
+msgstr "كيف تُحسب التكلفة؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le calcul dépend du service, des options, des échantillons et des tarifs applicables. Une estimation affichée reste indicative ; consultez le devis transmis pour une prestation sur devis."
+msgstr "يعتمد الحساب على الخدمة والخيارات والعينات والتعريفات المطبّقة. يبقى أي تقدير معروض استرشاديًا؛ وللخدمات بعرض سعر، ارجع إلى العرض المرسل."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Que faire si un e-mail n’arrive pas ?"
+msgstr "ماذا أفعل إذا لم تصل رسالة البريد؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez les courriers indésirables et votre adresse e-mail, puis consultez le suivi et les notifications dans l’application. Contactez la plateforme si un lien de vérification ou de réinitialisation reste introuvable."
+msgstr "تحقّق من مجلد الرسائل غير المرغوبة ومن عنوان بريدك، ثم راجع التتبّع والإشعارات داخل التطبيق. تواصل مع الأرضية إذا لم تجد رابط التحقّق أو إعادة تعيين كلمة المرور."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment réinitialiser mon mot de passe ?"
+msgstr "كيف أعيد تعيين كلمة المرور؟"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sur la page de connexion, choisissez « Mot de passe oublié ? », saisissez votre adresse e-mail puis suivez le lien reçu. Si vous n’avez plus accès à cette adresse, contactez la plateforme."
+msgstr "في صفحة تسجيل الدخول، اختر «نسيت كلمة المرور؟»، وأدخل بريدك الإلكتروني ثم اتبع الرابط الذي تتلقّاه. إذا فقدت الوصول إلى ذلك البريد، تواصل مع الأرضية."
+
+#: templates/dashboard/client/request_detail.html
+msgid "Déposer le justificatif de paiement"
+msgstr "رفع مستند الدفع"
+
+#: templates/dashboard/client/request_detail.html
+msgid "Justificatif de paiement à déposer :"
+msgstr "مستند الدفع المطلوب رفعه:"
+
+msgctxt "channel-label"
+msgid "IBTIKAR"
+msgstr "إبتكار"
+
+msgctxt "channel-label"
+msgid "GENOCLAB"
+msgstr "جينوصيلاب"
+
+msgctxt "channel-label"
+msgid "IBTIKAR uniquement"
+msgstr "إبتكار فقط"
+
+msgctxt "channel-label"
+msgid "GENOCLAB uniquement"
+msgstr "جينوصيلاب فقط"

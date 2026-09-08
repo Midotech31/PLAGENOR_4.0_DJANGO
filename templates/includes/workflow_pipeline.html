@@ -9,7 +9,7 @@
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
                 {% trans "Suivi du workflow" %}
-                <span class="badge-status {{ req.channel|lower }}" style="font-size:0.65rem;">{{ req.get_channel_display }}</span>
+                <span class="badge-status {{ req.channel|lower }}" style="font-size:0.65rem;">{% trans req.get_channel_display context "channel-label" %}</span>
             </h3>
             {% if allowed_transitions %}
             <div style="display:flex; gap:6px; flex-wrap:wrap;">

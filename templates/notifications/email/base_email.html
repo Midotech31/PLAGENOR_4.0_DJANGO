@@ -44,7 +44,7 @@
                 {% endif %}
                 <a href="{{ base_url }}">{{ base_url }}</a>
             </p>
-            <p>École Supérieure en Sciences Biologiques d'Oran (ESSBO) © 2026</p>
+            <p>{% if language == 'ar' %}المدرسة العليا في العلوم البيولوجية بوهران{% elif language == 'en' %}Higher School of Biological Sciences of Oran (ESSBO){% else %}École Supérieure en Sciences Biologiques d'Oran (ESSBO){% endif %} © 2026</p>
         </div>
     </div>
 </body>

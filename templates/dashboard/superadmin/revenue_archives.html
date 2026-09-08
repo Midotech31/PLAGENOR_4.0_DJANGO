@@ -27,7 +27,7 @@
                 {% for archive in archives %}
                 <tr>
                     <td><strong>{{ archive.month }}/{{ archive.year }}</strong></td>
-                    <td><span class="badge-status {% if archive.channel == 'IBTIKAR' %}info{% else %}completed{% endif %}">{{ archive.channel }}</span></td>
+                    <td><span class="badge-status {% if archive.channel == 'IBTIKAR' %}info{% else %}completed{% endif %}">{% trans archive.channel context "channel-label" %}</span></td>
                     <td>{{ archive.total_revenue|floatformat:2 }} DA</td>
                     <td>{{ archive.request_count }}</td>
                     <td class="text-sm text-muted">{{ archive.archived_at|date:"d/m/Y H:i" }}</td>
