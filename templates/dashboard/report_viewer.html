@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="report-detail">
                 <div class="label">{% trans "Canal" %}</div>
-                <div class="value">{{ req.channel }}</div>
+                <div class="value">{% trans req.channel context "channel-label" %}</div>
             </div>
             <div class="report-detail">
                 <div class="label">{% trans "Date de soumission" %}</div>

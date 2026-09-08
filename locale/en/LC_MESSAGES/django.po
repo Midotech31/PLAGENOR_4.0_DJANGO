@@ -5206,3 +5206,237 @@ msgstr "Deliverables"
 
 msgid "Chaque champ doit avoir un libellé en français, arabe et anglais."
 msgstr "Each field must have a label in French, Arabic and English."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Bien démarrer"
+msgstr "Getting started"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez « Créer un compte », renseignez vos coordonnées et choisissez le profil Demandeur IBTIKAR ou Client GENOCLAB. IBTIKAR est destiné aux étudiants algériens, quel que soit leur établissement."
+msgstr "Select “Create an account”, enter your details and choose the IBTIKAR requester or GENOCLAB client profile. IBTIKAR is intended for Algerian students, regardless of their institution."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Connectez-vous pour accéder au tableau de bord de votre profil. Les actions proposées dépendent du statut de la demande et de vos permissions."
+msgstr "Sign in to open your profile dashboard. Available actions depend on the request status and your permissions."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Compte ou soumission invité ?"
+msgstr "Account or guest submission?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sans compte, sélectionnez une prestation et utilisez la soumission invité. Conservez le code affiché sur la page de confirmation pour consulter le suivi."
+msgstr "Without an account, select a service and use guest submission. Keep the code displayed on the confirmation page to track your request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avec un compte, retrouvez vos demandes, documents, notifications et actions disponibles dans votre tableau de bord."
+msgstr "With an account, find your requests, documents, notifications and available actions in your dashboard."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour convertir une soumission invité en compte, utilisez la même adresse e-mail, ouvrez le lien de vérification reçu puis complétez votre inscription. Les demandes admissibles associées à cette adresse sont rattachées au compte."
+msgstr "To convert a guest submission into an account, use the same email address, open the verification link and complete registration. Eligible requests associated with that address are linked to the account."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours IBTIKAR"
+msgstr "IBTIKAR workflow"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Avant une nouvelle demande, déclarez votre solde IBTIKAR résiduel dans le tableau de bord. Actualisez-le selon votre solde réel, y compris après des prestations effectuées sur une autre plateforme."
+msgstr "Before a new request, declare your remaining IBTIKAR balance in the dashboard. Keep it aligned with your actual balance, including services used at other platforms."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Ouvrez « Nouvelle demande », sélectionnez le service, renseignez les paramètres et les échantillons, puis vérifiez et soumettez. Le coût calculé est contrôlé par rapport au solde déclaré."
+msgstr "Open “New request”, select the service, enter its parameters and samples, then review and submit. The calculated cost is checked against your declared balance."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La demande passe par les validations pédagogique et financière, puis par la génération de la note de plateforme. Attendez les instructions de soumission IBTIKAR dans le suivi."
+msgstr "The request goes through academic and financial validation, followed by generation of the platform note. Wait for the IBTIKAR submission instructions in the request tracker."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe."
+msgstr "When the instructions appear, download the IBTIKAR form, submit your request on the IBTIKAR-DGRSDT website using the provided link, then return to PLAGENOR and enter the external request code."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après transmission du code, la plateforme affecte la demande et propose un rendez-vous. Confirmez la date ou proposez une autre date avec les actions affichées."
+msgstr "After the code is submitted, the platform assigns the request and proposes an appointment. Confirm the date or suggest an alternative using the displayed actions."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La réception des échantillons et les étapes de réalisation sont enregistrées dans le suivi. Le rapport est déposé, validé puis transmis. Téléchargez-le et confirmez sa réception ; la plateforme peut ensuite clôturer la demande."
+msgstr "Sample receipt and service progress are recorded in the tracker. The report is uploaded, validated and released. Download it and confirm receipt; the platform can then close the request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Parcours des prestations sur devis"
+msgstr "Quoted service workflow"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Soumettez les informations de la prestation et des échantillons. La plateforme prépare puis envoie le devis ; consultez-le dans votre demande."
+msgstr "Submit the service and sample details. The platform prepares and sends the quotation; view it in your request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Acceptez ou refusez le devis avec les boutons disponibles. Après un refus, la plateforme peut préparer une nouvelle proposition. Après acceptation, déposez le bon de commande."
+msgstr "Accept or reject the quotation using the available buttons. After rejection, the platform may prepare a revised offer. After acceptance, upload the purchase order."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme émet la facture après le dépôt du bon de commande, puis affecte la prestation. Confirmez le rendez-vous proposé ou suggérez une autre date ; la réception des échantillons et la réalisation sont ensuite suivies dans la demande."
+msgstr "The platform issues the invoice after the purchase order is uploaded, then assigns the service. Confirm the proposed appointment or suggest another date; sample receipt and service progress are then tracked in the request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Après la fin de la réalisation, au statut « En attente paiement », réglez selon la facture et déposez le justificatif demandé. Un bon ou ordre de paiement déposé ne confirme pas à lui seul le règlement."
+msgstr "After the service is completed, at “Payment pending”, pay according to the invoice and upload the requested supporting document. Uploading a payment voucher or payment order does not by itself confirm settlement."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le responsable habilité vérifie le paiement. Si le justificatif est refusé, la demande revient en attente de paiement. Après confirmation, le rapport peut être déposé, validé et transmis."
+msgstr "An authorised staff member verifies payment. If the supporting document is rejected, the request returns to payment pending. Once payment is confirmed, the report can be uploaded, validated and released."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Téléchargez le rapport transmis et confirmez sa réception. La plateforme peut ensuite archiver la demande."
+msgstr "Download the released report and confirm receipt. The platform can then archive the request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Suivi, rendez-vous et notifications"
+msgstr "Tracking, appointments and notifications"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez le statut et l’historique de la demande dans votre tableau de bord, ou la page « Suivi » avec votre code si vous avez soumis en invité."
+msgstr "Check the request status and history in your dashboard, or use the “Tracking” page with your code if you submitted as a guest."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les actions apparaissent aux étapes où elles sont autorisées : saisie du code IBTIKAR, réponse au devis, dépôt de documents, confirmation de rendez-vous ou de réception du rapport."
+msgstr "Actions appear at the stages where they are allowed: entering the IBTIKAR code, responding to a quotation, uploading documents, confirming an appointment or acknowledging report receipt."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement."
+msgstr "Check notifications in the application. Emails accompany certain events depending on configuration; PLAGENOR tracking remains the reference for progress."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Documents et corrections"
+msgstr "Documents and corrections"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Les documents disponibles dépendent du parcours et du statut : formulaire IBTIKAR, note de plateforme, fiche de réception, devis, facture et rapport. Utilisez les liens proposés dans votre demande."
+msgstr "Available documents depend on the workflow and status: IBTIKAR form, platform note, sample receipt form, quotation, invoice and report. Use the links shown in your request."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le bon de commande et le justificatif de paiement sont des pièces que le client dépose. Vérifiez les informations et les références avant tout envoi."
+msgstr "The purchase order and payment supporting document are uploaded by the client. Check the details and references before submitting."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pour une erreur dans un document émis, une correction ou une annulation, contactez la plateforme avec la référence de la demande. Ne modifiez pas vous-même un devis ou une facture émis."
+msgstr "For an error in an issued document, a correction or a cancellation, contact the platform with the request reference. Do not alter an issued quotation or invoice yourself."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Questions fréquentes"
+msgstr "Frequently asked questions"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment changer la langue ?"
+msgstr "How do I change the language?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Utilisez FR, EN ou ع dans la navigation. Sur mobile, ces commandes sont également accessibles dans la barre supérieure."
+msgstr "Use FR, EN or ع in the navigation. On mobile, these controls are also available in the top bar."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi une estimation n’est-elle pas affichée ?"
+msgstr "Why is an estimate not displayed?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "La plateforme peut masquer les estimations pendant la validation ou la mise à jour des tarifs. Cela ne supprime pas les données financières ni les contrôles de budget. Le montant contractuel figure sur le devis émis."
+msgstr "The platform may hide estimates while rates are being validated or updated. This does not remove financial data or budget checks. The contractual amount is shown on the issued quotation."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Pourquoi ma demande IBTIKAR est-elle bloquée ?"
+msgstr "Why is my IBTIKAR request blocked?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez que vous avez déclaré un solde résiduel suffisant et rempli les champs obligatoires. Si la tarification doit être corrigée, contactez la plateforme. N’augmentez le solde déclaré qu’après vérification de votre solde réel."
+msgstr "Check that you declared a sufficient remaining balance and completed the required fields. If pricing needs correction, contact the platform. Only increase your declared balance after checking your actual balance."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment le coût est-il calculé ?"
+msgstr "How is the cost calculated?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Le calcul dépend du service, des options, des échantillons et des tarifs applicables. Une estimation affichée reste indicative ; consultez le devis transmis pour une prestation sur devis."
+msgstr "The calculation depends on the service, options, samples and applicable rates. Any displayed estimate is indicative; refer to the quotation sent for a quoted service."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Que faire si un e-mail n’arrive pas ?"
+msgstr "What if an email does not arrive?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Vérifiez les courriers indésirables et votre adresse e-mail, puis consultez le suivi et les notifications dans l’application. Contactez la plateforme si un lien de vérification ou de réinitialisation reste introuvable."
+msgstr "Check your spam folder and email address, then consult tracking and in-app notifications. Contact the platform if a verification or password-reset link is still missing."
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Comment réinitialiser mon mot de passe ?"
+msgstr "How do I reset my password?"
+
+#: templates/pages/help.html
+msgctxt "help-current"
+msgid "Sur la page de connexion, choisissez « Mot de passe oublié ? », saisissez votre adresse e-mail puis suivez le lien reçu. Si vous n’avez plus accès à cette adresse, contactez la plateforme."
+msgstr "On the sign-in page, select “Forgot password?”, enter your email address and follow the link you receive. If you no longer have access to that address, contact the platform."
+
+#: templates/dashboard/client/request_detail.html
+msgid "Déposer le justificatif de paiement"
+msgstr "Upload payment supporting document"
+
+#: templates/dashboard/client/request_detail.html
+msgid "Justificatif de paiement à déposer :"
+msgstr "Payment supporting document to upload:"
+
+msgctxt "channel-label"
+msgid "IBTIKAR"
+msgstr "IBTIKAR"
+
+msgctxt "channel-label"
+msgid "GENOCLAB"
+msgstr "GENOCLAB"
+
+msgctxt "channel-label"
+msgid "IBTIKAR uniquement"
+msgstr "IBTIKAR only"
+
+msgctxt "channel-label"
+msgid "GENOCLAB uniquement"
+msgstr "GENOCLAB only"

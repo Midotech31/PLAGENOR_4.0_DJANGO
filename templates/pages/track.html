@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <span class="text-muted">{% trans "Canal" %}:</span>
-                    {{ tracked_request.channel }}
+                    {% trans tracked_request.channel context "channel-label" %}
                 </div>
                 <div>
                     <span class="text-muted">{% trans "Date" %}:</span>
