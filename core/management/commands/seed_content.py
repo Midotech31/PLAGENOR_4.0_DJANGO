@@ -7,7 +7,7 @@ DEFAULTS_FR = {
 
     # Hero section
     'hero_title': 'PLAGENOR 4.0',
-    'hero_subtitle': 'Plateforme Technologique de Génomique — ESSBO · ORAN',
+    'hero_subtitle': 'Plateforme Technologique en Génomique — ESSBO · ORAN',
     'hero_description': "Solution intégrée pour la gestion des demandes d'analyses, le suivi des opérations et la facturation au sein de l'ESSBO.",
     'hero_btn_submit': 'Soumettre une demande',
     'hero_btn_guest': 'Soumission invité',
@@ -30,11 +30,11 @@ DEFAULTS_FR = {
     # Organization section
     'org_title': 'Organisation',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': 'PLAGENOR est la plateforme technologique de génomique de l’École Supérieure en Sciences Biologiques d’Oran (ESSBO). Elle accueille les demandes des étudiants algériens via IBTIKAR et les demandes de prestations scientifiques et techniques.',
+    'org_description': 'PLAGENOR est la Plateforme Technologique en Génomique de l’École Supérieure en Sciences Biologiques d’Oran (ESSBO). Elle accueille les demandes des étudiants algériens via IBTIKAR et les demandes de prestations scientifiques et techniques.',
 
     # Footer
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': 'PLAGENOR — Plateforme technologique de génomique de l’ESSBO. Demandes d’analyses, suivi des prestations et remise des résultats.',
+    'footer_description': 'PLAGENOR — Plateforme Technologique en Génomique de l’ESSBO. Demandes d’analyses, suivi des prestations et remise des résultats.',
     'footer_copyright': '© 2026 ESSBO — Tous droits réservés',
     'footer_credit': 'PLAGENOR 4.0 — Conçu par Prof. Mohamed Merzoug | ESSBO',
     'footer_contact_1': "École Supérieure en Sciences Biologiques d'Oran (ESSBO)",
@@ -121,7 +121,7 @@ DEFAULTS_EN = {
     'services_subtitle': 'Scientific and technical analyses offered by the ESSBO laboratory',
     'org_title': 'Organization',
     'org_subtitle': 'ESSBO → PLAGENOR → GENOCLAB',
-    'org_description': 'PLAGENOR is the genomics technology platform of the Higher School of Biological Sciences of Oran (ESSBO). It handles requests from Algerian students through IBTIKAR and requests for scientific and technical services.',
+    'org_description': 'PLAGENOR is the Genomics Technology Platform of the Higher School of Biological Sciences of Oran (ESSBO). It handles requests from Algerian students through IBTIKAR and requests for scientific and technical services.',
     'footer_brand': 'PLAGENOR 4.0',
     'footer_description': 'PLAGENOR — ESSBO Genomics Technology Platform. Analysis requests, service tracking and delivery of results.',
     'footer_copyright': '© 2026 ESSBO — All rights reserved',
@@ -161,7 +161,7 @@ DEFAULTS_EN = {
 DEFAULTS_AR = {
     'nav_brand': 'PLAGENOR 4.0',
     'hero_title': 'PLAGENOR 4.0',
-    'hero_subtitle': 'منصة التكنولوجيا الجينومية — المدرسة العليا في العلوم البيولوجية بوهران · وهران',
+    'hero_subtitle': 'الأرضية التكنولوجية للجينوميك — المدرسة العليا في العلوم البيولوجية بوهران · وهران',
     'hero_description': 'حل متكامل لإدارة طلبات التحليل ومتابعة العمليات والفوترة داخل ESSBO.',
     'hero_btn_submit': 'إرسال طلب',
     'hero_btn_guest': 'إرسال كزائر',
@@ -176,9 +176,9 @@ DEFAULTS_AR = {
     'services_subtitle': 'التحاليل العلمية والتقنية المقدمة من مخبر المدرسة العليا في العلوم البيولوجية بوهران',
     'org_title': 'التنظيم',
     'org_subtitle': 'المدرسة العليا في العلوم البيولوجية بوهران → PLAGENOR → جينوصيلاب',
-    'org_description': 'PLAGENOR هي منصة تكنولوجيا الجينوم التابعة للمدرسة العليا للعلوم البيولوجية بوهران. تستقبل طلبات الطلبة الجزائريين عبر منصة إبتكار وطلبات الخدمات العلمية والتقنية.',
+    'org_description': 'PLAGENOR هي الأرضية التكنولوجية للجينوميك التابعة للمدرسة العليا للعلوم البيولوجية بوهران. تستقبل طلبات الطلبة الجزائريين عبر منصة إبتكار وطلبات الخدمات العلمية والتقنية.',
     'footer_brand': 'PLAGENOR 4.0',
-    'footer_description': 'PLAGENOR — منصة تكنولوجيا الجينوم التابعة لـ ESSBO. طلبات التحليل ومتابعة الخدمات وتسليم النتائج.',
+    'footer_description': 'PLAGENOR — الأرضية التكنولوجية للجينوميك التابعة لـ ESSBO. طلبات التحليل ومتابعة الخدمات وتسليم النتائج.',
     'footer_copyright': '© 2026 المدرسة العليا في العلوم البيولوجية بوهران — جميع الحقوق محفوظة',
     'footer_credit': 'PLAGENOR 4.0 — تصميم البروفيسور محمد مرزوق | المدرسة العليا في العلوم البيولوجية بوهران',
     'footer_contact_1': 'المدرسة العليا في العلوم البيولوجية بوهران',
