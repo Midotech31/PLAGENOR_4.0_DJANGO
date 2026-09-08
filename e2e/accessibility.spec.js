@@ -18,7 +18,7 @@ async function login(page, username) {
   expect(response.status()).toBe(204);
   await page.goto('/dashboard/');
   await expect(page).toHaveURL(/\/dashboard\//);
-  await page.locator('button[name="language"][value="fr"]').click();
+  await page.getByRole('banner').getByRole('button', { name: 'Français', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', /^fr/);
 }
 
