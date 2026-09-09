@@ -178,6 +178,8 @@ class NotificationEmailTests(TestCase):
         self.assertNotIn('a@example.test', ' '.join(logs.output))
 
     def test_all_request_email_helpers_render_and_dispatch(self):
+        from django.utils import timezone
+        self.request.appointment_date = timezone.localdate()
         from notifications import emails
 
         with patch('notifications.emails.send_email_notification') as send:

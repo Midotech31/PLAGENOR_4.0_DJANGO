@@ -174,6 +174,7 @@ class CompleteServiceContracts(TestCase):
         self.req.requester=None;self.req.guest_email='guest@example.test'
         with patch.object(emails,'send_email_notification') as send:
             emails.notify_status_change(self.req,'QUOTE_DRAFT','QUOTE_SENT')
+            self.req.appointment_date = date(2026, 12, 1)
             emails.notify_appointment(self.req);emails.notify_report_delivery(self.req)
             self.assertEqual(send.call_count,3)
             self.assertEqual(send.call_args.args[0],'guest@example.test')
@@ -192,7 +193,7 @@ class CompleteServiceContracts(TestCase):
         from core.services.ibtikar import submit_ibtikar_request
         from notifications.models import Notification
         for submit in (submit_genoclab_request,submit_ibtikar_request):
-            with patch.object(Notification.objects,'create',side_effect=RuntimeError),patch('notifications.emails.notify_submission_confirmation',side_effect=RuntimeError):
+            with patch.object(Notification.objects,'create',side_effect=RuntimeError),patch('notifications.emails.notify_submission_confirmation',side_effect=RuntimeError),self.captureOnCommitCallbacks(execute=True):
                 req=submit({'title':'Resilient submission'},self.user)
             self.assertTrue(Request.objects.filter(pk=req.pk).exists())
             self.assertEqual(req.history.count(),1)

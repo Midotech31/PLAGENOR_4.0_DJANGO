@@ -802,6 +802,18 @@ class EndToEndPipelineTests(TestCase):
         cls.analyst = MemberProfile.objects.get(user=cls.analyst_user)
 
     def _step(self, req, to, actor):
+        # Supply the documents/data represented by each operation in this graph walk.
+        prerequisites = {
+            'IBTIKAR_CODE_SUBMITTED': ('ibtikar_external_code', 'IBK-AUDIT'),
+            'APPOINTMENT_PROPOSED': ('appointment_date', timezone.localdate()),
+            'ORDER_UPLOADED': ('order_file', 'orders/test-order.pdf'),
+            'PAYMENT_PROOF_UPLOADED': ('payment_receipt_file', 'payments/test-proof.pdf'),
+            'REPORT_UPLOADED': ('report_file', 'reports/test-report.pdf'),
+        }
+        if to in prerequisites:
+            field, value = prerequisites[to]
+            setattr(req, field, value)
+            req.save(update_fields=[field])
         transition(req, to, actor, notes=f'e2e→{to}')
         req.refresh_from_db()
         self.assertEqual(req.status, to)
@@ -897,6 +909,8 @@ class EndToEndPipelineTests(TestCase):
         req = Request.objects.create(
             channel='GENOCLAB', status='PAYMENT_PENDING', requester=client)
 
+        req.payment_receipt_file = 'payments/proof.pdf'
+        req.save(update_fields=['payment_receipt_file'])
         transition(req, 'PAYMENT_PROOF_UPLOADED', client)
         req.refresh_from_db()
         self.assertEqual(req.status, 'PAYMENT_PROOF_UPLOADED')

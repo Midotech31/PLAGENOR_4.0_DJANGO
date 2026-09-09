@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from django.db import transaction
 
 from core.models import Request, RequestHistory
 from core.sequences import next_display_id
@@ -11,6 +12,7 @@ from core.sequences import next_display_id
 logger = logging.getLogger('plagenor.services.genoclab')
 
 
+@transaction.atomic
 def submit_genoclab_request(data: dict, user=None) -> Request:
     """Submit a new GENOCLAB request."""
     # Generate display_id atomically (no .count()+1 race).
@@ -53,6 +55,12 @@ def submit_genoclab_request(data: dict, user=None) -> Request:
         actor=user,
     )
 
+    transaction.on_commit(lambda: _notify_submission(request_obj), robust=True)
+
+    return request_obj
+
+
+def _notify_submission(request_obj):
     # Notify admins of new GENOCLAB request
     try:
         from notifications.models import Notification
@@ -74,12 +82,16 @@ def submit_genoclab_request(data: dict, user=None) -> Request:
     # Email the client their submission confirmation. Same fix as IBTIKAR:
     # only the guest path was emailing; authenticated clients now get one too.
     try:
-        from notifications.emails import notify_submission_confirmation
-        notify_submission_confirmation(request_obj)
+        from notifications.emails import notify_submission_confirmation, notify_guest_tracking_code
+        if request_obj.requester:
+            notify_submission_confirmation(request_obj)
+        else:
+            notify_guest_tracking_code(request_obj)
     except Exception:
         logger.exception(
             "Unable to send submission confirmation for GENOCLAB request %s",
             request_obj.pk,
         )
 
-    return request_obj
+    from notifications.emails import notify_staff_transition
+    notify_staff_transition(request_obj, request_obj.status)

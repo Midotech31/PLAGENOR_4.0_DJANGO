@@ -15,10 +15,12 @@
 </p>
 
 <p style="color: #4b5563; margin-bottom: 24px;">
-    {% if language == 'ar' %}تم تحديد موعد لطلب التحليل:{% elif language == 'en' %}
-    An appointment has been scheduled for your analysis request:
+    {% if request.status == 'APPOINTMENT_CONFIRMED' %}
+    {% if language == 'ar' %}تم تأكيد موعدكم.{% elif language == 'en' %}Your appointment is confirmed.{% else %}Votre rendez-vous est confirmé.{% endif %}
+    {% elif language == 'ar' %}يرجى تأكيد الموعد المقترح لطلب التحليل:{% elif language == 'en' %}
+    Please confirm the proposed appointment for your analysis request:
     {% else %}
-    Un rendez-vous a été programmé pour votre demande d'analyse :
+    Veuillez confirmer le rendez-vous proposé pour votre demande d'analyse :
     {% endif %}
 </p>
 
@@ -34,7 +36,7 @@
     </div>
     {% if appointment_time %}
     <div style="font-size: 1.2rem; color: #166534; margin-top: 4px;">
-        {{ appointment_time }}
+        {{ appointment_time|time:"H:i" }}
     </div>
     {% endif %}
 </div>
@@ -66,7 +68,7 @@
 
 {% if request.channel == 'IBTIKAR' %}
 <p style="background: #eff6ff; border-left: 4px solid #4F46E5; padding: 16px; margin: 20px 0; color: #1e40af;">
-    {% if language == 'ar' %}<strong>إرشادات IBTIKAR:</strong> يُرجى إحضار بيانات طلب IBTIKAR والوثائق المطلوبة يوم الموعد.{% elif language == 'en' %}
+    {% if language == 'ar' %}<strong>إرشادات إبتكار:</strong> يُرجى إحضار بيانات طلب إبتكار والوثائق المطلوبة يوم الموعد.{% elif language == 'en' %}
     <strong>IBTIKAR Notice:</strong> Please bring your IBTIKAR-DGRSDT card and any relevant documentation on the day of your appointment.
     {% else %}
     <strong>Note IBTIKAR :</strong> Veuillez apporter votre carte IBTIKAR-DGRSDT et toute documentation pertinente le jour de votre rendez-vous.

@@ -182,6 +182,7 @@ if os.getenv('DATABASE_URL'):
         'default': dj_database_url.parse(
             os.getenv('DATABASE_URL'),
             conn_max_age=600,
+            conn_health_checks=True,
             ssl_require=database_ssl_required,
         )
     }
@@ -371,7 +372,10 @@ if REQUIRE_SMTP:
 EMAIL_BACKEND = _configured_email_backend
 EMAIL_HOST = _smtp_host or 'localhost'
 EMAIL_PORT = int(os.getenv('SMTP_PORT') or os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', 'false')
+EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', 'false' if EMAIL_USE_SSL else 'true')
+if EMAIL_USE_TLS and EMAIL_USE_SSL:
+    raise ImproperlyConfigured('EMAIL_USE_TLS and EMAIL_USE_SSL are mutually exclusive.')
 EMAIL_HOST_USER = os.getenv('SMTP_USER') or os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD') or os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('SMTP_FROM') or os.getenv('DEFAULT_FROM_EMAIL', 'noreply@plagenor.essbo.dz')

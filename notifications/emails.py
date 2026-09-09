@@ -57,11 +57,17 @@ def _email_ctx(request_obj, **extra):
         'dashboard_url': urljoin(settings.PUBLIC_BASE_URL, Notification(
             user=request_obj.requester, request=request_obj).get_absolute_url())
             if request_obj.requester else urljoin(settings.PUBLIC_BASE_URL, f'/track/?q={request_obj.guest_token}'),
-        'support_email': 'genomicsplatform.essbo@gmail.com',
+        'support_email': ('genoclab.essbo@gmail.com' if request_obj.channel == 'GENOCLAB'
+                          else 'genomicsplatform.essbo@gmail.com'),
         'user_name': (request_obj.requester.get_full_name()
                        if request_obj.requester else
                        (request_obj.guest_name or '')),
     }
+    recipient = extra.pop('recipient', None)
+    if recipient:
+        ctx['language'] = recipient.preferred_language or 'fr'
+        ctx['user_name'] = recipient.get_full_name() or recipient.username
+        ctx['dashboard_url'] = urljoin(settings.PUBLIC_BASE_URL, Notification(user=recipient, request=request_obj).get_absolute_url())
     member = extra.get('member')
     if member:
         ctx['language'] = getattr(member.user, 'preferred_language', 'fr') or 'fr'
@@ -129,6 +135,8 @@ def notify_assignment(request_obj, member_profile):
 
 def notify_appointment(request_obj):
     """Notify about appointment scheduling."""
+    if not request_obj.appointment_date:
+        return
     if request_obj.requester and request_obj.requester.email:
         to_email = request_obj.requester.email
     elif request_obj.guest_email:
@@ -143,7 +151,10 @@ def notify_appointment(request_obj):
                                        appointment_note=getattr(request_obj, 'appointment_note', '')))
     send_email_notification(
         to_email,
-        _subject(request_obj.display_id, _email_ctx(request_obj)['language'], 'Rendez-vous programmé', 'Appointment scheduled', 'تم تحديد الموعد'),
+        _subject(request_obj.display_id, _email_ctx(request_obj)['language'],
+                 'Rendez-vous confirmé' if request_obj.status == 'APPOINTMENT_CONFIRMED' else 'Rendez-vous proposé',
+                 'Appointment confirmed' if request_obj.status == 'APPOINTMENT_CONFIRMED' else 'Appointment proposed',
+                 'تأكيد الموعد' if request_obj.status == 'APPOINTMENT_CONFIRMED' else 'موعد مقترح'),
         body,
     )
 
@@ -192,3 +203,28 @@ def _render_email(template, context):
 
 def _subject(reference, language, fr, en, ar):
     return f"[PLAGENOR] {reference} — {dict(fr=fr, en=en, ar=ar).get(language, fr)}"
+
+
+def notify_staff_transition(request_obj, to_status):
+    """Email active operational recipients for actionable milestones."""
+    from accounts.models import User
+    milestones = {'SUBMITTED', 'REQUEST_CREATED', 'VALIDATION_FINANCE',
+                  'IBTIKAR_CODE_SUBMITTED', 'QUOTE_VALIDATED_BY_CLIENT',
+                  'QUOTE_REJECTED_BY_CLIENT', 'ORDER_UPLOADED',
+                  'PAYMENT_PROOF_UPLOADED', 'REPORT_UPLOADED'}
+    if to_status not in milestones:
+        return
+    roles = ['SUPER_ADMIN', 'PLATFORM_ADMIN']
+    if to_status in ('VALIDATION_FINANCE', 'PAYMENT_PROOF_UPLOADED'):
+        roles.append('FINANCE')
+    sent_to = set()
+    for user in User.objects.filter(role__in=roles, is_active=True).exclude(email='').order_by('pk'):
+        address = user.email.strip().lower()
+        if address in sent_to:
+            continue
+        sent_to.add(address)
+        ctx = _email_ctx(request_obj, recipient=user,
+                         new_status_display=dict(request_obj.STATUS_CHOICES).get(to_status, to_status))
+        body = _render_email('notifications/email/request_status_change.html', ctx)
+        send_email_notification(user.email,
+            _subject(request_obj.display_id, ctx['language'], 'Action requise', 'Action required', 'إجراء مطلوب'), body)
