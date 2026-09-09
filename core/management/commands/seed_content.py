@@ -226,6 +226,10 @@ DEFAULTS_EN.update({
  'genoclab_contact_phone': '+213-554-050-460',
  'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
 DEFAULTS_AR.update({
+    'footer_brand': 'بلاجينور 4.0',
+    'footer_description': 'الأرضية التكنولوجية للجينوميك التابعة للمدرسة العليا في العلوم البيولوجية بوهران. طلبات التحليل ومتابعة الخدمات وتسليم النتائج.',
+    'footer_credit': 'بلاجينور 4.0 — تصميم البروفيسور محمد مرزوق | المدرسة العليا في العلوم البيولوجية بوهران',
+
     'contact_address': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (كلية الطب سابقا)، 31000 وهران',
     'about_contact_address': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (كلية الطب سابقا)، 31000 وهران','genoclab_contact_name': 'الدكتورة بودربالة هاجر',
  'genoclab_contact_role': 'رئيسة مجلس إدارة جينوصيلاب (PCA)',
