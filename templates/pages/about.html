@@ -47,16 +47,17 @@
 
         <div class="card">
             <div class="card-body">
-                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% cms 'about_contact_title' 'Contact' %}</h3>
+                <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">{% cms 'about_contact_title' 'Contact' %} — PLAGENOR</h3>
                 <p class="text-muted text-sm">
                     <strong>{% cms 'about_contact_name' 'Prof. Mohamed Merzoug' %}</strong><br>
                     {% trans "Email" %} : <a href="mailto:{% cms 'about_contact_email' 'mohamed.merzouge.essbo@email.com' %}">{% cms 'about_contact_email' 'mohamed.merzouge.essbo@email.com' %}</a><br>
                     {% trans "Téléphone" %} : {% cms 'about_contact_phone' '041 24 63 59' %}<br>
-                    {% trans "Adresse" %} : {% cms 'about_contact_address' 'Cité Emir Abdelkader, 31000 Oran' %}
+                    {% trans "Adresse" %} : {% cms 'about_contact_address' 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran' %}
                 </p>
             </div>
         </div>
 
+        {% include "includes/genoclab_contact.html" %}
     </div>
 </section>
 {% endblock %}

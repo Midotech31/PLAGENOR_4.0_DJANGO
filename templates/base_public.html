@@ -77,7 +77,8 @@
             <div class="footer-col">
                 <h4>{% trans "Contact" %}</h4>
                 <a href="#">{% cms 'footer_contact_1' "École Supérieure en Sciences Biologiques d'Oran (ESSBO)" %}</a>
-                <a href="#">{% cms 'footer_contact_2' 'Prof. Mohamed Merzoug' %}</a>
+                <a href="{% url 'contact' %}#plagenor-contact">PLAGENOR — {% cms 'footer_contact_2' 'Prof. Mohamed Merzoug' %}</a>
+                <a href="{% url 'contact' %}#genoclab-contact">{% trans "GENOCLAB" %} — <bdi>{% cms 'genoclab_contact_name' 'Dr BOUDERBALA Hadjer' %}</bdi></a>
                 <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
                 <a href="{% url 'accounts:register' %}">{% trans "Inscription" %}</a>
             </div>

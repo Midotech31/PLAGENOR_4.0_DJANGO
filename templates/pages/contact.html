@@ -11,6 +11,7 @@
 
     <div class="card" style="margin-top:24px;">
         <div class="card-body" style="padding:32px;">
+            <h3 id="plagenor-contact" style="font-size:1.05rem; font-weight:700; margin-bottom:16px;">PLAGENOR — {% cms 'contact_name' 'Prof. Mohamed Merzoug' %}</h3>
             <div class="data-card" style="box-shadow:none; border:none; padding:0;">
                 <div class="data-card-row">
                     <strong>{% trans "Institution" %}</strong>
@@ -18,7 +19,7 @@
                 </div>
                 <div class="data-card-row">
                     <strong>{% trans "Adresse" %}</strong>
-                    <span>{% cms 'contact_address' "ESSBO, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran, Algérie" %}</span>
+                    <span>{% cms 'contact_address' "BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran" %}</span>
                 </div>
                 <div class="data-card-row">
                     <strong>{% trans "Email" %}</strong>
@@ -39,6 +40,8 @@
             </div>
         </div>
     </div>
+
+    {% include "includes/genoclab_contact.html" %}
 
     <div style="text-align:center; margin-top:24px;">
         <a href="{% url 'home' %}" class="btn btn-outline">{% trans "Retour à l'accueil" %}</a>
