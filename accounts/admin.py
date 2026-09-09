@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'full_name', 'email', 'role', 'is_active')
     list_filter = ('role', 'is_active')
     fieldsets = UserAdmin.fieldsets + (
-        ('PLAGENOR', {'fields': ('role', 'organization', 'phone', 'student_level', 'supervisor', 'laboratory')}),
+        ('PLAGENOR', {'fields': ('role', 'organization', 'phone', 'student_level', 'supervisor', 'supervisor_email', 'laboratory')}),
     )
 
     def full_name(self, obj):

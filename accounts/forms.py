@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, RegexValidator
 from django.utils.translation import gettext_lazy as _
 from .countries import COUNTRY_CHOICES
 from .models import User
@@ -52,11 +52,17 @@ class RegistrationForm(UserCreationForm):
         label=_('Niveau'),
     )
     laboratory = forms.CharField(max_length=200, required=False, label=_('Laboratoire'))
-    supervisor = forms.CharField(max_length=200, required=False, label=_('Directeur de recherche'))
+    supervisor = forms.CharField(max_length=200, required=False, label=_('Directeur de thèse / encadrant'))
+    supervisor_email = forms.EmailField(
+        required=False, max_length=254,
+        label=_('Email du directeur de thèse / encadrant'),
+        widget=forms.EmailInput(attrs={'autocomplete': 'off', 'dir': 'ltr'}),
+    )
     ibtikar_id = forms.CharField(
         max_length=20, required=False,
         label=_('Identifiant IBTIKAR-DGRSDT'),
         help_text=_('Format: IDGRSTDXXXXX'),
+        validators=[RegexValidator(r'\AIDGRSTD[0-9]{5}\Z', _('Format: IDGRSTDXXXXX'))],
         widget=forms.TextInput(attrs={'placeholder': 'IDGRSTD12345', 'pattern': 'IDGRSTD[0-9]{5}'})
     )
     phone = forms.CharField(
@@ -70,10 +76,20 @@ class RegistrationForm(UserCreationForm):
         fields = (
             'username', 'first_name', 'last_name', 'email',
             'role', 'organization', 'organization_type', 'organization_type_other',
-            'country', 'student_level', 'laboratory', 'supervisor', 'ibtikar_id', 'phone',
+            'country', 'student_level', 'laboratory', 'supervisor', 'supervisor_email', 'ibtikar_id', 'phone',
             'wilaya', 'gender',
             'password1', 'password2',
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        role = (self.data.get(self.add_prefix('role')) if self.is_bound
+                else self.initial.get('role', 'REQUESTER'))
+        if role == 'REQUESTER':
+            for name, field in self.fields.items():
+                # Only the conditional "other organisation" detail is exempt.
+                if name != 'organization_type_other':
+                    field.required = True
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()

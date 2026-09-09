@@ -58,6 +58,13 @@
                 <label>{% trans "Directeur de recherche" %}</label>
                 <input type="text" name="supervisor" class="form-control" value="{{ request.user.supervisor }}">
             </div>
+            {% if request.user.supervisor_email %}
+            <div class="form-group">
+                <p>{% trans "Email du directeur de thèse / encadrant" %}<br>
+                    <bdi dir="ltr">{{ request.user.supervisor_email }}</bdi>
+                </p>
+            </div>
+            {% endif %}
 
             <div class="form-group">
                 <label>{% trans "Langue préférée" %}</label>

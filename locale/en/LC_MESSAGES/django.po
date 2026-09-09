@@ -5440,3 +5440,9 @@ msgstr "IBTIKAR only"
 msgctxt "channel-label"
 msgid "GENOCLAB uniquement"
 msgstr "GENOCLAB only"
+
+msgid "Directeur de thèse / encadrant"
+msgstr "Thesis supervisor / academic supervisor"
+
+msgid "Email du directeur de thèse / encadrant"
+msgstr "Thesis supervisor / academic supervisor email"

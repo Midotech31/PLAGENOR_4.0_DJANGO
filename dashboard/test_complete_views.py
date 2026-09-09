@@ -414,7 +414,7 @@ class CompleteViewContracts(TestCase):
         from django.contrib.sessions.backends.db import SessionStore
         from django.contrib.auth.models import AnonymousUser
         req=self.factory.post('/accounts/register/');req.session=SessionStore();req.user=AnonymousUser()
-        form=RegistrationForm(data={'organization':'University of Oran','organization_type':User.ORGANIZATION_TYPE_CHOICES[0][0],'country':'DZ','username':'new-complete-user','email':'new@example.test','first_name':'New','last_name':'User','role':'REQUESTER','password1':'DifferentPass!2026','password2':'DifferentPass!2026'})
+        form=RegistrationForm(data={'organization':'University of Oran','organization_type':User.ORGANIZATION_TYPE_CHOICES[0][0],'country':'DZ','student_level':'doctorat','laboratory':'Lab','supervisor':'Supervisor','supervisor_email':'supervisor@example.test','ibtikar_id':'IDGRSTD12345','phone':'0554050460','wilaya':'31','gender':'M','username':'new-complete-user','email':'new@example.test','first_name':'New','last_name':'User','role':'REQUESTER','password1':'DifferentPass!2026','password2':'DifferentPass!2026'})
         self.assertTrue(form.is_valid(),form.errors)
         view=av.RegisterView();view.setup(req)
         self.assertEqual(view.form_valid(form).status_code,302)
