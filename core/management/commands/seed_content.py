@@ -213,15 +213,21 @@ DEFAULTS_AR = {
     'login_footer_2': 'تصميم البروفيسور محمد مرزوق',
 }
 
-DEFAULTS_FR.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+DEFAULTS_FR.update({
+    'contact_address': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran',
+    'about_contact_address': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran','genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
  'genoclab_contact_role': 'Présidente du conseil d’administration de GENOCLAB (PCA)',
  'genoclab_contact_phone': '+213-554-050-460',
  'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
-DEFAULTS_EN.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+DEFAULTS_EN.update({
+    'contact_address': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran',
+    'about_contact_address': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran','genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
  'genoclab_contact_role': 'Chair of the Board of Directors of GENOCLAB (PCA)',
  'genoclab_contact_phone': '+213-554-050-460',
  'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
-DEFAULTS_AR.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+DEFAULTS_AR.update({
+    'contact_address': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (EX-INESSMO)، 31000 وهران',
+    'about_contact_address': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (EX-INESSMO)، 31000 وهران','genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
  'genoclab_contact_role': 'رئيسة مجلس إدارة جينوصيلاب (PCA)',
  'genoclab_contact_phone': '+213-554-050-460',
  'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
