@@ -1,6 +1,6 @@
 from django.db import migrations
 
-ADDRESSES = {'fr': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran', 'en': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran', 'ar': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (EX-INESSMO)، 31000 وهران'}
+ADDRESSES = {'fr': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran', 'en': 'BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO) 31000 Oran', 'ar': 'ص.ب. 1042 صايم محمد، حي الأمير عبد القادر (كلية الطب سابقا)، 31000 وهران'}
 
 def forwards(apps, schema_editor):
     Content = apps.get_model('core', 'PlatformContent')
