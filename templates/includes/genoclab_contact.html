@@ -1,10 +1,12 @@
 {% load i18n cms %}
-<div id="genoclab-contact" style="margin-top:24px; padding-top:20px; border-top:1px solid #e2e8f0;">
-    <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:8px;">{% trans "GENOCLAB" %}</h3>
-    <p style="line-height:1.7; margin:0;">
-        <strong><bdi>{% cms 'genoclab_contact_name' 'Dr BOUDERBALA Hadjer' %}</bdi></strong><br>
-        {% cms 'genoclab_contact_role' 'Présidente du conseil d’administration de GENOCLAB (PCA)' %}<br>
-        <a href="tel:{% cms 'genoclab_contact_phone' '+213-554-050-460' %}"><bdi dir="ltr">{% cms 'genoclab_contact_phone' '+213-554-050-460' %}</bdi></a><br>
-        <a href="mailto:{% cms 'genoclab_contact_email' 'genoclab.essbo@gmail.com' %}" style="overflow-wrap:anywhere;"><bdi dir="ltr">{% cms 'genoclab_contact_email' 'genoclab.essbo@gmail.com' %}</bdi></a>
-    </p>
+<div id="genoclab-contact" class="card" style="margin-top:24px;">
+    <div class="card-body">
+        <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:8px;">{% trans "GENOCLAB" %}</h3>
+        <p class="text-muted text-sm" style="line-height:1.7; margin:0;">
+            <strong><bdi>{% cms 'genoclab_contact_name' 'Dr BOUDERBALA Hadjer' %}</bdi></strong><br>
+            {% cms 'genoclab_contact_role' 'Présidente du conseil d’administration de GENOCLAB (PCA)' %}<br>
+            <a href="tel:{% cms 'genoclab_contact_phone' '+213-554-050-460' %}"><bdi dir="ltr">{% cms 'genoclab_contact_phone' '+213-554-050-460' %}</bdi></a><br>
+            <a href="mailto:{% cms 'genoclab_contact_email' 'genoclab.essbo@gmail.com' %}" style="overflow-wrap:anywhere;"><bdi dir="ltr">{% cms 'genoclab_contact_email' 'genoclab.essbo@gmail.com' %}</bdi></a>
+        </p>
+    </div>
 </div>
