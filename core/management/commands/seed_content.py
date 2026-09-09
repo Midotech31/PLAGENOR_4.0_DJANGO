@@ -213,6 +213,19 @@ DEFAULTS_AR = {
     'login_footer_2': 'تصميم البروفيسور محمد مرزوق',
 }
 
+DEFAULTS_FR.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+ 'genoclab_contact_role': 'Présidente du conseil d’administration de GENOCLAB (PCA)',
+ 'genoclab_contact_phone': '+213-554-050-460',
+ 'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
+DEFAULTS_EN.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+ 'genoclab_contact_role': 'Chair of the Board of Directors of GENOCLAB (PCA)',
+ 'genoclab_contact_phone': '+213-554-050-460',
+ 'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
+DEFAULTS_AR.update({'genoclab_contact_name': 'Dr BOUDERBALA Hadjer',
+ 'genoclab_contact_role': 'رئيسة مجلس إدارة جينوصيلاب (PCA)',
+ 'genoclab_contact_phone': '+213-554-050-460',
+ 'genoclab_contact_email': 'genoclab.essbo@gmail.com'})
+
 DEFAULTS_BY_LANG = {
     'fr': DEFAULTS_FR,
     'en': DEFAULTS_EN,
