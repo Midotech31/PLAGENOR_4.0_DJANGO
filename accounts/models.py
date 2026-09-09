@@ -96,6 +96,9 @@ class User(AbstractUser):
     phone = models.CharField(max_length=50, default='', blank=True)
     student_level = models.CharField(max_length=100, default='', blank=True)
     supervisor = models.CharField(max_length=200, default='', blank=True)
+    supervisor_email = models.EmailField(
+        blank=True, default='', verbose_name='Email du directeur de thèse / encadrant',
+    )
     laboratory = models.CharField(max_length=200, default='', blank=True)
     ibtikar_id = models.CharField(max_length=20, blank=True, default='', verbose_name='Identifiant IBTIKAR')
     # Demographics used by the stats dashboard. Both optional.

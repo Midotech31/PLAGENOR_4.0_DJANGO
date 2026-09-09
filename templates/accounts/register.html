@@ -102,10 +102,10 @@
                 {% if form.organization_type_other.errors %}<div class="form-error">{{ form.organization_type_other.errors.0 }}</div>{% endif %}
             </div>
 
-            <div id="academic-fields" style="display:none;">
+            <div id="academic-fields" {% if form.role.value == 'CLIENT' %}style="display:none;"{% endif %}>
                 <div class="form-group">
-                    <label for="id_student_level">{% trans "Niveau" %}</label>
-                    <select name="student_level" id="id_student_level" class="form-control">
+                    <label for="id_student_level">{% trans "Niveau" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span></label>
+                    <select name="student_level" id="id_student_level" class="form-control" {% if form.student_level.field.required %}required{% endif %}>
                         <option value="">— {% trans "Sélectionner" %} —</option>
                         <option value="master" {% if form.student_level.value == 'master' %}selected{% endif %}>{% trans "Master (fin de cycle)" %}</option>
                         <option value="ingenieur" {% if form.student_level.value == 'ingenieur' %}selected{% endif %}>{% trans "Ingéniorat (fin de cycle)" %}</option>
@@ -116,36 +116,42 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="id_laboratory">{% trans "Laboratoire" %}</label>
-                    <input type="text" name="laboratory" id="id_laboratory" class="form-control" value="{{ form.laboratory.value|default:'' }}" placeholder="{% trans 'Nom du laboratoire' %}">
+                    <label for="id_laboratory">{% trans "Laboratoire" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span></label>
+                    <input type="text" name="laboratory" id="id_laboratory" class="form-control" {% if form.laboratory.field.required %}required{% endif %} value="{{ form.laboratory.value|default:'' }}" placeholder="{% trans 'Nom du laboratoire' %}">
                     {% if form.laboratory.errors %}<div class="form-error">{{ form.laboratory.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="id_supervisor">{% trans "Directeur de recherche" %}</label>
-                    <input type="text" name="supervisor" id="id_supervisor" class="form-control" value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
+                    <label for="id_supervisor">{{ form.supervisor.label }} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span></label>
+                    <input type="text" name="supervisor" id="id_supervisor" class="form-control" {% if form.supervisor.field.required %}required{% endif %} value="{{ form.supervisor.value|default:'' }}" placeholder="{% trans 'Nom du directeur de recherche' %}">
                     {% if form.supervisor.errors %}<div class="form-error">{{ form.supervisor.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %}</label>
-                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
+                    <label for="id_supervisor_email">{{ form.supervisor_email.label }} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span></label>
+                    <input type="email" name="supervisor_email" id="id_supervisor_email" class="form-control" dir="ltr" autocomplete="off" maxlength="254" value="{{ form.supervisor_email.value|default:'' }}" {% if form.supervisor_email.field.required %}required{% endif %}>
+                    {% if form.supervisor_email.errors %}<div class="form-error">{{ form.supervisor_email.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span></label>
+                    <input type="text" name="ibtikar_id" id="id_ibtikar_id" class="form-control" {% if form.ibtikar_id.field.required %}required{% endif %} value="{{ form.ibtikar_id.value|default:'' }}" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
                     <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
                     {% if form.ibtikar_id.errors %}<div class="form-error">{{ form.ibtikar_id.errors.0 }}</div>{% endif %}
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="id_phone">{% trans "Téléphone" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
-                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+                <label for="id_phone">{% trans "Téléphone" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span><span data-client-optional {% if form.role.value != 'CLIENT' %}hidden{% endif %} class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                <input type="text" name="phone" id="id_phone" class="form-control" {% if form.phone.field.required %}required{% endif %} value="{{ form.phone.value|default:'' }}">
                 {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
             </div>
 
             {# Demographics — fuel the stats dashboard (wilaya + sexe). #}
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_wilaya">{% trans "Wilaya" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
-                    <select name="wilaya" id="id_wilaya" class="form-control">
+                    <label for="id_wilaya">{% trans "Wilaya" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span><span data-client-optional {% if form.role.value != 'CLIENT' %}hidden{% endif %} class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="wilaya" id="id_wilaya" class="form-control" {% if form.wilaya.field.required %}required{% endif %}>
                         <option value="">— {% trans "Sélectionnez votre wilaya" %} —</option>
                         {% for code, label in form.fields.wilaya.choices %}
                             {% if code %}
@@ -156,8 +162,8 @@
                     {% if form.wilaya.errors %}<div class="form-error">{{ form.wilaya.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_gender">{% trans "Sexe" %} <span class="text-muted text-xs">({% trans "optionnel" %})</span></label>
-                    <select name="gender" id="id_gender" class="form-control">
+                    <label for="id_gender">{% trans "Sexe" %} <span data-requester-required {% if form.role.value == 'CLIENT' %}hidden{% endif %}>*</span><span data-client-optional {% if form.role.value != 'CLIENT' %}hidden{% endif %} class="text-muted text-xs">({% trans "optionnel" %})</span></label>
+                    <select name="gender" id="id_gender" class="form-control" {% if form.gender.field.required %}required{% endif %}>
                         <option value="">—</option>
                         {% for code, label in form.fields.gender.choices %}
                             {% if code %}
@@ -196,8 +202,6 @@
     var roleInputs = document.querySelectorAll('input[name="role"]');
     var roleOptions = document.querySelectorAll('.role-option');
     var academicFields = document.getElementById('academic-fields');
-    var studentLevel = document.getElementById('id_student_level');
-    var supervisor = document.getElementById('id_supervisor');
 
     function toggleAcademic() {
         var selected = document.querySelector('input[name="role"]:checked');
@@ -205,8 +209,19 @@
         academicFields.style.display = isRequester ? '' : 'none';
         // Required only applies to the academic channel — otherwise a GENOCLAB
         // client is blocked by a hidden "Niveau" field they can't fill.
-        studentLevel.required = isRequester;
-        supervisor.required = isRequester;
+        academicFields.querySelectorAll('input, select').forEach(function(field) {
+            field.required = isRequester;
+            field.disabled = !isRequester;
+        });
+        ['phone', 'wilaya', 'gender'].forEach(function(name) {
+            document.getElementById('id_' + name).required = isRequester;
+        });
+        document.querySelectorAll('[data-requester-required]').forEach(function(mark) {
+            mark.hidden = !isRequester;
+        });
+        document.querySelectorAll('[data-client-optional]').forEach(function(mark) {
+            mark.hidden = isRequester;
+        });
     }
 
     // The role radios are display:none (the card label is the visible control).
@@ -238,24 +253,6 @@
     if (orgType) { orgType.addEventListener('change', toggleOrgOther); }
     toggleOrgOther();
 
-    // Validate ibtikar_id on form submit
-    document.querySelector('form').addEventListener('submit', function(e) {
-        var selected = document.querySelector('input[name="role"]:checked');
-        if (selected && selected.value === 'REQUESTER') {
-            var ibtId = document.getElementById('id_ibtikar_id').value.trim();
-            if (ibtId && !/^IDGRSTD\d{5}$/.test(ibtId)) {
-                e.preventDefault();
-                var field = document.getElementById('id_ibtikar_id');
-                var err = field.parentElement.querySelector('.form-error');
-                if (!err) {
-                    err = document.createElement('div');
-                    err.className = 'form-error';
-                    field.parentElement.appendChild(err);
-                }
-                err.textContent = 'L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)';
-            }
-        }
-    });
 })();
 </script>
 {% endblock %}

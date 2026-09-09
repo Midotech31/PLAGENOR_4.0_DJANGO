@@ -5449,3 +5449,9 @@ msgstr "إبتكار فقط"
 msgctxt "channel-label"
 msgid "GENOCLAB uniquement"
 msgstr "جينوصيلاب فقط"
+
+msgid "Directeur de thèse / encadrant"
+msgstr "المشرف على الأطروحة / المؤطّر"
+
+msgid "Email du directeur de thèse / encadrant"
+msgstr "البريد الإلكتروني للمشرف على الأطروحة / المؤطّر"
