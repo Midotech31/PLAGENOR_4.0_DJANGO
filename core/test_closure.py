@@ -61,6 +61,9 @@ class ClosureTests(TestCase):
         self.assertEqual(self.req.status,'INVOICE_GENERATED')
         self.client.post(url)
         self.assertEqual(Invoice.objects.filter(request=self.req).count(),1)
+        analyst = User.objects.create_user(username='closure-assignee', role='MEMBER')
+        self.req.assigned_to = analyst.member_profile
+        self.req.save(update_fields=['assigned_to'])
         transition(self.req,'ASSIGNED',self.ops)
         self.assertEqual(self.req.status,'ASSIGNED')
 

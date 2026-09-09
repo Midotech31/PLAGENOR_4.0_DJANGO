@@ -73,8 +73,21 @@ ROLE_PERMISSIONS = {
 
 
 def get_allowed_transitions(request_obj):
-    """Return list of allowed next statuses for a request."""
-    return list(get_allowed_next_states(request_obj.channel, request_obj.status))
+    """Return graph edges with the verified, already-paid revision path."""
+    allowed = set(get_allowed_next_states(request_obj.channel, request_obj.status))
+    if _paid_revision(request_obj):
+        allowed = {'REPORT_UPLOADED'}
+    return list(allowed)
+
+
+def _paid_revision(req):
+    if req.channel != 'GENOCLAB' or req.status != 'ANALYSIS_FINISHED':
+        return False
+    from core.models import Invoice
+    return bool(req.payment_verified_at and req.payment_verified_by_id
+                and req.payment_verification_note.strip()
+                and Invoice.objects.filter(request=req, cancelled_at__isnull=True,
+                                           payment_status='COMPLETED').exists())
 
 
 def check_role_permission(request_obj, to_status, actor) -> bool:
@@ -113,7 +126,7 @@ def transition(request_obj, to_status, actor, notes='', force=False):
             raise AuthorizationError('Un forçage exige le Superadmin et une justification.')
 
         if not force:
-            allowed = get_allowed_next_states(locked.channel, old_status)
+            allowed = get_allowed_transitions(locked)
             if to_status not in allowed:
                 raise InvalidTransitionError(
                     f"Transition {old_status} -> {to_status} non autorisée pour le canal {locked.channel}. "
@@ -124,6 +137,29 @@ def transition(request_obj, to_status, actor, notes='', force=False):
                     f"Le rôle {getattr(actor, 'role', '?')} n'est pas autorisé pour la transition "
                     f"{old_status} -> {to_status}"
                 )
+
+        if not force:
+            role = getattr(actor, 'role', '')
+            if not getattr(actor, 'is_active', True):
+                raise AuthorizationError('Compte inactif.')
+            if role in ('REQUESTER', 'CLIENT') and locked.requester_id != actor.pk:
+                raise AuthorizationError('Cette demande ne vous appartient pas.')
+            if role == 'MEMBER' and (not locked.assigned_to_id or locked.assigned_to.user_id != actor.pk):
+                raise AuthorizationError('Cette analyse ne vous est pas assignée.')
+            required = {
+                'IBTIKAR_CODE_SUBMITTED': locked.ibtikar_external_code,
+                'ASSIGNED': locked.assigned_to_id,
+                'APPOINTMENT_PROPOSED': locked.appointment_date,
+                'APPOINTMENT_CONFIRMED': locked.appointment_date,
+                'ORDER_UPLOADED': locked.order_file,
+                'PAYMENT_PROOF_UPLOADED': locked.payment_receipt_file,
+                'REPORT_UPLOADED': locked.report_file,
+                'REPORT_VALIDATED': locked.report_file,
+                'SENT_TO_REQUESTER': locked.report_file,
+                'SENT_TO_CLIENT': locked.report_file,
+            }
+            if to_status in required and not required[to_status]:
+                raise InvalidTransitionError('Les données ou documents requis pour cette étape sont manquants.')
 
         if locked.channel == 'GENOCLAB' and to_status in ('INVOICE_GENERATED', 'ASSIGNED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED'):
             from core.models import Invoice
@@ -173,12 +209,18 @@ def transition(request_obj, to_status, actor, notes='', force=False):
 
 
 def _post_commit_transition(request_obj, old_status, to_status, actor, notes, force):
-    log_workflow_transition(
-        request_obj, old_status, to_status, actor,
-        {'notes': notes, 'forced': force})
-    _send_transition_emails(request_obj, old_status, to_status)
-    _create_notifications(request_obj, to_status)
-    _auto_generate_documents(request_obj, to_status)
+    effects = (
+        (log_workflow_transition, (request_obj, old_status, to_status, actor,
+                                  {'notes': notes, 'forced': force})),
+        (_send_transition_emails, (request_obj, old_status, to_status)),
+        (_create_notifications, (request_obj, to_status)),
+        (_auto_generate_documents, (request_obj, to_status)),
+    )
+    for effect, args in effects:
+        try:
+            effect(*args)
+        except Exception:
+            logger.exception('Post-commit effect failed for request=%s', request_obj.pk)
 
 
 def force_transition(request_obj, to_status, actor, notes=''):
@@ -199,6 +241,17 @@ def _create_notifications(request_obj, to_status):
         from notifications.models import Notification
         from accounts.models import User
 
+        from django.utils.translation import override
+        seen = set()
+
+        def emit(user, **kwargs):
+            if user.pk in seen or not user.is_active:
+                return
+            seen.add(user.pk)
+            with override(user.preferred_language or 'fr'):
+                kwargs['message'] = f"{request_obj.display_id}: {request_obj.get_status_display()}"
+                Notification.objects.create(user=user, **kwargs)
+
         # Notify the assigned member on relevant transitions
         if request_obj.assigned_to and to_status in (
             'ASSIGNED', 'APPOINTMENT_CONFIRMED', 'SAMPLE_RECEIVED',
@@ -207,7 +260,7 @@ def _create_notifications(request_obj, to_status):
             'REPORT_VALIDATED',  # Admin validated the report
             'SENT_TO_CLIENT',    # Report sent to client
         ):
-            Notification.objects.create(
+            emit(
                 user=request_obj.assigned_to.user,
                 message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
                 request=request_obj,
@@ -226,7 +279,7 @@ def _create_notifications(request_obj, to_status):
             'ADMIN_REVIEW',             # internal validation step
         }
         if request_obj.requester and to_status not in _SILENT_FOR_REQUESTER:
-            Notification.objects.create(
+            emit(
                 user=request_obj.requester,
                 message=f"{request_obj.display_id}: {request_obj.get_status_display()}",
                 request=request_obj,
@@ -241,7 +294,7 @@ def _create_notifications(request_obj, to_status):
         ):
             admins = User.objects.filter(role__in=(['SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'] if to_status in ('VALIDATION_FINANCE', 'PAYMENT_PROOF_UPLOADED', 'PAYMENT_CONFIRMED') else ['SUPER_ADMIN', 'PLATFORM_ADMIN']), is_active=True)
             for admin in admins:
-                Notification.objects.create(
+                emit(
                     user=admin,
                     message=f"Nouvelle action: {request_obj.display_id} → {request_obj.get_status_display()}",
                     request=request_obj,
@@ -284,6 +337,8 @@ def _send_transition_emails(request_obj, old_status, to_status):
                 old_status, to_status, exc,
             )
 
+    _safe(nem.notify_staff_transition, request_obj, to_status)
+
     # Dedicated templates first.
     if to_status == 'ASSIGNED' and request_obj.assigned_to:
         _safe(nem.notify_assignment, request_obj, request_obj.assigned_to)
@@ -313,6 +368,7 @@ def _send_transition_emails(request_obj, old_status, to_status):
         'QUOTE_SENT',                 # client must decide
         'INVOICE_GENERATED',          # client must pay
         'PAYMENT_PENDING',            # gentle nudge
+        'PAYMENT_CONFIRMED',          # receipt of verified payment
         'SENT_TO_CLIENT',             # report is ready
     }
     if to_status in _IMPORTANT_EMAIL_STATUSES and to_status not in {
@@ -374,7 +430,7 @@ def _deduct_ibtikar_on_complete(request_obj, old_status, to_status):
     from decimal import Decimal
     amount = (
         Decimal(request_obj.admin_validated_price)
-        if getattr(request_obj, 'admin_validated_price', None)
+        if getattr(request_obj, 'admin_validated_price', None) is not None
         else Decimal(request_obj.budget_amount or 0)
     )
     if amount <= 0:

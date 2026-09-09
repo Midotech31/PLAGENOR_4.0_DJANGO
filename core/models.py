@@ -386,6 +386,8 @@ class Request(models.Model):
 
     # Appointment
     appointment_date = models.DateField(null=True, blank=True)
+    appointment_time = models.TimeField(null=True, blank=True)
+    appointment_note = models.TextField(blank=True, default='')
     appointment_proposed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     appointment_confirmed = models.BooleanField(default=False)
     appointment_confirmed_at = models.DateTimeField(null=True, blank=True)

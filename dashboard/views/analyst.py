@@ -134,15 +134,11 @@ def accept_task(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to != profile or req.status != 'ASSIGNED':
         return HttpResponseForbidden()
     req.assignment_accepted = True
     req.assignment_accepted_at = timezone.now()
     req.save(update_fields=['assignment_accepted', 'assignment_accepted_at'])
-    try:
-        transition(req, 'APPOINTMENT_PROPOSED', request.user, notes='Tâche acceptée')
-    except (InvalidTransitionError, AuthorizationError, ValueError):
-        pass
     messages.success(request, f"Tâche {req.display_id} acceptée.")
     return redirect_to_detail(request, req, 'dashboard:analyst')
 
@@ -153,7 +149,7 @@ def decline_task(request, pk):
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
     profile = request.user.member_profile
-    if req.assigned_to != profile:
+    if req.assigned_to != profile or req.status != 'ASSIGNED':
         return HttpResponseForbidden()
     reason = request.POST.get('reason', '')
     # Status stays at ASSIGNED with no assignee — admin re-assigns from there.
@@ -220,31 +216,31 @@ def suggest_appointment(request, pk):
     profile = request.user.member_profile
     if req.assigned_to != profile:
         return HttpResponseForbidden()
-    date_str = request.POST.get('appointment_date', '')
-    time_str = request.POST.get('appointment_time', '')
-    appointment_note = request.POST.get('appointment_note', '')
-    if date_str:
-        from datetime import datetime
-        try:
-            req.appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    from datetime import datetime
+    from django.db import transaction
+    try:
+        with transaction.atomic():
+            req = Request.objects.select_for_update().get(pk=pk)
+            if req.assigned_to != profile or req.status not in ('ASSIGNED', 'APPOINTMENT_PROPOSED') or req.appointment_confirmed:
+                raise ValueError("Ce rendez-vous ne peut plus être modifié.")
+            day = datetime.strptime(request.POST.get('appointment_date', ''), '%Y-%m-%d').date()
+            if day < timezone.localdate():
+                raise ValueError("Le rendez-vous doit être fixé à une date future.")
+            raw_time = request.POST.get('appointment_time', '')
+            clock = datetime.strptime(raw_time, '%H:%M').time() if raw_time else None
+            note = request.POST.get('appointment_note', '').strip()
+            changed = (req.appointment_date, req.appointment_time, req.appointment_note) != (day, clock, note)
+            req.appointment_date, req.appointment_time, req.appointment_note = day, clock, note
             req.appointment_proposed_by = request.user
-            req.save(update_fields=['appointment_date', 'appointment_proposed_by'])
-            # Build transition notes with time and message
-            notes_parts = [f'RDV proposé: {req.appointment_date}']
-            if time_str:
-                notes_parts.append(f'Heure: {time_str}')
-            if appointment_note:
-                notes_parts.append(f'Note: {appointment_note}')
-            transition_notes = ' — '.join(notes_parts)
-            # Transition to APPOINTMENT_PROPOSED if currently ASSIGNED
+            req.save(update_fields=['appointment_date', 'appointment_time', 'appointment_note', 'appointment_proposed_by'])
             if req.status == 'ASSIGNED':
-                try:
-                    transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=transition_notes)
-                except (InvalidTransitionError, AuthorizationError, ValueError):
-                    pass
-            messages.success(request, f"Date de RDV proposée: {req.appointment_date}" + (f" à {time_str}" if time_str else ""))
-        except ValueError:
-            messages.error(request, "Date invalide.")
+                transition(req, 'APPOINTMENT_PROPOSED', request.user, notes=f'RDV proposé: {day}')
+            elif changed:
+                from notifications.emails import notify_appointment
+                transaction.on_commit(lambda: notify_appointment(req), robust=True)
+        messages.success(request, f"Date de RDV proposée: {day}")
+    except (ValueError, InvalidTransitionError, AuthorizationError) as exc:
+        messages.error(request, str(exc))
     return redirect_to_detail(request, req, 'dashboard:analyst')
 
 
@@ -274,6 +270,7 @@ def request_detail(request, pk):
         # is_observer = True AND NOT assignee → hide every action UI.
         'is_observer': is_observer and not is_assignee,
         'is_assignee': is_assignee,
+        'can_upload_report': 'REPORT_UPLOADED' in get_allowed_transitions(req),
     })
 
 
@@ -379,7 +376,7 @@ def upload_report(request, pk):
         return HttpResponseForbidden()
     
     # For GENOCLAB: Payment must be confirmed before report upload
-    if req.channel == 'GENOCLAB' and req.status != 'PAYMENT_CONFIRMED':
+    if req.channel == 'GENOCLAB' and 'REPORT_UPLOADED' not in get_allowed_transitions(req):
         messages.error(request, "Le paiement doit être confirmé avant de télécharger le rapport. Le client sera notifié pour effectuer le paiement.")
         return redirect_to_detail(request, req, 'dashboard:analyst')
 

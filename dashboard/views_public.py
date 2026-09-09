@@ -309,14 +309,6 @@ def guest_submit(request):
             submission_data['quote_amount'] = quote
             req = submit_genoclab_request(submission_data, user=None)
 
-        # Send email with tracking code
-        try:
-            from notifications.emails import notify_guest_tracking_code
-            notify_guest_tracking_code(req)
-        except Exception:
-            logger.exception(
-                "Unable to send guest tracking code for request %s", req.pk)
-
         return render(request, 'pages/guest_submit_success.html', {
             'req': req,
             'guest_token': guest_token,
