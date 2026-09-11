@@ -220,3 +220,8 @@ translations:
     name: Identification microbienne via MALDI-TOF MS
     description: Identification microbienne rapide et fiable des bactéries, levures et moisissures par spectrométrie
       de masse MALDI-TOF (profil protéique) sur plateforme MALDI Biotyper.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Spectromètre de masse MALDI-TOF — Bruker MALDI Biotyper"
+  overview: "L’identification microbienne repose sur la comparaison d’une empreinte protéique avec une base de référence. Le résultat dépend notamment de la qualité de l’échantillon et de la couverture de cette base ; il ne constitue pas un séquençage du génome."

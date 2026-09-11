@@ -11,10 +11,8 @@
     {% if services %}
     <div class="services-grid" style="padding:0;">
         {% for service in services %}
-        <div class="service-card">
-            <div class="service-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            </div>
+        <div class="service-card service-card--equipment">
+            {% include "includes/service_equipment.html" %}
             <div class="service-code">{{ service.code }}</div>
             <h4>{{ service.name }}</h4>
             <p>{{ service.description|truncatewords:25 }}</p>
@@ -26,7 +24,7 @@
                 {% endif %}
                 <span>{{ service.turnaround_days }} {% trans "jours" %}</span>
             </div>
-            <div style="display:flex; gap:8px; margin-top:12px;">
+            <div class="service-actions">
                 <a href="{% url 'service_detail' service.code %}" class="btn btn-sm btn-outline" style="flex:1; text-align:center;">{% trans "En savoir plus" %}</a>
                 <a href="{% url 'service_landing' service.code %}" class="btn btn-sm btn-primary" style="flex:1; text-align:center;">{% trans "Demander" %}</a>
             </div>

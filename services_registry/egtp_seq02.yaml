@@ -154,3 +154,8 @@ translations:
       genetic markers such as 16S rRNA, ITS, and 18S rRNA. The workflow includes DNA extraction, PCR amplification,
       amplicon cleanup, and Sanger sequencing. Identification is reported at species level when sequence quality
       and database coverage allow.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Thermocycleur et analyseur génétique Sanger"
+  overview: "Cette prestation associe une analyse ciblée par PCR au séquençage Sanger et à la comparaison avec des séquences de référence. Le marqueur étudié dépend du microorganisme. L’extraction d’ADN doit être précisée dans le périmètre demandé."

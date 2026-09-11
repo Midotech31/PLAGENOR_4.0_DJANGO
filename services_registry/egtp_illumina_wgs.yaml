@@ -153,3 +153,12 @@ translations:
     description: Whole Genome Sequencing (WGS) of microbial isolates using Illumina high-throughput sequencing technology.
       The service includes genomic DNA extraction from pure cultures, nucleic acid quality control, Illumina library
       preparation, paired-end sequencing, and delivery of raw sequencing data.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Séquenceur Illumina MiSeq"
+  overview: "Le séquençage du génome entier fournit des données génomiques sur un isolat microbien. Le périmètre de préparation, de contrôle qualité et d’analyse des données est à préciser avec la plateforme ; cette prestation se distingue du profilage ciblé 16S."
+  photo_url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Illumina_MiSeq_sequencer.jpg/960px-Illumina_MiSeq_sequencer.jpg"
+  photo_source: "https://commons.wikimedia.org/wiki/File:Illumina_MiSeq_sequencer.jpg"
+  photo_credit: "Konrad Förstner · CC0"
+  photo_alt: "Photographie illustrative d’un séquenceur Illumina MiSeq"

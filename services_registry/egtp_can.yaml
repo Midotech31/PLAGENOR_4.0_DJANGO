@@ -182,3 +182,8 @@ translations:
     description: Quality control of nucleic acids (DNA or RNA) including fluorimetric quantification and integrity
       assessment by agarose gel electrophoresis. This service is intended to assess sample suitability prior to
       downstream molecular analyses.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Fluorimètre Qubit et électrophorèse sur gel"
+  overview: "Cette prestation aide à évaluer la qualité des acides nucléiques avant une analyse moléculaire. La quantification et le contrôle d’intégrité apportent des informations complémentaires ; les techniques retenues sont précisées dans la demande."

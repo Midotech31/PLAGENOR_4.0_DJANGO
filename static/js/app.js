@@ -14,6 +14,13 @@ function escapePreview(value) {
 
 // Clickable table rows — navigate to data-href on click
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.service-equipment img').forEach(function (image) {
+        function showFallback() {
+            image.closest('.service-equipment').classList.add('equipment-photo-failed');
+        }
+        image.addEventListener('error', showFallback);
+        if (image.complete && image.naturalWidth === 0) showFallback();
+    });
     document.querySelectorAll('tr.clickable-row[data-href]').forEach(function (row) {
         row.addEventListener('click', function () {
             window.location.href = row.dataset.href;
