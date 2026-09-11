@@ -1,5 +1,7 @@
 """Equipment presentation is localized, optional and independent of billing."""
 import io
+from django.contrib.staticfiles import finders
+from django.templatetags.static import static
 from django.core.management import call_command
 from django.template.loader import render_to_string
 from django.test import TestCase, override_settings
@@ -31,14 +33,15 @@ class ServiceEquipmentTests(TestCase):
                     self.assertIn(escape(catalogue_text(presentation['overview'])), detail)
                 self.assertNotIn(str(service.ibtikar_price), detail)
 
-    def test_uploaded_photo_overrides_external_photo_on_every_public_page(self):
+    def test_collection_photo_is_used_on_every_public_page(self):
         service = Service.objects.get(code='EGTP-Illumina-Microbial-WGS')
         service.image = 'service_images/actual-miseq.jpg'
         service.save(update_fields=['image'])
         for url in ('/', reverse('services'), reverse('service_detail', args=[service.code]),
                     reverse('service_landing', args=[service.code])):
             response = self.client.get(url)
-            self.assertContains(response, service.image.url)
+            self.assertContains(response, static(service_presentation(service)['photo_static']))
+            self.assertNotContains(response, service.image.url)
             self.assertNotContains(response, '960px-Illumina_MiSeq_sequencer.jpg')
 
     def test_future_service_without_registry_or_photo_has_safe_fallback(self):
@@ -48,11 +51,17 @@ class ServiceEquipmentTests(TestCase):
         self.assertNotIn('<img', result)
         self.assertIn('service-equipment-placeholder', result)
 
-    def test_external_photo_has_provenance_and_no_referrer(self):
+    def test_all_services_use_existing_collection_photos(self):
+        for definition in load_service_registry().values():
+            presentation = definition['presentation']
+            self.assertTrue(finders.find(presentation['photo_static']))
+            self.assertNotIn('photo_url', presentation)
+            self.assertNotIn('photo_source', presentation)
+
+    def test_photo_caption_is_localized_without_external_attribution(self):
         service = Service.objects.get(code='EGTP-PCR')
         with override('en'):
             result = render_to_string('includes/service_equipment.html', {'service': service, 'detail': True})
-        self.assertIn('referrerpolicy="no-referrer"', result)
-        self.assertIn('https://commons.wikimedia.org/wiki/File:PCR_machine.jpg', result)
-        self.assertIn('model not confirmed at PLAGENOR', result)
-        self.assertIn('Illustrative photo taken outside PLAGENOR.', result)
+        self.assertIn('Applied Biosystems thermal cycler', result)
+        self.assertNotIn('wikimedia', result)
+        self.assertNotIn('outside PLAGENOR', result)

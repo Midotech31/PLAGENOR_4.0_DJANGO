@@ -1,18 +1,18 @@
-# Service equipment presentation — 11 September 2026
+# Service equipment photography
 
-The user-supplied `Ibtikar canvas PLAGENOR-ESSBO VF 2025.ods` contains 40 equipment entries and 11 historical services. Its photo fields are empty and no image objects are embedded. The current eight-service registry remains authoritative for active services, prices and service scope. No historical prices, availability or contact details were imported.
+The eight active services use seven original PLAGENOR photographs bundled with the application. The Sanger analyzer photograph is shared by sequencing and sequence-based identification. Captions are available in French, English and Arabic. Photographs are displayed without cropping and loaded lazily; an unavailable image retains the equipment label and a neutral placeholder.
 
-All eight active services now have associated equipment and explanatory scope notes in French, English and Arabic. These appear as presentation metadata, separate from stored financial and administrator-managed service data. Existing uploaded photographs take precedence on the homepage, catalogue, detail and request landing pages. New services can use the existing image-upload control; an admin preview is included. Failed images retain a neutral fallback and the equipment name.
+| Service | Photograph |
+|---|---|
+| Nucleic acid quality control | ChemiDoc MP imaging system |
+| Microbial WGS | Illumina MiSeq |
+| MALDI-TOF identification | MALDI Biotyper sirius |
+| Lyophilization | Martin Christ freeze dryer |
+| PCR | Applied Biosystems thermal cycler |
+| Primer synthesis | MerMade 4 |
+| Sanger sequencing | Applied Biosystems 3500 |
+| Sequence-based identification | Applied Biosystems 3500 |
 
-## External illustrative photographs
+The ChemiDoc photograph illustrates gel imaging within quality control; it does not depict a Qubit fluorometer. Equipment captions describe the photograph separately from the service methods.
 
-- Illumina MiSeq: Konrad Förstner, CC0 1.0 public-domain dedication. https://commons.wikimedia.org/wiki/File:Illumina_MiSeq_sequencer.jpg
-- PCR thermal cycler: Tinojasontran, released into the public domain. https://commons.wikimedia.org/wiki/File:PCR_machine.jpg
-
-Both are explicitly illustrative photographs taken outside PLAGENOR. The PCR photo shows a Bio-Rad model, not a confirmed model from ESSBO. Source links appear on the detail/request pages. Images load from the explicitly allowed `thumb.wikimedia.org` host with no referrer. They remain externally hosted because the local download attempt was blocked by network approval cancellation. The browser regression test substitutes a local fixture for deterministic layout and failure testing; it does not certify external CDN availability.
-
-Actual photographs are still needed for MALDI Biotyper, MerMade 4, Beta 2-8 LSCplus, the nucleic-acid QC equipment and the Sanger analyzer (used by two services). Manufacturer-owned photographs and photos of mismatched sequencer models were not substituted.
-
-## Validation
-
-See the associated PR for CI results. Regression tests cover all locales, all eight mappings, uploaded-photo precedence, unknown future services, source disclosure, responsive layout and image failures. No migration or pricing change is required.
+Public equipment photographs come exclusively from the bundled collection. Legacy service image uploads do not override this collection. Unmapped services show a placeholder. External image URLs and their CSP exception have been removed. No database migration is required.

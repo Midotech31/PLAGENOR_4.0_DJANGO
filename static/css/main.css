@@ -1791,7 +1791,7 @@ a:has(.service-card):hover .service-card,
 /* Equipment photography: full instruments, stable card geometry, RTL-safe spacing. */
 .service-card--equipment { display:flex; flex-direction:column; height:100%; }
 .service-equipment { margin:0 0 20px; overflow:hidden; border-radius:12px; background:#f4f6fb; border:1px solid var(--border-light); }
-.service-equipment img { display:block; width:100%; height:190px; object-fit:contain; background:#fff; }
+.service-equipment img { display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:contain; background:#fff; }
 .service-equipment-placeholder { height:190px; display:grid; place-items:center; background:linear-gradient(145deg,#eef2ff,#f8fafc); color:var(--primary); }
 .service-equipment-placeholder svg { width:54px; height:54px; }
 .service-equipment:has(img) .service-equipment-placeholder { display:none; }
@@ -1799,8 +1799,8 @@ a:has(.service-card):hover .service-card,
 .service-equipment.equipment-photo-failed .service-equipment-placeholder { display:grid; }
 .service-equipment figcaption { padding:12px 14px; text-align:start; line-height:1.5; }
 .service-equipment figcaption strong { display:block; font-size:.8rem; font-weight:600; color:var(--text); }
-.equipment-label { display:block; font-size:.68rem; color:var(--text-secondary); margin-bottom:4px; }
-.service-equipment figcaption small { display:block; font-size:.68rem; color:var(--text-secondary); margin-top:4px; }
+.equipment-label { display:block; font-size:.75rem; color:var(--text-secondary); margin-bottom:4px; }
+.service-equipment figcaption small { display:block; font-size:.75rem; color:var(--text-secondary); margin-top:4px; }
 .service-equipment--detail { max-width:600px; margin:0 auto 28px; }
 .service-equipment--detail img { height:auto; max-height:360px; aspect-ratio:4/3; }
 .service-equipment--detail .service-equipment-placeholder { height:110px; }
@@ -1810,7 +1810,7 @@ a:has(.service-card):hover .service-card,
 .service-actions { display:flex; gap:8px; margin-top:auto; padding-top:16px; }
 @media (max-width:480px) {
     .service-card--equipment { padding:20px; }
-    .service-equipment img, .service-equipment-placeholder { height:200px; }
+    .service-equipment-placeholder { height:200px; }
     .service-equipment--detail img { height:auto; }
 }
 

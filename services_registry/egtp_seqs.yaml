@@ -149,3 +149,5 @@ translations:
 presentation:
   equipment: "Analyseur génétique pour le séquençage Sanger"
   overview: "Le séquençage Sanger permet de lire une séquence d’ADN ciblée. Le sens de lecture demandé et l’état du produit fourni déterminent le périmètre de la prestation. L’identification d’un microorganisme par comparaison de séquences relève de la prestation dédiée."
+  photo_static: "images/equipment/sanger-3500.jpg"
+  photo_alt: "Analyseur génétique Applied Biosystems 3500 — PLAGENOR"

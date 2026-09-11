@@ -114,7 +114,7 @@ class ContentSecurityPolicyMiddleware:
     POLICY = (
         "default-src 'self'; base-uri 'self'; object-src 'none'; "
         "frame-ancestors 'none'; form-action 'self'; "
-        "img-src 'self' data: blob: https://thumb.wikimedia.org; font-src 'self' data:; "
+        "img-src 'self' data: blob:; font-src 'self' data:; "
         "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
         "connect-src 'self'"
     )
