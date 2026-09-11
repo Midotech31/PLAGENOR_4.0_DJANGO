@@ -166,3 +166,5 @@ translations:
 presentation:
   equipment: "Synthétiseur d’oligonucléotides MerMade 4"
   overview: "La synthèse porte sur les séquences d’amorces fournies par le demandeur. La conception des amorces et la validation de leur adéquation au projet doivent être distinguées de la fabrication ; toute prestation complémentaire est à convenir au préalable."
+  photo_static: "images/equipment/mermade-4.jpg"
+  photo_alt: "Synthétiseur MerMade 4 — PLAGENOR"

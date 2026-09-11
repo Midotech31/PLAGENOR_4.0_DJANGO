@@ -1,10 +1,8 @@
-{% load i18n dashboard_extras %}
+{% load i18n static dashboard_extras %}
 {% service_presentation service as equipment %}
 <figure class="service-equipment{% if detail %} service-equipment--detail{% endif %}">
-    {% if service.image %}
-    <img src="{{ service.image.url }}" alt="{{ service.name }}" width="960" height="720" loading="lazy" decoding="async">
-    {% elif equipment.photo_url %}
-    <img src="{{ equipment.photo_url }}" alt="{{ equipment.photo_alt|catalogue_text }}" width="960" height="720" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+    {% if equipment.photo_static %}
+    <img src="{% static equipment.photo_static %}" alt="{{ equipment.photo_alt|catalogue_text }}" width="1824" height="1368" loading="lazy" decoding="async">
     {% endif %}
     <div class="service-equipment-placeholder" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v7l-6 9a1 1 0 0 0 1 2h14a1 1 0 0 0 1-2l-6-9V3M8 15h8"/></svg>
@@ -13,10 +11,7 @@
     <figcaption>
         <span class="equipment-label">{{ "Équipement associé"|catalogue_text }}</span>
         <strong>{{ equipment.equipment|catalogue_text }}</strong>
-        {% if equipment.photo_url and not service.image %}
-        <small>{{ "Photo illustrative, prise hors de PLAGENOR."|catalogue_text }}</small>
-        {% if detail %}<small><a href="{{ equipment.photo_source }}" rel="noopener noreferrer">{{ equipment.photo_credit }}</a></small>{% endif %}
-        {% endif %}
+        {% if equipment.photo_static %}<small>{{ equipment.photo_alt|catalogue_text }}</small>{% endif %}
     </figcaption>
     {% endif %}
 </figure>

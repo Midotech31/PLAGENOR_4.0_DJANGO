@@ -1032,12 +1032,6 @@
     "التجهيزات المرتبطة بالخدمة"
   ],
   [
-    "Photo illustrative, prise hors de PLAGENOR.",
-    "Photo illustrative, prise hors de PLAGENOR.",
-    "Illustrative photo taken outside PLAGENOR.",
-    "صورة توضيحية التُقطت خارج الأرضية التكنولوجية للجينوميك."
-  ],
-  [
     "À propos de cette prestation",
     "À propos de cette prestation",
     "About this service",
@@ -1140,15 +1134,45 @@
     "يزيل التجفيف بالتجميد الماء من العينة المجمّدة بالتسامي تحت التفريغ. وتُقيَّم ملاءمة المادة والعبوة والنتيجة المتوقعة قبل قبولها. ولا تُعدّ هذه العملية طريقةً للتعقيم."
   ],
   [
-    "Photographie illustrative d’un séquenceur Illumina MiSeq",
-    "Photographie illustrative d’un séquenceur Illumina MiSeq",
-    "Illustrative photograph of an Illumina MiSeq sequencer",
-    "صورة توضيحية لجهاز Illumina MiSeq لتحديد التسلسل"
+    "Système d’imagerie ChemiDoc MP — PLAGENOR",
+    "Système d’imagerie ChemiDoc MP — PLAGENOR",
+    "ChemiDoc MP imaging system — PLAGENOR",
+    "نظام التصوير ChemiDoc MP — PLAGENOR"
   ],
   [
-    "Photographie illustrative d’un thermocycleur Bio-Rad, modèle non confirmé à PLAGENOR",
-    "Photographie illustrative d’un thermocycleur Bio-Rad, modèle non confirmé à PLAGENOR",
-    "Illustrative photograph of a Bio-Rad thermal cycler; model not confirmed at PLAGENOR",
-    "صورة توضيحية لجهاز تدوير حراري من Bio-Rad؛ الطراز غير مؤكّد لدى الأرضية"
+    "Séquenceur Illumina MiSeq — PLAGENOR",
+    "Séquenceur Illumina MiSeq — PLAGENOR",
+    "Illumina MiSeq sequencer — PLAGENOR",
+    "جهاز تحديد التسلسل Illumina MiSeq — PLAGENOR"
+  ],
+  [
+    "MALDI Biotyper sirius — PLAGENOR",
+    "MALDI Biotyper sirius — PLAGENOR",
+    "MALDI Biotyper sirius — PLAGENOR",
+    "MALDI Biotyper sirius — PLAGENOR"
+  ],
+  [
+    "Lyophilisateur Martin Christ — PLAGENOR",
+    "Lyophilisateur Martin Christ — PLAGENOR",
+    "Martin Christ freeze dryer — PLAGENOR",
+    "جهاز التجفيف بالتجميد Martin Christ — PLAGENOR"
+  ],
+  [
+    "Thermocycleur Applied Biosystems — PLAGENOR",
+    "Thermocycleur Applied Biosystems — PLAGENOR",
+    "Applied Biosystems thermal cycler — PLAGENOR",
+    "جهاز التدوير الحراري Applied Biosystems — PLAGENOR"
+  ],
+  [
+    "Synthétiseur MerMade 4 — PLAGENOR",
+    "Synthétiseur MerMade 4 — PLAGENOR",
+    "MerMade 4 synthesizer — PLAGENOR",
+    "جهاز التصنيع MerMade 4 — PLAGENOR"
+  ],
+  [
+    "Analyseur génétique Applied Biosystems 3500 — PLAGENOR",
+    "Analyseur génétique Applied Biosystems 3500 — PLAGENOR",
+    "Applied Biosystems 3500 genetic analyzer — PLAGENOR",
+    "المحلّل الوراثي Applied Biosystems 3500 — PLAGENOR"
   ]
 ]

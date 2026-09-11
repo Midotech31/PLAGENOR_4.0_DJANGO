@@ -159,3 +159,5 @@ translations:
 presentation:
   equipment: "Thermocycleur et analyseur génétique Sanger"
   overview: "Cette prestation associe une analyse ciblée par PCR au séquençage Sanger et à la comparaison avec des séquences de référence. Le marqueur étudié dépend du microorganisme. L’extraction d’ADN doit être précisée dans le périmètre demandé."
+  photo_static: "images/equipment/sanger-3500.jpg"
+  photo_alt: "Analyseur génétique Applied Biosystems 3500 — PLAGENOR"

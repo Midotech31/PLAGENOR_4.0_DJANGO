@@ -173,3 +173,5 @@ translations:
 presentation:
   equipment: "Lyophilisateur Martin Christ Beta 2-8 LSCplus"
   overview: "La lyophilisation retire l’eau d’un échantillon congelé par sublimation sous vide. L’adéquation du matériau, du conditionnement et du résultat attendu est évaluée avant prise en charge. Cette opération n’est pas une méthode de stérilisation."
+  photo_static: "images/equipment/lyophilisateur.jpg"
+  photo_alt: "Lyophilisateur Martin Christ — PLAGENOR"

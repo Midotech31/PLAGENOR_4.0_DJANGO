@@ -201,7 +201,5 @@ translations:
 presentation:
   equipment: "Thermocycleur PCR"
   overview: "La PCR permet d’amplifier une région ciblée de l’ADN. La demande précise la cible, l’origine de l’échantillon et les amorces disponibles. La synthèse des amorces et le séquençage sont des prestations distinctes lorsqu’ils ne sont pas explicitement inclus."
-  photo_url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/PCR_machine.jpg/500px-PCR_machine.jpg"
-  photo_source: "https://commons.wikimedia.org/wiki/File:PCR_machine.jpg"
-  photo_credit: "Tinojasontran · PD"
-  photo_alt: "Photographie illustrative d’un thermocycleur Bio-Rad, modèle non confirmé à PLAGENOR"
+  photo_static: "images/equipment/thermocycleur.jpg"
+  photo_alt: "Thermocycleur Applied Biosystems — PLAGENOR"

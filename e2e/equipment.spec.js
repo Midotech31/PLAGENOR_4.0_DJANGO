@@ -1,17 +1,17 @@
 const { test, expect } = require('@playwright/test');
-const path = require('path');
 
 for (const lang of ['fr', 'en', 'ar']) {
   test(`equipment cards and details remain usable in ${lang}`, async ({ page, context }, testInfo) => {
-    // Deterministic image delivery exercises layout without depending on a third-party CDN.
-    await page.route('https://thumb.wikimedia.org/**', route => route.fulfill({
-      path: path.join(__dirname, '../static/images/plagenor_logo.png'), contentType: 'image/png',
-    }));
     await context.addCookies([{ name: 'django_language', value: lang, url: 'http://127.0.0.1:8001' }]);
     await page.goto('/services/');
     await expect(page.locator('.service-card--equipment')).toHaveCount(8);
-    await expect(page.locator('.service-equipment img')).toHaveCount(2);
+    await expect(page.locator('.service-equipment img')).toHaveCount(8);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const photo of await page.locator('.service-equipment img').all()) {
+      await photo.scrollIntoViewIfNeeded();
+      await expect.poll(() => photo.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+      expect(await photo.getAttribute('src')).toMatch(/\/static\/images\/equipment\//);
+    }
     const card = page.locator('.service-card').filter({ hasText: 'EGTP-Illumina-Microbial-WGS' });
     await card.scrollIntoViewIfNeeded();
     await expect.poll(() => card.locator('img').evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
