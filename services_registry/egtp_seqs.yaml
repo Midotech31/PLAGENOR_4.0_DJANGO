@@ -144,3 +144,8 @@ translations:
     description: High-quality DNA sequencing using the Sanger method for PCR amplicons. The service supports sequencing
       of purified or non-purified PCR products using forward, reverse, or bidirectional reads. Results are delivered
       as chromatograms and FASTA sequence files. No identification or interpretation is included.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Analyseur génétique pour le séquençage Sanger"
+  overview: "Le séquençage Sanger permet de lire une séquence d’ADN ciblée. Le sens de lecture demandé et l’état du produit fourni déterminent le périmètre de la prestation. L’identification d’un microorganisme par comparaison de séquences relève de la prestation dédiée."

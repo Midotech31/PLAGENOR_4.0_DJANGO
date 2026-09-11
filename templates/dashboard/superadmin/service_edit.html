@@ -43,7 +43,7 @@
             <div class="form-group">
                 <label>{% trans "Image" %}</label>
                 <input type="file" name="image" class="form-control" accept="image/*">
-                {% if service.image %}<p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
+                {% if service.image %}<img src="{{ service.image.url }}" alt="{{ service.name }}" width="240" height="180" style="object-fit:contain;max-width:100%;margin-top:12px;" loading="lazy"><p class="text-sm text-muted">{% trans "Image actuelle" %}: {{ service.image.name }}</p>{% endif %}
             </div>
 
             <!-- =================================================== -->

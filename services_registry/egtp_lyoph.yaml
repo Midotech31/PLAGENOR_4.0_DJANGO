@@ -168,3 +168,8 @@ translations:
     description: Lyophilisation (séchage à froid sous vide) d’échantillons biologiques afin d’éliminer l’eau par
       sublimation sous vide à basse température, en utilisant le lyophilisateur Beta 2-8 LSCplus (Martin Christ,
       Allemagne).
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Lyophilisateur Martin Christ Beta 2-8 LSCplus"
+  overview: "La lyophilisation retire l’eau d’un échantillon congelé par sublimation sous vide. L’adéquation du matériau, du conditionnement et du résultat attendu est évaluée avant prise en charge. Cette opération n’est pas une méthode de stérilisation."

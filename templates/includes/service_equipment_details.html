@@ -1,0 +1,8 @@
+{% load dashboard_extras %}
+{% service_presentation service as equipment %}
+{% if equipment.overview %}
+<div class="card equipment-overview"><div class="card-body">
+    <h3>{{ "À propos de cette prestation"|catalogue_text }}</h3>
+    <p class="text-muted">{{ equipment.overview|catalogue_text }}</p>
+</div></div>
+{% endif %}

@@ -9,6 +9,7 @@
         <a href="{% url 'services' %}" class="text-muted" style="font-size:0.85rem;">&larr; {% trans "Retour aux services" %}</a>
     </div>
 
+    {% include "includes/service_equipment.html" with detail=True %}
     <div style="text-align:center; margin-bottom:32px;">
         <div class="service-code" style="font-size:0.85rem; color:var(--indigo-600, #4F46E5); font-weight:600; margin-bottom:8px;">{{ service.code }}</div>
         <h2 class="section-title" style="margin-bottom:8px;">{{ service.name }}</h2>
@@ -24,6 +25,8 @@
         <div style="margin-top:12px;"><span class="badge-status" style="background:#ccfbf1; color:#0d9488;">{% trans "GENOCLAB" %}</span></div>
         {% endif %}
     </div>
+
+    {% include "includes/service_equipment_details.html" %}
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
         <!-- Pricing -->

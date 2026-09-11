@@ -1024,5 +1024,131 @@
     "Marqueur de taille",
     "Size marker for agarose gel electrophoresis",
     "واسم الحجم للرحلان الكهربائي على هلام الأغاروز"
+  ],
+  [
+    "Équipement associé",
+    "Équipement associé",
+    "Associated equipment",
+    "التجهيزات المرتبطة بالخدمة"
+  ],
+  [
+    "Photo illustrative, prise hors de PLAGENOR.",
+    "Photo illustrative, prise hors de PLAGENOR.",
+    "Illustrative photo taken outside PLAGENOR.",
+    "صورة توضيحية التُقطت خارج الأرضية التكنولوجية للجينوميك."
+  ],
+  [
+    "À propos de cette prestation",
+    "À propos de cette prestation",
+    "About this service",
+    "حول هذه الخدمة"
+  ],
+  [
+    "Fluorimètre Qubit et électrophorèse sur gel",
+    "Fluorimètre Qubit et électrophorèse sur gel",
+    "Qubit fluorometer and gel electrophoresis",
+    "جهاز Qubit للقياس الفلوري والرحلان الكهربائي الهلامي"
+  ],
+  [
+    "Cette prestation aide à évaluer la qualité des acides nucléiques avant une analyse moléculaire. La quantification et le contrôle d’intégrité apportent des informations complémentaires ; les techniques retenues sont précisées dans la demande.",
+    "Cette prestation aide à évaluer la qualité des acides nucléiques avant une analyse moléculaire. La quantification et le contrôle d’intégrité apportent des informations complémentaires ; les techniques retenues sont précisées dans la demande.",
+    "This service helps assess nucleic acid quality before molecular analysis. Quantification and integrity assessment provide complementary information; the selected methods are specified in the request.",
+    "تساعد هذه الخدمة على تقييم جودة الأحماض النووية قبل التحليل الجزيئي. يوفّر القياس الكمي وتقييم سلامة الأحماض النووية معلومات متكاملة، وتُحدَّد التقنيات المطلوبة في الطلب."
+  ],
+  [
+    "Spectromètre de masse MALDI-TOF — Bruker MALDI Biotyper",
+    "Spectromètre de masse MALDI-TOF — Bruker MALDI Biotyper",
+    "MALDI-TOF mass spectrometer — Bruker MALDI Biotyper",
+    "مطياف الكتلة MALDI-TOF — Bruker MALDI Biotyper"
+  ],
+  [
+    "L’identification microbienne repose sur la comparaison d’une empreinte protéique avec une base de référence. Le résultat dépend notamment de la qualité de l’échantillon et de la couverture de cette base ; il ne constitue pas un séquençage du génome.",
+    "L’identification microbienne repose sur la comparaison d’une empreinte protéique avec une base de référence. Le résultat dépend notamment de la qualité de l’échantillon et de la couverture de cette base ; il ne constitue pas un séquençage du génome.",
+    "Microbial identification compares a protein fingerprint with a reference database. Results depend on sample quality and database coverage; this is not whole-genome sequencing.",
+    "يعتمد التعرف على الكائنات الحية الدقيقة على مقارنة بصمتها البروتينية بقاعدة بيانات مرجعية. وتتأثر النتيجة بجودة العينة ومدى تمثيل الكائنات في القاعدة؛ وهذه التقنية ليست تسلسلاً للجينوم الكامل."
+  ],
+  [
+    "Séquenceur Illumina MiSeq",
+    "Séquenceur Illumina MiSeq",
+    "Illumina MiSeq sequencer",
+    "جهاز Illumina MiSeq لتحديد التسلسل"
+  ],
+  [
+    "Le séquençage du génome entier fournit des données génomiques sur un isolat microbien. Le périmètre de préparation, de contrôle qualité et d’analyse des données est à préciser avec la plateforme ; cette prestation se distingue du profilage ciblé 16S.",
+    "Le séquençage du génome entier fournit des données génomiques sur un isolat microbien. Le périmètre de préparation, de contrôle qualité et d’analyse des données est à préciser avec la plateforme ; cette prestation se distingue du profilage ciblé 16S.",
+    "Whole-genome sequencing provides genomic data for a microbial isolate. Sample preparation, quality control and data analysis scope should be agreed with the platform; this service differs from targeted 16S profiling.",
+    "يوفّر تسلسل الجينوم الكامل بيانات جينومية لعزلة ميكروبية. ويُحدَّد نطاق تحضير العينة وضبط الجودة وتحليل البيانات بالتنسيق مع الأرضية؛ وتختلف هذه الخدمة عن التوصيف الموجّه باستخدام 16S."
+  ],
+  [
+    "Thermocycleur PCR",
+    "Thermocycleur PCR",
+    "PCR thermal cycler",
+    "جهاز التدوير الحراري لتفاعل PCR"
+  ],
+  [
+    "La PCR permet d’amplifier une région ciblée de l’ADN. La demande précise la cible, l’origine de l’échantillon et les amorces disponibles. La synthèse des amorces et le séquençage sont des prestations distinctes lorsqu’ils ne sont pas explicitement inclus.",
+    "La PCR permet d’amplifier une région ciblée de l’ADN. La demande précise la cible, l’origine de l’échantillon et les amorces disponibles. La synthèse des amorces et le séquençage sont des prestations distinctes lorsqu’ils ne sont pas explicitement inclus.",
+    "PCR amplifies a targeted DNA region. The request specifies the target, sample origin and available primers. Primer synthesis and sequencing are separate services unless explicitly included.",
+    "يتيح تفاعل PCR تضخيم منطقة مستهدفة من الحمض النووي DNA. ويحدّد الطلب المنطقة المستهدفة ومصدر العينة والبادئات المتاحة. ويُعدّ تصنيع البادئات وتحديد التسلسل خدمتين منفصلتين ما لم يُنصّ صراحةً على إدراجهما."
+  ],
+  [
+    "Synthétiseur d’oligonucléotides MerMade 4",
+    "Synthétiseur d’oligonucléotides MerMade 4",
+    "MerMade 4 oligonucleotide synthesizer",
+    "جهاز MerMade 4 لتصنيع قليلات النوكليوتيد"
+  ],
+  [
+    "La synthèse porte sur les séquences d’amorces fournies par le demandeur. La conception des amorces et la validation de leur adéquation au projet doivent être distinguées de la fabrication ; toute prestation complémentaire est à convenir au préalable.",
+    "La synthèse porte sur les séquences d’amorces fournies par le demandeur. La conception des amorces et la validation de leur adéquation au projet doivent être distinguées de la fabrication ; toute prestation complémentaire est à convenir au préalable.",
+    "Synthesis uses the primer sequences supplied by the requester. Primer design and assessment of their suitability for the project are distinct from manufacturing; any additional service must be agreed beforehand.",
+    "يُجرى التصنيع وفق تسلسلات البادئات التي يقدّمها صاحب الطلب. ويختلف تصميم البادئات وتقييم ملاءمتها للمشروع عن تصنيعها؛ ويجب الاتفاق مسبقاً على أي خدمة إضافية."
+  ],
+  [
+    "Analyseur génétique pour le séquençage Sanger",
+    "Analyseur génétique pour le séquençage Sanger",
+    "Genetic analyzer for Sanger sequencing",
+    "محلّل وراثي لتحديد التسلسل بطريقة سانغر"
+  ],
+  [
+    "Le séquençage Sanger permet de lire une séquence d’ADN ciblée. Le sens de lecture demandé et l’état du produit fourni déterminent le périmètre de la prestation. L’identification d’un microorganisme par comparaison de séquences relève de la prestation dédiée.",
+    "Le séquençage Sanger permet de lire une séquence d’ADN ciblée. Le sens de lecture demandé et l’état du produit fourni déterminent le périmètre de la prestation. L’identification d’un microorganisme par comparaison de séquences relève de la prestation dédiée.",
+    "Sanger sequencing reads a targeted DNA sequence. The requested reading direction and condition of the supplied product determine the service scope. Microbial identification by sequence comparison is covered by the dedicated service.",
+    "تتيح طريقة سانغر قراءة تسلسل مستهدف من الحمض النووي DNA. ويعتمد نطاق الخدمة على اتجاه القراءة المطلوب وحالة المنتج المقدّم. أما التعرف على الكائنات الحية الدقيقة بمقارنة التسلسلات فيندرج ضمن الخدمة المخصّصة لذلك."
+  ],
+  [
+    "Thermocycleur et analyseur génétique Sanger",
+    "Thermocycleur et analyseur génétique Sanger",
+    "Thermal cycler and Sanger genetic analyzer",
+    "جهاز تدوير حراري ومحلّل وراثي بطريقة سانغر"
+  ],
+  [
+    "Cette prestation associe une analyse ciblée par PCR au séquençage Sanger et à la comparaison avec des séquences de référence. Le marqueur étudié dépend du microorganisme. L’extraction d’ADN doit être précisée dans le périmètre demandé.",
+    "Cette prestation associe une analyse ciblée par PCR au séquençage Sanger et à la comparaison avec des séquences de référence. Le marqueur étudié dépend du microorganisme. L’extraction d’ADN doit être précisée dans le périmètre demandé.",
+    "This service combines targeted PCR, Sanger sequencing and comparison with reference sequences. The marker depends on the microorganism. DNA extraction must be specified in the requested scope.",
+    "تجمع هذه الخدمة بين التحليل الموجّه بتفاعل PCR وتحديد التسلسل بطريقة سانغر والمقارنة بتسلسلات مرجعية. ويعتمد الواسم المدروس على الكائن الحي الدقيق. ويجب تحديد ما إذا كان استخلاص DNA مشمولاً في الطلب."
+  ],
+  [
+    "Lyophilisateur Martin Christ Beta 2-8 LSCplus",
+    "Lyophilisateur Martin Christ Beta 2-8 LSCplus",
+    "Martin Christ Beta 2-8 LSCplus freeze dryer",
+    "جهاز Martin Christ Beta 2-8 LSCplus للتجفيف بالتجميد"
+  ],
+  [
+    "La lyophilisation retire l’eau d’un échantillon congelé par sublimation sous vide. L’adéquation du matériau, du conditionnement et du résultat attendu est évaluée avant prise en charge. Cette opération n’est pas une méthode de stérilisation.",
+    "La lyophilisation retire l’eau d’un échantillon congelé par sublimation sous vide. L’adéquation du matériau, du conditionnement et du résultat attendu est évaluée avant prise en charge. Cette opération n’est pas une méthode de stérilisation.",
+    "Freeze-drying removes water from a frozen sample by sublimation under vacuum. Material suitability, packaging and the intended outcome are assessed before acceptance. This operation is not a sterilization method.",
+    "يزيل التجفيف بالتجميد الماء من العينة المجمّدة بالتسامي تحت التفريغ. وتُقيَّم ملاءمة المادة والعبوة والنتيجة المتوقعة قبل قبولها. ولا تُعدّ هذه العملية طريقةً للتعقيم."
+  ],
+  [
+    "Photographie illustrative d’un séquenceur Illumina MiSeq",
+    "Photographie illustrative d’un séquenceur Illumina MiSeq",
+    "Illustrative photograph of an Illumina MiSeq sequencer",
+    "صورة توضيحية لجهاز Illumina MiSeq لتحديد التسلسل"
+  ],
+  [
+    "Photographie illustrative d’un thermocycleur Bio-Rad, modèle non confirmé à PLAGENOR",
+    "Photographie illustrative d’un thermocycleur Bio-Rad, modèle non confirmé à PLAGENOR",
+    "Illustrative photograph of a Bio-Rad thermal cycler; model not confirmed at PLAGENOR",
+    "صورة توضيحية لجهاز تدوير حراري من Bio-Rad؛ الطراز غير مؤكّد لدى الأرضية"
   ]
 ]

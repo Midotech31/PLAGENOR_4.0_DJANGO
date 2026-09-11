@@ -161,3 +161,8 @@ translations:
       4 phosphoramidite synthesizer. Primers are synthesized strictly according to sequences provided by the requester.
       The service includes standard butanol desalting purification and delivery at defined concentration. No primer
       design, validation, or sequence verification is performed.
+
+# Public presentation only; never used for pricing or eligibility.
+presentation:
+  equipment: "Synthétiseur d’oligonucléotides MerMade 4"
+  overview: "La synthèse porte sur les séquences d’amorces fournies par le demandeur. La conception des amorces et la validation de leur adéquation au projet doivent être distinguées de la fabrication ; toute prestation complémentaire est à convenir au préalable."

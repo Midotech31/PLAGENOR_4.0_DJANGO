@@ -4,6 +4,13 @@ from django import template
 
 register = template.Library()
 
+@register.simple_tag
+def service_presentation(service):
+    """Public equipment copy, independent of administrator-managed prices."""
+    from core.registry import get_service_def
+    definition = get_service_def(service.code) or {}
+    return definition.get('presentation', {})
+
 @register.filter
 def get_item(dictionary, key):
     """Access a dictionary item by key in templates."""
