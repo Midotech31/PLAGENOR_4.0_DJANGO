@@ -4,11 +4,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PLAGENOR 4.0\n"
+"Project-Id-Version: بلاجينور 4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-07 11:34+0100\n"
 "PO-Revision-Date: 2026-08-20 14:20+0100\n"
-"Last-Translator: PLAGENOR contributors\n"
+"Last-Translator: الأرضية التكنولوجية للجينوميك contributors\n"
 "Language-Team: Arabic\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
@@ -111,7 +111,7 @@ msgstr "البريد الإلكتروني مطلوب."
 
 #: accounts/views.py:237 templates/accounts/email/guest_conversion_verify.html:5
 msgid "Vérification de votre adresse — PLAGENOR 4.0"
-msgstr "التحقُّق من بريدك الإلكتروني — PLAGENOR 4.0"
+msgstr "التحقُّق من بريدك الإلكتروني — بلاجينور 4.0"
 
 #: accounts/views.py:238
 #, python-format
@@ -337,7 +337,7 @@ msgstr "تم إلغاء إعادة التعيين: لا يحتوي هذا الح
 
 #: dashboard/views/superadmin.py:1155
 msgid "Réinitialisation de votre compte PLAGENOR 4.0"
-msgstr "إعادة تعيين حسابك على PLAGENOR 4.0"
+msgstr "إعادة تعيين حسابك على بلاجينور 4.0"
 
 #: dashboard/views/superadmin.py:1189
 msgid "Réinitialisation annulée : l’email d’instructions n’a pas pu être livré."
@@ -427,7 +427,7 @@ msgstr "إنشاء حسابي"
 
 #: templates/accounts/email/account_reset.html:5
 msgid "Réinitialisation de compte PLAGENOR 4.0"
-msgstr "إعادة تعيين حساب PLAGENOR 4.0"
+msgstr "إعادة تعيين حساب بلاجينور 4.0"
 
 #: templates/accounts/email/account_reset.html:11 templates/accounts/email/guest_conversion_verify.html:11
 msgid "Plateforme de Gestion des Opérations Scientifiques"
@@ -478,7 +478,7 @@ msgstr "مرحباً،"
 #: templates/accounts/email/guest_conversion_verify.html:16
 #, python-format
 msgid "Quelqu'un — vraisemblablement vous — a demandé la création d'un compte sur PLAGENOR&nbsp;4.0 en utilisant l'adresse <strong>%(email)s</strong>."
-msgstr "طلب شخص ما — على الأرجح أنت — إنشاء حساب على PLAGENOR&nbsp;4.0 باستخدام العنوان <strong>%(email)s</strong>."
+msgstr "طلب شخص ما — على الأرجح أنت — إنشاء حساب على بلاجينور&nbsp;4.0 باستخدام العنوان <strong>%(email)s</strong>."
 
 #: templates/accounts/email/guest_conversion_verify.html:17
 msgid "Pour finaliser la création de votre compte et lier vos demandes invité, cliquez sur le bouton ci-dessous :"
@@ -506,7 +506,7 @@ msgstr "إعادة تعيين كلمة المرور"
 
 #: templates/accounts/email/password_reset_email.html:12
 msgid "Vous avez demandé la réinitialisation du mot de passe de votre compte PLAGENOR. Cliquez sur le bouton ci-dessous pour en choisir un nouveau."
-msgstr "لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR. انقر على الزر أدناه لاختيار كلمة مرور جديدة."
+msgstr "لقد طلبت إعادة تعيين كلمة مرور حسابك في الأرضية التكنولوجية للجينوميك. انقر على الزر أدناه لاختيار كلمة مرور جديدة."
 
 #: templates/accounts/email/password_reset_email.html:16
 msgid "Réinitialiser mon mot de passe"
@@ -518,7 +518,7 @@ msgstr "هذا الرابط صالح لمرة واحدة وينتهي قريبً
 
 #: templates/accounts/email/password_reset_email.html:21
 msgid "L'équipe PLAGENOR"
-msgstr "فريق PLAGENOR"
+msgstr "فريق الأرضية التكنولوجية للجينوميك"
 
 #: templates/accounts/email/password_reset_email.txt:1
 msgid ""
@@ -530,7 +530,7 @@ msgid ""
 msgstr ""
 "مرحبًا،\n"
 "\n"
-"لقد طلبت إعادة تعيين كلمة مرور حسابك في PLAGENOR.\n"
+"لقد طلبت إعادة تعيين كلمة مرور حسابك في الأرضية التكنولوجية للجينوميك.\n"
 "\n"
 "انقر على الرابط أدناه لاختيار كلمة مرور جديدة:"
 
@@ -542,11 +542,11 @@ msgid ""
 msgstr ""
 "هذا الرابط صالح لمرة واحدة وينتهي قريبًا. إذا لم تكن أنت من طلب ذلك، تجاهل هذا البريد: ستبقى كلمة المرور دون تغيير.\n"
 "\n"
-"— فريق PLAGENOR"
+"— فريق الأرضية التكنولوجية للجينوميك"
 
 #: templates/accounts/email/password_reset_subject.txt:1
 msgid "Réinitialisation de votre mot de passe PLAGENOR"
-msgstr "إعادة تعيين كلمة مرور PLAGENOR"
+msgstr "إعادة تعيين كلمة مرور الأرضية التكنولوجية للجينوميك"
 
 #: templates/accounts/force_change_password.html:4 templates/accounts/force_change_password.html:16
 msgid "Changement de mot de passe obligatoire"
@@ -2726,7 +2726,7 @@ msgstr "الشكر والاستشهاد"
 
 #: templates/dashboard/report_viewer.html:603
 msgid "Merci d'avoir utilisé PLAGENOR 4.0 ! Votre rapport est prêt."
-msgstr "شكراً لاستخدامك PLAGENOR 4.0! تقريرك جاهز."
+msgstr "شكراً لاستخدامك بلاجينور 4.0! تقريرك جاهز."
 
 #: templates/dashboard/report_viewer.html:607
 msgid "Pour reconnaître le soutien et les contributions de notre Plateforme Technologique en Génomique, veuillez inclure la citation suivante dans toute publication ou présentation issue des données ou analyses réalisées :"
@@ -2746,7 +2746,7 @@ msgstr "يرجى أيضاً التأكد من الاعتراف بأي مساهم
 
 #: templates/dashboard/report_viewer.html:627
 msgid "Toute production scientifique incluant des analyses réalisées sur PLAGENOR implique l'inclusion des membres ayant contribué. Contactez le responsable via l'adresse email de la plateforme pour convenir des modalités."
-msgstr "أي إنتاج علمي يتضمن تحاليل أُنجزَت على PLAGENOR يستوجب إدراج الأعضاء المساهمين فيه. تواصل مع المسؤول عبر البريد الإلكتروني للمنصة للاتفاق على الشروط."
+msgstr "أي إنتاج علمي يتضمن تحاليل أُنجزَت على الأرضية التكنولوجية للجينوميك يستوجب إدراج الأعضاء المساهمين فيه. تواصل مع المسؤول عبر البريد الإلكتروني للمنصة للاتفاق على الشروط."
 
 #: templates/dashboard/report_viewer.html:635
 msgid "Continuer vers l'évaluation"
@@ -4723,7 +4723,7 @@ msgstr "مركز المساعدة"
 
 #: templates/pages/help.html:41
 msgid "Centre d'aide PLAGENOR"
-msgstr "مركز مساعدة PLAGENOR"
+msgstr "مركز مساعدة الأرضية التكنولوجية للجينوميك"
 
 #: templates/pages/help.html:42
 msgid "Tout ce qu'il faut savoir pour soumettre, suivre et gérer vos analyses — étape par étape."
@@ -4913,7 +4913,7 @@ msgstr "تتوفّر <strong>مذكرة المنصة</strong> و<strong>عرض �
 
 #: templates/pages/help.html:131
 msgid "Tous portent l'<strong>en-tête institutionnel officiel</strong> (République algérienne, Ministère, ESSBO, PLAGENOR)."
-msgstr "تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية الجزائرية، الوزارة، المدرسة العليا في العلوم البيولوجية بوهران، PLAGENOR)."
+msgstr "تحمل جميعها <strong>الترويسة المؤسساتية الرسمية</strong> (الجمهورية الجزائرية، الوزارة، المدرسة العليا في العلوم البيولوجية بوهران، الأرضية التكنولوجية للجينوميك)."
 
 #: templates/pages/help.html:136
 msgid "Questions fréquentes"
@@ -5274,7 +5274,7 @@ msgstr "يمرّ الطلب بالمصادقة البيداغوجية والما
 #: templates/pages/help.html
 msgctxt "help-current"
 msgid "Quand ces instructions apparaissent, téléchargez le formulaire IBTIKAR, soumettez votre demande sur le site IBTIKAR-DGRSDT via le lien proposé, puis revenez dans PLAGENOR et saisissez le code de la demande externe."
-msgstr "عند ظهور التعليمات، حمّل استمارة إبتكار، وقدّم طلبك على موقع إبتكار التابع للمديرية العامة للبحث العلمي و التطوير التكنولوجي عبر الرابط المتاح، ثم عد إلى PLAGENOR وأدخل رمز الطلب الخارجي."
+msgstr "عند ظهور التعليمات، حمّل استمارة إبتكار، وقدّم طلبك على موقع إبتكار التابع للمديرية العامة للبحث العلمي و التطوير التكنولوجي عبر الرابط المتاح، ثم عد إلى الأرضية التكنولوجية للجينوميك وأدخل رمز الطلب الخارجي."
 
 #: templates/pages/help.html
 msgctxt "help-current"
@@ -5339,7 +5339,7 @@ msgstr "تظهر الإجراءات في المراحل المسموح بها: �
 #: templates/pages/help.html
 msgctxt "help-current"
 msgid "Consultez les notifications dans l’application. Les e-mails accompagnent certains événements selon la configuration ; le suivi dans PLAGENOR reste la référence pour connaître l’avancement."
-msgstr "راجع الإشعارات داخل التطبيق. ترافق رسائل البريد بعض الأحداث بحسب الإعدادات؛ ويبقى التتبّع في PLAGENOR المرجع لمعرفة تقدّم الطلب."
+msgstr "راجع الإشعارات داخل التطبيق. ترافق رسائل البريد بعض الأحداث بحسب الإعدادات؛ ويبقى التتبّع في الأرضية التكنولوجية للجينوميك المرجع لمعرفة تقدّم الطلب."
 
 #: templates/pages/help.html
 msgctxt "help-current"
@@ -5455,3 +5455,9 @@ msgstr "المشرف على الأطروحة / المؤطّر"
 
 msgid "Email du directeur de thèse / encadrant"
 msgstr "البريد الإلكتروني للمشرف على الأطروحة / المؤطّر"
+
+msgid "PLAGENOR"
+msgstr "الأرضية التكنولوجية للجينوميك"
+
+msgid "PLAGENOR 4.0"
+msgstr "بلاجينور 4.0"

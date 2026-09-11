@@ -3,7 +3,7 @@
 {% load i18n %}
 {% load cms %}
 
-{% block title %}PLAGENOR 4.0 — {% trans "Accueil" %}{% endblock %}
+{% block title %}{% trans "PLAGENOR 4.0" %} — {% trans "Accueil" %}{% endblock %}
 
 {% block content %}
 <!-- Hero -->
@@ -115,7 +115,7 @@
                 <img src="{% static 'images/essbo_logo.png' %}" alt="ESSBO" style="height:75px; width:auto;">
             </a>
             <div class="partner-logo" style="display:flex; align-items:center; opacity:0.9;">
-                <img src="{% static 'images/plagenor_logo.png' %}" alt="PLAGENOR" style="height:110px; width:auto;">
+                <img src="{% static 'images/plagenor_logo.png' %}" alt="{% trans 'PLAGENOR' %}" style="height:110px; width:auto;">
             </div>
             <a href="https://ibtikar.dgrsdt.dz/" target="_blank" rel="noopener" class="partner-logo" style="display:flex; align-items:center; opacity:0.85;">
                 <img src="{% static 'images/ibtikar_logo.png' %}" alt="IBTIKAR" style="height:60px; width:auto;">

@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load cms %}
 
-{% block title %}{% trans "Contact" %} — PLAGENOR 4.0{% endblock %}
+{% block title %}{% trans "Contact" %} — {% trans "PLAGENOR 4.0" %}{% endblock %}
 
 {% block content %}
 <section class="section" style="max-width:600px; margin:40px auto; padding:0 32px;">
@@ -11,7 +11,7 @@
 
     <div class="card" style="margin-top:24px;">
         <div class="card-body" style="padding:32px;">
-            <h3 id="plagenor-contact" style="font-size:1.05rem; font-weight:700; margin-bottom:16px;">PLAGENOR — {% cms 'contact_name' 'Prof. Mohamed Merzoug' %}</h3>
+            <h3 id="plagenor-contact" style="font-size:1.05rem; font-weight:700; margin-bottom:16px;">{% trans "PLAGENOR" %} — {% cms 'contact_name' 'Prof. Mohamed Merzoug' %}</h3>
             <div class="data-card" style="box-shadow:none; border:none; padding:0;">
                 <div class="data-card-row">
                     <strong>{% trans "Institution" %}</strong>

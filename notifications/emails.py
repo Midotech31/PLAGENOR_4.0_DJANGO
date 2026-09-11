@@ -202,7 +202,8 @@ def _render_email(template, context):
 
 
 def _subject(reference, language, fr, en, ar):
-    return f"[PLAGENOR] {reference} — {dict(fr=fr, en=en, ar=ar).get(language, fr)}"
+    brand = "بلاجينور 4.0" if language == "ar" else "PLAGENOR"
+    return f"[{brand}] {reference} — {dict(fr=fr, en=en, ar=ar).get(language, fr)}"
 
 
 def notify_staff_transition(request_obj, to_status):
