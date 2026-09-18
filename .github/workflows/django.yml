@@ -105,6 +105,8 @@ jobs:
           pip check
       - run: python manage.py migrate --noinput
       - run: python manage.py check --deploy
+      - name: Verify multi-sample HTTP submission on PostgreSQL
+        run: python manage.py test core.test_ibtikar_acceptance.AcceptanceFlows.test_two_hundred_rows_survive_the_http_parser_and_draft_save
       - run: python manage.py test
       - name: Synthetic PostgreSQL backup and restore
         env:

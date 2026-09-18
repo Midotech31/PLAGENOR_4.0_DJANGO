@@ -293,6 +293,10 @@ class AcceptanceFlows(TestCase):
         details = {key: str(getattr(response.context.get(key), 'errors', response.context.get(key))) for key in ('errors', 'applicant_form', 'parameter_form', 'sample_formset', 'upload_form')} if response.context else response.content[:2000]
         if response.status_code != 302 and response.context:
             formset = response.context['sample_formset']
+            from django.test.client import encode_multipart, BOUNDARY
+            import hashlib
+            body = encode_multipart(BOUNDARY, data)
+            details['request_parser'] = {'body_length': len(body), 'body_sha256': hashlib.sha256(body).hexdigest(), 'content_length': response.wsgi_request.META.get('CONTENT_LENGTH'), 'handlers': [(type(h).__name__, h.chunk_size) for h in response.wsgi_request.upload_handlers]}
             details['invalid_values'] = [{'row': i, 'field': key, 'submitted': repr(data.get(form.add_prefix(key)))[:100], 'bound_type': type(form[key].value()).__name__, 'bound_length': len(str(form[key].value())), 'bound_start': repr(form[key].value())[:180], 'bound_end': repr(form[key].value())[-180:]} for i, form in enumerate(formset) for key in form.errors if key in form.fields]
         self.assertEqual(response.status_code,302,details)
         obj=IbtikarSubmission.objects.latest('pk')
