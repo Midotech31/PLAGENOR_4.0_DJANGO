@@ -1,0 +1,4 @@
+{% load i18n %}
+{% for item in rows %}
+<div class="ibk-summary-row"><dt>{{ item.label }}</dt><dd>{{ item.display|linebreaksbr }}</dd></div>
+{% endfor %}

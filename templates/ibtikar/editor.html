@@ -1,0 +1,83 @@
+{% extends 'base_public.html' %}
+{% load i18n static %}
+{% block title %}{{ schema_title }} — IBTIKAR{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
+<section class="ibk-shell">
+    <a href="{% url 'ibtikar:index' %}" class="ibk-back">← {% trans "Toutes les prestations IBTIKAR" %}</a>
+    <p class="ibk-eyebrow">{{ schema.service_code }} · {{ schema.source_version }}</p>
+    <h1>{{ schema_title }}</h1>
+    <p class="ibk-lead">{% trans "Renseignez uniquement les informations applicables. Les champs marqués * sont obligatoires pour soumettre la demande." %}</p>
+    {% if legacy %}<div class="ibk-notice" role="status">{% trans "Dossier historique : vérifiez les valeurs reprises. Les données anciennes non interprétées restent conservées et ne sont pas remplacées par des suppositions." %}</div>{% endif %}
+    {% for note in notices %}<p class="ibk-notice">{{ note }}</p>{% endfor %}
+    {% if errors or applicant_form.errors or parameter_form.errors or sample_formset.errors or upload_form.errors %}
+    <div class="ibk-errors" role="alert" tabindex="-1">
+        <h2>{% trans "Vérifiez les informations signalées" %}</h2>
+        {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+        {{ sample_formset.non_form_errors }}
+        <p>{% trans "Aucune donnée n’a été enregistrée. Les valeurs saisies restent affichées ci-dessous ; les fichiers doivent être sélectionnés à nouveau." %}</p>
+    </div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="no-validation" id="ibk-editor" data-ibk-editor
+          data-estimate-url="{{ estimate_url }}" data-price-visible="{{ prices_visible|yesno:'true,false' }}">
+        {% csrf_token %}<input type="hidden" name="revision" value="{{ revision }}">
+        <section class="ibk-section" data-ibk-group="applicant">
+            <h2><span>01</span> {% trans "Demandeur et projet" %}</h2>
+            <div class="ibk-fields">{% include 'ibtikar/fields.html' with form=applicant_form %}</div>
+        </section>
+        {% if parameter_form.fields %}
+        <section class="ibk-section" data-ibk-group="parameters">
+            <h2><span>02</span> {% trans "Paramètres de la prestation" %}</h2>
+            <div class="ibk-fields">{% include 'ibtikar/fields.html' with form=parameter_form %}</div>
+        </section>
+        {% endif %}
+        <section class="ibk-section">
+            <h2><span>03</span> {% trans "Échantillons / amorces" %} <small id="ibk-row-count" aria-live="polite"></small></h2>
+            <p class="ibk-help">{% trans "Ajoutez une ligne par échantillon ou amorce. Le nombre de lignes du formulaire papier n’est pas une limite de saisie." %}</p>
+            {{ sample_formset.management_form }}
+            <div id="ibk-samples">
+                {% for sample in sample_formset %}
+                <div class="ibk-sample" data-ibk-group="sample" {% if sample.DELETE.value %}hidden data-deleted="true"{% endif %}>
+                    <div class="ibk-sample-title"><h3>{% trans "Échantillon / amorce" %} <span data-row-number>{{ forloop.counter }}</span></h3>
+                        <button type="button" class="btn btn-outline" data-remove-sample>{% trans "Retirer cette ligne" %}</button></div>
+                    <div hidden>{{ sample.DELETE }}</div>
+                    <div class="ibk-fields">{% include 'ibtikar/fields.html' with form=sample %}</div>
+                    <p class="ibk-computed" data-primer-computed aria-live="polite"></p>
+                    <p class="ibk-row-warning" aria-live="polite"></p>
+                </div>
+                {% endfor %}
+            </div>
+            <template id="ibk-empty-sample">
+                <div class="ibk-sample" data-ibk-group="sample">
+                    <div class="ibk-sample-title"><h3>{% trans "Échantillon / amorce" %} <span data-row-number></span></h3>
+                        <button type="button" class="btn btn-outline" data-remove-sample>{% trans "Retirer cette ligne" %}</button></div>
+                    <div hidden>{{ sample_formset.empty_form.DELETE }}</div>
+                    <div class="ibk-fields">{% include 'ibtikar/fields.html' with form=sample_formset.empty_form %}</div>
+                    <p class="ibk-computed" data-primer-computed aria-live="polite"></p>
+                    <p class="ibk-row-warning" aria-live="polite"></p>
+                </div>
+            </template>
+            <button type="button" class="btn btn-outline" id="ibk-add-sample">+ {% trans "Ajouter un échantillon / une amorce" %}</button>
+        </section>
+        <section class="ibk-section" data-ibk-group="attachments">
+            <h2><span>04</span> {% trans "Documents et signature" %}</h2>
+            <p class="ibk-help">{% trans "Joignez uniquement les documents nécessaires, sans identifiants directs de patients. Une déclaration saisie ne remplace pas un document exigé." %}</p>
+            {% for file in existing_attachments %}<p>{{ file.field }} : <a href="{{ file.url }}">{{ file.name }}</a></p>{% endfor %}
+            <div class="ibk-fields">{% include 'ibtikar/fields.html' with form=upload_form %}</div>
+        </section>
+        {% if prices_visible %}
+        <section class="ibk-section ibk-estimate" aria-live="polite"><strong>{% trans "Estimation" %}</strong>
+            <p id="ibk-estimate-value">{% trans "Complétez les paramètres et les échantillons pour obtenir une estimation." %}</p>
+            <p class="ibk-help">{% trans "Une option sans tarif défini nécessite une validation de PLAGENOR ; elle n’est jamais considérée comme gratuite." %}</p>
+        </section>
+        {% endif %}
+        <div class="ibk-actions">
+            {% if allow_draft %}<button type="submit" name="action" value="draft" formnovalidate class="btn btn-outline">{% trans "Enregistrer le brouillon" %}</button>{% endif %}
+            <button type="submit" name="action" value="submit" class="btn btn-primary">{% trans "Enregistrer et soumettre" %}</button>
+        </div>
+        <p class="ibk-help">{% trans "Les champs devenus non applicables restent conservés mais ne sont pas présentés comme des choix actifs dans la fiche." %}</p>
+    </form>
+    {{ form_rules|json_script:'ibk-form-rules' }}
+</section>
+<script src="{% static 'js/ibtikar-forms.js' %}" defer></script>
+{% endblock %}

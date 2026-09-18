@@ -4,7 +4,7 @@ for (const lang of ['fr', 'en', 'ar']) {
   test(`equipment cards and details remain usable in ${lang}`, async ({ page, context }, testInfo) => {
     await context.addCookies([{ name: 'django_language', value: lang, url: 'http://127.0.0.1:8001' }]);
     await page.goto('/services/');
-    await expect(page.locator('.service-card--equipment')).toHaveCount(8);
+    await expect(page.locator('.service-card--equipment')).toHaveCount(10);
     await expect(page.locator('.service-equipment img')).toHaveCount(8);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const photo of await page.locator('.service-equipment img').all()) {

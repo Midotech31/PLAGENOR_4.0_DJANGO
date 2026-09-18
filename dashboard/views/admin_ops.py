@@ -722,6 +722,9 @@ def adjust_cost(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     req = get_object_or_404(Request, pk=pk)
+    from core.ibtikar.models import IbtikarSubmission
+    if req.channel == 'IBTIKAR' and IbtikarSubmission.objects.filter(request=req).exists():
+        return redirect('ibtikar:staff', pk=req.pk)
     new_price = request.POST.get('admin_price', '')
     justification = request.POST.get('cost_justification', '').strip()
     

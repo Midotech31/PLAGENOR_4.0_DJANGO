@@ -190,76 +190,15 @@ def create_request(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
     service_id = request.POST.get('service_id')
-    service = get_object_or_404(Service, pk=service_id, active=True)
-
-    # Guard 1 — the requester must have declared a residual balance
-    # before any submission. Without a declared value we cannot size or
-    # cap-check a request, so reject the POST early with a clear redirect
-    # back to the dashboard where the declaration card is shown.
-    if request.user.ibtikar_declared_balance is None:
-        messages.error(
-            request,
-            "Vous devez d'abord déclarer votre solde IBTIKAR résiduel "
-            "avant de soumettre une demande.",
-        )
-        return redirect_back(request, 'dashboard:requester')
-    declared = float(request.user.ibtikar_declared_balance)
-
-    # Collect YAML parameter values
-    service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
-    sample_data = {}
-    for key, val in request.POST.items():
-        if key.startswith('sample_'):
-            parts = key.split('_', 2)
-            if len(parts) == 3:
-                sample_data.setdefault(parts[1], {})[parts[2]] = val
-    sample_table_data = list(sample_data.values()) if sample_data else []
-
-    # Resolve cost via the canonical pricing resolver (DB tiers → YAML →
-    # flat). See core.pricing.resolve_cost for the precedence and rationale.
-    from core.pricing import resolve_cost
+    from django.core.exceptions import ValidationError
     try:
-        price_result = resolve_cost(
-            service, 'IBTIKAR',
-            sample_table=sample_table_data,
-            service_params=service_params,
-            urgency=request.POST.get('urgency', 'Normal'),
-        )
-    except PricingConfigurationError:
-        messages.error(request, "La tarification de ce service doit être corrigée par un administrateur avant la soumission.")
-        return redirect_back(request, 'dashboard:requester')
-    budget_amount = price_result['total']
+        service = get_object_or_404(Service, pk=service_id, active=True, channel_availability__in=['IBTIKAR', 'BOTH'])
+    except (ValidationError, ValueError):
+        from django.http import HttpResponseBadRequest
+        return HttpResponseBadRequest('Service invalide.')
+    from core.ibtikar.bridge import open_legacy_submission
+    return open_legacy_submission(request, service)
 
-    # Budget guard — runs against the requester's DECLARED residual
-    # balance (User.ibtikar_declared_balance), not a flat 200K. The
-    # resolved cost is the basis; checking the flat service price would
-    # let a multi-sample request slip past the cap.
-    budget_check = check_ibtikar_budget(amount=budget_amount, requester=request.user)
-    if budget_check['exceeded']:
-        messages.error(
-            request,
-            f"Coût estimé ({budget_amount:,.0f} DA) supérieur à votre solde déclaré "
-            f"({declared:,.0f} DA). Mettez à jour votre solde si vous avez vérifié "
-            f"votre compte DGRSDT, ou contactez l'administrateur."
-        )
-        return redirect_back(request, 'dashboard:requester')
-
-    # Use ibtikar service to submit
-    req = submit_ibtikar_request(
-        data={
-            'title': request.POST.get('title', f"Demande {service.name}"),
-            'description': request.POST.get('description', ''),
-            'urgency': request.POST.get('urgency', 'Normal'),
-            'service_id': str(service.pk),
-            'budget_amount': budget_amount,
-            'declared_ibtikar_balance': declared,
-            'service_params': service_params,
-            'sample_table': sample_table_data,
-        },
-        user=request.user,
-    )
-    messages.success(request, f"Demande {req.display_id} soumise avec succès.")
-    return redirect_to_detail(request, req, 'dashboard:requester')
 
 
 @requester_required

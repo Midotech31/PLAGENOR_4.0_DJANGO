@@ -34,7 +34,7 @@ class TrilingualCatalogueTests(TestCase):
                 'name_ar': 'تحليل مخبري', 'description_ar': 'وصف كامل للتحليل المخبري.',
                 'name_en': 'Laboratory analysis', 'description_en': 'Complete laboratory analysis description.'}
 
-    def test_catalogue_and_detail_render_all_eight_services_in_each_language(self):
+    def test_catalogue_and_detail_render_all_registered_services_in_each_language(self):
         self.seed()
         for lang in ('fr', 'ar', 'en'):
             self.client.cookies['django_language'] = lang

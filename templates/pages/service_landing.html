@@ -24,6 +24,9 @@
     </div>
 
     {% include "includes/service_equipment_details.html" %}
+    {% if service.channel_availability != 'GENOCLAB' %}
+    <p><a class="btn btn-primary" href="{% url 'ibtikar:new' service.code %}">{% trans "Ouvrir le formulaire IBTIKAR" %}</a></p>
+    {% endif %}
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
         <!-- Option 1: Register (Recommended) -->

@@ -4,6 +4,8 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% if req.channel == 'IBTIKAR' %}<p><a class="btn btn-outline" href="{% url 'ibtikar:detail' req.pk %}">{% trans "Consulter le formulaire IBTIKAR et sa validation" %}</a></p>{% endif %}
+
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>

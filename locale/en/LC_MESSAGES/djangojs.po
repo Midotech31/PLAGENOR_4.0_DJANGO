@@ -1,0 +1,340 @@
+#
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Ajouter un échantillon / une amorce"
+msgstr "Add a sample / primer"
+
+msgid "Ajoutez au moins un échantillon ou une amorce."
+msgstr "Add at least one sample or primer."
+
+msgid ""
+"Ajoutez une ligne par échantillon ou amorce. Le nombre de lignes du "
+"formulaire papier n’est pas une limite de saisie."
+msgstr ""
+"Add one row per sample or primer. The number of rows in the paper form does "
+"not limit data entry."
+
+msgid "Aucune demande enregistrée."
+msgstr "No requests recorded."
+
+msgid ""
+"Aucune donnée n’a été enregistrée. Les valeurs saisies restent affichées ci-"
+"dessous ; les fichiers doivent être sélectionnés à nouveau."
+msgstr ""
+"No data have been saved. Your entries remain displayed below; files must be "
+"selected again."
+
+msgid "Aucune prestation disponible actuellement."
+msgstr "No services are currently available."
+
+msgid "Aucune réception ou validation n’a encore été enregistrée."
+msgstr "No receipt or validation has been recorded yet."
+
+msgid "Cadre réservé à PLAGENOR"
+msgstr "Reserved for PLAGENOR"
+
+msgid "Ce choix ne peut pas être combiné avec une autre option."
+msgstr "This choice cannot be combined with another option."
+
+msgid "Cette demande est en lecture seule à ce stade."
+msgstr "This request is read-only at this stage."
+
+msgid "Cette demande n’est plus modifiable à ce stade."
+msgstr "This request can no longer be edited at this stage."
+
+msgid ""
+"Cette section ne modifie pas les informations déclarées par le demandeur. "
+"L’opérateur et la date de modification sont enregistrés automatiquement."
+msgstr ""
+"This section does not change the information declared by the applicant. The "
+"operator and modification date are recorded automatically."
+
+msgid "Cette unité ne permet pas de vérifier la quantité minimale requise."
+msgstr "This unit cannot be used to check the required minimum quantity."
+
+msgid "Cette validation relève de l’administration."
+msgstr "This validation is reserved for the administration."
+
+msgid "Choisir"
+msgstr "Select"
+
+msgid ""
+"Choisissez la prestation. Les informations demandées et la fiche finale "
+"s’adaptent à vos choix réels."
+msgstr ""
+"Select a service. The requested information and final form adapt to your "
+"actual choices."
+
+msgid "Code de la demande sur IBTIKAR"
+msgstr "Request code on IBTIKAR"
+
+msgid ""
+"Complétez les paramètres et les échantillons pour obtenir une estimation."
+msgstr "Complete the parameters and samples to obtain an estimate."
+
+msgid ""
+"Conservez ce lien personnel pour retrouver et modifier votre demande avant "
+"sa validation."
+msgstr ""
+"Keep this personal link to retrieve and edit your request before validation."
+
+msgid "Demande invitée IBTIKAR requise."
+msgstr "An IBTIKAR guest request is required."
+
+msgid "Demandeur et projet"
+msgstr "Applicant and project"
+
+msgid "Documents et signature"
+msgstr "Documents and signature"
+
+msgid "Documents joints"
+msgstr "Attached documents"
+
+msgid "Données enregistrées"
+msgstr "Recorded data"
+
+msgid "Données historiques conservées"
+msgstr "Retained historical data"
+
+msgid ""
+"Dossier historique : les données ci-dessous sont conservées telles "
+"qu’enregistrées. Aucune option absente n’est déduite d’un ancien modèle "
+"Word."
+msgstr ""
+"Historical record: the data below are retained as recorded. No missing "
+"option is inferred from an old Word template."
+
+msgid ""
+"Dossier historique : vérifiez les valeurs reprises. Les données anciennes "
+"non interprétées restent conservées et ne sont pas remplacées par des "
+"suppositions."
+msgstr ""
+"Historical record: check the imported values. Uninterpreted historical data "
+"are retained and are not replaced with assumptions."
+
+msgid "Enregistrer et soumettre"
+msgstr "Save and submit"
+
+msgid "Enregistrer la réception / validation"
+msgstr "Save receipt / validation"
+
+msgid "Enregistrer le brouillon"
+msgstr "Save draft"
+
+msgid "Estimation"
+msgstr "Estimate"
+
+msgid "Estimation non publiée."
+msgstr "Estimate not published."
+
+msgid "Estimation temporairement indisponible."
+msgstr "Estimate temporarily unavailable."
+
+msgid "Formulaires IBTIKAR"
+msgstr "IBTIKAR forms"
+
+msgid "Indéterminé"
+msgstr "Undetermined"
+
+msgid ""
+"Joignez uniquement les documents nécessaires, sans identifiants directs de "
+"patients. Une déclaration saisie ne remplace pas un document exigé."
+msgstr ""
+"Attach only the necessary documents, without direct patient identifiers. A "
+"typed declaration does not replace a required document."
+
+msgid "Justifiez la validation tarifaire (au moins 10 caractères)."
+msgstr "Justify the approved price (at least 10 characters)."
+
+msgid "La demande a été modifiée ailleurs. Rechargez-la avant de sauvegarder."
+msgstr "This request was modified elsewhere. Reload it before saving."
+
+msgid "La demande dépasse la taille technique autorisée."
+msgstr "The request exceeds the technical size limit."
+
+msgid ""
+"La limite technique de lignes est atteinte. Contactez PLAGENOR pour un dépôt"
+" plus volumineux."
+msgstr ""
+"The technical row limit has been reached. Contact PLAGENOR for a larger "
+"submission."
+
+msgid ""
+"La quantité est inférieure au minimum du formulaire source : %(minimum)s "
+"%(unit)s."
+msgstr "The quantity is below the source form minimum: %(minimum)s %(unit)s."
+
+msgid "La référence ne peut pas être transmise à cette étape."
+msgstr "The reference cannot be submitted at this stage."
+
+msgid "Le code de l’échantillon ou de la paire/orientation est dupliqué."
+msgstr "The sample code or primer pair/orientation is duplicated."
+
+msgid "Le coût calculé dépasse le solde IBTIKAR déclaré."
+msgstr "The calculated cost exceeds the declared IBTIKAR balance."
+
+msgid ""
+"Le formulaire a été enregistré sans modifier les champs non applicables."
+msgstr "The form was saved without changing non-applicable fields."
+
+msgid ""
+"Le prix validé dépasse le solde déclaré ; demander une mise à jour au "
+"demandeur."
+msgstr ""
+"The approved price exceeds the declared balance; request an updated "
+"declaration from the applicant."
+
+msgid "Le remplissage dépasse 50 % du volume nominal du récipient."
+msgstr "The fill volume exceeds 50% of the nominal container volume."
+
+msgid "Le solde déclaré est hors des limites autorisées."
+msgstr "The declared balance is outside the permitted limits."
+
+msgid ""
+"Les champs devenus non applicables restent conservés mais ne sont pas "
+"présentés comme des choix actifs dans la fiche."
+msgstr ""
+"Fields that become non-applicable are retained but are not presented as "
+"active choices in the form."
+
+msgid "Mes demandes IBTIKAR"
+msgstr "My IBTIKAR requests"
+
+msgid "Modification réservée au personnel habilité."
+msgstr "Editing is reserved for authorized staff."
+
+msgid "Modifier le formulaire"
+msgstr "Edit form"
+
+msgid "Montant validé invalide."
+msgstr "Invalid approved amount."
+
+msgid "Montant validé par PLAGENOR"
+msgstr "Amount approved by PLAGENOR"
+
+msgid "Nombre de lectures demandé"
+msgstr "Requested number of reads"
+
+msgid "Ouvrir le formulaire"
+msgstr "Open form"
+
+msgid "Paramètres de la prestation"
+msgstr "Service parameters"
+
+msgid "Quantité minimale requise"
+msgstr "Required minimum quantity"
+
+msgid ""
+"Renseignez uniquement les informations applicables. Les champs marqués * "
+"sont obligatoires pour soumettre la demande."
+msgstr ""
+"Enter only applicable information. Fields marked * are required to submit "
+"the request."
+
+msgid "Retirer cette ligne"
+msgstr "Remove this row"
+
+msgid "Retirer cette ligne de la demande ?"
+msgstr "Remove this row from the request?"
+
+msgid "Réception et validation PLAGENOR"
+msgstr "PLAGENOR receipt and validation"
+
+msgid "Référence IBTIKAR invalide."
+msgstr "Invalid IBTIKAR reference."
+
+msgid "Référence IBTIKAR-DGRSDT"
+msgstr "IBTIKAR-DGRSDT reference"
+
+msgid "Révision"
+msgstr "Revision"
+
+msgid "Suivi opérationnel"
+msgstr "Operational tracking"
+
+msgid "Sélectionnez au moins une option."
+msgstr "Select at least one option."
+
+msgid "Taille"
+msgstr "Length"
+
+msgid ""
+"Tarification à valider par PLAGENOR — aucun montant total n’est encore "
+"arrêté."
+msgstr ""
+"Pricing requires PLAGENOR approval — no final total has been determined yet."
+
+msgid "Toutes les prestations IBTIKAR"
+msgstr "All IBTIKAR services"
+
+msgid "Transmettre la référence"
+msgstr "Submit reference"
+
+msgid "Télécharger la fiche IBTIKAR"
+msgstr "Download IBTIKAR form"
+
+msgid "Un dossier clôturé ne peut plus être modifié."
+msgstr "A closed record can no longer be edited."
+
+msgid ""
+"Un tarif validé ne peut pas être effacé sans une révision de la demande."
+msgstr "An approved price cannot be removed without revising the request."
+
+msgid "Une autre modification a été enregistrée. Rechargez cette page."
+msgstr "Another change was saved. Reload this page."
+
+msgid ""
+"Une demande déjà soumise doit être enregistrée comme révision, pas comme "
+"brouillon."
+msgstr ""
+"An already submitted request must be saved as a revision, not as a draft."
+
+msgid ""
+"Une option sans tarif défini nécessite une validation de PLAGENOR ; elle "
+"n’est jamais considérée comme gratuite."
+msgstr ""
+"An option without a defined price requires PLAGENOR validation; it is never "
+"treated as free of charge."
+
+msgid "Une origine clinique ne peut pas être déclarée standard."
+msgstr "A clinical origin cannot be declared standard."
+
+msgid "Utilisez une séquence ADN en orientation 5′→3′ (alphabet IUPAC)."
+msgstr "Use a DNA sequence in the 5′→3′ direction (IUPAC alphabet)."
+
+msgid "Valeur trop longue."
+msgstr "Value too long."
+
+msgid "Vérifiez les informations signalées"
+msgstr "Check the highlighted information"
+
+msgid "Échantillon / amorce"
+msgstr "Sample / primer"
+
+msgid "Échantillons / amorces"
+msgstr "Samples / primers"
+
+msgid "Le formulaire et son tarif doivent être validés avant cette étape."
+msgstr "The form and its price must be validated before this step."
+
+msgid "La compatibilité technique doit être validée par PLAGENOR."
+msgstr "Technical compatibility must be validated by PLAGENOR."
+
+msgid "Consulter le formulaire IBTIKAR et sa validation"
+msgstr "View the IBTIKAR form and its validation"
+
+msgid "Nouvelle demande IBTIKAR"
+msgstr "New IBTIKAR request"
+
+msgid "Ouvrir les formulaires IBTIKAR"
+msgstr "Open IBTIKAR forms"
+
+msgid "Demande IBTIKAR : ouvrir les formulaires dédiés"
+msgstr "IBTIKAR request: open the dedicated forms"
+
+msgid "Ouvrir le formulaire IBTIKAR"
+msgstr "Open the IBTIKAR form"

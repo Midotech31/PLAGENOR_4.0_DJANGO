@@ -1,3 +1,4 @@
+from plagenor.test_support import close_response
 """HTTP contracts for role boundaries, corrections and exceptional inputs."""
 import io
 import tempfile
@@ -281,7 +282,7 @@ class CompleteViewContracts(TestCase):
             self.assertEqual(path.with_suffix('.backup.docx').read_bytes(),b'old-template')
             response=self.call(superadmin.download_template,'SUPER_ADMIN',method='get',template_type=kind)
             try:self.assertEqual(b''.join(response.streaming_content),buf.getvalue())
-            finally:response.close()
+            finally:close_response(response)
             for type_ in ('invalid','reception_form_template'):
                 self.assertEqual(self.call(superadmin.download_template,'SUPER_ADMIN',method='get',template_type=type_).status_code,302)
 
@@ -377,7 +378,7 @@ class CompleteViewContracts(TestCase):
         self.assertFalse(dv._can_download_request_doc(self.users['REQUESTER'],self.req))
         with self.assertRaises(Http404):dv._serve_file(Path(self.tmp.name)/'absent','absent.docx')
         path=Path(self.tmp.name)/'contract.pdf';path.write_bytes(b'%PDF-1.4\ncontract')
-        response=dv._serve_docx(path,'contract.pdf');self.assertEqual(response['Content-Type'],'application/pdf');response.close()
+        response=dv._serve_docx(path,'contract.pdf');self.assertEqual(response['Content-Type'],'application/pdf');close_response(response)
         service=Service.objects.create(code='CACHE-COMP',name='Cache');self.req.service=service;self.req.save()
         ServiceFormField.objects.create(service=service,name='sample',label='Sample')
         self.assertNotEqual(dv._service_fields_signature(self.req),'0')
@@ -389,16 +390,16 @@ class CompleteViewContracts(TestCase):
             rendered=source.with_suffix(suffix);rendered.write_bytes(b'contract')
             with override_settings(DOCUMENT_PDF_ENABLED=True),patch.object(dv,'convert_docx_to_pdf',return_value=rendered):
                 response=dv._cached_serve_doc(self.req,'TEST'+suffix,lambda req:source,'contract')
-                self.assertTrue(response['Content-Disposition'].endswith(suffix+'"'));response.close()
+                self.assertTrue(response['Content-Disposition'].endswith(suffix+'"'));close_response(response)
                 self.assertFalse(source.exists())
         for generator in (lambda req:Path(self.tmp.name)/'absent',lambda req:1/0):
             with self.assertRaises(Http404):dv._cached_serve_doc(self.req,'ERROR',generator,'contract')
         source=Path(self.tmp.name)/'unclean.docx';source.write_bytes(b'contract')
         with override_settings(DOCUMENT_PDF_ENABLED=False),patch.object(Path,'unlink',side_effect=OSError):
-            response=dv._cached_serve_doc(self.req,'UNCLEAN',lambda req:source,'contract');response.close()
+            response=dv._cached_serve_doc(self.req,'UNCLEAN',lambda req:source,'contract');close_response(response)
         with override_settings(DOCUMENT_PDF_ENABLED=False):
             for fn in (dv.ibtikar_form_view,dv.reception_form_view,dv.platform_note_view):
-                response=self.call(fn,method='get',request_id=self.req.pk);self.assertEqual(response.status_code,200);response.close()
+                response=self.call(fn,method='get',request_id=self.req.pk);self.assertEqual(response.status_code,200);close_response(response)
         ServiceTemplate.objects.create(service=service,template_type='QUOTE',name='Active')
         for active in ('0','1'):
             response=self.call(dv.template_list,method='get',data={'type':'QUOTE','service':service.pk,'active':active})
@@ -471,7 +472,7 @@ class CompleteViewContracts(TestCase):
         pdf=Path(self.tmp.name)/'summary.pdf';pdf.write_bytes(b'%PDF-1.4\nsummary')
         with override_settings(DOCUMENT_PDF_ENABLED=True),patch('documents.pdf_converter.convert_docx_to_pdf',return_value=pdf):
             response=self.call(stats.stats_export,method='get',data={'format':'docx','date_to':'2026-12-31'})
-            self.assertEqual(response['Content-Type'],'application/pdf');response.close()
+            self.assertEqual(response['Content-Type'],'application/pdf');close_response(response)
         from accounts import views as av
         from django.core.signing import TimestampSigner
         token=TimestampSigner(salt=av._GUEST_TOKEN_SALT).sign('no-account@example.test')

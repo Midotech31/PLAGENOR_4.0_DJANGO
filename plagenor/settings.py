@@ -450,3 +450,5 @@ if SENTRY_DSN:
 
 # Canonical origin for links in background notifications.
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "plagenor.onrender.com")).rstrip("/")
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000

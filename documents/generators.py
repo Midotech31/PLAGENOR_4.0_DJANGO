@@ -363,6 +363,24 @@ def build_field_map(request_obj) -> dict[str, str]:
         'SAMPLE_SUMMARY': _format_sample_summary(req.sample_table),
         'SERVICE_PARAMS': _format_service_params(req.service_params),
     }
+    if req.channel == 'IBTIKAR':
+        from core.ibtikar.models import IbtikarSubmission
+        from core.ibtikar.schema import projection
+        form = IbtikarSubmission.objects.filter(request=req).first()
+        if form:
+            data = projection(form.schema, form.applicant, form.parameters, form.samples, form.staff, 'fr')
+            applicant = {row['name']: row['display'] for row in data['applicant']}
+            aliases = {'full_name': ['FULL_NAME','REQUESTER_NAME','CLIENT_NAME'], 'email':['EMAIL','REQUESTER_EMAIL','CLIENT_EMAIL'],
+                       'phone':['PHONE','REQUESTER_PHONE'], 'institution':['ETABLISSEMENT','ORGANIZATION'], 'laboratory':['LABORATORY'],
+                       'supervisor':['SUPERVISOR'], 'supervisor_email':['SUPERVISOR_EMAIL'], 'status':['STUDENT_LEVEL'],
+                       'ibtikar_id':['IBTIKAR_ID','REQUESTER_IBTIKAR_ID'], 'analysis_frame':['ANALYSIS_FRAME'], 'project_title':['PROJECT_TITLE','TITLE']}
+            for name, keys in aliases.items():
+                for key in keys:
+                    field_map[key] = applicant.get(name, '')
+            field_map['SERVICE_PARAMS'] = '\n'.join(row['label'] + ' : ' + row['display'] for row in data['parameters'])
+            field_map['SAMPLE_TABLE'] = '\n'.join(str(index) + ' — ' + '; '.join(row['label'] + ' : ' + row['display'] for row in rows) for index, rows in enumerate(data['samples'], 1))
+            if form.estimate.get('total') is None:
+                field_map['BUDGET_AMOUNT'] = field_map['IBTIKAR_BUDGET'] = 'À valider'
     return field_map
 
 
@@ -636,153 +654,9 @@ def _apply_brand_table_style_everywhere(doc: DocumentType) -> None:
 
 # Generators ----------------------------------------------------------------
 
-def generate_ibtikar_form(request_obj) -> str:
-    """IBTIKAR form. Priority: uploaded template → service-specific
-    branded template (egtp_*.docx with the institutional banner already
-    in the header) → generic generic template → programmatic fallback.
-
-    Service-specific egtp_*.docx forms ship as printable French forms
-    with literal labels ("Nom et prénom : * Nom complet du demandeur")
-    instead of ``{{KEY}}`` markers, so they bypass the standard
-    substitution pass. The ``apply_legacy_label_substitution`` step fills
-    the personal-info / request fields by matching the French label
-    patterns and writing the requester's data into the asterisked
-    instructional-text slot. Triggered only when the egtp_*.docx path is
-    taken — the generic/programmatic paths already use ``{{KEY}}``.
-    """
-    field_map = build_field_map(request_obj)
-    doc: Optional[DocumentType] = None
-    using_legacy_form = False
-
-    if request_obj.service:
-        uploaded = _get_uploaded_template(request_obj.service, 'IBTIKAR_FORM')
-        if uploaded:
-            doc = Document(str(uploaded))
-
-    if doc is None and request_obj.service:
-        template_name = IBTIKAR_TEMPLATE_MAP.get(request_obj.service.code, '')
-        if template_name:
-            path = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar' / template_name
-            if path.exists():
-                doc = Document(str(path))
-                using_legacy_form = True
-
-    using_generic = False
-    if doc is None:
-        generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'ibtikar_form_template.docx'
-        if generic.exists():
-            doc = Document(str(generic))
-            using_generic = True
-
-    if doc is None:
-        doc = _build_ibtikar_form_programmatic(request_obj, field_map)
-
-    replace_placeholders(doc, field_map)
-    if using_legacy_form:
-        apply_legacy_label_substitution(doc, field_map)
-        # Pre-fill the printable sample grid from the digital submission so the
-        # lab receives a complete form, not a blank table to re-type by hand.
-        populate_legacy_sample_table(doc, request_obj)
-        # Fill every "Choisissez un élément" / "Cliquez ici" answer slot from
-        # the requester's online service_params (PCR kit, QC level, marker
-        # size, recovered volume…). Fuzzy label match → answer; each param
-        # used at most once. Without this, the Section 4 questions stayed
-        # blank even when the requester answered them online.
-        populate_legacy_param_questions(doc, request_obj)
-    elif using_generic:
-        # The generic template only carries identity placeholders. For a
-        # service with no branded egtp form (e.g. one a SuperAdmin created
-        # from scratch), render its questions and sample table — with proper
-        # human labels — so the generated document carries everything the
-        # requester entered.
-        # Replace the generic template's manual-entry placeholder and keep
-        # the generated data before the signature block.
-        for paragraph in list(doc.paragraphs):
-            if '[Tableau des échantillons à remplir]' in paragraph.text:
-                previous = paragraph._p.getprevious()
-                if previous is not None and 'Tableau des échantillons' in ''.join(previous.itertext()):
-                    previous.getparent().remove(previous)
-                paragraph._p.getparent().remove(paragraph._p)
-        signature = next((p._p for p in doc.paragraphs if 'Signature du demandeur' in p.text), None)
-        existing = set(doc._element.body)
-        _labels = _field_label_map(request_obj)
-        _render_service_params(doc, request_obj.service_params, _labels)
-        _render_sample_table(doc, request_obj.sample_table, _labels)
-        if signature is not None:
-            for element in list(doc._element.body):
-                if element not in existing:
-                    signature.addprevious(element)
-    strip_unresolved_placeholders(doc)
-    ensure_institutional_header(doc)
-    _inject_document_blocks(doc, 'IBTIKAR_FORM', request_obj)
-    # The egtp_*.docx IBTIKAR templates are the official printable forms
-    # of the platform — they ship with their own typography, table
-    # styling and footer. Repainting them with the unified PLAGENOR
-    # house style overrides those carefully crafted fonts and colours
-    # and gives the result an inconsistent / "loud" feel. So we skip
-    # the finishing pass for legacy / generic templates: only the
-    # programmatic fallback gets the centralised look.
-    if using_legacy_form or using_generic:
-        return _save_document(
-            doc, 'IBTIKAR', request_obj,
-            skip_house_style=True,    # preserve the template's own fonts
-            style_tables=False,       # preserve the template's own table look
-            skip_brand_footer=True,   # the template already has its footer
-        )
-    return _save_document(doc, 'IBTIKAR', request_obj)
-
-
-def _build_ibtikar_form_programmatic(request_obj, field_map) -> DocumentType:
-    doc = Document()
-    apply_house_style(doc)
-    doc.add_heading('Formulaire IBTIKAR — PLAGENOR', level=1)
-    doc.add_heading("ESSBO — École Supérieure en Sciences Biologiques d'Oran", level=2)
-    doc.add_paragraph(f"Référence : {field_map['DISPLAY_ID']}")
-    doc.add_paragraph(f"Date : {field_map['DATE']}")
-    doc.add_paragraph('')
-
-    doc.add_heading('Informations du demandeur', level=2)
-    table = doc.add_table(rows=8, cols=2)
-    table.style = 'Light Grid Accent 1'
-    fields = [
-        ('Nom complet', field_map['FULL_NAME']),
-        ('Email', field_map['EMAIL']),
-        ('Téléphone', field_map['PHONE']),
-        ('Établissement', field_map['ETABLISSEMENT']),
-        ('Laboratoire', field_map['LABORATORY']),
-        ('Directeur de recherche', field_map['SUPERVISOR']),
-        ('Niveau', field_map['STUDENT_LEVEL']),
-        ('Code IBTIKAR-DGRSDT', field_map['IBTIKAR_EXTERNAL_CODE']),
-    ]
-    for i, (label, value) in enumerate(fields):
-        table.rows[i].cells[0].text = label
-        table.rows[i].cells[1].text = str(value or '')
-
-    doc.add_heading('Service demandé', level=2)
-    svc_table = doc.add_table(rows=4, cols=2)
-    svc_table.style = 'Light Grid Accent 1'
-    svc_fields = [
-        ('Code', field_map['SERVICE_CODE']),
-        ('Intitulé', field_map['SERVICE_NAME']),
-        ('Description', field_map['SERVICE_DESCRIPTION']),
-        ('Délai', f"{field_map['SERVICE_TURNAROUND']} jours"),
-    ]
-    for i, (label, value) in enumerate(svc_fields):
-        svc_table.rows[i].cells[0].text = label
-        svc_table.rows[i].cells[1].text = str(value or '')
-
-    doc.add_heading('Détails de la demande', level=2)
-    doc.add_paragraph(f"Titre du projet : {field_map['TITLE']}")
-    if field_map['DESCRIPTION']:
-        doc.add_paragraph(f"Description : {field_map['DESCRIPTION']}")
-    doc.add_paragraph(f"Urgence : {field_map['URGENCY']}")
-    doc.add_paragraph(f"Budget estimé : {field_map['BUDGET_AMOUNT']}")
-    doc.add_paragraph(f"Solde IBTIKAR déclaré : {field_map['IBTIKAR_BALANCE']}")
-
-    _render_sample_table(doc, request_obj.sample_table)
-    _render_service_params(doc, request_obj.service_params)
-    _render_footer(doc)
-    return doc
+def generate_ibtikar_form(request_obj):
+    from documents.ibtikar_canonical import generate_canonical_form
+    return generate_canonical_form(request_obj)
 
 
 def generate_platform_note(request_obj) -> str:

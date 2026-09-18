@@ -13,6 +13,7 @@
 
     <!-- Navigation -->
     <nav class="sidebar-nav">
+        <a href="{% url 'ibtikar:index' %}" class="nav-item">{% trans "Formulaires IBTIKAR" %}</a>
         {% if user.role == 'SUPER_ADMIN' %}
         <div class="nav-section">{% trans "Administration" %}</div>
         <a href="{% url 'dashboard:superadmin' %}" class="nav-item {% if request.resolver_match.url_name == 'superadmin' %}active{% endif %}">

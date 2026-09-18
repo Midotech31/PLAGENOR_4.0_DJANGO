@@ -52,7 +52,7 @@ class PublicPagesAndPrivacyTests(TestCase):
         anonymous = self.client.get(f"/service/{self.service.code}/")
         self.assertEqual(anonymous.status_code, 200)
         for user, expected in (
-            (self.requester, "/dashboard/requester/?service="),
+            (self.requester, "/ibtikar/new/"),
             (self.client_user, "/dashboard/client/?service="),
             (self.member, "/dashboard/"),
         ):
@@ -178,6 +178,9 @@ class PublicSubmissionEdgeTests(TestCase):
             success = self.client.post(
                 f"/track/ibtikar-code/{token}/", {"ibtikar_code": "IBT-EXTERNAL"})
         self.assertEqual(success.status_code, 302)
-        transition.assert_called_once()
+        transition.assert_not_called()
+        req.refresh_from_db()
+        self.assertEqual(req.status, "IBTIKAR_CODE_SUBMITTED")
+        self.assertTrue(req.history.filter(to_status="IBTIKAR_CODE_SUBMITTED").exists())
         req.refresh_from_db()
         self.assertEqual(req.ibtikar_external_code, "IBT-EXTERNAL")

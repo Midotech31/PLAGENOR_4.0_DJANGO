@@ -1,0 +1,19 @@
+{% load i18n %}
+{% for field in form %}
+{% if field.name != 'DELETE' %}
+<div class="ibk-field {% if field.errors %}ibk-field--error{% endif %}"
+     data-ibk-field="{{ field.name }}" data-ibk-when="{{ field.field.rule_json }}"
+     data-ibk-exclusive="{{ field.field.exclusive_json }}" data-ibk-required="{{ field.field.schema_required|yesno:'true,false' }}" data-file-present="{{ field.field.existing_file|yesno:'true,false' }}"
+     {% if not field.field.applicable %}hidden{% endif %}>
+    {% if field.field.ibtikar_spec.type == 'multi' %}
+    <fieldset><legend>{{ field.label }}{% if field.field.schema_required %} <span aria-hidden="true">*</span>{% endif %}</legend>{{ field }}</fieldset>
+    {% else %}
+    {{ field.label_tag }}{% if field.field.schema_required %}<span class="ibk-required" aria-hidden="true"> *</span>{% endif %}
+    {{ field }}
+    {% endif %}
+    {% if field.help_text %}<p class="ibk-help">{{ field.help_text }}</p>{% endif %}
+    {{ field.errors }}
+</div>
+{% endif %}
+{% endfor %}
+{{ form.non_field_errors }}

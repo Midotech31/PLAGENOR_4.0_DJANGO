@@ -28,13 +28,14 @@ def submit_ibtikar_request(data: dict, user=None) -> Request:
 
     budget_amount = data.get('budget_amount', 0)
     service_id = data.get('service_id')
+    initial_status = 'DRAFT' if data.get('status') == 'DRAFT' else 'SUBMITTED'
 
     request_obj = Request.objects.create(
         display_id=display_id,
         title=data.get('title', ''),
         description=data.get('description', ''),
         channel='IBTIKAR',
-        status='SUBMITTED',
+        status=initial_status,
         urgency=data.get('urgency', 'Normal'),
         service_id=service_id,
         requester=user,
@@ -54,11 +55,12 @@ def submit_ibtikar_request(data: dict, user=None) -> Request:
     RequestHistory.objects.create(
         request=request_obj,
         from_status='',
-        to_status='SUBMITTED',
+        to_status=initial_status,
         actor=user,
     )
 
-    transaction.on_commit(lambda: _notify_submission(request_obj), robust=True)
+    if initial_status != 'DRAFT':
+        transaction.on_commit(lambda: _notify_submission(request_obj), robust=True)
 
     return request_obj
 

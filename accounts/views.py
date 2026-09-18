@@ -312,6 +312,8 @@ def convert_guest_verify(request, token):
             request,
             _("Compte créé ! %(count)d demande(s) liée(s) à votre compte.") % {'count': linked},
         )
+        if Request.objects.filter(requester=user, channel='IBTIKAR').exists():
+            return redirect('ibtikar:index')
         return redirect('dashboard:router')
 
     return render(request, 'accounts/convert_guest_verify.html', {

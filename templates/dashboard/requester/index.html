@@ -106,89 +106,11 @@
         <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
     </div>
 
-    <!-- New Request -->
-    <div x-show="tab === 'new'">
-        {% if budget_context.needs_declaration %}
-        <div class="card">
-            <div class="card-body" style="text-align:center; padding:40px 20px;">
-                <h3 style="margin:0 0 10px;">{% trans "Solde IBTIKAR non déclaré" %}</h3>
-                <p class="text-muted" style="margin:0;">
-                    {% trans "Déclarez d'abord votre solde IBTIKAR résiduel ci-dessus pour pouvoir soumettre une demande." %}
-                </p>
-            </div>
-        </div>
-        {% else %}
-        <div class="card">
-            <div class="card-header"><h3>{% trans "Soumettre une nouvelle demande IBTIKAR" %}</h3></div>
-            <div class="card-body">
-                <form method="post" action="{% url 'dashboard:requester_create' %}">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label>{% trans "Service" %}</label>
-                        <select name="service_id" class="form-control" required>
-                            <option value="">{% trans "Sélectionner un service..." %}</option>
-                            {% for s in services %}
-                            <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div id="dynamic-service-form"></div>
-                    <div class="form-group">
-                        <label>{% trans "Titre de la demande" %}</label>
-                        <input type="text" name="title" class="form-control" required placeholder="{% trans 'Ex: Analyse DRX échantillon...' %}">
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Description" %}</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>{% trans "Urgence" %}</label>
-                        <select name="urgency" class="form-control">
-                            <option value="Normal">{% trans "Normal" %}</option>
-                            <option value="Urgent">{% trans "Urgent" %}</option>
-                            <option value="Très urgent">{% trans "Très urgent" %}</option>
-                        </select>
-                    </div>
-                    <div style="padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; color:#475569; margin-bottom:12px; font-size:0.85rem;">
-                        {% blocktrans with rem=budget_context.budget_remaining|floatformat:0 %}Plafond pour cette demande : <strong>{{ rem }} DA</strong> (votre solde IBTIKAR déclaré). Mettez à jour ce solde dans la carte ci-dessus si vous avez vérifié votre compte DGRSDT.{% endblocktrans %}
-                    </div>
-                    <div id="budget-warning" style="display:none; padding:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; margin-bottom:12px; font-size:0.9rem;">
-                    </div>
-                    <button type="button" id="btn-submit-request" class="btn btn-primary" onclick="showFormPreview(this.closest('form'))">{% trans "Vérifier et soumettre" %}</button>
-                </form>
-                <script>
-                (function() {
-                    var serviceSelect = document.querySelector('select[name="service_id"]');
-                    var warning = document.getElementById('budget-warning');
-                    var submitBtn = document.getElementById('btn-submit-request');
-                    var DECLARED_BALANCE = {{ budget_context.budget_remaining|default:0|floatformat:0 }};
-
-                    function checkBudget() {
-                        if (!serviceSelect || !warning) return;
-                        var opt = serviceSelect.options[serviceSelect.selectedIndex];
-                        if (!opt || !opt.value) { warning.style.display = 'none'; submitBtn.disabled = false; return; }
-                        var costEl = document.getElementById('cost-estimate');
-                        var estimated = 0;
-                        if (costEl && costEl.textContent && costEl.textContent !== '—') {
-                            estimated = parseFloat(costEl.textContent.replace(/\s/g, '').replace(',', '.').replace('DA', '')) || 0;
-                        }
-                        if (estimated > 0 && estimated > DECLARED_BALANCE) {
-                            warning.innerHTML = '{% trans "Coût estimé" %} (' + estimated.toLocaleString('fr-FR') + ' DA) {% trans "supérieur à votre solde déclaré" %} (' + DECLARED_BALANCE.toLocaleString('fr-FR') + ' DA).';
-                            warning.style.display = 'block';
-                            submitBtn.disabled = true;
-                        } else {
-                            warning.style.display = 'none';
-                            submitBtn.disabled = false;
-                        }
-                    }
-                    if (serviceSelect) serviceSelect.addEventListener('change', function(){ setTimeout(checkBudget, 100); });
-                    document.addEventListener('costUpdated', checkBudget);
-                })();
-                </script>
-            </div>
-        </div>
-        {% endif %}
-    </div>
+    <div x-show="tab === 'new'" class="card"><div class="card-body">
+        <h2>{% trans "Nouvelle demande IBTIKAR" %}</h2>
+        <p>{% trans "Choisissez la prestation. Les informations demandées et la fiche finale s’adaptent à vos choix réels." %}</p>
+        <a class="btn btn-primary" href="{% url 'ibtikar:index' %}">{% trans "Ouvrir les formulaires IBTIKAR" %}</a>
+    </div></div>
 
     <!-- My Requests -->
     <div x-show="tab === 'requests'">
@@ -268,7 +190,7 @@
                     {% endif %}
 
                     <!-- Pipeline visualization -->
-                    <div class="pipeline mt-2">
+                    <div class="pipeline mt-2" tabindex="0">
                         {% with s=req.status %}
                         <div class="pipeline-step">
                             <div class="pipeline-node"><div class="pipeline-dot done"></div></div>

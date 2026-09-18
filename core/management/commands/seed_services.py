@@ -38,7 +38,7 @@ class Command(BaseCommand):
                     **{f'{field}_{lang}': value.strip()
                        for lang, texts in defn['translations'].items()
                        for field, value in texts.items() if field in ('name', 'description')},
-                    'channel_availability': 'BOTH',
+                    'channel_availability': defn.get('channel_availability', 'BOTH'),
                     'ibtikar_price': ibtikar_price,
                     'genoclab_price': genoclab_price,
                     'turnaround_days': 7,

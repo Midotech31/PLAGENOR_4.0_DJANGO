@@ -1,0 +1,17 @@
+{% extends 'base_public.html' %}
+{% load i18n static %}
+{% block title %}{% trans "Cadre réservé à PLAGENOR" %} — {{ req.display_id }}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
+<section class="ibk-shell">
+    <a href="{% url 'ibtikar:detail' req.pk %}">← {{ req.display_id }}</a>
+    <h1>{% trans "Réception et validation PLAGENOR" %}</h1>
+    <p class="ibk-lead">{% trans "Cette section ne modifie pas les informations déclarées par le demandeur. L’opérateur et la date de modification sont enregistrés automatiquement." %}</p>
+    {% for error in errors %}<p class="ibk-errors" role="alert">{{ error }}</p>{% endfor %}
+    <form method="post" class="ibk-section" data-ibk-group="staff">
+        {% csrf_token %}<input type="hidden" name="revision" value="{{ revision }}">
+        <div class="ibk-fields">{% include 'ibtikar/fields.html' %}</div>
+        <button class="btn btn-primary" type="submit">{% trans "Enregistrer la réception / validation" %}</button>
+    </form>
+</section>
+{% endblock %}
