@@ -289,6 +289,15 @@ class AcceptanceFlows(TestCase):
         schema,a,p,rows=fixture('EGTP-CAN',200)
         data=posted(a,p,rows,action='draft')
         self.assertGreater(len(data),1000)
+        from django.test.client import encode_multipart, BOUNDARY
+        from django.conf import settings
+        import json, os
+        if os.environ.get('CI'):
+            folder=Path('test-results/multipart');folder.mkdir(parents=True,exist_ok=True)
+            suffix='full' if folder.joinpath('standalone.bin').exists() else 'standalone'
+            body=encode_multipart(BOUNDARY,data)
+            folder.joinpath(suffix+'.bin').write_bytes(body)
+            folder.joinpath(suffix+'.json').write_text(json.dumps({'data':data,'charset':settings.DEFAULT_CHARSET,'boundary':BOUNDARY,'memory_limit':settings.DATA_UPLOAD_MAX_MEMORY_SIZE},ensure_ascii=False),encoding='utf-8')
         response=self.client.post(reverse('ibtikar:new',args=['EGTP-CAN']),data)
         details = {key: str(getattr(response.context.get(key), 'errors', response.context.get(key))) for key in ('errors', 'applicant_form', 'parameter_form', 'sample_formset', 'upload_form')} if response.context else response.content[:2000]
         if response.status_code != 302 and response.context:

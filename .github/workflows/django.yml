@@ -108,6 +108,14 @@ jobs:
       - name: Verify multi-sample HTTP submission on PostgreSQL
         run: python manage.py test core.test_ibtikar_acceptance.AcceptanceFlows.test_two_hundred_rows_survive_the_http_parser_and_draft_save
       - run: python manage.py test
+      - name: Upload synthetic HTTP regression fixture
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: synthetic-http-fixture
+          path: test-results/multipart/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Synthetic PostgreSQL backup and restore
         env:
           PGPASSWORD: ci-only-password
