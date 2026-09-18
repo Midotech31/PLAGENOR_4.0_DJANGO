@@ -290,7 +290,8 @@ class AcceptanceFlows(TestCase):
         data=posted(a,p,rows,action='draft')
         self.assertGreater(len(data),1000)
         response=self.client.post(reverse('ibtikar:new',args=['EGTP-CAN']),data)
-        self.assertEqual(response.status_code,302)
+        details = {key: str(getattr(response.context.get(key), 'errors', response.context.get(key))) for key in ('errors', 'applicant_form', 'parameter_form', 'sample_formset', 'upload_form')} if response.context else response.content[:2000]
+        self.assertEqual(response.status_code,302,details)
         obj=IbtikarSubmission.objects.latest('pk')
         self.assertEqual(len(obj.samples),200)
         self.assertEqual(obj.samples[-1]['sample_code'],'S200')
