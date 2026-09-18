@@ -1,3 +1,4 @@
+from plagenor.test_support import close_response
 import io
 from copy import deepcopy
 from decimal import Decimal
@@ -170,7 +171,7 @@ class AcceptanceFlows(TestCase):
         obj=IbtikarSubmission.objects.latest('pk');file=obj.attachments.get()
         edit=self.client.get(reverse('ibtikar:guest_edit',args=[obj.request.guest_token]));self.assertEqual(edit.status_code,200)
         response=self.client.get(reverse('ibtikar:attachment',args=[file.pk]),{'access':str(obj.request.guest_token)})
-        self.assertEqual(response.status_code,200);self.assertTrue(b''.join(response.streaming_content));response.close()
+        self.assertEqual(response.status_code,200);self.assertTrue(b''.join(response.streaming_content));close_response(response)
         file.file.delete(save=False)
         self.assertEqual(self.client.get(reverse('ibtikar:attachment',args=[file.pk]),{'access':str(obj.request.guest_token)}).status_code,404)
 
@@ -289,26 +290,8 @@ class AcceptanceFlows(TestCase):
         schema,a,p,rows=fixture('EGTP-CAN',200)
         data=posted(a,p,rows,action='draft')
         self.assertGreater(len(data),1000)
-        from django.test.client import encode_multipart, BOUNDARY
-        from django.conf import settings
-        import json, os
-        folder=Path(settings.BASE_DIR)/'test-results'/'multipart'
-        folder.mkdir(parents=True,exist_ok=True)
-        import time
-        suffix=str(time.time_ns())
-        body=encode_multipart(BOUNDARY,data)
-        folder.joinpath(suffix+'.bin').write_bytes(body)
-        folder.joinpath(suffix+'.json').write_text(json.dumps({'data':data,'charset':settings.DEFAULT_CHARSET,'boundary':BOUNDARY,'memory_limit':settings.DATA_UPLOAD_MAX_MEMORY_SIZE,'cwd':str(Path.cwd()),'ci_present':bool(os.environ.get('CI'))},ensure_ascii=False),encoding='utf-8')
         response=self.client.post(reverse('ibtikar:new',args=['EGTP-CAN']),data)
-        details = {key: str(getattr(response.context.get(key), 'errors', response.context.get(key))) for key in ('errors', 'applicant_form', 'parameter_form', 'sample_formset', 'upload_form')} if response.context else response.content[:2000]
-        if response.status_code != 302 and response.context:
-            formset = response.context['sample_formset']
-            from django.test.client import encode_multipart, BOUNDARY
-            import hashlib
-            body = encode_multipart(BOUNDARY, data)
-            details['request_parser'] = {'body_length': len(body), 'body_sha256': hashlib.sha256(body).hexdigest(), 'content_length': response.wsgi_request.META.get('CONTENT_LENGTH'), 'handlers': [(type(h).__name__, h.chunk_size) for h in response.wsgi_request.upload_handlers]}
-            details['invalid_values'] = [{'row': i, 'field': key, 'submitted': repr(data.get(form.add_prefix(key)))[:100], 'bound_type': type(form[key].value()).__name__, 'bound_length': len(str(form[key].value())), 'bound_start': repr(form[key].value())[:180], 'bound_end': repr(form[key].value())[-180:]} for i, form in enumerate(formset) for key in form.errors if key in form.fields]
-        self.assertEqual(response.status_code,302,details)
+        self.assertEqual(response.status_code,302)
         obj=IbtikarSubmission.objects.latest('pk')
         self.assertEqual(len(obj.samples),200)
         self.assertEqual(obj.samples[-1]['sample_code'],'S200')

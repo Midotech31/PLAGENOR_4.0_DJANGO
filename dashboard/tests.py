@@ -1,3 +1,4 @@
+from plagenor.test_support import close_response
 """Tests for the report-access gate and storage-backed media serving.
 
 The IBTIKAR citation clause must block report downloads until acknowledged;
@@ -63,7 +64,7 @@ class ReportGateTests(TestCase):
         self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
-        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
+        if resp.streaming: body = b''.join(resp.streaming_content); close_response(resp)
         body = body if resp.closed else b''.join(resp.streaming_content)
         self.assertEqual(body, b'PDF-BYTES')
 
@@ -82,7 +83,7 @@ class ReportGateTests(TestCase):
         self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
-        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
+        if resp.streaming: body = b''.join(resp.streaming_content); close_response(resp)
 
     def test_report_token_download_remains_available_to_guest(self):
         rel = _save_report()
@@ -93,7 +94,7 @@ class ReportGateTests(TestCase):
         )
         resp = self.client.get(f'/report/{token}/download/')
         self.assertEqual(resp.status_code, 200)
-        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
+        if resp.streaming: body = b''.join(resp.streaming_content); close_response(resp)
         self.assertEqual(body, b'PDF-BYTES')
 
     def test_serve_media_404_on_missing(self):
@@ -748,7 +749,7 @@ class MediaAuthorizationTests(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(b''.join(response.streaming_content), b'x')
         finally:
-            response.close()
+            close_response(response)
 
     def test_avatar_is_public(self):
         self.assert_streamed('/media/avatars/pub.png')
@@ -1173,7 +1174,7 @@ class StatsViewAndExportTests(TestCase):
             ):
                 response = stats_export.__wrapped__(request)
                 body = b''.join(response.streaming_content)
-                response.close()
+                close_response(response)
         self.assertEqual(body, b'XLSX-CONTENT')
         self.assertEqual(
             response['Content-Type'],
@@ -1199,7 +1200,7 @@ class StatsViewAndExportTests(TestCase):
             ):
                 response = stats_export.__wrapped__(request)
                 body = b''.join(response.streaming_content)
-                response.close()
+                close_response(response)
         self.assertEqual(body, b'DOCX-CONTENT')
         self.assertIn('.docx', response['Content-Disposition'])
         convert.assert_not_called()

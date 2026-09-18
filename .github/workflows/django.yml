@@ -127,14 +127,6 @@ jobs:
           path: test-results/postgres/
           if-no-files-found: error
           retention-days: 14
-      - name: Upload synthetic HTTP regression fixture
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: synthetic-http-fixture
-          path: test-results/multipart/
-          if-no-files-found: warn
-          retention-days: 7
       - name: Synthetic PostgreSQL backup and restore
         env:
           PGPASSWORD: ci-only-password

@@ -1,3 +1,4 @@
+from plagenor.test_support import close_response
 import io
 import json
 from copy import deepcopy
@@ -296,7 +297,7 @@ class PersistenceContractTests(TestCase):
         self.assertEqual(self.client.get(reverse('ibtikar:detail',args=[req.pk])).status_code,404)
         self.assertEqual(self.client.get(reverse('ibtikar:guest_detail',args=[req.guest_token])).status_code,200)
         response=self.client.get(reverse('documents:guest_ibtikar_form',args=[req.guest_token]))
-        self.assertEqual(response.status_code,200);b''.join(response.streaming_content);response.close()
+        self.assertEqual(response.status_code,200);b''.join(response.streaming_content);close_response(response)
         req.status='IBTIKAR_SUBMISSION_PENDING';req.save(update_fields=['status'])
         r=self.client.post(reverse('ibtikar:guest_code',args=[req.guest_token]),{'ibtikar_code':'IBK-TEST-REFERENCE'})
         self.assertEqual(r.status_code,302);req.refresh_from_db();self.assertEqual(req.status,'IBTIKAR_CODE_SUBMITTED')
@@ -359,7 +360,7 @@ class PersistenceContractTests(TestCase):
         obj=IbtikarSubmission.objects.latest('pk');attachment=obj.attachments.get(active=True)
         self.assertEqual(len(attachment.sha256),64)
         response=self.client.get(reverse('ibtikar:attachment',args=[attachment.pk]));self.assertEqual(response.status_code,200)
-        b''.join(response.streaming_content);response.close()
+        b''.join(response.streaming_content);close_response(response)
         self.client.force_login(self.client_user)
         self.assertEqual(self.client.get(reverse('ibtikar:attachment',args=[attachment.pk])).status_code,404)
         self.assertEqual(self.client.get('/media/'+attachment.file.name).status_code,404)
