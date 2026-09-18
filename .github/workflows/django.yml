@@ -50,6 +50,16 @@ jobs:
         coverage run manage.py test
         # Enforced regression floor, verified by the full Django suite.
         coverage report --fail-under=100
+        coverage json -o coverage.json
+    - name: Upload coverage and form definitions
+      uses: actions/upload-artifact@v7
+      with:
+        name: application-validation
+        path: |
+          coverage.json
+          core/ibtikar/definitions.json
+        if-no-files-found: error
+        retention-days: 30
     - name: Dependency vulnerability audit
       run: |
         pip-audit -r requirements.txt
