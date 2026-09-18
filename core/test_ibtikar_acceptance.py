@@ -291,6 +291,9 @@ class AcceptanceFlows(TestCase):
         self.assertGreater(len(data),1000)
         response=self.client.post(reverse('ibtikar:new',args=['EGTP-CAN']),data)
         details = {key: str(getattr(response.context.get(key), 'errors', response.context.get(key))) for key in ('errors', 'applicant_form', 'parameter_form', 'sample_formset', 'upload_form')} if response.context else response.content[:2000]
+        if response.status_code != 302 and response.context:
+            formset = response.context['sample_formset']
+            details['invalid_values'] = [{'row': i, 'field': key, 'submitted': repr(data.get(form.add_prefix(key)))[:100], 'bound_type': type(form[key].value()).__name__, 'bound_length': len(str(form[key].value())), 'bound_start': repr(form[key].value())[:180], 'bound_end': repr(form[key].value())[-180:]} for i, form in enumerate(formset) for key in form.errors if key in form.fields]
         self.assertEqual(response.status_code,302,details)
         obj=IbtikarSubmission.objects.latest('pk')
         self.assertEqual(len(obj.samples),200)
