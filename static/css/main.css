@@ -999,7 +999,7 @@ input, select, textarea { font-family: inherit; }
 .badge-status.in-progress, .badge-in-progress { background: var(--warning-light); color: var(--warning); }
 .badge-status.completed, .badge-completed     { background: var(--success-light); color: var(--success); }
 .badge-status.rejected, .badge-rejected       { background: var(--danger-light);  color: var(--danger); }
-.badge-status.draft, .badge-draft             { background: var(--slate-100);     color: var(--slate-500); }
+.badge-status.draft, .badge-draft             { background: var(--slate-100);     color: #334155; }
 .badge-status.assigned, .badge-assigned       { background: #F5F3FF;              color: #7C3AED; }
 .badge-status.analysis, .badge-analysis       { background: #FFF7ED;              color: #EA580C; }
 .badge-status.validated, .badge-validated     { background: var(--success-light);  color: var(--success); }
@@ -2547,3 +2547,5 @@ img.emoji {
     overflow: hidden; clip: rect(0 0 0 0);
     white-space: nowrap; border: 0;
 }
+
+.pipeline:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
