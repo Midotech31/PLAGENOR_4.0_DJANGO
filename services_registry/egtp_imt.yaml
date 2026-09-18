@@ -158,6 +158,16 @@ sample_table:
 # PRICING (REGISTRY-DRIVEN)
 # -----------------------------------------------------
 pricing:
+  imt_rates:
+    standard:
+      single: 2500
+      duplicate: 4500
+      triplicate: 6500
+    pathogenic:
+      single: 4000
+      duplicate: 7000
+      triplicate: 10000
+  imt_rates_source: 'EGTP-IMT V02 / 02.11.2025, mode d’analyse'
   model: per_sample_table_row_with_multiplier
   currency: DZD
 

@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 # core/workflow.py — PLAGENOR 4.0 Workflow Engine (Django)
 # Integrates state_machine.py transitions with role-based permission checks.
 
@@ -122,6 +123,13 @@ def transition(request_obj, to_status, actor, notes='', force=False):
     with transaction.atomic():
         locked = Request.objects.select_for_update().get(pk=request_obj.pk)
         old_status = locked.status
+        if locked.channel == 'IBTIKAR' and to_status in ('VALIDATION_FINANCE', 'PLATFORM_NOTE_GENERATED', 'ASSIGNED', 'ANALYSIS_STARTED', 'COMPLETED'):
+            from core.ibtikar.models import IbtikarSubmission
+            form = IbtikarSubmission.objects.filter(request=locked).first()
+            if form and (form.submitted_at is None or form.estimate.get('total') is None):
+                raise InvalidTransitionError(_('Le formulaire et son tarif doivent être validés avant cette étape.'))
+            if form and locked.service_id and locked.service.code in ('EGTP-Lyoph', 'EGTP-PSM') and to_status in ('ASSIGNED', 'ANALYSIS_STARTED') and form.staff.get('technical_validation') != 'accepted':
+                raise InvalidTransitionError(_('La compatibilité technique doit être validée par PLAGENOR.'))
         if force and (getattr(actor, 'role', '') != 'SUPER_ADMIN' or not notes.strip()):
             raise AuthorizationError('Un forçage exige le Superadmin et une justification.')
 

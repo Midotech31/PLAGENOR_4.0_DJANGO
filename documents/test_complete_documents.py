@@ -170,12 +170,19 @@ class CompleteGeneratorContracts(TestCase):
             doc=Document();doc.add_paragraph('Uploaded {{REQUEST_ID}}')
             stream=io.BytesIO();doc.save(stream);stream.seek(0)
             template=ServiceTemplate.objects.create(service=self.service,template_type=kind,name=kind,file=File(stream,name=kind+'.docx'))
-            self.assertIn('Uploaded',self.read_text(fn(self.req)))
+            rendered = self.read_text(fn(self.req))
+            if kind == 'IBTIKAR_FORM':
+                self.assertNotIn('Uploaded', rendered)
+                self.assertIn('S-1', rendered)
+            else:
+                self.assertIn('Uploaded', rendered)
             template.delete()
         legacy=self.templates/'ibtikar';legacy.mkdir()
         doc=Document();doc.add_paragraph('Legacy Nom et prénom : * Nom complet du demandeur');doc.save(legacy/'contract.docx')
         with patch.dict(g.IBTIKAR_TEMPLATE_MAP,{'GEN-COMP':'contract.docx'}):
-            self.assertIn('National Student',self.read_text(g.generate_ibtikar_form(self.req)))
+            rendered = self.read_text(g.generate_ibtikar_form(self.req))
+            self.assertNotIn('National Student', rendered)
+            self.assertIn('Non renseigné', rendered)
         doc=Document();doc.add_paragraph('Generic {{REQUEST_ID}}');doc.add_paragraph('Tableau des échantillons');doc.add_paragraph('[Tableau des échantillons à remplir]');doc.add_paragraph('Signature du demandeur');doc.save(self.templates/'ibtikar_form_template.docx')
         text=self.read_text(g.generate_ibtikar_form(self.req));self.assertIn('S-1',text);self.assertNotIn('[Tableau',text)
         self.assertIn('S-1',self.read_text(g.generate_reception_form(self.req)))

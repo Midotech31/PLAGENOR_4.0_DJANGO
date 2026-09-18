@@ -25,7 +25,11 @@ class ServiceEquipmentTests(TestCase):
             self.client.cookies['django_language'] = lang
             for code, definition in load_service_registry().items():
                 service = Service.objects.get(code=code)
-                presentation = definition['presentation']
+                presentation = definition.get('presentation')
+                if not presentation:
+                    self.assertIn(code, ('EGTP-GDE', 'EGTP-PSM'))
+                    self.assertNotIn('<img', render_to_string('includes/service_equipment.html', {'service': service}))
+                    continue
                 with override(lang):
                     figure = render_to_string('includes/service_equipment.html', {'service': service})
                     detail = render_to_string('includes/service_equipment_details.html', {'service': service})
@@ -53,7 +57,10 @@ class ServiceEquipmentTests(TestCase):
 
     def test_all_services_use_existing_collection_photos(self):
         for definition in load_service_registry().values():
-            presentation = definition['presentation']
+            presentation = definition.get('presentation')
+            if not presentation:
+                self.assertIn(definition['service_code'], ('EGTP-GDE', 'EGTP-PSM'))
+                continue
             self.assertTrue(finders.find(presentation['photo_static']))
             self.assertNotIn('photo_url', presentation)
             self.assertNotIn('photo_source', presentation)

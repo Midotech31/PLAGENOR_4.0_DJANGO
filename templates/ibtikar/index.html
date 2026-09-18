@@ -1,0 +1,27 @@
+{% extends 'base_public.html' %}
+{% load i18n static %}
+{% block title %}{% trans "Formulaires IBTIKAR" %} — PLAGENOR 4.0{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
+<section class="ibk-shell">
+    <p class="ibk-eyebrow">PLAGENOR · IBTIKAR</p>
+    <h1>{% trans "Formulaires IBTIKAR" %}</h1>
+    <p class="ibk-lead">{% trans "Choisissez la prestation. Les informations demandées et la fiche finale s’adaptent à vos choix réels." %}</p>
+    <div class="ibk-service-grid">
+    {% for service in services %}
+        <a class="ibk-service-card" href="{% url 'ibtikar:new' service.code %}">
+            <span class="ibk-eyebrow">{{ service.code }}</span><h2>{{ service.name }}</h2>
+            <span>{% trans "Ouvrir le formulaire" %} →</span>
+        </a>
+    {% empty %}<p>{% trans "Aucune prestation disponible actuellement." %}</p>{% endfor %}
+    </div>
+    {% if request.user.is_authenticated %}
+    <h2>{% trans "Mes demandes IBTIKAR" %}</h2>
+    {% for item in own_requests %}
+    <a class="ibk-request-link" href="{% url 'ibtikar:detail' item.pk %}">
+        <strong>{{ item.display_id }}</strong> <span>{{ item.title }}</span> <span>{{ item.get_status_display }}</span>
+    </a>
+    {% empty %}<p>{% trans "Aucune demande enregistrée." %}</p>{% endfor %}
+    {% endif %}
+</section>
+{% endblock %}

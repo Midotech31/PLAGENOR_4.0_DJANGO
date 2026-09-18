@@ -1,0 +1,338 @@
+#
+msgid ""
+msgstr ""
+"Language: ar\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+
+msgid "Ajouter un échantillon / une amorce"
+msgstr "إضافة عينة / بادئ"
+
+msgid "Ajoutez au moins un échantillon ou une amorce."
+msgstr "أضف عينة واحدة أو بادئا واحدا على الأقل."
+
+msgid ""
+"Ajoutez une ligne par échantillon ou amorce. Le nombre de lignes du "
+"formulaire papier n’est pas une limite de saisie."
+msgstr ""
+"أضف صفا لكل عينة أو بادئ. لا يحدد عدد صفوف الاستمارة الورقية عدد المدخلات "
+"المسموح بها."
+
+msgid "Aucune demande enregistrée."
+msgstr "لا توجد طلبات مسجلة."
+
+msgid ""
+"Aucune donnée n’a été enregistrée. Les valeurs saisies restent affichées ci-"
+"dessous ; les fichiers doivent être sélectionnés à nouveau."
+msgstr ""
+"لم تحفظ أي بيانات. تبقى القيم المدخلة معروضة أدناه؛ يرجى اختيار الملفات "
+"مجددا."
+
+msgid "Aucune prestation disponible actuellement."
+msgstr "لا توجد خدمات متاحة حاليا."
+
+msgid "Aucune réception ou validation n’a encore été enregistrée."
+msgstr "لم يسجل أي استلام أو اعتماد بعد."
+
+msgid "Cadre réservé à PLAGENOR"
+msgstr "إطار مخصص للأرضية التكنولوجية للجينوميك"
+
+msgid "Ce choix ne peut pas être combiné avec une autre option."
+msgstr "لا يمكن الجمع بين هذا الاختيار وخيار آخر."
+
+msgid "Cette demande est en lecture seule à ce stade."
+msgstr "هذا الطلب متاح للقراءة فقط في هذه المرحلة."
+
+msgid "Cette demande n’est plus modifiable à ce stade."
+msgstr "لم يعد تعديل هذا الطلب ممكنا في هذه المرحلة."
+
+msgid ""
+"Cette section ne modifie pas les informations déclarées par le demandeur. "
+"L’opérateur et la date de modification sont enregistrés automatiquement."
+msgstr ""
+"لا يعدل هذا القسم المعلومات التي صرح بها صاحب الطلب. يسجل الموظف وتاريخ "
+"التعديل تلقائيا."
+
+msgid "Cette unité ne permet pas de vérifier la quantité minimale requise."
+msgstr "لا تتيح هذه الوحدة التحقق من الحد الأدنى المطلوب للكمية."
+
+msgid "Cette validation relève de l’administration."
+msgstr "هذا الاعتماد من اختصاص الإدارة."
+
+msgid "Choisir"
+msgstr "اختر"
+
+msgid ""
+"Choisissez la prestation. Les informations demandées et la fiche finale "
+"s’adaptent à vos choix réels."
+msgstr ""
+"اختر الخدمة. تتكيف المعلومات المطلوبة والاستمارة النهائية مع اختياراتك "
+"الفعلية."
+
+msgid "Code de la demande sur IBTIKAR"
+msgstr "رمز الطلب على إبتكار"
+
+msgid ""
+"Complétez les paramètres et les échantillons pour obtenir une estimation."
+msgstr "أكمل المعلمات والعينات للحصول على تقدير للتكلفة."
+
+msgid ""
+"Conservez ce lien personnel pour retrouver et modifier votre demande avant "
+"sa validation."
+msgstr "احتفظ بهذا الرابط الشخصي لاسترجاع طلبك وتعديله قبل الاعتماد."
+
+msgid "Demande invitée IBTIKAR requise."
+msgstr "يشترط أن يكون الطلب طلب إبتكار لزائر."
+
+msgid "Demandeur et projet"
+msgstr "صاحب الطلب والمشروع"
+
+msgid "Documents et signature"
+msgstr "الوثائق والتوقيع"
+
+msgid "Documents joints"
+msgstr "الوثائق المرفقة"
+
+msgid "Données enregistrées"
+msgstr "البيانات المسجلة"
+
+msgid "Données historiques conservées"
+msgstr "البيانات التاريخية المحفوظة"
+
+msgid ""
+"Dossier historique : les données ci-dessous sont conservées telles "
+"qu’enregistrées. Aucune option absente n’est déduite d’un ancien modèle "
+"Word."
+msgstr ""
+"ملف تاريخي: تحفظ البيانات أدناه كما سجلت. لا يستنتج أي خيار غائب من نموذج "
+"Word قديم."
+
+msgid ""
+"Dossier historique : vérifiez les valeurs reprises. Les données anciennes "
+"non interprétées restent conservées et ne sont pas remplacées par des "
+"suppositions."
+msgstr ""
+"ملف تاريخي: تحقق من القيم المسترجعة. تحفظ البيانات القديمة غير المفسرة ولا "
+"تستبدل بافتراضات."
+
+msgid "Enregistrer et soumettre"
+msgstr "حفظ وإرسال"
+
+msgid "Enregistrer la réception / validation"
+msgstr "حفظ الاستلام / الاعتماد"
+
+msgid "Enregistrer le brouillon"
+msgstr "حفظ المسودة"
+
+msgid "Estimation"
+msgstr "تقدير التكلفة"
+
+msgid "Estimation non publiée."
+msgstr "تقدير التكلفة غير منشور."
+
+msgid "Estimation temporairement indisponible."
+msgstr "تقدير التكلفة غير متاح مؤقتا."
+
+msgid "Formulaires IBTIKAR"
+msgstr "استمارات إبتكار"
+
+msgid "Indéterminé"
+msgstr "غير محدد"
+
+msgid ""
+"Joignez uniquement les documents nécessaires, sans identifiants directs de "
+"patients. Une déclaration saisie ne remplace pas un document exigé."
+msgstr ""
+"أرفق الوثائق اللازمة فقط دون معرفات مباشرة للمرضى. لا يعوض التصريح المكتوب "
+"الوثيقة المطلوبة."
+
+msgid "Justifiez la validation tarifaire (au moins 10 caractères)."
+msgstr "برر السعر المعتمد (10 أحرف على الأقل)."
+
+msgid "La demande a été modifiée ailleurs. Rechargez-la avant de sauvegarder."
+msgstr "عدل هذا الطلب في جلسة أخرى. أعد تحميله قبل الحفظ."
+
+msgid "La demande dépasse la taille technique autorisée."
+msgstr "يتجاوز الطلب الحد التقني المسموح للحجم."
+
+msgid ""
+"La limite technique de lignes est atteinte. Contactez PLAGENOR pour un dépôt"
+" plus volumineux."
+msgstr ""
+"بلغ الحد التقني لعدد الصفوف. اتصل بالأرضية التكنولوجية للجينوميك لإيداع طلب "
+"أكبر."
+
+msgid ""
+"La quantité est inférieure au minimum du formulaire source : %(minimum)s "
+"%(unit)s."
+msgstr ""
+"الكمية أقل من الحد الأدنى في الاستمارة المرجعية: %(minimum)s %(unit)s."
+
+msgid "La référence ne peut pas être transmise à cette étape."
+msgstr "لا يمكن إرسال المرجع في هذه المرحلة."
+
+msgid "Le code de l’échantillon ou de la paire/orientation est dupliqué."
+msgstr "رمز العينة أو زوج البادئات/الاتجاه مكرر."
+
+msgid "Le coût calculé dépasse le solde IBTIKAR déclaré."
+msgstr "تتجاوز التكلفة المحسوبة رصيد إبتكار المصرح به."
+
+msgid ""
+"Le formulaire a été enregistré sans modifier les champs non applicables."
+msgstr "حفظت الاستمارة دون تعديل الحقول غير المنطبقة."
+
+msgid ""
+"Le prix validé dépasse le solde déclaré ; demander une mise à jour au "
+"demandeur."
+msgstr ""
+"يتجاوز السعر المعتمد الرصيد المصرح به؛ اطلب من صاحب الطلب تحديث التصريح."
+
+msgid "Le remplissage dépasse 50 % du volume nominal du récipient."
+msgstr "يتجاوز حجم الملء 50٪ من الحجم الاسمي للوعاء."
+
+msgid "Le solde déclaré est hors des limites autorisées."
+msgstr "الرصيد المصرح به خارج الحدود المسموح بها."
+
+msgid ""
+"Les champs devenus non applicables restent conservés mais ne sont pas "
+"présentés comme des choix actifs dans la fiche."
+msgstr ""
+"تحفظ الحقول التي تصبح غير منطبقة، لكنها لا تعرض كاختيارات فعالة في "
+"الاستمارة."
+
+msgid "Mes demandes IBTIKAR"
+msgstr "طلباتي عبر إبتكار"
+
+msgid "Modification réservée au personnel habilité."
+msgstr "التعديل مخصص للموظفين المخولين."
+
+msgid "Modifier le formulaire"
+msgstr "تعديل الاستمارة"
+
+msgid "Montant validé invalide."
+msgstr "المبلغ المعتمد غير صالح."
+
+msgid "Montant validé par PLAGENOR"
+msgstr "المبلغ المعتمد من الأرضية التكنولوجية للجينوميك"
+
+msgid "Nombre de lectures demandé"
+msgstr "عدد القراءات المطلوبة"
+
+msgid "Ouvrir le formulaire"
+msgstr "فتح الاستمارة"
+
+msgid "Paramètres de la prestation"
+msgstr "معلمات الخدمة"
+
+msgid "Quantité minimale requise"
+msgstr "الحد الأدنى المطلوب للكمية"
+
+msgid ""
+"Renseignez uniquement les informations applicables. Les champs marqués * "
+"sont obligatoires pour soumettre la demande."
+msgstr ""
+"أدخل المعلومات المنطبقة فقط. الحقول الموسومة بعلامة * إلزامية لإرسال الطلب."
+
+msgid "Retirer cette ligne"
+msgstr "حذف هذا الصف"
+
+msgid "Retirer cette ligne de la demande ?"
+msgstr "هل تريد حذف هذا الصف من الطلب؟"
+
+msgid "Réception et validation PLAGENOR"
+msgstr "الاستلام والاعتماد لدى الأرضية التكنولوجية للجينوميك"
+
+msgid "Référence IBTIKAR invalide."
+msgstr "مرجع إبتكار غير صالح."
+
+msgid "Référence IBTIKAR-DGRSDT"
+msgstr "مرجع إبتكار للمديرية العامة للبحث العلمي والتطوير التكنولوجي"
+
+msgid "Révision"
+msgstr "مراجعة"
+
+msgid "Suivi opérationnel"
+msgstr "متابعة المعالجة"
+
+msgid "Sélectionnez au moins une option."
+msgstr "اختر خيارا واحدا على الأقل."
+
+msgid "Taille"
+msgstr "الطول"
+
+msgid ""
+"Tarification à valider par PLAGENOR — aucun montant total n’est encore "
+"arrêté."
+msgstr ""
+"يخضع التسعير لاعتماد الأرضية التكنولوجية للجينوميك — لم يحدد المبلغ الإجمالي"
+" النهائي بعد."
+
+msgid "Toutes les prestations IBTIKAR"
+msgstr "جميع خدمات إبتكار"
+
+msgid "Transmettre la référence"
+msgstr "إرسال المرجع"
+
+msgid "Télécharger la fiche IBTIKAR"
+msgstr "تحميل استمارة إبتكار"
+
+msgid "Un dossier clôturé ne peut plus être modifié."
+msgstr "لا يمكن تعديل ملف مغلق."
+
+msgid ""
+"Un tarif validé ne peut pas être effacé sans une révision de la demande."
+msgstr "لا يمكن حذف سعر معتمد دون مراجعة الطلب."
+
+msgid "Une autre modification a été enregistrée. Rechargez cette page."
+msgstr "حفظ تعديل آخر. أعد تحميل هذه الصفحة."
+
+msgid ""
+"Une demande déjà soumise doit être enregistrée comme révision, pas comme "
+"brouillon."
+msgstr "يجب حفظ الطلب المرسل سابقا كمراجعة وليس كمسودة."
+
+msgid ""
+"Une option sans tarif défini nécessite une validation de PLAGENOR ; elle "
+"n’est jamais considérée comme gratuite."
+msgstr ""
+"يتطلب الخيار الذي لم يحدد سعره اعتماد الأرضية التكنولوجية للجينوميك؛ ولا يعد"
+" مجانيا أبدا."
+
+msgid "Une origine clinique ne peut pas être déclarée standard."
+msgstr "لا يمكن تصنيف عينة ذات أصل سريري كعينة عادية."
+
+msgid "Utilisez une séquence ADN en orientation 5′→3′ (alphabet IUPAC)."
+msgstr "استخدم تسلسل DNA بالاتجاه 5′→3′ (أبجدية IUPAC)."
+
+msgid "Valeur trop longue."
+msgstr "القيمة طويلة جدا."
+
+msgid "Vérifiez les informations signalées"
+msgstr "تحقق من المعلومات المحددة"
+
+msgid "Échantillon / amorce"
+msgstr "عينة / بادئ"
+
+msgid "Échantillons / amorces"
+msgstr "العينات / البادئات"
+
+msgid "Le formulaire et son tarif doivent être validés avant cette étape."
+msgstr "يجب اعتماد الاستمارة وسعرها قبل هذه المرحلة."
+
+msgid "La compatibilité technique doit être validée par PLAGENOR."
+msgstr "يجب أن تعتمد الأرضية التكنولوجية للجينوميك التوافق التقني."
+
+msgid "Consulter le formulaire IBTIKAR et sa validation"
+msgstr "عرض استمارة إبتكار واعتمادها"
+
+msgid "Nouvelle demande IBTIKAR"
+msgstr "طلب إبتكار جديد"
+
+msgid "Ouvrir les formulaires IBTIKAR"
+msgstr "فتح استمارات إبتكار"
+
+msgid "Demande IBTIKAR : ouvrir les formulaires dédiés"
+msgstr "طلب إبتكار: فتح الاستمارات المخصصة"
+
+msgid "Ouvrir le formulaire IBTIKAR"
+msgstr "فتح استمارة إبتكار"

@@ -23,7 +23,7 @@ MAX_GUEST_SAMPLE_COLS = 50
 
 
 def home(request):
-    services = Service.objects.filter(active=True)[:8]
+    services = Service.objects.filter(active=True)[:12]
     return render(request, 'pages/home.html', {'services': services})
 
 
@@ -142,7 +142,7 @@ def service_landing(request, service_code):
     service = get_object_or_404(Service, code=service_code, active=True)
     if request.user.is_authenticated:
         if request.user.role == 'REQUESTER':
-            return redirect(f"{reverse('dashboard:requester')}?service={service.pk}")
+            return redirect('ibtikar:new', code=service.code)
         elif request.user.role == 'CLIENT':
             return redirect(f"{reverse('dashboard:client')}?service={service.pk}")
         else:
@@ -159,6 +159,9 @@ def guest_submit(request):
     the chosen service is actually available on the chosen channel — the
     client filter is UX, not a security boundary.
     """
+    if request.method == 'GET' and request.GET.get('channel') == 'IBTIKAR':
+        code = request.GET.get('service')
+        return redirect('ibtikar:new', code=code) if code else redirect('ibtikar:index')
     services_qs = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'IBTIKAR', 'GENOCLAB'],
     ).order_by('code')
@@ -195,7 +198,11 @@ def guest_submit(request):
                 'country_choices': COUNTRY_CHOICES,
             })
 
-        service = Service.objects.filter(pk=service_id, active=True).first()
+        from django.core.exceptions import ValidationError
+        try:
+            service = Service.objects.filter(pk=service_id, active=True).first()
+        except (ValidationError, ValueError):
+            service = None
         if not service:
             messages.error(request, "Service invalide.")
             return render(request, 'pages/guest_submit.html', {
@@ -212,6 +219,10 @@ def guest_submit(request):
                 'services': services_qs,
                 'country_choices': COUNTRY_CHOICES,
             })
+
+        if channel == 'IBTIKAR':
+            from core.ibtikar.bridge import open_legacy_submission
+            return open_legacy_submission(request, service)
 
         guest_token = uuid_lib.uuid4()
 
@@ -254,17 +265,6 @@ def guest_submit(request):
         if country:
             requester_data['country'] = country
 
-        # IBTIKAR-specific fields
-        ibtikar_id = ''
-        declared_balance = 0
-        if channel == 'IBTIKAR':
-            ibtikar_id = request.POST.get('ibtikar_id', '').strip()
-            declared_balance = safe_float(request.POST.get('declared_balance'))
-            if ibtikar_id:
-                requester_data['ibtikar_id'] = ibtikar_id
-            if declared_balance:
-                requester_data['declared_ibtikar_balance'] = declared_balance
-
         # Use the canonical pricing resolver so guest submissions price the
         # same way as authenticated submissions (DB tiers → YAML → flat).
         from core.pricing import resolve_cost
@@ -297,17 +297,9 @@ def guest_submit(request):
             'guest_email': guest_email,
             'guest_phone': guest_phone,
         }
-        if channel == 'IBTIKAR':
-            from core.services.ibtikar import submit_ibtikar_request
-            submission_data.update({
-                'budget_amount': quote,
-                'declared_ibtikar_balance': declared_balance,
-            })
-            req = submit_ibtikar_request(submission_data, user=None)
-        else:
-            from core.services.genoclab import submit_genoclab_request
-            submission_data['quote_amount'] = quote
-            req = submit_genoclab_request(submission_data, user=None)
+        from core.services.genoclab import submit_genoclab_request
+        submission_data['quote_amount'] = quote
+        req = submit_genoclab_request(submission_data, user=None)
 
         return render(request, 'pages/guest_submit_success.html', {
             'req': req,
@@ -335,17 +327,14 @@ def guest_ibtikar_code(request, token):
     if not code:
         msg.error(request, "Veuillez saisir votre code IBTIKAR.")
         return redirect(f"{reverse('track')}?q={req.guest_token}")
-    with transaction.atomic():
-        req = Request.objects.select_for_update().get(pk=req.pk)
-        req.ibtikar_external_code = code
-        req.save(update_fields=['ibtikar_external_code'])
-        if req.status == 'IBTIKAR_SUBMISSION_PENDING':
-            from core.workflow import transition
-            transition(
-                req, 'IBTIKAR_CODE_SUBMITTED', None,
-                notes='Code IBTIKAR soumis par le détenteur du lien invité',
-                force=True,
-            )
+    from django.core.exceptions import ValidationError
+    from core.ibtikar.services import record_guest_code
+    try:
+        record_guest_code(req, code)
+    except ValidationError as exc:
+        msg.error(request, ' '.join(exc.messages))
+        return redirect(f"{reverse('track')}?q={req.guest_token}")
+
     msg.success(request, "Votre code IBTIKAR a été transmis au responsable de la plateforme.")
     return redirect(f"{reverse('track')}?q={req.guest_token}")
 

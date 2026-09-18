@@ -1,0 +1,25 @@
+service_code: EGTP-GDE
+service_name: Extraction d’ADN génomique
+version: V01 / 21.07.2025
+channel_availability: IBTIKAR
+parameters: []
+sample_table:
+  columns: []
+pricing:
+  model: manual_review
+  currency: DZD
+translations:
+  fr:
+    name: Extraction d’ADN génomique
+    description: Extraction d’ADN génomique selon la méthode demandée, avec contrôle
+      qualité et volume final définis dans le formulaire. Tarif soumis à validation.
+  en:
+    name: Genomic DNA extraction
+    description: Genomic DNA extraction using the requested method, with quality control
+      and final volume defined in the form. Pricing requires validation.
+  ar:
+    name: استخلاص الحمض النووي الجينومي
+    description: استخلاص DNA الجينومي حسب الطريقة المطلوبة مع تحديد فحص الجودة والحجم
+      النهائي في الاستمارة. يخضع التسعير للمصادقة.
+
+compliance: []

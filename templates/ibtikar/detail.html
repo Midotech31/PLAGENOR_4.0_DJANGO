@@ -1,0 +1,50 @@
+{% extends 'base_public.html' %}
+{% load i18n static %}
+{% block title %}{{ req.display_id }} — IBTIKAR{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
+<section class="ibk-shell">
+    <a href="{% url 'ibtikar:index' %}">← {% trans "Formulaires IBTIKAR" %}</a>
+    <p class="ibk-eyebrow">{{ req.display_id }} · {{ req.get_status_display }}</p>
+    <h1>{% if projection %}{{ projection.title }}{% elif req.service %}{{ req.service.name }}{% else %}{{ req.title }}{% endif %}</h1>
+    {% if submission %}<p>{% trans "Révision" %} {{ submission.revision }} · {{ projection.source_version }} · {{ submission.updated_at|date:"d/m/Y H:i" }}</p>{% endif %}
+    {% if guest_token %}<p class="ibk-notice">{% trans "Conservez ce lien personnel pour retrouver et modifier votre demande avant sa validation." %}</p>{% endif %}
+    <div class="ibk-actions">
+        <a class="btn btn-outline" href="{{ operations_url }}">{% trans "Suivi opérationnel" %}</a>
+        {% if can_edit %}<a class="btn btn-primary" href="{{ edit_url }}">{% trans "Modifier le formulaire" %}</a>{% endif %}
+        <a class="btn btn-outline" href="{{ document_url }}">{% trans "Télécharger la fiche IBTIKAR" %}</a>
+        {% if can_staff and submission %}<a class="btn btn-outline" href="{% url 'ibtikar:staff' req.pk %}">{% trans "Cadre réservé à PLAGENOR" %}</a>{% endif %}
+    </div>
+    {% if can_code %}
+    <section class="ibk-section"><h2>{% trans "Référence IBTIKAR-DGRSDT" %}</h2>
+      <form method="post" action="{{ code_url }}">{% csrf_token %}
+        <label for="ibtikar-code">{% trans "Code de la demande sur IBTIKAR" %}</label>
+        <input class="form-control" id="ibtikar-code" name="ibtikar_code" value="{{ req.ibtikar_external_code }}" maxlength="50" required>
+        <button type="submit" class="btn btn-primary">{% trans "Transmettre la référence" %}</button>
+      </form>
+    </section>
+    {% endif %}
+    {% if projection %}
+    {% for note in projection.notices %}<p class="ibk-notice">{{ note }}</p>{% endfor %}
+    <section class="ibk-section"><h2>{% trans "Demandeur et projet" %}</h2><dl>{% include 'ibtikar/projection.html' with rows=projection.applicant %}</dl></section>
+    {% if projection.parameters %}<section class="ibk-section"><h2>{% trans "Paramètres de la prestation" %}</h2><dl>{% include 'ibtikar/projection.html' with rows=projection.parameters %}</dl></section>{% endif %}
+    <section class="ibk-section"><h2>{% trans "Échantillons / amorces" %} — {{ projection.sample_count }}</h2>
+        {% if projection.read_count %}<p>{% trans "Nombre de lectures demandé" %} : {{ projection.read_count }}</p>{% endif %}
+        {% for rows in projection.samples %}<div class="ibk-sample"><h3>{% trans "Échantillon / amorce" %} {{ forloop.counter }}</h3><dl>{% include 'ibtikar/projection.html' %}</dl></div>{% endfor %}
+    </section>
+    {% if attachments %}<section class="ibk-section"><h2>{% trans "Documents joints" %}</h2>{% for file in attachments %}<p>{{ file.label }} : <a href="{{ file.url }}">{{ file.name }}</a></p>{% endfor %}</section>{% endif %}
+    {% if prices_visible %}<section class="ibk-section"><h2>{% trans "Estimation" %}</h2>
+        {% if submission.estimate.total != None %}<p class="ibk-price">{{ submission.estimate.total }} DZD</p>
+        {% else %}<p>{% trans "Tarification à valider par PLAGENOR — aucun montant total n’est encore arrêté." %}</p>{% endif %}
+        {% if submission.estimate.status == 'validated' %}<p>{% trans "Montant validé par PLAGENOR" %}</p>{% endif %}
+    </section>{% endif %}
+    <section class="ibk-section"><h2>{% trans "Cadre réservé à PLAGENOR" %}</h2>
+        {% if projection.staff %}<dl>{% include 'ibtikar/projection.html' with rows=projection.staff %}</dl>{% else %}<p>{% trans "Aucune réception ou validation n’a encore été enregistrée." %}</p>{% endif %}
+    </section>
+    {% if submission.legacy_data %}<details class="ibk-section"><summary>{% trans "Données historiques conservées" %}</summary><pre>{{ submission.legacy_data|pprint }}</pre></details>{% endif %}
+    {% else %}
+    <p class="ibk-notice">{% trans "Dossier historique : les données ci-dessous sont conservées telles qu’enregistrées. Aucune option absente n’est déduite d’un ancien modèle Word." %}</p>
+    <section class="ibk-section"><h2>{% trans "Données enregistrées" %}</h2><pre>{{ req.requester_data|pprint }}</pre><pre>{{ req.service_params|pprint }}</pre><pre>{{ req.sample_table|pprint }}</pre></section>
+    {% endif %}
+</section>
+{% endblock %}

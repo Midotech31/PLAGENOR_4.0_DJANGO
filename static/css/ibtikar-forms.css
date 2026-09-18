@@ -1,0 +1,27 @@
+.ibk-shell{max-width:1140px;margin:36px auto 64px;padding:0 24px;color:var(--slate-800,#1e293b)}
+.ibk-shell h1{font-size:clamp(1.6rem,3vw,2.25rem);line-height:1.2;margin:12px 0 16px;letter-spacing:-.02em}
+.ibk-shell h2{font-size:1.2rem;line-height:1.4;margin:0 0 20px}.ibk-shell h3{font-size:1.04rem;margin:0}
+.ibk-eyebrow{font-size:.8rem;letter-spacing:.07em;font-weight:700;color:#475569;margin:18px 0 4px}
+.ibk-lead{font-size:1rem;line-height:1.65;max-width:82ch;margin-bottom:28px;color:#475569}
+.ibk-back{display:inline-block;margin-bottom:12px}.ibk-section{background:#fff;border:1px solid #dbe2ea;border-radius:14px;padding:26px;margin:22px 0}
+.ibk-section h2>span{font-size:.85rem;color:#475569;margin-inline-end:12px}.ibk-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
+.ibk-field{min-width:0}.ibk-field label,.ibk-field legend{font-size:.94rem;font-weight:600;line-height:1.5;color:#243347;max-width:100%}
+.ibk-field .form-control{width:100%;box-sizing:border-box;min-height:44px;margin-top:7px;font-size:1rem;border:1px solid #94a3b8;background:#fff;color:#172033;border-radius:7px;padding:10px 12px}
+.ibk-field textarea{min-height:90px;resize:vertical}.ibk-field input[type=checkbox]{width:18px;height:18px;min-height:18px;display:inline-block;margin:6px 9px 6px 0;vertical-align:middle}
+.ibk-field fieldset{border:0;padding:0;margin:0}.ibk-field fieldset>div>div{margin:7px 0}.ibk-field fieldset label{font-weight:400}
+.ibk-field input:focus-visible,.ibk-field select:focus-visible,.ibk-field textarea:focus-visible,.ibk-shell a:focus-visible,.ibk-shell button:focus-visible{outline:3px solid #3b82f6;outline-offset:3px}
+.ibk-required{color:#9f1239}.ibk-help{font-size:.87rem;line-height:1.6;color:#475569;margin:10px 0}.ibk-notice{background:#f1f5f9;border-inline-start:4px solid #64748b;padding:14px 18px;border-radius:6px;line-height:1.6}
+.ibk-errors,.ibk-field .errorlist,.ibk-row-warning{color:#9f1239}.ibk-errors{background:#fff1f2;border:1px solid #fda4af;padding:18px;border-radius:8px}.ibk-field--error .form-control{border-color:#be123c}
+.ibk-sample{background:#f8fafc;border:1px solid #dbe2ea;padding:20px;border-radius:10px;margin:18px 0}.ibk-sample-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px}
+.ibk-sample-title button{font-size:.86rem;min-height:40px}.ibk-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:24px 0}.ibk-actions .btn{min-height:46px}
+.ibk-summary-row{display:grid;grid-template-columns:minmax(160px,2fr) minmax(0,3fr);gap:16px;padding:10px 0;border-bottom:1px solid #e2e8f0}.ibk-summary-row dt{font-weight:600;font-size:.92rem}.ibk-summary-row dd{margin:0;overflow-wrap:anywhere;white-space:normal;line-height:1.6}
+.ibk-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:36px}.ibk-service-card{display:block;background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:24px;color:inherit;text-decoration:none}.ibk-service-card:hover{border-color:#4f46e5;box-shadow:0 4px 14px #0f172a0a}.ibk-service-card h2{margin:12px 0 18px}
+.ibk-request-link{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #cbd5e1}.ibk-price{font-size:1.6rem;font-weight:700}.ibk-shell pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}
+.ibk-shell [hidden]{display:none!important}.ibk-shell small{font-weight:400}.ibk-computed{color:#334155;font-size:.9rem}
+@media(max-width:700px){.ibk-shell{padding:0 16px;margin-top:24px}.ibk-fields,.ibk-service-grid,.ibk-summary-row{grid-template-columns:1fr}.ibk-section{padding:20px 16px}.ibk-sample{padding:16px 12px}.ibk-sample-title{align-items:flex-start}.ibk-summary-row{gap:6px}.ibk-actions .btn{width:100%;justify-content:center}}
+
+.ibk-field .required-asterisk{display:none!important}
+#ibk-editor{counter-reset:ibk-section}
+#ibk-editor>.ibk-section:not(.ibk-estimate){counter-increment:ibk-section}
+#ibk-editor>.ibk-section>h2>span{font-size:0}
+#ibk-editor>.ibk-section>h2>span::before{content:counter(ibk-section,decimal-leading-zero);font-size:.85rem}

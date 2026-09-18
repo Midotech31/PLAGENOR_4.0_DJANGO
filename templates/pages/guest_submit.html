@@ -6,6 +6,7 @@
 
 {% block content %}
 <section class="section" style="max-width:960px; margin:40px auto; padding:0 32px;">
+    <p><a class="btn btn-outline" href="{% url 'ibtikar:index' %}">{% trans "Demande IBTIKAR : ouvrir les formulaires dédiés" %}</a></p>
     <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
     <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
 
@@ -80,7 +81,6 @@
                     <label>{% trans "Canal" %} *</label>
                     <select name="channel" id="id_channel" class="form-control" required>
                         <option value="GENOCLAB">GENOCLAB ({% trans "externe" %})</option>
-                        <option value="IBTIKAR">IBTIKAR ({% trans "académique" %})</option>
                     </select>
                 </div>
                 <div id="ibtikar-guest-fields" style="display:none;">

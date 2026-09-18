@@ -63,7 +63,8 @@ class ReportGateTests(TestCase):
         self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
-        body = b''.join(resp.streaming_content)
+        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
+        body = body if resp.closed else b''.join(resp.streaming_content)
         self.assertEqual(body, b'PDF-BYTES')
 
     def test_raw_genoclab_report_is_not_public(self):
@@ -81,6 +82,7 @@ class ReportGateTests(TestCase):
         self.client.force_login(self.owner)
         resp = self.client.get('/media/' + rel)
         self.assertEqual(resp.status_code, 200)
+        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
 
     def test_report_token_download_remains_available_to_guest(self):
         rel = _save_report()
@@ -91,7 +93,8 @@ class ReportGateTests(TestCase):
         )
         resp = self.client.get(f'/report/{token}/download/')
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(b''.join(resp.streaming_content), b'PDF-BYTES')
+        if resp.streaming: body = b''.join(resp.streaming_content); resp.close()
+        self.assertEqual(body, b'PDF-BYTES')
 
     def test_serve_media_404_on_missing(self):
         resp = self.client.get('/media/avatars/does-not-exist.png')
@@ -562,19 +565,17 @@ class GuestSubmissionWorkflowTests(TestCase):
         ):
             return self.client.post('/guest-submit/', data)
 
-    def test_guest_ibtikar_uses_canonical_submitted_state_and_budget(self):
-        response = self._post(
-            self.ibtikar_service, 'IBTIKAR',
-            declared_balance='50000', ibtikar_id='IBT-EXT-1',
-        )
-        self.assertEqual(response.status_code, 200)
-        req = Request.objects.get(title='IBTIKAR guest request')
-        self.assertEqual(req.status, 'SUBMITTED')
-        self.assertTrue(req.display_id.startswith('IBK-'))
-        self.assertEqual(req.budget_amount, 1250)
-        self.assertTrue(req.submitted_as_guest)
-        self.assertIsNotNone(req.guest_token)
-        self.assertTrue(req.history.filter(to_status='SUBMITTED').exists())
+    def test_guest_ibtikar_legacy_submission_is_retained_for_canonical_review(self):
+        response = self._post(self.ibtikar_service, 'IBTIKAR', declared_balance='50000', ibtikar_id='IBT-EXT-1')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f'/ibtikar/new/{self.ibtikar_service.code}/')
+        self.assertFalse(Request.objects.exists())
+        imported = self.client.session['ibtikar_import_' + self.ibtikar_service.code]
+        self.assertEqual(imported['applicant']['declared_balance'], '50000')
+        self.assertEqual(imported['legacy_data']['sample_table'][0]['code'], 'S-1')
+        page = self.client.get(response.url)
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'Guest User')
 
     def test_guest_genoclab_uses_canonical_request_created_state_and_quote(self):
         response = self._post(self.genoclab_service, 'GENOCLAB')
@@ -741,8 +742,16 @@ class MediaAuthorizationTests(TestCase):
             if default_storage.exists(n):
                 default_storage.delete(n)
 
+    def assert_streamed(self, url):
+        response = self.client.get(url)
+        try:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(b''.join(response.streaming_content), b'x')
+        finally:
+            response.close()
+
     def test_avatar_is_public(self):
-        self.assertEqual(self.client.get('/media/avatars/pub.png').status_code, 200)
+        self.assert_streamed('/media/avatars/pub.png')
 
     def test_order_denied_to_anonymous(self):
         self.assertEqual(self.client.get('/media/orders/bc-001.pdf').status_code, 404)
@@ -753,11 +762,11 @@ class MediaAuthorizationTests(TestCase):
 
     def test_order_served_to_owner(self):
         self.client.force_login(self.owner)
-        self.assertEqual(self.client.get('/media/orders/bc-001.pdf').status_code, 200)
+        self.assert_streamed('/media/orders/bc-001.pdf')
 
     def test_order_served_to_staff(self):
         self.client.force_login(self.staff)
-        self.assertEqual(self.client.get('/media/orders/bc-001.pdf').status_code, 200)
+        self.assert_streamed('/media/orders/bc-001.pdf')
 
     def test_generated_document_denied_to_anonymous_and_clients(self):
         self.assertEqual(self.client.get('/media/documents/DEVIS_X.docx').status_code, 404)
@@ -766,7 +775,7 @@ class MediaAuthorizationTests(TestCase):
 
     def test_generated_document_served_to_staff(self):
         self.client.force_login(self.staff)
-        self.assertEqual(self.client.get('/media/documents/DEVIS_X.docx').status_code, 200)
+        self.assert_streamed('/media/documents/DEVIS_X.docx')
 
 
 class PricingApiIntegrityTests(TestCase):
@@ -1261,7 +1270,9 @@ class RoleWorkflowCoverageTests(TestCase):
                 'param_mode': 'full', 'sample_0_sample_code': 'NEW-1',
             })
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Request.objects.filter(requester=self.requester, title='Created request').exists())
+        self.assertFalse(Request.objects.filter(requester=self.requester, title='Created request').exists())
+        self.assertEqual(self.client.session['ibtikar_import_' + self.service.code]['applicant']['project_title'], 'Created request')
+        self.assertEqual(self.client.session['ibtikar_import_' + self.service.code]['applicant']['declared_balance'], '150000.00')
 
         self.client.post(f'/dashboard/requester/alt-date/{req.pk}/', {'alt_date': 'bad'})
         self.client.post(f'/dashboard/requester/alt-date/{req.pk}/', {

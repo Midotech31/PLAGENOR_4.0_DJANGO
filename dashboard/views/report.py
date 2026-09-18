@@ -258,7 +258,7 @@ def serve_media(request, path):
     Access control lives in ``_may_access_media``; denials answer 404 (not
     403) so unauthorized probing cannot confirm that a file exists.
     """
-    if path.startswith('reports/'):
+    if '\\' in path or any(part in ('.', '..') for part in path.split('/')) or path.startswith(('reports/', 'ibtikar_attachments/')):
         raise Http404("Fichier introuvable")
     if not _may_access_media(request.user, path):
         raise Http404("Fichier introuvable")

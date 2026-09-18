@@ -4,6 +4,8 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
+{% if req.channel == 'IBTIKAR' %}<p><a class="btn btn-outline" href="{% url 'ibtikar:detail' req.pk %}">{% trans "Consulter le formulaire IBTIKAR et sa validation" %}</a></p>{% endif %}
+
 <!-- Header -->
 <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
@@ -64,6 +66,15 @@
             </div>
         </div>
 
+        {% if req.ibtikar_form %}
+        {% load ibtikar_tags %}{% ibtikar_projection req as canonical %}
+        <section class="card mb-4"><div class="card-body">
+            <h3>{% trans "Paramètres de la prestation" %}</h3>
+            <dl>{% include 'ibtikar/projection.html' with rows=canonical.parameters %}</dl>
+            <h3>{% trans "Échantillons / amorces" %}</h3>
+            {% for rows in canonical.samples %}<h4>{{ forloop.counter }}</h4><dl>{% include 'ibtikar/projection.html' %}</dl>{% endfor %}
+        </div></section>
+        {% else %}
         <!-- Service Parameters -->
         {% if params_display %}
         <div class="card mb-4">
@@ -111,6 +122,7 @@
             </div>
         </div>
         {% endif %}
+{% endif %}
     </div>
 
     <!-- RIGHT COLUMN -->

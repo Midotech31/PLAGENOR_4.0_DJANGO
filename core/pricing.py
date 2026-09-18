@@ -192,7 +192,7 @@ def format_price(amount, currency: str = 'DZD') -> str:
 # of who's clicking.
 # ============================================================================
 
-def resolve_cost(
+def _resolve_legacy_cost(
     service,
     channel: str,
     sample_table=None,
@@ -248,6 +248,8 @@ def resolve_cost(
     #     numbers in the UI and the next quote/estimate uses them, without
     #     touching the YAML on disk.
     pdata = getattr(service, 'pricing_data', None) or {}
+    if isinstance(pdata, dict):
+        pdata = {key: value for key, value in pdata.items() if key != 'ibtikar'}
     db_pricing_block = None
     if pdata and not isinstance(pdata, dict):
         raise PricingConfigurationError("Service pricing_data must be an object.")
@@ -458,3 +460,10 @@ def calculate_cost_from_db(service, channel, sample_table=None, service_params=N
         'total': float(total),
         'breakdown': breakdown,
     }
+
+
+def resolve_cost(service, channel, sample_table=None, service_params=None, urgency='Normal', *, ibtikar_schema=None):
+    if channel == 'IBTIKAR' and (service_params or {}).get('_ibtikar_schema'):
+        from core.ibtikar.pricing import resolve_schema_cost
+        return resolve_schema_cost(service, channel, sample_table, service_params, urgency, schema=ibtikar_schema)
+    return _resolve_legacy_cost(service, channel, sample_table, service_params, urgency)

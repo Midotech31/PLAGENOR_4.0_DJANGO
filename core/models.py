@@ -703,6 +703,9 @@ class RevenueArchive(models.Model):
         return f"{self.channel} {self.month}/{self.year} — {self.total_revenue} DA"
 
 
+from core.ibtikar.models import IbtikarSubmission, IbtikarAttachment, IbtikarRevision
+
+
 class IssuedDocument(models.Model):
     """Immutable generated originals; retained with the database backup."""
     kind = models.CharField(max_length=12)

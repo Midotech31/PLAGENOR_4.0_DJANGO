@@ -1,0 +1,25 @@
+service_code: EGTP-PSM
+service_name: Prestation sur mesure
+version: V01 / 21.01.2026
+channel_availability: IBTIKAR
+parameters: []
+sample_table:
+  columns: []
+pricing:
+  model: manual_review
+  currency: DZD
+translations:
+  fr:
+    name: Prestation sur mesure
+    description: Prestation définie à partir de l’objectif, des étapes, des échantillons
+      et des contraintes déclarés. Aucun type de prestation n’est présélectionné.
+  en:
+    name: Custom service
+    description: A service defined by the stated objective, steps, samples and constraints.
+      No service type is preselected.
+  ar:
+    name: خدمة حسب الطلب
+    description: خدمة تحدد حسب الهدف والخطوات والعينات والقيود المصرح بها. لا يحدد
+      نوع الخدمة مسبقا.
+
+compliance: []
