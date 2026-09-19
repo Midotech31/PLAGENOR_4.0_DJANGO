@@ -20,11 +20,23 @@ def document_identity(req):
     user = req.requester
     data = req.requester_data or {}
     name = (user.get_full_name() or user.username) if user else req.guest_name
-    lines = [getattr(user, 'organization', '') or data.get('organization', ''),
-             getattr(user, 'phone', '') or req.guest_phone,
-             getattr(user, 'email', '') or req.guest_email]
-    return {'billing_channel': req.billing_channel, 'values': values,
-            'client_name': name, 'client_lines': [x for x in lines if x]}
+    organization = getattr(user, 'organization', '') or data.get('organization', '')
+    laboratory = getattr(user, 'laboratory', '') or data.get('laboratory', '')
+    phone = getattr(user, 'phone', '') or req.guest_phone
+    fax = data.get('fax', '')
+    email = getattr(user, 'email', '') or req.guest_email
+    lines = [organization, laboratory, phone, fax, email]
+    return {
+        'billing_channel': req.billing_channel,
+        'values': values,
+        'client_name': name,
+        'client_organization': organization,
+        'client_laboratory': laboratory,
+        'client_phone': phone,
+        'client_fax': fax,
+        'client_email': email,
+        'client_lines': [x for x in lines if x],
+    }
 
 
 @transaction.atomic
