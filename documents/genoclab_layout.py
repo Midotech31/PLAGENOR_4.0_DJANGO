@@ -303,10 +303,38 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
     _shade_cell(date_cell, 'F2F3F3'); _shade_cell(client_cell, 'E7E9E8')
     _multi_para(date_cell, [(f'Date : {doc_date}', {'bold': True, 'size': 10}),
                            (f'N° : {doc_number}', {'bold': True, 'size': 10})])
-    rows = [('Client', {'bold': True, 'size': 10})]
+    raw_lines = [str(line) for line in (client_lines or []) if line]
+    client_phone = (identity or {}).get('client_phone', '')
+    client_fax = (identity or {}).get('client_fax', '')
+    client_email = (identity or {}).get('client_email', '')
+    client_organization = (identity or {}).get('client_organization', '')
+    client_laboratory = (identity or {}).get('client_laboratory', '')
+    if not client_email:
+        client_email = next((line for line in raw_lines if '@' in line), '')
+    if not client_phone:
+        client_phone = next((
+            line for line in raw_lines
+            if '@' not in line and re.search(r'\d{6,}', re.sub(r'\D', '', line))
+        ), '')
+    labelled_values = {
+        value for value in (
+            client_organization, client_laboratory, client_phone,
+            client_fax, client_email
+        ) if value
+    }
+    extra_lines = [line for line in raw_lines if line not in labelled_values]
+    rows = [('Client :', {'bold': True, 'size': 10})]
     if client_name:
         rows.append((client_name, {'bold': True, 'size': 10}))
-    rows.extend((str(line), {'size': 9.5}) for line in (client_lines or []) if line)
+    if client_organization:
+        rows.append((client_organization, {'size': 9.5}))
+    if client_laboratory:
+        rows.append((client_laboratory, {'size': 9.5}))
+    rows.extend((line, {'size': 9.5}) for line in extra_lines)
+    rows.append((f'Tél : {client_phone}', {'size': 9.5}))
+    rows.append((f'Fax : {client_fax}', {'size': 9.5}))
+    if client_email:
+        rows.append((f'Email : {client_email}', {'size': 9.5}))
     if identity and identity.get('payment_terms'):
         rows.append((identity['payment_terms'], {'size': 9.5}))
     _multi_para(client_cell, rows)
