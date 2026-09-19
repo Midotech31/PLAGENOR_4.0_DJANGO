@@ -1,6 +1,5 @@
 from copy import deepcopy
 import io
-import json
 from pathlib import Path
 import re
 import uuid
@@ -36,6 +35,7 @@ TEXT = {
     'unknown': ('Non renseigné', 'Not provided', 'غير مذكور'),
     'source': ('Version du formulaire source', 'Source form version', 'نسخة الاستمارة المرجعية'),
     'revision': ('Révision numérique', 'Digital revision', 'المراجعة الرقمية'),
+    'legacy_revision': ('Non applicable — demande historique', 'Not applicable — historical request', 'غير مطبق — طلب تاريخي'),
     'date': ('Date de la demande', 'Request date', 'تاريخ الطلب'),
     'number': ('Numéro de demande', 'Request number', 'رقم الطلب'),
     'count': ('Nombre de lignes enregistrées', 'Number of recorded rows', 'عدد الصفوف المسجلة'),
@@ -285,13 +285,9 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     )
     p = doc.add_paragraph(text('unsigned', language))
     p.paragraph_format.space_before = Pt(4)
-    if legacy:
-        add_section_heading(doc, text('legacy', language), theme=PLAGENOR_THEME)
-        for key, value in legacy.items():
-            p = doc.add_paragraph()
-            run = p.add_run(str(key))
-            run.bold = True
-            doc.add_paragraph(json.dumps(value, ensure_ascii=False, indent=2))
+    # Legacy source dictionaries are retained internally for migration/provenance,
+    # but raw JSON is never printed in a user-facing form. All useful values are
+    # projected above into their proper labelled fields.
     add_document_footer(doc, theme=PLAGENOR_THEME, reference=metadata['number'])
     _rtl_document(doc, language)
     return doc
@@ -343,7 +339,6 @@ def generate_canonical_form(req):
             schema, old['applicant'], old['parameters'], old['samples'],
             language=language, print_blank_staff=True,
         )
-        project['source_version'] = text('unknown', language)
         legacy = old['legacy_data']
     project['staff'] = [
         row for row in project['staff']
@@ -353,7 +348,7 @@ def generate_canonical_form(req):
         'number': req.display_id,
         'date': req.created_at.strftime('%d/%m/%Y'),
         'external_reference': req.ibtikar_external_code,
-        'revision': submission.revision if submission else None,
+        'revision': submission.revision if submission else text('legacy_revision', language),
         'draft': req.status == 'DRAFT',
         'operator_name': submission.staff.get('operator_name') if submission else None,
     }
