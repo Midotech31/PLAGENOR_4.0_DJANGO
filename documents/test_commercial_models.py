@@ -47,7 +47,8 @@ class CommercialDocumentModelsTests(TestCase):
         storage.enable(); self.addCleanup(storage.disable)
         self.user = User.objects.create_user('document-client', role='CLIENT',
                     first_name='Client', last_name='Fictif', email='client@example.test',
-                    organization='Établissement de recette', phone='+213 000 000 000')
+                    organization='Établissement de recette', laboratory='Laboratoire de recette',
+                    phone='+213 000 000 000')
         self.service = Service.objects.create(code='MODEL-TEST', name='Analyse de recette')
         self.items = [{'label':'Identification microbienne — prestation de recette',
                        'quantity':3,'unit_price':'2500.00','total':'7500.00'},
@@ -60,6 +61,7 @@ class CommercialDocumentModelsTests(TestCase):
             display_id='MDL-' + channel + suffix, title='Prestation de recette',
             requester=self.user, service=self.service, channel='GENOCLAB',
             billing_channel=channel, status='QUOTE_DRAFT',
+            requester_data={'fax': '+213 41 11 22 33'},
         )
         rate = 0 if channel == 'OHB' else 0.19
         request.quote_detail = {'items': self.items, 'vat_rate':rate, 'admin_fees':0, 'report_fees':0,
@@ -90,6 +92,10 @@ class CommercialDocumentModelsTests(TestCase):
                     text = document_text(path)
                     self.assertIn('Client Fictif',text)
                     self.assertIn('Établissement de recette',text)
+                    self.assertIn('Laboratoire de recette',text)
+                    self.assertIn('Tél : +213 000 000 000',text)
+                    self.assertIn('Fax : +213 41 11 22 33',text)
+                    self.assertIn('Email : client@example.test',text)
                     self.assertIn('7 500,00',text)
                     self.assertIn('2 500,50',text)
                     self.assertIn('Montant DA',text)
