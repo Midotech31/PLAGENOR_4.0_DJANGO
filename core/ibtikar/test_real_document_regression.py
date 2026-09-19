@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from pathlib import Path
 import os
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
@@ -8,6 +9,7 @@ from core.ibtikar.legacy import _display_value, document_initial, legacy_initial
 from core.ibtikar.schema import get_schema, projection
 from documents.ibtikar_canonical import build_document
 from documents.ibtikar_reference import reference_content
+from documents.views import _cached_doc_path
 
 
 def collect_text(document):
@@ -20,6 +22,23 @@ def collect_text(document):
 
 
 class LegacyDisplayHelperCoverageTests(SimpleTestCase):
+    def test_legacy_initial_maps_guest_contact_fallbacks(self):
+        schema = get_schema("EGTP-IMT")
+        request = SimpleNamespace(
+            requester_data={},
+            service_params={},
+            sample_table=[],
+            pricing={},
+            title="Projet invité",
+            guest_name="Demandeur invité",
+            guest_email="invite@example.test",
+            guest_phone="+213 555 111 222",
+        )
+        values = legacy_initial(request, schema)["applicant"]
+        self.assertEqual(values["full_name"], "Demandeur invité")
+        self.assertEqual(values["email"], "invite@example.test")
+        self.assertEqual(values["phone"], "+213 555 111 222")
+
     def test_human_readable_legacy_value_shapes(self):
         self.assertEqual(_display_value(None), "")
         self.assertEqual(_display_value(True), "Oui")
@@ -72,7 +91,7 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
             guest_name="",
             guest_email="",
             guest_phone="",
-            declared_ibtikar_balance=190000,
+            declared_ibtikar_balance=None,
         )
         schema = get_schema("EGTP-IMT")
         historical = legacy_initial(request, schema)
@@ -138,9 +157,32 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
         self.assertNotIn("{{ANALYSIS_MODE_LABEL}}", source_text)
         self.assertNotIn("alimenatire", source_text)
         self.assertIn("paraffiné/alimentaire", source_text)
+        self.assertIn("4 °C", source_text)
+        self.assertIn("8 °C", source_text)
+        self.assertIn("MALDI-TOF MS. Sans culture fraîche,", source_text)
 
         preview_dir = os.environ.get("PLAGENOR_DOCUMENT_PREVIEW_DIR")
         if preview_dir:
             destination = Path(preview_dir)
             destination.mkdir(parents=True, exist_ok=True)
             document.save(destination / "IBTIKAR_MALDI_CAS_REEL_CORRIGE.docx")
+
+
+class IbtikarDocumentCacheVersionTests(SimpleTestCase):
+    def test_corrected_generator_invalidates_canonical2_cache(self):
+        request = SimpleNamespace(
+            updated_at=None,
+            display_id="IBK-CACHE",
+            pk="cache-pk",
+            service_id=None,
+        )
+        with patch(
+            "core.ibtikar.models.IbtikarSubmission.objects.filter"
+        ) as query, patch(
+            "documents.views._block_signature", return_value="0"
+        ), patch(
+            "documents.views._service_fields_signature", return_value="0"
+        ):
+            query.return_value.only.return_value.first.return_value = None
+            path = _cached_doc_path(request, "IBTIKAR_FORM")
+        self.assertIn("__canonical3__", path.name)

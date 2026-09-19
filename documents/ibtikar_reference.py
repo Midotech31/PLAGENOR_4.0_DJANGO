@@ -61,6 +61,9 @@ _SOURCE_CORRECTIONS = {
     "EGTP-IMT": {
         "paraffin/alimenatire": "paraffiné/alimentaire",
         "{{ANALYSIS_MODE_LABEL}}": "",
+        "4°C": "4 °C",
+        "8°C": "8 °C",
+        "MALDI-TOF MS, sans culture fraîche,": "MALDI-TOF MS. Sans culture fraîche,",
     },
 }
 
