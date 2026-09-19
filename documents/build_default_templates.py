@@ -26,7 +26,11 @@ from docx import Document
 from docx.document import Document as DocumentType
 from docx.shared import Pt
 
-from documents.docx_helpers import apply_house_style, ensure_institutional_header
+from documents.document_design import (
+    GENOCLAB_THEME, PLAGENOR_THEME, add_document_footer, add_document_title,
+    add_identity_header, add_section_heading, add_signature_grid,
+    apply_document_style, style_data_table, style_key_value_table,
+)
 
 
 if __name__ == '__main__':
@@ -44,181 +48,125 @@ def _backup(path: Path) -> None:
             shutil.copy2(str(path), str(backup))
 
 
-def _kv_table(doc: DocumentType, rows) -> None:
+def _kv_table(doc: DocumentType, rows, *, theme=PLAGENOR_THEME) -> None:
     table = doc.add_table(rows=len(rows), cols=2)
-    table.style = 'Light Grid Accent 1'
     for i, (label, value) in enumerate(rows):
         table.rows[i].cells[0].text = label
         table.rows[i].cells[1].text = value
+    style_key_value_table(table, theme=theme, dense=True)
 
 
 def build_platform_note_template() -> Path:
     doc = Document()
-    apply_house_style(doc)
+    apply_document_style(doc, PLAGENOR_THEME, dense=True)
+    add_identity_header(doc, PLAGENOR_THEME, compact=True)
+    add_document_title(doc, 'NOTE DE PLATEFORME',
+                       subtitle='PLAGENOR — synthèse opérationnelle de la demande',
+                       code='{{DISPLAY_ID}}', theme=PLAGENOR_THEME)
+    add_section_heading(doc, 'Références', theme=PLAGENOR_THEME)
+    _kv_table(doc, [('Référence', '{{DISPLAY_ID}}'), ("Date d'émission", '{{DATETIME}}')])
 
-    doc.add_heading('NOTE DE PLATEFORME — PLAGENOR', level=1)
-    doc.add_paragraph("ESSBO — École Supérieure en Sciences Biologiques d'Oran")
-    doc.add_paragraph('Référence : {{DISPLAY_ID}}')
-    doc.add_paragraph("Date d'émission : {{DATETIME}}")
-    doc.add_paragraph('')
-
-    doc.add_heading('Demandeur', level=2)
+    add_section_heading(doc, 'Demandeur', theme=PLAGENOR_THEME)
     _kv_table(doc, [
-        ('Nom complet', '{{FULL_NAME}}'),
-        ('Établissement', '{{ETABLISSEMENT}}'),
-        ('Laboratoire', '{{LABORATORY}}'),
-        ('Niveau / fonction', '{{STUDENT_LEVEL}}'),
-        ('Directeur de recherche', '{{SUPERVISOR}}'),
-        ('Email', '{{EMAIL}}'),
+        ('Nom complet', '{{FULL_NAME}}'), ('Établissement', '{{ETABLISSEMENT}}'),
+        ('Laboratoire', '{{LABORATORY}}'), ('Niveau / fonction', '{{STUDENT_LEVEL}}'),
+        ('Directeur de recherche', '{{SUPERVISOR}}'), ('Email', '{{EMAIL}}'),
         ('Téléphone', '{{PHONE}}'),
     ])
 
-    doc.add_heading('Service demandé', level=2)
+    add_section_heading(doc, 'Service demandé', theme=PLAGENOR_THEME)
     _kv_table(doc, [
-        ('Code', '{{SERVICE_CODE}}'),
-        ('Intitulé', '{{SERVICE_NAME}}'),
-        ('Description', '{{SERVICE_DESCRIPTION}}'),
-        ('Délai (jours ouvrables)', '{{SERVICE_TURNAROUND}}'),
-        ('Canal', '{{CHANNEL}}'),
-        ('Urgence', '{{URGENCY}}'),
+        ('Code', '{{SERVICE_CODE}}'), ('Intitulé', '{{SERVICE_NAME}}'),
+        ('Description', '{{SERVICE_DESCRIPTION}}'), ('Délai (jours ouvrables)', '{{SERVICE_TURNAROUND}}'),
+        ('Canal', '{{CHANNEL}}'), ('Urgence', '{{URGENCY}}'),
     ])
 
-    doc.add_heading('Détails de la demande', level=2)
-    doc.add_paragraph('Titre : {{TITLE}}')
-    doc.add_paragraph('Description : {{DESCRIPTION}}')
-    doc.add_paragraph('Paramètres : {{SERVICE_PARAMS}}')
-    doc.add_paragraph('Échantillons : {{SAMPLE_SUMMARY}}')
-
-    doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
-    doc.add_paragraph('Budget annuel par étudiant : 200 000 DA')
-    doc.add_paragraph('Montant de cette prestation : {{BUDGET_AMOUNT}}')
-    doc.add_paragraph('Solde IBTIKAR déclaré : {{IBTIKAR_BALANCE}}')
-
-    doc.add_heading('Assignation', level=2)
-    doc.add_paragraph('Analyste : {{ASSIGNED_ANALYST}}')
-    doc.add_paragraph('Email analyste : {{ANALYST_EMAIL}}')
-    doc.add_paragraph('Rendez-vous : {{APPOINTMENT_DATE}}')
-
-    _add_footer(doc)
-    ensure_institutional_header(doc)
-
+    add_section_heading(doc, 'Détails de la demande', theme=PLAGENOR_THEME)
+    _kv_table(doc, [
+        ('Titre', '{{TITLE}}'), ('Description', '{{DESCRIPTION}}'),
+        ('Paramètres', '{{SERVICE_PARAMS}}'), ('Échantillons', '{{SAMPLE_SUMMARY}}'),
+    ])
+    add_section_heading(doc, 'Décompte budgétaire IBTIKAR', theme=PLAGENOR_THEME)
+    _kv_table(doc, [
+        ('Budget annuel par étudiant', '200 000 DA'),
+        ('Montant de cette prestation', '{{BUDGET_AMOUNT}}'),
+        ('Solde IBTIKAR déclaré', '{{IBTIKAR_BALANCE}}'),
+    ])
+    add_section_heading(doc, 'Assignation', theme=PLAGENOR_THEME)
+    _kv_table(doc, [
+        ('Analyste', '{{ASSIGNED_ANALYST}}'), ('Email analyste', '{{ANALYST_EMAIL}}'),
+        ('Rendez-vous', '{{APPOINTMENT_DATE}}'),
+    ])
+    add_document_footer(doc, theme=PLAGENOR_THEME, reference='{{DISPLAY_ID}}')
     path = TEMPLATE_DIR / 'platform_note_template.docx'
-    _backup(path)
-    doc.save(str(path))
-    return path
+    _backup(path); doc.save(str(path)); return path
 
 
 def build_quote_template() -> Path:
     doc = Document()
-    apply_house_style(doc)
-
-    doc.add_heading('DEVIS — GENOCLAB', level=1)
-    doc.add_paragraph("ESSBO — École Supérieure en Sciences Biologiques d'Oran")
-    doc.add_paragraph('N° Devis : {{QUOTE_NUMBER}}')
-    doc.add_paragraph('Référence demande : {{DISPLAY_ID}}')
-    doc.add_paragraph('Date : {{DATE}}')
-    doc.add_paragraph('')
-
-    doc.add_heading('Client', level=2)
+    apply_document_style(doc, GENOCLAB_THEME, dense=True)
+    add_identity_header(doc, GENOCLAB_THEME, compact=True)
+    add_document_title(doc, 'DEVIS', subtitle='GENOCLAB — prestations scientifiques et technologiques',
+                       code='{{QUOTE_NUMBER}}', theme=GENOCLAB_THEME)
+    add_section_heading(doc, 'Document et client', theme=GENOCLAB_THEME)
     _kv_table(doc, [
-        ('Nom', '{{CLIENT_NAME}}'),
-        ('Organisation', '{{ORGANIZATION}}'),
-        ('Laboratoire', '{{LABORATORY}}'),
-        ('Email', '{{CLIENT_EMAIL}}'),
-        ('Téléphone', '{{PHONE}}'),
-    ])
-
-    doc.add_heading('Prestations', level=2)
-    table = doc.add_table(rows=2, cols=4)
-    table.style = 'Light Grid Accent 1'
-    for j, h in enumerate(['Description', 'Quantité', 'Prix unitaire', 'Total']):
-        table.rows[0].cells[j].text = h
-    table.rows[1].cells[0].text = '{{SERVICE_NAME}}'
-    table.rows[1].cells[1].text = '1'
-    table.rows[1].cells[2].text = '{{SUBTOTAL_HT}}'
-    table.rows[1].cells[3].text = '{{SUBTOTAL_HT}}'
-
-    doc.add_paragraph('')
-    summary = doc.add_table(rows=3, cols=2)
-    summary.style = 'Light Grid Accent 1'
-    summary.rows[0].cells[0].text = 'Sous-total HT'
-    summary.rows[0].cells[1].text = '{{SUBTOTAL_HT}}'
-    summary.rows[1].cells[0].text = 'TVA ({{VAT_RATE}})'
-    summary.rows[1].cells[1].text = '{{VAT_AMOUNT}}'
-    summary.rows[2].cells[0].text = 'Total TTC'
-    summary.rows[2].cells[1].text = '{{TOTAL_TTC}}'
-
-    _add_footer(doc)
-    ensure_institutional_header(doc)
-
-    path = TEMPLATE_DIR / 'quote_template.docx'
-    _backup(path)
-    doc.save(str(path))
-    return path
+        ('Date', '{{DATE}}'), ('N°', '{{QUOTE_NUMBER}}'),
+        ('Référence demande', '{{DISPLAY_ID}}'), ('Client', '{{CLIENT_NAME}}'),
+        ('Organisation', '{{ORGANIZATION}}'), ('Laboratoire', '{{LABORATORY}}'),
+        ('Tél.', '{{PHONE}}'), ('Email', '{{CLIENT_EMAIL}}'),
+    ], theme=GENOCLAB_THEME)
+    add_section_heading(doc, 'Prestations', theme=GENOCLAB_THEME)
+    table=doc.add_table(rows=2,cols=4)
+    for j,h in enumerate(['Prestation','Quantité','Prix unitaire DA','Montant DA']):
+        table.rows[0].cells[j].text=h
+    table.rows[1].cells[0].text='{{SERVICE_NAME}}'
+    table.rows[1].cells[1].text='1'
+    table.rows[1].cells[2].text='{{SUBTOTAL_HT}}'
+    table.rows[1].cells[3].text='{{SUBTOTAL_HT}}'
+    style_data_table(table,theme=GENOCLAB_THEME,dense=True,numeric_cols=(1,2,3))
+    summary=doc.add_table(rows=3,cols=2)
+    for row,(label,value) in zip(summary.rows,[
+        ('Sous-total HT','{{SUBTOTAL_HT}}'),('TVA ({{VAT_RATE}})','{{VAT_AMOUNT}}'),
+        ('Total TTC','{{TOTAL_TTC}}')]):
+        row.cells[0].text,row.cells[1].text=label,value
+    style_key_value_table(summary,theme=GENOCLAB_THEME,dense=True)
+    add_document_footer(doc,theme=GENOCLAB_THEME,reference='{{DISPLAY_ID}}')
+    path=TEMPLATE_DIR/'quote_template.docx'
+    _backup(path); doc.save(str(path)); return path
 
 
 def build_reception_form_template() -> Path:
-    doc = Document()
-    apply_house_style(doc)
-
-    doc.add_heading("FICHE DE RÉCEPTION D'ÉCHANTILLONS", level=1)
-    doc.add_paragraph('PLAGENOR — ESSBO')
-    doc.add_paragraph('Référence : {{DISPLAY_ID}}')
-    doc.add_paragraph('Code de suivi : {{TRACKING_CODE}}')
-    doc.add_paragraph('')
-
-    _kv_table(doc, [
-        ('Service', '{{SERVICE_NAME}}'),
-        ('Canal', '{{CHANNEL}}'),
-        ('Urgence', '{{URGENCY}}'),
-        ('Date de RDV', '{{APPOINTMENT_DATE}}'),
-        ('Analyste assigné', '{{ASSIGNED_ANALYST}}'),
-        ('Date de soumission', '{{SUBMISSION_DATE}}'),
-    ])
-
-    doc.add_heading('Déposant', level=2)
-    _kv_table(doc, [
-        ('Nom', '{{FULL_NAME}}'),
-        ('Email', '{{EMAIL}}'),
-        ('Téléphone', '{{PHONE}}'),
-        ('Établissement', '{{ETABLISSEMENT}}'),
-        ('Laboratoire', '{{LABORATORY}}'),
-    ])
-
-    doc.add_heading('Échantillons soumis', level=2)
+    doc=Document()
+    apply_document_style(doc,PLAGENOR_THEME,dense=True)
+    add_identity_header(doc,PLAGENOR_THEME,compact=True)
+    add_document_title(doc,"FICHE DE RÉCEPTION D'ÉCHANTILLONS",
+                       subtitle='Traçabilité de la remise et du contrôle initial',
+                       code='{{DISPLAY_ID}}',theme=PLAGENOR_THEME)
+    add_section_heading(doc,'Références de la demande',theme=PLAGENOR_THEME)
+    _kv_table(doc,[
+        ('Service','{{SERVICE_NAME}}'),('Canal','{{CHANNEL}}'),('Urgence','{{URGENCY}}'),
+        ('Date de RDV','{{APPOINTMENT_DATE}}'),('Analyste assigné','{{ASSIGNED_ANALYST}}'),
+        ('Date de soumission','{{SUBMISSION_DATE}}')])
+    add_section_heading(doc,'Déposant',theme=PLAGENOR_THEME)
+    _kv_table(doc,[
+        ('Nom','{{FULL_NAME}}'),('Email','{{EMAIL}}'),('Téléphone','{{PHONE}}'),
+        ('Établissement','{{ETABLISSEMENT}}'),('Laboratoire','{{LABORATORY}}')])
+    add_section_heading(doc,'Échantillons soumis',theme=PLAGENOR_THEME)
     doc.add_paragraph('{{SAMPLE_TABLE}}')
-
-    doc.add_heading('Contrôle à la réception', level=2)
-    _kv_table(doc, [
-        ('Date de réception', '___ / ___ / ______'),
-        ("Nombre d'échantillons reçus", '____________'),
-        ('État des échantillons', '☐ Bon   ☐ Acceptable   ☐ Dégradé'),
-        ('Observations', ''),
-    ])
-
-    doc.add_paragraph('')
-    doc.add_paragraph('Signature du réceptionniste : ________________________')
-    doc.add_paragraph('Signature du déposant : ________________________')
-
-    _add_footer(doc)
-    ensure_institutional_header(doc)
-
-    path = TEMPLATE_DIR / 'reception_form_template.docx'
-    _backup(path)
-    doc.save(str(path))
-    return path
+    add_section_heading(doc,'Contrôle à la réception',theme=PLAGENOR_THEME)
+    _kv_table(doc,[
+        ('Date de réception','___ / ___ / ______'),
+        ("Nombre d'échantillons reçus",'____________'),
+        ('État des échantillons','☐ Bon   ☐ Acceptable   ☐ Dégradé'),
+        ('Observations','')])
+    add_signature_grid(doc,['Signature du réceptionniste','Signature du déposant'],theme=PLAGENOR_THEME)
+    add_document_footer(doc,theme=PLAGENOR_THEME,reference='{{DISPLAY_ID}}')
+    path=TEMPLATE_DIR/'reception_form_template.docx'
+    _backup(path); doc.save(str(path)); return path
 
 
 def _add_footer(doc: DocumentType) -> None:
-    section = doc.sections[0]
-    footer = section.footer
-    if footer.paragraphs:
-        paragraph = footer.paragraphs[0]
-    else:
-        paragraph = footer.add_paragraph()
-    paragraph.text = ''
-    run = paragraph.add_run('Document généré automatiquement par PLAGENOR 4.0 · ESSBO')
-    run.font.size = Pt(9)
+    add_document_footer(doc, theme=PLAGENOR_THEME)
 
 
 def build_all():

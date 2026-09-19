@@ -40,6 +40,13 @@ from documents.docx_helpers import (
 )
 
 
+from documents.document_design import (
+    GENOCLAB_THEME, OHB_THEME, add_document_footer, add_document_title,
+    add_identity_header, add_section_heading, apply_document_style,
+    set_cant_split, set_cell_border, set_cell_fill,
+    style_data_table, style_key_value_table,
+)
+
 logger = logging.getLogger(__name__)
 DOCUMENT_GREEN = RGBColor(0x00, 0xA6, 0x4D)
 ESSBO_LOGO = Path(__file__).resolve().parent.parent / 'static' / 'images' / 'essbo_logo.png'
@@ -270,75 +277,65 @@ def _shade_cell(cell, hex_color: str) -> None:
 def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
                         doc_date: str, client_name: str = '',
                         client_lines: Optional[Iterable[str]] = None, identity=None) -> None:
-    get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
-    ohb = bool(identity and identity.get('billing_channel') == 'OHB')
-    title_table = _fixed_table(doc, [10.4, 7.0])
-    left, right = title_table.rows[0].cells
-    _set_cell_text(left, title, bold=True, size=27, color=DOCUMENT_GREEN)
-    left.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-    logo = ESSBO_LOGO if ohb else _GENOCLAB_LOGO
-    if logo.exists():
-        from PIL import Image
-        with Image.open(logo) as image:
-            width = min(5.2, 2.4 * image.width / image.height)
-        p = right.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        p.add_run().add_picture(str(logo), width=Cm(width))
-    _spacer(doc, 8)
-    issuer = _fixed_table(doc, [CONTENT_WIDTH]).rows[0].cells[0]
-    _multi_para(issuer, [
-        (get_value('genoclab_issuer_name'), {'bold': True, 'size': 11}),
-        (get_value('genoclab_issuer_address1'), {'size': 10}),
-        (get_value('genoclab_issuer_address2'), {'size': 10}),
-        (get_value('genoclab_issuer_address3'), {'size': 10}),
-        (get_value('genoclab_issuer_treasury'), {'size': 9.5}),
-        (get_value('genoclab_issuer_nif'), {'size': 9.5}),
-        (get_value('genoclab_issuer_ccp'), {'size': 9.5}),
-        (get_value('genoclab_issuer_legal_details'), {'size': 9.5}),
-        (get_value('genoclab_issuer_phone'), {'size': 9.5}),
-    ])
-    _spacer(doc, 10)
-    details = _fixed_table(doc, [7.1, 10.3])
-    date_cell, client_cell = details.rows[0].cells
-    _shade_cell(date_cell, 'F2F3F3'); _shade_cell(client_cell, 'E7E9E8')
-    _multi_para(date_cell, [(f'Date : {doc_date}', {'bold': True, 'size': 10}),
-                           (f'N° : {doc_number}', {'bold': True, 'size': 10})])
-    raw_lines = [str(line) for line in (client_lines or []) if line]
-    client_phone = (identity or {}).get('client_phone', '')
-    client_fax = (identity or {}).get('client_fax', '')
-    client_email = (identity or {}).get('client_email', '')
-    client_organization = (identity or {}).get('client_organization', '')
-    client_laboratory = (identity or {}).get('client_laboratory', '')
-    if not client_email:
-        client_email = next((line for line in raw_lines if '@' in line), '')
-    if not client_phone:
-        client_phone = next((
-            line for line in raw_lines
-            if '@' not in line and re.search(r'\d{6,}', re.sub(r'\D', '', line))
-        ), '')
-    labelled_values = {
-        value for value in (
-            client_organization, client_laboratory, client_phone,
-            client_fax, client_email
+
+    identity = identity or {}
+    values = identity.get('values', {})
+    get_value = lambda key: values[key] if key in values else cms_get(key)
+    ohb = identity.get('billing_channel') == 'OHB'
+    theme = OHB_THEME if ohb else GENOCLAB_THEME
+    add_identity_header(doc, theme, compact=True)
+    subtitle = 'Opération Hors Budget — non assujettie à la TVA' if ohb else 'GENOCLAB — prestation soumise à la TVA'
+    add_document_title(doc, title, subtitle=subtitle, code=doc_number, theme=theme)
+
+    add_section_heading(doc, 'Émetteur', theme=theme, level=2)
+    issuer = doc.add_table(rows=0, cols=2)
+    issuer_rows = [
+        ('Organisme', get_value('genoclab_issuer_name')),
+        ('Adresse', ' · '.join(filter(None, (get_value('genoclab_issuer_address1'), get_value('genoclab_issuer_address2'), get_value('genoclab_issuer_address3'))))),
+        ('Cpte Trésor', get_value('genoclab_issuer_treasury').removeprefix('Cpte Trésor :').strip()),
+        ('N.I.F', get_value('genoclab_issuer_nif').removeprefix('N.I.F :').strip()),
+        ('Cpte CCP Agent comptable', get_value('genoclab_issuer_ccp').split(':', 1)[-1].strip()),
+        ('Téléphone / Fax', get_value('genoclab_issuer_phone').split(':', 1)[-1].strip()),
+    ]
+    if get_value('genoclab_issuer_legal_details'):
+        issuer_rows.append(('Informations administratives', get_value('genoclab_issuer_legal_details')))
+    for label, value in issuer_rows:
+        cells = issuer.add_row().cells
+        cells[0].text, cells[1].text = label, value
+    style_key_value_table(issuer, theme=theme, dense=True)
+
+    add_section_heading(doc, 'Document et client', theme=theme, level=2)
+    details = doc.add_table(rows=0, cols=2)
+    client_rows = [
+        ('Date', doc_date), ('N°', doc_number),
+        ('Référence demande', identity.get('request_reference', '')),
+        ('Client', client_name or identity.get('client_name', '')),
+        ('Organisation', identity.get('client_organization', '')),
+        ('Laboratoire', identity.get('client_laboratory', '')),
+        ('Tél :', identity.get('client_phone', '')),
+        ('Fax :', identity.get('client_fax', '')),
+        ('Email :', identity.get('client_email', '')),
+    ]
+    known = {
+        str(value).strip() for value in (
+            identity.get('client_organization', ''),
+            identity.get('client_laboratory', ''),
+            identity.get('client_phone', ''),
+            identity.get('client_fax', ''),
+            identity.get('client_email', ''),
         ) if value
     }
-    extra_lines = [line for line in raw_lines if line not in labelled_values]
-    rows = [('Client :', {'bold': True, 'size': 10})]
-    if client_name:
-        rows.append((client_name, {'bold': True, 'size': 10}))
-    if client_organization:
-        rows.append((client_organization, {'size': 9.5}))
-    if client_laboratory:
-        rows.append((client_laboratory, {'size': 9.5}))
-    rows.extend((line, {'size': 9.5}) for line in extra_lines)
-    rows.append((f'Tél : {client_phone}', {'size': 9.5}))
-    rows.append((f'Fax : {client_fax}', {'size': 9.5}))
-    if client_email:
-        rows.append((f'Email : {client_email}', {'size': 9.5}))
-    if identity and identity.get('payment_terms'):
-        rows.append((identity['payment_terms'], {'size': 9.5}))
-    _multi_para(client_cell, rows)
-    _spacer(doc, 10)
+    extras = [
+        str(value).strip() for value in (client_lines or [])
+        if value and str(value).strip() not in known
+    ]
+    if extras:
+        client_rows.append(('Informations complémentaires', '\n'.join(extras)))
+    for label, value in client_rows:
+        cells = details.add_row().cells
+        cells[0].text, cells[1].text = label, str(value or '—')
+    style_key_value_table(details, theme=theme, dense=True)
+
 
 
 def _multi_para(cell, items) -> None:
@@ -381,6 +378,7 @@ def _clear_table_borders(table) -> None:
 def add_prestation_table(doc: DocumentType, line_items, *, vat_rate=None, non_taxable=False):
     from core.financial import compute_invoice_totals, parse_money
     from core.exceptions import FinancialValidationError
+    theme = OHB_THEME if non_taxable else GENOCLAB_THEME
     if vat_rate is None:
         vat_rate = 0 if non_taxable else cms_get('genoclab_vat_rate', '0.19')
     rate = parse_money(vat_rate, field='Taux de TVA')
@@ -395,93 +393,78 @@ def add_prestation_table(doc: DocumentType, line_items, *, vat_rate=None, non_ta
         items.append({'label': str(item.get('label') or item.get('description') or ''),
                       'quantity': qty, 'unit_price': unit, 'total': total})
     totals = compute_invoice_totals(items, vat_rate=rate)
-    table = _fixed_table(doc, [8.5, 2.4, 3.0, 3.5], rows=1 + len(items) + (1 if non_taxable else 3))
-    header = table.rows[0]
-    header._tr.get_or_add_trPr().append(OxmlElement('w:tblHeader'))
-    for index, text in enumerate(('Prestation', 'Quantité', 'Prix unitaire DA', 'Montant DA')):
-        _set_cell_text(header.cells[index], text, bold=True, size=10,
-                       align=WD_ALIGN_PARAGRAPH.LEFT if index == 0 else WD_ALIGN_PARAGRAPH.RIGHT)
-        _cell_border(header.cells[index], 'bottom', '222222', 6)
-    for row_index, item in enumerate(items, 1):
-        row = table.rows[row_index]
-        _set_cell_text(row.cells[0], item['label'], size=10)
-        _set_cell_text(row.cells[1], _quantity(item['quantity']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        _set_cell_text(row.cells[2], _money_int(item['unit_price']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        _set_cell_text(row.cells[3], _money_int(item['total']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        for cell in row.cells:
-            _cell_border(cell, 'bottom', 'D7DBD9', 3)
-        if len(item['label']) < 500:
-            row._tr.get_or_add_trPr().append(OxmlElement('w:cantSplit'))
-    total_rows = [('Total DA', totals['total_ttc'])] if non_taxable else [
+    add_section_heading(doc, 'Prestations', theme=theme, level=2)
+    table = doc.add_table(rows=1, cols=4)
+    for cell, label in zip(table.rows[0].cells, ('Prestation', 'Quantité', 'Prix unitaire DA', 'Montant DA')):
+        cell.text = label
+    for item in items:
+        cells = table.add_row().cells
+        cells[0].text = item['label']
+        cells[1].text = _quantity(item['quantity'])
+        cells[2].text = _money_int(item['unit_price'])
+        cells[3].text = _money_int(item['total'])
+    style_data_table(table, theme=theme, dense=True, numeric_cols=(1,2,3))
+    summary_rows = [('Total DA', totals['total_ttc'])] if non_taxable else [
         ('Sous-total HT', totals['subtotal_before_tax']),
-        (f'TVA ({_quantity(rate * 100)} %)', totals['vat_amount']), ('Total TTC', totals['total_ttc'])]
-    for offset, (label, value) in enumerate(total_rows, 1 + len(items)):
-        row = table.rows[offset]
-        merged = row.cells[0].merge(row.cells[2])
-        big = offset == len(table.rows) - 1
-        _set_cell_text(merged, label, bold=True, size=11 if big else 10,
-                       color=DOCUMENT_GREEN if big else BRAND_DARK, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        _set_cell_text(row.cells[3], _money_int(value), bold=True, size=11 if big else 10,
-                       color=DOCUMENT_GREEN if big else BRAND_DARK, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        row._tr.get_or_add_trPr().append(OxmlElement('w:cantSplit'))
-        if not big:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    paragraph.paragraph_format.keep_with_next = True
+        (f"TVA ({_quantity(rate*100)} %)", totals['vat_amount']),
+        ('Total TTC', totals['total_ttc'])]
+    summary = doc.add_table(rows=0, cols=2)
+    for label, value in summary_rows:
+        cells = summary.add_row().cells
+        cells[0].text, cells[1].text = label, _money_int(value)
+        set_cant_split(summary.rows[-1])
+    style_key_value_table(summary, theme=theme, dense=True)
+    for cell in summary.rows[-1].cells:
+        set_cell_fill(cell, theme.soft)
+        set_cell_border(cell, top=(theme.accent,12), bottom=(theme.accent,12))
+        for p in cell.paragraphs:
+            for r in p.runs:
+                r.bold=True
+                r.font.color.rgb=RGBColor.from_string(theme.accent)
+    summary.rows[-1].cells[1].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.RIGHT
     return totals['total_ttc']
 
 
 
 
 def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None, document_kind='invoice') -> None:
-    get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
-    _spacer(doc, 10)
-    if identity and identity.get('billing_channel') == 'OHB':
-        p = doc.add_paragraph('Non assujetti à la TVA.')
-        p.paragraph_format.space_after = Pt(7)
-        for run in p.runs:
-            run.bold = True; run.font.size = Pt(10)
-    if total_amount is not None:
-        legal_text = _amount_notice(get_value('genoclab_footer_legal'), total_amount, document_kind)
-    else:
-        legal_text = get_value('genoclab_footer_legal')
-    p = doc.add_paragraph(legal_text)
-    p.paragraph_format.space_after = Pt(7)
-    for run in p.runs:
-        run.font.size = Pt(10)
-    terms = (identity or {}).get('commercial_terms', '')
-    if not terms:
-        terms = cms_get('genoclab_quote_validity' if document_kind == 'quote' else 'genoclab_invoice_validity')
+    identity = identity or {}
+    values = identity.get('values', {})
+    get_value = lambda key: values[key] if key in values else cms_get(key)
+    ohb = identity.get('billing_channel') == 'OHB'
+    theme = OHB_THEME if ohb else GENOCLAB_THEME
+    if ohb:
+        p=doc.add_paragraph()
+        run=p.add_run('Non assujetti à la TVA.')
+        run.bold=True
+        run.font.color.rgb=RGBColor.from_string(theme.accent)
+    legal_text = _amount_notice(get_value('genoclab_footer_legal'), total_amount, document_kind) if total_amount is not None else get_value('genoclab_footer_legal')
+    add_section_heading(doc, 'Montant arrêté et conditions', theme=theme, level=2)
+    p=doc.add_paragraph(legal_text)
+    p.paragraph_format.space_after=Pt(5)
+    payment_terms = identity.get('payment_terms', '')
+    if payment_terms:
+        p = doc.add_paragraph()
+        r = p.add_run('Conditions de paiement : ')
+        r.bold = True
+        p.add_run(payment_terms)
+    terms = identity.get('commercial_terms','') or cms_get(
+        'genoclab_quote_validity' if document_kind=='quote' else 'genoclab_invoice_validity'
+    )
     if terms:
-        p = doc.add_paragraph(terms)
-        for run in p.runs: run.font.size = Pt(9)
-    footer = doc.sections[0].footer
-    paragraph = footer.paragraphs[0]
-    paragraph.paragraph_format.space_after = Pt(3)
-    table = footer.add_table(rows=1, cols=2, width=Cm(CONTENT_WIDTH))
-    table.autofit = False
-    for column, width in zip(table.columns, (7.1, 10.3)):
-        column.width = Cm(width)
-    for cell, width in zip(table.rows[0].cells, (7.1, 10.3)):
-        cell.width = Cm(width)
-    _clear_table_borders(table)
-    office = get_value('genoclab_footer_office')
-    if not office:
-        office = '\n'.join(get_value('genoclab_issuer_address' + str(index)) for index in (1, 2, 3))
-    office = office.removeprefix('Siège social — ').removeprefix('Siège social - ')
-    contact = get_value('genoclab_footer_contact')
-    _multi_para(table.cell(0, 0), [('Siège social', {'bold': True, 'size': 8.5}), (office, {'size': 8})])
-    _multi_para(table.cell(0, 1), [('Coordonnées', {'bold': True, 'size': 8.5}), (contact, {'size': 8}),
-                                 (get_value('genoclab_issuer_ccp'), {'size': 8})])
-    for cell in table.rows[0].cells:
-        _cell_border(cell, 'bottom', '00A64D', 18)
-    pages = footer.add_paragraph()
-    pages.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    pages.paragraph_format.space_before = Pt(3)
-    for text in ('Page ', ' / '):
-        run = pages.add_run(text); run.font.size = Pt(8)
-        field = OxmlElement('w:fldSimple'); field.set(qn('w:instr'), 'PAGE' if text == 'Page ' else 'NUMPAGES')
-        pages._p.append(field)
+        doc.add_paragraph(terms)
+    contact=doc.add_table(rows=4,cols=2)
+    office=get_value('genoclab_footer_office').removeprefix('Siège social — ').removeprefix('Siège social - ')
+    values=[
+        ('Siège social',office),
+        ('Coordonnées',get_value('genoclab_footer_contact')),
+        ('Cpte CCP Agent comptable',get_value('genoclab_issuer_ccp').split(':',1)[-1].strip()),
+        ('Téléphone / Fax',get_value('genoclab_issuer_phone').split(':',1)[-1].strip()),
+    ]
+    for row,(label,value) in zip(contact.rows,values):
+        row.cells[0].text,row.cells[1].text=label,value
+    style_key_value_table(contact,theme=theme,dense=True)
+    add_document_footer(doc,theme=theme,reference=identity.get('request_reference',''))
 
 
 def _spacer(doc, size):
@@ -521,17 +504,15 @@ def _quantity(value):
 
 def render_commercial_document(*, title, number, date, identity, items, vat_rate, document_kind):
     from docx import Document
-    doc = Document()
-    apply_house_style(doc)
-    section = doc.sections[0]
-    section.left_margin = section.right_margin = Cm(1.8)
-    section.top_margin = Cm(1.5)
-    section.bottom_margin = Cm(3.2)
-    section.footer_distance = Cm(0.7)
-    doc.core_properties.title = title + ' ' + number
-    add_genoclab_header(doc, title=title, doc_number=number, doc_date=date,
-                        client_name=identity.get('client_name', ''), client_lines=identity.get('client_lines', []), identity=identity)
-    grand_total = add_prestation_table(doc, items, vat_rate=vat_rate,
-                                      non_taxable=identity.get('billing_channel') == 'OHB')
-    add_genoclab_footer(doc, total_amount=grand_total, identity=identity, document_kind=document_kind)
+    doc=Document()
+    theme=OHB_THEME if identity.get('billing_channel')=='OHB' else GENOCLAB_THEME
+    apply_document_style(doc,theme,dense=True)
+    doc.sections[0].bottom_margin=Cm(1.8)
+    doc.core_properties.title=title+' '+number
+    add_genoclab_header(doc,title=title,doc_number=number,doc_date=date,
+                        client_name=identity.get('client_name',''),
+                        client_lines=identity.get('client_lines',[]),identity=identity)
+    grand_total=add_prestation_table(doc,items,vat_rate=vat_rate,
+                                     non_taxable=identity.get('billing_channel')=='OHB')
+    add_genoclab_footer(doc,total_amount=grand_total,identity=identity,document_kind=document_kind)
     return doc

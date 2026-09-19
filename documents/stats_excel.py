@@ -26,10 +26,10 @@ from openpyxl.chart import BarChart, PieChart, Reference
 
 
 # Brand palette
-_NAVY = '1E293B'
+_NAVY = '24364B'
 _INDIGO = '4F46E5'
 _INDIGO_LT = 'EEF2FF'
-_BAND = 'F8FAFC'
+_BAND = 'F7F8FA'
 _GREY = '64748B'
 
 _MONEY_FMT = '#,##0 "DA"'
@@ -41,7 +41,7 @@ _BORDER = Border(left=_thin, right=_thin, top=_thin, bottom=_thin)
 
 
 def _title_font(size=16, color=_NAVY):
-    return Font(name='Calibri', size=size, bold=True, color=color)
+    return Font(name='Arial', size=size, bold=True, color=color)
 
 
 def _hdr_fill():
@@ -173,6 +173,13 @@ def generate_bilan_excel(bilan: dict, filters: dict, actor) -> str:
     ws = wb.active
     ws.title = 'Synthèse'
     ws.sheet_view.showGridLines = False
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 1
+    ws.oddFooter.left.text = "PLAGENOR — ESSBO"
+    ws.oddFooter.right.text = "Page &P / &N"
 
     ws.cell(row=1, column=1, value="ESSBO — École Supérieure en Sciences Biologiques d'Oran").font = _title_font(12, _GREY)
     ws.cell(row=2, column=1, value="PLAGENOR 4.0 — Bilan d'activité").font = _title_font(18)
@@ -234,6 +241,13 @@ def generate_bilan_excel(bilan: dict, filters: dict, actor) -> str:
     for section in bilan['sections']:
         sheet = wb.create_sheet(_safe_sheet_name(section['title'], used))
         sheet.sheet_view.showGridLines = False
+        sheet.sheet_properties.pageSetUpPr.fitToPage = True
+        sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
+        sheet.page_setup.orientation = sheet.ORIENTATION_LANDSCAPE
+        sheet.page_setup.fitToWidth = 1
+        sheet.page_setup.fitToHeight = 0
+        sheet.oddFooter.left.text = "PLAGENOR — ESSBO"
+        sheet.oddFooter.right.text = "Page &P / &N"
         _write_section(sheet, section, start_row=1)
 
     # ---- Persist --------------------------------------------------------
