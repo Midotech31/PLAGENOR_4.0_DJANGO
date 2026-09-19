@@ -1,3 +1,4 @@
+from plagenor.test_documents import valid_pdf_bytes
 from plagenor.test_support import close_response
 import io
 import json
@@ -39,7 +40,7 @@ def upload_image():
 
 
 def upload_document():
-    return SimpleUploadedFile('declaration.pdf', b'%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF', content_type='application/pdf')
+    return SimpleUploadedFile('declaration.pdf', valid_pdf_bytes(), content_type='application/pdf')
 
 
 def raw_group(specs):
@@ -309,6 +310,23 @@ class PersistenceContractTests(TestCase):
         self.assertFalse(obj.applicant.get('full_name'));self.assertIsNone(obj.estimate['total'])
         r=self.client.post(reverse('ibtikar:edit',args=[obj.request_id]),posted(a,p,rows,revision=1))
         self.assertEqual(r.status_code,302);obj.refresh_from_db();self.assertIsNotNone(obj.submitted_at)
+
+    def test_guest_empty_draft_can_be_saved_then_completed(self):
+        self.client.logout()
+        response = self.client.post(reverse('ibtikar:new', args=['EGTP-CAN']), posted({}, {}, [], action='draft'))
+        self.assertEqual(response.status_code, 302)
+        obj = IbtikarSubmission.objects.latest('pk')
+        self.assertEqual(obj.request.status, 'DRAFT')
+        self.assertIsNone(obj.request.requester_id)
+        schema, applicant, params, rows = fixture('EGTP-CAN')
+        response = self.client.post(reverse('ibtikar:guest_edit', args=[obj.request.guest_token]), posted(applicant, params, rows, revision=obj.revision))
+        self.assertEqual(response.status_code, 302)
+        obj.refresh_from_db()
+        self.assertIsNotNone(obj.submitted_at)
+        obj.request.refresh_from_db()
+        self.assertEqual(obj.request.guest_email, applicant['email'])
+        self.assertEqual(obj.request.guest_name, applicant['full_name'])
+        self.assertEqual(obj.request.guest_phone, applicant['phone'])
 
     def test_invalid_input_does_not_create_or_erase_a_request(self):
         schema,a,p,rows=fixture('EGTP-CAN');a['email']='invalid'

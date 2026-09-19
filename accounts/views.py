@@ -25,6 +25,7 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from .models import User
 from .forms import RegistrationForm
+from .totp import consume_totp, enable_totp
 
 _GUEST_TOKEN_SALT = 'guest-conversion'
 _GUEST_TOKEN_TTL = 24 * 60 * 60  # 24 hours
@@ -399,7 +400,7 @@ def two_factor_verify(request):
     uid = request.session.get('pending_2fa_user')
     if not uid:
         return redirect('accounts:login')
-    user = User.objects.filter(pk=uid, totp_enabled=True).first()
+    user = User.objects.filter(pk=uid, totp_enabled=True, is_active=True).first()
     if user is None:
         request.session.pop('pending_2fa_user', None)
         return redirect('accounts:login')
@@ -416,7 +417,7 @@ def two_factor_verify(request):
             return redirect('accounts:login')
         request.session['pending_2fa_attempts'] = attempts
         code = (request.POST.get('code') or '').strip().replace(' ', '')
-        if pyotp.TOTP(user.get_totp_secret()).verify(code, valid_window=1):
+        if consume_totp(user, code):
             nxt = request.session.pop('pending_2fa_next', None)
             request.session.pop('pending_2fa_user', None)
             request.session.pop('pending_2fa_attempts', None)
@@ -449,10 +450,7 @@ def two_factor_setup(request):
             return redirect('accounts:two_factor_setup')
         request.session['pending_totp_attempts'] = attempts
         code = (request.POST.get('code') or '').strip().replace(' ', '')
-        if pyotp.TOTP(secret).verify(code, valid_window=1):
-            request.user.set_totp_secret(secret)
-            request.user.totp_enabled = True
-            request.user.save(update_fields=['totp_secret', 'totp_enabled'])
+        if enable_totp(request.user, secret, code):
             request.session.pop('pending_totp_secret', None)
             request.session.pop('pending_totp_attempts', None)
             messages.success(request, _("Double authentification activée."))
@@ -478,13 +476,9 @@ def two_factor_disable(request):
     password = request.POST.get('password', '')
     code = (request.POST.get('code') or '').strip().replace(' ', '')
     if (not request.user.check_password(password)
-            or not pyotp.TOTP(request.user.get_totp_secret()).verify(
-                code, valid_window=1)):
+            or not consume_totp(request.user, code, disable=True)):
         messages.error(request, _("Mot de passe ou code 2FA invalide."))
         return redirect('accounts:profile')
-    request.user.totp_secret = ''
-    request.user.totp_enabled = False
-    request.user.save(update_fields=['totp_secret', 'totp_enabled'])
     request.session.cycle_key()
     messages.success(request, _("Double authentification désactivée."))
     return redirect('accounts:profile')

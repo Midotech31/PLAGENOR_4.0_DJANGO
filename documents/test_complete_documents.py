@@ -79,13 +79,17 @@ class CompleteDocumentModelContracts(TestCase):
         with patch.object(PlatformContent.objects,'filter',side_effect=RuntimeError):
             self.assertEqual(gl.cms_get('missing','Fallback'),'Fallback')
         doc=Document()
+        from core.exceptions import FinancialValidationError
         with patch.object(gl,'cms_get',return_value='invalid'):
-            gl.add_prestation_table(doc,[{'label':'A','quantity':2,'unit_price':10},
-                                          {'label':'B','quantity':'bad','unit_price':10},
-                                          {'label':'C','total':'bad'}])
+            with self.assertRaises(FinancialValidationError):
+                gl.add_prestation_table(doc, [{'label':'A','quantity':2,'unit_price':10}])
+        for item in ({'quantity':'bad','unit_price':10}, {'total':'bad'}):
+            with self.assertRaises(FinancialValidationError):
+                gl.add_prestation_table(doc, [item], vat_rate=0.19)
+        gl.add_prestation_table(doc, [{'label':'A','quantity':2,'unit_price':10}], vat_rate=0.19)
         self.assertEqual(len(doc.tables),1)
         gl.add_genoclab_footer(doc,total_amount=21,identity={'values':{'genoclab_footer_legal':'Montant arrêté'}})
-        self.assertIn('Vingt et un',' '.join(p.text for p in doc.paragraphs))
+        self.assertIn('vingt et un',' '.join(p.text for p in doc.paragraphs).lower())
 
     def test_spreadsheet_numeric_formats_and_period_labels(self):
         from documents import stats_excel as se

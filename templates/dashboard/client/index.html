@@ -31,6 +31,7 @@
         <button class="tab-item" :class="tab === 'notifs' && 'active'" @click="tab = 'notifs'">{% trans "Notifications" %}</button>
     </div>
 
+    <p><a class="btn btn-outline" href="{% url 'ibtikar:index' %}">{% trans "Ouvrir les formulaires IBTIKAR" %}</a></p>
     <!-- New Request -->
     <div x-show="tab === 'new'">
         <div class="card">
@@ -40,7 +41,7 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <label>{% trans "Service" %}</label>
-                        <select name="service_id" class="form-control" required>
+                        <select name="service_id" data-channel="GENOCLAB" class="form-control" required>
                             <option value="">{% trans "Sélectionner un service..." %}</option>
                             {% for s in services %}
                             <option value="{{ s.pk }}" data-code="{{ s.code }}">{{ s.code }} — {{ s.name }}</option>
@@ -76,6 +77,7 @@
             <div class="card-header"><h3>{% trans "Mes demandes actives" %}</h3></div>
             <div class="card-body">
                 {% for req in active_requests %}
+                {% if req.channel == 'GENOCLAB' %}
                 <div class="data-card mb-2">
                     <div class="data-card-row">
                         <div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div>
@@ -269,6 +271,7 @@
                     </div>
                     {% endif %}
                 </div>
+                {% else %}{% include 'includes/owned_request_card.html' %}{% endif %}
                 {% empty %}
                 <div class="empty-state"><p>{% trans "Aucune demande active. Soumettez votre première demande!" %}</p></div>
                 {% endfor %}

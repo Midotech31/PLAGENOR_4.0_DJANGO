@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch('/dashboard/api/service-form/' + code + '/?channel=' + channel)
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
+                        if (select.value !== serviceId) return;
                         container.innerHTML = html;
                         
                         // Dispatch event to notify that form is loaded
@@ -191,7 +192,10 @@ function addSampleRow() {
 
     if (columns.length === 0) { console.error('No columns found'); return; }
 
-    sampleRowCount++;
+    sampleRowCount = Array.from(tbody.querySelectorAll('[name^="sample_"]')).reduce(function(maximum, field) {
+        var match = /^sample_([0-9]+)_/.exec(field.name);
+        return match ? Math.max(maximum, Number(match[1])) : maximum;
+    }, -1) + 1;
     var rowIndex = tbody.querySelectorAll('tr').length;
     var tr = document.createElement('tr');
     columns.forEach(function(col) {

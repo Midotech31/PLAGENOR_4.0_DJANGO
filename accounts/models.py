@@ -143,6 +143,7 @@ class User(AbstractUser):
     # password. A Super Admin can reset both fields if a device is lost.
     totp_secret = models.CharField(max_length=512, blank=True, default='')
     totp_enabled = models.BooleanField(default=False, verbose_name='2FA activé')
+    totp_last_step = models.BigIntegerField(null=True, blank=True, editable=False)
 
     # IBTIKAR running balance, self-declared by the requester.
     #

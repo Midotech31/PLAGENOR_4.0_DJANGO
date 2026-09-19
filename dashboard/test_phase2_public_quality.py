@@ -150,7 +150,7 @@ class PublicSubmissionEdgeTests(TestCase):
     def test_tampered_metadata_is_normalized_and_payload_is_bounded(self):
         data = self._valid(
             organization="Org", organization_type="tampered", country="XX",
-            channel="tampered", param_note="x" * 5000,
+            channel="GENOCLAB", param_note="x" * 5000,
             **{"sample_bad": "ignored", "sample_0_code": "y" * 5000},
         )
         with patch("notifications.emails.notify_guest_tracking_code", side_effect=OSError("mail down")):

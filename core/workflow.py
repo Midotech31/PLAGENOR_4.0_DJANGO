@@ -108,7 +108,13 @@ def check_role_permission(request_obj, to_status, actor) -> bool:
             request_obj.status, to_status,
         )
         return False
-    return getattr(actor, 'role', '') in allowed_roles
+    role = getattr(actor, 'role', '')
+    if role in ('REQUESTER', 'CLIENT') and getattr(request_obj, 'requester_id', None) == getattr(actor, 'pk', None):
+        if request_obj.channel == 'IBTIKAR':
+            role = 'REQUESTER'
+        elif request_obj.channel == 'GENOCLAB':
+            role = 'CLIENT'
+    return role in allowed_roles
 
 
 def transition(request_obj, to_status, actor, notes='', force=False):

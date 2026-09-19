@@ -43,3 +43,58 @@ def decrypt_secret(value: str) -> str:
     except InvalidToken as exc:
         raise ImproperlyConfigured(
             "Unable to decrypt a TOTP seed with TOTP_ENCRYPTION_KEY.") from exc
+
+
+def matching_step(secret, code, now=None):
+    import re
+    import time
+    import pyotp
+    from django.utils.crypto import constant_time_compare
+
+    if not isinstance(code, str) or not re.fullmatch(r'[0-9]{6}', code) or not secret:
+        return None
+    totp = pyotp.TOTP(secret)
+    current = int((time.time() if now is None else now) // totp.interval)
+    for step in (current, current - 1, current + 1):
+        if step >= 0 and constant_time_compare(totp.at(step * totp.interval), code):
+            return step
+    return None
+
+
+def consume_totp(user, code, *, disable=False, now=None):
+    from django.db.models import Q
+    from accounts.models import User
+
+    if not user.is_active or not user.totp_enabled or not user.totp_secret:
+        return False
+    step = matching_step(user.get_totp_secret(), code, now)
+    if step is None:
+        return False
+    values = {'totp_last_step': step}
+    if disable:
+        values.update(totp_enabled=False, totp_secret='')
+    accepted = User.objects.filter(
+        pk=user.pk, is_active=True, totp_enabled=True,
+        totp_secret=user.totp_secret, password=user.password,
+    ).filter(Q(totp_last_step__isnull=True) | Q(totp_last_step__lt=step)).update(**values)
+    if accepted:
+        for name, value in values.items():
+            setattr(user, name, value)
+    return bool(accepted)
+
+
+def enable_totp(user, secret, code, *, now=None):
+    from accounts.models import User
+
+    step = matching_step(secret, code, now)
+    if step is None:
+        return False
+    values = {'totp_secret': encrypt_secret(secret), 'totp_enabled': True, 'totp_last_step': step}
+    accepted = User.objects.filter(
+        pk=user.pk, is_active=True, totp_enabled=False,
+        totp_secret=user.totp_secret, password=user.password,
+    ).update(**values)
+    if accepted:
+        for name, value in values.items():
+            setattr(user, name, value)
+    return bool(accepted)

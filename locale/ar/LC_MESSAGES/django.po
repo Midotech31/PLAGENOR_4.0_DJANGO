@@ -7126,6 +7126,53 @@ msgstr "طلب إبتكار: فتح الاستمارات المخصصة"
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "فتح استمارة إبتكار"
 
+msgid "Autorisation de suivi invalide."
+msgstr "تصريح التتبع غير صالح."
+
+msgid "Canal de prestation invalide."
+msgstr "قناة الخدمة غير صالحة."
+
+msgid "Ce service est désactivé."
+msgstr "هذه الخدمة غير مفعّلة."
+
+msgid "Ce service n'est pas disponible pour ce canal."
+msgstr "هذه الخدمة غير متاحة عبر هذه القناة."
+
+msgid "Cette demande ne vous appartient pas."
+msgstr "هذا الطلب لا يخصّك."
+
+msgid "Chemin de fichier invalide."
+msgstr "مسار الملف غير صالح."
+
+msgid "Document invalide, protégé ou dépassant les limites de validation."
+msgstr "المستند غير صالح أو محمي أو يتجاوز حدود التحقق."
+
+msgid "Identifiant de service invalide."
+msgstr "معرّف الخدمة غير صالح."
+
+msgid ""
+"La référence a déjà été transmise. Contactez PLAGENOR pour la corriger."
+msgstr ""
+"سبق إرسال المرجع. يرجى الاتصال بالأرضية التكنولوجية للجينوميك لتصحيحه."
+
+msgid "La taille réelle du fichier est invalide."
+msgstr "الحجم الفعلي للملف غير صالح."
+
+msgid "Le document ne peut pas être validé dans les limites autorisées."
+msgstr "تعذّر التحقق من المستند ضمن الحدود المسموح بها."
+
+msgid "Le fichier DOCX est invalide."
+msgstr "ملف DOCX غير صالح."
+
+msgid "Service introuvable."
+msgstr "الخدمة غير موجودة."
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "التحقق مشغول حاليًا. يرجى إعادة المحاولة بعد لحظات."
+
+msgid "Demande commerciale"
+msgstr "طلب خدمة مدفوعة"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "لطلبة وباحثي ESSBO."
 

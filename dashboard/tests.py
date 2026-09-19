@@ -220,10 +220,11 @@ class RoleDashboardAccessTests(TestCase):
             self.assertEqual(resp.status_code, 200, f"{role} {url} → {resp.status_code}")
 
     def test_wrong_role_is_forbidden(self):
-        # A CLIENT must not reach any staff/other-role landing.
+        # End users may reach both owned-request views, never staff views.
         self.client.force_login(self.users['CLIENT'])
         for role, url in self.LANDINGS.items():
-            if role == 'CLIENT':
+            if role in ('CLIENT', 'REQUESTER'):
+                self.assertEqual(self.client.get(url).status_code, 200)
                 continue
             resp = self.client.get(url)
             self.assertEqual(resp.status_code, 403, f"CLIENT reached {url}")
@@ -608,7 +609,7 @@ class GuestTrackingSecurityTests(TestCase):
         token = uuid.uuid4()
         req = Request.objects.create(
             channel='IBTIKAR', submitted_as_guest=True, guest_token=token,
-            status='IBTIKAR_CODE_SUBMITTED', display_id='IBT-GUEST-CODE',
+            status='IBTIKAR_SUBMISSION_PENDING', display_id='IBT-GUEST-CODE',
         )
         wrong = self.client.post(
             f'/track/ibtikar-code/{uuid.uuid4()}/',

@@ -1075,6 +1075,7 @@ def generate_quote(request_obj) -> str:
         doc, 'DEVIS', request_obj,
         style_tables=False,        # tables are already styled by our layout
         skip_institutional=True,   # GENOCELAB header instead
+        skip_house_style=True,
         skip_brand_footer=True,    # GENOCLAB-specific footer text
     )
     if request_obj.client_quote_visible:
@@ -1082,68 +1083,22 @@ def generate_quote(request_obj) -> str:
     return path
 
 
-def _build_genoclab_doc(
-    *, title_key: str, doc_number: str, request_obj,
-    line_items, admin_fees=0, report_fees=0, vat_rate=None,
-) -> DocumentType:
-    """Common builder for the GENOCLAB quote and invoice — assembles
-    header + prestation table + totals + legal footer in one place so
-    quote and invoice always carry the same look and field discipline.
-    """
-    from documents.genoclab_layout import (
-        add_genoclab_header, add_prestation_table, add_genoclab_footer,
-        cms_get,
-    )
-    doc = Document()
-    apply_house_style(doc)
-
-    # Client coords — pulled from the requester profile, with sensible
-    # blanks when something is missing.
-    requester = getattr(request_obj, 'requester', None)
-    client_name = ''
-    client_lines = []
-    if requester is not None:
-        client_name = requester.get_full_name() or requester.username or ''
-        org = getattr(requester, 'organization', '')
-        phone = getattr(requester, 'phone', '')
-        email = getattr(requester, 'email', '')
-        if org: client_lines.append(org)
-        if phone: client_lines.append(f"Tél : {phone}")
-        if email: client_lines.append(email)
-
+def _build_genoclab_doc(*, title_key: str, doc_number: str, request_obj,
+                        line_items, admin_fees=0, report_fees=0, vat_rate=None) -> DocumentType:
     from core.commercial import document_identity
+    from core.financial import parse_money
+    from documents.genoclab_layout import cms_get, render_commercial_document
     identity = (request_obj.quote_detail or {}).get('identity') or document_identity(request_obj)
-    client_name, client_lines = identity['client_name'], identity['client_lines']
-    add_genoclab_header(
-        doc,
-        title=cms_get(title_key),
-        doc_number=doc_number,
-        doc_date=(request_obj.quote_date or request_obj.created_at.date()).strftime('%d/%m/%Y'),
-        client_name=client_name,
-        client_lines=client_lines, identity=identity,
-    )
-
-    # Add a small spacer paragraph.
-    doc.add_paragraph()
-
-    # Build the prestation list. admin_fees / report_fees come from the
-    # quote_detail and become their own line items so they're visible in
-    # the table — the SuperAdmin / client sees exactly where every DA
-    # goes.
     items = list(line_items or [])
-    extras = []
-    if admin_fees and float(admin_fees) > 0:
-        extras.append({'label': 'Frais administratifs',
-                       'quantity': 1, 'unit_price': float(admin_fees),
-                       'total': float(admin_fees)})
-    if report_fees and float(report_fees) > 0:
-        extras.append({'label': 'Frais de rapport',
-                       'quantity': 1, 'unit_price': float(report_fees),
-                       'total': float(report_fees)})
-
-    grand_total = add_prestation_table(doc, items + extras, vat_rate=vat_rate)
-    add_genoclab_footer(doc, total_amount=grand_total, identity=identity)
-    return doc
+    for label, raw in (('Frais administratifs', admin_fees), ('Frais de rapport', report_fees)):
+        amount = parse_money(raw, field=label)
+        if amount:
+            items.append({'label': label, 'quantity': 1, 'unit_price': str(amount), 'total': str(amount)})
+    return render_commercial_document(
+        title=cms_get(title_key), number=doc_number,
+        date=(request_obj.quote_date or request_obj.created_at.date()).strftime('%d/%m/%Y'),
+        identity=identity, items=items, vat_rate=vat_rate, document_kind='quote',
+    )
 
 
 def _build_quote_programmatic(request_obj, field_map) -> DocumentType:
@@ -1455,75 +1410,42 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
 
 
 def generate_invoice_document(invoice_obj) -> str:
-    """GENOCLAB invoice (final, post-payment).
-
-    Same SAIDAL-style layout as the quote (generate_quote): GENOCELAB
-    logo, CMS-editable issuer block, client block, prestation grid,
-    HT / TVA / TTC totals, legal footer. Differs only in the title
-    (Facture, from the genoclab_invoice_title CMS key) and the source
-    of the line items (the Invoice's line_items JSON).
-    """
+    from copy import deepcopy
+    from django.utils import timezone
+    from core.commercial import document_identity
     from documents.archives import restore_original, preserve_original
+    from documents.genoclab_layout import CMS_DEFAULTS, cms_get, render_commercial_document
+
     archived = restore_original('INVOICE', invoice_obj.invoice_number)
     if archived:
         if invoice_obj.cancelled_at:
             _mark_cancelled_invoice(archived, invoice_obj)
         return archived
-    from documents.genoclab_layout import (
-        add_genoclab_header, add_prestation_table, add_genoclab_footer,
-        cms_get,
+    if invoice_obj.document_snapshot:
+        identity = deepcopy(invoice_obj.document_snapshot)
+    elif invoice_obj.request:
+        identity = document_identity(invoice_obj.request)
+    else:
+        client = invoice_obj.client
+        identity = {
+            'billing_channel': 'GENOCLAB',
+            'values': {key: cms_get(key) for key in CMS_DEFAULTS
+                       if key.startswith(('genoclab_issuer_', 'genoclab_footer_'))},
+            'client_name': (client.get_full_name() or client.username) if client else '',
+            'client_lines': [value for value in (
+                getattr(client, 'organization', ''), getattr(client, 'phone', ''),
+                getattr(client, 'email', '')) if value],
+        }
+    doc = render_commercial_document(
+        title=cms_get('genoclab_invoice_title'), number=invoice_obj.invoice_number,
+        date=timezone.localtime(invoice_obj.created_at).strftime('%d/%m/%Y'),
+        identity=identity, items=invoice_obj.line_items or [],
+        vat_rate=invoice_obj.vat_rate, document_kind='invoice',
     )
-    doc = Document()
-    apply_house_style(doc)
-
-    # Client coords from the invoice row.
-    client = invoice_obj.client
-    client_name = ''
-    client_lines = []
-    if client is not None:
-        client_name = client.get_full_name() or client.username or ''
-        org = getattr(client, 'organization', '')
-        phone = getattr(client, 'phone', '')
-        email = getattr(client, 'email', '')
-        if org: client_lines.append(org)
-        if phone: client_lines.append(f"Tél : {phone}")
-        if email: client_lines.append(email)
-    elif invoice_obj.request and invoice_obj.request.requester:
-        client_name = invoice_obj.request.requester.get_full_name() or ''
-
-    identity = invoice_obj.document_snapshot or None
-    if identity:
-        client_name, client_lines = identity['client_name'], identity['client_lines']
-    elif invoice_obj.request and not client:
-        client_name = invoice_obj.request.guest_name
-        client_lines = [invoice_obj.request.guest_email, invoice_obj.request.guest_phone]
-    add_genoclab_header(
-        doc,
-        title=cms_get('genoclab_invoice_title'),
-        doc_number=invoice_obj.invoice_number,
-        doc_date=invoice_obj.created_at.strftime('%d/%m/%Y'),
-        client_name=client_name,
-        client_lines=client_lines, identity=identity,
-    )
-    doc.add_paragraph()
-
-    # line_items on Invoice carries 'description' instead of 'label'.
-    items = []
-    for it in (invoice_obj.line_items or []):
-        items.append({
-            'label': it.get('description') or it.get('label') or '',
-            'quantity': it.get('quantity', 0),
-            'unit_price': it.get('unit_price', 0),
-            'total': it.get('total'),
-        })
-
-    grand_total = add_prestation_table(doc, items, vat_rate=float(invoice_obj.vat_rate))
-    add_genoclab_footer(doc, total_amount=grand_total, identity=identity)
-
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"FACTURE_{invoice_obj.invoice_number}.docx"
-    filepath = out_dir / filename
+    safe_number = re.sub(r'[^A-Za-z0-9._-]', '_', invoice_obj.invoice_number)
+    filepath = out_dir / f'FACTURE_{safe_number}.docx'
     doc.save(str(filepath))
     preserve_original('INVOICE', invoice_obj.invoice_number, filepath)
     if invoice_obj.cancelled_at:

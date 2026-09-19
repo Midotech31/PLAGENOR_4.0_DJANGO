@@ -197,7 +197,11 @@ def cost_estimate(request, service_code):
         return JsonResponse({'visible': False})
     svc = get_object_or_404(Service, code=service_code, active=True)
     channel = request.POST.get('channel') or ('IBTIKAR' if role == 'REQUESTER' else 'GENOCLAB')
-    if channel not in ('IBTIKAR', 'GENOCLAB') or svc.channel_availability not in ('BOTH', channel):
+    from core.service_eligibility import validate_service
+    from django.core.exceptions import ValidationError
+    try:
+        validate_service(svc, channel)
+    except ValidationError:
         return JsonResponse({'visible': False}, status=400)
     params = {k[6:]: v for k, v in request.POST.items() if k.startswith('param_')}
     samples = {}

@@ -71,7 +71,7 @@ class FinalFinancialTests(TestCase):
         doc = Document(path)
         text = '\n'.join(p.text for p in doc.paragraphs) + '\n'.join(c.text for t in doc.tables for row in t.rows for c in row.cells)
         self.assertIn(ESSBO_NAME, text)
-        self.assertIn('non assujetti', text)
+        self.assertIn('non assujetti', text.lower())
         self.assertNotIn('19 %', text)
         self.assertEqual(invoice.document_snapshot['client_name'], 'customer')
 

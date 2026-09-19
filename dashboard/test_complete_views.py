@@ -1,3 +1,4 @@
+from plagenor.test_documents import valid_pdf_bytes
 from plagenor.test_support import close_response
 """HTTP contracts for role boundaries, corrections and exceptional inputs."""
 import io
@@ -125,7 +126,7 @@ class CompleteViewContracts(TestCase):
 
     @staticmethod
     def pdf():
-        return SimpleUploadedFile('proof.pdf',b'%PDF-1.4\n%%EOF',content_type='application/pdf')
+        return SimpleUploadedFile('proof.pdf',valid_pdf_bytes(),content_type='application/pdf')
 
     def test_business_uploads_are_atomic_and_respect_status(self):
         for fn,field,start,end in [(client.upload_order,'order_file','QUOTE_VALIDATED_BY_CLIENT','ORDER_UPLOADED'),
@@ -182,7 +183,8 @@ class CompleteViewContracts(TestCase):
                 response=self.call(module.request_detail,role,method='get',pk=self.req.pk)
             self.assertEqual(response.status_code,200)
             self.assertIn(b'Mode label',response.content)
-        self.assertEqual(self.call(client.index,'REQUESTER',method='get').status_code,403)
+        self.assertEqual(self.call(client.index,'REQUESTER',method='get').status_code,200)
+        self.assertEqual(self.call(client.index,'MEMBER',method='get').status_code,403)
 
     def test_submission_requires_valid_tariff_and_declared_sufficient_budget(self):
         from core.exceptions import PricingConfigurationError
@@ -210,7 +212,9 @@ class CompleteViewContracts(TestCase):
             self.call(analyst.suggest_appointment,'MEMBER',data={'appointment_date':'2026-12-01'},pk=self.req.pk)
         self.req.refresh_from_db();self.assertEqual(self.req.status,'ASSIGNED')
         for module,role,status in [(client,'CLIENT','SENT_TO_CLIENT'),(requester,'REQUESTER','SENT_TO_REQUESTER')]:
-            self.req.requester=self.users[role];self.req.status=status;self.req.save()
+            self.req.requester=self.users[role];self.req.status=status
+            self.req.channel='IBTIKAR' if role=='REQUESTER' else 'GENOCLAB'
+            self.req.save()
             target='dashboard.views.client.transition' if role=='CLIENT' else 'core.workflow.transition'
             with patch(target,side_effect=InvalidTransitionError('Changed')):
                 self.call(module.confirm_receipt,role,pk=self.req.pk)

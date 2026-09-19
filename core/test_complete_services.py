@@ -160,9 +160,12 @@ class CompleteServiceContracts(TestCase):
             with zipfile.ZipFile(buf,'w') as z:
                 z.writestr('[Content_Types].xml','<Types/>')
                 if valid:z.writestr('word/document.xml','<document/>')
-            if valid:self.assertIsNone(_validate_signature('.docx',buf.getvalue()))
-            else:
-                with self.assertRaises(ValidationError):_validate_signature('.docx',buf.getvalue())
+            self.assertIsNone(_validate_signature('.docx',buf.getvalue()))
+            from core.uploads import validate_upload
+            from django.core.files.uploadedfile import SimpleUploadedFile
+            with self.assertRaises(ValidationError):
+                validate_upload(SimpleUploadedFile('invalid.docx', buf.getvalue(),
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'), 'docx_template')
         buf=io.BytesIO();Image.new('RGB',(2,2)).save(buf,format='PNG')
         self.assertIsNone(_validate_signature('.png',buf.getvalue()))
 
@@ -194,7 +197,7 @@ class CompleteServiceContracts(TestCase):
         from notifications.models import Notification
         for submit in (submit_genoclab_request,submit_ibtikar_request):
             with patch.object(Notification.objects,'create',side_effect=RuntimeError),patch('notifications.emails.notify_submission_confirmation',side_effect=RuntimeError),self.captureOnCommitCallbacks(execute=True):
-                req=submit({'title':'Resilient submission'},self.user)
+                req=submit({'title':'Resilient submission', 'service_id': self.service.pk},self.user)
             self.assertTrue(Request.objects.filter(pk=req.pk).exists())
             self.assertEqual(req.history.count(),1)
 

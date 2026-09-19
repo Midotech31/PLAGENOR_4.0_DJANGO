@@ -1,4 +1,6 @@
 import logging
+from django.core.exceptions import ValidationError
+from core.media_paths import canonical_media_path, validate_storage_path
 
 from django.core.files.storage import default_storage
 from django.db import transaction
@@ -187,7 +189,10 @@ def protected_report_media(request, path):
     tokens: only internal staff or the authenticated request owner may use
     this route. External/guest delivery uses the unguessable report token.
     """
-    rel = f"reports/{path}"
+    try:
+        rel = canonical_media_path(f"reports/{path}")
+    except ValidationError:
+        raise Http404("Fichier introuvable")
     req = Request.objects.filter(report_file=rel).first()
     # Raw storage names are not authorization capabilities.  Anonymous users
     # must use the unguessable report-token route; otherwise a predictable
@@ -209,6 +214,10 @@ def protected_report_media(request, path):
             "télécharger le rapport."
         )
     # Authorized staff/owner → stream from the configured storage backend.
+    try:
+        validate_storage_path(default_storage, rel)
+    except (ValidationError, OSError):
+        raise Http404("Fichier introuvable")
     if not default_storage.exists(rel):
         raise Http404("Fichier introuvable")
     return FileResponse(default_storage.open(rel, 'rb'))
@@ -231,6 +240,10 @@ def _may_access_media(user, path) -> bool:
       must never be guessable by anonymous visitors; authenticated flows
       stream them through their own permission-checked views instead.
     """
+    try:
+        path = canonical_media_path(path)
+    except ValidationError:
+        return False
     if path.startswith(_PUBLIC_MEDIA_PREFIXES):
         return True
     if path.startswith(_OWNER_MEDIA_PREFIXES):
@@ -258,9 +271,17 @@ def serve_media(request, path):
     Access control lives in ``_may_access_media``; denials answer 404 (not
     403) so unauthorized probing cannot confirm that a file exists.
     """
-    if '\\' in path or any(part in ('.', '..') for part in path.split('/')) or path.startswith(('reports/', 'ibtikar_attachments/')):
+    try:
+        path = canonical_media_path(path)
+    except ValidationError:
+        raise Http404("Fichier introuvable")
+    if path.startswith(('reports/', 'ibtikar_attachments/')):
         raise Http404("Fichier introuvable")
     if not _may_access_media(request.user, path):
+        raise Http404("Fichier introuvable")
+    try:
+        validate_storage_path(default_storage, path)
+    except (ValidationError, OSError):
         raise Http404("Fichier introuvable")
     if not default_storage.exists(path):
         raise Http404("Fichier introuvable")

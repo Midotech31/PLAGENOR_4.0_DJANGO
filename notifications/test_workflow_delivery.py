@@ -83,7 +83,7 @@ class WorkflowDeliveryTests(TestCase):
                 with self.captureOnCommitCallbacks(execute=True):
                     try:
                         with transaction.atomic():
-                            submit({'title':'Rolled back'},self.owner)
+                            submit({'title':'Rolled back', 'service_id': self.service.pk},self.owner)
                             raise ValueError('Rollback')
                     except ValueError: pass
                 self.assertEqual(len(inbox),1)
@@ -92,7 +92,7 @@ class WorkflowDeliveryTests(TestCase):
     def test_guest_submission_receives_one_tracking_message(self):
         with receiving_mailbox() as (inbox,_):
             with self.captureOnCommitCallbacks(execute=True):
-                submit_genoclab_request({'guest_email':'guest@example.test','guest_name':'Audit guest',
+                submit_genoclab_request({'service_id': self.service.pk, 'guest_email':'guest@example.test','guest_name':'Audit guest',
                     'guest_token':'dc7ed0ac-e2fd-4215-90e2-8a561eb75e9e','submitted_as_guest':True})
             self.assertEqual(len(inbox),1)
             self.assertIn('/track/?q=dc7ed0ac-e2fd-4215-90e2-8a561eb75e9e',inbox[0].get_body(preferencelist=('html',)).get_content())
@@ -245,7 +245,7 @@ class WorkflowDeliveryTests(TestCase):
             self.assertEqual(len(inbox),1)
             self.assertEqual(inbox[0]['To'],'guest@example.test')
             with self.captureOnCommitCallbacks(execute=True):
-                submit_ibtikar_request({'guest_email':'guest@example.test','guest_token':'dc7ed0ac-e2fd-4215-90e2-8a561eb75e9e'})
+                submit_ibtikar_request({'service_id': self.service.pk, 'guest_email':'guest@example.test','guest_token':'dc7ed0ac-e2fd-4215-90e2-8a561eb75e9e'})
             self.assertEqual(len(inbox),2)
 
     def test_in_app_overlap_creates_one_localized_notification(self):
