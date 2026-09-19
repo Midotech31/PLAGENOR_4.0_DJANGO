@@ -56,7 +56,7 @@ def receiving_mailbox(reject=False):
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
-                   PRIVILEGED_MFA_ENFORCEMENT=False, DOCUMENT_PDF_ENABLED=False,
+                   DOCUMENT_PDF_ENABLED=False,
                    STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'}, 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}},
                    PUBLIC_BASE_URL='https://plagenor.example.test')
 class WorkflowDeliveryTests(TestCase):

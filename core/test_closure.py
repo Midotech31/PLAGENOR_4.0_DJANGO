@@ -20,7 +20,7 @@ from notifications.models import Notification
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
                    STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
                              'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}},
-                   PRIVILEGED_MFA_ENFORCEMENT=False, DOCUMENT_PDF_ENABLED=False)
+                   DOCUMENT_PDF_ENABLED=False)
 class ClosureTests(TestCase):
     def setUp(self):
         self.ops = User.objects.create_user(username='closure-ops', role='PLATFORM_ADMIN')

@@ -227,7 +227,7 @@ for code,schema in definitions()['services'].items():
 
 @override_settings(STORAGES=STATIC, EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
                    PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
-                   PRIVILEGED_MFA_ENFORCEMENT=False, RATE_LIMIT_BACKEND='cache', DOCUMENT_PDF_ENABLED=False)
+                   RATE_LIMIT_BACKEND='cache', DOCUMENT_PDF_ENABLED=False)
 class PersistenceContractTests(TestCase):
     @classmethod
     def setUpTestData(cls):

@@ -15,9 +15,9 @@ def _env_bool(name, default):
 
 # Secure by default: DEBUG=False unless the operator opts in.
 DEBUG = _env_bool('DEBUG', 'False')
-PRIVILEGED_MFA_ENFORCEMENT = os.getenv(
-    'PRIVILEGED_MFA_ENFORCEMENT', 'false' if DEBUG else 'true'
-).lower() == 'true'
+# MFA is user-controlled for every authenticated account. Enrollment is
+# intentionally never mandatory; the interface strongly recommends it.
+MFA_RECOMMENDED = True
 CSP_REPORT_ONLY = _env_bool(
     'CSP_REPORT_ONLY',
     'true' if DEBUG else 'false',
@@ -132,7 +132,6 @@ MIDDLEWARE = [
     # activated a language from the cookie / Accept-Language header).
     'dashboard.middleware.PreferredLanguageMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'dashboard.middleware.PrivilegedMFAMiddleware',
     'dashboard.middleware.ContentSecurityPolicyMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dashboard.middleware.UpdateLastSeenMiddleware',

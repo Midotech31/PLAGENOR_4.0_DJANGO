@@ -7018,3 +7018,9 @@ msgstr "Validation occupée. Réessayez dans quelques instants."
 
 msgid "Demande commerciale"
 msgstr "Demande commerciale"
+
+msgid "Fortement recommandée"
+msgstr "Fortement recommandée"
+
+msgid "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion."
+msgstr "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion."

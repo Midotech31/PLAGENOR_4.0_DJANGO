@@ -15,7 +15,7 @@ from core.pricing import resolve_cost
 from core.exceptions import PricingConfigurationError
 
 
-@override_settings(STORAGES={'default':{'BACKEND':'django.core.files.storage.FileSystemStorage'},'staticfiles':{'BACKEND':'django.contrib.staticfiles.storage.StaticFilesStorage'}}, PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'], PRIVILEGED_MFA_ENFORCEMENT=False)
+@override_settings(STORAGES={'default':{'BACKEND':'django.core.files.storage.FileSystemStorage'},'staticfiles':{'BACKEND':'django.contrib.staticfiles.storage.StaticFilesStorage'}}, PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class FinalFinancialTests(TestCase):
     def setUp(self):
         self.ops = User.objects.create_user(username='ops', role='PLATFORM_ADMIN')

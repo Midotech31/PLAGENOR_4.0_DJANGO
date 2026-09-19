@@ -12,7 +12,6 @@ DATABASES = {
 ROOT_URLCONF = 'plagenor.urls_e2e'
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
-PRIVILEGED_MFA_ENFORCEMENT = False
 RATE_LIMIT_BACKEND = 'cache'
 RATE_LIMIT_FAIL_CLOSED = False
 # Each Playwright project uses a distinct documentation-only proxy address so

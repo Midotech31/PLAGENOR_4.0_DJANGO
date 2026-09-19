@@ -24,9 +24,10 @@ in Git, tickets, screenshots, or chat:
   `RATE_LIMIT_FAIL_CLOSED=true` so a limiter failure returns HTTP 503 rather
   than silently bypassing the protection.
 
-Keep `DEBUG=false` and `PRIVILEGED_MFA_ENFORCEMENT=true`. Losing or rotating
-`TOTP_ENCRYPTION_KEY` before re-enrolling users makes existing encrypted TOTP
-seeds unreadable.
+Keep `DEBUG=false`. MFA is optional for every account and is strongly
+recommended in the account security settings, especially for administrative
+and staff accounts. Losing or rotating `TOTP_ENCRYPTION_KEY` before
+re-enrolling users makes existing encrypted TOTP seeds unreadable.
 
 Keep `CSP_REPORT_ONLY=false` after the validated baseline is deployed. The
 current policy is enforced in production while inline frontend code is migrated
