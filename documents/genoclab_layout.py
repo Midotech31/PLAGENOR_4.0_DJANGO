@@ -1,16 +1,9 @@
-"""GENOCLAB commercial documents layout (quote + invoice).
+"""Unified commercial document layout for OHB and GENOCLAB.
 
-Replicates the SAIDAL-style "Facture Proforma" model the platform uses
-for commercial billing: GENOCELAB logo top-left, two-column header
-(issuer info on the left, client info on the right), prestation table
-with columns Prestation / Quantité / Prix unitaire DA / Montant DA,
-HT / VAT / TTC totals, and a legal footer with the amount-in-words
-line plus the registered-office block.
-
-Every text-only element (issuer name, NIF, bank accounts, footer
-legal text, …) is read from PlatformContent so the SuperAdmin can
-edit it via /dashboard/home/content/update/ without touching code.
-The defaults match the model file supplied by the owner.
+The generator preserves the complete administrative and financial information
+from the source models while presenting it through the shared PLAGENOR 4.0
+institutional document system. Textual issuer/footer values remain editable
+through PlatformContent.
 """
 from __future__ import annotations
 
@@ -21,24 +14,8 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from docx.document import Document as DocumentType
-from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
-
-from documents.docx_helpers import (
-    BRAND_DARK,
-    BRAND_FONT,
-    BRAND_MUTED,
-    SIZE_BODY,
-    SIZE_CAPTION,
-    SIZE_H1,
-    SIZE_H2,
-    _GENOCLAB_LOGO,
-    apply_house_style,
-)
-
 
 from documents.document_design import (
     GENOCLAB_THEME, OHB_THEME, add_document_footer, add_document_title,
@@ -51,6 +28,7 @@ logger = logging.getLogger(__name__)
 DOCUMENT_GREEN = RGBColor(0x00, 0xA6, 0x4D)
 ESSBO_LOGO = Path(__file__).resolve().parent.parent / 'static' / 'images' / 'essbo_logo.png'
 CONTENT_WIDTH = 17.4
+_GENOCLAB_LOGO = GENOCLAB_THEME.logo
 
 
 # Logo colours — sampled from the GENOCLAB asset itself (see comment at
@@ -244,34 +222,8 @@ def _money_int(value) -> str:
     return format(number, ',.2f').replace(',', ' ').replace('.', ',')
 
 
-def _set_cell_text(cell, text: str, *, bold: bool = False, size: int = SIZE_BODY,
-                   color=None, align=None) -> None:
-    """Replace a table cell's content with one styled run."""
-    cell.text = ''  # wipe whatever was there
-    p = cell.paragraphs[0]
-    p.paragraph_format.space_before = Pt(4)
-    p.paragraph_format.space_after = Pt(4)
-    p.paragraph_format.line_spacing = 1.0
-    if align is not None:
-        p.alignment = align
-    run = p.add_run(text or '')
-    run.font.name = BRAND_FONT
-    run.font.size = Pt(size)
-    run.font.bold = bold
-    if color is not None:
-        run.font.color.rgb = color
-    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
 
-def _shade_cell(cell, hex_color: str) -> None:
-    tcPr = cell._tc.get_or_add_tcPr()
-    shd = tcPr.find(qn('w:shd'))
-    if shd is None:
-        shd = OxmlElement('w:shd')
-        tcPr.append(shd)
-    shd.set(qn('w:val'), 'clear')
-    shd.set(qn('w:color'), 'auto')
-    shd.set(qn('w:fill'), hex_color)
 
 
 def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
@@ -338,41 +290,8 @@ def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
 
 
 
-def _multi_para(cell, items) -> None:
-    cell.text = ''
-    populated = False
-    for text, opts in items:
-        if not text:
-            continue
-        p = cell.add_paragraph() if populated else cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        p.paragraph_format.space_before = Pt(0)
-        p.paragraph_format.line_spacing = 1.0
-        run = p.add_run(str(text))
-        run.font.name = BRAND_FONT
-        run.font.size = Pt(opts.get('size', SIZE_BODY))
-        run.font.bold = opts.get('bold', False)
-        run.font.color.rgb = opts.get('color', BRAND_DARK)
-        populated = True
 
 
-def _clear_table_borders(table) -> None:
-    """Remove every border from a python-docx table (used for layout
-    tables that shouldn't look like data tables)."""
-    for row in table.rows:
-        for cell in row.cells:
-            tcPr = cell._tc.get_or_add_tcPr()
-            tcBorders = tcPr.find(qn('w:tcBorders'))
-            if tcBorders is None:
-                tcBorders = OxmlElement('w:tcBorders')
-                tcPr.append(tcBorders)
-            for side in ('top', 'left', 'bottom', 'right',
-                         'insideH', 'insideV'):
-                el = tcBorders.find(qn(f'w:{side}'))
-                if el is None:
-                    el = OxmlElement(f'w:{side}')
-                    tcBorders.append(el)
-                el.set(qn('w:val'), 'nil')
 
 
 def add_prestation_table(doc: DocumentType, line_items, *, vat_rate=None, non_taxable=False):
@@ -467,34 +386,10 @@ def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None, 
     add_document_footer(doc,theme=theme,reference=identity.get('request_reference',''))
 
 
-def _spacer(doc, size):
-    paragraph = doc.add_paragraph()
-    paragraph.paragraph_format.space_before = Pt(0)
-    paragraph.paragraph_format.space_after = Pt(0)
-    paragraph.paragraph_format.line_spacing = 1
-    paragraph.add_run().font.size = Pt(size)
 
 
-def _fixed_table(doc, widths, rows=1):
-    table = doc.add_table(rows=rows, cols=len(widths))
-    table.autofit = False
-    _clear_table_borders(table)
-    for column, width in zip(table.columns, widths): column.width = Cm(width)
-    for row in table.rows:
-        for cell, width in zip(row.cells, widths): cell.width = Cm(width)
-    return table
 
 
-def _cell_border(cell, edge, color, size):
-    properties = cell._tc.get_or_add_tcPr()
-    borders = properties.find(qn('w:tcBorders'))
-    if borders is None:
-        borders = OxmlElement('w:tcBorders'); properties.append(borders)
-    border = borders.find(qn('w:' + edge))
-    if border is None:
-        border = OxmlElement('w:' + edge); borders.append(border)
-    for key, value in (('val', 'single'), ('sz', str(size)), ('color', color)):
-        border.set(qn('w:' + key), value)
 
 
 def _quantity(value):

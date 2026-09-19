@@ -162,10 +162,7 @@ def apply_document_style(doc: DocumentType, theme: DocumentTheme = PLAGENOR_THEM
         ("Heading 2", 11.5, theme.dark, 7, 3),
         ("Heading 3", 10.5, theme.muted, 5, 2),
     ):
-        try:
-            style = doc.styles[name]
-        except KeyError:
-            continue
+        style = doc.styles[name]
         style.font.name = "Arial"
         style.font.size = Pt(size)
         style.font.bold = True

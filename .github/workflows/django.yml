@@ -32,8 +32,10 @@ jobs:
       uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install gettext (for i18n)
-      run: sudo apt-get update && sudo apt-get install -y gettext
+    - name: Install document and i18n system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gettext libreoffice-writer default-jre-headless poppler-utils fonts-dejavu-core fonts-liberation2
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -53,7 +55,41 @@ jobs:
         # Enforced regression floor, verified by the full Django suite.
         coverage report --fail-under=100
         coverage json -o coverage.json
-    - name: Upload coverage and form definitions
+    - name: Render document previews with LibreOffice
+      run: |
+        set -euo pipefail
+        mkdir -p document-previews/pdf document-previews/render-smoke
+        export HOME="${RUNNER_TEMP}/libreoffice-home"
+        mkdir -p "$HOME"
+
+        docx_count=$(find document-previews -maxdepth 1 -type f -name '*.docx' | wc -l)
+        test "$docx_count" -ge 10
+
+        : > document-previews/VALIDATION.txt
+        for docx in document-previews/*.docx; do
+          soffice --headless --convert-to pdf --outdir document-previews/pdf "$docx"
+        done
+
+        pdf_count=$(find document-previews/pdf -maxdepth 1 -type f -name '*.pdf' | wc -l)
+        test "$pdf_count" -eq "$docx_count"
+
+        for pdf in document-previews/pdf/*.pdf; do
+          name=$(basename "$pdf")
+          pages=$(pdfinfo "$pdf" | awk '/^Pages:/ {print $2}')
+          test -n "$pages"
+          test "$pages" -ge 1
+          pdfinfo "$pdf" | grep -Eq 'Page size:.*A4'
+          pdftotext "$pdf" - | grep -q '[[:alnum:]]'
+          stem="${name%.pdf}"
+          mkdir -p "document-previews/render-smoke/$stem"
+          pdftoppm -f 1 -singlefile -png -r 120 "$pdf" "document-previews/render-smoke/$stem/page-1" >/dev/null 2>&1
+          test -s "document-previews/render-smoke/$stem/page-1.png"
+          echo "$name|pages=$pages|A4=PASS|text=PASS|render=PASS" >> document-previews/VALIDATION.txt
+        done
+
+        cat document-previews/VALIDATION.txt
+
+    - name: Upload coverage and rendered document evidence
       uses: actions/upload-artifact@v7
       with:
         name: application-validation
@@ -61,6 +97,8 @@ jobs:
           coverage.json
           core/ibtikar/definitions.json
           document-previews/*.docx
+          document-previews/pdf/*.pdf
+          document-previews/VALIDATION.txt
         if-no-files-found: error
         retention-days: 30
     - name: Dependency vulnerability audit

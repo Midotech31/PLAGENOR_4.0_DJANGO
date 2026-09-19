@@ -62,8 +62,4 @@ class ReleaseBoundaryContracts(TestCase):
         self.assertIn('Custom terms',' '.join(p.text for p in doc.paragraphs))
         blank=Document(); layout.add_genoclab_footer(blank,identity={'values':{}})
         self.assertTrue(blank.sections[0].footer.tables)
-        cell=Document().add_table(rows=1,cols=1).cell(0,0)
-        layout._cell_border(cell,'top','000000',4)
-        layout._cell_border(cell,'top','000000',6)
-        self.assertIn('w:sz="6"',cell._tc.xml)
         self.assertEqual(layout._quantity('3.50'),'3.5')
