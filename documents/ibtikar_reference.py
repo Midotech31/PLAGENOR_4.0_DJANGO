@@ -58,6 +58,10 @@ _DYNAMIC_PREFIXES = {
 
 _SOURCE_CORRECTIONS = {
     "EGTP-Lyoph": {"Alpha 3-4 LSCbasic": "Beta 2-8 LSCplus"},
+    "EGTP-IMT": {
+        "paraffin/alimenatire": "paraffiné/alimentaire",
+        "{{ANALYSIS_MODE_LABEL}}": "",
+    },
 }
 
 def _norm(value):
