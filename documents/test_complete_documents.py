@@ -69,7 +69,7 @@ class CompleteDocumentModelContracts(TestCase):
     def test_french_amount_words_and_invalid_legacy_amounts(self):
         from documents import genoclab_layout as gl
         from core.models import PlatformContent
-        for value,expected in [(21,'vingt et un'),(30,'trente'),(0,'zéro'),(-1,'moins un'),(2000000,'deux millions'),(1000000000,'un milliard')]:
+        for value,expected in [(21,'vingt et un dinars algériens'),(30,'trente dinars algériens'),(0,'zéro dinar algérien'),(-1,'moins un dinar algérien'),(2000000,'deux millions de dinars algériens'),(1000000000,'un milliard de dinars algériens')]:
             self.assertEqual(gl.amount_in_words_fr(value),expected)
         for value in ('invalid','NaN','Infinity',None):self.assertEqual(gl.amount_in_words_fr(value),'')
         self.assertEqual(gl._three_digits(0),'')

@@ -15,6 +15,7 @@ The defaults match the model file supplied by the owner.
 from __future__ import annotations
 
 import logging
+import re
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Iterable, Optional
@@ -72,7 +73,7 @@ CMS_DEFAULTS = {
     'genoclab_invoice_title':     "Facture",
     'genoclab_footer_legal':      (
         "Arrêtée la présente facture à la somme de "
-        "____________________________________________________________ Dinars Algériens."
+        "{amount_words} ({amount})."
     ),
     'genoclab_footer_office':     (
         "Siège social — BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran"
@@ -99,13 +100,6 @@ def cms_get(key: str, default: str = '') -> str:
         logger.exception("Unable to load CMS value key=%s", key)
     return CMS_DEFAULTS.get(key, default)
 
-
-# ── Amount-to-words ────────────────────────────────────────────────────────
-# Tiny standalone French converter. We avoid a num2words dependency to
-# keep requirements.txt unchanged. Algerian French uses the Belgian /
-# Swiss style "septante / nonante" for some, but the official invoicing
-# convention sticks to the French standard ("soixante-dix / quatre-vingt-
-# dix"), so we follow that.
 
 _UNITS = ('zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept',
           'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze',
@@ -135,14 +129,7 @@ def _two_digits(n: int) -> str:
 
 
 def _three_digits(n: int, *, followed_by_multiplier: bool = False) -> str:
-    """French 0-999 written out.
-
-    ``followed_by_multiplier`` should be True when this triplet is the
-    multiplier of a higher unit (mille / million / milliard). It strips
-    the plural 's' on 'cent' since "cent" loses its plural mark whenever
-    it precedes another numeral name (deux cent mille — not "deux cents
-    mille").
-    """
+    """Spell out a triplet; suppress plurals only before mille."""
     if n == 0:
         return ''
     if n < 100:
@@ -166,58 +153,65 @@ def _three_digits(n: int, *, followed_by_multiplier: bool = False) -> str:
 
 
 def amount_in_words_fr(amount) -> str:
-    """Return a French textual representation of ``amount`` in DZD.
-
-    Example:
-        amount_in_words_fr(11900) -> "onze mille neuf cents"
-        amount_in_words_fr(123)   -> "cent vingt-trois"
-        amount_in_words_fr(1000.50) -> "mille et 50/100"
-
-    Caller is responsible for appending the currency name. Cents (chimes)
-    are rendered as a fraction so the legal phrasing stays unambiguous.
-    """
+    """Spell out a DZD amount, including dinars and centimes."""
     try:
         amt = Decimal(str(amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        if not amt.is_finite():
+        if not amt.is_finite() or abs(amt) >= Decimal('1000000000000'):
             return ''
     except (InvalidOperation, TypeError, ValueError):
         return ''
-    if amt < 0:
-        return f"moins {amount_in_words_fr(-amt)}"
-    if amt >= Decimal('1000000000000'):
-        return ''
+    negative = amt < 0
+    amt = abs(amt)
     integer_part = int(amt)
-    cents = round((amt - integer_part) * 100)
-
-    if integer_part == 0:
-        words = 'zéro'
-    else:
-        # Split into milliards / millions / mille / units.
-        groups = []
-        for power, label in [(10**9, 'milliard'), (10**6, 'million'),
-                             (10**3, 'mille'), (1, '')]:
-            count = integer_part // power
-            integer_part = integer_part % power
-            if count == 0:
-                continue
-            if label == 'mille':
-                # "mille" is invariable — never an 's'. And "un mille" is
-                # wrong; just write "mille" when count == 1.
-                if count == 1:
-                    groups.append('mille')
-                else:
-                    groups.append(f"{_three_digits(count, followed_by_multiplier=True)} mille")
-            elif label == '':
-                groups.append(_three_digits(count))
-            else:
-                # million / milliard — keep the 's' when plural.
-                plural = 's' if count > 1 else ''
-                groups.append(f"{_three_digits(count)} {label}{plural}")
-        words = ' '.join(g for g in groups if g)
-
+    cents = int((amt - integer_part) * 100)
+    remaining = integer_part
+    groups = []
+    for power, label in ((10**9, 'milliard'), (10**6, 'million'),
+                         (10**3, 'mille'), (1, '')):
+        count, remaining = divmod(remaining, power)
+        if count == 0:
+            continue
+        if label == 'mille':
+            groups.append('mille' if count == 1 else
+                          f"{_three_digits(count, followed_by_multiplier=True)} mille")
+        elif not label:
+            groups.append(_three_digits(count))
+        else:
+            plural = 's' if count > 1 else ''
+            groups.append(f"{_three_digits(count)} {label}{plural}")
+    words = ' '.join(groups) or 'zéro'
+    currency = 'dinar algérien' if integer_part < 2 else 'dinars algériens'
+    if integer_part and integer_part % 10**6 == 0:
+        currency = 'de ' + currency
+    words += ' ' + currency
     if cents:
-        words += f" et {cents:02d}/100"
-    return words
+        unit = 'centime' if cents == 1 else 'centimes'
+        words += f" et {_two_digits(cents)} {unit}"
+    return ('moins ' if negative else '') + words
+
+
+def _amount_notice(template, total_amount, document_kind):
+    from core.exceptions import FinancialValidationError
+
+    words = amount_in_words_fr(total_amount)
+    if not words:
+        raise FinancialValidationError('Montant en lettres invalide ou hors limites.')
+    introduction = ('Arrêté le présent devis à la somme de' if document_kind == 'quote'
+                    else 'Arrêtée la présente facture à la somme de')
+    text = template or introduction + ' {amount_words} ({amount}).'
+    if document_kind == 'quote':
+        text = text.replace('Arrêtée la présente facture', 'Arrêté le présent devis')
+    text = re.sub(r'_{5,}', '{amount_words}', text)
+    text = re.sub(
+        r'\{amount_words\}\s+(?:de\s+)?(?:dinars?(?:\s+alg[ée]riens?)?|DZD|DA)\b',
+        '{amount_words}', text, flags=re.IGNORECASE,
+    )
+    if '{amount_words}' not in text:
+        if '{amount}' in text:
+            text = text.replace('{amount}', '{amount_words} ({amount})', 1)
+        else:
+            text = text.rstrip(' .:') + ' : {amount_words} ({amount}).'
+    return text.replace('{amount_words}', words).replace('{amount}', _money(total_amount))
 
 
 # ── End amount-to-words helpers ────────────────────────────────────────────
@@ -420,18 +414,7 @@ def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None, 
         for run in p.runs:
             run.bold = True; run.font.size = Pt(10)
     if total_amount is not None:
-        words = amount_in_words_fr(total_amount).strip()
-        introduction = 'Arrêté le présent devis à la somme de' if document_kind == 'quote' else 'Arrêtée la présente facture à la somme de'
-        legal_text = get_value('genoclab_footer_legal')
-        if not legal_text or legal_text in (CMS_DEFAULTS['genoclab_footer_legal'], 'Arrêtée la présente facture à la somme de {amount_words} dinars ({amount}).'):
-            legal_text = introduction + ' {amount_words} dinars algériens ({amount}).'
-        elif document_kind == 'quote':
-            legal_text = legal_text.replace('Arrêtée la présente facture', 'Arrêté le présent devis')
-        import re
-        legal_text = re.sub(r'_{5,}', '{amount_words}', legal_text)
-        if '{amount_words}' not in legal_text and '{amount}' not in legal_text:
-            legal_text = legal_text.rstrip(' .:') + ' : {amount_words} dinars algériens ({amount}).'
-        legal_text = legal_text.replace('{amount_words}', words).replace('{amount}', _money(total_amount))
+        legal_text = _amount_notice(get_value('genoclab_footer_legal'), total_amount, document_kind)
     else:
         legal_text = get_value('genoclab_footer_legal')
     p = doc.add_paragraph(legal_text)
