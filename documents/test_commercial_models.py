@@ -93,6 +93,10 @@ class CommercialDocumentModelsTests(TestCase):
                     self.assertIn('7 500,00',text)
                     self.assertIn('2 500,50',text)
                     self.assertIn('Montant DA',text)
+                    self.assertNotIn('/100', text)
+                    expected_words = ('dix mille dinars algériens et cinquante centimes' if channel == 'OHB'
+                                      else 'onze mille neuf cents dinars algériens et soixante centimes')
+                    self.assertIn(expected_words, text)
                     self.assertIn('Siège social',text)
                     self.assertIn('Coordonnées',text)
                     self.assertNotIn('_____ ',text)
@@ -117,6 +121,30 @@ class CommercialDocumentModelsTests(TestCase):
                 self.assertIn('Validité du devis : 30 jours',document_text(quote))
                 self.assertIn('Arrêtée la présente facture',document_text(bill))
                 self.assertIn('Validité de la facture : 30 jours',document_text(bill))
+
+    def test_exact_fractional_total_in_all_commercial_documents(self):
+        for channel in ('OHB', 'GENOCLAB'):
+            with self.subTest(channel=channel):
+                price = '11900.50' if channel == 'OHB' else '10000.42'
+                self.items = [{'label': 'Prestation de recette', 'quantity': 1,
+                               'unit_price': price, 'total': price}]
+                req = self.make_request(channel, '-WORDS')
+                rate = Decimal('0') if channel == 'OHB' else Decimal('0.19')
+                totals = compute_invoice_totals(self.items, vat_rate=rate)
+                self.assertEqual(Decimal(str(totals['total_ttc'])), Decimal('11900.50'))
+                invoice = Invoice.objects.create(request=req, client=self.user,
+                    invoice_number='TEST-WORDS-' + channel, line_items=self.items,
+                    document_snapshot=document_identity(req), subtotal_ht=totals['subtotal_before_tax'],
+                    vat_rate=rate, vat_amount=totals['vat_amount'], total_ttc=totals['total_ttc'])
+                quote = generate_quote(req)
+                bill = generate_invoice_document(invoice)
+                for path in (quote, bill):
+                    text = document_text(path)
+                    self.assertIn('onze mille neuf cents dinars algériens et cinquante centimes', text)
+                    self.assertIn('11 900,50', text)
+                    self.assertNotIn('/100', text)
+                if channel == 'GENOCLAB':
+                    self.keep_preview(bill, 'GENOCLAB_FACTURE_11900_50_EXEMPLE_FICTIF.docx')
 
     def test_ohb_missing_explicit_rate_does_not_default_to_nineteen_percent(self):
         req = self.make_request('OHB', '-DEFAULT')
@@ -167,9 +195,12 @@ class CommercialDocumentModelsTests(TestCase):
 
 class CommercialArithmeticTests(SimpleTestCase):
     def test_french_money_words(self):
-        for amount, words in [(71,'soixante et onze'),(80,'quatre-vingts'),(80000,'quatre-vingt mille'),
-                              (280000,'deux cent quatre-vingt mille'),(200000000,'deux cents millions'),
-                              (1000.5,'mille et 50/100')]:
+        for amount, words in [(71,'soixante et onze dinars algériens'),
+                              (80,'quatre-vingts dinars algériens'),
+                              (80000,'quatre-vingt mille dinars algériens'),
+                              (280000,'deux cent quatre-vingt mille dinars algériens'),
+                              (200000000,'deux cents millions de dinars algériens'),
+                              (1000.5,'mille dinars algériens et cinquante centimes')]:
             self.assertEqual(amount_in_words_fr(amount),words)
         self.assertEqual(amount_in_words_fr(10**15),'')
 

@@ -92,7 +92,7 @@ DEFAULTS_FR = {
     'genoclab_vat_rate':          '0.19',
     'genoclab_footer_legal':      (
         'Arrêtée la présente facture à la somme de '
-        '____________________________________________________________ Dinars Algériens.'
+        '{amount_words} ({amount}).'
     ),
     'genoclab_footer_office':     (
         'Siège social — BP 1042 SAIM MOHAMED, Cité Emir Abdelkader (EX-INESSMO), 31000 Oran'

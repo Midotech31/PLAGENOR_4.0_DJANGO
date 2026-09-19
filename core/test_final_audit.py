@@ -121,7 +121,7 @@ class FinalFinancialTests(TestCase):
         text = '\n'.join(c.text for t in doc.tables for row in t.rows for c in row.cells)
         self.assertIn('TVA (0 %)', text)
         self.assertNotIn('119', text)
-        self.assertEqual(amount_in_words_fr('1.995'), 'deux')
+        self.assertEqual(amount_in_words_fr('1.995'), 'deux dinars algériens')
 
     def test_visibility_ui_authorization_expiry_and_audit(self):
         url = reverse('dashboard:financial_visibility')
