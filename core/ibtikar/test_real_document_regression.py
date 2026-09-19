@@ -1,9 +1,10 @@
 from types import SimpleNamespace
+from pathlib import Path
 import os
 
 from django.test import SimpleTestCase
 
-from core.ibtikar.legacy import legacy_initial
+from core.ibtikar.legacy import document_initial, legacy_initial
 from core.ibtikar.schema import get_schema, projection
 from documents.ibtikar_canonical import build_document
 from documents.ibtikar_reference import reference_content
@@ -61,12 +62,14 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
             declared_ibtikar_balance=190000,
         )
         schema = get_schema("EGTP-IMT")
-        legacy = legacy_initial(request, schema)
+        historical = legacy_initial(request, schema)
+        self.assertNotIn("email", historical["applicant"])
+        legacy = document_initial(request, schema)
         project = projection(
             schema,
-            legacy["applicant"],
+            legacy["document_applicant"],
             legacy["parameters"],
-            legacy["samples"],
+            legacy["document_samples"],
             language="fr",
             print_blank_staff=True,
         )
@@ -81,7 +84,7 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
                 "operator_name": "",
             },
             "fr",
-            legacy=legacy["legacy_data"],
+            legacy=legacy["legacy_display"],
         )
         text = collect_text(document)
 

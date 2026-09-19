@@ -285,9 +285,9 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     )
     p = doc.add_paragraph(text('unsigned', language))
     p.paragraph_format.space_before = Pt(4)
-    # Legacy source dictionaries are retained internally for migration/provenance,
-    # but raw JSON is never printed in a user-facing form. All useful values are
-    # projected above into their proper labelled fields.
+    if legacy:
+        add_section_heading(doc, text('legacy', language), theme=PLAGENOR_THEME)
+        _kv_table(doc, legacy, language, dense=True)
     add_document_footer(doc, theme=PLAGENOR_THEME, reference=metadata['number'])
     _rtl_document(doc, language)
     return doc
@@ -300,7 +300,7 @@ def generate_canonical_form(req):
     from core.ibtikar.schema import (
         active_data, active_names, label, projection, schema_for_service,
     )
-    from core.ibtikar.legacy import legacy_initial
+    from core.ibtikar.legacy import document_initial
     language = (get_language() or 'fr').split('-')[0]
     submission = IbtikarSubmission.objects.filter(request=req).first()
     attachments, signature, legacy = [], None, None
@@ -334,12 +334,12 @@ def generate_canonical_form(req):
                     signature = stream.read()
     else:
         schema = schema_for_service(req.service)
-        old = legacy_initial(req, schema)
+        old = document_initial(req, schema)
         project = projection(
-            schema, old['applicant'], old['parameters'], old['samples'],
-            language=language, print_blank_staff=True,
+            schema, old['document_applicant'], old['parameters'],
+            old['document_samples'], language=language, print_blank_staff=True,
         )
-        legacy = old['legacy_data']
+        legacy = old['legacy_display']
     project['staff'] = [
         row for row in project['staff']
         if row['name'] not in ('validated_price', 'price_justification')
