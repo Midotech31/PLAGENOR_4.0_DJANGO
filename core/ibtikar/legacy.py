@@ -26,13 +26,19 @@ FIELD_ALIASES = {
     'submitted_type': ['submitted_type', 'sample_purity'],
     'maldi_target': ['maldi_target', 'maldi_target_type'],
     'fresh_culture': ['fresh_culture', 'fresh_culture_available'],
+    'risk_status': ['risk_status', 'pathogenic'],
 }
 VALUE_ALIASES = {
     'sequencing_mode': {'Forward': 'forward', 'Reverse': 'reverse', 'Forward + Reverse': 'both', 'F': 'forward', 'F+R': 'both'},
     'submitted_type': {'Purified': 'purified_pcr', 'Non-purified': 'unpurified_pcr'},
     'analysis_mode': {'Simple': 'single', 'Duplicate': 'duplicate', 'Triplicate': 'triplicate'},
     'maldi_target': {'Reusable': 'reusable', 'Disposable': 'disposable'},
-    'fresh_culture': {'true': 'yes', 'false': 'no', True: 'yes', False: 'no'},
+    'fresh_culture': {'true': 'yes', 'false': 'no', 'True': 'yes', 'False': 'no',
+                      True: 'yes', False: 'no'},
+    'risk_status': {'true': 'pathogenic', 'false': 'standard',
+                    'True': 'pathogenic', 'False': 'standard',
+                    True: 'pathogenic', False: 'standard',
+                    'Pathogenic': 'pathogenic', 'Clinical': 'clinical'},
     'product_recovery': {'true': 'yes', 'false': 'no', True: 'yes', False: 'no'},
     'organism_type': {'Bacterium': 'bacterium', 'Yeast': 'yeast', 'Mould': 'mould'},
     'origin': {'Environmental': 'environmental', 'Food': 'food', 'Hospital / Clinical': 'clinical'},
@@ -67,12 +73,50 @@ def legacy_initial(req, schema):
     common = dict(req.requester_data or {})
     common.update({k: v for k, v in params.items() if k not in common})
     common.setdefault('project_title', req.title)
-    for name, value in [('guest_name', req.guest_name), ('guest_email', req.guest_email), ('guest_phone', req.guest_phone)]:
+
+    requester = getattr(req, 'requester', None)
+    if requester is not None:
+        account_values = {
+            'full_name': requester.get_full_name() or requester.username,
+            'institution': getattr(requester, 'organization', ''),
+            'laboratory': getattr(requester, 'laboratory', ''),
+            'status': getattr(requester, 'student_level', ''),
+            'email': getattr(requester, 'email', ''),
+            'phone': getattr(requester, 'phone', ''),
+            'supervisor': getattr(requester, 'supervisor', ''),
+            'supervisor_email': getattr(requester, 'supervisor_email', ''),
+            'ibtikar_id': getattr(requester, 'ibtikar_id', ''),
+        }
+        declared = getattr(req, 'declared_ibtikar_balance', None)
+        if declared is None:
+            declared = getattr(requester, 'ibtikar_declared_balance', None)
+        account_values['declared_balance'] = declared
+        for name, value in account_values.items():
+            if value not in (None, ''):
+                common.setdefault(name, value)
+
+    for name, value in (
+        ('guest_name', req.guest_name),
+        ('guest_email', req.guest_email),
+        ('guest_phone', req.guest_phone),
+    ):
         if value:
             common.setdefault(name, value)
-    return {'applicant': mapped_values(schema['applicant'], common),
-            'parameters': mapped_values(schema['parameters'], params),
-            'samples': [mapped_values(schema['samples'], row) for row in (req.sample_table or [])],
-            'legacy_data': {'requester_data': deepcopy(req.requester_data),
-                            'service_params': deepcopy(req.service_params),
-                            'sample_table': deepcopy(req.sample_table), 'pricing': deepcopy(req.pricing)}}
+
+    samples = []
+    for row in (req.sample_table or []):
+        merged = dict(params)
+        merged.update(row)
+        samples.append(mapped_values(schema['samples'], merged))
+
+    return {
+        'applicant': mapped_values(schema['applicant'], common),
+        'parameters': mapped_values(schema['parameters'], params),
+        'samples': samples,
+        'legacy_data': {
+            'requester_data': deepcopy(req.requester_data),
+            'service_params': deepcopy(req.service_params),
+            'sample_table': deepcopy(req.sample_table),
+            'pricing': deepcopy(req.pricing),
+        },
+    }
