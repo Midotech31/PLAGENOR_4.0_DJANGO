@@ -171,6 +171,8 @@ def document_initial(req, schema):
     """
     initial = legacy_initial(req, schema)
     applicant = deepcopy(initial['applicant'])
+    if str(applicant.get('project_title') or '').strip() in {'.', '..', '-', '--'}:
+        applicant['project_title'] = ''
 
     requester = getattr(req, 'requester', None)
     if requester is not None:

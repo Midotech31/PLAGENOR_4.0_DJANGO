@@ -120,6 +120,11 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
         )
         text = collect_text(document)
 
+        project_title = next(
+            row for row in project["applicant"] if row["name"] == "project_title"
+        )
+        self.assertEqual(project_title["display"], "Non renseigné")
+
         for expected in (
             "Demandeur Réel",
             "ESSBO",
@@ -141,6 +146,15 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
             "V02 / 02.11.2025",
         ):
             self.assertIn(expected, text)
+
+        self.assertNotIn(
+            "Fournir des colonies fraîches, pures et bien isolées, sur un milieu adapté",
+            text,
+        )
+        self.assertNotIn(
+            "Le demandeur certifie que les échantillons ont été collectés, manipulés et transférés",
+            text,
+        )
 
         for forbidden in (
             "requester_data",

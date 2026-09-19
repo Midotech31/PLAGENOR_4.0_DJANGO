@@ -187,6 +187,12 @@ def _render_reference(doc, project, language):
             add_callout(doc, note, theme=PLAGENOR_THEME)
     guidance = list(source.get('guidance') or [])
     for notice in project.get('notices') or []:
+        # EGTP-IMT already carries the complete official MALDI-TOF guidance
+        # extracted from the source form. Its schema notices are condensed
+        # reminders of the same ethics/transport requirements and would
+        # otherwise be printed a second time.
+        if project.get('service_code') == 'EGTP-IMT':
+            continue
         if notice and not any(notice.casefold() in value.casefold() or value.casefold() in notice.casefold()
                               for value in guidance if value):
             guidance.append(notice)
