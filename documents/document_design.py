@@ -140,12 +140,12 @@ def apply_document_style(doc: DocumentType, theme: DocumentTheme = PLAGENOR_THEM
     for section in doc.sections:
         section.page_width = Cm(21)
         section.page_height = Cm(29.7)
-        section.top_margin = Cm(1.6)
-        section.bottom_margin = Cm(1.75)
-        section.left_margin = Cm(1.7)
-        section.right_margin = Cm(1.7)
-        section.header_distance = Cm(0.6)
-        section.footer_distance = Cm(0.6)
+        section.top_margin = Cm(1.35 if dense else 1.6)
+        section.bottom_margin = Cm(1.45 if dense else 1.75)
+        section.left_margin = Cm(1.6 if dense else 1.7)
+        section.right_margin = Cm(1.6 if dense else 1.7)
+        section.header_distance = Cm(0.5 if dense else 0.6)
+        section.footer_distance = Cm(0.5 if dense else 0.6)
     normal = doc.styles["Normal"]
     normal.font.name = "Arial"
     normal.font.size = Pt(9.8 if dense else 10.5)
@@ -156,16 +156,14 @@ def apply_document_style(doc: DocumentType, theme: DocumentTheme = PLAGENOR_THEM
     fonts = rpr.get_or_add_rFonts()
     for key in ("ascii", "hAnsi", "cs", "eastAsia"):
         fonts.set(qn(f"w:{key}"), "Arial")
-    for name, size, color, before, after in (
-        ("Title", 20, theme.primary, 0, 6),
-        ("Heading 1", 13.5, theme.primary, 11, 4),
-        ("Heading 2", 11.5, theme.dark, 7, 3),
-        ("Heading 3", 10.5, theme.muted, 5, 2),
-    ):
-        try:
-            style = doc.styles[name]
-        except KeyError:
-            continue
+    heading_metrics = (
+        ("Title", 20, theme.primary, 0, 5 if dense else 6),
+        ("Heading 1", 13.5, theme.primary, 7 if dense else 11, 3 if dense else 4),
+        ("Heading 2", 11.5, theme.dark, 5 if dense else 7, 2 if dense else 3),
+        ("Heading 3", 10.5, theme.muted, 4 if dense else 5, 1 if dense else 2),
+    )
+    for name, size, color, before, after in heading_metrics:
+        style = doc.styles[name]
         style.font.name = "Arial"
         style.font.size = Pt(size)
         style.font.bold = True
