@@ -55,8 +55,9 @@ class CommercialDocumentModelsTests(TestCase):
                        'quantity':2,'unit_price':'1250.25','total':'2500.50'}]
 
     def make_request(self, channel, suffix=''):
+        self.assertLessEqual(len('MDL-' + channel + suffix), Request._meta.get_field('display_id').max_length)
         request = Request.objects.create(
-            display_id='MODEL-' + channel + suffix, title='Prestation de recette',
+            display_id='MDL-' + channel + suffix, title='Prestation de recette',
             requester=self.user, service=self.service, channel='GENOCLAB',
             billing_channel=channel, status='QUOTE_DRAFT',
         )

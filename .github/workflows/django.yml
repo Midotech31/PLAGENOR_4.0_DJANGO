@@ -46,6 +46,8 @@ jobs:
         python manage.py compilemessages
         python manage.py shell -c "from django.template.loader import engines; from pathlib import Path; e=engines['django'].engine; fs=list(Path('templates').rglob('*.html'))+list(Path('notifications/templates').rglob('*.html')); [e.get_template(str(p.relative_to('templates')) if str(p).startswith('templates/') else str(p.relative_to('notifications/templates'))) for p in fs]; print(f'TEMPLATES_OK={len(fs)}')"
     - name: Run tests with coverage
+      env:
+        PLAGENOR_DOCUMENT_PREVIEW_DIR: document-previews
       run: |
         coverage run manage.py test
         # Enforced regression floor, verified by the full Django suite.
@@ -58,6 +60,7 @@ jobs:
         path: |
           coverage.json
           core/ibtikar/definitions.json
+          document-previews/*.docx
         if-no-files-found: error
         retention-days: 30
     - name: Dependency vulnerability audit

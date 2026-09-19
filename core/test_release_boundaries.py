@@ -54,6 +54,7 @@ class ReleaseBoundaryContracts(TestCase):
     def test_custom_document_notices_and_blank_legacy_values(self):
         self.assertEqual(layout._money('Infinity'),'Infinity')
         self.assertEqual(layout._money_int('Infinity'),'Infinity')
+        self.assertEqual(layout._money_int('NaN'),'NaN')
         doc=Document()
         identity={'values':{'genoclab_footer_legal':'Arrêtée la présente facture à la somme de {amount_words}.','genoclab_issuer_address1':'Address'},'commercial_terms':'Custom terms'}
         layout.add_genoclab_footer(doc,total_amount=10,identity=identity,document_kind='quote')
