@@ -4,7 +4,7 @@ import os
 
 from django.test import SimpleTestCase
 
-from core.ibtikar.legacy import document_initial, legacy_initial
+from core.ibtikar.legacy import _display_value, document_initial, legacy_initial
 from core.ibtikar.schema import get_schema, projection
 from documents.ibtikar_canonical import build_document
 from documents.ibtikar_reference import reference_content
@@ -17,6 +17,19 @@ def collect_text(document):
             for cell in row.cells:
                 values.append(cell.text)
     return "\n".join(values)
+
+
+class LegacyDisplayHelperCoverageTests(SimpleTestCase):
+    def test_human_readable_legacy_value_shapes(self):
+        self.assertEqual(_display_value(None), "")
+        self.assertEqual(_display_value(True), "Oui")
+        self.assertEqual(_display_value(False), "Non")
+        self.assertEqual(_display_value(["A", "", "B"]), "A ; B")
+        self.assertEqual(
+            _display_value({"analysis_mode": "Simple", "active": True}),
+            "Analysis mode : Simple ; Active : Oui",
+        )
+        self.assertEqual(_display_value("Texte"), "Texte")
 
 
 class RealMALDIFormRegressionTests(SimpleTestCase):
