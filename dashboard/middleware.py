@@ -95,25 +95,17 @@ class ForcePasswordChangeMiddleware:
 
 
 class PrivilegedMFAMiddleware:
-    """Require TOTP enrollment for every privileged interactive account."""
+    """Compatibility middleware.
 
-    PRIVILEGED_ROLES = {'SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE', 'MEMBER'}
-    EXEMPT_PATHS = (
-        '/accounts/2fa/setup/', '/accounts/2fa/verify/', '/accounts/logout/',
-        '/static/', '/healthz', '/readyz',
-    )
+    MFA is optional for every account. This class intentionally never redirects
+    an authenticated user to enrollment; users who enable TOTP are still
+    challenged by the login flow.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        user = getattr(request, 'user', None)
-        if (settings.PRIVILEGED_MFA_ENFORCEMENT
-                and user is not None and user.is_authenticated
-                and getattr(user, 'role', '') in self.PRIVILEGED_ROLES
-                and not user.totp_enabled
-                and not any(request.path.startswith(p) for p in self.EXEMPT_PATHS)):
-            return redirect('/accounts/2fa/setup/')
         return self.get_response(request)
 
 

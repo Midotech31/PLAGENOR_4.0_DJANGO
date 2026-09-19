@@ -113,7 +113,8 @@
             </button>
         </form>
         {% else %}
-        <p class="text-muted">{% trans "Ajoutez une couche de sécurité : un code à 6 chiffres généré par votre téléphone sera demandé à la connexion. Recommandé pour les comptes du personnel." %}</p>
+        <p><span class="badge" style="background:#fff7ed;color:#9a3412;">{% trans "Fortement recommandée" %}</span></p>
+        <p class="text-muted">{% trans "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion." %}</p>
         <a href="{% url 'accounts:two_factor_setup' %}" class="btn btn-sm btn-primary" style="margin-top:8px;">{% trans "Activer la 2FA" %}</a>
         {% endif %}
     </div>

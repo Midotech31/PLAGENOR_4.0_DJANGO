@@ -95,7 +95,6 @@ jobs:
       # secure default because this override exists only inside this CI job.
       SECURE_SSL_REDIRECT: "false"
       TOTP_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
-      PRIVILEGED_MFA_ENFORCEMENT: "false"
       REQUIRE_PERSISTENT_MEDIA_STORAGE: "false"
       REQUIRE_SMTP: "false"
     steps:

@@ -77,7 +77,7 @@ class EdgeSchemaContracts(SimpleTestCase):
                 amount(value)
 
 
-@override_settings(STORAGES=STATIC, EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'], PRIVILEGED_MFA_ENFORCEMENT=False, RATE_LIMIT_BACKEND='cache', DOCUMENT_PDF_ENABLED=False)
+@override_settings(STORAGES=STATIC, EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'], RATE_LIMIT_BACKEND='cache', DOCUMENT_PDF_ENABLED=False)
 class AcceptanceFlows(TestCase):
     setUpTestData = contracts.PersistenceContractTests.__dict__['setUpTestData']
     setUp = contracts.PersistenceContractTests.setUp

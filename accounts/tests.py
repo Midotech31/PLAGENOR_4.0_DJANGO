@@ -134,20 +134,33 @@ class TwoFactorTests(TestCase):
         user.save(update_fields=['totp_secret', 'totp_enabled'])
         return secret
 
-    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=True)
-    def test_privileged_user_without_2fa_is_sent_to_enrollment(self):
-        resp = self.client.post('/accounts/login/',
-                                {'username': 'tfa', 'password': 'RightPass!42'})
-        self.assertEqual(resp.status_code, 302)
-        self.assertEqual(resp.url, '/accounts/2fa/setup/')
+    def test_mfa_is_optional_for_every_account_role(self):
+        roles = ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE',
+                 'MEMBER', 'REQUESTER', 'CLIENT')
+        for index, role in enumerate(roles):
+            with self.subTest(role=role):
+                username = f'optional-{index}'
+                User.objects.create_user(
+                    username=username, password='RightPass!42', role=role,
+                )
+                resp = self.client.post(
+                    '/accounts/login/',
+                    {'username': username, 'password': 'RightPass!42'},
+                )
+                self.assertEqual(resp.status_code, 302)
+                self.assertNotEqual(resp.url, '/accounts/2fa/setup/')
+                self.assertIn('_auth_user_id', self.client.session)
+                self.client.logout()
 
-    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=False)
-    def test_disabled_enforcement_does_not_force_enrollment(self):
-        resp = self.client.post('/accounts/login/',
-                                {'username': 'tfa', 'password': 'RightPass!42'})
-        self.assertEqual(resp.status_code, 302)
-        self.assertNotEqual(resp.url, '/accounts/2fa/setup/')
-        self.assertIn('_auth_user_id', self.client.session)
+    def test_profile_recommends_optional_mfa_for_client_account(self):
+        client_user = User.objects.create_user(
+            username='client-mfa-choice', password='RightPass!42', role='CLIENT'
+        )
+        self.client.force_login(client_user)
+        response = self.client.get('/accounts/profile/')
+        self.assertContains(response, 'Fortement recommandée')
+        self.assertContains(response, 'reste facultative pour tous les comptes')
+        self.assertContains(response, 'Activer la 2FA')
 
     def test_2fa_user_is_redirected_to_verify_and_not_logged_in(self):
         self._enable_totp(self.user)
@@ -263,11 +276,18 @@ class TwoFactorTests(TestCase):
         self.user.refresh_from_db()
         self.assertFalse(self.user.totp_enabled)
 
-    @override_settings(PRIVILEGED_MFA_ENFORCEMENT=True)
-    def test_middleware_blocks_privileged_session_until_enrollment(self):
-        self.client.force_login(self.user)
-        response = self.client.get('/dashboard/analyst/')
-        self.assertRedirects(response, '/accounts/2fa/setup/')
+    def test_legacy_mfa_middleware_never_forces_enrollment(self):
+        from dashboard.middleware import PrivilegedMFAMiddleware
+        from django.http import HttpResponse
+        from django.test import RequestFactory
+
+        request = RequestFactory().get('/dashboard/analyst/')
+        request.user = self.user
+        response = PrivilegedMFAMiddleware(
+            lambda req: HttpResponse('ok')
+        )(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'ok')
 
     def test_plaintext_totp_migration_is_idempotent(self):
         from django.core.management import call_command
