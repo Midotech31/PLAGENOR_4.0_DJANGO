@@ -349,3 +349,9 @@ msgstr "Demande IBTIKAR : ouvrir les formulaires dédiés"
 
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "Ouvrir le formulaire IBTIKAR"
+
+msgid "Supprimer la ligne"
+msgstr "Supprimer la ligne"
+
+msgid "Échantillons"
+msgstr "Échantillons"

@@ -35,10 +35,14 @@ from documents.docx_helpers import (
     SIZE_H1,
     SIZE_H2,
     _GENOCLAB_LOGO,
+    apply_house_style,
 )
 
 
 logger = logging.getLogger(__name__)
+DOCUMENT_GREEN = RGBColor(0x00, 0xA6, 0x4D)
+ESSBO_LOGO = Path(__file__).resolve().parent.parent / 'static' / 'images' / 'essbo_logo.png'
+CONTENT_WIDTH = 17.4
 
 
 # Logo colours — sampled from the GENOCLAB asset itself (see comment at
@@ -61,10 +65,10 @@ CMS_DEFAULTS = {
     'genoclab_issuer_address3':   "31000 Oran",
     'genoclab_issuer_treasury':   "Cpte Trésor : 00831001131000208471",
     'genoclab_issuer_nif':        "N.I.F : 415020000310784",
-    'genoclab_issuer_ccp':        "Cpte CCP Agent comptable de l'ESSBO : 007999990000",
+    'genoclab_issuer_ccp':        "Cpte CCP Agent comptable de l'ESSBO : 007999990000324044 14",
     'genoclab_issuer_legal_details': '',
     'genoclab_issuer_phone':      "Téléphone / Fax : +213 41 24 63 59",
-    'genoclab_quote_title':       "Facture Proforma",
+    'genoclab_quote_title':       "Devis",
     'genoclab_invoice_title':     "Facture",
     'genoclab_footer_legal':      (
         "Arrêtée la présente facture à la somme de "
@@ -78,6 +82,8 @@ CMS_DEFAULTS = {
         "https://essb-oran.edu.dz/"
     ),
     'genoclab_vat_rate':          "0.19",
+    'genoclab_quote_validity':     "Validité du devis : 30 jours à partir de la date d’émission.",
+    'genoclab_invoice_validity':   "Validité de la facture : 30 jours à partir de la date d’émission.",
 }
 
 
@@ -113,6 +119,8 @@ def _two_digits(n: int) -> str:
         return _UNITS[n]
     tens, units = divmod(n, 10)
     base = _TENS[tens]
+    if n == 71:
+        return 'soixante et onze'
     if tens in (7, 9):
         # 70-79 → soixante-dix, soixante-onze, …
         # 90-99 → quatre-vingt-dix, quatre-vingt-onze, …
@@ -138,7 +146,8 @@ def _three_digits(n: int, *, followed_by_multiplier: bool = False) -> str:
     if n == 0:
         return ''
     if n < 100:
-        return _two_digits(n)
+        words = _two_digits(n)
+        return words.rstrip('s') if followed_by_multiplier and n == 80 else words
     hundreds, rest = divmod(n, 100)
     if hundreds == 1:
         head = 'cent'
@@ -149,7 +158,10 @@ def _three_digits(n: int, *, followed_by_multiplier: bool = False) -> str:
         if rest == 0 and not followed_by_multiplier:
             head += 's'
     if rest:
-        return f"{head} {_two_digits(rest)}"
+        tail = _two_digits(rest)
+        if followed_by_multiplier and rest == 80:
+            tail = tail.rstrip('s')
+        return f"{head} {tail}"
     return head
 
 
@@ -172,6 +184,8 @@ def amount_in_words_fr(amount) -> str:
         return ''
     if amt < 0:
         return f"moins {amount_in_words_fr(-amt)}"
+    if amt >= Decimal('1000000000000'):
+        return ''
     integer_part = int(amt)
     cents = round((amt - integer_part) * 100)
 
@@ -198,7 +212,7 @@ def amount_in_words_fr(amount) -> str:
             else:
                 # million / milliard — keep the 's' when plural.
                 plural = 's' if count > 1 else ''
-                groups.append(f"{_three_digits(count, followed_by_multiplier=True)} {label}{plural}")
+                groups.append(f"{_three_digits(count)} {label}{plural}")
         words = ' '.join(g for g in groups if g)
 
     if cents:
@@ -210,23 +224,23 @@ def amount_in_words_fr(amount) -> str:
 
 
 def _money(value, currency: str = 'DA') -> str:
-    """Format a numeric amount with French thousands grouping."""
     try:
-        x = float(value or 0)
-    except (TypeError, ValueError):
+        amount = Decimal(str(value or 0))
+        if not amount.is_finite():
+            return str(value)
+    except (InvalidOperation, TypeError, ValueError):
         return str(value)
-    return f"{x:,.2f}".replace(',', ' ').replace('.', ',') + f" {currency}"
+    return _money_int(amount) + ' ' + currency
 
 
 def _money_int(value) -> str:
-    """Whole-DA formatting for the unit-price column where decimals are noise."""
     try:
-        x = float(value or 0)
-    except (TypeError, ValueError):
+        number = Decimal(str(value or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        if not number.is_finite():
+            return str(value)
+    except (InvalidOperation, TypeError, ValueError):
         return str(value)
-    if x == int(x):
-        return f"{int(x):,}".replace(',', ' ')
-    return f"{x:,.2f}".replace(',', ' ').replace('.', ',')
+    return format(number, ',.2f').replace(',', ' ').replace('.', ',')
 
 
 def _set_cell_text(cell, text: str, *, bold: bool = False, size: int = SIZE_BODY,
@@ -234,6 +248,9 @@ def _set_cell_text(cell, text: str, *, bold: bool = False, size: int = SIZE_BODY
     """Replace a table cell's content with one styled run."""
     cell.text = ''  # wipe whatever was there
     p = cell.paragraphs[0]
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.line_spacing = 1.0
     if align is not None:
         p.alignment = align
     run = p.add_run(text or '')
@@ -259,79 +276,65 @@ def _shade_cell(cell, hex_color: str) -> None:
 def add_genoclab_header(doc: DocumentType, *, title: str, doc_number: str,
                         doc_date: str, client_name: str = '',
                         client_lines: Optional[Iterable[str]] = None, identity=None) -> None:
-    """Write the GENOCLAB document header: logo top-left, big title,
-    then a two-column block — issuer (CMS-editable) on the left, client
-    coordinates on the right, with the date / document number below.
-    """
     get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
     ohb = bool(identity and identity.get('billing_channel') == 'OHB')
-    # Logo. Sized at ~6 cm wide, leaves comfortable whitespace next to it.
-    if _GENOCLAB_LOGO.exists() and not ohb:
-        p = doc.add_paragraph()
-        run = p.add_run()
-        run.add_picture(str(_GENOCLAB_LOGO), width=Cm(7))
-
-    # Document title (e.g. "Facture Proforma" or "Facture") — large, brand colour.
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = p.add_run(title)
-    run.font.name = BRAND_FONT
-    run.font.size = Pt(SIZE_H1 + 4)  # 20 pt
-    run.font.bold = True
-    run.font.color.rgb = GCL_NAVY
-
-    # Two-column header: issuer left, client right.
-    table = doc.add_table(rows=1, cols=2)
-    table.autofit = False
-    # No borders, no fill — just a layout grid.
-    _clear_table_borders(table)
-
-    issuer_cell = table.rows[0].cells[0]
-    issuer_cell.width = Cm(10)
-    client_cell = table.rows[0].cells[1]
-    client_cell.width = Cm(7)
-
-    # Issuer block (left)
-    _multi_para(issuer_cell, [
-        (get_value('genoclab_issuer_name'),     {'bold': True, 'size': SIZE_BODY + 1}),
-        (get_value('genoclab_issuer_address1'), {}),
-        (get_value('genoclab_issuer_address2'), {}),
-        (get_value('genoclab_issuer_address3'), {}),
-        (get_value('genoclab_issuer_treasury'), {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (get_value('genoclab_issuer_nif'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (get_value('genoclab_issuer_ccp'),      {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
-        (get_value('genoclab_issuer_legal_details'), {'size': SIZE_CAPTION + 1}),
-        (get_value('genoclab_issuer_phone'),    {'size': SIZE_CAPTION + 1, 'color': BRAND_MUTED}),
+    title_table = _fixed_table(doc, [10.4, 7.0])
+    left, right = title_table.rows[0].cells
+    _set_cell_text(left, title, bold=True, size=27, color=DOCUMENT_GREEN)
+    left.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+    logo = ESSBO_LOGO if ohb else _GENOCLAB_LOGO
+    if logo.exists():
+        from PIL import Image
+        with Image.open(logo) as image:
+            width = min(5.2, 2.4 * image.width / image.height)
+        p = right.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        p.add_run().add_picture(str(logo), width=Cm(width))
+    _spacer(doc, 8)
+    issuer = _fixed_table(doc, [CONTENT_WIDTH]).rows[0].cells[0]
+    _multi_para(issuer, [
+        (get_value('genoclab_issuer_name'), {'bold': True, 'size': 11}),
+        (get_value('genoclab_issuer_address1'), {'size': 10}),
+        (get_value('genoclab_issuer_address2'), {'size': 10}),
+        (get_value('genoclab_issuer_address3'), {'size': 10}),
+        (get_value('genoclab_issuer_treasury'), {'size': 9.5}),
+        (get_value('genoclab_issuer_nif'), {'size': 9.5}),
+        (get_value('genoclab_issuer_ccp'), {'size': 9.5}),
+        (get_value('genoclab_issuer_legal_details'), {'size': 9.5}),
+        (get_value('genoclab_issuer_phone'), {'size': 9.5}),
     ])
-
-    # Client block (right)
-    client_paras = [("Client", {'bold': True, 'color': GCL_NAVY})]
+    _spacer(doc, 10)
+    details = _fixed_table(doc, [7.1, 10.3])
+    date_cell, client_cell = details.rows[0].cells
+    _shade_cell(date_cell, 'F2F3F3'); _shade_cell(client_cell, 'E7E9E8')
+    _multi_para(date_cell, [(f'Date : {doc_date}', {'bold': True, 'size': 10}),
+                           (f'N° : {doc_number}', {'bold': True, 'size': 10})])
+    rows = [('Client', {'bold': True, 'size': 10})]
     if client_name:
-        client_paras.append((client_name, {'bold': True, 'size': SIZE_BODY + 1}))
-    for line in (client_lines or []):
-        if line:
-            client_paras.append((line, {}))
+        rows.append((client_name, {'bold': True, 'size': 10}))
+    rows.extend((str(line), {'size': 9.5}) for line in (client_lines or []) if line)
     if identity and identity.get('payment_terms'):
-        client_paras.append((identity['payment_terms'], {}))
-    client_paras.append(("", {}))  # spacer
-    client_paras.append((f"Date : {doc_date}", {'bold': True}))
-    client_paras.append((f"N° : {doc_number}", {'bold': True}))
-    _multi_para(client_cell, client_paras)
+        rows.append((identity['payment_terms'], {'size': 9.5}))
+    _multi_para(client_cell, rows)
+    _spacer(doc, 10)
 
 
 def _multi_para(cell, items) -> None:
-    """Stuff multiple styled paragraphs into a single cell — first call
-    overwrites, the rest are appended."""
     cell.text = ''
-    p = cell.paragraphs[0]
-    for i, (text, opts) in enumerate(items):
-        if i > 0:
-            p = cell.add_paragraph()
-        run = p.add_run(text)
+    populated = False
+    for text, opts in items:
+        if not text:
+            continue
+        p = cell.add_paragraph() if populated else cell.paragraphs[0]
+        p.paragraph_format.space_after = Pt(2)
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.line_spacing = 1.0
+        run = p.add_run(str(text))
         run.font.name = BRAND_FONT
         run.font.size = Pt(opts.get('size', SIZE_BODY))
         run.font.bold = opts.get('bold', False)
         run.font.color.rgb = opts.get('color', BRAND_DARK)
+        populated = True
 
 
 def _clear_table_borders(table) -> None:
@@ -353,173 +356,171 @@ def _clear_table_borders(table) -> None:
                 el.set(qn('w:val'), 'nil')
 
 
-def add_prestation_table(doc: DocumentType, line_items,
-                         *, vat_rate=None) -> None:
-    """Render the SAIDAL-style prestation grid + subtotal / VAT / total
-    block in the document. ``line_items`` is a list of dicts with keys
-    ``label`` (or ``description``), ``quantity``, ``unit_price``,
-    ``total``. Missing keys default to 0/empty. ``vat_rate`` is a float
-    (e.g. 0.19); when None, read from CMS.
-    """
+def add_prestation_table(doc: DocumentType, line_items, *, vat_rate=None, non_taxable=False):
+    from core.financial import compute_invoice_totals, parse_money
+    from core.exceptions import FinancialValidationError
     if vat_rate is None:
-        try:
-            vat_rate = float(cms_get('genoclab_vat_rate'))
-        except (TypeError, ValueError):
-            vat_rate = 0.19
-
-    # Header row
-    table = doc.add_table(rows=1 + len(line_items) + 3, cols=4)
-    table.autofit = False
-    headers = ['Prestation', 'Quantité', 'Prix unitaire (DA)', 'Montant (DA)']
-    for i, h in enumerate(headers):
-        _set_cell_text(table.rows[0].cells[i], h,
-                       bold=True, color=GCL_NAVY,
-                       align=(WD_ALIGN_PARAGRAPH.CENTER if i > 0 else WD_ALIGN_PARAGRAPH.LEFT))
-        _shade_cell(table.rows[0].cells[i], GCL_TEAL_TINT)
-
-    # Item rows
-    subtotal_ht = Decimal('0')
-    for r, item in enumerate(line_items, start=1):
-        label = item.get('label') or item.get('description') or ''
-        qty = item.get('quantity', 0) or 0
-        unit_price = item.get('unit_price', 0) or 0
-        total = item.get('total')
-        if total is None:
-            try:
-                total = float(qty) * float(unit_price)
-            except (TypeError, ValueError):
-                total = 0
-        try:
-            subtotal_ht += Decimal(str(total))
-        except (InvalidOperation, TypeError, ValueError):
-            logger.warning("Ignoring invalid GENOCLAB line total: %r", total)
-        cells = table.rows[r].cells
-        _set_cell_text(cells[0], str(label))
-        _set_cell_text(cells[1], str(qty), align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_text(cells[2], _money_int(unit_price), align=WD_ALIGN_PARAGRAPH.RIGHT)
-        _set_cell_text(cells[3], _money_int(total), align=WD_ALIGN_PARAGRAPH.RIGHT)
-
-    # Totals (subtotal HT, VAT, total TTC) — right-aligned, label in col 0-2 merged.
-    from core.financial import compute_invoice_totals
-    totals = compute_invoice_totals([{'total': subtotal_ht}], vat_rate=vat_rate)
-    vat_amount = totals['vat_amount']
-    total_ttc = totals['total_ttc']
-
-    def _total_row(row_idx, label, value, *, big=False):
-        # Merge first three cells under the label so the layout reads
-        # like the SAIDAL model.
-        merged = table.rows[row_idx].cells[0]
-        for ci in (1, 2):
-            merged = merged.merge(table.rows[row_idx].cells[ci])
-        _set_cell_text(
-            merged, label,
-            bold=True, size=SIZE_BODY + (1 if big else 0),
-            color=GCL_NAVY if big else BRAND_DARK,
-            align=WD_ALIGN_PARAGRAPH.RIGHT,
-        )
-        amount_cell = table.rows[row_idx].cells[3]
-        _set_cell_text(
-            amount_cell, _money_int(value),
-            bold=True, size=SIZE_BODY + (1 if big else 0),
-            color=GCL_NAVY if big else BRAND_DARK,
-            align=WD_ALIGN_PARAGRAPH.RIGHT,
-        )
-        if big:
-            _shade_cell(amount_cell, GCL_TEAL_TINT)
-
-    base_row = 1 + len(line_items)
-    _total_row(base_row,     "Sous-total HT",                                                       float(subtotal_ht))
-    _total_row(base_row + 1, f"TVA ({int(round(vat_rate * 100))} %)",                                 vat_amount)
-    _total_row(base_row + 2, "Total TTC",                                                              total_ttc, big=True)
-
-    # Thin slate-200 borders on every cell of the table (data area).
-    _apply_thin_borders(table)
-    return total_ttc
-
-
-def _apply_thin_borders(table) -> None:
-    """Apply thin 1/2pt slate-200 borders on every cell of a python-docx
-    table — used by add_prestation_table to demarcate the data grid."""
-    for row in table.rows:
+        vat_rate = 0 if non_taxable else cms_get('genoclab_vat_rate', '0.19')
+    rate = parse_money(vat_rate, field='Taux de TVA')
+    if non_taxable and rate != 0:
+        raise FinancialValidationError('Une opération OHB ne peut pas comporter de TVA.')
+    items = []
+    for item in line_items:
+        qty = parse_money(item.get('quantity', 0), field='Quantité')
+        unit = parse_money(item.get('unit_price', 0), field='Prix unitaire')
+        amount = item.get('total')
+        total = parse_money(qty * unit if amount is None else amount, field='Montant de ligne')
+        items.append({'label': str(item.get('label') or item.get('description') or ''),
+                      'quantity': qty, 'unit_price': unit, 'total': total})
+    totals = compute_invoice_totals(items, vat_rate=rate)
+    table = _fixed_table(doc, [8.5, 2.4, 3.0, 3.5], rows=1 + len(items) + (1 if non_taxable else 3))
+    header = table.rows[0]
+    header._tr.get_or_add_trPr().append(OxmlElement('w:tblHeader'))
+    for index, text in enumerate(('Prestation', 'Quantité', 'Prix unitaire DA', 'Montant DA')):
+        _set_cell_text(header.cells[index], text, bold=True, size=10,
+                       align=WD_ALIGN_PARAGRAPH.LEFT if index == 0 else WD_ALIGN_PARAGRAPH.RIGHT)
+        _cell_border(header.cells[index], 'bottom', '222222', 6)
+    for row_index, item in enumerate(items, 1):
+        row = table.rows[row_index]
+        _set_cell_text(row.cells[0], item['label'], size=10)
+        _set_cell_text(row.cells[1], _quantity(item['quantity']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        _set_cell_text(row.cells[2], _money_int(item['unit_price']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        _set_cell_text(row.cells[3], _money_int(item['total']), size=10, align=WD_ALIGN_PARAGRAPH.RIGHT)
         for cell in row.cells:
-            tcPr = cell._tc.get_or_add_tcPr()
-            tcBorders = tcPr.find(qn('w:tcBorders'))
-            if tcBorders is None:
-                tcBorders = OxmlElement('w:tcBorders')
-                tcPr.append(tcBorders)
-            for side in ('top', 'left', 'bottom', 'right'):
-                el = tcBorders.find(qn(f'w:{side}'))
-                if el is None:
-                    el = OxmlElement(f'w:{side}')
-                    tcBorders.append(el)
-                el.set(qn('w:val'), 'single')
-                el.set(qn('w:sz'), '4')
-                el.set(qn('w:color'), 'E2E8F0')
+            _cell_border(cell, 'bottom', 'D7DBD9', 3)
+        if len(item['label']) < 500:
+            row._tr.get_or_add_trPr().append(OxmlElement('w:cantSplit'))
+    total_rows = [('Total DA', totals['total_ttc'])] if non_taxable else [
+        ('Sous-total HT', totals['subtotal_before_tax']),
+        (f'TVA ({_quantity(rate * 100)} %)', totals['vat_amount']), ('Total TTC', totals['total_ttc'])]
+    for offset, (label, value) in enumerate(total_rows, 1 + len(items)):
+        row = table.rows[offset]
+        merged = row.cells[0].merge(row.cells[2])
+        big = offset == len(table.rows) - 1
+        _set_cell_text(merged, label, bold=True, size=11 if big else 10,
+                       color=DOCUMENT_GREEN if big else BRAND_DARK, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        _set_cell_text(row.cells[3], _money_int(value), bold=True, size=11 if big else 10,
+                       color=DOCUMENT_GREEN if big else BRAND_DARK, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        row._tr.get_or_add_trPr().append(OxmlElement('w:cantSplit'))
+        if not big:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.paragraph_format.keep_with_next = True
+    return totals['total_ttc']
 
 
-def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None) -> None:
-    """Legal & office block at the bottom of the document.
 
-    Renders three CMS-editable blocks:
-      1. The "Arrêtée la présente facture à la somme de …" legal phrase.
-         When ``total_amount`` is supplied, the variable part (the
-         underscored slot in the CMS default, or any "{amount_words}" /
-         "{amount}" placeholder if the SuperAdmin uses one) is filled
-         automatically with both the words and the figures, so the
-         document is legally complete out of the box. The SuperAdmin
-         keeps full control over the surrounding wording.
-      2. The "Siège social …" line (CMS).
-      3. The contact / website line (CMS).
-    """
-    doc.add_paragraph()  # spacer
 
+def add_genoclab_footer(doc: DocumentType, *, total_amount=None, identity=None, document_kind='invoice') -> None:
     get_value = lambda key: identity['values'].get(key, '') if identity else cms_get(key)
+    _spacer(doc, 10)
     if identity and identity.get('billing_channel') == 'OHB':
-        doc.add_paragraph('TVA non applicable — établissement non assujetti.')
-    legal_text = get_value('genoclab_footer_legal')
+        p = doc.add_paragraph('Non assujetti à la TVA.')
+        p.paragraph_format.space_after = Pt(7)
+        for run in p.runs:
+            run.bold = True; run.font.size = Pt(10)
     if total_amount is not None:
         words = amount_in_words_fr(total_amount).strip()
-        figures = _money_int(total_amount)
-        words_upper = words[:1].upper() + words[1:] if words else ''
+        introduction = 'Arrêté le présent devis à la somme de' if document_kind == 'quote' else 'Arrêtée la présente facture à la somme de'
+        legal_text = get_value('genoclab_footer_legal')
+        if not legal_text or legal_text in (CMS_DEFAULTS['genoclab_footer_legal'], 'Arrêtée la présente facture à la somme de {amount_words} dinars ({amount}).'):
+            legal_text = introduction + ' {amount_words} dinars algériens ({amount}).'
+        elif document_kind == 'quote':
+            legal_text = legal_text.replace('Arrêtée la présente facture', 'Arrêté le présent devis')
+        import re
+        legal_text = re.sub(r'_{5,}', '{amount_words}', legal_text)
+        if '{amount_words}' not in legal_text and '{amount}' not in legal_text:
+            legal_text = legal_text.rstrip(' .:') + ' : {amount_words} dinars algériens ({amount}).'
+        legal_text = legal_text.replace('{amount_words}', words).replace('{amount}', _money(total_amount))
+    else:
+        legal_text = get_value('genoclab_footer_legal')
+    p = doc.add_paragraph(legal_text)
+    p.paragraph_format.space_after = Pt(7)
+    for run in p.runs:
+        run.font.size = Pt(10)
+    terms = (identity or {}).get('commercial_terms', '')
+    if not terms:
+        terms = cms_get('genoclab_quote_validity' if document_kind == 'quote' else 'genoclab_invoice_validity')
+    if terms:
+        p = doc.add_paragraph(terms)
+        for run in p.runs: run.font.size = Pt(9)
+    footer = doc.sections[0].footer
+    paragraph = footer.paragraphs[0]
+    paragraph.paragraph_format.space_after = Pt(3)
+    table = footer.add_table(rows=1, cols=2, width=Cm(CONTENT_WIDTH))
+    table.autofit = False
+    for column, width in zip(table.columns, (7.1, 10.3)):
+        column.width = Cm(width)
+    for cell, width in zip(table.rows[0].cells, (7.1, 10.3)):
+        cell.width = Cm(width)
+    _clear_table_borders(table)
+    office = get_value('genoclab_footer_office')
+    if not office:
+        office = '\n'.join(get_value('genoclab_issuer_address' + str(index)) for index in (1, 2, 3))
+    office = office.removeprefix('Siège social — ').removeprefix('Siège social - ')
+    contact = get_value('genoclab_footer_contact')
+    _multi_para(table.cell(0, 0), [('Siège social', {'bold': True, 'size': 8.5}), (office, {'size': 8})])
+    _multi_para(table.cell(0, 1), [('Coordonnées', {'bold': True, 'size': 8.5}), (contact, {'size': 8}),
+                                 (get_value('genoclab_issuer_ccp'), {'size': 8})])
+    for cell in table.rows[0].cells:
+        _cell_border(cell, 'bottom', '00A64D', 18)
+    pages = footer.add_paragraph()
+    pages.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    pages.paragraph_format.space_before = Pt(3)
+    for text in ('Page ', ' / '):
+        run = pages.add_run(text); run.font.size = Pt(8)
+        field = OxmlElement('w:fldSimple'); field.set(qn('w:instr'), 'PAGE' if text == 'Page ' else 'NUMPAGES')
+        pages._p.append(field)
 
-        if '{amount_words}' in legal_text or '{amount}' in legal_text:
-            # Explicit placeholders — fill them in.
-            legal_text = (
-                legal_text
-                .replace('{amount_words}', words_upper)
-                .replace('{amount}', f"{figures} DA")
-            )
-        else:
-            # Default phrasing has a long "____" placeholder we replace
-            # with the words; we then append "(soit XXX DA)" so the
-            # figure is unambiguous.
-            import re as _re
-            underscores = _re.search(r'_{5,}', legal_text)
-            if underscores:
-                legal_text = legal_text.replace(
-                    underscores.group(0), words_upper)
-            else:
-                legal_text = legal_text.rstrip(' .') + f" {words_upper}"
-            legal_text = legal_text.rstrip(' .') + f" (soit {figures} DA)."
 
-    if identity and identity.get('commercial_terms'):
-        doc.add_paragraph(identity['commercial_terms'])
-    legal = doc.add_paragraph(legal_text)
-    for run in legal.runs:
-        run.font.name = BRAND_FONT
-        run.font.size = Pt(SIZE_BODY)
-        run.italic = True
-        run.font.color.rgb = BRAND_DARK
-    doc.add_paragraph()  # spacer
+def _spacer(doc, size):
+    paragraph = doc.add_paragraph()
+    paragraph.paragraph_format.space_before = Pt(0)
+    paragraph.paragraph_format.space_after = Pt(0)
+    paragraph.paragraph_format.line_spacing = 1
+    paragraph.add_run().font.size = Pt(size)
 
-    office = doc.add_paragraph()
-    run = office.add_run(get_value('genoclab_footer_office'))
-    run.font.name = BRAND_FONT
-    run.font.size = Pt(SIZE_CAPTION + 1)
-    run.font.color.rgb = BRAND_MUTED
 
-    contact = doc.add_paragraph()
-    run = contact.add_run(get_value('genoclab_footer_contact'))
-    run.font.name = BRAND_FONT
-    run.font.size = Pt(SIZE_CAPTION + 1)
-    run.font.color.rgb = BRAND_MUTED
+def _fixed_table(doc, widths, rows=1):
+    table = doc.add_table(rows=rows, cols=len(widths))
+    table.autofit = False
+    _clear_table_borders(table)
+    for column, width in zip(table.columns, widths): column.width = Cm(width)
+    for row in table.rows:
+        for cell, width in zip(row.cells, widths): cell.width = Cm(width)
+    return table
+
+
+def _cell_border(cell, edge, color, size):
+    properties = cell._tc.get_or_add_tcPr()
+    borders = properties.find(qn('w:tcBorders'))
+    if borders is None:
+        borders = OxmlElement('w:tcBorders'); properties.append(borders)
+    border = borders.find(qn('w:' + edge))
+    if border is None:
+        border = OxmlElement('w:' + edge); borders.append(border)
+    for key, value in (('val', 'single'), ('sz', str(size)), ('color', color)):
+        border.set(qn('w:' + key), value)
+
+
+def _quantity(value):
+    text = format(Decimal(str(value)), 'f')
+    return text.rstrip('0').rstrip('.') if '.' in text else text
+
+
+def render_commercial_document(*, title, number, date, identity, items, vat_rate, document_kind):
+    from docx import Document
+    doc = Document()
+    apply_house_style(doc)
+    section = doc.sections[0]
+    section.left_margin = section.right_margin = Cm(1.8)
+    section.top_margin = Cm(1.5)
+    section.bottom_margin = Cm(3.2)
+    section.footer_distance = Cm(0.7)
+    doc.core_properties.title = title + ' ' + number
+    add_genoclab_header(doc, title=title, doc_number=number, doc_date=date,
+                        client_name=identity.get('client_name', ''), client_lines=identity.get('client_lines', []), identity=identity)
+    grand_total = add_prestation_table(doc, items, vat_rate=vat_rate,
+                                      non_taxable=identity.get('billing_channel') == 'OHB')
+    add_genoclab_footer(doc, total_amount=grand_total, identity=identity, document_kind=document_kind)
+    return doc

@@ -10,6 +10,9 @@ from accounts.countries import COUNTRY_CHOICES
 from core.models import Service, Request
 from core.ratelimit import rate_limit
 from core.exceptions import PricingConfigurationError
+from core.service_eligibility import resolve_service
+from core.guest_forms import GuestContactForm
+from django.utils.translation import gettext as _
 from dashboard.utils import safe_float
 
 logger = logging.getLogger('plagenor.public')
@@ -150,6 +153,18 @@ def service_landing(request, service_code):
     return render(request, 'pages/service_landing.html', {'service': service})
 
 
+def guest_form_response(request, services):
+    names = {'guest_name', 'guest_email', 'guest_phone', 'organization', 'organization_type',
+             'organization_type_other', 'country', 'channel', 'service_id', 'title', 'description', 'urgency'}
+    values = {key: [value[:MAX_GUEST_VALUE_LEN] for value in items[:50]]
+              for key, items in request.POST.lists()
+              if key in names or key.startswith(('param_', 'sample_'))}
+    return render(request, 'pages/guest_submit.html', {
+        'services': services, 'country_choices': COUNTRY_CHOICES,
+        'posted': request.POST, 'saved_form_values': values,
+    })
+
+
 @rate_limit('guest_submit', limit=10, window=3600)
 def guest_submit(request):
     """Public guest submission form — no login required.
@@ -167,6 +182,12 @@ def guest_submit(request):
     ).order_by('code')
 
     if request.method == 'POST':
+        contact = GuestContactForm(request.POST)
+        if not contact.is_valid():
+            for errors in contact.errors.values():
+                for error in errors:
+                    messages.error(request, error)
+            return guest_form_response(request, services_qs)
         guest_name = request.POST.get('guest_name', '').strip()
         guest_email = request.POST.get('guest_email', '').strip()
         guest_phone = request.POST.get('guest_phone', '').strip()
@@ -184,8 +205,6 @@ def guest_submit(request):
         if country not in _valid_countries:
             country = ''
         channel = request.POST.get('channel', 'GENOCLAB').strip()
-        if channel not in ('IBTIKAR', 'GENOCLAB'):
-            channel = 'GENOCLAB'
         service_id = request.POST.get('service_id', '')
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
@@ -193,32 +212,14 @@ def guest_submit(request):
 
         if not guest_name or not guest_email or not service_id:
             messages.error(request, "Veuillez remplir tous les champs obligatoires.")
-            return render(request, 'pages/guest_submit.html', {
-                'services': services_qs,
-                'country_choices': COUNTRY_CHOICES,
-            })
+            return guest_form_response(request, services_qs)
 
         from django.core.exceptions import ValidationError
         try:
-            service = Service.objects.filter(pk=service_id, active=True).first()
-        except (ValidationError, ValueError):
-            service = None
-        if not service:
-            messages.error(request, "Service invalide.")
-            return render(request, 'pages/guest_submit.html', {
-                'services': services_qs,
-                'country_choices': COUNTRY_CHOICES,
-            })
-
-        # Re-check the service is actually available on the chosen channel
-        # — the template's client-side filter is UX only; users can craft a
-        # POST that bypasses it.
-        if service.channel_availability not in ('BOTH', channel):
-            messages.error(request, "Ce service n'est pas disponible sur le canal choisi.")
-            return render(request, 'pages/guest_submit.html', {
-                'services': services_qs,
-                'country_choices': COUNTRY_CHOICES,
-            })
+            service = resolve_service(service_id, channel)
+        except ValidationError as exc:
+            messages.error(request, ' '.join(exc.messages))
+            return guest_form_response(request, services_qs)
 
         if channel == 'IBTIKAR':
             from core.ibtikar.bridge import open_legacy_submission
@@ -277,10 +278,7 @@ def guest_submit(request):
             )
         except PricingConfigurationError:
             messages.error(request, "La tarification de ce service est temporairement indisponible. Veuillez contacter l'administration.")
-            return render(request, 'pages/guest_submit.html', {
-                'services': services_qs,
-                'country_choices': COUNTRY_CHOICES,
-            })
+            return guest_form_response(request, services_qs)
         quote = _price_result['total']
 
         submission_data = {
@@ -306,10 +304,7 @@ def guest_submit(request):
             'guest_token': guest_token,
         })
 
-    return render(request, 'pages/guest_submit.html', {
-        'services': services_qs,
-        'country_choices': COUNTRY_CHOICES,
-    })
+    return guest_form_response(request, services_qs)
 
 
 def guest_ibtikar_code(request, token):
@@ -330,7 +325,7 @@ def guest_ibtikar_code(request, token):
     from django.core.exceptions import ValidationError
     from core.ibtikar.services import record_guest_code
     try:
-        record_guest_code(req, code)
+        record_guest_code(req, code, guest_token=token)
     except ValidationError as exc:
         msg.error(request, ' '.join(exc.messages))
         return redirect(f"{reverse('track')}?q={req.guest_token}")

@@ -16,3 +16,4 @@ boto3==1.43.36
 sentry-sdk==2.68.0
 pyotp==2.10.0
 cryptography==50.0.0
+pypdf==6.19.0

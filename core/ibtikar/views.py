@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from core.exceptions import PricingConfigurationError
+from core.service_eligibility import services_for
 from core.ibtikar.forms import SchemaForm, cleaned_samples, make_sample_formset
 from core.ibtikar.legacy import legacy_initial
 from core.ibtikar.models import IbtikarAttachment, IbtikarSubmission
@@ -64,8 +65,7 @@ def visible_prices(request):
 
 
 def index(request):
-    services = Service.objects.filter(active=True, channel_availability__in=['BOTH', 'IBTIKAR'],
-                                      ).order_by('code')
+    services = services_for('IBTIKAR').order_by('code')
     own = Request.objects.filter(requester=request.user, channel='IBTIKAR').select_related('service')[:100] if request.user.is_authenticated else []
     return render(request, 'ibtikar/index.html', {'services': services, 'own_requests': own})
 
@@ -97,8 +97,7 @@ def editor(request, code=None, pk=None, token=None):
         return HttpResponseForbidden(_('Cette demande est en lecture seule à ce stade.'))
     if not req and actor and actor.role not in ('REQUESTER', 'CLIENT', 'SUPER_ADMIN', 'PLATFORM_ADMIN'):
         return HttpResponseForbidden()
-    service = req.service if req else get_object_or_404(Service, code=code, active=True,
-                                                    channel_availability__in=['BOTH', 'IBTIKAR'])
+    service = req.service if req else get_object_or_404(services_for('IBTIKAR'), code=code)
     if service is None:
         raise Http404
     current = IbtikarSubmission.objects.filter(request=req).first() if req else None
@@ -250,7 +249,7 @@ def attachment(request, pk):
 def estimate(request, code):
     if not visible_prices(request):
         return JsonResponse({'visible': False})
-    service = get_object_or_404(Service, code=code, active=True, channel_availability__in=['BOTH', 'IBTIKAR'])
+    service = get_object_or_404(services_for('IBTIKAR'), code=code)
     schema = schema_for_service(service)
     if request.GET.get('request'):
         try:
@@ -289,7 +288,7 @@ def submit_code(request, pk=None, token=None):
     if not token and (not actor or req.requester_id != actor.pk):
         raise Http404
     try:
-        record_code(req, request.POST.get('ibtikar_code', '').strip(), actor)
+        record_code(req, request.POST.get('ibtikar_code', '').strip(), actor, guest_token=token)
     except ValidationError as exc:
         messages.error(request, ' '.join(exc.messages))
     return redirect(detail_url(req, token))

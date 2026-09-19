@@ -7195,6 +7195,53 @@ msgstr "IBTIKAR request: open the dedicated forms"
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "Open the IBTIKAR form"
 
+msgid "Autorisation de suivi invalide."
+msgstr "Invalid tracking authorization."
+
+msgid "Canal de prestation invalide."
+msgstr "Invalid service channel."
+
+msgid "Ce service est désactivé."
+msgstr "This service is inactive."
+
+msgid "Ce service n'est pas disponible pour ce canal."
+msgstr "This service is not available for this channel."
+
+msgid "Cette demande ne vous appartient pas."
+msgstr "This request does not belong to you."
+
+msgid "Chemin de fichier invalide."
+msgstr "Invalid file path."
+
+msgid "Document invalide, protégé ou dépassant les limites de validation."
+msgstr "Invalid or protected document, or validation limits exceeded."
+
+msgid "Identifiant de service invalide."
+msgstr "Invalid service identifier."
+
+msgid ""
+"La référence a déjà été transmise. Contactez PLAGENOR pour la corriger."
+msgstr ""
+"The reference has already been submitted. Contact PLAGENOR to correct it."
+
+msgid "La taille réelle du fichier est invalide."
+msgstr "The actual file size is invalid."
+
+msgid "Le document ne peut pas être validé dans les limites autorisées."
+msgstr "The document could not be validated within the allowed limits."
+
+msgid "Le fichier DOCX est invalide."
+msgstr "The DOCX file is invalid."
+
+msgid "Service introuvable."
+msgstr "Service not found."
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "Validation is busy. Please try again shortly."
+
+msgid "Demande commerciale"
+msgstr "Commercial request"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "For ESSBO students and researchers."
 

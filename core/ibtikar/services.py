@@ -34,6 +34,8 @@ def snapshot(submission):
 def save_submission(*, service, schema, applicant, parameters, samples, files,
                     actor=None, req=None, revision=0, draft=False, legacy_data=None):
     from core.pricing import resolve_cost
+    from core.service_eligibility import validate_service
+    validate_service(service, 'IBTIKAR')
     from core.services.ibtikar import submit_ibtikar_request
     from django.conf import settings
     created_files = []
@@ -77,13 +79,18 @@ def save_submission(*, service, schema, applicant, parameters, samples, files,
                 req.service_params = projected_parameters
                 req.sample_table = projected_samples
                 req.requester_data = data['applicant']
+                if req.submitted_as_guest:
+                    req.guest_name = applicant.get('full_name', '')
+                    req.guest_email = applicant.get('email', '')
+                    req.guest_phone = applicant.get('phone', '')
                 req.pricing = estimate
                 req.budget_amount = budget
                 req.declared_ibtikar_balance = balance
                 req.admin_validated_price = None
                 req.status = 'DRAFT' if draft and old_status == 'DRAFT' else 'SUBMITTED'
                 req.save(update_fields=['title', 'service_params', 'sample_table', 'requester_data', 'pricing',
-                                        'budget_amount', 'declared_ibtikar_balance', 'admin_validated_price', 'status', 'updated_at'])
+                                        'budget_amount', 'declared_ibtikar_balance', 'admin_validated_price', 'status', 'updated_at',
+                                        'guest_name', 'guest_email', 'guest_phone'])
                 if old_status == 'DRAFT' and not draft:
                     from core.services.ibtikar import _notify_submission
                     transaction.on_commit(lambda: _notify_submission(req), robust=True)
@@ -172,14 +179,26 @@ def save_staff(submission_id, values, actor, revision):
 
 
 @transaction.atomic
-def record_code(req, code, actor=None):
+def record_code(req, code, actor=None, *, guest_token=None):
     req = Request.objects.select_for_update().get(pk=req.pk)
-    if req.channel != 'IBTIKAR' or (actor is None and not req.submitted_as_guest) or (actor is not None and req.requester_id != actor.pk):
+    from django.utils.crypto import constant_time_compare
+    if req.channel != 'IBTIKAR':
         raise ValidationError(_('Demande invitée IBTIKAR requise.'))
+    if actor is None:
+        if (not req.submitted_as_guest or not req.guest_token or not guest_token
+                or not constant_time_compare(str(req.guest_token), str(guest_token))):
+            raise ValidationError(_('Autorisation de suivi invalide.'))
+    elif not actor.is_active or req.requester_id != actor.pk:
+        raise ValidationError(_('Cette demande ne vous appartient pas.'))
+    code = code.strip() if isinstance(code, str) else ''
     if not code or len(code) > 50:
         raise ValidationError(_('Référence IBTIKAR invalide.'))
     if req.status not in ('IBTIKAR_SUBMISSION_PENDING', 'IBTIKAR_CODE_SUBMITTED'):
         raise ValidationError(_('La référence ne peut pas être transmise à cette étape.'))
+    if req.status == 'IBTIKAR_CODE_SUBMITTED':
+        if req.ibtikar_external_code != code:
+            raise ValidationError(_('La référence a déjà été transmise. Contactez PLAGENOR pour la corriger.'))
+        return req
     old = req.status
     req.ibtikar_external_code = code
     req.status = 'IBTIKAR_CODE_SUBMITTED'
@@ -191,5 +210,5 @@ def record_code(req, code, actor=None):
     return req
 
 
-def record_guest_code(req, code):
-    return record_code(req, code)
+def record_guest_code(req, code, *, guest_token=None):
+    return record_code(req, code, guest_token=guest_token)

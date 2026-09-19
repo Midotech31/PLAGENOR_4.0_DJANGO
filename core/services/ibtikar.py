@@ -8,6 +8,8 @@ from django.db import transaction
 
 from core.models import Request, RequestHistory
 from core.sequences import next_display_id
+from core.service_eligibility import resolve_service
+from core.guest_forms import guest_contact
 
 logger = logging.getLogger('plagenor.services.ibtikar')
 
@@ -16,6 +18,9 @@ logger = logging.getLogger('plagenor.services.ibtikar')
 def submit_ibtikar_request(data: dict, user=None) -> Request:
     """Submit a new IBTIKAR request. Budget enforcement happens at the view
     layer (see dashboard.views.requester.create_request)."""
+    service = resolve_service(data.get('service_id'), 'IBTIKAR', lock=True)
+    if data.get('submitted_as_guest') and data.get('status') != 'DRAFT':
+        data = {**data, **guest_contact(data)}
     # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
     display_id = next_display_id(
@@ -27,7 +32,7 @@ def submit_ibtikar_request(data: dict, user=None) -> Request:
     )
 
     budget_amount = data.get('budget_amount', 0)
-    service_id = data.get('service_id')
+    service_id = service.pk
     initial_status = 'DRAFT' if data.get('status') == 'DRAFT' else 'SUBMITTED'
 
     request_obj = Request.objects.create(

@@ -8,6 +8,8 @@ from django.db import transaction
 
 from core.models import Request, RequestHistory
 from core.sequences import next_display_id
+from core.service_eligibility import resolve_service
+from core.guest_forms import guest_contact
 
 logger = logging.getLogger('plagenor.services.genoclab')
 
@@ -15,6 +17,9 @@ logger = logging.getLogger('plagenor.services.genoclab')
 @transaction.atomic
 def submit_genoclab_request(data: dict, user=None) -> Request:
     """Submit a new GENOCLAB request."""
+    service = resolve_service(data.get('service_id'), 'GENOCLAB', lock=True)
+    if data.get('submitted_as_guest'):
+        data = {**data, **guest_contact(data)}
     # Generate display_id atomically (no .count()+1 race).
     year = datetime.now().year
     display_id = next_display_id(
@@ -25,7 +30,7 @@ def submit_genoclab_request(data: dict, user=None) -> Request:
         ).count(),
     )
 
-    service_id = data.get('service_id')
+    service_id = service.pk
 
     request_obj = Request.objects.create(
         display_id=display_id,

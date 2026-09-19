@@ -338,3 +338,9 @@ msgstr "IBTIKAR request: open the dedicated forms"
 
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "Open the IBTIKAR form"
+
+msgid "Supprimer la ligne"
+msgstr "Delete row"
+
+msgid "Échantillons"
+msgstr "Samples"

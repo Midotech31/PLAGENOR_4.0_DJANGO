@@ -7,6 +7,8 @@ Both are unauthenticated, cheap, and cache-free so an external monitor
 (UptimeRobot, Render health check, …) can poll them.
 """
 import logging
+import os
+import re
 
 from django.db import connection
 from django.http import JsonResponse
@@ -26,10 +28,14 @@ def readyz(request):
         with connection.cursor() as cur:
             cur.execute('SELECT 1')
             cur.fetchone()
-    except Exception:  # pragma: no cover - exercised via DB-down only
+    except Exception:
         # Log the detail server-side; never return it — the driver message can
         # disclose the host, database and user to an unauthenticated caller.
         logger.exception('readyz: database check failed')
         return JsonResponse(
             {'status': 'error', 'database': 'unavailable'}, status=503)
-    return JsonResponse({'status': 'ok', 'database': 'ok'})
+    payload = {'status': 'ok', 'database': 'ok'}
+    commit = os.environ.get('RENDER_GIT_COMMIT', '')
+    if re.fullmatch(r'[0-9a-f]{40}', commit):
+        payload['commit'] = commit
+    return JsonResponse(payload)

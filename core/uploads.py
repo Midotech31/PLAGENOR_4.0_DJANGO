@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import io
 import uuid
-import zipfile
 from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
+from core.upload_validation import validate_document
 from PIL import Image, UnidentifiedImageError
 
 
@@ -52,14 +53,9 @@ def _validate_signature(ext: str, data: bytes) -> None:
         raise ValidationError("Le contenu du fichier ne correspond pas à une image PNG.")
     if ext in {".jpg", ".jpeg"} and not data.startswith(b"\xff\xd8\xff"):
         raise ValidationError("Le contenu du fichier ne correspond pas à une image JPEG.")
-    if ext == ".docx":
-        try:
-            with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                names = set(archive.namelist())
-                if "[Content_Types].xml" not in names or "word/document.xml" not in names:
-                    raise ValidationError("Le fichier DOCX est invalide.")
-        except (zipfile.BadZipFile, OSError) as exc:
-            raise ValidationError("Le fichier DOCX est invalide.") from exc
+    if ext == ".docx" and not data.startswith((b"PK\x03\x04", b"PK\x05\x06")):
+        raise ValidationError(_("Le fichier DOCX est invalide."))
+
 
 
 def validate_upload(upload, policy: str, *, max_bytes: int | None = None):
@@ -81,9 +77,15 @@ def validate_upload(upload, policy: str, *, max_bytes: int | None = None):
     if content_type and content_type not in allowed[ext]:
         raise ValidationError("Le type MIME du fichier est invalide.")
 
-    data = upload.read()
-    upload.seek(0)
+    try:
+        data = upload.read(limit + 1)
+    finally:
+        upload.seek(0)
+    if not data or len(data) > limit:
+        raise ValidationError(_("La taille réelle du fichier est invalide."))
     _validate_signature(ext, data)
+    if ext in {'.pdf', '.docx'}:
+        validate_document(data, ext)
     if ext in {".png", ".jpg", ".jpeg"}:
         try:
             with Image.open(io.BytesIO(data)) as image:

@@ -1,4 +1,6 @@
 import logging
+from datetime import timedelta
+from django.db.models import Q
 
 from django.conf import settings
 from django.utils import timezone, translation
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class UpdateLastSeenMiddleware:
-    """Update user's last_seen timestamp on every request."""
+    """Record activity at most once every five minutes."""
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -18,9 +20,16 @@ class UpdateLastSeenMiddleware:
         response = self.get_response(request)
         if request.user.is_authenticated:
             try:
-                # Update every 5 minutes max to avoid excessive DB writes
                 from accounts.models import User
-                User.objects.filter(pk=request.user.pk).update(last_seen=timezone.now())
+                now = timezone.now()
+                cutoff = now - timedelta(minutes=5)
+                previous = request.user.last_seen
+                if previous is None or previous <= cutoff:
+                    updated = User.objects.filter(pk=request.user.pk).filter(
+                        Q(last_seen__isnull=True) | Q(last_seen__lte=cutoff)
+                    ).update(last_seen=now)
+                    if updated:
+                        request.user.last_seen = now
             except Exception:
                 logger.exception("Unable to update last_seen for user_id=%s", request.user.pk)
         return response

@@ -1,6 +1,6 @@
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, confirm_appointment_flow
 from django.contrib import messages
@@ -12,13 +12,14 @@ from core.workflow import transition
 from core.services.genoclab import submit_genoclab_request
 from core.exceptions import InvalidTransitionError, AuthorizationError, PricingConfigurationError
 from core.uploads import validate_upload
+from core.service_eligibility import resolve_service, services_for
 from django.core.exceptions import ValidationError
 from notifications.models import Notification
 
 
 def client_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if request.user.role != 'CLIENT':
+        if not request.user.is_active or request.user.role not in ('CLIENT', 'REQUESTER'):
             return HttpResponseForbidden()
         return view_func(request, *args, **kwargs)
     wrapper.__wrapped__ = view_func
@@ -27,7 +28,7 @@ def client_required(view_func):
 
 @client_required
 def index(request):
-    my_requests = Request.objects.filter(requester=request.user, channel='GENOCLAB')
+    my_requests = Request.objects.filter(requester=request.user)
     total = my_requests.count()
     active = my_requests.exclude(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']).count()
     completed = my_requests.filter(status__in=['COMPLETED', 'CLOSED']).count()
@@ -55,9 +56,7 @@ def index(request):
             _req.save(update_fields=['report_token'])
 
     # Services for new request
-    services = Service.objects.filter(
-        active=True, channel_availability__in=['BOTH', 'GENOCLAB']
-    ).order_by('code')
+    services = services_for('GENOCLAB').order_by('code')
 
     # Notifications
     notifications = Notification.objects.filter(user=request.user, read=False).order_by('-created_at')[:10]
@@ -80,6 +79,8 @@ def index(request):
 @client_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    if req.channel == 'IBTIKAR':
+        return redirect('dashboard:requester_request_detail', pk=req.pk)
     # Lazy backfill: ensure report_token exists so download goes through
     # the citation gate. See requester.request_detail for rationale.
     if req.report_file and not req.report_token:
@@ -144,7 +145,10 @@ def create_request(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
     service_id = request.POST.get('service_id')
-    service = get_object_or_404(Service, pk=service_id, active=True)
+    try:
+        service = resolve_service(service_id, 'GENOCLAB')
+    except ValidationError as exc:
+        return HttpResponseBadRequest(' '.join(exc.messages))
 
     # Collect YAML parameter values
     service_params = {key.replace('param_', '', 1): val for key, val in request.POST.items() if key.startswith('param_')}
@@ -194,7 +198,7 @@ def accept_quote(request, pk):
     """After accepting quote, client must upload purchase order (Bon de commande)."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     try:
         transition(req, 'QUOTE_VALIDATED_BY_CLIENT', request.user, notes='Devis accepté par client')
         messages.success(request, f"Devis accepté pour {req.display_id}. Veuillez maintenant déposer votre bon de commande pour poursuivre le traitement.")
@@ -207,7 +211,7 @@ def accept_quote(request, pk):
 def reject_quote(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     try:
         transition(req, 'QUOTE_REJECTED_BY_CLIENT', request.user, notes='Devis refusé par client')
         messages.success(request, f"Devis refusé pour {req.display_id}.")
@@ -235,7 +239,7 @@ def upload_order(request, pk):
     try:
         with transaction.atomic():
             req = get_object_or_404(
-                Request.objects.select_for_update(), pk=pk, requester=request.user,
+                Request.objects.select_for_update(), pk=pk, requester=request.user, channel='GENOCLAB',
             )
             if req.status != 'QUOTE_VALIDATED_BY_CLIENT':
                 raise InvalidTransitionError("Vous ne pouvez pas télécharger de bon de commande à ce stade.")
@@ -269,7 +273,7 @@ def upload_payment_receipt(request, pk):
     try:
         with transaction.atomic():
             req = get_object_or_404(
-                Request.objects.select_for_update(), pk=pk, requester=request.user,
+                Request.objects.select_for_update(), pk=pk, requester=request.user, channel='GENOCLAB',
             )
             if req.status != 'PAYMENT_PENDING':
                 raise InvalidTransitionError("Vous ne pouvez pas télécharger de reçu de paiement à ce stade.")
@@ -288,7 +292,7 @@ def upload_payment_receipt(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     confirm_appointment_flow(request, req)
     return redirect_to_detail(request, req, 'dashboard:client')
 
@@ -297,7 +301,7 @@ def confirm_appointment(request, pk):
 def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -333,7 +337,7 @@ def confirm_receipt(request, pk):
 def suggest_alternative_date(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
     if alt_date:
@@ -370,7 +374,7 @@ def suggest_alternative_date(request, pk):
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='GENOCLAB')
     rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating

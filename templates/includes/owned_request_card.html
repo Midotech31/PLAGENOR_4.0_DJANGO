@@ -1,0 +1,9 @@
+{% load i18n %}
+<div class="data-card mb-2">
+    <div class="data-card-row"><div class="data-card-title">{{ req.display_id }} — {{ req.title|truncatechars:50 }}</div><span class="badge-status {{ req.status|lower }}">{{ req.get_status_display }}</span></div>
+    <div class="data-card-row text-sm text-muted"><span>{{ req.service.name|default:"—" }}</span><span>{{ req.created_at|date:"d/m/Y" }}</span></div>
+    <div class="data-card-row mt-1">
+        {% if req.channel == 'IBTIKAR' %}<a href="{% url 'dashboard:requester_request_detail' req.pk %}" class="btn btn-outline">{% trans "Voir détails" %}</a>
+        {% else %}<a href="{% url 'dashboard:client_request_detail' req.pk %}" class="btn btn-outline">{% trans "Voir détails" %}</a>{% endif %}
+    </div>
+</div>

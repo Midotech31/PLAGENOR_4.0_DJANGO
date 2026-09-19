@@ -6971,3 +6971,50 @@ msgstr "Demande IBTIKAR : ouvrir les formulaires dédiés"
 
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "Ouvrir le formulaire IBTIKAR"
+
+msgid "Autorisation de suivi invalide."
+msgstr "Autorisation de suivi invalide."
+
+msgid "Canal de prestation invalide."
+msgstr "Canal de prestation invalide."
+
+msgid "Ce service est désactivé."
+msgstr "Ce service est désactivé."
+
+msgid "Ce service n'est pas disponible pour ce canal."
+msgstr "Ce service n'est pas disponible pour ce canal."
+
+msgid "Cette demande ne vous appartient pas."
+msgstr "Cette demande ne vous appartient pas."
+
+msgid "Chemin de fichier invalide."
+msgstr "Chemin de fichier invalide."
+
+msgid "Document invalide, protégé ou dépassant les limites de validation."
+msgstr "Document invalide, protégé ou dépassant les limites de validation."
+
+msgid "Identifiant de service invalide."
+msgstr "Identifiant de service invalide."
+
+msgid ""
+"La référence a déjà été transmise. Contactez PLAGENOR pour la corriger."
+msgstr ""
+"La référence a déjà été transmise. Contactez PLAGENOR pour la corriger."
+
+msgid "La taille réelle du fichier est invalide."
+msgstr "La taille réelle du fichier est invalide."
+
+msgid "Le document ne peut pas être validé dans les limites autorisées."
+msgstr "Le document ne peut pas être validé dans les limites autorisées."
+
+msgid "Le fichier DOCX est invalide."
+msgstr "Le fichier DOCX est invalide."
+
+msgid "Service introuvable."
+msgstr "Service introuvable."
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "Validation occupée. Réessayez dans quelques instants."
+
+msgid "Demande commerciale"
+msgstr "Demande commerciale"

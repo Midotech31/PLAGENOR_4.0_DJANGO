@@ -87,6 +87,7 @@ class ProductionSettingsTests(SimpleTestCase):
             cwd=BASE_DIR,
             env=env,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
             timeout=15,
             check=False,

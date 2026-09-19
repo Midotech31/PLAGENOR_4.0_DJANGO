@@ -4,6 +4,7 @@ resolver, and the IBTIKAR budget check.
 These guard the numbers that turn into real invoices (GENOCLAB) and the
 virtual-budget gate (IBTIKAR). Run with ``python manage.py test core``.
 """
+from plagenor.test_documents import valid_pdf_bytes
 import base64
 import uuid
 from decimal import Decimal
@@ -281,7 +282,7 @@ class UploadValidationTests(SimpleTestCase):
             validate_upload(upload, 'business_document')
 
     def test_valid_pdf_is_renamed_to_opaque_name(self):
-        upload = SimpleUploadedFile('customer-name.pdf', b'%PDF-1.4\n%%EOF', 'application/pdf')
+        upload = SimpleUploadedFile('customer-name.pdf', valid_pdf_bytes(), 'application/pdf')
         validate_upload(upload, 'business_document')
         self.assertRegex(upload.name, r'^[0-9a-f]{32}\.pdf$')
 

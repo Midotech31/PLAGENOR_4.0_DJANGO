@@ -36,23 +36,23 @@
 
                 <h4 style="margin-bottom: 16px;">{% trans "Vos informations" %}</h4>
                 <div class="form-group">
-                    <label>{% trans "Nom complet" %} *</label>
-                    <input type="text" name="guest_name" class="form-control" required placeholder="{% trans 'Votre nom complet' %}">
+                    <label for="guest-guest_name">{% trans "Nom complet" %} *</label>
+                    <input type="text" name="guest_name" class="form-control" required placeholder="{% trans 'Votre nom complet' %}" value="{{ posted.guest_name|default_if_none:'' }}" id="guest-guest_name">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Email" %} *</label>
-                    <input type="email" name="guest_email" class="form-control" required placeholder="{% trans 'votre@email.com' %}">
+                    <label for="guest-guest_email">{% trans "Email" %} *</label>
+                    <input type="email" name="guest_email" class="form-control" required placeholder="{% trans 'votre@email.com' %}" value="{{ posted.guest_email|default_if_none:'' }}" id="guest-guest_email">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Téléphone" %}</label>
-                    <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Numéro de téléphone' %}">
+                    <label for="guest-guest_phone">{% trans "Téléphone" %}</label>
+                    <input type="tel" name="guest_phone" class="form-control" placeholder="{% trans 'Numéro de téléphone' %}" value="{{ posted.guest_phone|default_if_none:'' }}" id="guest-guest_phone">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Organisation" %}</label>
-                    <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}">
+                    <label for="guest-organization">{% trans "Organisation" %}</label>
+                    <input type="text" name="organization" class="form-control" placeholder="{% trans 'Votre organisation' %}" value="{{ posted.organization|default_if_none:'' }}" id="guest-organization">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Type d'organisation" %}</label>
+                    <label for="id_guest_org_type">{% trans "Type d'organisation" %}</label>
                     <select name="organization_type" id="id_guest_org_type" class="form-control">
                         <option value="">— {% trans "Sélectionner" %} —</option>
                         <option value="academique">{% trans "Académique" %}</option>
@@ -64,12 +64,12 @@
                 </div>
                 {% trans "Précisez le type d'organisation" as ph_org_other %}
                 <div class="form-group" id="guest-org-other-group" style="display:none;">
-                    <label>{% trans "Préciser (autre)" %}</label>
-                    <input type="text" name="organization_type_other" class="form-control" placeholder="{{ ph_org_other }}">
+                    <label for="guest-organization_type_other">{% trans "Préciser (autre)" %}</label>
+                    <input type="text" name="organization_type_other" class="form-control" placeholder="{{ ph_org_other }}" value="{{ posted.organization_type_other|default_if_none:'' }}" id="guest-organization_type_other">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Pays" %}</label>
-                    <select name="country" class="form-control">
+                    <label for="guest-country">{% trans "Pays" %}</label>
+                    <select name="country" class="form-control" id="guest-country">
                         {% for code, label in country_choices %}
                         <option value="{{ code }}" {% if code == 'DZ' %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
@@ -78,25 +78,25 @@
 
                 <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
                 <div class="form-group">
-                    <label>{% trans "Canal" %} *</label>
+                    <label for="id_channel">{% trans "Canal" %} *</label>
                     <select name="channel" id="id_channel" class="form-control" required>
                         <option value="GENOCLAB">GENOCLAB ({% trans "externe" %})</option>
                     </select>
                 </div>
                 <div id="ibtikar-guest-fields" style="display:none;">
                     <div class="form-group">
-                        <label>{% trans "Identifiant IBTIKAR-DGRSDT" %} *</label>
-                        <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
+                        <label for="guest_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %} *</label>
+                    <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
                         <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
                     </div>
                     <div class="form-group">
-                        <label>{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                        <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
+                        <label for="guest_declared_balance">{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
+                    <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Service" %} *</label>
-                    <select name="service_id" id="id_service" class="form-control" required>
+                    <label for="id_service">{% trans "Service" %} *</label>
+                    <select name="service_id" id="id_service" data-channel="GENOCLAB" class="form-control" required>
                         <option value="">{% trans "Sélectionner un service..." %}</option>
                         {% for s in services %}
                         <option value="{{ s.pk }}" data-code="{{ s.code }}"
@@ -108,16 +108,16 @@
                 </div>
                 <div id="dynamic-service-form"></div>
                 <div class="form-group">
-                    <label>{% trans "Titre de la demande" %}</label>
-                    <input type="text" name="title" class="form-control" placeholder="{% trans 'Ex: Analyse DRX...' %}">
+                    <label for="guest-title">{% trans "Titre de la demande" %}</label>
+                    <input type="text" name="title" class="form-control" placeholder="{% trans 'Ex: Analyse DRX...' %}" value="{{ posted.title|default_if_none:'' }}" id="guest-title">
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Description" %}</label>
-                    <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}"></textarea>
+                    <label for="guest-description">{% trans "Description" %}</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="{% trans 'Décrivez votre demande...' %}" id="guest-description">{{ posted.description|default_if_none:'' }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label>{% trans "Urgence" %}</label>
-                    <select name="urgency" class="form-control">
+                    <label for="guest-urgency">{% trans "Urgence" %}</label>
+                    <select name="urgency" class="form-control" id="guest-urgency">
                         <option value="Normal">{% trans "Normal" %}</option>
                         <option value="Urgent">{% trans "Urgent" %}</option>
                         <option value="Très urgent">{% trans "Très urgent" %}</option>
@@ -134,94 +134,6 @@
     </p>
 </section>
 
-<script>
-(function() {
-    var channelSelect = document.getElementById('id_channel');
-    var ibtFields = document.getElementById('ibtikar-guest-fields');
-    var ibtIdInput = document.getElementById('guest_ibtikar_id');
-
-    // Reveal the "other organisation type" box only when "Autre" is chosen.
-    var guestOrgType = document.getElementById('id_guest_org_type');
-    var guestOrgOther = document.getElementById('guest-org-other-group');
-    function toggleGuestOrgOther() {
-        if (guestOrgOther) {
-            guestOrgOther.style.display =
-                (guestOrgType && guestOrgType.value === 'autre') ? '' : 'none';
-        }
-    }
-    if (guestOrgType) { guestOrgType.addEventListener('change', toggleGuestOrgOther); }
-    toggleGuestOrgOther();
-
-    var serviceSelect = document.getElementById('id_service');
-
-    function filterServicesByChannel() {
-        if (!channelSelect || !serviceSelect) return;
-        var ch = channelSelect.value || 'GENOCLAB';
-        var matchedFirst = null;
-        var selectedStillVisible = false;
-        for (var i = 0; i < serviceSelect.options.length; i++) {
-            var opt = serviceSelect.options[i];
-            if (!opt.value) { opt.hidden = false; continue; }            // keep placeholder
-            var avail = opt.getAttribute('data-channel-availability') || 'BOTH';
-            var show = (avail === 'BOTH' || avail === ch);
-            opt.hidden = !show; opt.disabled = !show;
-            if (show) {
-                if (!matchedFirst) matchedFirst = opt;
-                if (opt.value === serviceSelect.value) selectedStillVisible = true;
-                // Refresh the price suffix to the active channel's price
-                var price = opt.getAttribute(ch === 'IBTIKAR' ? 'data-ibtikar-price' : 'data-genoclab-price') || '0';
-                var label = opt.textContent.replace(/\s*\([^)]*\)\s*$/, '');
-                opt.textContent = label + ' (' + price + ' DA)';
-            }
-        }
-        if (!selectedStillVisible) serviceSelect.value = '';
-    }
-
-    function toggleIbtFields() {
-        if (!channelSelect || !ibtFields) return;
-        if (channelSelect.value === 'IBTIKAR') {
-            ibtFields.style.display = '';
-            ibtIdInput.required = true;
-        } else {
-            ibtFields.style.display = 'none';
-            ibtIdInput.required = false;
-        }
-        filterServicesByChannel();
-    }
-
-    if (channelSelect) {
-        channelSelect.addEventListener('change', toggleIbtFields);
-        toggleIbtFields();
-    }
-
-    // Validate ibtikar_id on submit
-    document.querySelector('form').addEventListener('submit', function(e) {
-        if (channelSelect && channelSelect.value === 'IBTIKAR') {
-            var ibtId = ibtIdInput.value.trim();
-            if (!/^IDGRSTD\d{5}$/.test(ibtId)) {
-                e.preventDefault();
-                alert('L\'identifiant IBTIKAR doit être au format IDGRSTDXXXXX (ex: IDGRSTD12345)');
-            }
-        }
-    });
-})();
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var preService = urlParams.get('service');
-    if (preService) {
-        var select = document.querySelector('[name="service_id"]');
-        if (select) {
-            for (var i = 0; i < select.options.length; i++) {
-                if (select.options[i].getAttribute('data-code') === preService) {
-                    select.value = select.options[i].value;
-                    select.dispatchEvent(new Event('change'));
-                    break;
-                }
-            }
-        }
-    }
-});
-</script>
+{{ saved_form_values|json_script:"guest-saved-values" }}
+<script src="{% static 'js/guest-form.js' %}" defer></script>
 {% endblock %}

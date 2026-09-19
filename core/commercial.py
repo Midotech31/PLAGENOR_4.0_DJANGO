@@ -13,7 +13,7 @@ def document_identity(req):
     values = {}
     for key in CMS_DEFAULTS:
         if key.startswith('genoclab_issuer_') or key.startswith('genoclab_footer_'):
-            values[key] = cms_get(key.replace('genoclab_', 'ohb_'), CMS_DEFAULTS[key] if key.startswith('genoclab_issuer_address') else '') if ohb else cms_get(key)
+            values[key] = cms_get(key.replace('genoclab_', 'ohb_'), CMS_DEFAULTS[key]) if ohb else cms_get(key)
     if ohb:
         values['genoclab_issuer_name'] = ESSBO_NAME
         values['genoclab_footer_legal'] = 'Arrêtée la présente facture à la somme de {amount_words} dinars ({amount}).'

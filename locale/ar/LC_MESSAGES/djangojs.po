@@ -336,3 +336,9 @@ msgstr "طلب إبتكار: فتح الاستمارات المخصصة"
 
 msgid "Ouvrir le formulaire IBTIKAR"
 msgstr "فتح استمارة إبتكار"
+
+msgid "Supprimer la ligne"
+msgstr "حذف السطر"
+
+msgid "Échantillons"
+msgstr "العينات"

@@ -11,12 +11,13 @@ from core.models import Service, Request
 from core.services.ibtikar import submit_ibtikar_request, get_ibtikar_request_context
 from core.financial import check_ibtikar_budget
 from core.exceptions import PricingConfigurationError
+from core.service_eligibility import resolve_service, services_for
 from notifications.models import Notification
 
 
 def requester_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if request.user.role != 'REQUESTER':
+        if not request.user.is_active or request.user.role not in ('CLIENT', 'REQUESTER'):
             return HttpResponseForbidden()
         return view_func(request, *args, **kwargs)
     wrapper.__wrapped__ = view_func
@@ -25,7 +26,7 @@ def requester_required(view_func):
 
 @requester_required
 def index(request):
-    my_requests = Request.objects.filter(requester=request.user, channel='IBTIKAR')
+    my_requests = Request.objects.filter(requester=request.user)
     total = my_requests.count()
     active = my_requests.exclude(status__in=['COMPLETED', 'CLOSED', 'REJECTED', 'ARCHIVED']).count()
     completed = my_requests.filter(status__in=['COMPLETED', 'CLOSED']).count()
@@ -53,9 +54,7 @@ def index(request):
             _req.save(update_fields=['report_token'])
 
     # Available services for new request
-    services = Service.objects.filter(
-        active=True, channel_availability__in=['BOTH', 'IBTIKAR']
-    ).order_by('code')
+    services = services_for('IBTIKAR').order_by('code')
 
     # Budget context from IBTIKAR service
     budget_context = get_ibtikar_request_context(request.user)
@@ -81,6 +80,8 @@ def index(request):
 @requester_required
 def request_detail(request, pk):
     req = get_object_or_404(Request, pk=pk, requester=request.user)
+    if req.channel == 'GENOCLAB':
+        return redirect('dashboard:client_request_detail', pk=req.pk)
     # Lazy backfill: any uploaded report needs a report_token so the
     # download passes through the gated /report/<token>/ route + citation
     # clause. Older rows (created before the token was introduced)
@@ -192,7 +193,7 @@ def create_request(request):
     service_id = request.POST.get('service_id')
     from django.core.exceptions import ValidationError
     try:
-        service = get_object_or_404(Service, pk=service_id, active=True, channel_availability__in=['IBTIKAR', 'BOTH'])
+        service = resolve_service(service_id, 'IBTIKAR')
     except (ValidationError, ValueError):
         from django.http import HttpResponseBadRequest
         return HttpResponseBadRequest('Service invalide.')
@@ -205,7 +206,7 @@ def create_request(request):
 def confirm_receipt(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     req.receipt_confirmed = True
     req.receipt_confirmed_at = timezone.now()
     req.save(update_fields=['receipt_confirmed', 'receipt_confirmed_at'])
@@ -242,7 +243,7 @@ def confirm_receipt(request, pk):
 def confirm_appointment(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     confirm_appointment_flow(request, req)
     return redirect_to_detail(request, req, 'dashboard:requester')
 
@@ -251,7 +252,7 @@ def confirm_appointment(request, pk):
 def suggest_alternative_date(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     alt_date = request.POST.get('alt_date', '')
     alt_note = request.POST.get('alt_note', '')
     if alt_date:
@@ -289,7 +290,7 @@ def submit_ibtikar_code(request, pk):
     """Requester submits their IBTIKAR-DGRSDT code."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     code = request.POST.get('ibtikar_code', '').strip()
     if not code:
         messages.error(request, "Veuillez saisir votre code IBTIKAR.")
@@ -311,7 +312,7 @@ def submit_ibtikar_code(request, pk):
 def rate_service(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    req = get_object_or_404(Request, pk=pk, requester=request.user)
+    req = get_object_or_404(Request, pk=pk, requester=request.user, channel='IBTIKAR')
     rating = safe_int(request.POST.get('rating'))
     if 1 <= rating <= 5:
         req.service_rating = rating
