@@ -13,7 +13,8 @@ def document_identity(req):
     values = {}
     for key in CMS_DEFAULTS:
         if key.startswith('genoclab_issuer_') or key.startswith('genoclab_footer_'):
-            values[key] = cms_get(key.replace('genoclab_', 'ohb_'), CMS_DEFAULTS[key]) if ohb else cms_get(key)
+            source_key = key.replace('genoclab_', 'ohb_') if ohb else key
+            values[key] = cms_get(source_key, CMS_DEFAULTS[key])
     if ohb:
         values['genoclab_issuer_name'] = ESSBO_NAME
         values['genoclab_footer_legal'] = CMS_DEFAULTS['genoclab_footer_legal']
@@ -36,6 +37,8 @@ def document_identity(req):
         'client_fax': fax,
         'client_email': email,
         'client_lines': [x for x in lines if x],
+        'request_reference': req.display_id,
+
     }
 
 

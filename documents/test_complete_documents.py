@@ -87,7 +87,7 @@ class CompleteDocumentModelContracts(TestCase):
             with self.assertRaises(FinancialValidationError):
                 gl.add_prestation_table(doc, [item], vat_rate=0.19)
         gl.add_prestation_table(doc, [{'label':'A','quantity':2,'unit_price':10}], vat_rate=0.19)
-        self.assertEqual(len(doc.tables),1)
+        self.assertEqual(len(doc.tables),2)
         gl.add_genoclab_footer(doc,total_amount=21,identity={'values':{'genoclab_footer_legal':'Montant arrêté'}})
         self.assertIn('vingt et un',' '.join(p.text for p in doc.paragraphs).lower())
 
@@ -251,7 +251,7 @@ class CompleteGeneratorContracts(TestCase):
         self.assertNotIn('Heading 1',doc.styles)
         footer=doc.sections[0].footer
         for p in list(footer.paragraphs):p._p.getparent().remove(p._p)
-        bt._add_footer(doc);self.assertIn('PLAGENOR',footer.paragraphs[0].text)
+        bt._add_footer(doc);self.assertIn('PLAGENOR',' '.join(cell.text for table in footer.tables for row in table.rows for cell in row.cells))
         header=doc.sections[0].header
         for p in list(header.paragraphs):p._p.getparent().remove(p._p)
         corrupt=self.root/'corrupt.png';corrupt.write_bytes(b'broken image')

@@ -54,6 +54,12 @@ from documents.docx_helpers import (
     style_brand_table,
 )
 
+from documents.document_design import (
+    PLAGENOR_THEME, add_callout, add_document_footer, add_document_title,
+    add_identity_header, add_section_heading, add_signature_grid,
+    apply_document_style, style_data_table, style_key_value_table,
+)
+
 _PLACEHOLDER_BARE_RE = re.compile(r'\{\{[A-Z0-9_]+\}\}')
 
 
@@ -578,39 +584,17 @@ def _save_document(doc: DocumentType, prefix: str, request_obj,
                    skip_institutional: bool = False,
                    skip_brand_footer: bool = False,
                    skip_house_style: bool = False) -> str:
-    """Persist a generated document, but first run the house-style
-    finishing pass so every artifact leaves the pipeline with the same
-    typography / colours / footer / institutional header regardless of
-    which generator built it. Per-generator code stays focused on the
-    *content*; the *form* is centralised here.
-
-    Kwargs let specific generators opt out of pieces of the centralised
-    finishing pass:
-      * skip_house_style  — don't rewrite fonts/colours/headings.
-        Used by the IBTIKAR legacy templates, which ship with their
-        own typography already polished by the ESSBO team.
-      * skip_institutional — don't inject the DGRSDT banner. Used by
-        GENOCLAB-side documents (devis, facture) which have their own
-        GENOCLAB letterhead.
-      * skip_brand_footer — don't add the "ESSBO — PLAGENOR 4.0 / page
-        X / Y" footer.
-      * style_tables — repaint every table with the brand header tint.
-    """
-    # Centralised finishing — these are all idempotent so calling them
-    # in addition to whatever the generator already did is safe.
     if not skip_house_style:
-        apply_house_style(doc)
+        apply_document_style(doc, PLAGENOR_THEME)
     if not skip_institutional:
-        ensure_institutional_header(doc)
-        if not skip_house_style:
-            for section in doc.sections:
-                section.top_margin = Cm(3.5)
-                section.header_distance = Cm(0.8)
+        add_identity_header(doc, PLAGENOR_THEME, compact=True)
     if not skip_brand_footer:
-        add_brand_footer(doc)
+        add_document_footer(
+            doc, theme=PLAGENOR_THEME,
+            reference=getattr(request_obj, 'display_id', '') or '',
+        )
     if style_tables:
         _apply_brand_table_style_everywhere(doc)
-
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
     safe_id = (request_obj.display_id or str(request_obj.pk)).replace('/', '_')
@@ -621,35 +605,16 @@ def _save_document(doc: DocumentType, prefix: str, request_obj,
 
 
 def _apply_brand_table_style_everywhere(doc: DocumentType) -> None:
-    """Apply the unified brand table style to every table in the doc.
-
-    Detects a header row heuristically: if the first row's first cell
-    is bold or visibly a label, treat the first row as the header tint;
-    otherwise fall back to a left-column accent for the IBTIKAR
-    two-column "label : value" layouts. This way every generator picks
-    up the same visual without having to refactor each call site.
-    """
     for table in doc.tables:
         if not table.rows:
             continue
-        # Heuristic: 2-column tables with non-numeric first column are
-        # almost always label/value layouts.
-        accent = 'header'
-        if len(table.columns) == 2 and len(table.rows) >= 2:
-            first_col_vals = [
-                (r.cells[0].text or '').strip()
-                for r in table.rows[:min(4, len(table.rows))]
-            ]
-            looks_labelled = sum(
-                1 for v in first_col_vals if v and not v.replace(' ', '').isdigit()
-            ) >= 2
-            if looks_labelled:
-                accent = 'first-col'
         try:
-            style_brand_table(table, accent=accent)
+            if len(table.columns) == 2 and len(table.rows) > 1:
+                style_key_value_table(table, theme=PLAGENOR_THEME, dense=True)
+            else:
+                style_data_table(table, theme=PLAGENOR_THEME, dense=True)
         except Exception:
-            # Don't let one mal-formed table break the whole document.
-            pass
+            logger.exception("Unable to style document table")
 
 
 # Generators ----------------------------------------------------------------
@@ -671,11 +636,6 @@ def generate_platform_note(request_obj) -> str:
         uploaded = _get_uploaded_template(request_obj.service, 'PLATFORM_NOTE')
         if uploaded:
             doc = Document(str(uploaded))
-
-    if doc is None:
-        generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'platform_note_template.docx'
-        if generic.exists():
-            doc = Document(str(generic))
 
     using_programmatic = doc is None
     if doc is None:
@@ -935,19 +895,30 @@ def _render_tariff_breakdown(doc, request_obj) -> None:
 
 def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
     doc = Document()
-    apply_house_style(doc)
+    apply_document_style(doc, PLAGENOR_THEME, dense=True)
+    add_identity_header(doc, PLAGENOR_THEME, compact=True)
+    add_document_title(
+        doc, 'NOTE DE PLATEFORME',
+        subtitle='PLAGENOR — synthèse opérationnelle de la demande',
+        code=field_map['DISPLAY_ID'], theme=PLAGENOR_THEME,
+    )
 
-    doc.add_heading('NOTE DE PLATEFORME — PLAGENOR', level=1)
-    doc.add_paragraph("ESSBO — École Supérieure en Sciences Biologiques d'Oran")
-    doc.add_paragraph(f"Référence : {field_map['DISPLAY_ID']}")
-    doc.add_paragraph(f"Date d'émission : {field_map['DATETIME']}")
-    doc.add_paragraph('')
+    def line(label, value='—', *, strong=False):
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(2)
+        r = p.add_run(f"{label} : ")
+        r.bold = True
+        v = p.add_run(str(value if value not in (None, '') else '—'))
+        if strong:
+            v.bold = True
+            v.font.size = Pt(11)
 
-    doc.add_heading('Demandeur', level=2)
-    # Plain "Label : value" paragraphs — no Word table. The note is
-    # designed to be copy-pasted into the DGRSDT IBTIKAR portal text
-    # areas, where Word tables become tab-separated garbage on paste.
-    fields = [
+    add_section_heading(doc, 'Références', theme=PLAGENOR_THEME)
+    line('Référence', field_map['DISPLAY_ID'], strong=True)
+    line("Date d'émission", field_map['DATETIME'])
+
+    add_section_heading(doc, 'Demandeur', theme=PLAGENOR_THEME)
+    for label, value in [
         ('Nom complet', field_map['FULL_NAME']),
         ('Établissement', field_map['ETABLISSEMENT']),
         ('Laboratoire', field_map['LABORATORY']),
@@ -955,70 +926,42 @@ def _build_platform_note_programmatic(request_obj, field_map) -> DocumentType:
         ('Directeur de recherche', field_map['SUPERVISOR']),
         ('Email', field_map['EMAIL']),
         ('Téléphone', field_map['PHONE']),
-    ]
-    for label, value in fields:
-        p = doc.add_paragraph()
-        run_l = p.add_run(f"{label} : ")
-        run_l.bold = True
-        p.add_run(str(value or ''))
+    ]:
+        line(label, value)
 
-    doc.add_heading('Service demandé', level=2)
-    doc.add_paragraph(f"Code : {field_map['SERVICE_CODE']}")
-    doc.add_paragraph(f"Intitulé : {field_map['SERVICE_NAME']}")
-    if field_map['SERVICE_DESCRIPTION']:
-        doc.add_paragraph(f"Description : {field_map['SERVICE_DESCRIPTION']}")
-    doc.add_paragraph(f"Délai estimé : {field_map['SERVICE_TURNAROUND']} jours ouvrables")
+    add_section_heading(doc, 'Service demandé', theme=PLAGENOR_THEME)
+    for label, value in [
+        ('Code', field_map['SERVICE_CODE']),
+        ('Intitulé', field_map['SERVICE_NAME']),
+        ('Description', field_map['SERVICE_DESCRIPTION']),
+        ('Délai (jours ouvrables)', field_map['SERVICE_TURNAROUND']),
+        ('Canal', field_map['CHANNEL']),
+        ('Urgence', field_map['URGENCY']),
+    ]:
+        line(label, value)
 
-    doc.add_heading('Détails de la demande', level=2)
-    doc.add_paragraph(f"Titre : {field_map['TITLE']}")
-    if field_map['DESCRIPTION']:
-        doc.add_paragraph(f"Description : {field_map['DESCRIPTION']}")
-    doc.add_paragraph(f"Canal : {field_map['CHANNEL']}")
-    doc.add_paragraph(f"Urgence : {field_map['URGENCY']}")
-
-    # Paramètres en français propre (labels FR, Oui/Non) — pas de clés
-    # anglaises ni de booléens Python dans un document destiné au DGRSDT.
+    add_section_heading(doc, 'Détails de la demande', theme=PLAGENOR_THEME)
+    line('Titre', field_map['TITLE'])
+    line('Description', field_map['DESCRIPTION'])
     params = request_obj.service_params if isinstance(request_obj.service_params, dict) else {}
-    param_items = [(k, v) for k, v in params.items() if v not in (None, '', [], {})]
-    if param_items:
-        doc.add_heading('Paramètres du service', level=3)
-        for k, v in param_items:
-            p = doc.add_paragraph()
-            run_l = p.add_run(f"{_fr_param_label(k)} : ")
-            run_l.bold = True
-            p.add_run(_fr_param_value(v))
-
-    # Résumé des échantillons (effectif + ventilation par type) — pas la
-    # grille détaillée (qui surcharge le devis et colle mal dans le portail).
+    for key, value in params.items():
+        if value not in (None, '', [], {}):
+            line(_fr_param_label(key), _fr_param_value(value))
     samples = request_obj.sample_table or []
-    n_samples = len([s for s in samples
-                     if isinstance(s, dict) and any(x not in (None, '', [], {}) for x in s.values())])
-    if not n_samples:
-        n_samples = len(samples)
-    if samples:
-        p = doc.add_paragraph()
-        run_l = p.add_run("Échantillons : ")
-        run_l.bold = True
-        p.add_run(_summarise_samples(samples, n_samples))
+    count = len([row for row in samples if isinstance(row, dict) and any(row.values())])
+    line('Échantillons', _summarise_samples(samples, count or len(samples)))
 
-    doc.add_heading('Décompte budgétaire IBTIKAR', level=2)
-    doc.add_paragraph('Budget annuel par étudiant : 200 000 DA')
-    doc.add_paragraph(f"Montant de cette prestation : {field_map['BUDGET_AMOUNT']}")
-    if request_obj.declared_ibtikar_balance:
-        doc.add_paragraph(f"Solde IBTIKAR déclaré : {field_map['IBTIKAR_BALANCE']}")
-
-    # Tariff justification — see _render_tariff_breakdown docstring.
+    add_section_heading(doc, 'Décompte budgétaire IBTIKAR', theme=PLAGENOR_THEME)
+    line('Budget annuel par étudiant', '200 000 DA')
+    line('Montant de cette prestation', field_map['BUDGET_AMOUNT'], strong=True)
+    line('Solde IBTIKAR déclaré', field_map['IBTIKAR_BALANCE'])
     _render_tariff_breakdown(doc, request_obj)
 
-    if request_obj.assigned_to:
-        doc.add_heading('Assignation', level=2)
-        doc.add_paragraph(f"Analyste : {field_map['ASSIGNED_ANALYST']}")
-        if field_map['ANALYST_EMAIL']:
-            doc.add_paragraph(f"Email analyste : {field_map['ANALYST_EMAIL']}")
-        if field_map['APPOINTMENT_DATE'] != 'Non défini':
-            doc.add_paragraph(f"Rendez-vous : {field_map['APPOINTMENT_DATE']}")
-
-    _render_footer(doc)
+    add_section_heading(doc, 'Assignation', theme=PLAGENOR_THEME)
+    line('Analyste', field_map['ASSIGNED_ANALYST'])
+    line('Email analyste', field_map['ANALYST_EMAIL'])
+    line('Rendez-vous', field_map['APPOINTMENT_DATE'])
+    add_document_footer(doc, theme=PLAGENOR_THEME, reference=field_map['DISPLAY_ID'])
     return doc
 
 
@@ -1161,11 +1104,6 @@ def generate_reception_form(request_obj) -> str:
             doc = Document(str(uploaded))
 
     if doc is None:
-        generic = Path(settings.BASE_DIR) / 'documents' / 'docx_templates' / 'reception_form_template.docx'
-        if generic.exists():
-            doc = Document(str(generic))
-
-    if doc is None:
         doc = _build_reception_form_programmatic(request_obj, field_map)
 
     replace_placeholders(doc, field_map)
@@ -1177,61 +1115,56 @@ def generate_reception_form(request_obj) -> str:
 
 def _build_reception_form_programmatic(request_obj, field_map) -> DocumentType:
     doc = Document()
-    apply_house_style(doc)
+    apply_document_style(doc, PLAGENOR_THEME, dense=True)
+    add_identity_header(doc, PLAGENOR_THEME, compact=True)
+    add_document_title(
+        doc, "FICHE DE RÉCEPTION D'ÉCHANTILLONS",
+        subtitle='Traçabilité de la remise et du contrôle initial',
+        code=field_map['DISPLAY_ID'], theme=PLAGENOR_THEME,
+    )
 
-    doc.add_heading("Fiche de Réception d'Échantillons", level=1)
-    doc.add_paragraph('PLAGENOR — ESSBO')
-    doc.add_paragraph(f"Référence : {field_map['DISPLAY_ID']}")
-    doc.add_paragraph(f"Code de suivi : {field_map['TRACKING_CODE']}")
-    doc.add_paragraph('')
-
+    add_section_heading(doc, 'Références de la demande', theme=PLAGENOR_THEME)
     table = doc.add_table(rows=6, cols=2)
-    table.style = 'Light Grid Accent 1'
-    fields = [
+    for row, (label, value) in zip(table.rows, [
         ('Service', field_map['SERVICE_NAME']),
         ('Canal', field_map['CHANNEL']),
         ('Urgence', field_map['URGENCY']),
         ('Date de RDV', field_map['APPOINTMENT_DATE']),
         ('Analyste assigné', field_map['ASSIGNED_ANALYST']),
         ('Date de soumission', field_map['SUBMISSION_DATE']),
-    ]
-    for i, (label, value) in enumerate(fields):
-        table.rows[i].cells[0].text = label
-        table.rows[i].cells[1].text = str(value or '')
+    ]):
+        row.cells[0].text, row.cells[1].text = label, str(value or '—')
+    style_key_value_table(table, theme=PLAGENOR_THEME, dense=True)
 
-    doc.add_heading('Déposant', level=2)
-    client_table = doc.add_table(rows=5, cols=2)
-    client_table.style = 'Light Grid Accent 1'
-    client_fields = [
+    add_section_heading(doc, 'Déposant', theme=PLAGENOR_THEME)
+    client = doc.add_table(rows=5, cols=2)
+    for row, (label, value) in zip(client.rows, [
         ('Nom', field_map['FULL_NAME']),
         ('Email', field_map['EMAIL']),
         ('Téléphone', field_map['PHONE']),
         ('Établissement', field_map['ETABLISSEMENT']),
         ('Laboratoire', field_map['LABORATORY']),
-    ]
-    for i, (label, value) in enumerate(client_fields):
-        client_table.rows[i].cells[0].text = label
-        client_table.rows[i].cells[1].text = str(value or '')
+    ]):
+        row.cells[0].text, row.cells[1].text = label, str(value or '—')
+    style_key_value_table(client, theme=PLAGENOR_THEME, dense=True)
 
-    _render_sample_table(doc, request_obj.sample_table)
+    _render_sample_table(doc, request_obj.sample_table, _field_label_map(request_obj))
 
-    doc.add_heading('Réception', level=2)
-    rec_table = doc.add_table(rows=4, cols=2)
-    rec_table.style = 'Light Grid Accent 1'
-    rec_fields = [
+    add_section_heading(doc, 'Contrôle à la réception', theme=PLAGENOR_THEME)
+    reception = doc.add_table(rows=4, cols=2)
+    for row, (label, value) in zip(reception.rows, [
         ('Date de réception', '___ / ___ / ______'),
         ("Nombre d'échantillons reçus", '____________'),
         ('État des échantillons', '☐ Bon   ☐ Acceptable   ☐ Dégradé'),
         ('Observations', ''),
-    ]
-    for i, (label, value) in enumerate(rec_fields):
-        rec_table.rows[i].cells[0].text = label
-        rec_table.rows[i].cells[1].text = str(value or '')
-
-    doc.add_paragraph('')
-    doc.add_paragraph('Signature du réceptionniste : ________________________')
-    doc.add_paragraph('Signature du déposant : ________________________')
-    _render_footer(doc)
+    ]):
+        row.cells[0].text, row.cells[1].text = label, value
+    style_key_value_table(reception, theme=PLAGENOR_THEME, dense=True)
+    add_signature_grid(
+        doc, ['Signature du réceptionniste', 'Signature du déposant'],
+        theme=PLAGENOR_THEME,
+    )
+    add_document_footer(doc, theme=PLAGENOR_THEME, reference=field_map['DISPLAY_ID'])
     return doc
 
 
@@ -1275,84 +1208,81 @@ def _field_label_map(request_obj) -> dict:
 def _render_sample_table(doc: DocumentType, sample_table, label_map=None) -> None:
     if not sample_table or not isinstance(sample_table, list):
         return
-    samples = [s for s in sample_table if isinstance(s, dict) and any(s.values())]
+    samples = [row for row in sample_table if isinstance(row, dict) and any(row.values())]
     if not samples:
         return
     label_map = label_map or {}
-    doc.add_heading('Tableau des échantillons', level=3)
-    headers = list(samples[0].keys())
-    table = doc.add_table(rows=len(samples) + 1, cols=len(headers))
-    table.style = 'Light Grid Accent 1'
-    for j, h in enumerate(headers):
-        table.rows[0].cells[j].text = label_map.get(h) or _fr_param_label(h)
-    for i, sample in enumerate(samples):
-        for j, h in enumerate(headers):
-            table.rows[i + 1].cells[j].text = str(sample.get(h, ''))
+    add_section_heading(doc, 'Tableau des échantillons', theme=PLAGENOR_THEME, level=2)
+    headers = []
+    for sample in samples:
+        for key in sample:
+            if key not in headers:
+                headers.append(key)
+    table = doc.add_table(rows=1, cols=len(headers) + 1)
+    table.rows[0].cells[0].text = 'N°'
+    for index, key in enumerate(headers, 1):
+        table.rows[0].cells[index].text = label_map.get(key) or _fr_param_label(key)
+    for number, sample in enumerate(samples, 1):
+        cells = table.add_row().cells
+        cells[0].text = f'{number:02d}'
+        for index, key in enumerate(headers, 1):
+            cells[index].text = _fr_param_value(sample.get(key, ''))
+    style_data_table(table, theme=PLAGENOR_THEME, dense=True)
 
 
 def _render_service_params(doc: DocumentType, service_params, label_map=None) -> None:
     if not service_params or not isinstance(service_params, dict):
         return
-    non_empty = [(k, v) for k, v in service_params.items() if v not in (None, '', [], {})]
+    non_empty = [(key, value) for key, value in service_params.items()
+                 if value not in (None, '', [], {})]
     if not non_empty:
         return
     label_map = label_map or {}
-    doc.add_heading('Paramètres du service', level=3)
+    add_section_heading(doc, 'Paramètres du service', theme=PLAGENOR_THEME, level=2)
     table = doc.add_table(rows=len(non_empty), cols=2)
-    table.style = 'Light Grid Accent 1'
-    for i, (key, value) in enumerate(non_empty):
+    for row, (key, value) in zip(table.rows, non_empty):
         clean = key.replace('param_', '')
-        table.rows[i].cells[0].text = label_map.get(clean) or _fr_param_label(clean)
-        table.rows[i].cells[1].text = _fr_param_value(value)
+        row.cells[0].text = label_map.get(clean) or _fr_param_label(clean)
+        row.cells[1].text = _fr_param_value(value)
+    style_key_value_table(table, theme=PLAGENOR_THEME, dense=True)
 
 
 def _render_footer(doc: DocumentType) -> None:
-    doc.add_paragraph('')
-    doc.add_paragraph('—' * 40)
-    p = doc.add_paragraph()
-    run = p.add_run(
-        f"Document généré automatiquement par PLAGENOR 4.0 · "
-        f"{datetime.now().strftime('%d/%m/%Y à %H:%M')}"
-    )
-    run.font.size = Pt(9)
+    add_document_footer(doc, theme=PLAGENOR_THEME)
 
 
 def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
-    """Generate the official statistics report DOCX.
-
-    Branded like every other PLAGENOR document — institutional header is
-    injected by ``ensure_institutional_header`` — so the PDF conversion
-    that follows yields a presentation-ready report.
-    """
     doc = Document()
-    apply_house_style(doc)
-
-    doc.add_heading('PLAGENOR 4.0 — Statistiques institutionnelles', level=1)
-    doc.add_paragraph(
-        f"ESSBO — École Supérieure en Sciences Biologiques d'Oran")
-    doc.add_paragraph(
+    apply_document_style(doc, PLAGENOR_THEME, dense=True)
+    add_identity_header(doc, PLAGENOR_THEME, compact=True)
+    add_document_title(
+        doc, 'Statistiques institutionnelles',
+        subtitle="PLAGENOR 4.0 — état récapitulatif d'activité",
+        theme=PLAGENOR_THEME,
+    )
+    p = doc.add_paragraph(
         f"Édité le {datetime.now().strftime('%d/%m/%Y à %H:%M')} "
         f"par {actor.get_full_name() or actor.username}"
     )
+    p.paragraph_format.space_after = Pt(7)
 
-    # Active filters block
     if filters:
-        doc.add_heading('Filtres appliqués', level=3)
+        add_section_heading(doc, 'Filtres appliqués', theme=PLAGENOR_THEME)
         label_map = {
             'date_from': 'Du', 'date_to': 'Au', 'channel': 'Canal',
-            'service_code': 'Service', 'status': 'Statut',
-            'wilaya': 'Wilaya', 'organization': 'Établissement',
-            'gender': 'Sexe', 'analysis_frame': "Cadre d'analyse",
+            'service_code': 'Service', 'status': 'Statut', 'wilaya': 'Wilaya',
+            'organization': 'Établissement', 'gender': 'Sexe',
+            'analysis_frame': "Cadre d'analyse",
         }
-        for k, v in filters.items():
-            doc.add_paragraph(f"• {label_map.get(k, k)} : {v}")
+        table = doc.add_table(rows=len(filters), cols=2)
+        for row, (key, value) in zip(table.rows, filters.items()):
+            row.cells[0].text = label_map.get(key, key)
+            row.cells[1].text = str(value)
+        style_key_value_table(table, theme=PLAGENOR_THEME, dense=True)
 
-    # Headline KPIs
     kpis = bundle.get('kpis', {})
-    doc.add_heading('Indicateurs principaux', level=2)
-    kpi_table = doc.add_table(rows=9, cols=2)
-    kpi_table.style = 'Light Grid Accent 1'
-    rows = [
+    add_section_heading(doc, 'Indicateurs principaux', theme=PLAGENOR_THEME)
+    values = [
         ('Demandes', kpis.get('total', 0)),
         ('Complétées', kpis.get('completed', 0)),
         ('En cours', kpis.get('in_progress', 0)),
@@ -1363,44 +1293,41 @@ def generate_stats_report(bundle: dict, filters: dict, actor) -> str:
         ('Revenu virtuel IBTIKAR', f"{kpis.get('ibtikar_virtual_revenue', 0):,.0f} DA".replace(',', ' ')),
         ('Revenu GENOCLAB', f"{kpis.get('genoclab_revenue', 0):,.0f} DA".replace(',', ' ')),
     ]
-    for i, (label, value) in enumerate(rows):
-        kpi_table.rows[i].cells[0].text = label
-        kpi_table.rows[i].cells[1].text = _fr_param_value(value)
+    table = doc.add_table(rows=len(values), cols=2)
+    for row, (label, value) in zip(table.rows, values):
+        row.cells[0].text, row.cells[1].text = label, str(value)
+    style_key_value_table(table, theme=PLAGENOR_THEME, dense=True)
 
-    def _section(title, key, col1='Catégorie'):
+    def section(title, key, first='Catégorie'):
         data = bundle.get(key)
         if not data:
             return
-        doc.add_heading(title, level=2)
-        t = doc.add_table(rows=len(data) + 1, cols=2)
-        t.style = 'Light Grid Accent 1'
-        t.rows[0].cells[0].text = col1
-        t.rows[0].cells[1].text = 'Demandes'
-        for i, r in enumerate(data, start=1):
-            t.rows[i].cells[0].text = str(r.get('label', '—'))
-            t.rows[i].cells[1].text = str(r.get('count', 0))
+        add_section_heading(doc, title, theme=PLAGENOR_THEME)
+        table = doc.add_table(rows=1, cols=2)
+        table.rows[0].cells[0].text, table.rows[0].cells[1].text = first, 'Demandes'
+        for item in data:
+            cells = table.add_row().cells
+            cells[0].text = str(item.get('label', '—'))
+            cells[1].text = str(item.get('count', 0))
+        style_data_table(table, theme=PLAGENOR_THEME, dense=True, numeric_cols=(1,))
 
-    _section('Répartition par service', 'by_service', col1='Service')
-    _section('Répartition par statut', 'by_status', col1='Statut')
-    _section('Répartition par wilaya', 'by_wilaya', col1='Wilaya')
-    _section('Répartition par établissement', 'by_organization', col1='Établissement')
-    _section("Répartition par cadre d'analyse", 'by_analysis_frame', col1='Cadre')
-    _section('Répartition par sexe', 'by_gender', col1='Sexe')
+    section('Répartition par service', 'by_service', 'Service')
+    section('Répartition par statut', 'by_status', 'Statut')
+    section('Répartition par wilaya', 'by_wilaya', 'Wilaya')
+    section('Répartition par établissement', 'by_organization', 'Établissement')
+    section("Répartition par cadre d'analyse", 'by_analysis_frame', 'Cadre')
+    section('Répartition par sexe', 'by_gender', 'Sexe')
 
     trend = bundle.get('trend') or []
     if trend:
-        doc.add_heading('Tendance mensuelle', level=2)
-        t = doc.add_table(rows=len(trend) + 1, cols=2)
-        t.style = 'Light Grid Accent 1'
-        t.rows[0].cells[0].text = 'Mois'
-        t.rows[0].cells[1].text = 'Demandes'
-        for i, r in enumerate(trend, start=1):
-            t.rows[i].cells[0].text = r['month']
-            t.rows[i].cells[1].text = str(r['count'])
-
-    _render_footer(doc)
-    ensure_institutional_header(doc)
-
+        add_section_heading(doc, 'Tendance mensuelle', theme=PLAGENOR_THEME)
+        table = doc.add_table(rows=1, cols=2)
+        table.rows[0].cells[0].text, table.rows[0].cells[1].text = 'Mois', 'Demandes'
+        for item in trend:
+            cells = table.add_row().cells
+            cells[0].text, cells[1].text = item['month'], str(item['count'])
+        style_data_table(table, theme=PLAGENOR_THEME, dense=True, numeric_cols=(1,))
+    add_document_footer(doc, theme=PLAGENOR_THEME)
     out_dir = Path(settings.MEDIA_ROOT) / 'documents'
     out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"PLAGENOR_Statistiques_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
