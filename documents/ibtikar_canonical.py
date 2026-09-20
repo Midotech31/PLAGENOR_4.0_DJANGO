@@ -1,6 +1,5 @@
 from copy import deepcopy
 import io
-import json
 from pathlib import Path
 import re
 import uuid
@@ -36,6 +35,7 @@ TEXT = {
     'unknown': ('Non renseigné', 'Not provided', 'غير مذكور'),
     'source': ('Version du formulaire source', 'Source form version', 'نسخة الاستمارة المرجعية'),
     'revision': ('Révision numérique', 'Digital revision', 'المراجعة الرقمية'),
+    'legacy_revision': ('Non applicable — demande historique', 'Not applicable — historical request', 'غير مطبق — طلب تاريخي'),
     'date': ('Date de la demande', 'Request date', 'تاريخ الطلب'),
     'number': ('Numéro de demande', 'Request number', 'رقم الطلب'),
     'count': ('Nombre de lignes enregistrées', 'Number of recorded rows', 'عدد الصفوف المسجلة'),
@@ -187,6 +187,12 @@ def _render_reference(doc, project, language):
             add_callout(doc, note, theme=PLAGENOR_THEME)
     guidance = list(source.get('guidance') or [])
     for notice in project.get('notices') or []:
+        # EGTP-IMT already carries the complete official MALDI-TOF guidance
+        # extracted from the source form. Its schema notices are condensed
+        # reminders of the same ethics/transport requirements and would
+        # otherwise be printed a second time.
+        if project.get('service_code') == 'EGTP-IMT':
+            continue
         if notice and not any(notice.casefold() in value.casefold() or value.casefold() in notice.casefold()
                               for value in guidance if value):
             guidance.append(notice)
@@ -287,11 +293,7 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     p.paragraph_format.space_before = Pt(4)
     if legacy:
         add_section_heading(doc, text('legacy', language), theme=PLAGENOR_THEME)
-        for key, value in legacy.items():
-            p = doc.add_paragraph()
-            run = p.add_run(str(key))
-            run.bold = True
-            doc.add_paragraph(json.dumps(value, ensure_ascii=False, indent=2))
+        _kv_table(doc, legacy, language, dense=True)
     add_document_footer(doc, theme=PLAGENOR_THEME, reference=metadata['number'])
     _rtl_document(doc, language)
     return doc
@@ -304,7 +306,7 @@ def generate_canonical_form(req):
     from core.ibtikar.schema import (
         active_data, active_names, label, projection, schema_for_service,
     )
-    from core.ibtikar.legacy import legacy_initial
+    from core.ibtikar.legacy import document_initial
     language = (get_language() or 'fr').split('-')[0]
     submission = IbtikarSubmission.objects.filter(request=req).first()
     attachments, signature, legacy = [], None, None
@@ -338,13 +340,12 @@ def generate_canonical_form(req):
                     signature = stream.read()
     else:
         schema = schema_for_service(req.service)
-        old = legacy_initial(req, schema)
+        old = document_initial(req, schema)
         project = projection(
-            schema, old['applicant'], old['parameters'], old['samples'],
-            language=language, print_blank_staff=True,
+            schema, old['document_applicant'], old['parameters'],
+            old['document_samples'], language=language, print_blank_staff=True,
         )
-        project['source_version'] = text('unknown', language)
-        legacy = old['legacy_data']
+        legacy = old['legacy_display']
     project['staff'] = [
         row for row in project['staff']
         if row['name'] not in ('validated_price', 'price_justification')
@@ -353,7 +354,7 @@ def generate_canonical_form(req):
         'number': req.display_id,
         'date': req.created_at.strftime('%d/%m/%Y'),
         'external_reference': req.ibtikar_external_code,
-        'revision': submission.revision if submission else None,
+        'revision': submission.revision if submission else text('legacy_revision', language),
         'draft': req.status == 'DRAFT',
         'operator_name': submission.staff.get('operator_name') if submission else None,
     }

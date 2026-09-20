@@ -26,13 +26,19 @@ FIELD_ALIASES = {
     'submitted_type': ['submitted_type', 'sample_purity'],
     'maldi_target': ['maldi_target', 'maldi_target_type'],
     'fresh_culture': ['fresh_culture', 'fresh_culture_available'],
+    'risk_status': ['risk_status', 'pathogenic'],
 }
 VALUE_ALIASES = {
     'sequencing_mode': {'Forward': 'forward', 'Reverse': 'reverse', 'Forward + Reverse': 'both', 'F': 'forward', 'F+R': 'both'},
     'submitted_type': {'Purified': 'purified_pcr', 'Non-purified': 'unpurified_pcr'},
     'analysis_mode': {'Simple': 'single', 'Duplicate': 'duplicate', 'Triplicate': 'triplicate'},
     'maldi_target': {'Reusable': 'reusable', 'Disposable': 'disposable'},
-    'fresh_culture': {'true': 'yes', 'false': 'no', True: 'yes', False: 'no'},
+    'fresh_culture': {'true': 'yes', 'false': 'no', 'True': 'yes', 'False': 'no',
+                      True: 'yes', False: 'no'},
+    'risk_status': {'true': 'pathogenic', 'false': 'standard',
+                    'True': 'pathogenic', 'False': 'standard',
+                    True: 'pathogenic', False: 'standard',
+                    'Pathogenic': 'pathogenic', 'Clinical': 'clinical'},
     'product_recovery': {'true': 'yes', 'false': 'no', True: 'yes', False: 'no'},
     'organism_type': {'Bacterium': 'bacterium', 'Yeast': 'yeast', 'Mould': 'mould'},
     'origin': {'Environmental': 'environmental', 'Food': 'food', 'Hospital / Clinical': 'clinical'},
@@ -63,16 +69,141 @@ def mapped_values(specs, values):
 
 
 def legacy_initial(req, schema):
+    """Return the historical payload exactly as stored plus canonical mappings.
+
+    This function deliberately does not infer missing requester/account values:
+    the migration/edit contract depends on preserving the historical payload
+    without silent backfill.
+    """
     params = dict(req.service_params or {})
     common = dict(req.requester_data or {})
     common.update({k: v for k, v in params.items() if k not in common})
     common.setdefault('project_title', req.title)
-    for name, value in [('guest_name', req.guest_name), ('guest_email', req.guest_email), ('guest_phone', req.guest_phone)]:
+    for name, value in (
+        ('guest_name', req.guest_name),
+        ('guest_email', req.guest_email),
+        ('guest_phone', req.guest_phone),
+    ):
         if value:
             common.setdefault(name, value)
-    return {'applicant': mapped_values(schema['applicant'], common),
-            'parameters': mapped_values(schema['parameters'], params),
-            'samples': [mapped_values(schema['samples'], row) for row in (req.sample_table or [])],
-            'legacy_data': {'requester_data': deepcopy(req.requester_data),
-                            'service_params': deepcopy(req.service_params),
-                            'sample_table': deepcopy(req.sample_table), 'pricing': deepcopy(req.pricing)}}
+    return {
+        'applicant': mapped_values(schema['applicant'], common),
+        'parameters': mapped_values(schema['parameters'], params),
+        'samples': [
+            mapped_values(schema['samples'], row)
+            for row in (req.sample_table or [])
+        ],
+        'legacy_data': {
+            'requester_data': deepcopy(req.requester_data),
+            'service_params': deepcopy(req.service_params),
+            'sample_table': deepcopy(req.sample_table),
+            'pricing': deepcopy(req.pricing),
+        },
+    }
+
+
+def _used_aliases(specs):
+    values = set()
+    for spec in specs:
+        name = spec['name']
+        values.update(FIELD_ALIASES.get(name, [name]))
+    return values
+
+
+def _display_value(value):
+    if value in (None, '', [], {}):
+        return ''
+    if isinstance(value, bool):
+        return 'Oui' if value else 'Non'
+    if isinstance(value, list):
+        return ' ; '.join(str(item) for item in value if item not in (None, ''))
+    if isinstance(value, dict):
+        return ' ; '.join(
+            f"{str(key).replace('_', ' ').capitalize()} : {_display_value(item)}"
+            for key, item in value.items() if _display_value(item)
+        )
+    return str(value)
+
+
+def _legacy_display_rows(req, schema):
+    """Human-readable rows for historical values not represented canonically."""
+    rows = []
+    requester_used = _used_aliases(schema['applicant'])
+    param_used = (
+        requester_used
+        | _used_aliases(schema['parameters'])
+        | _used_aliases(schema['samples'])
+    )
+    sample_used = _used_aliases(schema['samples'])
+
+    def add_mapping(values, used, prefix=''):
+        for key, value in (values or {}).items():
+            if key in used:
+                continue
+            display = _display_value(value)
+            if not display:
+                continue
+            label = str(key).replace('_', ' ').strip().capitalize()
+            rows.append({
+                'name': f'legacy_{key}',
+                'label': f'{prefix}{label}',
+                'display': display,
+                'value': value,
+                'options': [],
+                'all_options': False,
+            })
+
+    add_mapping(req.requester_data or {}, requester_used)
+    add_mapping(req.service_params or {}, param_used)
+    for index, sample in enumerate(req.sample_table or [], 1):
+        add_mapping(sample, sample_used, prefix=f'Échantillon {index:02d} — ')
+    add_mapping(req.pricing or {}, set(), prefix='Tarification historique — ')
+    return rows
+
+
+def document_initial(req, schema):
+    """Build document-only values without mutating the historical payload.
+
+    Known account fields may fill otherwise-empty display fields because they
+    are authoritative current account data, while legacy_data remains exactly
+    as stored. Service-level legacy parameters may also feed sample fields
+    where old PLAGENOR versions stored those selections globally.
+    """
+    initial = legacy_initial(req, schema)
+    applicant = deepcopy(initial['applicant'])
+    if str(applicant.get('project_title') or '').strip() in {'.', '..', '-', '--'}:
+        applicant['project_title'] = ''
+
+    requester = getattr(req, 'requester', None)
+    if requester is not None:
+        account_values = {
+            'full_name': requester.get_full_name() or requester.username,
+            'institution': getattr(requester, 'organization', ''),
+            'laboratory': getattr(requester, 'laboratory', ''),
+            'status': getattr(requester, 'student_level', ''),
+            'email': getattr(requester, 'email', ''),
+            'phone': getattr(requester, 'phone', ''),
+            'supervisor': getattr(requester, 'supervisor', ''),
+            'supervisor_email': getattr(requester, 'supervisor_email', ''),
+            'ibtikar_id': getattr(requester, 'ibtikar_id', ''),
+        }
+        declared = getattr(req, 'declared_ibtikar_balance', None)
+        if declared is None:
+            declared = getattr(requester, 'ibtikar_declared_balance', None)
+        account_values['declared_balance'] = declared
+        for name, value in mapped_values(schema['applicant'], account_values).items():
+            applicant.setdefault(name, value)
+
+    params = dict(req.service_params or {})
+    samples = []
+    for row in (req.sample_table or []):
+        merged = dict(params)
+        merged.update(row)
+        samples.append(mapped_values(schema['samples'], merged))
+
+    return {
+        **initial,
+        'document_applicant': applicant,
+        'document_samples': samples,
+        'legacy_display': _legacy_display_rows(req, schema),
+    }

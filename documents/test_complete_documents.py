@@ -185,7 +185,10 @@ class CompleteGeneratorContracts(TestCase):
         doc=Document();doc.add_paragraph('Legacy Nom et prénom : * Nom complet du demandeur');doc.save(legacy/'contract.docx')
         with patch.dict(g.IBTIKAR_TEMPLATE_MAP,{'GEN-COMP':'contract.docx'}):
             rendered = self.read_text(g.generate_ibtikar_form(self.req))
-            self.assertNotIn('National Student', rendered)
+            # The canonical document may enrich otherwise-empty display fields
+            # from the authenticated requester's authoritative account, without
+            # mutating the historical payload itself.
+            self.assertIn('National Student', rendered)
             self.assertIn('Non renseigné', rendered)
         doc=Document();doc.add_paragraph('Generic {{REQUEST_ID}}');doc.add_paragraph('Tableau des échantillons');doc.add_paragraph('[Tableau des échantillons à remplir]');doc.add_paragraph('Signature du demandeur');doc.save(self.templates/'ibtikar_form_template.docx')
         text=self.read_text(g.generate_ibtikar_form(self.req));self.assertIn('S-1',text);self.assertNotIn('[Tableau',text)
