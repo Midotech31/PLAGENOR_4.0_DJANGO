@@ -133,6 +133,8 @@ class IbtikarPreservationContractTests(SimpleTestCase):
                 self.assertAlmostEqual(section.page_width.cm, 21.0, places=1)
                 self.assertAlmostEqual(section.page_height.cm, 29.7, places=1)
                 self.assertIn("NUMPAGES", section.footer._element.xml)
+                preview_name = f"IBTIKAR_{code.replace('-', '_').upper()}_EXEMPLE_FICTIF.docx"
+                _keep_preview(document, preview_name)
 
     def test_long_source_tables_repeat_headers_and_signature_zones_remain(self):
         schema = definitions()["services"]["EGTP-Lyoph"]
