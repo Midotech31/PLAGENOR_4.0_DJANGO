@@ -36,7 +36,8 @@ for (const [language, title, direction] of [
     await audit(page, `ERP ${language}`);
     await page.screenshot({path:info.outputPath(`erp-${language}.png`),fullPage:true});
     await page.goto('/erp/articles/new/');
-    await expect(page.locator('.erp-field label .required-asterisk')).toHaveCount(await page.locator('.erp-field [required]').count());
+    expect(await page.locator('.erp-field label').evaluateAll(labels => labels.every(label => label.querySelectorAll('.required-asterisk').length <= 1))).toBeTruthy();
+    expect(await page.locator('.erp-field [required]').evaluateAll(fields => fields.every(field => field.closest('.erp-field').querySelectorAll('label .required-asterisk').length === 1))).toBeTruthy();
     await audit(page, `ERP form ${language}`);
     await page.screenshot({path:info.outputPath(`erp-form-${language}.png`),fullPage:true});
     await page.goto('/erp/locations/');
