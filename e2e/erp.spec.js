@@ -12,7 +12,13 @@ async function audit(page, label) {
 }
 
 async function save(page) {
-  await page.locator('.erp-form button[type=submit]').click();
+  const path = new URL(page.url()).pathname;
+  const [response] = await Promise.all([
+    page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === path),
+    page.locator('.erp-form button[type=submit]').click(),
+  ]);
+  expect([302, 303]).toContain(response.status());
+  await expect(page.locator('.erp-form')).toHaveCount(0);
   await expect(page.locator('.erp-errors')).toHaveCount(0);
 }
 
@@ -30,6 +36,7 @@ for (const [language, title, direction] of [
     await audit(page, `ERP ${language}`);
     await page.screenshot({path:info.outputPath(`erp-${language}.png`),fullPage:true});
     await page.goto('/erp/articles/new/');
+    await expect(page.locator('.erp-field label .required-asterisk')).toHaveCount(await page.locator('.erp-field [required]').count());
     await audit(page, `ERP form ${language}`);
     await page.screenshot({path:info.outputPath(`erp-form-${language}.png`),fullPage:true});
     await page.goto('/erp/locations/');
