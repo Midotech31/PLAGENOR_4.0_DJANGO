@@ -4,6 +4,7 @@
 {% block content %}
 <section class="erp-workspace">
 <nav class="erp-breadcrumb" aria-label="{% trans 'Fil d’Ariane' %}"><a href="{% url 'erp:index' %}">{% trans 'Gestion / ERP' %}</a>{% block erp_breadcrumb %}{% endblock %}</nav>
+<nav class="planning-mainnav" aria-label="{% trans 'Pilotage PLAGENOR' %}"><a href="{% url 'erp:planning' %}">{% trans 'Planning & activités' %}</a><a href="{% url 'erp:work-list' %}">{% trans 'Tâches et délégations' %}</a><a href="{% url 'erp:index' %}">{% trans 'Gestion des ressources' %}</a></nav>
 {% block erp_content %}{% endblock %}
 </section>
 {% endblock %}

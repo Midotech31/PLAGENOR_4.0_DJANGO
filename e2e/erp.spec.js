@@ -23,9 +23,9 @@ async function save(page) {
 }
 
 for (const [language, title, direction] of [
-  ['fr', 'Référentiels scientifiques', 'ltr'],
-  ['en', 'Scientific reference data', 'ltr'],
-  ['ar', 'المرجعيات العلمية', 'rtl'],
+  ['fr', 'Gestion des ressources scientifiques', 'ltr'],
+  ['en', 'Scientific resource management', 'ltr'],
+  ['ar', 'تسيير الموارد العلمية', 'rtl'],
 ]) {
   test(`ERP is translated and accessible in ${language}`, async ({page}, info) => {
     await login(page);

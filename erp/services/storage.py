@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from erp.models import Capability, Location, LocationClosure
@@ -38,6 +39,15 @@ def save_location(user, values, *, pk=None, expected=None):
         if obj.capacity is not None and obj.capacity != size:
             raise ValidationError(_('La capacité doit correspondre au nombre de positions de la grille.'))
         obj.capacity = size
+    from erp.models import BiologicalSample, StockContainer, StoragePosition
+    if pk:
+        positions = StoragePosition.objects.filter(location=obj)
+        if positions.exists() and (obj.grid_rows is None or obj.grid_columns is None or
+            positions.filter(Q(row__gt=obj.grid_rows) | Q(column__gt=obj.grid_columns)).exists()):
+            raise ValidationError(_('La modification supprimerait des positions existantes. Conservez la grille historique.'))
+        if not obj.active or not obj.kind.can_store:
+            if BiologicalSample.objects.filter(location=obj).exclude(status__in=['DESTROYED', 'SHIPPED', 'EXHAUSTED']).exists() or StockContainer.objects.filter(location=obj, quantity__gt=0).exists():
+                raise ValidationError(_('Déplacez le contenu physique avant de désactiver cet emplacement ou son stockage.'))
     obj.full_clean()
     if pk:
         obj.version += 1
@@ -51,5 +61,8 @@ def save_location(user, values, *, pk=None, expected=None):
             LocationClosure(ancestor_id=ancestor_id, descendant_id=descendant_id, depth=above + below + 1)
             for ancestor_id, above in ancestors for descendant_id, below in descendants.items()
         ])
+    if obj.active and obj.kind.can_store and obj.grid_rows and obj.grid_columns:
+        from .biobank import build_positions
+        build_positions(user, obj.pk, expected=obj.version)
     audit(user, obj, 'updated' if pk else 'created', before)
     return obj

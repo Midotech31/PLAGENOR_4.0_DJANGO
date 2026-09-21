@@ -1,7 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 
-from .models import AccessGrant, Capability, LocationClosure
+from .models import AccessGrant, Capability, LocationClosure, WorkItem
 
 
 ADMIN_ROLES = ('SUPER_ADMIN', 'PLATFORM_ADMIN')
@@ -10,6 +10,10 @@ READ_INCLUDES = {
     Capability.VIEW_CATALOG: (Capability.VIEW_CATALOG, Capability.EDIT_CATALOG),
     Capability.VIEW_STORAGE: (Capability.VIEW_STORAGE, Capability.EDIT_STORAGE),
     Capability.VIEW_COST: (Capability.VIEW_COST, Capability.EDIT_COST),
+    Capability.VIEW_STOCK: (Capability.VIEW_STOCK, Capability.RECEIVE_STOCK, Capability.CONSUME_STOCK,
+                            Capability.TRANSFER_STOCK, Capability.RESERVE_STOCK, Capability.CONTROL_STOCK, Capability.INVENTORY),
+    Capability.VIEW_BIOBANK: (Capability.VIEW_BIOBANK, Capability.MANAGE_BIOBANK),
+    Capability.VIEW_PLANNING: (Capability.VIEW_PLANNING, Capability.EDIT_PLANNING),
 }
 
 
@@ -27,7 +31,8 @@ def grants(user, capability):
 
 
 def has_access(user):
-    return is_team(user) and (is_manager(user) or AccessGrant.objects.filter(user=user, active=True).exists())
+    return is_team(user) and (is_manager(user) or AccessGrant.objects.filter(user=user, active=True).exists()
+        or WorkItem.objects.filter(assignee=user).exclude(status=WorkItem.Status.CANCELLED).exists())
 
 
 def permitted(user, capability, *, location=None, category=None):
@@ -78,3 +83,22 @@ def storage_scope(queryset, user, capability=Capability.VIEW_STORAGE):
         return queryset
     descendants = LocationClosure.objects.filter(ancestor_id__in=allowed.values('location_id')).values('descendant_id')
     return queryset.filter(pk__in=descendants)
+
+
+def operational_scope(queryset, user, capability=Capability.VIEW_STOCK, *, category_field='lot__article__category_id', location_field='location_id'):
+    if not is_team(user):
+        return queryset.none()
+    if is_manager(user):
+        return queryset
+    condition = Q(pk__in=[])
+    for grant in grants(user, capability):
+        scope = Q()
+        if grant.category_id:
+            scope &= Q(**{category_field: grant.category_id})
+        if grant.location_id:
+            descendants = LocationClosure.objects.filter(ancestor_id=grant.location_id).values('descendant_id')
+            scope &= Q(**{location_field + '__in': descendants})
+        if not scope:
+            return queryset
+        condition |= scope
+    return queryset.filter(condition)

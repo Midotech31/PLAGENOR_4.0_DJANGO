@@ -12,6 +12,17 @@ class Capability(models.TextChoices):
     EDIT_STORAGE = 'edit_storage', _('Gérer les emplacements')
     VIEW_COST = 'view_cost', _('Consulter les coûts')
     EDIT_COST = 'edit_cost', _('Enregistrer les prix')
+    VIEW_STOCK = 'view_stock', _('Consulter le stock')
+    RECEIVE_STOCK = 'receive_stock', _('Réceptionner le stock')
+    CONSUME_STOCK = 'consume_stock', _('Enregistrer les consommations')
+    TRANSFER_STOCK = 'transfer_stock', _('Transférer le stock')
+    RESERVE_STOCK = 'reserve_stock', _('Réserver le stock')
+    CONTROL_STOCK = 'control_stock', _('Contrôler les lots et les sorties')
+    INVENTORY = 'inventory', _('Réaliser un inventaire')
+    VIEW_BIOBANK = 'view_biobank', _('Consulter l’échantillothèque')
+    MANAGE_BIOBANK = 'manage_biobank', _('Gérer l’échantillothèque')
+    VIEW_PLANNING = 'view_planning', _('Consulter les besoins prévisionnels')
+    EDIT_PLANNING = 'edit_planning', _('Préparer les besoins prévisionnels')
 
 
 class AccessGrant(Record):
