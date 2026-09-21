@@ -469,6 +469,9 @@ class FoundationTests(TestCase):
             response = self.client.get('/erp/')
             self.assertContains(response, expected)
             self.assertContains(response, 'dir="rtl"' if lang == 'ar' else 'dir="ltr"')
+            detail = self.client.get(reverse('erp:article', args=[self.article.pk]))
+            self.assertNotIn(self.article.criticality, [str(value) for _, value in detail.context['fields']])
+            self.assertContains(detail, 'tabindex="0" role="region"', count=2)
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])

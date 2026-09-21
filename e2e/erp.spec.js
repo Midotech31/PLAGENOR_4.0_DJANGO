@@ -94,6 +94,8 @@ test('ERP reference data can be created and related through the native interface
   await page.goto(`/erp/articles/?q=${key}`);
   await page.locator('.erp-table a').filter({hasText:`Reagent ${key}`}).click();
   await expect(page.locator('.erp-heading h1')).toHaveText(`Reagent ${key}`);
+  await expect(page.locator('.erp-description')).not.toContainText('CRITICAL');
+  await expect(page.locator('.erp-table-wrap[tabindex="0"][role="region"]')).toHaveCount(2);
   await audit(page, 'ERP item detail');
   await page.screenshot({path:info.outputPath('erp-item.png'),fullPage:true});
 });

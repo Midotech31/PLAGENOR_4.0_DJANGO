@@ -154,7 +154,7 @@ def record_edit(request, section, pk=None):
 def article_detail(request, pk):
     obj = get_object_or_404(queryset_for('articles', request.user), pk=pk)
     costs = permitted(request.user, Capability.VIEW_COST, category=obj.category)
-    fields = [(field.verbose_name, getattr(obj, field.name)) for field in obj._meta.concrete_fields
+    fields = [(field.verbose_name, getattr(obj, f'get_{field.name}_display')() if field.choices else getattr(obj, field.name)) for field in obj._meta.concrete_fields
               if field.editable and not field.primary_key and field.name not in ('name_en', 'name_ar')]
     return render(request, 'erp/article.html', {'article': obj, 'fields': fields,
         'conversions': obj.conversions.select_related('unit').order_by('unit__code'),
