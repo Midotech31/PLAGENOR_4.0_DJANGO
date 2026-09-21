@@ -1,0 +1,3 @@
+erp/assets/institutional/*.json binary
+erp/assets/models/*.docx -text
+erp/assets/excel/*.xlsx -text
