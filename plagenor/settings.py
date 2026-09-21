@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     'dashboard',
     'documents',
     'notifications',
+    'erp.apps.ErpConfig',
 ]
 
 # ─── django-modeltranslation ─────────────────────────────────────────────

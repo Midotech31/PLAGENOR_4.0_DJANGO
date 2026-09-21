@@ -1,0 +1,549 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PLAGENOR ERP\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+
+msgid "Actif"
+msgstr "نشط"
+
+msgid "Actifs"
+msgstr "النشطة"
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "Adresse"
+msgstr "العنوان"
+
+msgid "Adresse électronique"
+msgstr "البريد الإلكتروني"
+
+msgid "Ajouter"
+msgstr "إضافة"
+
+msgid "Ajouter un sous-emplacement"
+msgstr "إضافة موقع فرعي"
+
+msgid "Ajouter une conversion"
+msgstr "إضافة تحويل"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+msgid "Approvisionnement"
+msgstr "التموين"
+
+msgid "Après"
+msgstr "بعد"
+
+msgid "Articles"
+msgstr "المواد"
+
+msgid "Articles, unités, partenaires et emplacements partagés."
+msgstr "مرجع موحّد للمواد والوحدات والشركاء ومواقع التخزين."
+
+msgid "Aucun enregistrement dans ce périmètre."
+msgstr "لا توجد سجلات ضمن هذا النطاق."
+
+msgid "Aucun prix enregistré."
+msgstr "لا يوجد سعر مسجّل."
+
+msgid "Aucun sous-emplacement enregistré."
+msgstr "لا يوجد موقع فرعي مسجّل."
+
+msgid "Aucune conversion spécifique enregistrée."
+msgstr "لا يوجد تحويل خاص بهذه المادة."
+
+msgid "Aucune conversion validée ne relie ces unités pour cet article."
+msgstr "لا يوجد تحويل معتمد يربط هذه الوحدات لهذه المادة."
+
+msgid "Aucune opération enregistrée."
+msgstr "لا توجد عملية مسجّلة."
+
+msgid "Autre dimension"
+msgstr "بُعد آخر"
+
+msgid "Avant"
+msgstr "قبل"
+
+msgid "Capacité (positions)"
+msgstr "السعة (مواضع)"
+
+msgid "Catégorie"
+msgstr "الفئة"
+
+msgid "Catégorie / périmètre"
+msgstr "الفئة / النطاق"
+
+msgid "Catégorie autorisée"
+msgstr "الفئة المسموح بها"
+
+msgid "Catégorie parente"
+msgstr "الفئة الأم"
+
+msgid "Catégories"
+msgstr "الفئات"
+
+msgid "Cet enregistrement a changé. Rechargez-le avant de réessayer."
+msgstr "تغيّر هذا السجل. أعد تحميله قبل المحاولة مجددًا."
+
+msgid "Cette unité nécessite une conversion propre à chaque article."
+msgstr "تتطلب هذه الوحدة تحويلًا خاصًا بكل مادة."
+
+msgid "Champ non modifiable."
+msgstr "لا يمكن تعديل هذا الحقل."
+
+msgid "Code / utilisateur"
+msgstr "الرمز / المستخدم"
+
+msgid "Code de devise à trois lettres requis."
+msgstr "يجب إدخال رمز العملة المكوّن من ثلاثة أحرف."
+
+msgid "Code interne"
+msgstr "الرمز الداخلي"
+
+msgid "Colonnes de la boîte"
+msgstr "أعمدة العلبة"
+
+msgid "Concentration"
+msgstr "التركيز"
+
+msgid "Conditionnement"
+msgstr "التعبئة"
+
+msgid "Conditionnement décrit"
+msgstr "وصف التعبئة"
+
+msgid "Conservation"
+msgstr "شروط الحفظ"
+
+msgid "Consignes de conservation"
+msgstr "تعليمات الحفظ"
+
+msgid "Consignes et observations"
+msgstr "التعليمات والملاحظات"
+
+msgid "Consulter"
+msgstr "عرض"
+
+msgid "Consulter le catalogue"
+msgstr "عرض الدليل"
+
+msgid "Consulter les coûts"
+msgstr "عرض التكاليف"
+
+msgid "Consulter les emplacements"
+msgstr "عرض المواقع"
+
+msgid "Consulter les valeurs historisées"
+msgstr "عرض القيم المحفوظة"
+
+msgid "Conversion d’unité"
+msgstr "تحويل الوحدات"
+
+msgid "Conversions et conditionnements"
+msgstr "التحويلات والتعبئة"
+
+msgid "Corrigez les informations signalées."
+msgstr "صحّح المعلومات المشار إليها."
+
+msgid "Criticité"
+msgstr "الأهمية التشغيلية"
+
+msgid "Critique"
+msgstr "حرجة"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Date de référence"
+msgstr "التاريخ المرجعي"
+
+msgid "Devise"
+msgstr "العملة"
+
+msgid "Dimension"
+msgstr "البُعد"
+
+msgid "Durée de conservation (jours)"
+msgstr "مدة الصلاحية (أيام)"
+
+msgid "Délai fournisseur (jours)"
+msgstr "مهلة التوريد (أيام)"
+
+msgid "Délégations ERP"
+msgstr "تفويضات نظام ERP"
+
+msgid "Désactivez d’abord les emplacements enfants."
+msgstr "عطّل المواقع الفرعية أولًا."
+
+msgid "Désignation / permission"
+msgstr "التسمية / الصلاحية"
+
+msgid "Désignation anglaise"
+msgstr "التسمية بالإنجليزية"
+
+msgid "Désignation arabe"
+msgstr "التسمية بالعربية"
+
+msgid "Désignation française"
+msgstr "التسمية بالفرنسية"
+
+msgid "Emplacement parent"
+msgstr "الموقع الأب"
+
+msgid "Emplacements"
+msgstr "مواقع التخزين"
+
+msgid "Enregistrement sauvegardé."
+msgstr "تم حفظ السجل."
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+msgid "Enregistrer les prix"
+msgstr "تسجيل الأسعار"
+
+msgid "Enregistrer un prix"
+msgstr "تسجيل سعر"
+
+msgid "Fabricant"
+msgstr "المصنّع"
+
+msgid "Facteur vers l’unité de référence"
+msgstr "معامل التحويل إلى الوحدة المرجعية"
+
+msgid "Faible"
+msgstr "منخفضة"
+
+msgid "Fil d’Ariane"
+msgstr "مسار التنقّل"
+
+msgid "Filtrer"
+msgstr "تصفية"
+
+msgid "Format"
+msgstr "الشكل"
+
+msgid "Fournisseur"
+msgstr "المورّد"
+
+msgid "Fournisseur préféré"
+msgstr "المورّد المفضّل"
+
+msgid "Fournisseurs et fabricants"
+msgstr "المورّدون والمصنّعون"
+
+msgid "Gestion / ERP"
+msgstr "التسيير / ERP"
+
+msgid "Grade / pureté"
+msgstr "الدرجة / النقاوة"
+
+msgid "Gérer le catalogue"
+msgstr "إدارة الدليل"
+
+msgid "Gérer les emplacements"
+msgstr "إدارة مواقع التخزين"
+
+msgid "Haute"
+msgstr "عالية"
+
+msgid "Historique des opérations"
+msgstr "سجل العمليات"
+
+msgid "Historique des prix"
+msgstr "سجل الأسعار"
+
+msgid "Identification"
+msgstr "التعريف"
+
+msgid "Inactif"
+msgstr "غير نشط"
+
+msgid "Inactifs"
+msgstr "غير النشطة"
+
+msgid "Informations scientifiques"
+msgstr "المعلومات العلمية"
+
+msgid "Justification"
+msgstr "التبرير"
+
+msgid "Justification de la conversion"
+msgstr "تبرير التحويل"
+
+msgid "La capacité doit correspondre au nombre de positions de la grille."
+msgstr "يجب أن تتوافق السعة مع عدد مواضع الشبكة."
+
+msgid "La conversion doit concerner une unité alternative du même article."
+msgstr "يجب أن يتعلق التحويل بوحدة بديلة للمادة نفسها."
+
+msgid ""
+"La conversion dépasse la précision de six décimales ; aucun arrondi "
+"silencieux n’est appliqué."
+msgstr "يتجاوز التحويل دقة ست منازل عشرية؛ لا يُطبّق أي تقريب دون تنبيه."
+
+msgid "La dimension et le facteur d’une unité existante sont immuables."
+msgstr "لا يمكن تغيير بُعد وحدة موجودة أو معاملها."
+
+msgid "La température cible doit appartenir à la plage autorisée."
+msgstr "يجب أن تقع درجة الحرارة المستهدفة ضمن المجال المسموح به."
+
+msgid "Le fabricant sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "الجهة المحددة غير نشطة أو ليست مصنّعًا."
+
+msgid "Le fournisseur sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "الجهة المحددة غير نشطة أو ليست مورّدًا."
+
+msgid "Le type d’emplacement doit être actif."
+msgstr "يجب أن يكون نوع الموقع نشطًا."
+
+msgid ""
+"Les champs facultatifs restent vides lorsque l’information est inconnue."
+msgstr "تُترك الحقول الاختيارية فارغة عندما تكون المعلومات غير معروفة."
+
+msgid "Lignes de la boîte"
+msgstr "صفوف العلبة"
+
+msgid "L’article et les unités doivent être actifs."
+msgstr "يجب أن تكون المادة ووحداتها نشطة."
+
+msgid "L’emplacement parent doit être actif."
+msgstr "يجب أن يكون الموقع الأب نشطًا."
+
+msgid "L’unité de gestion d’un article existant ne peut pas être remplacée."
+msgstr "لا يمكن استبدال وحدة تسيير مادة موجودة."
+
+msgid "Masse"
+msgstr "الكتلة"
+
+msgid "Membre de l’équipe"
+msgstr "عضو الفريق"
+
+msgid "Modifier"
+msgstr "تعديل"
+
+msgid "Moyenne"
+msgstr "متوسطة"
+
+msgid "Multiple de commande"
+msgstr "مضاعف كمية الطلب"
+
+msgid "Non"
+msgstr "لا"
+
+msgid "Non renseigné"
+msgstr "غير مذكور"
+
+msgid "Numéro CAS"
+msgstr "رقم CAS"
+
+msgid "Observations"
+msgstr "الملاحظات"
+
+msgid "Observations internes ; aucune TVA universelle n’est appliquée."
+msgstr "ملاحظات داخلية؛ لا تُطبّق نسبة موحّدة للرسم على القيمة المضافة."
+
+msgid "Oui"
+msgstr "نعم"
+
+msgid "Page"
+msgstr "صفحة"
+
+msgid "Pagination"
+msgstr "التنقّل بين الصفحات"
+
+msgid "Pays"
+msgstr "البلد"
+
+msgid "Permission"
+msgstr "الصلاحية"
+
+msgid "Pièces"
+msgstr "القطع"
+
+msgid "Prix unitaire"
+msgstr "سعر الوحدة"
+
+msgid "Précédent"
+msgstr "السابق"
+
+msgid "Périmètre de stockage"
+msgstr "نطاق التخزين"
+
+msgid "Quantité dans l’unité de gestion"
+msgstr "الكمية بوحدة التسيير"
+
+msgid "Rechercher"
+msgstr "بحث"
+
+msgid "Renseignez ensemble la concentration et son unité."
+msgstr "أدخل التركيز ووحدته معًا."
+
+msgid "Réactions"
+msgstr "التفاعلات"
+
+msgid "Référence catalogue"
+msgstr "مرجع الدليل"
+
+msgid "Référence fabricant"
+msgstr "مرجع المصنّع"
+
+msgid "Référentiel des articles"
+msgstr "دليل المواد"
+
+msgid "Référentiels scientifiques"
+msgstr "المرجعيات العلمية"
+
+msgid ""
+"Saisissez une quantité finie, positive ou nulle, dans les limites "
+"autorisées."
+msgstr "يجب إدخال كمية محدودة وغير سالبة ضمن الحدود المسموح بها."
+
+msgid "Sensible à la lumière"
+msgstr "حسّاس للضوء"
+
+msgid "Seuil de réapprovisionnement"
+msgstr "حد إعادة التموين"
+
+msgid "Seul un membre actif de l’équipe peut recevoir une délégation ERP."
+msgstr "لا تُمنح صلاحيات ERP إلا لعضو نشط في الفريق."
+
+msgid "Source"
+msgstr "المصدر"
+
+msgid "Source du prix"
+msgstr "مصدر السعر"
+
+msgid "Sous-emplacements"
+msgstr "المواقع الفرعية"
+
+msgid "Spécifications techniques"
+msgstr "المواصفات التقنية"
+
+msgid "Stabilité après ouverture (jours)"
+msgstr "الثبات بعد الفتح (أيام)"
+
+msgid "Statut"
+msgstr "الحالة"
+
+msgid "Stock cible"
+msgstr "المخزون المستهدف"
+
+msgid "Stock de sécurité"
+msgstr "مخزون الأمان"
+
+msgid "Stock minimal"
+msgstr "الحد الأدنى للمخزون"
+
+msgid "Stockage autorisé"
+msgstr "السماح بالتخزين"
+
+msgid "Stockage réfrigéré"
+msgstr "التخزين البارد"
+
+msgid "Suivant"
+msgstr "التالي"
+
+msgid "Sélectionnez un fournisseur."
+msgstr "اختر مورّدًا."
+
+msgid "Sélectionnez une unité et une catégorie actives."
+msgstr "اختر وحدة وفئة نشطتين."
+
+msgid "Température cible (°C)"
+msgstr "درجة الحرارة المستهدفة (°C)"
+
+msgid "Température maximale (°C)"
+msgstr "درجة الحرارة القصوى (°C)"
+
+msgid "Température minimale (°C)"
+msgstr "درجة الحرارة الدنيا (°C)"
+
+msgid "Tests"
+msgstr "الاختبارات"
+
+msgid "Tous"
+msgstr "الكل"
+
+msgid "Type de référentiel non autorisé."
+msgstr "هذا النوع من المرجعيات غير مسموح به."
+
+msgid "Type d’emplacement"
+msgstr "نوع الموقع"
+
+msgid "Types d’emplacements"
+msgstr "أنواع المواقع"
+
+msgid "Téléphone"
+msgstr "الهاتف"
+
+msgid "Un code interne attribué est immuable."
+msgstr "لا يمكن تغيير الرمز الداخلي بعد إسناده."
+
+msgid "Un enregistrement avec cette identité existe déjà."
+msgstr "يوجد سجل بهذه الهوية بالفعل."
+
+msgid "Un référentiel unique, des modifications historisées."
+msgstr "مرجع موحّد مع حفظ سجل التعديلات."
+
+msgid ""
+"Une conversion spécifique prévaut sur la conversion générale de dimension."
+msgstr "يُعتمد التحويل الخاص بالمادة قبل التحويل العام للبُعد."
+
+msgid "Une hiérarchie ne peut pas contenir de cycle."
+msgstr "لا يمكن أن يتضمن التسلسل الهرمي حلقة مغلقة."
+
+msgid ""
+"Une observation ne peut pas être attribuée à un autre article ou "
+"utilisateur."
+msgstr "لا يمكن إسناد الملاحظة إلى مادة أو مستخدم آخر."
+
+msgid "Une permission de catalogue ou de coût est limitée par catégorie."
+msgstr "تُحدّد صلاحيات الدليل والتكاليف حسب الفئة."
+
+msgid ""
+"Une permission de stockage est limitée par emplacement, pas par catégorie."
+msgstr "تُحدّد صلاحيات التخزين حسب الموقع، وليس الفئة."
+
+msgid "Une unité active et une justification sont obligatoires."
+msgstr "يجب تحديد وحدة نشطة وتقديم تبرير."
+
+msgid "Une écriture historique ne peut pas être modifiée."
+msgstr "لا يمكن تعديل سجل تاريخي."
+
+msgid "Une écriture historique ne peut pas être supprimée."
+msgstr "لا يمكن حذف سجل تاريخي."
+
+msgid "Unité"
+msgstr "الوحدة"
+
+msgid "Unité alternative"
+msgstr "الوحدة البديلة"
+
+msgid "Unité de concentration"
+msgstr "وحدة التركيز"
+
+msgid "Unité de consommation"
+msgstr "وحدة الاستهلاك"
+
+msgid "Unité de gestion"
+msgstr "وحدة التسيير"
+
+msgid "Unité du prix"
+msgstr "وحدة التسعير"
+
+msgid "Unité d’achat"
+msgstr "وحدة الشراء"
+
+msgid "Unités"
+msgstr "الوحدات"
+
+msgid "Volume"
+msgstr "الحجم"

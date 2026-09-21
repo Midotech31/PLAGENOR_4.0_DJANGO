@@ -1,0 +1,7 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading"><div><p class="erp-eyebrow">PLAGENOR</p><h1>{% trans 'Référentiels scientifiques' %}</h1><p>{% trans 'Articles, unités, partenaires et emplacements partagés.' %}</p></div>{% if manager %}<a class="btn btn-secondary" href="{% url 'erp:audit' %}">{% trans 'Historique des opérations' %}</a>{% endif %}</header>
+<div class="erp-cards">
+{% for card in cards %}<a class="erp-card" href="{% url 'erp:list' section=card.section %}"><span class="erp-card-label">{{ card.title }}</span><strong class="erp-card-count">{{ card.count }}</strong><span class="erp-card-action">{% trans 'Consulter' %}<span aria-hidden="true"> →</span></span></a>{% endfor %}
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 [run]
-source = accounts,core,dashboard,documents,notifications,plagenor
+source = accounts,core,dashboard,documents,notifications,plagenor,erp
 omit =
     */migrations/*
     */tests.py

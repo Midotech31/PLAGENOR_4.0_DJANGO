@@ -1,0 +1,553 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PLAGENOR ERP\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Actifs"
+msgstr "Active"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Adresse"
+msgstr "Address"
+
+msgid "Adresse électronique"
+msgstr "Email address"
+
+msgid "Ajouter"
+msgstr "Add"
+
+msgid "Ajouter un sous-emplacement"
+msgstr "Add a sublocation"
+
+msgid "Ajouter une conversion"
+msgstr "Add a conversion"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Approvisionnement"
+msgstr "Procurement"
+
+msgid "Après"
+msgstr "After"
+
+msgid "Articles"
+msgstr "Items"
+
+msgid "Articles, unités, partenaires et emplacements partagés."
+msgstr "Shared items, units, partners and storage locations."
+
+msgid "Aucun enregistrement dans ce périmètre."
+msgstr "No records within this scope."
+
+msgid "Aucun prix enregistré."
+msgstr "No price recorded."
+
+msgid "Aucun sous-emplacement enregistré."
+msgstr "No sublocation recorded."
+
+msgid "Aucune conversion spécifique enregistrée."
+msgstr "No item-specific conversion recorded."
+
+msgid "Aucune conversion validée ne relie ces unités pour cet article."
+msgstr "No approved conversion connects these units for this item."
+
+msgid "Aucune opération enregistrée."
+msgstr "No operation recorded."
+
+msgid "Autre dimension"
+msgstr "Other dimension"
+
+msgid "Avant"
+msgstr "Before"
+
+msgid "Capacité (positions)"
+msgstr "Capacity (positions)"
+
+msgid "Catégorie"
+msgstr "Category"
+
+msgid "Catégorie / périmètre"
+msgstr "Category / scope"
+
+msgid "Catégorie autorisée"
+msgstr "Authorized category"
+
+msgid "Catégorie parente"
+msgstr "Parent category"
+
+msgid "Catégories"
+msgstr "Categories"
+
+msgid "Cet enregistrement a changé. Rechargez-le avant de réessayer."
+msgstr "This record has changed. Reload it before trying again."
+
+msgid "Cette unité nécessite une conversion propre à chaque article."
+msgstr "This unit requires an item-specific conversion."
+
+msgid "Champ non modifiable."
+msgstr "This field cannot be modified."
+
+msgid "Code / utilisateur"
+msgstr "Code / user"
+
+msgid "Code de devise à trois lettres requis."
+msgstr "A three-letter currency code is required."
+
+msgid "Code interne"
+msgstr "Internal code"
+
+msgid "Colonnes de la boîte"
+msgstr "Box columns"
+
+msgid "Concentration"
+msgstr "Concentration"
+
+msgid "Conditionnement"
+msgstr "Packaging"
+
+msgid "Conditionnement décrit"
+msgstr "Packaging description"
+
+msgid "Conservation"
+msgstr "Storage conditions"
+
+msgid "Consignes de conservation"
+msgstr "Storage instructions"
+
+msgid "Consignes et observations"
+msgstr "Instructions and notes"
+
+msgid "Consulter"
+msgstr "View"
+
+msgid "Consulter le catalogue"
+msgstr "View the catalogue"
+
+msgid "Consulter les coûts"
+msgstr "View costs"
+
+msgid "Consulter les emplacements"
+msgstr "View locations"
+
+msgid "Consulter les valeurs historisées"
+msgstr "View recorded values"
+
+msgid "Conversion d’unité"
+msgstr "Unit conversion"
+
+msgid "Conversions et conditionnements"
+msgstr "Conversions and packaging"
+
+msgid "Corrigez les informations signalées."
+msgstr "Correct the highlighted information."
+
+msgid "Criticité"
+msgstr "Criticality"
+
+msgid "Critique"
+msgstr "Critical"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Date de référence"
+msgstr "Reference date"
+
+msgid "Devise"
+msgstr "Currency"
+
+msgid "Dimension"
+msgstr "Dimension"
+
+msgid "Durée de conservation (jours)"
+msgstr "Shelf life (days)"
+
+msgid "Délai fournisseur (jours)"
+msgstr "Supplier lead time (days)"
+
+msgid "Délégations ERP"
+msgstr "ERP delegations"
+
+msgid "Désactivez d’abord les emplacements enfants."
+msgstr "Deactivate the child locations first."
+
+msgid "Désignation / permission"
+msgstr "Description / permission"
+
+msgid "Désignation anglaise"
+msgstr "English name"
+
+msgid "Désignation arabe"
+msgstr "Arabic name"
+
+msgid "Désignation française"
+msgstr "French name"
+
+msgid "Emplacement parent"
+msgstr "Parent location"
+
+msgid "Emplacements"
+msgstr "Locations"
+
+msgid "Enregistrement sauvegardé."
+msgstr "Record saved."
+
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "Enregistrer les prix"
+msgstr "Record prices"
+
+msgid "Enregistrer un prix"
+msgstr "Record a price"
+
+msgid "Fabricant"
+msgstr "Manufacturer"
+
+msgid "Facteur vers l’unité de référence"
+msgstr "Factor to the reference unit"
+
+msgid "Faible"
+msgstr "Low"
+
+msgid "Fil d’Ariane"
+msgstr "Breadcrumb"
+
+msgid "Filtrer"
+msgstr "Filter"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Fournisseur"
+msgstr "Supplier"
+
+msgid "Fournisseur préféré"
+msgstr "Preferred supplier"
+
+msgid "Fournisseurs et fabricants"
+msgstr "Suppliers and manufacturers"
+
+msgid "Gestion / ERP"
+msgstr "Management / ERP"
+
+msgid "Grade / pureté"
+msgstr "Grade / purity"
+
+msgid "Gérer le catalogue"
+msgstr "Manage the catalogue"
+
+msgid "Gérer les emplacements"
+msgstr "Manage locations"
+
+msgid "Haute"
+msgstr "High"
+
+msgid "Historique des opérations"
+msgstr "Operation history"
+
+msgid "Historique des prix"
+msgstr "Price history"
+
+msgid "Identification"
+msgstr "Identification"
+
+msgid "Inactif"
+msgstr "Inactive"
+
+msgid "Inactifs"
+msgstr "Inactive"
+
+msgid "Informations scientifiques"
+msgstr "Scientific information"
+
+msgid "Justification"
+msgstr "Justification"
+
+msgid "Justification de la conversion"
+msgstr "Conversion justification"
+
+msgid "La capacité doit correspondre au nombre de positions de la grille."
+msgstr "Capacity must match the number of grid positions."
+
+msgid "La conversion doit concerner une unité alternative du même article."
+msgstr "The conversion must use an alternative unit for the same item."
+
+msgid ""
+"La conversion dépasse la précision de six décimales ; aucun arrondi "
+"silencieux n’est appliqué."
+msgstr ""
+"The conversion exceeds six decimal places; no silent rounding is applied."
+
+msgid "La dimension et le facteur d’une unité existante sont immuables."
+msgstr "The dimension and factor of an existing unit cannot be changed."
+
+msgid "La température cible doit appartenir à la plage autorisée."
+msgstr "The target temperature must be within the permitted range."
+
+msgid "Le fabricant sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "The selected party is inactive or is not a manufacturer."
+
+msgid "Le fournisseur sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "The selected party is inactive or is not a supplier."
+
+msgid "Le type d’emplacement doit être actif."
+msgstr "The location type must be active."
+
+msgid ""
+"Les champs facultatifs restent vides lorsque l’information est inconnue."
+msgstr "Optional fields remain empty when the information is unknown."
+
+msgid "Lignes de la boîte"
+msgstr "Box rows"
+
+msgid "L’article et les unités doivent être actifs."
+msgstr "The item and its units must be active."
+
+msgid "L’emplacement parent doit être actif."
+msgstr "The parent location must be active."
+
+msgid "L’unité de gestion d’un article existant ne peut pas être remplacée."
+msgstr "The base unit of an existing item cannot be replaced."
+
+msgid "Masse"
+msgstr "Mass"
+
+msgid "Membre de l’équipe"
+msgstr "Team member"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Moyenne"
+msgstr "Medium"
+
+msgid "Multiple de commande"
+msgstr "Order multiple"
+
+msgid "Non"
+msgstr "No"
+
+msgid "Non renseigné"
+msgstr "Not provided"
+
+msgid "Numéro CAS"
+msgstr "CAS number"
+
+msgid "Observations"
+msgstr "Notes"
+
+msgid "Observations internes ; aucune TVA universelle n’est appliquée."
+msgstr "Internal observations; no universal VAT rate is applied."
+
+msgid "Oui"
+msgstr "Yes"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Pagination"
+msgstr "Pagination"
+
+msgid "Pays"
+msgstr "Country"
+
+msgid "Permission"
+msgstr "Permission"
+
+msgid "Pièces"
+msgstr "Pieces"
+
+msgid "Prix unitaire"
+msgstr "Unit price"
+
+msgid "Précédent"
+msgstr "Previous"
+
+msgid "Périmètre de stockage"
+msgstr "Storage scope"
+
+msgid "Quantité dans l’unité de gestion"
+msgstr "Quantity in the base unit"
+
+msgid "Rechercher"
+msgstr "Search"
+
+msgid "Renseignez ensemble la concentration et son unité."
+msgstr "Provide both the concentration and its unit."
+
+msgid "Réactions"
+msgstr "Reactions"
+
+msgid "Référence catalogue"
+msgstr "Catalogue reference"
+
+msgid "Référence fabricant"
+msgstr "Manufacturer reference"
+
+msgid "Référentiel des articles"
+msgstr "Item catalogue"
+
+msgid "Référentiels scientifiques"
+msgstr "Scientific reference data"
+
+msgid ""
+"Saisissez une quantité finie, positive ou nulle, dans les limites "
+"autorisées."
+msgstr ""
+"A finite, non-negative quantity within the permitted limits is required."
+
+msgid "Sensible à la lumière"
+msgstr "Light-sensitive"
+
+msgid "Seuil de réapprovisionnement"
+msgstr "Reorder point"
+
+msgid "Seul un membre actif de l’équipe peut recevoir une délégation ERP."
+msgstr "Only an active team member may receive an ERP delegation."
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Source du prix"
+msgstr "Price source"
+
+msgid "Sous-emplacements"
+msgstr "Sublocations"
+
+msgid "Spécifications techniques"
+msgstr "Technical specifications"
+
+msgid "Stabilité après ouverture (jours)"
+msgstr "Stability after opening (days)"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Stock cible"
+msgstr "Target stock"
+
+msgid "Stock de sécurité"
+msgstr "Safety stock"
+
+msgid "Stock minimal"
+msgstr "Minimum stock"
+
+msgid "Stockage autorisé"
+msgstr "Storage permitted"
+
+msgid "Stockage réfrigéré"
+msgstr "Cold storage"
+
+msgid "Suivant"
+msgstr "Next"
+
+msgid "Sélectionnez un fournisseur."
+msgstr "Select a supplier."
+
+msgid "Sélectionnez une unité et une catégorie actives."
+msgstr "Select an active unit and category."
+
+msgid "Température cible (°C)"
+msgstr "Target temperature (°C)"
+
+msgid "Température maximale (°C)"
+msgstr "Maximum temperature (°C)"
+
+msgid "Température minimale (°C)"
+msgstr "Minimum temperature (°C)"
+
+msgid "Tests"
+msgstr "Tests"
+
+msgid "Tous"
+msgstr "All"
+
+msgid "Type de référentiel non autorisé."
+msgstr "This reference-data type is not permitted."
+
+msgid "Type d’emplacement"
+msgstr "Location type"
+
+msgid "Types d’emplacements"
+msgstr "Location types"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+msgid "Un code interne attribué est immuable."
+msgstr "An assigned internal code cannot be changed."
+
+msgid "Un enregistrement avec cette identité existe déjà."
+msgstr "A record with this identity already exists."
+
+msgid "Un référentiel unique, des modifications historisées."
+msgstr "One shared catalogue, with a complete change history."
+
+msgid ""
+"Une conversion spécifique prévaut sur la conversion générale de dimension."
+msgstr ""
+"An item-specific conversion takes precedence over the general dimension "
+"conversion."
+
+msgid "Une hiérarchie ne peut pas contenir de cycle."
+msgstr "A hierarchy cannot contain a cycle."
+
+msgid ""
+"Une observation ne peut pas être attribuée à un autre article ou "
+"utilisateur."
+msgstr "An observation cannot be attributed to a different item or user."
+
+msgid "Une permission de catalogue ou de coût est limitée par catégorie."
+msgstr "Catalogue and cost permissions are scoped by category."
+
+msgid ""
+"Une permission de stockage est limitée par emplacement, pas par catégorie."
+msgstr "Storage permissions are scoped by location, not category."
+
+msgid "Une unité active et une justification sont obligatoires."
+msgstr "An active unit and a justification are required."
+
+msgid "Une écriture historique ne peut pas être modifiée."
+msgstr "A historical record cannot be modified."
+
+msgid "Une écriture historique ne peut pas être supprimée."
+msgstr "A historical record cannot be deleted."
+
+msgid "Unité"
+msgstr "Unit"
+
+msgid "Unité alternative"
+msgstr "Alternative unit"
+
+msgid "Unité de concentration"
+msgstr "Concentration unit"
+
+msgid "Unité de consommation"
+msgstr "Consumption unit"
+
+msgid "Unité de gestion"
+msgstr "Base unit"
+
+msgid "Unité du prix"
+msgstr "Price unit"
+
+msgid "Unité d’achat"
+msgstr "Purchase unit"
+
+msgid "Unités"
+msgstr "Units"
+
+msgid "Volume"
+msgstr "Volume"

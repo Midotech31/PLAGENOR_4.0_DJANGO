@@ -106,7 +106,7 @@ jobs:
         pip-audit -r requirements.txt
     - name: Static security scan
       run: |
-        bandit -r accounts core dashboard documents notifications plagenor \
+        bandit -r accounts core dashboard documents notifications plagenor erp \
           -x '*/migrations/*,*/tests.py' -ll
 
   postgres:
@@ -250,6 +250,11 @@ jobs:
           npm ci
           npm audit --audit-level=high
           npx playwright install --with-deps chromium firefox
+      - name: Compile application translations
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+          python manage.py compilemessages
       - name: Run browser E2E and WCAG 2.2 AA gates
         run: npm run test:e2e
       - name: Upload browser evidence

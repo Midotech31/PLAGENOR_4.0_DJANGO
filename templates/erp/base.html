@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% load i18n static %}
+{% block title %}ERP · PLAGENOR 4.0{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/erp.css' %}">{% endblock %}
+{% block content %}
+<section class="erp-workspace">
+<nav class="erp-breadcrumb" aria-label="{% trans 'Fil d’Ariane' %}"><a href="{% url 'erp:index' %}">{% trans 'Gestion / ERP' %}</a>{% block erp_breadcrumb %}{% endblock %}</nav>
+{% block erp_content %}{% endblock %}
+</section>
+{% endblock %}

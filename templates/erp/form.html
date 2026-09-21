@@ -1,0 +1,11 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_breadcrumb %}<span aria-hidden="true">/</span><a href="{% url 'erp:list' section=section %}">{{ title }}</a>{% endblock %}
+{% block erp_content %}
+<header class="erp-heading"><div><h1>{{ title }}</h1><p>{% trans 'Les champs facultatifs restent vides lorsque l’information est inconnue.' %}</p></div></header>
+<form method="post" class="erp-form" novalidate>{% csrf_token %}
+{% if form.errors %}<div class="erp-errors" role="alert"><strong>{% trans 'Corrigez les informations signalées.' %}</strong>{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}
+{% if form.groups %}{% for group in form.groups %}<details class="erp-form-section" {% if forloop.first or form.errors %}open{% endif %}><summary>{{ group.title }}</summary><div class="erp-form-grid">{% for field in group.fields %}{% include 'erp/field.html' %}{% endfor %}</div></details>{% endfor %}{% else %}<div class="erp-form-grid">{% for field in form.visible_fields %}{% include 'erp/field.html' %}{% endfor %}</div>{% endif %}
+<div class="erp-form-actions"><button type="submit" class="btn btn-primary">{% trans 'Enregistrer' %}</button><a class="btn btn-secondary" href="{% url 'erp:list' section=section %}">{% trans 'Annuler' %}</a></div>
+</form>
+{% endblock %}
