@@ -96,7 +96,7 @@ def quantity(value):
         if isinstance(value, bool) or len(str(value)) > 64:
             raise InvalidOperation
         result = Decimal(str(value))
-        if not result.is_finite() or result < 0 or result > Decimal('999999999999.999999'):
+        if not result.is_finite() or result < 0 or result > Decimal('999999999999.999999') or (result != 0 and result.adjusted() < -60):
             raise InvalidOperation
     except (InvalidOperation, ValueError, TypeError):
         raise ValidationError(_('Saisissez une quantité finie, positive ou nulle, dans les limites autorisées.'))

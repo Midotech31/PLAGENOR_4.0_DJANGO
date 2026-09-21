@@ -197,9 +197,12 @@ class FoundationTests(TestCase):
             save_conversion(self.admin, self.article, {'article': self.liquid, 'unit': self.box, 'factor': Decimal(1), 'justification': 'X'})
 
     def test_nonfinite_excessive_or_imprecise_quantities_fail_without_rounding(self):
-        for value in (True, '-1', 'NaN', 'Infinity', '1E99999999', 'x', None, '1' * 65):
+        for value in (True, '-1', 'NaN', 'Infinity', '1E99999999', '1E-999999999', '1E-61', 'x', None, '1' * 65):
             with self.subTest(value=value), self.assertRaises(ValidationError):
                 quantity(value)
+        self.assertEqual(quantity('1E-60'), Decimal('1E-60'))
+        with self.assertRaises(ValidationError):
+            convert_quantity(self.article, '1E-999999999', self.unit)
         self.assertEqual(convert_quantity(self.article, 0, self.unit)[0], 0)
         with self.assertRaises(ValidationError):
             convert_quantity(self.article, '0.0000001', self.unit)
