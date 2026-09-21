@@ -74,7 +74,7 @@ def create_work(user, *, kind, title, assignee=None, due_on=None, priority='NORM
 def delegate_work(user, pk, *, expected, assignee, due_on=None, priority='NORMAL',
                   instructions='', allow_costs=False, reason=''):
     require_manager(user)
-    work = WorkItem.objects.select_for_update().get(pk=pk)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=pk)
     check_version(work, expected)
     if work.status in (WorkItem.Status.APPROVED, WorkItem.Status.CANCELLED):
         raise ValidationError(_('Cette tâche est clôturée.'))
@@ -124,7 +124,7 @@ def _transition(user, work, state, reason=''):
 
 @transaction.atomic
 def transition_work(user, pk, *, expected, state, reason=''):
-    work = WorkItem.objects.select_for_update().get(pk=pk)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=pk)
     require_work(user, work)
     check_version(work, expected)
     if state == WorkItem.Status.IN_PROGRESS:
@@ -154,7 +154,7 @@ def transition_work(user, pk, *, expected, state, reason=''):
 
 @transaction.atomic
 def comment_work(user, pk, body):
-    work = WorkItem.objects.select_for_update().get(pk=pk)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=pk)
     require_work(user, work)
     if not body.strip() or len(body) > 10000:
         raise ValidationError(_('Le compte rendu doit contenir entre 1 et 10 000 caractères.'))

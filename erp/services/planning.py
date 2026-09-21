@@ -85,7 +85,7 @@ def _editable(work):
 @transaction.atomic
 def save_schedule(user, work_id, *, expected, starts_at, ends_at, resources=(), request=None, run=None, reason=''):
     require_manager(user)
-    work = WorkItem.objects.select_for_update().get(pk=work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=work_id)
     check_version(work, expected)
     _editable(work)
     lock_tree('planning')
@@ -167,7 +167,7 @@ def create_activity(user, *, key, kind, title, assignee, starts_at, ends_at, res
 @transaction.atomic
 def set_dependencies(user, work_id, *, expected, prerequisites, reason):
     require_manager(user)
-    work = WorkItem.objects.select_for_update().get(pk=work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=work_id)
     check_version(work, expected)
     _editable(work)
     lock_tree('planning')
@@ -255,7 +255,7 @@ def readiness(user, work, *, include_confirmation=True):
 
 @transaction.atomic
 def confirm_resources(user, work_id, *, expected, note):
-    work = WorkItem.objects.select_for_update().get(pk=work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=work_id)
     require_work(user, work, edit=True)
     check_version(work, expected)
     lock_tree('locations')

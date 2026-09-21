@@ -44,7 +44,7 @@ def create_inventory(user, *, title, assignee=None, location=None, category=None
 @transaction.atomic
 def count_inventory(user, pk, *, expected, container_version, amount, note=''):
     line = InventoryLine.objects.select_related('campaign').get(pk=pk)
-    work = WorkItem.objects.select_for_update().get(pk=line.campaign.work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=line.campaign.work_id)
     require_work(user, work, edit=True)
     line = InventoryLine.objects.select_for_update().get(pk=pk)
     container = _container(line.container_id)
@@ -68,7 +68,7 @@ def count_inventory(user, pk, *, expected, container_version, amount, note=''):
 @transaction.atomic
 def submit_inventory(user, pk, *, expected, reason=''):
     campaign = InventoryCampaign.objects.get(pk=pk)
-    work = WorkItem.objects.select_for_update().get(pk=campaign.work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=campaign.work_id)
     require_work(user, work, edit=True)
     check_version(work, expected)
     if campaign.lines.filter(Q(counted_quantity__isnull=True) | Q(needs_recount=True)).exists():
@@ -80,7 +80,7 @@ def submit_inventory(user, pk, *, expected, reason=''):
 def recount_inventory(user, pk, *, expected, line_ids, reason):
     require_manager(user)
     campaign = InventoryCampaign.objects.get(pk=pk)
-    work = WorkItem.objects.select_for_update().get(pk=campaign.work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=campaign.work_id)
     check_version(work, expected)
     if work.status != WorkItem.Status.SUBMITTED or not reason.strip():
         raise ValidationError(_('Le recomptage exige un inventaire soumis et une justification.'))
@@ -99,7 +99,7 @@ def recount_inventory(user, pk, *, expected, line_ids, reason):
 def approve_inventory(user, pk, *, expected, key, reason):
     require_manager(user)
     campaign = InventoryCampaign.objects.get(pk=pk)
-    work = WorkItem.objects.select_for_update().get(pk=campaign.work_id)
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=campaign.work_id)
     campaign.refresh_from_db()
     payload = {'campaign': campaign.pk, 'reason': reason}
     if campaign.adjustment_id:

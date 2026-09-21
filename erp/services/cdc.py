@@ -37,7 +37,7 @@ def dossier_scope(user):
 
 def _dossier(user, pk, *, edit=False):
     identity = CdcDossier.objects.values('work_id').get(pk=pk)
-    work = WorkItem.objects.select_for_update().get(pk=identity['work_id'])
+    work = WorkItem.objects.select_for_update(no_key=True).get(pk=identity['work_id'])
     require_work(user, work, edit=edit)
     dossier = CdcDossier.objects.select_for_update().get(pk=pk)
     dossier.work = work

@@ -53,8 +53,8 @@ jobs:
       run: |
         coverage run manage.py test
         # Enforced regression floor, verified by the full Django suite.
-        coverage report --fail-under=100
         coverage json -o coverage.json
+        coverage report --fail-under=100
     - name: Render document previews with LibreOffice
       run: |
         set -euo pipefail
@@ -90,6 +90,7 @@ jobs:
         cat document-previews/VALIDATION.txt
 
     - name: Upload coverage and rendered document evidence
+      if: always()
       uses: actions/upload-artifact@v7
       with:
         name: application-validation
@@ -147,6 +148,8 @@ jobs:
       - run: python manage.py check --deploy
       - name: Verify multi-sample HTTP submission on PostgreSQL
         run: python manage.py test core.test_ibtikar_acceptance.AcceptanceFlows.test_two_hundred_rows_survive_the_http_parser_and_draft_save
+      - name: Verify operational and planning concurrency on PostgreSQL
+        run: python manage.py test erp.test_postgres_operations --noinput --verbosity 2
       - name: Run PostgreSQL regression suite
         run: |
           set -euo pipefail

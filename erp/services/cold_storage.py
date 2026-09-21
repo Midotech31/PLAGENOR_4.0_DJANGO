@@ -30,7 +30,7 @@ def _temperature_permission(user, location, work=None):
 @transaction.atomic
 def record_temperature(user, *, location, measured_at, value, comment='', source='MANUAL', work=None):
     if work is not None:
-        work = WorkItem.objects.select_for_update().get(pk=work.pk)
+        work = WorkItem.objects.select_for_update(no_key=True).get(pk=work.pk)
     lock_tree('locations')
     location = Location.objects.select_for_update().get(pk=location.pk)
     _temperature_permission(user, location, work)
