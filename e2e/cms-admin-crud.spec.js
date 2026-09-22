@@ -52,6 +52,7 @@ test('techniques and payment methods persist through reloads', async ({ page }, 
 test('announcements create toggle and delete persist', async ({ page }, testInfo) => {
   const suffix = testInfo.project.name.replace(/[^a-z0-9]/gi, '-') + '-' + testInfo.retry;
   await asAdmin(page);
+  page.on('dialog', dialog => dialog.accept());
   await page.goto('/dashboard/home/?tab=system');
   const form = page.locator('form[action="/dashboard/home/announcement/create/"]');
   await form.locator('[name="title"]').fill('Annonce CMS navigateur ' + suffix + '');
@@ -166,9 +167,8 @@ test('document block CRUD persists relation and text', async ({ page }, testInfo
   await expect(page.locator('[name="body"]')).toHaveValue('Contenu modifié et relu');
   await page.goto('/documents/blocks/');
   row = page.locator('tr').filter({ hasText: changedTitle });
-  const deleteHref = await row.locator('a[href$="/delete/"]').getAttribute('href');
-  await page.goto(deleteHref);
-  await clickAndSettle(page.locator('main form button[type="submit"]'), page);
+  page.on('dialog', dialog => dialog.accept());
+  await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
   await page.goto('/documents/blocks/');
   await expect(page.locator('tr').filter({ hasText: changedTitle })).toHaveCount(0);
 });
