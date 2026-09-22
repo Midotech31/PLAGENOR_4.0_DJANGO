@@ -112,7 +112,7 @@ class CmsPersistenceVerificationTests(TestCase):
         self.client.raise_request_exception=False
         with patch('dashboard.views.superadmin.PlatformContent.objects.update_or_create',side_effect=fail_second),patch('dashboard.views.superadmin.messages.success') as success:
             response=self.client.post(self.endpoint('superadmin_content_save'),{'key':'atomic','value_fr':'A','value_en':'B','value_ar':'C'})
-            self.assertGreaterEqual(response.status_code,400);success.assert_not_called()
+            self.assertEqual(response.status_code,302);success.assert_not_called()
         self.assertFalse(PlatformContent.objects.filter(key='atomic').exists())
 
     def test_cms_new_request_observes_external_update_without_worker_cache(self):
@@ -160,3 +160,61 @@ class CmsPersistenceVerificationTests(TestCase):
         self.client.force_login(outsider)
         self.assertEqual(self.client.post(self.endpoint('pricing_add_api',self.service.pk),{'name':'Forbidden','amount':'100'}).status_code,403)
         self.assertEqual(ServicePricing.objects.count(),0)
+
+
+    def test_technique_validation_and_database_failures_never_report_success(self):
+        create_url=self.endpoint('superadmin_technique_create')
+        before=Technique.objects.count()
+        for data in ({'name':'','category':'X'},{'name':'X'*201,'category':'X'}):
+            with patch('dashboard.views.superadmin.messages.success') as success:
+                self.client.post(create_url,data);success.assert_not_called()
+            self.assertEqual(Technique.objects.count(),before)
+        existing=Technique.objects.create(name='Existing technique',category='A')
+        with patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(create_url,{'name':existing.name,'category':'B'})
+            success.assert_not_called()
+        self.assertEqual(Technique.objects.filter(name=existing.name).count(),1)
+        with patch('accounts.models.Technique.save',side_effect=DatabaseError('write failed')),patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(create_url,{'name':'Database failure technique','category':'C'})
+            success.assert_not_called()
+        self.assertFalse(Technique.objects.filter(name='Database failure technique').exists())
+        other=Technique.objects.create(name='Other technique',category='B')
+        with patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(self.endpoint('superadmin_technique_edit',existing.pk),{'name':other.name,'category':'Changed'})
+            success.assert_not_called()
+        existing.refresh_from_db();self.assertEqual(existing.name,'Existing technique')
+        with patch('accounts.models.Technique.save',side_effect=DatabaseError('write failed')),patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(self.endpoint('superadmin_technique_edit',existing.pk),{'name':'Would not persist','category':'Changed'})
+            success.assert_not_called()
+        existing.refresh_from_db();self.assertEqual(existing.name,'Existing technique')
+
+    def test_content_validation_readback_and_database_failures_are_atomic(self):
+        save_url=self.endpoint('superadmin_content_save')
+        update_url=self.endpoint('superadmin_content_update')
+        too_long='K'*101
+        for url,data in ((save_url,{'key':too_long,'value_fr':'x'}),(save_url,{'key':'no-values'}),(update_url,{'key':too_long,'lang':'fr','value':'x'})):
+            with patch('dashboard.views.superadmin.messages.success') as success:
+                self.client.post(url,data);success.assert_not_called()
+        self.assertFalse(PlatformContent.objects.filter(key__in=[too_long,'no-values']).exists())
+        with patch('dashboard.views.superadmin.PlatformContent.objects.update_or_create',side_effect=DatabaseError('write failed')),patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(update_url,{'key':'failed-update','lang':'fr','value':'x'});success.assert_not_called()
+        self.assertFalse(PlatformContent.objects.filter(key='failed-update').exists())
+        with patch('dashboard.views.superadmin.PlatformContent.objects.filter') as query,patch('dashboard.views.superadmin.messages.success') as success:
+            query.return_value.values_list.return_value=[]
+            self.client.post(save_url,{'key':'mismatch','value_fr':'expected'});success.assert_not_called()
+        self.assertFalse(PlatformContent.objects.filter(key='mismatch').exists())
+        fake=type('SavedValue',(),{'value':'wrong','key':'mismatch-single','lang':'fr'})()
+        with patch('dashboard.views.superadmin.PlatformContent.objects.get',return_value=fake),patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(update_url,{'key':'mismatch-single','lang':'fr','value':'expected'});success.assert_not_called()
+        self.assertFalse(PlatformContent.objects.filter(key='mismatch-single').exists())
+
+    def test_announcement_validation_and_database_failure_do_not_claim_publish(self):
+        url=self.endpoint('superadmin_announcement_create')
+        for data in ({'title':'','message':'message'},{'title':'A'*201,'message':'message'}):
+            with patch('dashboard.views.superadmin.messages.success') as success:
+                self.client.post(url,data);success.assert_not_called()
+        self.assertEqual(Announcement.objects.count(),0)
+        with patch('core.models.Announcement.save',side_effect=DatabaseError('write failed')),patch('dashboard.views.superadmin.messages.success') as success:
+            self.client.post(url,{'title':'Database failure','message':'Must not publish'})
+            success.assert_not_called()
+        self.assertEqual(Announcement.objects.count(),0)
