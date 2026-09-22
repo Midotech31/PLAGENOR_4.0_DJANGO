@@ -11,6 +11,13 @@ async function clickAndSettle(button, page) {
   ]);
 }
 
+async function submitFormAndSettle(form, page) {
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    form.evaluate(node => node.requestSubmit()),
+  ]);
+}
+
 test('techniques and payment methods persist through reloads', async ({ page }, testInfo) => {
   const suffix = testInfo.project.name.replace(/[^a-z0-9]/gi, '-') + '-' + testInfo.retry;
   await asAdmin(page);
@@ -20,23 +27,23 @@ test('techniques and payment methods persist through reloads', async ({ page }, 
   await create.locator('[name="category"]').fill('Validation persistance');
   await clickAndSettle(create.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=techniques');
-  let row = page.locator('div[x-show*="techniques"] tr').filter({ hasText: 'Technique CMS navigateur ' + suffix + '' });
+  let row = page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + '' });
   await expect(row).toHaveCount(1);
-  await row.getByRole('button', { name: 'Modifier' }).click();
+  await row.locator('button[type="button"]').click();
   const edit = row.locator('form[action$="/edit/"]');
   await edit.locator('[name="name"]').fill('Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '');
   await edit.locator('[name="category"]').fill('Catégorie persistée');
   await clickAndSettle(edit.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=techniques');
-  row = page.locator('div[x-show*="techniques"] tr').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' });
+  row = page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' });
   await expect(row).toContainText('Catégorie persistée');
   await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
   await page.goto('/dashboard/home/?tab=techniques');
-  row = page.locator('div[x-show*="techniques"] tr').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' });
+  row = page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' });
   await expect(row).toContainText('Inactive');
   await clickAndSettle(row.locator('form[action$="/reactivate/"] button'), page);
   await page.goto('/dashboard/home/?tab=techniques');
-  await expect(page.locator('div[x-show*="techniques"] tr').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' })).toContainText('Active');
+  await expect(page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' })).toContainText('Active');
 
   await page.goto('/dashboard/home/?tab=payments');
   const payment = page.locator('form[action="/dashboard/home/payment-method/create/"]');
@@ -61,15 +68,15 @@ test('announcements create toggle and delete persist', async ({ page }, testInfo
   await form.locator('[name="audience"]').selectOption('ALL');
   await clickAndSettle(form.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=system');
-  let row = page.locator('div[x-show*="system"] tr').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
+  let row = page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
   await expect(row).toContainText('Message de persistance navigateur');
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=system');
-  row = page.locator('div[x-show*="system"] tr').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
+  row = page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
   await expect(row).toContainText('Non');
-  await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
+  await submitFormAndSettle(row.locator('form[action$="/delete/"]'), page);
   await page.goto('/dashboard/home/?tab=system');
-  await expect(page.locator('div[x-show*="system"] tr').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' })).toHaveCount(0);
+  await expect(page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' })).toHaveCount(0);
 });
 
 test('financial visibility persists after a new admin session', async ({ page, context }) => {
@@ -112,7 +119,7 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await create.locator('[name="password"]').fill('CmsBrowserAudit!2026');
   await clickAndSettle(create.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
-  let row = page.locator('div[x-show*="users"] tr').filter({ hasText: email });
+  let row = page.locator('tr:visible').filter({ hasText: email });
   await expect(row).toHaveCount(1);
   const editHref = await row.locator('a[href$="/edit/"]').getAttribute('href');
   await page.goto(editHref);
@@ -123,14 +130,14 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await expect(page.locator('[name="organization"]')).toHaveValue('Institution persistée');
   await expect(page.locator('[name="phone"]')).toHaveValue('0555003344');
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
-  row = page.locator('div[x-show*="users"] tr').filter({ hasText: email });
+  row = page.locator('tr:visible').filter({ hasText: email });
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
-  row = page.locator('div[x-show*="users"] tr').filter({ hasText: email });
+  row = page.locator('tr:visible').filter({ hasText: email });
   await expect(row).toContainText('Inactif');
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
-  await expect(page.locator('div[x-show*="users"] tr').filter({ hasText: email })).toContainText('Actif');
+  await expect(page.locator('tr:visible').filter({ hasText: email })).toContainText('Actif');
 });
 
 test('document block CRUD persists relation and text', async ({ page }, testInfo) => {
@@ -167,8 +174,7 @@ test('document block CRUD persists relation and text', async ({ page }, testInfo
   await expect(page.locator('[name="body"]')).toHaveValue('Contenu modifié et relu');
   await page.goto('/documents/blocks/');
   row = page.locator('tr').filter({ hasText: changedTitle });
-  page.on('dialog', dialog => dialog.accept());
-  await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
+  await submitFormAndSettle(row.locator('form[action$="/delete/"]'), page);
   await page.goto('/documents/blocks/');
   await expect(page.locator('tr').filter({ hasText: changedTitle })).toHaveCount(0);
 });
@@ -189,15 +195,15 @@ test('service soft-delete and reactivation persist without losing values', async
   await form.locator('[name="genoclab_price"]').fill('2222.75');
   await clickAndSettle(form.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=services');
-  let row = page.locator('div[x-show*="services"] tr').filter({ hasText: code });
+  let row = page.locator('tr:visible').filter({ hasText: code });
   await expect(row).toContainText('1111,25');
   await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
   await page.goto('/dashboard/home/?tab=services');
-  row = page.locator('div[x-show*="services"] tr').filter({ hasText: code });
+  row = page.locator('tr:visible').filter({ hasText: code });
   await expect(row).toContainText('Non');
   await clickAndSettle(row.locator('form[action$="/reactivate/"] button'), page);
   await page.goto('/dashboard/home/?tab=services');
-  row = page.locator('div[x-show*="services"] tr').filter({ hasText: code });
+  row = page.locator('tr:visible').filter({ hasText: code });
   await expect(row).toContainText('Oui');
   const href = await row.locator('a[href$="/edit/"]').getAttribute('href');
   await page.goto(href);
