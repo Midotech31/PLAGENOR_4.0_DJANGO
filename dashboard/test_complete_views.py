@@ -271,24 +271,27 @@ class CompleteViewContracts(TestCase):
         with patch('core.registry.load_service_registry',side_effect=RuntimeError):
             self.assertEqual(self.call(superadmin.index,'SUPER_ADMIN',method='get').status_code,200)
 
-    def test_template_replace_preserves_backup_and_downloads_exact_bytes(self):
+    def test_legacy_global_template_upload_is_explicitly_retired(self):
         from pathlib import Path
         from docx import Document
         buf=io.BytesIO();doc=Document();doc.add_paragraph('Contract');doc.save(buf)
         root=Path(self.tmp.name);dest=root/'documents'/'docx_templates';dest.mkdir(parents=True)
         kind='quote_template';path=dest/(kind+'.docx');path.write_bytes(b'old-template')
         with override_settings(BASE_DIR=root):
-            for type_,blob in [('invalid',buf.getvalue()),(kind,b'bad')]:
-                self.call(superadmin.upload_template,'SUPER_ADMIN',data={'template_type':type_,'template_file':SimpleUploadedFile('template.docx',blob,content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')})
-                self.assertEqual(path.read_bytes(),b'old-template')
-            self.call(superadmin.upload_template,'SUPER_ADMIN',data={'template_type':kind,'template_file':SimpleUploadedFile('template.docx',buf.getvalue(),content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')})
-            self.assertEqual(path.read_bytes(),buf.getvalue())
-            self.assertEqual(path.with_suffix('.backup.docx').read_bytes(),b'old-template')
-            response=self.call(superadmin.download_template,'SUPER_ADMIN',method='get',template_type=kind)
-            try:self.assertEqual(b''.join(response.streaming_content),buf.getvalue())
-            finally:close_response(response)
-            for type_ in ('invalid','reception_form_template'):
-                self.assertEqual(self.call(superadmin.download_template,'SUPER_ADMIN',method='get',template_type=type_).status_code,302)
+            response=self.call(
+                superadmin.upload_template,'SUPER_ADMIN',
+                data={'template_type':kind,'template_file':SimpleUploadedFile(
+                    'template.docx',buf.getvalue(),
+                    content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')})
+            self.assertEqual(response.status_code,302)
+            self.assertEqual(response.url,reverse('documents:template_list'))
+            self.assertEqual(path.read_bytes(),b'old-template')
+            self.assertFalse(path.with_suffix('.backup.docx').exists())
+            download=self.call(
+                superadmin.download_template,'SUPER_ADMIN',
+                method='get',template_type=kind)
+            try:self.assertEqual(b''.join(download.streaming_content),b'old-template')
+            finally:close_response(download)
 
     def test_opt_in_restore_cleans_staging_files_on_success_and_failure(self):
         from pathlib import Path
