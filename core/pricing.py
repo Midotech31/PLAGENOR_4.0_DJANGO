@@ -98,8 +98,10 @@ def _price_per_row_with_multiplier(pricing: dict, params: dict, samples: list, c
         key=f"base_price/{base_key}",
     )
 
-    # Determine multiplier key
-    mult_key = (
+    # Determine multiplier key. DB-authored pricing may explicitly select
+    # the parameter; registry definitions without it keep the legacy heuristic.
+    multiplier_param = str(pricing.get('multiplier_param') or '').strip()
+    mult_key = params.get(multiplier_param) if multiplier_param else (
         params.get('analysis_mode') or params.get('qc_level')
         or params.get('sequencing_mode') or params.get('drying_level')
         or params.get('primer_type')
@@ -253,14 +255,19 @@ def _resolve_legacy_cost(
     db_pricing_block = None
     if pdata and not isinstance(pdata, dict):
         raise PricingConfigurationError("Service pricing_data must be an object.")
-    if pdata and not (pdata.get('base_price') and pdata.get('multipliers')):
-        raise PricingConfigurationError("Service pricing_data is incomplete.")
-    if isinstance(pdata, dict) and pdata.get('base_price') and pdata.get('multipliers'):
+    if isinstance(pdata, dict) and pdata:
+        base_prices = pdata.get('base_price') or {}
+        multipliers = pdata.get('multipliers', {})
+        if not isinstance(base_prices, dict) or not base_prices:
+            raise PricingConfigurationError("Service pricing_data is incomplete.")
+        if not isinstance(multipliers, dict):
+            raise PricingConfigurationError("Service pricing multipliers must be an object.")
         db_pricing_block = {
             'model': 'per_sample_table_row_with_multiplier',
             'currency': pdata.get('currency', 'DZD'),
-            'base_price': pdata.get('base_price') or {},
-            'multipliers': pdata.get('multipliers') or {},
+            'base_price': base_prices,
+            'multipliers': multipliers,
+            'multiplier_param': str(pdata.get('multiplier_param') or '').strip(),
         }
 
     # 2b) YAML registry — for the legacy 9 IBTIKAR services (fallback when

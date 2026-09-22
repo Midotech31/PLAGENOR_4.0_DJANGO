@@ -1,4 +1,6 @@
 import logging
+import hashlib
+import json
 import shutil
 from pathlib import Path
 
@@ -8,6 +10,10 @@ from django.http import HttpResponseForbidden, FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.db.models import Q
+from django.db import DatabaseError
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from core.uploads import validate_upload
 
 from core.models import Request, Service
 from dashboard.views.admin_ops import admin_required
@@ -83,7 +89,7 @@ def _block_signature(req, template_type):
     )
     if not sig_parts:
         return '0'
-    return str(max(t.timestamp() if t else 0 for _, t in sig_parts))
+    return hashlib.sha256(json.dumps(list(blocks.order_by('pk').values('pk', 'updated_at', 'title', 'body', 'position', 'language', 'priority')), default=str, sort_keys=True).encode()).hexdigest()[:24]
 
 
 def _service_fields_signature(req):
@@ -110,7 +116,8 @@ def _service_fields_signature(req):
         # signature = service pk + last form-fields id + their count, no
         # timestamp on this model so we rely on (count, max id) which jumps
         # whenever the wipe-and-recreate save runs.
-        return f"{req.service_id}-{len(ids)}-{ids[-1]}"
+        rows = list(ServiceFormField.objects.filter(service_id=req.service_id).order_by('pk').values())
+        return hashlib.sha256(json.dumps(rows, default=str, sort_keys=True).encode()).hexdigest()[:24]
     except Exception:
         return '0'
 
@@ -125,7 +132,7 @@ def _cached_doc_path(req, template_type, suffix='.docx'):
     """
     cache_dir = Path(settings.MEDIA_ROOT) / 'documents_cache'
     cache_dir.mkdir(parents=True, exist_ok=True)
-    ts = int(req.updated_at.timestamp()) if req.updated_at else 0
+    ts = int(req.updated_at.timestamp() * 1000000) if req.updated_at else 0
     safe_id = (req.display_id or str(req.pk)).replace('/', '_')
     from django.utils.translation import get_language
     from core.ibtikar.models import IbtikarSubmission
@@ -135,7 +142,12 @@ def _cached_doc_path(req, template_type, suffix='.docx'):
         safe_id += '__canonical3__' + (str(form.revision) + '__' + form.schema_hash[:12] if form else 'legacy')
     blocks_sig = _block_signature(req, template_type)
     fields_sig = _service_fields_signature(req)
-    return cache_dir / f"{safe_id}__{template_type}__{ts}__{blocks_sig}__{fields_sig}{suffix}"
+    templates_sig = '0'
+    if getattr(req, 'service_id', None):
+        rows = list(ServiceTemplate.objects.filter(service_id=req.service_id, template_type=template_type, is_active=True).order_by('pk').values('pk', 'file', 'updated_at'))
+        if rows:
+            templates_sig = hashlib.sha256(json.dumps(rows, default=str, sort_keys=True).encode()).hexdigest()[:24]
+    return cache_dir / f"{safe_id}__{template_type}__{ts}__{blocks_sig}__{fields_sig}__{templates_sig}{suffix}"
 
 
 def _cached_serve_doc(req, template_type, generator_fn, download_basename):
@@ -285,135 +297,198 @@ def template_list(request):
     return render(request, 'documents/template_list.html', context)
 
 
+def _cleanup_template_file(stored):
+    if stored:
+        try:
+            stored[0].delete(stored[1])
+        except OSError:
+            logger.exception('Deferred template file cleanup failed')
+
+
+def _template_form_values(request, template=None):
+    service_id = str(request.POST.get('service', template.service_id if template else '') or '').strip()
+    template_type = (request.POST.get('template_type', template.template_type if template else '') or '').strip()
+    name = (request.POST.get('name') or '').strip()
+    description = request.POST.get('description', '')
+    upload = request.FILES.get('file')
+    if not service_id or not template_type or not name:
+        raise ValidationError('Service, type et nom sont obligatoires.')
+    valid_types = {value for value, _ in ServiceTemplate.TEMPLATE_TYPE_CHOICES}
+    if template_type not in valid_types:
+        raise ValidationError('Type de modèle invalide.')
+    try:
+        service = Service.objects.get(pk=service_id)
+    except (Service.DoesNotExist, ValidationError, ValueError):
+        raise ValidationError('Service invalide.')
+    if not service.active and (template is None or template.service_id != service.pk):
+        raise ValidationError('Le service sélectionné est inactif.')
+    if template is None and upload is None:
+        raise ValidationError('Le fichier DOCX est obligatoire.')
+    if upload is not None:
+        upload = validate_upload(upload, 'docx_template')
+    return service, template_type, name, description, upload
+
+
+def _template_form_context(*, template=None, posted=None):
+    services = Service.objects.filter(active=True)
+    if template is not None:
+        services = Service.objects.filter(Q(active=True) | Q(pk=template.service_id))
+    values = {
+        'service': str(template.service_id) if template else '',
+        'template_type': template.template_type if template else '',
+        'name': template.name if template else '',
+        'description': template.description if template else '',
+        'is_active': bool(template.is_active) if template else True,
+    }
+    if posted is not None:
+        values.update({
+            'service': posted.get('service', ''),
+            'template_type': posted.get('template_type', ''),
+            'name': posted.get('name', ''),
+            'description': posted.get('description', ''),
+            'is_active': posted.get('is_active') == 'on',
+        })
+    return {
+        'template': template,
+        'services': services.order_by('name'),
+        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
+        'form_values': values,
+    }
+
+
 @admin_required
 def template_create(request):
-    """Create a new document template."""
-    services = Service.objects.filter(active=True).order_by('name')
-    
+    """Create a durable, validated service document template."""
     if request.method == 'POST':
-        service_id = request.POST.get('service')
-        template_type = request.POST.get('template_type')
-        name = request.POST.get('name')
-        description = request.POST.get('description', '')
-        file = request.FILES.get('file')
-        
-        if not all([service_id, template_type, name, file]):
-            messages.error(request, 'Veuillez remplir tous les champs obligatoires.')
-        else:
-            # Deactivate existing templates of the same type for this service
-            ServiceTemplate.objects.filter(
-                service_id=service_id,
-                template_type=template_type,
-                is_active=True
-            ).update(is_active=False)
-            
-            template = ServiceTemplate.objects.create(
-                service_id=service_id,
-                template_type=template_type,
-                name=name,
-                description=description,
-                file=file,
-                is_active=True,
-                created_by=request.user,
-            )
-            messages.success(request, f'Modèle "{template.name}" créé avec succès.')
-            return redirect('documents:template_detail', pk=template.pk)
-    
-    context = {
-        'services': services,
-        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
-    }
-    return render(request, 'documents/template_form.html', context)
+        try:
+            service, template_type, name, description, upload = _template_form_values(request)
+        except ValidationError as exc:
+            messages.error(request, '; '.join(exc.messages))
+            return render(request, 'documents/template_form.html',
+                          _template_form_context(posted=request.POST), status=400)
+
+        template = None
+        stored = None
+        try:
+            with transaction.atomic():
+                Service.objects.select_for_update().get(pk=service.pk)
+                ServiceTemplate.objects.filter(
+                    service=service, template_type=template_type, is_active=True
+                ).update(is_active=False)
+                template = ServiceTemplate(
+                    service=service, template_type=template_type, name=name,
+                    description=description, is_active=True, created_by=request.user,
+                )
+                template.file.save(upload.name, upload, save=False)
+                stored = (template.file.storage, template.file.name)
+                template.full_clean()
+                template.save()
+        except (DatabaseError, OSError, ValidationError) as exc:
+            _cleanup_template_file(stored)
+            logger.exception('Template creation failed')
+            messages.error(request, '; '.join(exc.messages) if isinstance(exc, ValidationError) else 'Échec de l’enregistrement du modèle. Les données précédentes sont conservées.')
+            return render(request, 'documents/template_form.html', _template_form_context(posted=request.POST), status=400 if isinstance(exc, ValidationError) else 503)
+        template.refresh_from_db()
+        messages.success(request, f'Modèle "{template.name}" créé et relu depuis la base.')
+        return redirect('documents:template_detail', pk=template.pk)
+    return render(request, 'documents/template_form.html', _template_form_context())
 
 
 @admin_required
 def template_detail(request, pk):
-    """View template details."""
     template = get_object_or_404(
-        ServiceTemplate.objects.select_related('service', 'created_by'),
-        pk=pk
+        ServiceTemplate.objects.select_related('service', 'created_by'), pk=pk
     )
     return render(request, 'documents/template_detail.html', {'template': template})
 
 
 @admin_required
 def template_edit(request, pk):
-    """Edit an existing document template."""
+    """Edit every field shown by the form and keep file changes durable."""
     template = get_object_or_404(ServiceTemplate, pk=pk)
-    services = Service.objects.filter(active=True).order_by('name')
-    
     if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description', '')
-        is_active = request.POST.get('is_active') == 'on'
-        new_file = request.FILES.get('file')
-        
-        if not name:
-            messages.error(request, 'Le nom est obligatoire.')
-        else:
-            template.name = name
-            template.description = description
-            template.is_active = is_active
-            
-            if new_file:
-                # Deactivate existing active templates of the same type for this service
-                ServiceTemplate.objects.filter(
-                    service=template.service,
-                    template_type=template.template_type,
-                    is_active=True
-                ).exclude(pk=template.pk).update(is_active=False)
-                template.file = new_file
-                # Make this one active
-                template.is_active = True
-            
-            template.save()
-            messages.success(request, f'Modèle "{template.name}" mis à jour.')
-            return redirect('documents:template_detail', pk=template.pk)
-    
-    context = {
-        'template': template,
-        'services': services,
-        'template_types': ServiceTemplate.TEMPLATE_TYPE_CHOICES,
-    }
-    return render(request, 'documents/template_form.html', context)
+        try:
+            service, template_type, name, description, upload = _template_form_values(
+                request, template=template
+            )
+        except ValidationError as exc:
+            messages.error(request, '; '.join(exc.messages))
+            return render(request, 'documents/template_form.html',
+                          _template_form_context(template=template, posted=request.POST), status=400)
+
+        old_file = (template.file.storage, template.file.name) if template.file else None
+        new_stored = None
+        try:
+            with transaction.atomic():
+                service_ids = {template.service_id, service.pk}
+                list(Service.objects.select_for_update().filter(pk__in=service_ids).order_by('pk'))
+                locked = ServiceTemplate.objects.select_for_update().get(pk=template.pk)
+                if locked.service_id not in service_ids:
+                    raise ValidationError('Le modèle a été modifié dans une autre session. Rechargez avant de réessayer.')
+                is_active = request.POST.get('is_active') == 'on'
+                if is_active:
+                    ServiceTemplate.objects.filter(
+                        service=service, template_type=template_type, is_active=True
+                    ).exclude(pk=locked.pk).update(is_active=False)
+                locked.service = service
+                locked.template_type = template_type
+                locked.name = name
+                locked.description = description
+                locked.is_active = is_active
+                if upload is not None:
+                    locked.file.save(upload.name, upload, save=False)
+                    new_stored = (locked.file.storage, locked.file.name)
+                locked.full_clean(exclude=['file'])
+                locked.save()
+                template = locked
+        except (DatabaseError, OSError, ValidationError) as exc:
+            if new_stored and (not old_file or new_stored[1] != old_file[1]):
+                _cleanup_template_file(new_stored)
+            logger.exception('Template update failed')
+            messages.error(request, '; '.join(exc.messages) if isinstance(exc, ValidationError) else 'Échec de l’enregistrement du modèle. Les données précédentes sont conservées.')
+            return render(request, 'documents/template_form.html', _template_form_context(template=template, posted=request.POST), status=400 if isinstance(exc, ValidationError) else 503)
+        if upload is not None and old_file and old_file[1] != template.file.name:
+            transaction.on_commit(lambda: _cleanup_template_file(old_file))
+        template.refresh_from_db()
+        messages.success(request, f'Modèle "{template.name}" mis à jour et relu depuis la base.')
+        return redirect('documents:template_detail', pk=template.pk)
+    return render(request, 'documents/template_form.html',
+                  _template_form_context(template=template))
 
 
 @admin_required
 def template_delete(request, pk):
-    """Delete a document template."""
     template = get_object_or_404(ServiceTemplate, pk=pk)
-    
     if request.method == 'POST':
         template_name = template.name
-        template.delete()
+        stored = (template.file.storage, template.file.name) if template.file else None
+        with transaction.atomic():
+            ServiceTemplate.objects.select_for_update().filter(pk=template.pk).delete()
+        if stored:
+            transaction.on_commit(lambda: _cleanup_template_file(stored))
         messages.success(request, f'Modèle "{template_name}" supprimé.')
         return redirect('documents:template_list')
-    
     return render(request, 'documents/template_confirm_delete.html', {'template': template})
 
 
 @admin_required
 def template_toggle_active(request, pk):
-    """Toggle template active status."""
-    template = get_object_or_404(ServiceTemplate, pk=pk)
-    
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('documents:template_detail', pk=pk)
+    with transaction.atomic():
+        template = ServiceTemplate.objects.select_for_update().select_related('service').get(pk=pk)
         if template.is_active:
-            # Deactivate
             template.is_active = False
+            template.save(update_fields=['is_active', 'updated_at'])
             messages.info(request, f'Modèle "{template.name}" désactivé.')
         else:
-            # Activate and deactivate others
+            Service.objects.select_for_update().get(pk=template.service_id)
             ServiceTemplate.objects.filter(
-                service=template.service,
-                template_type=template.template_type,
-                is_active=True
+                service=template.service, template_type=template.template_type, is_active=True
             ).exclude(pk=template.pk).update(is_active=False)
             template.is_active = True
+            template.save(update_fields=['is_active', 'updated_at'])
             messages.success(request, f'Modèle "{template.name}" activé.')
-
-        template.save()
-
     return redirect('documents:template_detail', pk=template.pk)
 
 
@@ -463,7 +538,7 @@ def block_list(request):
     return render(request, 'documents/block_list.html', context)
 
 
-def _block_form_context(block=None):
+def _block_form_context(block=None, posted=None):
     """Build the form context.
 
     ``selected_service_ids`` is a string-keyed set so the template can
@@ -474,8 +549,14 @@ def _block_form_context(block=None):
     selected_ids: set[str] = set()
     if block and block.pk:
         selected_ids = {str(pk) for pk in block.services.values_list('pk', flat=True)}
+    if posted is not None:
+        from types import SimpleNamespace
+        values = {name: posted.get(name, '') for name in ('template_type', 'position', 'language', 'title', 'body', 'priority')}
+        values.update(pk=block.pk if block else None, is_active=posted.get('is_active') == 'on')
+        block = SimpleNamespace(**values)
+        selected_ids = set(posted.getlist('services'))
     return {
-        'block': block,
+        'document_block': block,
         'services': Service.objects.filter(active=True).order_by('code'),
         'selected_service_ids': selected_ids,
         'template_types': DocumentBlock.TEMPLATE_TYPE_CHOICES,
@@ -516,7 +597,7 @@ def _save_block(request, block):
     try:
         priority_int = int(priority)
     except ValueError:
-        priority_int = 0
+        return 'La priorité doit être un nombre entier.', None
 
     # Service uses a UUID primary key; an invalid string raises ValidationError
     # at the SQL boundary, not a clean "not found". Wrap the count probe.
@@ -538,38 +619,47 @@ def _save_block(request, block):
     block.body = body
     block.priority = priority_int
     block.is_active = is_active
+    try:
+        block.full_clean()
+    except ValidationError as exc:
+        return '; '.join(exc.messages), None
     return None, services_qs
+
+
+def _persist_block_form(request, block):
+    from django.db import DatabaseError
+    creating = block.pk is None
+    if request.method == 'POST':
+        error, services_qs = _save_block(request, block)
+        status = 400
+        if not error:
+            try:
+                with transaction.atomic():
+                    block.updated_by = request.user
+                    block.save()
+                    block.services.set(services_qs)
+            except DatabaseError:
+                logger.exception('Document block persistence failed')
+                error = 'Échec de l’enregistrement du bloc. Aucune modification n’a été validée.'
+                status = 503
+            else:
+                messages.success(request, 'Bloc de contenu créé.' if creating else 'Bloc de contenu mis à jour.')
+                return redirect('documents:block_list')
+        messages.error(request, error)
+        if creating:
+            block.pk = None
+        return render(request, 'documents/block_form.html', _block_form_context(block, request.POST), status=status)
+    return render(request, 'documents/block_form.html', _block_form_context(None if creating else block))
 
 
 @admin_required
 def block_create(request):
-    if request.method == 'POST':
-        block = DocumentBlock(created_by=request.user, updated_by=request.user)
-        error, services_qs = _save_block(request, block)
-        if error:
-            messages.error(request, error)
-        else:
-            block.save()
-            block.services.set(services_qs)
-            messages.success(request, 'Bloc de contenu créé.')
-            return redirect('documents:block_list')
-    return render(request, 'documents/block_form.html', _block_form_context())
+    return _persist_block_form(request, DocumentBlock(created_by=request.user, updated_by=request.user))
 
 
 @admin_required
 def block_edit(request, pk):
-    block = get_object_or_404(DocumentBlock, pk=pk)
-    if request.method == 'POST':
-        error, services_qs = _save_block(request, block)
-        if error:
-            messages.error(request, error)
-        else:
-            block.updated_by = request.user
-            block.save()
-            block.services.set(services_qs)
-            messages.success(request, 'Bloc de contenu mis à jour.')
-            return redirect('documents:block_list')
-    return render(request, 'documents/block_form.html', _block_form_context(block))
+    return _persist_block_form(request, get_object_or_404(DocumentBlock, pk=pk))
 
 
 @admin_required
@@ -579,7 +669,7 @@ def block_delete(request, pk):
         block.delete()
         messages.success(request, 'Bloc de contenu supprimé.')
         return redirect('documents:block_list')
-    return render(request, 'documents/block_confirm_delete.html', {'block': block})
+    return render(request, 'documents/block_confirm_delete.html', {'document_block': block})
 
 
 @admin_required

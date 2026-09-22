@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n l10n static %}
 {% load dashboard_extras %}
 
 {% block title %}{% trans "Modifier service" %} — {% trans "PLAGENOR 4.0" %}{% endblock %}
@@ -9,10 +9,13 @@
     <h1 class="greeting">{% trans "Modifier le service" %}: {{ service.code }}</h1>
 </div>
 
+{% if submitted_editor_values %}{{ submitted_editor_values|json_script:"submitted-editor-data" }}{% endif %}
+{% if upload_retry_required %}<p role="alert">{% trans "Les champs saisis sont conservés. Veuillez sélectionner de nouveau le fichier avant de réessayer." %}</p>{% endif %}
 <div class="card" style="max-width:1100px;">
     <div class="card-header"><h3>{{ service.name }}</h3></div>
     <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
+        <form id="service-editor" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="custom_fields_present" value="1">
             {% csrf_token %}
             <div class="form-row">
                 <div class="form-group">
@@ -27,16 +30,16 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>{% trans "Prix IBTIKAR (DA)" %}</label>
-                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price }}">
+                    <input type="number" name="ibtikar_price" class="form-control" step="0.01" value="{{ service.ibtikar_price|unlocalize }}">
                     <small class="text-muted">{% trans "Prix forfaitaire (utilisé si aucune règle tarifaire détaillée n'est définie ci-dessous)" %}</small>
                 </div>
                 <div class="form-group">
                     <label>{% trans "Prix GENOCLAB (DA)" %}</label>
-                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price }}">
+                    <input type="number" name="genoclab_price" class="form-control" step="0.01" value="{{ service.genoclab_price|unlocalize }}">
                 </div>
                 <div class="form-group">
                     <label>{% trans "Délai (jours)" %}</label>
-                    <input type="number" name="turnaround_days" class="form-control" value="{{ service.turnaround_days }}">
+                    <input type="number" name="turnaround_days" class="form-control" value="{{ service.turnaround_days|unlocalize }}">
                 </div>
             </div>
             {% include "includes/service_translations.html" %}
@@ -63,13 +66,13 @@
                     <label>{% trans "Prix non pathogène (DA)" %}</label>
                     <input type="number" step="0.01" min="0" class="form-control"
                            name="pd_base_non_pathogenic"
-                           value="{{ pricing_data_view.base_non_pathogenic }}">
+                           value="{{ pricing_data_view.base_non_pathogenic|unlocalize }}">
                 </div>
                 <div class="form-group">
                     <label>{% trans "Prix pathogène (DA)" %}</label>
                     <input type="number" step="0.01" min="0" class="form-control"
                            name="pd_base_pathogenic"
-                           value="{{ pricing_data_view.base_pathogenic }}"
+                           value="{{ pricing_data_view.base_pathogenic|unlocalize }}"
                            placeholder="{% trans 'idem si vide' %}">
                 </div>
                 <div class="form-group">
@@ -101,7 +104,7 @@
                     </div>
                     <div class="form-group" style="flex:1;">
                         <input type="number" step="0.01" min="0" class="form-control"
-                               name="pd_mult_factor" value="{{ v }}" placeholder="× 1.0">
+                               name="pd_mult_factor" value="{{ v|unlocalize }}" placeholder="× 1.0">
                     </div>
                     <div class="form-group" style="flex:0;">
                         <button type="button" class="btn btn-sm btn-danger"
@@ -148,6 +151,7 @@
             <p class="text-muted" style="margin-bottom:14px;">
                 {% trans "Configurez les prix de base et les suppléments. Plusieurs règles peuvent coexister (priorité plus basse = appliquée en premier). Chaque modification est enregistrée immédiatement." %}
             </p>
+            <div id="pricing-status" class="text-sm" role="status" aria-live="polite" style="margin-bottom:10px; display:none;"></div>
             <div id="pricing-list" style="display:flex; flex-direction:column; gap:10px;"></div>
             <div id="pricing-empty" class="text-muted text-sm" style="padding:20px; border:1px dashed #cbd5e1; border-radius:8px; text-align:center; display:none;">
                 {% trans "Aucun tarif détaillé. Le prix forfaitaire ci-dessus est utilisé pour les nouvelles demandes." %}
@@ -200,13 +204,16 @@
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.78rem;">{% trans "Options (virgules)" %}</label>
-                        <input type="text" name="field_options" class="form-control" value="{{ field.options|join:', ' }}">
+                        <input type="text" name="field_options" class="form-control" value="{{ field.options|as_json }}">
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.78rem;">
                             <input type="checkbox" name="field_required" value="{{ forloop.counter0 }}" {% if field.required %}checked{% endif %}> {% trans "Requis" %}
                         </label>
                     </div>
+                  </div>
+                  <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+                    <button type="button" class="btn btn-sm btn-danger" data-remove-custom-field onclick="removeFieldRow(this)">{% trans "Retirer ce champ" %}</button>
                   </div>
                   <details class="field-pricing-advanced" style="margin-top:8px;" {% if field.affects_pricing or field.option_pricing or field.conditional_logic %}open{% endif %}>
                     <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 {% trans "Tarification conditionnelle & logique d'affichage" %}</summary>
@@ -227,7 +234,7 @@
                             </div>
                             <div class="form-group">
                                 <label style="font-size:0.78rem;">{% trans "Valeur" %}</label>
-                                <input type="number" step="0.01" name="field_price_modifier_value" class="form-control" value="{{ field.price_modifier_value|default_if_none:'' }}">
+                                <input type="number" step="0.01" name="field_price_modifier_value" class="form-control" value="{{ field.price_modifier_value|default_if_none:''|unlocalize }}">
                             </div>
                         </div>
                         <div class="form-row" style="align-items:flex-end;">
@@ -285,6 +292,7 @@
                     <option value="PER_PARAMETER">{% trans "Par paramètre" %}</option>
                     <option value="URGENCY_SURCHARGE">{% trans "Majoration urgence" %}</option>
                     <option value="DISCOUNT">{% trans "Remise" %}</option>
+                    <option value="OVERRIDE">{% trans "Forfait (override total)" %}</option>
                 </select>
             </div>
             <div class="form-group">
@@ -366,7 +374,7 @@
 <script>
 var SERVICE_ID = '{{ service.pk }}';
 var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-var fieldCount = {{ custom_fields.count }};
+var fieldCount = {{ custom_fields|length }};
 
 function addFieldRow() {
     var container = document.getElementById('custom-fields-container');
@@ -383,6 +391,7 @@ function addFieldRow() {
         '<div class="form-group"><label style="font-size:0.78rem;">Options</label><input type="text" name="field_options" class="form-control"></div>' +
         '<div class="form-group"><label style="font-size:0.78rem;"><input type="checkbox" name="field_required" value="' + idx + '"> Requis</label></div>' +
         '</div>' +
+        '<div style="display:flex;justify-content:flex-end;margin-top:6px;"><button type="button" class="btn btn-sm btn-danger" data-remove-custom-field onclick="removeFieldRow(this)">Retirer ce champ</button></div>' +
         '<details class="field-pricing-advanced" style="margin-top:8px;">' +
         '<summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:#475569;">💰 Tarification conditionnelle & logique d\'affichage</summary>' +
         '<div style="padding-top:10px; display:flex; flex-direction:column; gap:10px;">' +
@@ -402,6 +411,24 @@ function addFieldRow() {
         '</div>';
     container.insertAdjacentHTML('beforeend', html);
     fieldCount++;
+    reindexCustomFields();
+}
+
+function reindexCustomFields() {
+    var rows = Array.from(document.querySelectorAll('#custom-fields-container .custom-field-row'));
+    rows.forEach(function(row, index) {
+        row.querySelectorAll('input[name="field_required"], input[name="field_affects_pricing"]').forEach(function(box) {
+            box.value = String(index);
+        });
+    });
+    fieldCount = rows.length;
+}
+
+function removeFieldRow(button) {
+    var row = button.closest('.custom-field-row');
+    if (!row) return;
+    row.remove();
+    reindexCustomFields();
 }
 
 // =============================================================
@@ -420,10 +447,11 @@ var TYPE_LABELS = {
     PER_SAMPLE: '{% trans "Par échantillon" %}',
     PER_PARAMETER: '{% trans "Par paramètre" %}',
     URGENCY_SURCHARGE: '{% trans "Majoration urgence" %}',
-    DISCOUNT: '{% trans "Remise" %}'
+    DISCOUNT: '{% trans "Remise" %}',
+    OVERRIDE: '{% trans "Forfait total" %}'
 };
-var CHANNEL_LABELS = { BOTH: '{% trans "Les deux" %}', IBTIKAR: 'IBTIKAR', GENOCLAB: 'GENOCLAB' };
-var CHANNEL_COLORS = { BOTH: '#f1f5f9', IBTIKAR: '#ede9fe', GENOCLAB: '#cffafe' };
+var CHANNEL_LABELS = { BOTH: '{% trans "Les deux" %}', IBTIKAR: 'IBTIKAR', GENOCLAB: 'GENOCLAB', OHB: 'OHB' };
+var CHANNEL_COLORS = { BOTH: '#f1f5f9', IBTIKAR: '#ede9fe', GENOCLAB: '#cffafe', OHB: '#fef3c7' };
 
 function escHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
@@ -431,11 +459,31 @@ function escHtml(s) {
     });
 }
 
-function loadPricingConfigs() {
-    fetch(PRICING_API.list, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function(r) { return r.json(); })
-        .then(function(data) { renderPricingConfigs(data.configs || []); })
-        .catch(function(err) { console.error('pricing list failed:', err); });
+function showPricingStatus(message, isError) {
+    var node = document.getElementById('pricing-status');
+    node.textContent = message || '';
+    node.style.display = message ? 'block' : 'none';
+    node.style.color = isError ? '#b91c1c' : '#166534';
+}
+
+function loadPricingConfigs(successMessage) {
+    return fetch(PRICING_API.list, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) {
+            return r.json().catch(function() { return {}; }).then(function(data) {
+                if (!r.ok) throw new Error(data.error || data.detail || 'HTTP ' + r.status);
+                return data;
+            });
+        })
+        .then(function(data) {
+            renderPricingConfigs(data.configs || []);
+            if (successMessage) showPricingStatus(successMessage, false);
+            return data;
+        })
+        .catch(function(err) {
+            console.error('pricing list failed:', err);
+            showPricingStatus('{% trans "Impossible de relire les tarifs enregistrés. Rechargez ou réessayez." %} ' + err.message, true);
+            throw err;
+        });
 }
 
 function renderPricingConfigs(configs) {
@@ -558,10 +606,13 @@ function savePricing() {
             alert('{% trans "Erreur" %} : ' + (res.data.error || res.data.detail || 'unknown'));
         } else {
             closePricingModal();
-            loadPricingConfigs();
+            loadPricingConfigs('{% trans "Tarif enregistré et relu depuis le serveur." %}').catch(function() {});
         }
     })
-    .catch(function(err) { console.error(err); alert('{% trans "Erreur" %} : ' + err); });
+    .catch(function(err) {
+        console.error(err);
+        showPricingStatus('{% trans "Échec de l’enregistrement du tarif." %} ' + err, true);
+    });
 }
 
 function deletePricing(configId) {
@@ -570,14 +621,22 @@ function deletePricing(configId) {
         method: 'POST',
         headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.error) alert('{% trans "Erreur" %} : ' + data.error);
-        else loadPricingConfigs();
+    .then(function(r) {
+        return r.json().catch(function() { return {}; }).then(function(data) {
+            if (!r.ok || data.error) throw new Error(data.error || data.detail || 'HTTP ' + r.status);
+            return data;
+        });
+    })
+    .then(function() {
+        loadPricingConfigs('{% trans "Tarif supprimé et état relu depuis le serveur." %}').catch(function() {});
+    })
+    .catch(function(err) {
+        showPricingStatus('{% trans "Échec de la suppression du tarif." %} ' + err.message, true);
     });
 }
 
 // Load the tiers list on page load.
 document.addEventListener('DOMContentLoaded', loadPricingConfigs);
 </script>
+<script src="{% static 'js/admin-editor-recovery.js' %}"></script>
 {% endblock %}

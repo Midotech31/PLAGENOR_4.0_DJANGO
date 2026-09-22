@@ -410,7 +410,7 @@ class CompleteViewContracts(TestCase):
             self.assertEqual(response.status_code,200)
         block=DocumentBlock.objects.create(template_type='QUOTE',position='TOP',language='fr',body='Original')
         data={'template_type':'QUOTE','position':'TOP','language':'fr','body':'Updated','services':[str(uuid4())]}
-        response=self.call(dv.block_edit,data=data,pk=block.pk);self.assertEqual(response.status_code,200)
+        response=self.call(dv.block_edit,data=data,pk=block.pk);self.assertEqual(response.status_code,400)
         block.refresh_from_db();self.assertEqual(block.body,'Original')
 
     def test_authentication_registration_and_existing_two_factor_settings(self):

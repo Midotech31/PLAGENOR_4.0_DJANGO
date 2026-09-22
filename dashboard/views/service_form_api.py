@@ -50,17 +50,24 @@ def service_form_fragment(request, service_code):
     try:
         from core.models import Service as _Svc
         _svc = _Svc.objects.filter(code=service_code).first()
-        if _svc and isinstance(_svc.pricing_data, dict) and _svc.pricing_data.get('multipliers'):
-            db_pdata = _svc.pricing_data
+        if _svc and isinstance(_svc.pricing_data, dict):
+            candidate = _svc.pricing_data
+            if any(key in candidate for key in ('base_price', 'multipliers', 'multiplier_param')):
+                db_pdata = candidate
     except Exception:
         logger.exception("Unable to load DB pricing for service=%s", service_code)
         db_pdata = {}
-    if db_pdata.get('base_price') or db_pdata.get('multipliers'):
-        # Surface the override to the cost calculator as if it were the YAML.
+    if db_pdata:
+        # Presence matters here: an empty multiplier mapping is an explicit
+        # administrator choice meaning x1 and must override YAML multipliers.
         pricing = {
             **pricing,
-            'base_price': db_pdata.get('base_price', pricing.get('base_price', {})),
-            'multipliers': db_pdata.get('multipliers', pricing.get('multipliers', {})),
+            'base_price': db_pdata.get('base_price') or pricing.get('base_price', {}),
+            'multipliers': (db_pdata.get('multipliers', {})
+                            if 'multipliers' in db_pdata
+                            else pricing.get('multipliers', {})),
+            'multiplier_param': (str(db_pdata.get('multiplier_param') or '').strip()
+                                 or pricing.get('multiplier_param', '')),
             'model': pricing.get('model', 'per_sample_table_row_with_multiplier'),
         }
 
