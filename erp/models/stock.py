@@ -139,4 +139,11 @@ class InternalPreparation(ImmutableRecord):
     protocol_reference = models.CharField(_('Protocole / SOP'), max_length=255)
     prepared_on = models.DateField(_('Date de préparation'))
     concentration = models.CharField(_('Concentration documentée'), max_length=120, blank=True)
+    concentration_value = models.DecimalField(_('Valeur de concentration'),max_digits=18,decimal_places=6,null=True,blank=True)
+    concentration_unit = models.ForeignKey('erp.Unit',on_delete=models.PROTECT,null=True,blank=True,related_name='+',verbose_name=_('Unité de concentration'))
     sources = models.JSONField(default=list)
+
+
+    class Meta:
+        constraints=[models.CheckConstraint(condition=Q(concentration_value__isnull=True,concentration_unit__isnull=True)|
+            Q(concentration_value__gte=0,concentration_value__lte=Decimal('999999999999.999999'),concentration_value__isnull=False,concentration_unit__isnull=False),name='erp_preparation_concentration_pair')]

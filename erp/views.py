@@ -97,7 +97,9 @@ def index(request):
     from .services.consumption import run_scope
     from .models import InventoryCampaign, StockContainer
     from .permissions import operational_scope
+    from .services.procurement import plan_scope
     modules = [
+        {'route':'erp:procurement-list','title':_('Prévisions et approvisionnement'),'count':plan_scope(request.user).count(),'detail':_('Besoins, plans annuels, CDC et réceptions')},
         {'route': 'erp:planning', 'title': _('Planning & activités'), 'count': work_scope(request.user).exclude(status__in=['APPROVED', 'CANCELLED']).count(), 'detail': _('Planifier, affecter, vérifier et valider')},
         {'route': 'erp:run-list', 'title': _('Séries analytiques'), 'count': run_scope(request.user).exclude(status__in=['COMPLETED', 'CANCELLED']).count(), 'detail': _('Besoins, lots réservés et consommations réelles')},
         {'route': 'erp:work-list', 'title': _('Tâches et délégations'), 'count': work_scope(request.user).exclude(status__in=['APPROVED', 'CANCELLED']).count(), 'detail': _('Responsabilités, échéances et comptes rendus')},

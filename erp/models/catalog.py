@@ -83,6 +83,7 @@ class Article(CodedRecord):
                                        validators=[MinValueValidator(0)])
     order_multiple = models.DecimalField(_('Multiple de commande'), max_digits=18, decimal_places=6,
                                          default=1, validators=[MinValueValidator(Decimal('0.000001'))])
+    minimum_order_quantity = models.DecimalField(_('Commande minimale (unité d’achat)'), max_digits=18, decimal_places=6, default=0, validators=[MinValueValidator(0)])
     lead_time_days = models.PositiveIntegerField(_('Délai fournisseur (jours)'), null=True, blank=True)
     shelf_life_days = models.PositiveIntegerField(_('Durée de conservation (jours)'), null=True, blank=True)
     after_open_days = models.PositiveIntegerField(_('Stabilité après ouverture (jours)'), null=True, blank=True)
@@ -100,6 +101,7 @@ class Article(CodedRecord):
             models.CheckConstraint(condition=Q(minimum_stock__gte=0, safety_stock__gte=0,
                                                reorder_point__gte=0, target_stock__gte=0, order_multiple__gt=0),
                                    name='erp_article_thresholds_positive'),
+            models.CheckConstraint(condition=Q(minimum_order_quantity__gte=0,minimum_order_quantity__lte=Decimal('999999999999.999999')),name='erp_min_order_quantity'),
             models.CheckConstraint(condition=Q(temperature_min__isnull=True) | Q(temperature_max__isnull=True)
                                    | Q(temperature_min__lte=models.F('temperature_max')),
                                    name='erp_article_temperature_order'),

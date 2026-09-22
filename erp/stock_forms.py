@@ -98,6 +98,7 @@ class RemoveForm(OperationForm):
 
 
 class TransferForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
     key = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)
     destination = forms.ModelChoiceField(label=_('Destination'), queryset=Location.objects.none())
     amount = forms.DecimalField(label=_('Quantité transférée'), max_digits=18, decimal_places=6, required=False, min_value=0.000001,

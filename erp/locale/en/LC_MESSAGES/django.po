@@ -1210,3 +1210,81 @@ msgstr "Pre-start readiness check"
 
 msgid "Une continuité entre ressources, responsabilités et approvisionnement."
 msgstr "Connecting resources, responsibilities and procurement."
+
+msgid "Vers"
+msgstr "To"
+
+msgid "Disponibilité"
+msgstr "Availability"
+
+msgid "Révision"
+msgstr "Revision"
+
+msgid "Nom"
+msgstr "Last name"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Mise à jour"
+msgstr "Updated"
+
+msgid "Quantité"
+msgstr "Quantity"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "De"
+msgstr "From"
+
+msgid "Rapport"
+msgstr "Report"
+
+msgid "Référence"
+msgstr "Reference"
+
+msgid "Rejeté"
+msgstr "Rejected"
+
+msgid "Fichier"
+msgstr "File"
+
+msgid "Disponible"
+msgstr "Available"
+
+msgid "Attention"
+msgstr "Warning"
+
+msgid "Type de document"
+msgstr "Document type"
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Aperçu"
+msgstr "Preview"
+
+msgid "Historique"
+msgstr "History"
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "Validation is busy. Please try again shortly."
+
+msgid "Clôturé"
+msgstr "Closed"
+
+msgid "Demande"
+msgstr "Request"
+
+msgid "Inactive"
+msgstr "Inactive"

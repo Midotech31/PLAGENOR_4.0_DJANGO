@@ -31,6 +31,12 @@ def stock_queryset(user):
 @require_GET
 def stock_list(request):
     qs = stock_queryset(request.user)
+    if request.GET.get('location'):
+        from .models import LocationClosure
+        try:
+            qs=qs.filter(location_id__in=LocationClosure.objects.filter(ancestor_id=request.GET['location']).values('descendant_id'))
+        except ValidationError:
+            raise Http404
     search = request.GET.get('q', '').strip()[:200]
     if search:
         qs = qs.filter(Q(code__icontains=search) | Q(lot__code__icontains=search) |
@@ -83,10 +89,13 @@ def stock_detail(request, pk):
     if not is_manager(request.user):
         entries = operational_scope(entries, request.user, category_field='container__lot__article__category_id')
     suggested = fefo(request.user, container.lot.article).first()
+    from .services.safety import storage_compatibility
+    compatibility=storage_compatibility(container.lot.article,container.location,exclude=container)
+    receipt=container.stockreceipt_set.first()
     return render(request, 'erp/stock_detail.html', {'container': container, 'permissions': permissions,
         'usable': is_usable(container), 'available': max(Decimal(0), container.quantity-container.reserved) if is_usable(container) else Decimal(0),
         'entries': entries[:100], 'reservations': container.reservations.filter(remaining__gt=0),
-        'suggested': suggested, 'manager': is_manager(request.user)})
+        'suggested': suggested, 'compatibility':compatibility, 'receipt':receipt, 'manager': is_manager(request.user)})
 
 
 OPERATIONS = {

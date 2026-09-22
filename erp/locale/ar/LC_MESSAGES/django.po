@@ -1192,3 +1192,81 @@ msgstr "التحقق من الجاهزية قبل البدء"
 
 msgid "Une continuité entre ressources, responsabilités et approvisionnement."
 msgstr "ربط الموارد والمسؤوليات والتموين."
+
+msgid "Vers"
+msgstr "إلى"
+
+msgid "Disponibilité"
+msgstr "التوفُّر"
+
+msgid "Révision"
+msgstr "مراجعة"
+
+msgid "Nom"
+msgstr "اللقب"
+
+msgid "Total"
+msgstr "الإجمالي"
+
+msgid "Mise à jour"
+msgstr "آخر تحديث"
+
+msgid "Quantité"
+msgstr "الكمية"
+
+msgid "Retour"
+msgstr "رجوع"
+
+msgid "De"
+msgstr "من"
+
+msgid "Rapport"
+msgstr "التقرير"
+
+msgid "Référence"
+msgstr "المرجع"
+
+msgid "Rejeté"
+msgstr "مرفوض"
+
+msgid "Fichier"
+msgstr "الملف"
+
+msgid "Disponible"
+msgstr "متاح"
+
+msgid "Attention"
+msgstr "تنبيه"
+
+msgid "Type de document"
+msgstr "نوع الوثيقة"
+
+msgid "Tous les statuts"
+msgstr "جميع الحالات"
+
+msgid "Position"
+msgstr "الموضع"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Document"
+msgstr "مستند"
+
+msgid "Aperçu"
+msgstr "معاينة"
+
+msgid "Historique"
+msgstr "السجل"
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "التحقق مشغول حاليًا. يرجى إعادة المحاولة بعد لحظات."
+
+msgid "Clôturé"
+msgstr "مُغلَق"
+
+msgid "Demande"
+msgstr "الطلب"
+
+msgid "Inactive"
+msgstr "غير نشطة"

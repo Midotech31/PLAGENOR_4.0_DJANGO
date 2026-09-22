@@ -3,7 +3,7 @@ from decimal import Decimal
 import uuid
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import models,transaction
 from django.utils.translation import gettext_lazy as _
 
 from core.audit import log_action
@@ -22,11 +22,11 @@ def scalar(value):
 
 def snapshot(instance):
     return {field.name: scalar(getattr(instance, field.attname))
-            for field in instance._meta.concrete_fields if field.name not in ('created_at', 'updated_at')}
+            for field in instance._meta.concrete_fields if field.name not in ('created_at', 'updated_at') and not isinstance(field,models.BinaryField)}
 
 
-def audit(user, instance, action, before=None, reason=''):
-    after = snapshot(instance)
+def audit(user, instance, action, before=None, reason='', *, after=None):
+    after = snapshot(instance) if after is None else after
     event = AuditEvent.objects.create(actor=user, entity_type=instance._meta.label_lower,
                                      entity_id=instance.pk, action=action, before=before or {}, after=after,
                                      reason=reason)

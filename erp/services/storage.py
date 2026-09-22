@@ -46,7 +46,7 @@ def save_location(user, values, *, pk=None, expected=None):
             positions.filter(Q(row__gt=obj.grid_rows) | Q(column__gt=obj.grid_columns)).exists()):
             raise ValidationError(_('La modification supprimerait des positions existantes. Conservez la grille historique.'))
         if not obj.active or not obj.kind.can_store:
-            if BiologicalSample.objects.filter(location=obj).exclude(status__in=['DESTROYED', 'SHIPPED', 'EXHAUSTED']).exists() or StockContainer.objects.filter(location=obj, quantity__gt=0).exists():
+            if BiologicalSample.objects.filter(location_id__in=LocationClosure.objects.filter(ancestor=obj).values('descendant_id')).exclude(status__in=['DESTROYED', 'SHIPPED', 'EXHAUSTED']).exists() or StockContainer.objects.filter(location_id__in=LocationClosure.objects.filter(ancestor=obj).values('descendant_id'), quantity__gt=0).exists():
                 raise ValidationError(_('Déplacez le contenu physique avant de désactiver cet emplacement ou son stockage.'))
     obj.full_clean()
     if pk:

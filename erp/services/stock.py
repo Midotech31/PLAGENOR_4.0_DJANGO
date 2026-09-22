@@ -26,7 +26,7 @@ def stock_quantity(value, *, zero=False):
     value = quantity(value)
     if value != value.quantize(Decimal('0.000001')) or (not zero and value == 0):
         raise ValidationError(_('La quantité doit être positive et exacte à six décimales au maximum.'))
-    return value
+    return value.quantize(Decimal('0.000001'))
 
 
 def _key(key):
@@ -79,7 +79,7 @@ def usable_filter(today=None):
     return Q(active=True, lot__active=True, lot__article__active=True,
              lot__status=StockLot.Status.AVAILABLE, status=StockLot.Status.AVAILABLE) & (
              Q(use_by__isnull=True) | Q(use_by__gte=today)) & (
-             Q(lot__expires_on__isnull=True) | Q(lot__expires_on__gte=today))
+             Q(lot__expires_on__isnull=True) | Q(lot__expires_on__gte=today)) & ~Q(location_id__in=LocationClosure.objects.filter(ancestor__active=False).values('descendant_id'))
 
 
 def is_usable(container):
@@ -112,6 +112,8 @@ def receive_stock(user, *, key, article, location, manufacturer_lot, lot_code, c
                   initial=False, barcode=''):
     article = _article(article.pk)
     location = _location(location.pk)
+    from .safety import enforce_storage
+    enforce_storage(article,location)
     require(user, Capability.RECEIVE_STOCK, category=article.category, location=location)
     amount = stock_quantity(convert_quantity(article, amount, unit)[0])
     if unit_price is not None:
@@ -318,16 +320,20 @@ def release_stock(user, reservation_id, *, key, reason):
 
 
 @transaction.atomic
-def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destination_code='', reason):
+def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destination_code='', reason, expected=None):
     container = _container(pk)
     require_container(user, Capability.TRANSFER_STOCK, container)
     destination = _location(destination.pk)
+    from .safety import enforce_storage
+    enforce_storage(container.lot.article,destination,exclude=container)
     require(user, Capability.TRANSFER_STOCK, category=container.lot.article.category, location=destination)
     payload = {'container': container.pk, 'destination': destination.pk, 'amount': amount,
                'unit': unit.pk if unit else None, 'destination_code': destination_code, 'reason': reason}
     move, created = _movement(user, key, StockMovement.Kind.TRANSFER, payload, reason=reason)
     if not created:
         return move
+    if expected is not None:
+        check_version(container,expected)
     if destination.pk == container.location_id or not reason.strip() or container.quantity == 0:
         raise ValidationError(_('Le transfert exige du stock, une nouvelle destination et un motif.'))
     moving = container.quantity if amount is None else stock_quantity(convert_quantity(container.lot.article, amount, unit or container.lot.article.base_unit)[0])
@@ -355,9 +361,15 @@ def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destin
 
 
 @transaction.atomic
-def reverse_stock(user, pk, *, key, reason):
+def reverse_stock(user, pk, *, key, reason, _purchase_context=False):
     require_manager(user)
     original = StockMovement.objects.get(pk=pk)
+    if not _purchase_context:
+        from erp.models import PurchaseReceiptLink
+        delivery=PurchaseReceiptLink.objects.filter(receipt__movement=original).first()
+        if delivery:
+            from .purchases import reverse_delivery
+            return reverse_delivery(user,delivery.pk,key=key,reason=reason)
     from .links import lock_request
     lock_request(user, original.request, allow_closed=True)
     entries = list(original.entries.select_related('container__lot', 'location').order_by('-id'))

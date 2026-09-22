@@ -1,9 +1,53 @@
 from django.urls import path
-from . import views, work_views, stock_views, inventory_views, cdc_views, biobank_views, planning_views, consumption_views
+from . import identification, report_views, preparation_views, safety_views, alert_views, import_views, procurement_views, views, work_views, stock_views, inventory_views, cdc_views, biobank_views, planning_views, consumption_views
 
 app_name = 'erp'
 urlpatterns = [
     path('', views.index, name='index'),
+    path('identify/',identification.identify,name='identify'),
+    path('identify/<slug:kind>/<uuid:pk>/',identification.identify_target,name='identify-target'),
+    path('labels/<slug:kind>/<uuid:pk>/',identification.label,name='label'),
+    path('labels/<slug:kind>/<uuid:pk>/qr.png',identification.qr_image,name='qr-image'),
+
+    path('reports/',report_views.report_home,name='reports'),
+    path('preparations/new/',preparation_views.preparation_create,name='preparation-create'),
+    path('preparations/<int:pk>/',preparation_views.preparation_detail,name='preparation-detail'),
+
+    path('resource-documents/<slug:target_kind>/<uuid:target_id>/',safety_views.document_list,name='resource-documents'),
+    path('resource-documents/<slug:target_kind>/<uuid:target_id>/upload/',safety_views.document_upload,name='resource-document-upload'),
+    path('resource-document/<uuid:pk>/',safety_views.document_download,name='resource-document-download'),
+    path('safety/',safety_views.safety_home,name='safety'),
+    path('safety/hazards/new/',safety_views.hazard_edit,name='hazard-new'),
+    path('safety/hazards/<uuid:pk>/',safety_views.hazard_edit,name='hazard-edit'),
+    path('safety/rules/new/',safety_views.rule_edit,name='storage-rule-new'),
+    path('safety/rules/<uuid:pk>/',safety_views.rule_edit,name='storage-rule-edit'),
+    path('articles/<uuid:pk>/safety/',safety_views.chemical_edit,name='chemical-edit'),
+
+    path('alerts/',alert_views.alert_list,name='alerts'),
+    path('alerts/policy/',alert_views.alert_policy,name='alert-policy'),
+    path('alerts/<slug:signature>/',alert_views.alert_action,name='alert-action'),
+
+    path('imports/',import_views.import_home,name='imports'),
+    path('imports/template/<slug:kind>/',import_views.template_download,name='import-template'),
+    path('imports/<uuid:pk>/',import_views.import_detail,name='import-detail'),
+    path('imports/<uuid:pk>/cancel/',import_views.import_cancel,name='import-cancel'),
+    path('imports/<uuid:pk>/report/',import_views.import_report,name='import-report'),
+
+    path('procurement/',procurement_views.plan_list,name='procurement-list'),
+    path('procurement/new/',procurement_views.plan_create,name='procurement-create'),
+    path('procurement/<uuid:pk>/',procurement_views.plan_detail,name='procurement-detail'),
+    path('procurement/<uuid:pk>/export/',procurement_views.plan_export,name='procurement-export'),
+    path('procurement/<uuid:pk>/articles/new/',procurement_views.plan_article,name='procurement-article'),
+    path('procurement/lines/<uuid:pk>/',procurement_views.plan_line,name='procurement-line'),
+    path('procurement/lines/<uuid:pk>/forecast/',procurement_views.forecast_detail,name='forecast-detail'),
+    path('procurement/<uuid:pk>/cdc/',procurement_views.cdc_from_plan,name='procurement-cdc'),
+    path('procurement/<uuid:pk>/order/',procurement_views.order_create,name='order-create'),
+    path('orders/<uuid:pk>/',procurement_views.order_detail,name='order-detail'),
+    path('orders/<uuid:order_id>/lines/new/',procurement_views.order_line,name='order-line-new'),
+    path('orders/<uuid:order_id>/lines/<uuid:pk>/',procurement_views.order_line,name='order-line-edit'),
+    path('orders/lines/<uuid:pk>/receive/',procurement_views.order_receive,name='order-receive'),
+    path('orders/<uuid:pk>/delivery-date/',procurement_views.order_date,name='order-date'),
+
     path('planning/', planning_views.planning_home, name='planning'),
     path('planning/new/', planning_views.activity_create, name='activity-create'),
     path('planning/activities/<uuid:pk>/', planning_views.activity_detail, name='activity-detail'),
