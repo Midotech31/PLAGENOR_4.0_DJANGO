@@ -13,7 +13,7 @@
             <label for="guest-service-choice">{% trans "Service" %} *</label>
             <select name="service" id="guest-service-choice" class="form-control" required>
                 <option value="">{% trans "Sélectionner un service..." %}</option>
-                {% for service in services %}<option value="{{ service.code }}" data-channel-availability="{{ service.channel_availability }}">{{ service.code }} — {{ service.name }}</option>{% endfor %}
+                {% for service in services %}<option value="{{ service.code }}" data-channel-availability="{{ service.channel_availability }}"{% if selected_service and service.pk == selected_service.pk %} selected{% endif %}>{{ service.code }} — {{ service.name }}</option>{% endfor %}
             </select>
         </div>
     </div>

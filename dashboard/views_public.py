@@ -159,7 +159,9 @@ def guest_form_response(request, services):
     values = {key: [value[:MAX_GUEST_VALUE_LEN] for value in items[:50]]
               for key, items in request.POST.lists()
               if key in names or key.startswith(('param_', 'sample_'))}
-    selected_channel = (request.POST if request.method == 'POST' else request.GET).get('channel', 'GENOCLAB')
+    source = request.POST if request.method == 'POST' else request.GET
+    explicit_channel = source.get('channel', '').strip()
+    selected_channel = explicit_channel or 'GENOCLAB'
     if selected_channel not in ('IBTIKAR', 'GENOCLAB'):
         selected_channel = 'GENOCLAB'
     values.setdefault('channel', [selected_channel])
@@ -168,7 +170,11 @@ def guest_form_response(request, services):
     selected_service = next((item for item in available
         if candidate in (str(item.pk), item.code) and item.channel_availability in ('BOTH', selected_channel)), None)
     selected_services = [selected_service] if selected_service else [item for item in available if item.channel_availability in ('BOTH', 'GENOCLAB')]
-    show_commercial_form = selected_channel == 'GENOCLAB' and (selected_service is not None or request.method == 'POST')
+    show_commercial_form = (
+        selected_channel == 'GENOCLAB'
+        and explicit_channel == 'GENOCLAB'
+        and (selected_service is not None or request.method == 'POST')
+    )
     return render(request, 'pages/guest_submit.html', {
         'services': services, 'country_choices': COUNTRY_CHOICES, 'selected_channel': selected_channel,
         'posted': request.POST, 'saved_form_values': values,
@@ -203,8 +209,17 @@ def guest_submit(request):
                 messages.error(request, ' '.join(exc.messages))
                 return guest_form_response(request, services_qs)
             legacy_fields = ('guest_name', 'guest_email', 'organization', 'ibtikar_id')
-            if any(value and (key in legacy_fields or key.startswith(('param_', 'sample_')))
-                   for key, value in request.POST.items()):
+            has_legacy_payload = any(
+                value and (key in legacy_fields or key.startswith(('param_', 'sample_')))
+                for key, value in request.POST.items()
+            )
+            if has_legacy_payload:
+                contact = GuestContactForm(request.POST)
+                if not contact.is_valid():
+                    for errors in contact.errors.values():
+                        for error in errors:
+                            messages.error(request, error)
+                    return guest_form_response(request, services_qs)
                 from core.ibtikar.bridge import open_legacy_submission
                 return open_legacy_submission(request, service)
             return redirect('ibtikar:new', code=service.code)
