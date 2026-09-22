@@ -284,7 +284,7 @@ class CompleteViewContracts(TestCase):
                     'template.docx',buf.getvalue(),
                     content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')})
             self.assertEqual(response.status_code,302)
-            self.assertEqual(response.url,reverse('documents:template_list'))
+            self.assertEqual(response.url,'/documents/templates/')
             self.assertEqual(path.read_bytes(),b'old-template')
             self.assertFalse(path.with_suffix('.backup.docx').exists())
             download=self.call(
