@@ -1,9 +1,9 @@
 from django import template
 from django.utils.translation import get_language
-from core.ibtikar.schema import projection
+from core.ibtikar.schema import reference_projection
 register = template.Library()
 
 @register.simple_tag
 def ibtikar_projection(req):
     form = req.ibtikar_form
-    return projection(form.schema, form.applicant, form.parameters, form.samples, form.staff, get_language() or 'fr')
+    return reference_projection(form, get_language() or 'fr')

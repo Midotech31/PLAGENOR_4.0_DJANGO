@@ -104,10 +104,13 @@ def project_group(fields, values, language='fr', parameters=None, samples=None, 
         if f['name'] not in active:
             continue
         value = values.get(f['name'])
-        if empty(value) and not f.get('required') and f['type'] != 'computed' and not (include_empty and f.get('document_blank')):
+        fillable = include_empty and (f.get('document_blank') or f['name'] in ('technical_validation', 'administrative_validation'))
+        if empty(value) and not f.get('required') and f['type'] != 'computed' and not fillable:
             continue
         rows.append({'name': f['name'], 'label': label(f['label'], language),
-                     'value': value, 'display': display_value(f, value, language), 'all_options': bool(f.get('all_options')),
+                     'value': value, 'display': '' if include_empty and empty(value) else display_value(f, value, language),
+                     'is_blank': empty(value), 'field_type': f['type'], 'write_in': bool(fillable and empty(value)),
+                     'all_options': bool(f.get('all_options') or fillable),
                      'options': [{'label': label(o['label'], language),
                                   'selected': o['value'] in (value if isinstance(value, list) else [value])}
                                  for o in f.get('options', [])]})
@@ -132,6 +135,13 @@ def projection(schema, applicant, parameters, samples, staff=None, language='fr'
         'sample_count': len(samples), 'read_count': read_count,
         'notices': [label(x, language) for x in schema.get('notices', [])],
     }
+
+
+def reference_projection(submission, language='fr'):
+    result = projection(submission.schema, submission.applicant, submission.parameters,
+                        submission.samples, submission.staff, language, print_blank_staff=True)
+    result['staff'] = [row for row in result['staff'] if row['name'] not in ('validated_price', 'price_justification')]
+    return result
 
 
 def active_data(schema, group, values, parameters=None, samples=None):

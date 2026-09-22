@@ -159,9 +159,21 @@ def guest_form_response(request, services):
     values = {key: [value[:MAX_GUEST_VALUE_LEN] for value in items[:50]]
               for key, items in request.POST.lists()
               if key in names or key.startswith(('param_', 'sample_'))}
+    selected_channel = (request.POST if request.method == 'POST' else request.GET).get('channel', 'GENOCLAB')
+    if selected_channel not in ('IBTIKAR', 'GENOCLAB'):
+        selected_channel = 'GENOCLAB'
+    values.setdefault('channel', [selected_channel])
+    available = list(services)
+    candidate = request.POST.get('service_id', '') if request.method == 'POST' else request.GET.get('service', '')
+    selected_service = next((item for item in available
+        if candidate in (str(item.pk), item.code) and item.channel_availability in ('BOTH', selected_channel)), None)
+    selected_services = [selected_service] if selected_service else [item for item in available if item.channel_availability in ('BOTH', 'GENOCLAB')]
+    show_commercial_form = selected_channel == 'GENOCLAB' and (selected_service is not None or request.method == 'POST')
     return render(request, 'pages/guest_submit.html', {
-        'services': services, 'country_choices': COUNTRY_CHOICES,
+        'services': services, 'country_choices': COUNTRY_CHOICES, 'selected_channel': selected_channel,
         'posted': request.POST, 'saved_form_values': values,
+        'selected_service': selected_service, 'selected_services': selected_services,
+        'show_commercial_form': show_commercial_form,
     })
 
 
@@ -174,14 +186,28 @@ def guest_submit(request):
     the chosen service is actually available on the chosen channel — the
     client filter is UX, not a security boundary.
     """
-    if request.method == 'GET' and request.GET.get('channel') == 'IBTIKAR':
-        code = request.GET.get('service')
-        return redirect('ibtikar:new', code=code) if code else redirect('ibtikar:index')
+    if request.method == 'GET' and request.GET.get('channel') == 'IBTIKAR' and request.GET.get('service'):
+        from core.service_eligibility import services_for
+        service = get_object_or_404(services_for('IBTIKAR'), code=request.GET['service'])
+        return redirect('ibtikar:new', code=service.code)
     services_qs = Service.objects.filter(
         active=True, channel_availability__in=['BOTH', 'IBTIKAR', 'GENOCLAB'],
     ).order_by('code')
 
     if request.method == 'POST':
+        if request.POST.get('channel', '').strip() == 'IBTIKAR':
+            from django.core.exceptions import ValidationError
+            try:
+                service = resolve_service(request.POST.get('service_id'), 'IBTIKAR')
+            except ValidationError as exc:
+                messages.error(request, ' '.join(exc.messages))
+                return guest_form_response(request, services_qs)
+            legacy_fields = ('guest_name', 'guest_email', 'organization', 'ibtikar_id')
+            if any(value and (key in legacy_fields or key.startswith(('param_', 'sample_')))
+                   for key, value in request.POST.items()):
+                from core.ibtikar.bridge import open_legacy_submission
+                return open_legacy_submission(request, service)
+            return redirect('ibtikar:new', code=service.code)
         contact = GuestContactForm(request.POST)
         if not contact.is_valid():
             for errors in contact.errors.values():
@@ -220,10 +246,6 @@ def guest_submit(request):
         except ValidationError as exc:
             messages.error(request, ' '.join(exc.messages))
             return guest_form_response(request, services_qs)
-
-        if channel == 'IBTIKAR':
-            from core.ibtikar.bridge import open_legacy_submission
-            return open_legacy_submission(request, service)
 
         guest_token = uuid_lib.uuid4()
 

@@ -1,4 +1,4 @@
-{% extends 'base_public.html' %}
+{% extends workspace_base|default:"base_public.html" %}
 {% load i18n static %}
 {% block title %}{% trans "Cadre réservé à PLAGENOR" %} — {{ req.display_id }}{% endblock %}
 {% block content %}
@@ -7,6 +7,7 @@
     <a href="{% url 'ibtikar:detail' req.pk %}">← {{ req.display_id }}</a>
     <h1>{% trans "Réception et validation PLAGENOR" %}</h1>
     <p class="ibk-lead">{% trans "Cette section ne modifie pas les informations déclarées par le demandeur. L’opérateur et la date de modification sont enregistrés automatiquement." %}</p>
+    <p class="ibk-help">{% trans "Vous pouvez enregistrer une réception partielle. Les champs laissés vides restent disponibles sur la fiche imprimée ; les valeurs saisies apparaissent dans la nouvelle révision." %}</p>
     {% for error in errors %}<p class="ibk-errors" role="alert">{{ error }}</p>{% endfor %}
     <form method="post" class="ibk-section" data-ibk-group="staff">
         {% csrf_token %}<input type="hidden" name="revision" value="{{ revision }}">

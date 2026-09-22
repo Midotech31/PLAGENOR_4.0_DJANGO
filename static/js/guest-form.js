@@ -1,5 +1,20 @@
 (function () {
     'use strict';
+    const picker = document.querySelector('[data-guest-channel-picker]');
+    if (picker) {
+        const channel = picker.elements.namedItem('channel');
+        const choice = picker.elements.namedItem('service');
+        function filterServices() {
+            Array.from(choice.options).forEach(function (option) {
+                const availability = option.dataset.channelAvailability;
+                option.disabled = Boolean(option.value && availability !== 'BOTH' && availability !== channel.value);
+                option.hidden = option.disabled;
+            });
+            if (choice.selectedOptions[0]?.disabled) choice.value = '';
+        }
+        channel.addEventListener('change', filterServices);
+        filterServices();
+    }
     const source = document.getElementById('guest-saved-values');
     const saved = source ? JSON.parse(source.textContent) : {};
     const form = document.querySelector('form[action="/guest/submit/"]') || document.querySelector('input[name="guest_email"]')?.form;
