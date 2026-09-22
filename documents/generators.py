@@ -567,15 +567,15 @@ def _get_uploaded_template(service, template_type) -> Optional[Path]:
             is_active=True,
         ).first()
         if template and template.file:
-            file_path = Path(settings.MEDIA_ROOT) / template.file.name
-            if file_path.exists():
-                return file_path
-    except Exception:
+            from documents.template_storage import materialize_template
+            return materialize_template(template)
+    except Exception as exc:
         logger.exception(
             "Unable to load uploaded template service_id=%s type=%s",
             getattr(service, 'pk', None),
             template_type,
         )
+        raise FileNotFoundError("Le modèle enregistré est indisponible ou invalide.") from exc
     return None
 
 

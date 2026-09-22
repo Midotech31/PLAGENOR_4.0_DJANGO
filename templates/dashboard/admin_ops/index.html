@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% load i18n dashboard_extras %}
 {% load icons %}
 
@@ -108,7 +109,7 @@
                                 {% csrf_token %}
                                 <div>
                                     <label class="text-sm" style="font-size:0.75rem;">{% trans "Ajuster le coût (DA)" %}</label>
-                                    <input type="number" name="admin_price" step="0.01" value="{{ req.admin_validated_price|default:req.budget_amount|default:req.quote_amount }}" class="form-control" style="width:140px; font-size:0.85rem;">
+                                    <input type="number" name="admin_price" step="0.01" value="{% if req.admin_validated_price != None %}{{ req.admin_validated_price|unlocalize }}{% elif req.budget_amount %}{{ req.budget_amount|unlocalize }}{% else %}{{ req.quote_amount|unlocalize }}{% endif %}" class="form-control" style="width:140px; font-size:0.85rem;">
                                 </div>
                                 <div>
                                     <label class="text-sm" style="font-size:0.75rem;">{% trans "Justification" %}</label>

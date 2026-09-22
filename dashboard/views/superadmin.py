@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
-from django.db import transaction
+from django.db import transaction, DatabaseError
 from dashboard.views.admin_ops import admin_required
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -288,11 +288,21 @@ def service_delete(request, pk):
 def technique_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    Technique.objects.create(
-        name=request.POST.get('name', ''),
-        category=request.POST.get('category', ''),
+    technique = Technique(
+        name=(request.POST.get('name') or '').strip(),
+        category=(request.POST.get('category') or '').strip(),
     )
-    messages.success(request, "Technique ajoutée.")
+    try:
+        technique.full_clean()
+        technique.save()
+        technique.refresh_from_db()
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to create technique")
+        messages.error(request, "La technique n'a pas pu être enregistrée.")
+    else:
+        messages.success(request, "Technique ajoutée.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -313,15 +323,19 @@ def technique_edit(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     technique = get_object_or_404(Technique, pk=pk)
-    name = request.POST.get('name', '').strip()
-    category = request.POST.get('category', '').strip()
-    if name:
-        technique.name = name
-        technique.category = category
+    technique.name = (request.POST.get('name') or '').strip()
+    technique.category = (request.POST.get('category') or '').strip()
+    try:
+        technique.full_clean()
         technique.save(update_fields=['name', 'category'])
-        messages.success(request, f"Technique '{name}' mise à jour.")
+        technique.refresh_from_db(fields=['name', 'category'])
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to update technique pk=%s", pk)
+        messages.error(request, "La technique n'a pas pu être mise à jour.")
     else:
-        messages.error(request, "Le nom est requis.")
+        messages.success(request, f"Technique '{technique.name}' mise à jour.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -366,22 +380,34 @@ def content_delete(request, pk):
 def content_update(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    key = request.POST.get('key', '').strip()
+    key = (request.POST.get('key') or '').strip()
     value = request.POST.get('value', '')
-    lang = request.POST.get('lang', '').strip() or settings.LANGUAGE_CODE
+    lang = (request.POST.get('lang') or '').strip() or settings.LANGUAGE_CODE
     allowed_langs = {code for code, _ in PlatformContent.LANGUAGE_CHOICES}
     if lang not in allowed_langs:
         lang = settings.LANGUAGE_CODE
+    max_key = PlatformContent._meta.get_field('key').max_length
     if not key:
         messages.error(request, "Clé manquante.")
         return redirect_back(request, 'dashboard:superadmin')
-    PlatformContent.objects.update_or_create(
-        key=key,
-        lang=lang,
-        defaults={'value': value, 'updated_by': request.user},
-    )
-    clear_cms_cache()
-    messages.success(request, f"Contenu '{key}' [{lang}] mis à jour.")
+    if len(key) > max_key:
+        messages.error(request, f"La clé ne peut pas dépasser {max_key} caractères.")
+        return redirect_back(request, 'dashboard:superadmin')
+    try:
+        with transaction.atomic():
+            PlatformContent.objects.update_or_create(
+                key=key, lang=lang,
+                defaults={'value': value, 'updated_by': request.user},
+            )
+            saved = PlatformContent.objects.get(key=key, lang=lang)
+            if saved.value != value:
+                raise DatabaseError("Persisted content differs from submitted content")
+    except DatabaseError:
+        logger.exception("Unable to update platform content key=%s lang=%s", key, lang)
+        messages.error(request, "Le contenu n'a pas pu être enregistré.")
+    else:
+        clear_cms_cache()
+        messages.success(request, f"Contenu '{saved.key}' [{saved.lang}] mis à jour.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -390,21 +416,30 @@ def announcement_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
     from core.models import Announcement
-    title = (request.POST.get('title') or '').strip()
-    message = (request.POST.get('message') or '').strip()
-    level = request.POST.get('level', 'info')
-    audience = request.POST.get('audience', 'ALL')
+    announcement = Announcement(
+        title=(request.POST.get('title') or '').strip(),
+        message=(request.POST.get('message') or '').strip(),
+        level=request.POST.get('level', 'info'),
+        audience=request.POST.get('audience', 'ALL'),
+        created_by=request.user,
+    )
     valid_levels = {c for c, _ in Announcement.LEVEL_CHOICES}
     valid_aud = {c for c, _ in Announcement.AUDIENCE_CHOICES}
-    if not title or not message:
-        messages.error(request, "Titre et message obligatoires.")
-        return redirect_back(request, 'dashboard:superadmin')
-    Announcement.objects.create(
-        title=title, message=message,
-        level=level if level in valid_levels else 'info',
-        audience=audience if audience in valid_aud else 'ALL',
-        created_by=request.user)
-    messages.success(request, "Annonce publiée.")
+    if announcement.level not in valid_levels:
+        announcement.level = 'info'
+    if announcement.audience not in valid_aud:
+        announcement.audience = 'ALL'
+    try:
+        announcement.full_clean()
+        announcement.save()
+        announcement.refresh_from_db()
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to create announcement")
+        messages.error(request, "L'annonce n'a pas pu être enregistrée.")
+    else:
+        messages.success(request, "Annonce publiée.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -459,26 +494,44 @@ def reset_2fa(request, pk):
 
 @superadmin_required
 def content_save(request):
-    """Upsert all three languages of one content key in a single submit.
-
-    POST: key, value_fr, value_en, value_ar. A blank language value clears
-    that translation (the {% cms %} tag then falls back to the default
-    language, then to the template default).
-    """
+    """Upsert submitted languages of one content key atomically."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    key = request.POST.get('key', '').strip()
+    key = (request.POST.get('key') or '').strip()
+    max_key = PlatformContent._meta.get_field('key').max_length
     if not key:
         messages.error(request, "Clé manquante.")
         return redirect_back(request, 'dashboard:superadmin')
-    for code, _label in PlatformContent.LANGUAGE_CHOICES:
-        value = request.POST.get(f'value_{code}', '')
-        PlatformContent.objects.update_or_create(
-            key=key, lang=code,
-            defaults={'value': value, 'updated_by': request.user},
-        )
-    clear_cms_cache()
-    messages.success(request, f"Contenu '{key}' enregistré (toutes les langues).")
+    if len(key) > max_key:
+        messages.error(request, f"La clé ne peut pas dépasser {max_key} caractères.")
+        return redirect_back(request, 'dashboard:superadmin')
+    submitted = {
+        code: request.POST[f'value_{code}']
+        for code, _label in PlatformContent.LANGUAGE_CHOICES
+        if f'value_{code}' in request.POST
+    }
+    if not submitted:
+        messages.error(request, "Aucune valeur de contenu n'a été transmise.")
+        return redirect_back(request, 'dashboard:superadmin')
+    try:
+        with transaction.atomic():
+            for code, value in submitted.items():
+                PlatformContent.objects.update_or_create(
+                    key=key, lang=code,
+                    defaults={'value': value, 'updated_by': request.user},
+                )
+            persisted = dict(
+                PlatformContent.objects.filter(key=key, lang__in=submitted)
+                .values_list('lang', 'value')
+            )
+            if persisted != submitted:
+                raise DatabaseError("Persisted content differs from submitted content")
+    except DatabaseError:
+        logger.exception("Unable to save multilingual platform content key=%s", key)
+        messages.error(request, "Le contenu n'a pas pu être enregistré. Aucune modification partielle n'a été conservée.")
+    else:
+        clear_cms_cache()
+        messages.success(request, f"Contenu '{key}' enregistré.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -539,9 +592,78 @@ def audit_log(request):
     return render(request, 'dashboard/superadmin/audit_log.html', context)
 
 
+def _service_edit_context(service):
+    from core.models import ServicePricing
+    custom_fields = service.custom_fields.all()
+    pricing_tiers = service.pricing_configs.order_by('priority', 'pk')
+    # Build the pricing_data view context. If the admin hasn't authored any
+    # DB pricing yet for one of the 9 legacy services, pre-fill the form from
+    # the YAML registry so the visible numbers are the actual ones currently
+    # applied — first save then writes them to the DB.
+    pdata = service.pricing_data or {}
+    try:
+        from core.registry import get_service_def
+        yaml_def = get_service_def(service.code) or {}
+    except Exception:
+        yaml_def = {}
+    yaml_pricing = (yaml_def.get('pricing') or {})
+    yaml_base = yaml_pricing.get('base_price') or {}
+    yaml_mults = yaml_pricing.get('multipliers') or {}
+    yaml_params = yaml_def.get('parameters', []) or []
+    pricing_data_view = {
+        'base_non_pathogenic': pdata.get('base_price', {}).get('non_pathogenic',
+                                                              yaml_base.get('non_pathogenic') or ''),
+        'base_pathogenic': pdata.get('base_price', {}).get('pathogenic',
+                                                          yaml_base.get('pathogenic') or ''),
+        'multipliers': (pdata.get('multipliers', {}) if 'multipliers' in pdata else (yaml_mults or {})),
+        'multiplier_param': (pdata.get('multiplier_param', '') if 'multiplier_param' in pdata
+                             else _guess_multiplier_param(yaml_params, yaml_mults)),
+        'param_options': [p.get('name') for p in yaml_params if p.get('options')],
+        'has_db_override': any(key in pdata for key in ('base_price', 'multipliers', 'multiplier_param')),
+        'has_yaml_default': bool(yaml_base or yaml_mults),
+    }
+
+    return {
+        'service': service,
+        'custom_fields': custom_fields,
+        'pricing_tiers': pricing_tiers,
+        'pricing_type_choices': ServicePricing.PRICING_TYPE_CHOICES,
+        'pricing_channel_choices': ServicePricing.CHANNEL_CHOICES,
+        'pricing_data_view': pricing_data_view,
+    }
+
+
+def _service_edit_error(request, pk, status=400):
+    service = get_object_or_404(Service, pk=pk)
+    context = _service_edit_context(service)
+    context['submitted_editor_values'] = {
+        key: values for key, values in request.POST.lists()
+        if key.startswith(('pd_', 'field_', 'name_', 'description_'))
+        or key in ('channel_availability', 'ibtikar_price', 'genoclab_price',
+                   'turnaround_days', 'custom_fields_present')
+    }
+    context['upload_retry_required'] = bool(request.FILES)
+    return render(request, 'dashboard/superadmin/service_edit.html', context, status=status)
+
+
 @admin_required
-@transaction.atomic
 def service_edit(request, pk):
+    from django.db import DatabaseError
+    try:
+        with transaction.atomic():
+            response = _edit_service(request, pk)
+    except (DatabaseError, OSError):
+        if request.method != 'POST':
+            raise
+        logger.exception('Service save failed for service_id=%s', pk)
+        messages.error(request, _('Échec de l’enregistrement. Aucune modification n’a été validée. Vos saisies sont conservées.'))
+        return _service_edit_error(request, pk, status=503)
+    if hasattr(request, '_cms_saved_service_name'):
+        messages.success(request, f"Service {request._cms_saved_service_name} mis à jour.")
+    return response
+
+
+def _edit_service(request, pk):
     """Edit a service, its custom form fields, and its detailed pricing tiers.
 
     Three datasets live on this page and submit as one form:
@@ -596,14 +718,14 @@ def service_edit(request, pk):
                 raise ValueError('Canal invalide.')
         except (FinancialValidationError, ValueError, TypeError) as exc:
             messages.error(request, str(exc))
-            return redirect('dashboard:superadmin_service_edit', pk=pk)
+            return _service_edit_error(request, pk)
         from core.forms import ServiceTextForm, SERVICE_TEXT_FIELDS
         # Operational edits that omit text fields preserve all translations.
         if any(key in request.POST for key in SERVICE_TEXT_FIELDS):
             text_form = ServiceTextForm(request.POST, instance=service)
             if not text_form.is_valid():
                 messages.error(request, text_form.errors.as_text())
-                return redirect('dashboard:superadmin_service_edit', pk=pk)
+                return _service_edit_error(request, pk)
             service = text_form.save(commit=False)
         service.channel_availability = request.POST.get('channel_availability', service.channel_availability)
         service.ibtikar_price = request.POST.get('ibtikar_price') or service.ibtikar_price
@@ -614,75 +736,76 @@ def service_edit(request, pk):
                 service.image = validate_upload(request.FILES['image'], 'image')
             except ValidationError as exc:
                 messages.error(request, exc.messages[0])
-                return redirect('dashboard:superadmin_service_edit', pk=service.pk)
+                return _service_edit_error(request, service.pk)
         try:
             service.full_clean()
         except ValidationError as exc:
             messages.error(request, '; '.join(exc.messages))
-            return redirect('dashboard:superadmin_service_edit', pk=pk)
+            return _service_edit_error(request, pk)
         service.save()
 
-        # ---- Custom form fields: wipe + recreate (simple, low-volume data)
-        import json
-        service.custom_fields.all().delete()
-        field_names = request.POST.getlist('field_name')
-        field_types = request.POST.getlist('field_type')
-        field_categories = request.POST.getlist('field_category')
-        field_required = request.POST.getlist('field_required')
-        field_options = request.POST.getlist('field_options')
-        # Variable-pricing + conditional-logic config (parallel lists, one per field)
-        field_affects = request.POST.getlist('field_affects_pricing')
-        field_mod_type = request.POST.getlist('field_price_modifier_type')
-        field_mod_value = request.POST.getlist('field_price_modifier_value')
-        field_note_fr = request.POST.getlist('field_condition_note_fr')
-        field_note_en = request.POST.getlist('field_condition_note_en')
-        field_option_pricing = request.POST.getlist('field_option_pricing')
-        field_conditional = request.POST.getlist('field_conditional_logic')
+        if request.POST.get('custom_fields_present') == '1' or 'field_name' in request.POST:
+            # ---- Custom form fields: wipe + recreate (simple, low-volume data)
+            import json
+            service.custom_fields.all().delete()
+            field_names = request.POST.getlist('field_name')
+            field_types = request.POST.getlist('field_type')
+            field_categories = request.POST.getlist('field_category')
+            field_required = request.POST.getlist('field_required')
+            field_options = request.POST.getlist('field_options')
+            # Variable-pricing + conditional-logic config (parallel lists, one per field)
+            field_affects = request.POST.getlist('field_affects_pricing')
+            field_mod_type = request.POST.getlist('field_price_modifier_type')
+            field_mod_value = request.POST.getlist('field_price_modifier_value')
+            field_note_fr = request.POST.getlist('field_condition_note_fr')
+            field_note_en = request.POST.getlist('field_condition_note_en')
+            field_option_pricing = request.POST.getlist('field_option_pricing')
+            field_conditional = request.POST.getlist('field_conditional_logic')
 
-        def _at(lst, idx, default=''):
-            return lst[idx] if idx < len(lst) else default
+            def _at(lst, idx, default=''):
+                return lst[idx] if idx < len(lst) else default
 
-        def _parse_json(raw, fallback):
-            raw = (raw or '').strip()
-            if not raw:
-                return fallback
-            return json.loads(raw)  # Validated before any service mutation.
+            def _parse_json(raw, fallback):
+                raw = (raw or '').strip()
+                if not raw:
+                    return fallback
+                return json.loads(raw)  # Validated before any service mutation.
 
-        for i, name in enumerate(field_names):
-            if not name.strip():
-                continue
-            opts = []
-            if i < len(field_options) and field_options[i].strip():
-                try:
-                    opts = json.loads(field_options[i])
-                except (json.JSONDecodeError, ValueError):
-                    opts = [o.strip() for o in field_options[i].split(',') if o.strip()]
+            for i, name in enumerate(field_names):
+                if not name.strip():
+                    continue
+                opts = []
+                if i < len(field_options) and field_options[i].strip():
+                    try:
+                        opts = json.loads(field_options[i])
+                    except (json.JSONDecodeError, ValueError):
+                        opts = [o.strip() for o in field_options[i].split(',') if o.strip()]
 
-            mod_value = _at(field_mod_value, i).strip()
-            mod_value = Decimal(mod_value) if mod_value else None
+                mod_value = _at(field_mod_value, i).strip()
+                mod_value = Decimal(mod_value) if mod_value else None
 
-            category = _at(field_categories, i, 'parameter').strip()
-            if category not in ('parameter', 'sample_column'):
-                category = 'parameter'
+                category = _at(field_categories, i, 'parameter').strip()
+                if category not in ('parameter', 'sample_column'):
+                    category = 'parameter'
 
-            ServiceFormField.objects.create(
-                service=service,
-                name=name.strip(),
-                **{f'label_{lang}': request.POST.getlist(f'field_label_{lang}')[i].strip()
-                   for lang in ('fr', 'ar', 'en')},
-                field_type=field_types[i] if i < len(field_types) else 'string',
-                field_category=category,
-                required=str(i) in field_required,
-                options=opts,
-                sort_order=i,
-                affects_pricing=str(i) in field_affects,
-                price_modifier_type=_at(field_mod_type, i).strip(),
-                price_modifier_value=mod_value,
-                condition_note_fr=_at(field_note_fr, i).strip(),
-                condition_note_en=_at(field_note_en, i).strip(),
-                option_pricing=_parse_json(_at(field_option_pricing, i), {}),
-                conditional_logic=_parse_json(_at(field_conditional, i), []),
-            )
+                ServiceFormField.objects.create(
+                    service=service,
+                    name=name.strip(),
+                    **{f'label_{lang}': request.POST.getlist(f'field_label_{lang}')[i].strip()
+                       for lang in ('fr', 'ar', 'en')},
+                    field_type=field_types[i] if i < len(field_types) else 'string',
+                    field_category=category,
+                    required=str(i) in field_required,
+                    options=opts,
+                    sort_order=i,
+                    affects_pricing=str(i) in field_affects,
+                    price_modifier_type=_at(field_mod_type, i).strip(),
+                    price_modifier_value=mod_value,
+                    condition_note_fr=_at(field_note_fr, i).strip(),
+                    condition_note_en=_at(field_note_en, i).strip(),
+                    option_pricing=_parse_json(_at(field_option_pricing, i), {}),
+                    conditional_logic=_parse_json(_at(field_conditional, i), []),
+                )
 
         # ---- Pricing tiers are managed by the modal UI via the JSON API
         #     (dashboard.views.pricing_api). They're saved instantly on each
@@ -694,72 +817,43 @@ def service_edit(request, pk):
         # Same formula as before: base_price (pathogenic / non_pathogenic) ×
         # multiplier (chosen via multiplier_param) × N_samples. The admin
         # adjusts the numbers here when reagent/consumable costs vary.
-        bp_non = _to_decimal_or_none(request.POST.get('pd_base_non_pathogenic'))
-        bp_pat = _to_decimal_or_none(request.POST.get('pd_base_pathogenic'))
-        mult_param = (request.POST.get('pd_multiplier_param') or '').strip()
-        mult_keys = request.POST.getlist('pd_mult_key')
-        mult_factors = request.POST.getlist('pd_mult_factor')
-        multipliers = {}
-        for k, f in zip(mult_keys, mult_factors):
-            k = (k or '').strip()
-            if not k or not f.strip():
-                continue
-            multipliers[k] = float(f)  # Validated above with parse_money.
-        if bp_non is not None or bp_pat is not None or multipliers or mult_param:
+        if any(key in request.POST for key in ('pd_base_non_pathogenic', 'pd_base_pathogenic', 'pd_multiplier_param', 'pd_mult_key', 'pd_mult_factor')):
+            bp_non = _to_decimal_or_none(request.POST.get('pd_base_non_pathogenic'))
+            bp_pat = _to_decimal_or_none(request.POST.get('pd_base_pathogenic'))
+            mult_param = (request.POST.get('pd_multiplier_param') or '').strip()
+            mult_keys = request.POST.getlist('pd_mult_key')
+            mult_factors = request.POST.getlist('pd_mult_factor')
+            multipliers = {}
+            for k, f in zip(mult_keys, mult_factors):
+                k = (k or '').strip()
+                if not k or not f.strip():
+                    continue
+                multipliers[k] = float(f)  # Validated above with parse_money.
+            # The pricing controls are authoritative on submit. In particular,
+            # removing every multiplier row must really remove the old rows; an
+            # empty mapping means a neutral x1 factor. Clearing both base-price
+            # inputs intentionally removes this DB override and reverts to the
+            # registry/flat fallback.
             new_pdata = dict(service.pricing_data or {})
-            new_pdata['base_price'] = {
-                'non_pathogenic': float(bp_non) if bp_non is not None else (
-                    (service.pricing_data or {}).get('base_price', {}).get('non_pathogenic')
-                ),
-                'pathogenic': float(bp_pat) if bp_pat is not None else (
-                    (service.pricing_data or {}).get('base_price', {}).get('pathogenic')
-                ),
-            }
-            new_pdata['base_price'] = {k: v for k, v in new_pdata['base_price'].items() if v is not None}
-            if multipliers:
+            if bp_non is None and bp_pat is None:
+                for key in ('base_price', 'multipliers', 'multiplier_param'):
+                    new_pdata.pop(key, None)
+            else:
+                base_non = bp_non if bp_non is not None else bp_pat
+                base_pat = bp_pat if bp_pat is not None else base_non
+                new_pdata['base_price'] = {
+                    'non_pathogenic': float(base_non),
+                    'pathogenic': float(base_pat),
+                }
                 new_pdata['multipliers'] = multipliers
-            if mult_param:
                 new_pdata['multiplier_param'] = mult_param
             service.pricing_data = new_pdata
             service.save(update_fields=['pricing_data'])
 
-        messages.success(request, f"Service {service.name} mis à jour.")
+        request._cms_saved_service_name = service.name
         return redirect('dashboard:ops_services' if request.user.role == 'PLATFORM_ADMIN' else 'dashboard:superadmin')
 
-    # Build the pricing_data view context. If the admin hasn't authored any
-    # DB pricing yet for one of the 9 legacy services, pre-fill the form from
-    # the YAML registry so the visible numbers are the actual ones currently
-    # applied — first save then writes them to the DB.
-    pdata = service.pricing_data or {}
-    try:
-        from core.registry import get_service_def
-        yaml_def = get_service_def(service.code) or {}
-    except Exception:
-        yaml_def = {}
-    yaml_pricing = (yaml_def.get('pricing') or {})
-    yaml_base = yaml_pricing.get('base_price') or {}
-    yaml_mults = yaml_pricing.get('multipliers') or {}
-    yaml_params = yaml_def.get('parameters', []) or []
-    pricing_data_view = {
-        'base_non_pathogenic': pdata.get('base_price', {}).get('non_pathogenic',
-                                                              yaml_base.get('non_pathogenic') or ''),
-        'base_pathogenic': pdata.get('base_price', {}).get('pathogenic',
-                                                          yaml_base.get('pathogenic') or ''),
-        'multipliers': pdata.get('multipliers') or yaml_mults or {},
-        'multiplier_param': pdata.get('multiplier_param') or _guess_multiplier_param(yaml_params, yaml_mults),
-        'param_options': [p.get('name') for p in yaml_params if p.get('options')],
-        'has_db_override': bool(pdata.get('base_price') or pdata.get('multipliers')),
-        'has_yaml_default': bool(yaml_base or yaml_mults),
-    }
-
-    return render(request, 'dashboard/superadmin/service_edit.html', {
-        'service': service,
-        'custom_fields': custom_fields,
-        'pricing_tiers': pricing_tiers,
-        'pricing_type_choices': ServicePricing.PRICING_TYPE_CHOICES,
-        'pricing_channel_choices': ServicePricing.CHANNEL_CHOICES,
-        'pricing_data_view': pricing_data_view,
-    })
+    return render(request, 'dashboard/superadmin/service_edit.html', _service_edit_context(service))
 
 
 def _to_decimal_or_none(value):
@@ -963,38 +1057,33 @@ def add_payment_method(request):
         return HttpResponseForbidden()
     name = request.POST.get('name', '').strip()
     if name:
-        PaymentMethod.objects.create(name=name)
-        messages.success(request, "Méthode de paiement ajoutée.")
+        if len(name) > PaymentMethod._meta.get_field("name").max_length:
+            messages.error(request, "Le nom est trop long.")
+        else:
+            method, created = PaymentMethod.objects.get_or_create(name=name)
+            if created:
+                messages.success(request, "Méthode de paiement ajoutée.")
+            else:
+                messages.info(request, "Cette méthode de paiement existe déjà.")
     else:
         messages.error(request, "Le nom est requis.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
-# --- Task 11: DOCX Template Upload ---
+# Legacy global-template upload was removed from the control plane because
+# writing into BASE_DIR is not durable on container deployments. Durable
+# templates are managed through documents.ServiceTemplate and the configured
+# Django storage backend.
 @superadmin_required
 def upload_template(request):
-    if request.method != 'POST' or 'template_file' not in request.FILES:
+    if request.method != 'POST':
         return HttpResponseForbidden()
-    import shutil
-    template_type = request.POST.get('template_type', '')
-    allowed = ['ibtikar_form_template', 'platform_note_template', 'reception_form_template', 'quote_template']
-    if template_type not in allowed:
-        messages.error(request, "Type de template invalide.")
-        return redirect_back(request, 'dashboard:superadmin')
-    upload = request.FILES['template_file']
-    try:
-        validate_upload(upload, 'docx_template')
-    except ValidationError as exc:
-        messages.error(request, exc.messages[0])
-        return redirect_back(request, 'dashboard:superadmin')
-    dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
-    if dest.exists():
-        shutil.copy2(str(dest), str(dest.with_suffix('.backup.docx')))
-    with open(str(dest), 'wb') as f:
-        for chunk in upload.chunks():
-            f.write(chunk)
-    messages.success(request, f"Template '{template_type}' mis à jour.")
-    return redirect_back(request, 'dashboard:superadmin')
+    messages.error(
+        request,
+        "Ce téléversement global a été retiré : utilisez « Modèles DOCX personnalisés », "
+        "qui enregistre les fichiers dans le stockage persistant configuré.",
+    )
+    return redirect('documents:template_list')
 
 
 @superadmin_required

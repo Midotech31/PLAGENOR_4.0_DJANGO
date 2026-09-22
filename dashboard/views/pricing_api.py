@@ -16,6 +16,10 @@ URL shape (mounted in dashboard/urls.py under ``api/service/.../pricing/``):
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+import logging
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, transaction
+from django.views.decorators.cache import never_cache
 
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
@@ -142,10 +146,15 @@ def _apply_form_to_tier(tier: ServicePricing, post, user) -> tuple[ServicePricin
     tier.priority = priority
     tier.is_active = is_active
     tier.updated_by = user
+    try:
+        tier.full_clean()
+    except ValidationError as exc:
+        return None, "; ".join(exc.messages)
     return tier, None
 
 
 @admin_required
+@never_cache
 @require_GET
 def pricing_list(request, service_pk):
     """List all pricing tiers for a service (ordered by priority)."""
@@ -159,6 +168,7 @@ def pricing_list(request, service_pk):
 
 
 @admin_required
+@never_cache
 @require_POST
 def pricing_add(request, service_pk):
     """Create a new pricing tier for a service."""
@@ -166,11 +176,18 @@ def pricing_add(request, service_pk):
     tier, err = _apply_form_to_tier(ServicePricing(service=service), request.POST, request.user)
     if err:
         return JsonResponse({'error': err}, status=400)
-    tier.save()
+    try:
+        with transaction.atomic():
+            tier.save()
+            tier.refresh_from_db()
+    except DatabaseError:
+        logging.getLogger(__name__).exception("Tariff persistence failed")
+        return JsonResponse({"error": "L’enregistrement a échoué. Les valeurs saisies sont conservées ; veuillez réessayer."}, status=503)
     return JsonResponse({'ok': True, 'config': _serialize(tier)}, status=201)
 
 
 @admin_required
+@never_cache
 @require_POST
 def pricing_update(request, pricing_pk):
     """Update an existing pricing tier."""
@@ -178,14 +195,26 @@ def pricing_update(request, pricing_pk):
     tier, err = _apply_form_to_tier(tier, request.POST, request.user)
     if err:
         return JsonResponse({'error': err}, status=400)
-    tier.save()
+    try:
+        with transaction.atomic():
+            tier.save()
+            tier.refresh_from_db()
+    except DatabaseError:
+        logging.getLogger(__name__).exception("Tariff persistence failed")
+        return JsonResponse({"error": "L’enregistrement a échoué. Les valeurs saisies sont conservées ; veuillez réessayer."}, status=503)
     return JsonResponse({'ok': True, 'config': _serialize(tier)})
 
 
 @admin_required
+@never_cache
 @require_POST
 def pricing_delete(request, pricing_pk):
     """Delete a pricing tier."""
     tier = get_object_or_404(ServicePricing, pk=pricing_pk)
-    tier.delete()
+    try:
+        with transaction.atomic():
+            tier.delete()
+    except DatabaseError:
+        logging.getLogger(__name__).exception('Tariff deletion failed')
+        return JsonResponse({'error': 'La suppression a échoué. Veuillez réessayer.'}, status=503)
     return JsonResponse({'ok': True})

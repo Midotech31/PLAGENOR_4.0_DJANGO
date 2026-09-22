@@ -200,7 +200,7 @@ class CompleteGeneratorContracts(TestCase):
         self.req.appointment_date=timezone.now()
         self.assertIn('Assignation',self.read_text(g.generate_platform_note(self.req)))
         with patch.object(ServiceTemplate.objects,'filter',side_effect=RuntimeError('storage metadata unavailable')):
-            with self.assertLogs(g.logger,level='ERROR'):self.assertIsNone(g._get_uploaded_template(self.service,'QUOTE'))
+            with self.assertLogs(g.logger,level='ERROR'), self.assertRaises(FileNotFoundError):g._get_uploaded_template(self.service,'QUOTE')
 
     def test_defensive_field_rendering_and_custom_labels(self):
         from documents import generators as g

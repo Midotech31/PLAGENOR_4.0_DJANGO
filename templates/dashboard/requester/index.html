@@ -44,8 +44,8 @@
             <div class="form-group" style="margin:0; flex:1; min-width:220px;">
                 <label style="font-weight:600; font-size:.9rem;">{% trans "Solde IBTIKAR résiduel (DA)" %}</label>
                 <input type="number" name="declared_balance" class="form-control"
-                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
-                       required placeholder="0">
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:'0u' }}"
+                       required autofocus placeholder="0">
             </div>
             <button type="submit" class="btn btn-primary">{% trans "Valider mon solde" %}</button>
         </form>
@@ -84,8 +84,8 @@
             <div class="form-group" style="margin:0; flex:1; min-width:220px;">
                 <label style="font-weight:600; font-size:.9rem;">{% trans "Nouveau solde IBTIKAR (DA)" %}</label>
                 <input type="number" name="declared_balance" class="form-control"
-                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
-                       value="{{ budget_context.budget_remaining|floatformat:0 }}" required>
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:'0u' }}"
+                       value="{{ budget_context.budget_remaining|floatformat:'0u' }}" required>
                 <small class="text-muted" style="display:block; margin-top:4px;">
                     {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Plafond annuel encadré par la DGRSDT : {{ cap }} DA.{% endblocktrans %}
                 </small>

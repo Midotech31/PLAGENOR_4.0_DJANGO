@@ -48,7 +48,13 @@ class ServiceTemplate(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Modèle de document'
         verbose_name_plural = 'Modèles de documents'
-        unique_together = ['service', 'template_type', 'is_active']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['service', 'template_type'],
+                condition=models.Q(is_active=True),
+                name='unique_active_service_template',
+            ),
+        ]
         
     def __str__(self):
         return f"{self.name} ({self.get_template_type_display()}) - {self.service.code}"
