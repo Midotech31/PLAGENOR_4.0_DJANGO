@@ -108,7 +108,7 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await create.locator('[name="phone"]').fill('0555001122');
   await create.locator('[name="password"]').fill('CmsBrowserAudit!2026');
   await clickAndSettle(create.locator('button[type="submit"]'), page);
-  await page.goto('/dashboard/home/?tab=users&user_q=cms-browser-user');
+  await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
   let row = page.locator('tr').filter({ hasText: email });
   await expect(row).toHaveCount(1);
   const editHref = await row.locator('a[href$="/edit/"]').getAttribute('href');
@@ -119,14 +119,14 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await page.goto(editHref);
   await expect(page.locator('[name="organization"]')).toHaveValue('Institution persistée');
   await expect(page.locator('[name="phone"]')).toHaveValue('0555003344');
-  await page.goto('/dashboard/home/?tab=users&user_q=cms-browser-user');
+  await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
   row = page.locator('tr').filter({ hasText: email });
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
-  await page.goto('/dashboard/home/?tab=users&user_q=cms-browser-user');
+  await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
   row = page.locator('tr').filter({ hasText: email });
   await expect(row).toContainText('Inactif');
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
-  await page.goto('/dashboard/home/?tab=users&user_q=cms-browser-user');
+  await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
   await expect(page.locator('tr').filter({ hasText: email })).toContainText('Actif');
 });
 
