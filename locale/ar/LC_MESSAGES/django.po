@@ -7191,6 +7191,78 @@ msgstr ""
 msgid "Avec un compte"
 msgstr "باستخدام حساب"
 
+msgid "Retour à mon espace de soumission"
+msgstr "العودة إلى فضاء تقديم الطلبات"
+
+msgid "Canal et prestation"
+msgstr "القناة والخدمة"
+
+msgid ""
+"Choisissez le canal et la prestation. Les informations demandées s’adaptent "
+"à votre sélection."
+msgstr "اختر القناة والخدمة. تتكيف المعلومات المطلوبة مع اختيارك."
+
+msgid ""
+"Le choix IBTIKAR ouvre le formulaire unique utilisé pour générer votre fiche"
+" imprimable."
+msgstr ""
+"يفتح اختيار إبتكار الاستمارة الموحدة المستخدمة لإنشاء نسخة طلبك القابلة "
+"للطباعة."
+
+msgid "Changer de canal ou de prestation"
+msgstr "تغيير القناة أو الخدمة"
+
+msgid "Renseigner ma fiche IBTIKAR"
+msgstr "تعبئة استمارة إبتكار"
+
+msgid "Zone réservée au personnel habilité"
+msgstr "مساحة مخصصة للموظفين المخولين"
+
+msgid "Sélectionné"
+msgstr "محدد"
+
+msgid "Non sélectionné"
+msgstr "غير محدد"
+
+msgid ""
+"À compléter par le personnel habilité lors de la réception et du traitement,"
+" dans l’application ou sur la fiche imprimée."
+msgstr ""
+"يستكملها الموظفون المخولون عند الاستلام والمعالجة، في التطبيق أو على "
+"الاستمارة المطبوعة."
+
+msgid ""
+"Les données enregistrées dans ce formulaire constituent la source unique de "
+"votre fiche IBTIKAR. Les zones de réception sont réservées au personnel "
+"habilité."
+msgstr ""
+"البيانات المحفوظة في هذه الاستمارة هي المصدر الوحيد لوثيقة طلب إبتكار. خانات"
+" الاستلام مخصصة للموظفين المخولين."
+
+msgid "Me connecter pour enregistrer cette demande dans mon espace"
+msgstr "تسجيل الدخول لحفظ هذا الطلب في فضائي"
+
+msgid ""
+"La fiche téléchargeable reprend les données enregistrées ci-dessous et les "
+"compléments opérateur de cette révision."
+msgstr ""
+"تتضمن الاستمارة القابلة للتنزيل البيانات المحفوظة أدناه وإضافات الموظف "
+"الخاصة بهذه المراجعة."
+
+msgid ""
+"Vous pouvez enregistrer une réception partielle. Les champs laissés vides "
+"restent disponibles sur la fiche imprimée ; les valeurs saisies apparaissent"
+" dans la nouvelle révision."
+msgstr ""
+"يمكن حفظ قسم استلام مكتمل جزئيا. تبقى الخانات الفارغة متاحة في الاستمارة "
+"المطبوعة، وتظهر القيم المدخلة في المراجعة الجديدة."
+
+msgid "Continuer"
+msgstr "متابعة"
+
+msgid "Informations administratives internes"
+msgstr "معلومات إدارية داخلية"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "لطلبة وباحثي ESSBO."
 

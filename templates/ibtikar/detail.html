@@ -1,14 +1,15 @@
-{% extends 'base_public.html' %}
+{% extends workspace_base|default:"base_public.html" %}
 {% load i18n static %}
 {% block title %}{{ req.display_id }} — IBTIKAR{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
 <section class="ibk-shell">
-    <a href="{% url 'ibtikar:index' %}">← {% trans "Formulaires IBTIKAR" %}</a>
+    <a href="{{ workspace_url }}" class="ibk-back">← {% trans "Retour à mon espace de soumission" %}</a>
     <p class="ibk-eyebrow">{{ req.display_id }} · {{ req.get_status_display }}</p>
     <h1>{% if projection %}{{ projection.title }}{% elif req.service %}{{ req.service.name }}{% else %}{{ req.title }}{% endif %}</h1>
     {% if submission %}<p>{% trans "Révision" %} {{ submission.revision }} · {{ projection.source_version }} · {{ submission.updated_at|date:"d/m/Y H:i" }}</p>{% endif %}
     {% if guest_token %}<p class="ibk-notice">{% trans "Conservez ce lien personnel pour retrouver et modifier votre demande avant sa validation." %}</p>{% endif %}
+    <p class="ibk-help">{% trans "La fiche téléchargeable reprend les données enregistrées ci-dessous et les compléments opérateur de cette révision." %}</p>
     <div class="ibk-actions">
         <a class="btn btn-outline" href="{{ operations_url }}">{% trans "Suivi opérationnel" %}</a>
         {% if can_edit %}<a class="btn btn-primary" href="{{ edit_url }}">{% trans "Modifier le formulaire" %}</a>{% endif %}
@@ -38,9 +39,11 @@
         {% else %}<p>{% trans "Tarification à valider par PLAGENOR — aucun montant total n’est encore arrêté." %}</p>{% endif %}
         {% if submission.estimate.status == 'validated' %}<p>{% trans "Montant validé par PLAGENOR" %}</p>{% endif %}
     </section>{% endif %}
-    <section class="ibk-section"><h2>{% trans "Cadre réservé à PLAGENOR" %}</h2>
+    <section class="ibk-section" data-operator-section><h2>{% trans "Cadre réservé à PLAGENOR" %}</h2>
+        <p class="ibk-help">{% trans "À compléter par le personnel habilité lors de la réception et du traitement, dans l’application ou sur la fiche imprimée." %}</p>
         {% if projection.staff %}<dl>{% include 'ibtikar/projection.html' with rows=projection.staff %}</dl>{% else %}<p>{% trans "Aucune réception ou validation n’a encore été enregistrée." %}</p>{% endif %}
     </section>
+    {% if internal_staff %}<section class="ibk-section"><h2>{% trans "Informations administratives internes" %}</h2><dl>{% include 'ibtikar/projection.html' with rows=internal_staff %}</dl></section>{% endif %}
     {% if submission.legacy_data %}<details class="ibk-section"><summary>{% trans "Données historiques conservées" %}</summary><pre>{{ submission.legacy_data|pprint }}</pre></details>{% endif %}
     {% else %}
     <p class="ibk-notice">{% trans "Dossier historique : les données ci-dessous sont conservées telles qu’enregistrées. Aucune option absente n’est déduite d’un ancien modèle Word." %}</p>

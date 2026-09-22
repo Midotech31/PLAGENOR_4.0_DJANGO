@@ -1,5 +1,6 @@
 {% load static %}
-{% load i18n %}
+{% load i18n erp_access %}
+{% erp_available user as show_erp %}
 
 <aside class="sidebar" id="sidebar">
     <!-- Brand -->
@@ -13,6 +14,7 @@
 
     <!-- Navigation -->
     <nav class="sidebar-nav">
+        {% if show_erp %}<a href="{% url 'erp:index' %}" class="nav-item {% if request.resolver_match.namespace == 'erp' %}active{% endif %}">{% trans "Gestion / ERP" %}</a>{% endif %}
         <a href="{% url 'ibtikar:index' %}" class="nav-item">{% trans "Formulaires IBTIKAR" %}</a>
         {% if user.role == 'SUPER_ADMIN' %}
         <div class="nav-section">{% trans "Administration" %}</div>

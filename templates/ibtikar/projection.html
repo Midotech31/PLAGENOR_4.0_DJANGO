@@ -1,4 +1,15 @@
 {% load i18n %}
 {% for item in rows %}
-<div class="ibk-summary-row"><dt>{{ item.label }}</dt><dd>{{ item.display|linebreaksbr }}</dd></div>
+<div class="ibk-summary-row" data-reference-field="{{ item.name }}">
+    <dt>{{ item.label }}</dt>
+    <dd>
+        {% if item.options and item.all_options %}
+        <ul class="ibk-choice-summary">
+            {% for option in item.options %}<li><svg class="ibk-choice-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1"/>{% if option.selected %}<path d="m4.5 8 2.5 2.5 4.5-5"/>{% endif %}</svg><span class="sr-only">{% if option.selected %}{% trans "Sélectionné" %}{% else %}{% trans "Non sélectionné" %}{% endif %} : </span>{{ option.label }}</li>{% endfor %}
+        </ul>
+        {% elif item.write_in %}
+        <span class="ibk-write-in" role="img" aria-label="{% trans 'Zone réservée au personnel habilité' %}"></span>
+        {% else %}{{ item.display|linebreaksbr }}{% endif %}
+    </dd>
+</div>
 {% endfor %}

@@ -11,6 +11,7 @@ urlpatterns = [
     path('readyz', health.readyz, name='readyz'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('erp/', include('erp.urls')),
     path('ibtikar/', include('core.ibtikar.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('documents/', include('documents.urls')),

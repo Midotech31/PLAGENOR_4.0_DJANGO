@@ -144,7 +144,7 @@ def save_staff(submission_id, values, actor, revision):
     if actor.role not in roles and not (actor.role == 'MEMBER' and current.request.assigned_to_id
                                       and current.request.assigned_to.user_id == actor.pk):
         raise ValidationError(_('Modification réservée au personnel habilité.'))
-    values = serializable(values)
+    values = {**current.staff, **serializable(values)}
     if actor.role not in roles:
         for key in ('validated_price', 'price_justification', 'administrative_validation', 'head_visa', 'director_visa'):
             if values.get(key) not in (None, '', current.staff.get(key)):
@@ -173,6 +173,7 @@ def save_staff(submission_id, values, actor, revision):
                      'updated_at': timezone.now().isoformat()}
     current.revision += 1
     current.save(update_fields=['staff', 'estimate', 'revision', 'updated_at'])
+    req.save(update_fields=['updated_at'])
     IbtikarRevision.objects.create(submission=current, revision=current.revision,
                                   data=snapshot(current), actor=actor, reason='Réception / validation PLAGENOR')
     return current

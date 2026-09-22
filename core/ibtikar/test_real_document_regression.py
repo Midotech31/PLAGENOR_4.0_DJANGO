@@ -199,4 +199,5 @@ class IbtikarDocumentCacheVersionTests(SimpleTestCase):
         ):
             query.return_value.only.return_value.first.return_value = None
             path = _cached_doc_path(request, "IBTIKAR_FORM")
-        self.assertIn("__canonical3__", path.name)
+        self.assertIn("__canonical4_hybrid__", path.name)
+        self.assertNotIn("__canonical3__", path.name)

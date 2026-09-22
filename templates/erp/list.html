@@ -1,0 +1,15 @@
+{% extends 'erp/base.html' %}{% load i18n erp_access %}
+{% block erp_breadcrumb %}<span aria-hidden="true">/</span><span>{{ title }}</span>{% endblock %}
+{% block erp_content %}
+<header class="erp-heading"><div><h1>{{ title }}</h1><p>{% trans 'Un référentiel unique, des modifications historisées.' %}</p></div>{% if creatable %}<a class="btn btn-primary" href="{% url 'erp:create' section=section %}">{% trans 'Ajouter' %}</a>{% endif %}</header>
+<form method="get" class="erp-toolbar" role="search">
+{% if section != 'delegations' %}<div><label for="erp-search">{% trans 'Rechercher' %}</label><input class="form-control" id="erp-search" type="search" name="q" value="{{ q }}" maxlength="200"></div>{% endif %}
+<div><label for="erp-state">{% trans 'Statut' %}</label><select class="form-control" id="erp-state" name="state"><option value="active" {% if state == 'active' %}selected{% endif %}>{% trans 'Actifs' %}</option><option value="inactive" {% if state == 'inactive' %}selected{% endif %}>{% trans 'Inactifs' %}</option><option value="all" {% if state == 'all' %}selected{% endif %}>{% trans 'Tous' %}</option></select></div><button type="submit" class="btn btn-secondary">{% trans 'Filtrer' %}</button>
+</form>
+<div class="erp-table-wrap" tabindex="0" role="region" aria-label="{{ title }}">
+<table class="erp-table"><thead><tr><th scope="col">{% trans 'Code / utilisateur' %}</th><th scope="col">{% trans 'Désignation / permission' %}</th><th scope="col">{% trans 'Catégorie / périmètre' %}</th><th scope="col">{% trans 'Statut' %}</th><th scope="col">{% trans 'Actions' %}</th></tr></thead><tbody>
+{% for row in rows %}{% with obj=row.obj %}<tr><td class="erp-code">{% if section == 'delegations' %}{{ obj.user.get_full_name|default:obj.user.username }}{% else %}{{ obj.code }}{% endif %}</td><td>{% if section == 'articles' %}<a href="{% url 'erp:article' pk=obj.pk %}">{{ obj }}</a>{% elif section == 'locations' %}<a href="{% url 'erp:location' pk=obj.pk %}">{{ obj }}</a>{% elif section == 'delegations' %}{{ obj.get_capability_display }}{% else %}{{ obj }}{% endif %}</td><td>{% if section == 'articles' %}{{ obj.category }}<small>{{ obj.base_unit }} · {{ obj.get_criticality_display }}</small>{% elif section == 'locations' %}{{ obj.kind }}<small>{{ obj.parent|default_if_none:'—' }}</small>{% elif section == 'delegations' %}{{ obj.category|default_if_none:'—' }} {{ obj.location|default_if_none:'—' }}{% elif section == 'units' %}{{ obj.get_dimension_display }} · {{ obj.factor }}{% else %}{{ obj.parent|default:'—' }}{% endif %}</td><td><span class="erp-status">{{ obj.active|erp_value }}</span></td><td>{% if row.editable %}<a href="{% url 'erp:edit' section=section pk=obj.pk %}" aria-label="{% trans 'Modifier' %} {% if section == 'delegations' %}{{ obj.get_capability_display }}{% else %}{{ obj.code }}{% endif %}">{% trans 'Modifier' %}</a>{% else %}—{% endif %}</td></tr>{% endwith %}
+{% empty %}<tr><td colspan="5" class="erp-empty">{% trans 'Aucun enregistrement dans ce périmètre.' %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% include 'erp/pagination.html' %}
+{% endblock %}

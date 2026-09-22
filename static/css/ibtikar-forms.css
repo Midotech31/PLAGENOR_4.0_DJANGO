@@ -25,3 +25,10 @@
 #ibk-editor>.ibk-section:not(.ibk-estimate){counter-increment:ibk-section}
 #ibk-editor>.ibk-section>h2>span{font-size:0}
 #ibk-editor>.ibk-section>h2>span::before{content:counter(ibk-section,decimal-leading-zero);font-size:.85rem}
+
+.ibk-write-in{display:block;min-height:2.75rem;border:1px solid #cbd5e1;border-radius:4px;background:#fff}
+.ibk-choice-summary{list-style:none;padding:0;margin:0}.ibk-choice-summary li{margin:.3rem 0;overflow-wrap:anywhere}.ibk-choice-summary li>span:first-child{margin-inline-end:.55rem}
+.ibk-service-picker{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:20px 0}.ibk-service-picker label{font-weight:600}.ibk-service-picker select{flex:1;min-width:180px}.ibk-service-picker .btn{min-height:44px}
+@media print{.ibk-write-in{min-height:1.25cm;border-color:#64748b}.ibk-summary-row{break-inside:avoid}.ibk-actions,.ibk-back{display:none!important}}
+
+.ibk-choice-mark{display:inline-block;width:1em;height:1em;vertical-align:-.12em;margin-inline-end:.55rem;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}

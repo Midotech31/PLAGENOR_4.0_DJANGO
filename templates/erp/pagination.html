@@ -1,0 +1,6 @@
+{% load i18n %}
+<nav class="erp-pagination" aria-label="{% trans 'Pagination' %}">
+{% if page.has_previous %}<a class="btn btn-secondary" href="?page={{ page.previous_page_number }}&q={{ q|urlencode }}&state={{ state|urlencode }}">{% trans 'Précédent' %}</a>{% endif %}
+<span>{% trans 'Page' %} {{ page.number }} / {{ page.paginator.num_pages }}</span>
+{% if page.has_next %}<a class="btn btn-secondary" href="?page={{ page.next_page_number }}&q={{ q|urlencode }}&state={{ state|urlencode }}">{% trans 'Suivant' %}</a>{% endif %}
+</nav>

@@ -7261,6 +7261,80 @@ msgstr ""
 msgid "Avec un compte"
 msgstr "With an account"
 
+msgid "Retour à mon espace de soumission"
+msgstr "Back to my submission workspace"
+
+msgid "Canal et prestation"
+msgstr "Channel and service"
+
+msgid ""
+"Choisissez le canal et la prestation. Les informations demandées s’adaptent "
+"à votre sélection."
+msgstr ""
+"Choose the channel and service. The requested information adapts to your "
+"selection."
+
+msgid ""
+"Le choix IBTIKAR ouvre le formulaire unique utilisé pour générer votre fiche"
+" imprimable."
+msgstr ""
+"Selecting IBTIKAR opens the single form used to generate your printable "
+"request sheet."
+
+msgid "Changer de canal ou de prestation"
+msgstr "Change channel or service"
+
+msgid "Renseigner ma fiche IBTIKAR"
+msgstr "Complete my IBTIKAR form"
+
+msgid "Zone réservée au personnel habilité"
+msgstr "Area reserved for authorised staff"
+
+msgid "Sélectionné"
+msgstr "Selected"
+
+msgid "Non sélectionné"
+msgstr "Not selected"
+
+msgid ""
+"À compléter par le personnel habilité lors de la réception et du traitement,"
+" dans l’application ou sur la fiche imprimée."
+msgstr ""
+"To be completed by authorised staff during receipt and processing, in the "
+"application or on the printed form."
+
+msgid ""
+"Les données enregistrées dans ce formulaire constituent la source unique de "
+"votre fiche IBTIKAR. Les zones de réception sont réservées au personnel "
+"habilité."
+msgstr ""
+"The data saved in this form are the single source for your IBTIKAR request "
+"sheet. Receipt fields are reserved for authorised staff."
+
+msgid "Me connecter pour enregistrer cette demande dans mon espace"
+msgstr "Sign in to save this request in my workspace"
+
+msgid ""
+"La fiche téléchargeable reprend les données enregistrées ci-dessous et les "
+"compléments opérateur de cette révision."
+msgstr ""
+"The downloadable sheet contains the data saved below and the staff entries "
+"for this revision."
+
+msgid ""
+"Vous pouvez enregistrer une réception partielle. Les champs laissés vides "
+"restent disponibles sur la fiche imprimée ; les valeurs saisies apparaissent"
+" dans la nouvelle révision."
+msgstr ""
+"You can save a partially completed receipt section. Empty fields remain "
+"available on the printed sheet; entered values appear in the new revision."
+
+msgid "Continuer"
+msgstr "Continue"
+
+msgid "Informations administratives internes"
+msgstr "Internal administrative information"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "For ESSBO students and researchers."
 
