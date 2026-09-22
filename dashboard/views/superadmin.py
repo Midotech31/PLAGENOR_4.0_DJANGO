@@ -399,7 +399,9 @@ def content_update(request):
                 key=key, lang=lang,
                 defaults={'value': value, 'updated_by': request.user},
             )
-        saved = PlatformContent.objects.get(key=key, lang=lang)
+            saved = PlatformContent.objects.get(key=key, lang=lang)
+            if saved.value != value:
+                raise DatabaseError("Persisted content differs from submitted content")
     except DatabaseError:
         logger.exception("Unable to update platform content key=%s lang=%s", key, lang)
         messages.error(request, "Le contenu n'a pas pu être enregistré.")
@@ -518,12 +520,12 @@ def content_save(request):
                     key=key, lang=code,
                     defaults={'value': value, 'updated_by': request.user},
                 )
-        persisted = dict(
-            PlatformContent.objects.filter(key=key, lang__in=submitted)
-            .values_list('lang', 'value')
-        )
-        if persisted != submitted:
-            raise DatabaseError("Persisted content differs from submitted content")
+            persisted = dict(
+                PlatformContent.objects.filter(key=key, lang__in=submitted)
+                .values_list('lang', 'value')
+            )
+            if persisted != submitted:
+                raise DatabaseError("Persisted content differs from submitted content")
     except DatabaseError:
         logger.exception("Unable to save multilingual platform content key=%s", key)
         messages.error(request, "Le contenu n'a pas pu être enregistré. Aucune modification partielle n'a été conservée.")
