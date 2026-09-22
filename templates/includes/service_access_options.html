@@ -1,0 +1,25 @@
+{% load i18n %}
+{% url 'service_landing' service.code as service_entry_url %}
+{% if request.user.is_authenticated %}
+<div class="service-access-action">
+    <a href="{{ service_entry_url }}" class="btn btn-primary" data-service-entry="workspace">{% trans "Demander ce service" %}</a>
+</div>
+{% else %}
+<div class="service-access-options" data-service-entry="choices">
+    <section class="card service-access-card" data-access-mode="account">
+        <div class="service-access-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></div>
+        <h2>{% trans "Avec un compte" %}</h2>
+        <p class="text-muted text-sm">{% trans "Suivez l'état de votre demande, recevez des notifications et accédez à votre historique." %}</p>
+        <div class="service-access-actions">
+            <a href="{% url 'accounts:login' %}?next={{ service_entry_url|urlencode }}" class="btn btn-primary" data-entry-action="login">{% trans "Connexion" %}</a>
+            <a href="{% url 'accounts:register' %}?service={{ service.code|urlencode }}" class="btn btn-outline" data-entry-action="register">{% trans "Créer un compte" %}</a>
+        </div>
+    </section>
+    <section class="card service-access-card" data-access-mode="guest">
+        <div class="service-access-icon service-access-icon--guest" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6"/></svg></div>
+        <h2>{% trans "Continuer en tant qu'invité" %}</h2>
+        <p class="text-muted text-sm">{% trans "Soumettez votre demande sans compte. Vous recevrez un code de suivi unique." %}</p>
+        <div class="service-access-actions"><a href="{% url 'guest_submit' %}?service={{ service.code|urlencode }}" class="btn btn-outline" data-entry-action="guest">{% trans "Soumettre sans compte" %}</a></div>
+    </section>
+</div>
+{% endif %}
