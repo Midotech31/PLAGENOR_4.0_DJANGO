@@ -7173,6 +7173,24 @@ msgstr "التحقق مشغول حاليًا. يرجى إعادة المحاول
 msgid "Demande commerciale"
 msgstr "طلب خدمة مدفوعة"
 
+msgid "Fortement recommandée"
+msgstr "موصى بها بشدة"
+
+msgid ""
+"La double authentification reste facultative pour tous les comptes. Son "
+"activation est fortement recommandée, notamment pour les comptes "
+"Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois "
+"activée, un code à 6 chiffres généré par votre téléphone sera demandé à "
+"chaque connexion."
+msgstr ""
+"تظل المصادقة الثنائية اختيارية لجميع الحسابات. ويوصى بشدة بتفعيلها، ولا سيما"
+" لحسابات المسؤول وAdmin Ops والمالية وبقية حسابات الأعضاء. بعد تفعيلها، "
+"سيُطلب عند كل تسجيل دخول رمز مكوّن من 6 أرقام يولده هاتفك."
+
+#: templates/includes/service_access_options.html:11
+msgid "Avec un compte"
+msgstr "باستخدام حساب"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "لطلبة وباحثي ESSBO."
 
@@ -7277,9 +7295,3 @@ msgstr "طلب خدمة مدفوعة"
 #~ msgstr ""
 #~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
 #~ "تحويل تقديمك إلى حساب كامل لاحقًا."
-
-msgid "Fortement recommandée"
-msgstr "موصى بها بشدة"
-
-msgid "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion."
-msgstr "تظل المصادقة الثنائية اختيارية لجميع الحسابات. ويوصى بشدة بتفعيلها، ولا سيما لحسابات المسؤول وAdmin Ops والمالية وبقية حسابات الأعضاء. بعد تفعيلها، سيُطلب عند كل تسجيل دخول رمز مكوّن من 6 أرقام يولده هاتفك."
