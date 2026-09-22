@@ -180,8 +180,8 @@ test('service soft-delete and reactivation persist without losing values', async
   const form = page.locator('form[action="/dashboard/home/service/create/"]');
   await form.locator('[name="code"]').fill(code);
   for (const lang of ['fr','en','ar']) {
-    await form.locator('[name="name_"' + ' + lang + ' + '"]').fill('Lifecycle ' + lang + ' ' + suffix);
-    await form.locator('[name="description_"' + ' + lang + ' + '"]').fill('Description ' + lang);
+    await form.locator(`[name="name_${lang}"]`).fill('Lifecycle ' + lang + ' ' + suffix);
+    await form.locator(`[name="description_${lang}"]`).fill('Description ' + lang);
   }
   await form.locator('[name="ibtikar_price"]').fill('1111.25');
   await form.locator('[name="genoclab_price"]').fill('2222.75');
