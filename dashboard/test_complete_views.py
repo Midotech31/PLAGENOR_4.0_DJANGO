@@ -293,6 +293,18 @@ class CompleteViewContracts(TestCase):
             try:self.assertEqual(b''.join(download.streaming_content),b'old-template')
             finally:close_response(download)
 
+    def test_legacy_global_template_download_rejects_invalid_and_missing_types(self):
+        from pathlib import Path
+        with override_settings(BASE_DIR=Path(self.tmp.name)):
+            invalid=self.call(
+                superadmin.download_template,'SUPER_ADMIN',
+                method='get',template_type='invalid')
+            self.assertEqual(invalid.status_code,302)
+            missing=self.call(
+                superadmin.download_template,'SUPER_ADMIN',
+                method='get',template_type='reception_form_template')
+            self.assertEqual(missing.status_code,302)
+
     def test_opt_in_restore_cleans_staging_files_on_success_and_failure(self):
         from pathlib import Path
         root=Path(self.tmp.name)
