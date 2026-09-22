@@ -170,3 +170,35 @@ test('document block CRUD persists relation and text', async ({ page }, testInfo
   await page.goto('/documents/blocks/');
   await expect(page.locator('tr').filter({ hasText: changedTitle })).toHaveCount(0);
 });
+
+
+test('service soft-delete and reactivation persist without losing values', async ({ page }, testInfo) => {
+  const suffix = testInfo.project.name.replace(/[^a-z0-9]/gi, '-');
+  const code = 'CMS-LIFECYCLE-' + suffix;
+  await asAdmin(page);
+  await page.goto('/dashboard/home/?tab=services');
+  const form = page.locator('form[action="/dashboard/home/service/create/"]');
+  await form.locator('[name="code"]').fill(code);
+  for (const lang of ['fr','en','ar']) {
+    await form.locator('[name="name_"' + ' + lang + ' + '"]').fill('Lifecycle ' + lang + ' ' + suffix);
+    await form.locator('[name="description_"' + ' + lang + ' + '"]').fill('Description ' + lang);
+  }
+  await form.locator('[name="ibtikar_price"]').fill('1111.25');
+  await form.locator('[name="genoclab_price"]').fill('2222.75');
+  await clickAndSettle(form.locator('button[type="submit"]'), page);
+  await page.goto('/dashboard/home/?tab=services');
+  let row = page.locator('tr').filter({ hasText: code });
+  await expect(row).toContainText('1111,25');
+  await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
+  await page.goto('/dashboard/home/?tab=services');
+  row = page.locator('tr').filter({ hasText: code });
+  await expect(row).toContainText('Non');
+  await clickAndSettle(row.locator('form[action$="/reactivate/"] button'), page);
+  await page.goto('/dashboard/home/?tab=services');
+  row = page.locator('tr').filter({ hasText: code });
+  await expect(row).toContainText('Oui');
+  const href = await row.locator('a[href$="/edit/"]').getAttribute('href');
+  await page.goto(href);
+  await expect(page.locator('[name="ibtikar_price"]')).toHaveValue('1111.25');
+  await expect(page.locator('[name="genoclab_price"]')).toHaveValue('2222.75');
+});
