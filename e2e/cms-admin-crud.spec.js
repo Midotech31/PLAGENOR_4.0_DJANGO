@@ -5,8 +5,10 @@ async function asAdmin(page) {
   expect(response.status()).toBe(204);
 }
 async function clickAndSettle(button, page) {
-  await button.click();
-  await page.waitForLoadState('domcontentloaded');
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    button.click(),
+  ]);
 }
 
 test('techniques and payment methods persist through reloads', async ({ page }, testInfo) => {
