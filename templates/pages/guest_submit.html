@@ -6,7 +6,6 @@
 
 {% block content %}
 <section class="section" style="max-width:960px; margin:40px auto; padding:0 32px;">
-    <p><a class="btn btn-outline" href="{% url 'ibtikar:index' %}">{% trans "Demande IBTIKAR : ouvrir les formulaires dédiés" %}</a></p>
     <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
     <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
 
@@ -80,19 +79,9 @@
                 <div class="form-group">
                     <label for="id_channel">{% trans "Canal" %} *</label>
                     <select name="channel" id="id_channel" class="form-control" required>
-                        <option value="GENOCLAB">GENOCLAB ({% trans "externe" %})</option>
+                        <option value="GENOCLAB" {% if posted.channel != "IBTIKAR" %}selected{% endif %}>GENOCLAB ({% trans "externe" %})</option>
+                        <option value="IBTIKAR" {% if posted.channel == "IBTIKAR" %}selected{% endif %}>IBTIKAR</option>
                     </select>
-                </div>
-                <div id="ibtikar-guest-fields" style="display:none;">
-                    <div class="form-group">
-                        <label for="guest_ibtikar_id">{% trans "Identifiant IBTIKAR-DGRSDT" %} *</label>
-                    <input type="text" name="ibtikar_id" id="guest_ibtikar_id" class="form-control" placeholder="IDGRSTD12345" pattern="IDGRSTD[0-9]{5}">
-                        <small class="text-muted">{% trans "Format: IDGRSTDXXXXX" %}</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="guest_declared_balance">{% trans "Solde IBTIKAR déclaré (DA)" %}</label>
-                    <input type="number" name="declared_balance" id="guest_declared_balance" class="form-control" step="1" value="0" min="0" max="200000">
-                    </div>
                 </div>
                 <div class="form-group">
                     <label for="id_service">{% trans "Service" %} *</label>
@@ -124,7 +113,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Soumettre la demande" %}</button>
+                <button type="submit" id="guest-submit-button" data-commercial-label="{% trans 'Soumettre la demande' %}" data-ibtikar-label="{% trans 'Continuer' %}" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Soumettre la demande" %}</button>
             </form>
         </div>
     </div>

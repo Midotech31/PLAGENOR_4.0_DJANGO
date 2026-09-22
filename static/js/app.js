@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', function() {
             var serviceId = this.value;
             var container = document.getElementById('dynamic-service-form');
             if (!container) return;
+            if (this.dataset.canonicalForm === 'ibtikar') {
+                container.replaceChildren();
+                return;
+            }
             if (!serviceId) { 
                 container.innerHTML = ''; 
                 return; 
@@ -113,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch('/dashboard/api/service-form/' + code + '/?channel=' + channel)
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
-                        if (select.value !== serviceId) return;
+                        if (select.value !== serviceId || select.dataset.canonicalForm === 'ibtikar') return;
                         container.innerHTML = html;
                         
                         // Dispatch event to notify that form is loaded

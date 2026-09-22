@@ -5,6 +5,7 @@
     const form = document.querySelector('form[action="/guest/submit/"]') || document.querySelector('input[name="guest_email"]')?.form;
     if (!form) return;
     const service = form.elements.namedItem('service_id');
+    const channel = form.elements.namedItem('channel');
     const orgType = form.elements.namedItem('organization_type');
     const orgOther = document.getElementById('guest-org-other-group');
     let restored = false;
@@ -47,15 +48,30 @@
         restored = true;
     });
     if (orgType) orgType.addEventListener('change', organization);
+    function updateChannel() {
+        if (!service || !channel) return;
+        const selected = channel.value;
+        service.dataset.channel = selected;
+        service.dataset.canonicalForm = selected === 'IBTIKAR' ? 'ibtikar' : '';
+        Array.from(service.options).forEach(function (option) {
+            const availability = option.dataset.channelAvailability;
+            option.disabled = Boolean(option.value && availability !== 'BOTH' && availability !== selected);
+            option.hidden = option.disabled;
+        });
+        if (service.selectedOptions[0]?.disabled) service.value = '';
+        const button = document.getElementById('guest-submit-button');
+        if (button) button.textContent = selected === 'IBTIKAR' ? button.dataset.ibtikarLabel : button.dataset.commercialLabel;
+        if (selected === 'IBTIKAR') document.getElementById('dynamic-service-form')?.replaceChildren();
+    }
+    if (channel) channel.addEventListener('change', function () {
+        updateChannel();
+        if (service) service.dispatchEvent(new Event('change', {bubbles: true}));
+    });
     function initialize() {
         fill(form);
         organization();
         if (!service) return;
-        Array.from(service.options).forEach(function (option) {
-            const channel = option.dataset.channelAvailability;
-            option.disabled = Boolean(option.value && channel !== 'BOTH' && channel !== 'GENOCLAB');
-            option.hidden = option.disabled;
-        });
+        updateChannel();
         if (!saved.service_id) {
             const code = new URLSearchParams(window.location.search).get('service');
             const option = Array.from(service.options).find(function (item) { return item.dataset.code === code && !item.disabled; });
