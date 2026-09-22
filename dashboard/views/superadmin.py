@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
-from django.db import transaction
+from django.db import transaction, DatabaseError
 from dashboard.views.admin_ops import admin_required
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -288,11 +288,21 @@ def service_delete(request, pk):
 def technique_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    Technique.objects.create(
-        name=request.POST.get('name', ''),
-        category=request.POST.get('category', ''),
+    technique = Technique(
+        name=(request.POST.get('name') or '').strip(),
+        category=(request.POST.get('category') or '').strip(),
     )
-    messages.success(request, "Technique ajoutée.")
+    try:
+        technique.full_clean()
+        technique.save()
+        technique.refresh_from_db()
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to create technique")
+        messages.error(request, "La technique n'a pas pu être enregistrée.")
+    else:
+        messages.success(request, "Technique ajoutée.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -313,15 +323,19 @@ def technique_edit(request, pk):
     if request.method != 'POST':
         return HttpResponseForbidden()
     technique = get_object_or_404(Technique, pk=pk)
-    name = request.POST.get('name', '').strip()
-    category = request.POST.get('category', '').strip()
-    if name:
-        technique.name = name
-        technique.category = category
+    technique.name = (request.POST.get('name') or '').strip()
+    technique.category = (request.POST.get('category') or '').strip()
+    try:
+        technique.full_clean()
         technique.save(update_fields=['name', 'category'])
-        messages.success(request, f"Technique '{name}' mise à jour.")
+        technique.refresh_from_db(fields=['name', 'category'])
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to update technique pk=%s", pk)
+        messages.error(request, "La technique n'a pas pu être mise à jour.")
     else:
-        messages.error(request, "Le nom est requis.")
+        messages.success(request, f"Technique '{technique.name}' mise à jour.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -366,22 +380,32 @@ def content_delete(request, pk):
 def content_update(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
-    key = request.POST.get('key', '').strip()
+    key = (request.POST.get('key') or '').strip()
     value = request.POST.get('value', '')
-    lang = request.POST.get('lang', '').strip() or settings.LANGUAGE_CODE
+    lang = (request.POST.get('lang') or '').strip() or settings.LANGUAGE_CODE
     allowed_langs = {code for code, _ in PlatformContent.LANGUAGE_CHOICES}
     if lang not in allowed_langs:
         lang = settings.LANGUAGE_CODE
+    max_key = PlatformContent._meta.get_field('key').max_length
     if not key:
         messages.error(request, "Clé manquante.")
         return redirect_back(request, 'dashboard:superadmin')
-    PlatformContent.objects.update_or_create(
-        key=key,
-        lang=lang,
-        defaults={'value': value, 'updated_by': request.user},
-    )
-    clear_cms_cache()
-    messages.success(request, f"Contenu '{key}' [{lang}] mis à jour.")
+    if len(key) > max_key:
+        messages.error(request, f"La clé ne peut pas dépasser {max_key} caractères.")
+        return redirect_back(request, 'dashboard:superadmin')
+    try:
+        with transaction.atomic():
+            PlatformContent.objects.update_or_create(
+                key=key, lang=lang,
+                defaults={'value': value, 'updated_by': request.user},
+            )
+        saved = PlatformContent.objects.get(key=key, lang=lang)
+    except DatabaseError:
+        logger.exception("Unable to update platform content key=%s lang=%s", key, lang)
+        messages.error(request, "Le contenu n'a pas pu être enregistré.")
+    else:
+        clear_cms_cache()
+        messages.success(request, f"Contenu '{saved.key}' [{saved.lang}] mis à jour.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -390,21 +414,30 @@ def announcement_create(request):
     if request.method != 'POST':
         return HttpResponseForbidden()
     from core.models import Announcement
-    title = (request.POST.get('title') or '').strip()
-    message = (request.POST.get('message') or '').strip()
-    level = request.POST.get('level', 'info')
-    audience = request.POST.get('audience', 'ALL')
+    announcement = Announcement(
+        title=(request.POST.get('title') or '').strip(),
+        message=(request.POST.get('message') or '').strip(),
+        level=request.POST.get('level', 'info'),
+        audience=request.POST.get('audience', 'ALL'),
+        created_by=request.user,
+    )
     valid_levels = {c for c, _ in Announcement.LEVEL_CHOICES}
     valid_aud = {c for c, _ in Announcement.AUDIENCE_CHOICES}
-    if not title or not message:
-        messages.error(request, "Titre et message obligatoires.")
-        return redirect_back(request, 'dashboard:superadmin')
-    Announcement.objects.create(
-        title=title, message=message,
-        level=level if level in valid_levels else 'info',
-        audience=audience if audience in valid_aud else 'ALL',
-        created_by=request.user)
-    messages.success(request, "Annonce publiée.")
+    if announcement.level not in valid_levels:
+        announcement.level = 'info'
+    if announcement.audience not in valid_aud:
+        announcement.audience = 'ALL'
+    try:
+        announcement.full_clean()
+        announcement.save()
+        announcement.refresh_from_db()
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+    except DatabaseError:
+        logger.exception("Unable to create announcement")
+        messages.error(request, "L'annonce n'a pas pu être enregistrée.")
+    else:
+        messages.success(request, "Annonce publiée.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -458,30 +491,45 @@ def reset_2fa(request, pk):
 
 
 @superadmin_required
-@transaction.atomic
 def content_save(request):
-    """Upsert all three languages of one content key in a single submit.
-
-    POST: key, value_fr, value_en, value_ar. A blank language value clears
-    that translation (the {% cms %} tag then falls back to the default
-    language, then to the template default).
-    """
+    """Upsert submitted languages of one content key atomically."""
     if request.method != 'POST':
         return HttpResponseForbidden()
-    key = request.POST.get('key', '').strip()
+    key = (request.POST.get('key') or '').strip()
+    max_key = PlatformContent._meta.get_field('key').max_length
     if not key:
         messages.error(request, "Clé manquante.")
         return redirect_back(request, 'dashboard:superadmin')
-    for code, _label in PlatformContent.LANGUAGE_CHOICES:
-        if f'value_{code}' not in request.POST:
-            continue
-        value = request.POST[f'value_{code}']
-        PlatformContent.objects.update_or_create(
-            key=key, lang=code,
-            defaults={'value': value, 'updated_by': request.user},
+    if len(key) > max_key:
+        messages.error(request, f"La clé ne peut pas dépasser {max_key} caractères.")
+        return redirect_back(request, 'dashboard:superadmin')
+    submitted = {
+        code: request.POST[f'value_{code}']
+        for code, _label in PlatformContent.LANGUAGE_CHOICES
+        if f'value_{code}' in request.POST
+    }
+    if not submitted:
+        messages.error(request, "Aucune valeur de contenu n'a été transmise.")
+        return redirect_back(request, 'dashboard:superadmin')
+    try:
+        with transaction.atomic():
+            for code, value in submitted.items():
+                PlatformContent.objects.update_or_create(
+                    key=key, lang=code,
+                    defaults={'value': value, 'updated_by': request.user},
+                )
+        persisted = dict(
+            PlatformContent.objects.filter(key=key, lang__in=submitted)
+            .values_list('lang', 'value')
         )
-    clear_cms_cache()
-    messages.success(request, f"Contenu '{key}' enregistré (toutes les langues).")
+        if persisted != submitted:
+            raise DatabaseError("Persisted content differs from submitted content")
+    except DatabaseError:
+        logger.exception("Unable to save multilingual platform content key=%s", key)
+        messages.error(request, "Le contenu n'a pas pu être enregistré. Aucune modification partielle n'a été conservée.")
+    else:
+        clear_cms_cache()
+        messages.success(request, f"Contenu '{key}' enregistré.")
     return redirect_back(request, 'dashboard:superadmin')
 
 
@@ -1020,31 +1068,20 @@ def add_payment_method(request):
     return redirect_back(request, 'dashboard:superadmin')
 
 
-# --- Task 11: DOCX Template Upload ---
+# Legacy global-template upload was removed from the control plane because
+# writing into BASE_DIR is not durable on container deployments. Durable
+# templates are managed through documents.ServiceTemplate and the configured
+# Django storage backend.
 @superadmin_required
 def upload_template(request):
-    if request.method != 'POST' or 'template_file' not in request.FILES:
+    if request.method != 'POST':
         return HttpResponseForbidden()
-    import shutil
-    template_type = request.POST.get('template_type', '')
-    allowed = ['ibtikar_form_template', 'platform_note_template', 'reception_form_template', 'quote_template']
-    if template_type not in allowed:
-        messages.error(request, "Type de template invalide.")
-        return redirect_back(request, 'dashboard:superadmin')
-    upload = request.FILES['template_file']
-    try:
-        validate_upload(upload, 'docx_template')
-    except ValidationError as exc:
-        messages.error(request, exc.messages[0])
-        return redirect_back(request, 'dashboard:superadmin')
-    dest = settings.BASE_DIR / 'documents' / 'docx_templates' / f'{template_type}.docx'
-    if dest.exists():
-        shutil.copy2(str(dest), str(dest.with_suffix('.backup.docx')))
-    with open(str(dest), 'wb') as f:
-        for chunk in upload.chunks():
-            f.write(chunk)
-    messages.success(request, f"Template '{template_type}' mis à jour.")
-    return redirect_back(request, 'dashboard:superadmin')
+    messages.error(
+        request,
+        "Ce téléversement global a été retiré : utilisez « Modèles DOCX personnalisés », "
+        "qui enregistre les fichiers dans le stockage persistant configuré.",
+    )
+    return redirect('documents:template_list')
 
 
 @superadmin_required
