@@ -128,11 +128,11 @@ class ColdStorageGuardCoverageTests(OperationFixtures, TestCase):
         now = timezone.now() - timedelta(minutes=1)
         with self.assertRaises(ValidationError):
             cold_storage.create_incident(
-                self.operator, location=self.freezer, kind="FAILURE",
+                self.admin, location=self.freezer, kind="FAILURE",
                 started_at=now, description="",
             )
         incident = cold_storage.create_incident(
-            self.operator, location=self.freezer, kind="FAILURE",
+            self.admin, location=self.freezer, kind="FAILURE",
             started_at=now, description="Panne documentée",
         )
         with self.assertRaises(PermissionDenied):
