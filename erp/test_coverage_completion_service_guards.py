@@ -84,11 +84,12 @@ class PlanningGuardCoverageTests(OperationFixtures, TestCase):
 
 class ColdStorageGuardCoverageTests(OperationFixtures, TestCase):
     def grant_storage(self):
-        save_grant(self.admin, {
-            "user": self.operator,
-            "capability": Capability.EDIT_STORAGE,
-            "location": self.freezer,
-        })
+        for capability in (Capability.EDIT_STORAGE, Capability.MANAGE_BIOBANK):
+            save_grant(self.admin, {
+                "user": self.operator,
+                "capability": capability,
+                "location": self.freezer,
+            })
 
     def test_temperature_permissions_and_input_guards(self):
         with self.assertRaises(PermissionDenied):
