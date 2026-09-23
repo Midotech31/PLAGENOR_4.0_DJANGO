@@ -37,11 +37,11 @@ class ProcurementDocumentEdgeCoverageTests(SimpleTestCase):
             with self.assertRaises(DocumentError):
                 procurement.quantity("1")
         p=Mock()
-        own=Mock(name=NS+"t", characters="own")
+        own=Mock(characters="own"); own.name=NS+"t"
         own.ancestor.return_value=p
-        foreign=Mock(name=NS+"t", characters="foreign")
+        foreign=Mock(characters="foreign"); foreign.name=NS+"t"
         foreign.ancestor.return_value=Mock()
-        br=Mock(name=NS+"br")
+        br=Mock(); br.name=NS+"br"
         br.ancestor.return_value=p
         p.descendants.return_value=[foreign,own,br]
         self.assertEqual(procurement.paragraph_value(p),"own\n")
@@ -90,7 +90,7 @@ class ProcurementDocumentEdgeCoverageTests(SimpleTestCase):
             procurement._deleted_bookmark_guard(Mock(),row)
 
         end.attrs={NS+"id":"1"}
-        hyperlink=Mock(name=NS+"hyperlink",attrs={NS+"anchor":"bookmark"})
+        hyperlink=Mock(attrs={NS+"anchor":"bookmark"}); hyperlink.name=NS+"hyperlink"
         root=Mock()
         root.descendants.return_value=[hyperlink]
         doc=Mock(parts={"p":(b"",root)})
@@ -98,7 +98,7 @@ class ProcurementDocumentEdgeCoverageTests(SimpleTestCase):
             procurement._deleted_bookmark_guard(doc,row)
 
         hyperlink.attrs={NS+"anchor":"other"}
-        instruction=Mock(name=NS+"instrText",characters="REF bookmark")
+        instruction=Mock(characters="REF bookmark"); instruction.name=NS+"instrText"
         root.descendants.return_value=[instruction]
         with self.assertRaises(DocumentError):
             procurement._deleted_bookmark_guard(doc,row)
