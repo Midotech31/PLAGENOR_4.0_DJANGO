@@ -40,10 +40,10 @@ test('techniques and payment methods persist through reloads', async ({ page }, 
   await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
   await page.goto('/dashboard/home/?tab=techniques');
   row = page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' });
-  await expect(row).toContainText('Inactive');
+  await expect(row.locator('.badge-status')).toContainText(/^(Inactive|Inactif|غير نشط)$/);
   await clickAndSettle(row.locator('form[action$="/reactivate/"] button'), page);
   await page.goto('/dashboard/home/?tab=techniques');
-  await expect(page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' })).toContainText('Active');
+  await expect(page.locator('tr:visible').filter({ hasText: 'Technique CMS navigateur ' + suffix + ' modifiée ' + suffix + '' }).locator('.badge-status')).toContainText(/^(Active|Actif|نشط)$/);
 
   await page.goto('/dashboard/home/?tab=payments');
   const payment = page.locator('form[action="/dashboard/home/payment-method/create/"]');
@@ -53,7 +53,8 @@ test('techniques and payment methods persist through reloads', async ({ page }, 
   await expect(page.locator('main')).toContainText('Virement CMS navigateur ' + suffix + '');
   await payment.locator('[name="name"]').fill('Virement CMS navigateur ' + suffix + '');
   await clickAndSettle(payment.locator('button[type="submit"]'), page);
-  await expect(page.locator('main')).toContainText(/existe/i);
+  await page.goto('/dashboard/home/?tab=payments');
+  await expect(page.locator('tr:visible').filter({ hasText: 'Virement CMS navigateur ' + suffix + '' })).toHaveCount(1);
 });
 
 test('announcements create toggle and delete persist', async ({ page }, testInfo) => {
