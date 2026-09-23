@@ -80,12 +80,12 @@ class TableProbeCoverageTests(SimpleTestCase):
         self.assertEqual(rows[0][:2], ["a", "b"])
         with self.assertRaisesRegex(ValueError, "SHEETS"):
             table_probe.xlsx_rows(workbook_bytes(("Data", "Other")), h)
-        with patch.object(table_probe, "MAX_COLUMNS", 1):
-            with self.assertRaisesRegex(ValueError, "SIZE"):
-                table_probe.xlsx_rows(payload, h)
-        with patch.object(table_probe, "MAX_ROWS", 1):
-            with self.assertRaisesRegex(ValueError, "SIZE"):
-                table_probe.xlsx_rows(payload, h)
+        wide = workbook_bytes(rows=(tuple(str(i) for i in range(41)), tuple("x" for _ in range(41))))
+        with self.assertRaisesRegex(ValueError, "SIZE"):
+            table_probe.xlsx_rows(wide, h)
+        tall = workbook_bytes(rows=tuple(("x",) for _ in range(502)))
+        with self.assertRaisesRegex(ValueError, "SIZE"):
+            table_probe.xlsx_rows(tall, h)
 
     def test_xlsx_zip_security_guards(self):
         h = self.helpers()
@@ -99,7 +99,7 @@ class TableProbeCoverageTests(SimpleTestCase):
         with self.assertRaisesRegex(ValueError, "FORMULA"):
             table_probe.xlsx_rows(rewrite_zip(payload, ((sheet_name, formula),)), h)
         active = rewrite_zip(payload, additions=(("xl/vbaProject.bin", b"x"),))
-        with self.assertRaisesRegex(ValueError, "ACTIVE"):
+        with self.assertRaisesRegex(ValueError, "Active"):
             table_probe.xlsx_rows(active, h)
         external = rel.replace(b"</Relationships>", b'<Relationship Id="rExt" TargetMode="External" Target="https://example.test" Type="x"/></Relationships>')
         with self.assertRaisesRegex(ValueError, "EXTERNAL"):
@@ -255,10 +255,12 @@ class CatalogCoverageTests(SimpleTestCase):
         self.assertIn("17", catalog.reference_replacement(original, data))
         with patch.object(catalog, "generation_edits", return_value=({}, {"p":[{"segment":0,"before":"X","after":"Y"}]})):
             node=Mock(characters="Z")
+            paragraph=Mock()
             doc=Mock()
-            doc.paragraphs={"p":("part",Mock())}
+            doc.paragraphs={"p":("part",paragraph)}
             doc.editable_segments.return_value=[[node]]
-            with patch.object(catalog, "document", return_value=doc):
+            with patch.object(catalog, "document", return_value=doc), \
+                 patch("erp.cdc.docengine.own_text_nodes", return_value=[node]):
                 with self.assertRaises(DocumentError):
                     catalog.effective_edits(data)
 
@@ -325,10 +327,9 @@ class LotWorkbookCoverageTests(SimpleTestCase):
         with zipfile.ZipFile(buf,"w") as z:z.writestr("xl/vbaProject.bin",b"x")
         with self.assertRaises(DocumentError):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
-        buf=io.BytesIO()
-        with zipfile.ZipFile(buf,"w") as z:z.writestr("plain.txt",b"x")
+        plain = workbook_bytes()
         with self.assertRaises(DocumentError):
-            lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
+            lot_workbook.parse_workbook(plain,"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
 
 
 class BulkImportPrimitiveCoverageTests(OperationFixtures, TestCase):
