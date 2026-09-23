@@ -37,6 +37,39 @@ class PersistenceFailureTests(TestCase):
         self.assertEqual(response.status_code,503)
         self.assertTrue(ServicePricing.objects.filter(pk=tier.pk).exists())
 
+    def test_tariff_and_base_price_survive_save_reload_and_another_session(self):
+        payload={'name':'Tarif par échantillon','pricing_type':'PER_SAMPLE',
+                 'channel':'GENOCLAB','amount':'1250.50','unit':'échantillon',
+                 'min_quantity':'1','priority':'2','is_active':'on'}
+        created=self.client.post(self.url('pricing_add_api',self.service.pk),payload)
+        self.assertEqual(created.status_code,201)
+        tier_id=created.json()['config']['id']
+        self.assertEqual(self.client.get(self.url('pricing_list_api',self.service.pk)).json()['configs'][0]['id'],tier_id)
+
+        response=self.client.post(self.url('superadmin_service_edit',self.service.pk),{
+            'ibtikar_price':'678.90','genoclab_price':'1500.00',
+            'pd_base_non_pathogenic':'1200.00','pd_base_pathogenic':'1800.00',
+            'pd_multiplier_param':'analysis_mode','pd_mult_key':['Simple'],
+            'pd_mult_factor':['1.5'],
+        })
+        self.assertEqual(response.status_code,302)
+        self.service.refresh_from_db()
+        self.assertEqual(self.service.ibtikar_price,Decimal('678.90'))
+        self.assertEqual(self.service.pricing_data['base_price'],{
+            'non_pathogenic':1200.0,'pathogenic':1800.0})
+        self.assertEqual(self.service.pricing_data['multipliers'],{'Simple':1.5})
+
+        self.client.logout()
+        self.client.force_login(self.user)
+        self.assertEqual(self.client.get(self.url('superadmin_service_edit',self.service.pk)).status_code,200)
+        configs=self.client.get(self.url('pricing_list_api',self.service.pk)).json()['configs']
+        self.assertEqual([(entry['id'],entry['amount']) for entry in configs],[(tier_id,1250.5)])
+        changed=self.client.post(self.url('pricing_update_api',tier_id),{
+            **payload,'amount':'1400.75'})
+        self.assertEqual(changed.status_code,200)
+        self.assertEqual(ServicePricing.objects.get(pk=tier_id).amount,Decimal('1400.75'))
+        self.assertEqual(self.client.get(self.url('pricing_list_api',self.service.pk)).json()['configs'][0]['amount'],1400.75)
+
     def test_service_write_failure_retains_input_and_never_claims_success(self):
         with patch('dashboard.views.superadmin.Service.save',side_effect=DatabaseError('Test failure')),patch('dashboard.views.superadmin.messages.success') as success:
             response=self.client.post(self.url('superadmin_service_edit',self.service.pk),{'ibtikar_price':'678.90'})

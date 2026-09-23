@@ -274,7 +274,9 @@ class CatalogCoverageTests(SimpleTestCase):
              patch.object(catalog, "effective_edits", return_value={"p":"{{ unresolved }}"}):
             findings = catalog.controls(controls_data)
         ids={x["id"] for x in findings}
-        self.assertIn("I1",ids); self.assertIn("UNRESOLVED_MARKER",ids); self.assertIn("AR_MAPPING_REQUIRED",ids)
+        self.assertIn("I1", ids)
+        self.assertIn("UNRESOLVED_MARKER", ids)
+        self.assertIn("AR_MAPPING_REQUIRED", ids)
 
 
 class LotWorkbookCoverageTests(SimpleTestCase):
@@ -326,11 +328,17 @@ class LotWorkbookCoverageTests(SimpleTestCase):
             lot_workbook.parse_workbook(b"x","x.txt",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("xl/vbaProject.bin",b"x")
-        with self.assertRaises(DocumentError):
+        with self.assertRaisesRegex(DocumentError, "Macros"):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("plain.txt",b"x")
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(DocumentError, "Structure du classeur"):
+            lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
+        buf=io.BytesIO()
+        with zipfile.ZipFile(buf,"w") as z:
+            z.writestr("xl/workbook.xml", b"<workbook xmlns='http://schemas.openxmlformats.org/spreadsheetml/2006/main'/>")
+            z.writestr("xl/_rels/workbook.xml.rels", b"<Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'/>")
+        with self.assertRaisesRegex(DocumentError, "Liste des feuilles"):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
 
 

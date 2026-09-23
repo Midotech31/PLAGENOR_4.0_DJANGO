@@ -75,8 +75,11 @@ def cell(sheet, address, value, numeric=False):
 
 
 def _sheet_paths(archive):
-    workbook = xml(archive.read('xl/workbook.xml'))
-    rels = xml(archive.read('xl/_rels/workbook.xml.rels'))
+    try:
+        workbook = xml(archive.read('xl/workbook.xml'))
+        rels = xml(archive.read('xl/_rels/workbook.xml.rels'))
+    except KeyError as exc:
+        raise DocumentError('Structure du classeur Excel incomplète.') from exc
     targets = {}
     for rel in rels:
         if rel.get('Type', '').endswith('/worksheet'):
@@ -86,6 +89,8 @@ def _sheet_paths(archive):
                 raise DocumentError('Relation de feuille invalide.')
             targets[rel.get('Id')] = path
     sheets = workbook.find(Q+'sheets')
+    if sheets is None:
+        raise DocumentError('Liste des feuilles Excel manquante.')
     result = {}
     for sheet in sheets:
         name = sheet.get('name')

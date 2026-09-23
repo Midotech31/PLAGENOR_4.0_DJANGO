@@ -579,6 +579,8 @@ function savePricing() {
     var editId = document.getElementById('edit-pricing-id').value;
     var name = document.getElementById('pricing-name').value.trim();
     if (!name) { alert('{% trans "Le nom du tarif est obligatoire." %}'); return; }
+    var saveButton = document.querySelector('#pricing-modal button[onclick="savePricing()"]');
+    saveButton.disabled = true;
     var url = editId ? PRICING_API.update(editId) : PRICING_API.add;
     var fd = new FormData();
     fd.append('name', name);
@@ -605,14 +607,19 @@ function savePricing() {
         if (!res.ok || res.data.error) {
             alert('{% trans "Erreur" %} : ' + (res.data.error || res.data.detail || 'unknown'));
         } else {
-            closePricingModal();
-            loadPricingConfigs('{% trans "Tarif enregistré et relu depuis le serveur." %}').catch(function() {});
+            document.getElementById('edit-pricing-id').value = res.data.config.id;
+            return loadPricingConfigs('{% trans "Tarif enregistré et relu depuis le serveur." %}')
+                .then(closePricingModal)
+                .catch(function() {
+                    showPricingStatus('{% trans "Tarif enregistré, mais sa relecture a échoué. Vos valeurs sont conservées ; réessayez ou rechargez la page." %}', true);
+                });
         }
     })
     .catch(function(err) {
         console.error(err);
         showPricingStatus('{% trans "Échec de l’enregistrement du tarif." %} ' + err, true);
-    });
+    })
+    .finally(function() { saveButton.disabled = false; });
 }
 
 function deletePricing(configId) {

@@ -119,6 +119,9 @@ class AlertTests(OperationFixtures,TestCase):
         work=create_work(self.ops,kind='INVENTORY',title='Inventaire à terminer',assignee=self.operator,
             due_on=timezone.localdate()-timedelta(days=1),location=self.freezer,priority='URGENT')
         alert=next(row for row in collect_alerts(self.ops)['alerts'] if row['kind']=='TASK_OVERDUE')
+        for reason in ('', 'x' * 501):
+            with self.subTest(reason_length=len(reason)), self.assertRaises(ValidationError):
+                acknowledge(self.ops, alert['signature'], reason=reason)
         first=acknowledge(self.ops,alert['signature'],reason='Vérification confiée à un membre',assignee=self.second)
         second=acknowledge(self.ops,alert['signature'],reason='Vérification confiée à un membre',assignee=self.second)
         self.assertEqual(first.pk,second.pk)

@@ -50,3 +50,57 @@ test('a rejected save retains entered values without reporting success', async (
   await page.goto(url);
   await expect(page.locator('[name="ibtikar_price"]')).toHaveValue('1234.56');
 });
+
+test('pricing modal saves a tariff that survives reopening and a new session', async ({page, context}) => {
+  const url = await createService(page);
+  await page.locator('button[onclick="showAddPricingModal()"]').click();
+  await page.locator('#pricing-name').fill('Analyse par échantillon');
+  await page.locator('#pricing-type').selectOption('PER_SAMPLE');
+  await page.locator('#pricing-channel').selectOption('OHB');
+  await page.locator('#pricing-amount').fill('1250.50');
+  await page.locator('#pricing-unit').fill('échantillon');
+  await page.locator('#pricing-modal button[onclick="savePricing()"]').click();
+  await expect(page.locator('#pricing-status')).toContainText('Tarif enregistré');
+  await expect(page.locator('#pricing-list')).toContainText('Analyse par échantillon');
+  await page.reload();
+  await expect(page.locator('#pricing-list')).toContainText('1 250,5 DA');
+  await context.clearCookies();
+  await page.request.post('/__e2e__/session/admin/');
+  await page.goto(url);
+  await expect(page.locator('#pricing-list')).toContainText('Analyse par échantillon');
+  await expect(page.locator('#pricing-list')).toContainText('OHB');
+  await page.locator('#pricing-list button[onclick^="editPricing("]').click();
+  await expect(page.locator('#pricing-amount')).toHaveValue('1250.5');
+  await page.locator('#pricing-amount').fill('1400.75');
+  await page.locator('#pricing-modal button[onclick="savePricing()"]').click();
+  await expect(page.locator('#pricing-status')).toContainText('Tarif enregistré');
+  await page.reload();
+  await expect(page.locator('#pricing-list')).toContainText('1 400,75 DA');
+});
+
+test('a failed tariff reread preserves the submitted modal and avoids a duplicate on retry', async ({page}) => {
+  await createService(page);
+  await expect(page.locator('#pricing-empty')).toBeVisible();
+  let failedOnce = false;
+  await page.route('**/api/service/*/pricing/', async route => {
+    if (!failedOnce) {
+      failedOnce = true;
+      await route.fulfill({status: 503, contentType: 'application/json', body: '{"error":"Temporary read failure"}'});
+    } else {
+      await route.continue();
+    }
+  });
+  await page.locator('button[onclick="showAddPricingModal()"]').click();
+  await page.locator('#pricing-name').fill('Tarif à relire');
+  await page.locator('#pricing-amount').fill('85.25');
+  await page.locator('#pricing-modal button[onclick="savePricing()"]').click();
+  await expect(page.locator('#pricing-status')).toContainText('relecture a échoué');
+  await expect(page.locator('#pricing-modal')).toBeVisible();
+  await expect(page.locator('#pricing-name')).toHaveValue('Tarif à relire');
+  await expect(page.locator('#edit-pricing-id')).not.toHaveValue('');
+  await page.locator('#pricing-modal button[onclick="savePricing()"]').click();
+  await expect(page.locator('#pricing-modal')).toBeHidden();
+  await expect(page.locator('#pricing-list > div')).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator('#pricing-list > div')).toHaveCount(1);
+});

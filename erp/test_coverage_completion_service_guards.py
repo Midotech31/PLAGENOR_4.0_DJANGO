@@ -19,6 +19,15 @@ from erp.test_operations import OperationFixtures
 
 
 class PlanningGuardCoverageTests(OperationFixtures, TestCase):
+    def test_cdc_work_approval_requires_business_dossier(self):
+        work = create_work(self.ops, kind="CDC", title="Cahier des charges")
+        work.status = "SUBMITTED"
+        work.save(update_fields=["status"])
+        with self.assertRaisesRegex(ValidationError, "dossier métier"):
+            transition_work(self.ops, work.pk, expected=work.version, state="APPROVED")
+        work.refresh_from_db()
+        self.assertEqual(work.status, "SUBMITTED")
+
     def test_editability_readiness_dependencies_and_series_guards(self):
         work = create_work(self.ops, kind="CONTROL", title="Planning guard")
         result = planning.readiness(self.ops, work)
