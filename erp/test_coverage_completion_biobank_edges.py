@@ -14,6 +14,7 @@ from erp.services.biobank import (
     transfer_sample,
 )
 from erp.services.common import Conflict
+from erp.services.storage import save_location
 from erp.test_operations import OperationFixtures
 
 
@@ -71,7 +72,7 @@ class BiobankEdgeCoverageTests(OperationFixtures, TestCase):
         )
         self.assertTrue(reservation.active)
         sample = receive_sample(
-            self.admin, key=uuid.uuid4(), code="POS-TEST", amount=1, unit=self.unit,
+            self.operator, key=uuid.uuid4(), code="POS-TEST", amount=1, unit=self.unit,
             location=self.freezer, position=positions[0], received_on=timezone.localdate(),
             reason="Réception positionnée",
         )
@@ -149,9 +150,14 @@ class BiobankEdgeCoverageTests(OperationFixtures, TestCase):
 
     def test_checkout_return_consumption_final_state_and_reconciliation(self):
         sample = self.receive_sample("BIO-B", "3")
+        second_storage = save_location(self.admin, {
+            "code": "F20", "name": "Congélateur secondaire", "kind": self.storage_kind,
+            "parent": self.lab, "temperature_target": Decimal("-20"),
+            "temperature_min": Decimal("-30"), "temperature_max": Decimal("-10"),
+        })
         event = sample_action(
             self.admin, sample.pk, key=uuid.uuid4(), action="CHECK_OUT",
-            reason="Analyse", destination=self.lab, thawed=True,
+            reason="Analyse", destination=second_storage, thawed=True,
         )
         self.assertEqual(event.sample.status, "OUT")
         returned = sample_action(
