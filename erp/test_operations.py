@@ -262,6 +262,71 @@ class WorkAndStockTests(OperationFixtures, TestCase):
             reverse_stock(self.operator, consumption.pk, key=uuid.uuid4(), reason='Interdit')
         self.assertEqual(reconcile_stock(self.admin), [])
 
+    def test_stock_control_and_opening_reject_invalid_physical_states(self):
+        container, _, _ = self.receive()
+        with self.assertRaises(ValidationError):
+            control_container(self.admin, container.pk, expected=container.version,
+                status='DESTROYED', reason='Contrôle demandé avant destruction')
+        with self.assertRaises(ValidationError):
+            control_lot(self.admin, container.lot_id, expected=container.lot.version,
+                status='DESTROYED', reason='Lot encore en stock')
+        with self.assertRaises(ValidationError):
+            control_lot(self.admin, container.lot_id, expected=container.lot.version,
+                status='UNKNOWN', reason='État non prévu')
+        with self.assertRaises(ValidationError):
+            open_container(self.admin, container.pk, expected=container.version,
+                opened_on=timezone.localdate()-timedelta(days=1))
+        quarantined, _, _ = self.receive('Q', accepted=False)
+        with self.assertRaises(ValidationError):
+            open_container(self.admin, quarantined.pk, expected=quarantined.version,
+                opened_on=timezone.localdate())
+        self.assertEqual(reconcile_stock(self.admin), [])
+
+    def test_reserved_consumption_reversal_restores_both_ledgers_once(self):
+        container, _, _ = self.receive()
+        reservation = reserve_stock(self.admin, container.pk, key=uuid.uuid4(), amount=4,
+            unit=self.unit, reference='Analyse annulée')
+        consumed = remove_stock(self.admin, container.pk, key=uuid.uuid4(), amount=2,
+            unit=self.unit, reservation=reservation)
+        reservation.refresh_from_db()
+        self.assertEqual(reservation.remaining, 2)
+        correction = reverse_stock(self.ops, consumed.pk, key=uuid.uuid4(), reason='Analyse non réalisée')
+        container.refresh_from_db()
+        reservation.refresh_from_db()
+        self.assertEqual((container.quantity, container.reserved, reservation.remaining), (10, 4, 4))
+        with self.assertRaises(Conflict):
+            reverse_stock(self.ops, consumed.pk, key=uuid.uuid4(), reason='Deuxième correction interdite')
+        with self.assertRaises(ValidationError):
+            reverse_stock(self.ops, reservation.movement_id, key=uuid.uuid4(),
+                reason='Réservation corrigée hors de sa procédure')
+        self.assertEqual(correction.reverses_id, consumed.pk)
+        self.assertEqual(reconcile_stock(self.admin), [])
+
+    def test_stock_outflows_and_transfers_reject_unjustified_or_unsafe_changes(self):
+        from erp.services.storage import save_location
+        destination = save_location(self.admin, {'code':'F-DEST','name':'Autre stockage',
+            'kind':self.storage_kind,'parent':self.lab})
+        container, _, _ = self.receive()
+        with self.assertRaises(ValidationError):
+            remove_stock(self.admin, container.pk, key=uuid.uuid4(), amount=1, unit=self.unit,
+                kind=StockMovement.Kind.TRANSFER, reason='Type invalide pour une sortie')
+        with self.assertRaises(ValidationError):
+            remove_stock(self.admin, container.pk, key=uuid.uuid4(), amount=1, unit=self.unit,
+                kind=StockMovement.Kind.LOSS, reason='')
+        with self.assertRaises(ValidationError):
+            reserve_stock(self.admin, container.pk, key=uuid.uuid4(), amount=1,
+                unit=self.unit, reference='')
+        with self.assertRaises(ValidationError):
+            transfer_stock(self.admin, container.pk, key=uuid.uuid4(), destination=self.freezer,
+                reason='Même emplacement')
+        with self.assertRaises(ValidationError):
+            transfer_stock(self.admin, container.pk, key=uuid.uuid4(), destination=destination,
+                amount=11, unit=self.unit, destination_code='EXCESS', reason='Trop de stock')
+        with self.assertRaises(ValidationError):
+            transfer_stock(self.admin, container.pk, key=uuid.uuid4(), destination=destination,
+                amount=1, unit=self.unit, reason='Division sans code')
+        self.assertEqual(reconcile_stock(self.admin), [])
+
     def test_scoped_permissions_are_intersections_and_costs_are_separate(self):
         container, _, values = self.receive()
         self.grant(Capability.RECEIVE_STOCK, category=self.category, location=self.freezer)

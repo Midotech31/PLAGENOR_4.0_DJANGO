@@ -290,6 +290,38 @@ class ProcurementDocumentCoverageTests(TestCase):
         output, report = procurement.apply_procurement(self.doc.data, removed)
         self.assertEqual(report['status'], 'GENERATED')
 
+    def test_protected_source_fields_and_oversized_lots_are_rejected(self):
+        for index, field in ((4, 'specifications'), (12, 'designation')):
+            modified = copy.deepcopy(self.data)
+            modified['procurement']['lots'][1]['items'][index][field] = 'Texte modifié sans autorisation'
+            with self.subTest(field=field), self.assertRaisesRegex(DocumentError, 'protégé'):
+                procurement.validate_procurement(modified, 'equipment')
+
+        oversized = copy.deepcopy(self.data)
+        template = oversized['procurement']['lots'][0]['items'][0]
+        oversized['procurement']['lots'][0]['items'] = [
+            {**template, 'key': 'new-' + str(uuid.uuid5(uuid.NAMESPACE_URL, str(index)))}
+            for index in range(1000)]
+        with self.assertRaisesRegex(DocumentError, '1 000 articles'):
+            procurement.validate_procurement(oversized, 'equipment')
+
+    def test_regeneration_refuses_an_altered_equipment_table(self):
+        lot = procurement.mapping()[0]
+        raw = self.doc.parts['word/document.xml'][0]
+        row = lot['tables']['cptc']['rows'][1]
+        original = raw[row.start:row.end]
+        altered = original.replace(b'<w:t>', b'<w:t data-test="modified">', 1)
+        self.assertNotEqual(altered, original)
+        altered_xml = raw[:row.start] + altered + raw[row.end:]
+        output = io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(self.doc.data)) as source, zipfile.ZipFile(output, 'w') as target:
+            for info in source.infolist():
+                target.writestr(info, altered_xml if info.filename == 'word/document.xml' else source.read(info.filename))
+        changed = copy.deepcopy(self.data)
+        changed['procurement']['lots'][0]['items'][0]['quantity'] = '2'
+        with self.assertRaisesRegex(DocumentError, 'Conflit de modification'):
+            procurement.apply_procurement(output.getvalue(), changed)
+
     def test_procurement_private_helpers_fail_closed(self):
         lot = procurement.mapping()[0]
         raw = self.doc.parts['word/document.xml'][0]

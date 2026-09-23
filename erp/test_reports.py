@@ -189,3 +189,18 @@ class ReportTests(OperationFixtures,TestCase):
         self.assertEqual(sheet.max_row,4)
         self.assertEqual(sheet['A4'].value,'Article')
         book.close()
+
+    def test_export_failure_closes_stream_and_validation_is_rendered(self):
+        import tempfile
+        from unittest.mock import patch
+        self.client.force_login(self.ops)
+        stream = tempfile.SpooledTemporaryFile(mode='w+b')
+        with patch('erp.report_views.tempfile.SpooledTemporaryFile', return_value=stream), \
+             patch('erp.report_views.export_report', side_effect=OSError('Export unavailable')):
+            with self.assertRaises(OSError):
+                self.client.get(reverse('erp:reports'), {'kind': 'STOCK', 'export': 'xlsx'})
+        self.assertTrue(stream.closed)
+        with patch('erp.report_views.report', side_effect=ValidationError('Rapport indisponible')):
+            response = self.client.get(reverse('erp:reports'), {'kind': 'STOCK'})
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'Rapport indisponible', status_code=400)

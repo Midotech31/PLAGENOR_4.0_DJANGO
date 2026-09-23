@@ -199,7 +199,10 @@ def storage_maps(request):
     locations = storage_scope(Location.objects.filter(active=True), request.user, Capability.VIEW_BIOBANK)
     parent = request.GET.get('parent')
     if parent:
-        selected = get_object_or_404(locations, pk=parent)
+        try:
+            selected = get_object_or_404(locations, pk=parent)
+        except (ValidationError, ValueError):
+            raise Http404
         locations = locations.filter(parent=selected)
     else:
         selected = None
@@ -254,7 +257,10 @@ def position_reserve(request, pk):
 def temperature_create(request):
     work = None
     if request.GET.get('task'):
-        work = get_object_or_404(work_scope(request.user), pk=request.GET['task'], kind=WorkItem.Kind.TEMPERATURE)
+        try:
+            work = get_object_or_404(work_scope(request.user), pk=request.GET['task'], kind=WorkItem.Kind.TEMPERATURE)
+        except (ValidationError, ValueError):
+            raise Http404
     if work is None and not is_manager(request.user) and not grants(request.user, Capability.MANAGE_BIOBANK).exists() and not grants(request.user, Capability.EDIT_STORAGE).exists():
         raise PermissionDenied
     form = forms.TemperatureForm(request.POST or None, user=request.user, work=work)

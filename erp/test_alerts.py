@@ -189,3 +189,20 @@ class AlertTests(OperationFixtures,TestCase):
         self.assertEqual(self.client.get(reverse('erp:alert-policy')).status_code,403)
         with self.assertRaises(PermissionDenied):
             collect_alerts(AnonymousUser())
+
+    def test_http_stale_policy_and_alert_withdrawn_during_acknowledgement(self):
+        save_policy(self.ops, {}, expected=1)
+        self.receive(expires_on=timezone.localdate()+timedelta(days=2))
+        self.client.force_login(self.ops)
+        values = {'expected_version': 99, 'expiry_days': '60,30,7', 'dormant_days': 120,
+            'receipt_pending_days': 2, 'occupancy_percent': '90', 'overstock_multiplier': '2'}
+        self.assertEqual(self.client.post(reverse('erp:alert-policy'), values).status_code, 400)
+        self.assertEqual(self.client.get(reverse('erp:alert-action', args=['unknown'])).status_code, 404)
+        alert = collect_alerts(self.ops)['alerts'][0]
+        route = reverse('erp:alert-action', args=[alert['signature']])
+        # Simulate the alert disappearing between view lookup and transactional acknowledgement.
+        with patch('erp.services.alerts.collect_alerts', return_value={'alerts': []}):
+            self.assertEqual(self.client.post(route, {'reason': 'Contrôle'}).status_code, 400)
+        self.assertFalse(AlertAcknowledgement.objects.exists())
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(route).status_code, 403)

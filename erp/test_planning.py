@@ -351,3 +351,66 @@ class PlanningTests(OperationFixtures, TestCase):
         container.refresh_from_db()
         self.assertEqual((container.quantity,container.reserved),(8,0))
         self.assertEqual(reconcile_stock(self.ops),[])
+
+    def test_readiness_rejects_missing_owner_expired_slot_and_archived_request(self):
+        schedule, _ = self.activity(assignee=None)
+        self.assertFalse(readiness(self.ops, schedule.work)['ready'])
+        ActivitySchedule.objects.filter(pk=schedule.pk).update(ends_at=timezone.now()-timedelta(minutes=1))
+        result = readiness(self.ops, schedule.work)
+        self.assertTrue(any('terminé' in str(issue) for issue in result['issues']))
+        request = Request.objects.create(title='Clôturée', requester=self.outsider, status='ARCHIVED', archived=True)
+        with self.assertRaises(ValidationError):
+            save_schedule(self.ops, schedule.work_id, expected=schedule.work.version,
+                starts_at=self.start, ends_at=self.end, request=request, reason='Lien interdit')
+        ActivitySchedule.objects.filter(pk=schedule.pk).update(request=request)
+        self.assertTrue(any('archivée' in str(issue) for issue in readiness(self.ops, schedule.work)['issues']))
+
+    def test_inactive_resource_location_and_invalid_dependency_order_are_rejected(self):
+        from erp.models import Location
+        first, _ = self.activity()
+        second, _ = self.activity(starts_at=self.end, ends_at=self.end+timedelta(hours=1))
+        with self.assertRaises(ValidationError):
+            set_dependencies(self.ops, first.work_id, expected=first.work.version,
+                prerequisites=[second.work], reason='Ordre inversé')
+        self.assertFalse(ActivityDependency.objects.exists())
+        Location.objects.filter(pk=self.lab.pk).update(active=False)
+        self.assertTrue(any('désactivé' in str(issue) for issue in readiness(self.ops, first.work)['issues']))
+        Location.objects.filter(pk=self.lab.pk).update(active=True)
+        for prerequisites, reason in [([first.work], 'Dépendance sur soi'), ([], '')]:
+            with self.subTest(reason=reason), self.assertRaises(ValidationError):
+                set_dependencies(self.ops, first.work_id, expected=first.work.version,
+                    prerequisites=prerequisites, reason=reason)
+
+    def test_confirmation_note_and_closed_schedule_are_enforced(self):
+        schedule, _ = self.activity()
+        with self.assertRaises(ValidationError):
+            confirm_resources(self.operator, schedule.work_id, expected=schedule.work.version, note='')
+        work = self.checked(schedule)
+        work = transition_work(self.operator, work.pk, expected=work.version, state='IN_PROGRESS')
+        work = transition_work(self.operator, work.pk, expected=work.version, state='SUBMITTED', reason='Compte rendu')
+        with self.assertRaises(ValidationError):
+            save_schedule(self.ops, work.pk, expected=work.version, starts_at=self.start,
+                ends_at=self.end, reason='Modification interdite')
+        work = transition_work(self.ops, work.pk, expected=work.version, state='CHANGES_REQUESTED', reason='Revoir le contrôle')
+        schedule.refresh_from_db()
+        self.assertIsNone(schedule.resources_checked_at)
+        self.assertIsNone(schedule.actual_finished_at)
+        block = save_unavailability(self.ops, starts_at=self.end, ends_at=self.end+timedelta(hours=1),
+            member=self.second, reason='Absence')
+        with self.assertRaises(ValidationError):
+            cancel_unavailability(self.ops, block.pk, expected=block.version, reason='')
+        block.refresh_from_db()
+        self.assertTrue(block.active)
+
+    def test_request_assignment_is_checked_during_planning_and_delegation(self):
+        member, _ = MemberProfile.objects.get_or_create(user=self.operator)
+        request = Request.objects.create(title='Demande assignée', requester=self.outsider,
+            assigned_to=member, status='ANALYSIS_STARTED')
+        with self.assertRaises(ValidationError):
+            self.activity(assignee=self.second, request=request)
+        schedule, _ = self.activity(request=request)
+        with self.assertRaises(ValidationError):
+            delegate_work(self.ops, schedule.work_id, expected=schedule.work.version,
+                assignee=self.second, reason='Membre non autorisé')
+        schedule.work.refresh_from_db()
+        self.assertEqual(schedule.work.assignee_id, self.operator.pk)

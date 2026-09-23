@@ -16,7 +16,9 @@ from erp.services.stock import reconcile_stock,reverse_stock
 from erp.test_operations import OperationFixtures
 
 
-@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+    STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+              'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
 class ProcurementChainTests(OperationFixtures,TestCase):
     def setUp(self):
         today=timezone.localdate()
@@ -345,3 +347,76 @@ class ProcurementChainTests(OperationFixtures,TestCase):
             refresh_forecast(self.operator,self.line.pk,expected=self.plan.version)
         with self.assertRaises(PermissionDenied):
             add_plan_article(self.operator,self.plan.pk,expected=self.plan.version,article=self.article,lot_name='Hors catégorie')
+
+    def test_plan_http_rejects_stale_decisions_and_invalid_actions(self):
+        from django.urls import reverse
+        self.client.force_login(self.ops)
+        route = reverse('erp:procurement-detail', args=[self.plan.pk])
+        self.assertEqual(self.client.post(route, {'expected_version': self.plan.version,
+            'reason': 'Action inconnue', 'action': 'unknown'}).status_code, 404)
+        response = self.client.post(route, {'expected_version': self.plan.version,
+            'reason': 'Revue manquante', 'action': 'submit'})
+        self.assertEqual(response.status_code, 400)
+        data = self.decide()
+        data['expected_version'] = self.plan.version - 1
+        response = self.client.post(reverse('erp:procurement-line', args=[self.line.pk]), data)
+        self.assertEqual(response.status_code, 400)
+        data['expected_version'] = self.plan.version
+        self.assertEqual(self.client.post(reverse('erp:procurement-line', args=[self.line.pk]), data).status_code, 302)
+        self.plan.refresh_from_db()
+        cdc_data = {'expected_version': self.plan.version, 'family': 'reagents',
+            'reference': '88/SME/SDFM/SG/ESSBO/2026'}
+        self.assertEqual(self.client.post(reverse('erp:procurement-cdc', args=[self.plan.pk]), cdc_data).status_code, 400)
+        create = {'reference': 'PLAN-TEST', 'title': 'Duplicated reference', 'year': timezone.localdate().year+1,
+            'assignee': self.operator.pk, 'allow_costs': 'on', 'expected_version': 1}
+        self.assertEqual(self.client.post(reverse('erp:procurement-create'), create).status_code, 400)
+
+    def test_order_http_workflow_checks_versions_and_receipt_balance(self):
+        from django.urls import reverse
+        self.client.force_login(self.ops)
+        self.approve()
+        values = {'expected_version': self.plan.version-1, 'reference': 'HTTP-ORDER', 'supplier': self.party.pk,
+            'ordered_on': timezone.localdate().isoformat(), 'expected_on': (timezone.localdate()+timedelta(days=30)).isoformat()}
+        route = reverse('erp:order-create', args=[self.plan.pk])
+        self.assertEqual(self.client.post(route, values).status_code, 400)
+        values['expected_version'] = self.plan.version
+        self.assertEqual(self.client.post(route, values).status_code, 302)
+        order = PurchaseOrder.objects.get(reference='HTTP-ORDER')
+        detail = reverse('erp:order-detail', args=[order.pk])
+        action = {'expected_version': order.version, 'reason': 'Vérification', 'action': 'unknown'}
+        self.assertEqual(self.client.post(detail, action).status_code, 404)
+        action['action'] = 'confirm'
+        self.assertEqual(self.client.post(detail, action).status_code, 400)
+        line_data = {'expected_version': order.version+1, 'plan_line': self.line.pk,
+            'quantity': '10', 'unit_price': '100', 'tax_rate': '19', 'currency': 'DZD'}
+        self.assertEqual(self.client.post(reverse('erp:order-line-new', args=[order.pk]), line_data).status_code, 400)
+        line_data['expected_version'] = order.version
+        self.assertEqual(self.client.post(reverse('erp:order-line-new', args=[order.pk]), line_data).status_code, 302)
+        order.refresh_from_db()
+        line = order.lines.get()
+        self.assertEqual(self.client.get(reverse('erp:order-line-edit', args=[order.pk, line.pk])).status_code, 200)
+        action['expected_version'] = order.version
+        self.assertEqual(self.client.post(detail, action).status_code, 302)
+        order.refresh_from_db()
+        date_data = {'expected_version': order.version+1, 'reason': 'Fournisseur consulté',
+            'expected_on': (timezone.localdate()+timedelta(days=40)).isoformat()}
+        date_route = reverse('erp:order-date', args=[order.pk])
+        self.assertEqual(self.client.get(date_route).status_code, 200)
+        self.assertEqual(self.client.post(date_route, date_data).status_code, 400)
+        date_data['expected_version'] = order.version
+        self.assertEqual(self.client.post(date_route, date_data).status_code, 302)
+        order.refresh_from_db()
+        receipt = {'expected_version': order.version, 'key': str(uuid.uuid4()), 'amount': '11',
+            'location': self.freezer.pk, 'lot_code': 'HTTP-LOT', 'manufacturer_lot': 'MANUF',
+            'container_code': 'HTTP-CONT', 'received_on': timezone.localdate().isoformat(), 'condition': 'Intact'}
+        receipt_route = reverse('erp:order-receive', args=[line.pk])
+        self.assertEqual(self.client.post(receipt_route, receipt).status_code, 400)
+        self.assertFalse(StockMovement.objects.exists())
+        receipt['amount'] = '10'
+        self.assertEqual(self.client.post(receipt_route, receipt).status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'RECEIVED')
+        self.assertEqual(received_quantity(line), 10)
+        self.assertEqual(reconcile_stock(self.ops), [])
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(receipt_route).status_code, 403)

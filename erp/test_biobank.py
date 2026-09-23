@@ -149,6 +149,50 @@ class BiobankTests(OperationFixtures, TestCase):
             self.sample(request=req, source_key=sources[0]['key'], source_fingerprint=sources[0]['fingerprint'])
         self.assertFalse(BiologicalSample.objects.exists())
 
+    def test_malformed_source_and_collection_date_cannot_enter_the_biobank(self):
+        service=Service.objects.create(code='SOURCE-DATE',name='Contrôle des prélèvements')
+        req=Request.objects.create(requester=self.outsider,service=service,
+            title='Demande avec date invalide',status='IN_PROGRESS',sample_table='invalid')
+        with self.assertRaises(ValidationError):
+            source_samples(self.admin,req)
+        req.sample_table=[{'sample_code':'B-1','collection_date':'31/12/2026'}]
+        req.save(update_fields=['sample_table'])
+        source=source_samples(self.admin,req)[0]
+        with self.assertRaises(ValidationError):
+            self.sample(request=req,source_key=source['key'],source_fingerprint=source['fingerprint'])
+        self.assertFalse(BiologicalSample.objects.exists())
+        req.sample_table=[None]
+        req.save(update_fields=['sample_table'])
+        with self.assertRaises(ValidationError):
+            source_samples(self.admin,req)
+
+    def test_capacity_and_terminal_events_preserve_biological_accounting(self):
+        self.workbench=save_location(self.admin,{'capacity':1},pk=self.workbench.pk,
+            expected=self.workbench.version)
+        first,_=self.sample('CAPACITY-1',location=self.workbench,position=None)
+        with self.assertRaises(ValidationError):
+            self.sample('CAPACITY-2',location=self.workbench,position=None)
+        self.assertEqual(BiologicalSample.objects.count(),1)
+        shipped=sample_action(self.admin,first.pk,key=uuid.uuid4(),action='SHIPMENT',
+            reason='Expédition documentée')
+        first.refresh_from_db()
+        self.assertEqual((first.status,first.remaining_quantity),('SHIPPED',0))
+        self.assertEqual(shipped.quantity_delta,-100)
+        with self.assertRaises(ValidationError):
+            sample_action(self.admin,first.pk,key=uuid.uuid4(),action='ANALYSIS',reason='Clôturé')
+        destroyed,_=self.sample('CAPACITY-3',location=self.workbench,position=None)
+        sample_action(self.admin,destroyed.pk,key=uuid.uuid4(),action='DESTRUCTION',
+            reason='Élimination contrôlée')
+        destroyed.refresh_from_db()
+        self.assertEqual((destroyed.status,destroyed.remaining_quantity),('DESTROYED',0))
+        self.assertEqual(reconcile_biobank(self.admin),[])
+
+    def test_position_builder_rejects_a_grid_over_ten_thousand_slots(self):
+        Location.objects.filter(pk=self.box_location.pk).update(grid_rows=101,grid_columns=100)
+        with self.assertRaises(ValidationError):
+            build_positions(self.admin,self.box_location.pk,expected=self.box_location.version)
+        self.assertEqual(self.box_location.positions.count(),6)
+
     def test_aliquot_parent_volume_conservation_and_idempotent_retry(self):
         parent, _ = self.sample()
         key = uuid.uuid4()
@@ -289,3 +333,76 @@ class BiobankTests(OperationFixtures, TestCase):
         self.client.force_login(self.outsider)
         for name, args in [('erp:sample-list', []), ('erp:sample-receive', [])]:
             self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 403)
+
+    def test_position_reservations_http_and_scoped_sample_history(self):
+        self.client.force_login(self.ops)
+        sample, _ = self.sample()
+        route = reverse('erp:position-reserve', args=[self.positions[1].pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'assignee': self.ops.pk, 'until': (timezone.now()+timedelta(days=1)).isoformat(),
+                'reason': 'Réception à préparer'}
+        self.assertEqual(self.client.post(route, data).status_code, 302)
+        occupied = reverse('erp:position-reserve', args=[sample.position_id])
+        response = self.client.post(occupied, data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(PositionReservation.objects.count(), 1)
+        route = reverse('erp:sample-operation', args=[sample.pk, 'aliquot'])
+        response = self.client.post(route, {'key': str(uuid.uuid4()), 'expected_version': sample.version,
+            'destination': self.target.pk, 'position': self.targets[0].pk, 'code': 'HTTP-ALIQUOT',
+            'amount': '5', 'unit': self.ul.pk, 'reason': 'Préparation analytique'})
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        sample.refresh_from_db()
+        self.assertEqual(sample.remaining_quantity, 95)
+        self.grant(Capability.VIEW_BIOBANK, location=self.box_location)
+        self.client.force_login(self.operator)
+        response = self.client.get(reverse('erp:sample-detail', args=[sample.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['can_write'])
+        self.assertTrue(list(response.context['events']))
+        self.assertEqual(reconcile_biobank(self.admin), [])
+
+    def test_incident_http_create_stale_resolution_and_chronology(self):
+        self.client.force_login(self.ops)
+        start = timezone.now() - timedelta(hours=1)
+        response = self.client.post(reverse('erp:cold-incidents'), {'location': self.freezer.pk,
+            'kind': 'FAILURE', 'started_at': start.isoformat(), 'description': 'Incident constaté'})
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        incident = StorageIncident.objects.get()
+        route = reverse('erp:incident-resolve', args=[incident.pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'expected_version': incident.version + 1, 'resolved_at': timezone.now().isoformat(),
+            'corrective_action': 'Vérification et remise en service'}
+        self.assertEqual(self.client.post(route, data).status_code, 400)
+        data['expected_version'] = incident.version
+        self.assertEqual(self.client.post(route, data).status_code, 302)
+        incident.refresh_from_db()
+        self.assertIsNotNone(incident.resolved_at)
+        self.assertEqual(incident.corrective_action, data['corrective_action'])
+
+    def test_temperature_http_validates_record_and_task_scope(self):
+        self.client.force_login(self.ops)
+        work = create_work(self.ops, kind='TEMPERATURE', title='Relevé', assignee=self.ops, location=self.freezer)
+        route = reverse('erp:temperature-create') + '?task=' + str(work.pk)
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'location': self.freezer.pk, 'measured_at': (timezone.now()+timedelta(days=1)).isoformat(),
+            'value': '-80', 'comment': 'Contrôle'}
+        self.assertEqual(self.client.post(route, data).status_code, 400)
+        self.assertFalse(TemperatureReading.objects.exists())
+        data['measured_at'] = timezone.now().isoformat()
+        response = self.client.post(route, data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        self.assertEqual(TemperatureReading.objects.get().location_id, self.freezer.pk)
+        work.refresh_from_db()
+        self.assertEqual(work.status, 'SUBMITTED')
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(reverse('erp:temperature-create')).status_code, 403)
+
+    def test_invalid_storage_and_task_links_return_not_found(self):
+        self.client.force_login(self.ops)
+        for route, params in [('erp:storage-maps', {'parent': 'not-a-uuid'}),
+                              ('erp:temperature-create', {'task': 'not-a-uuid'})]:
+            with self.subTest(route=route):
+                self.assertEqual(self.client.get(reverse(route), params).status_code, 404)
+        response = self.client.get(reverse('erp:storage-maps'), {'parent': str(self.rack.pk)})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['parent'], self.rack)

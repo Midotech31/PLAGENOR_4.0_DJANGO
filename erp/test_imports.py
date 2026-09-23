@@ -101,6 +101,95 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
         self.assertFalse(StockContainer.objects.exists())
         self.assertFalse(StockMovement.objects.exists())
 
+    def test_duplicate_container_rows_cannot_be_confirmed(self):
+        batch=self.preview('INITIAL',[self.receipt_row('SAME-CONT'),self.receipt_row('SAME-CONT')])
+        self.assertFalse(batch.report['valid'])
+        self.assertTrue(batch.report['preview'][0]['valid'])
+        self.assertFalse(batch.report['preview'][1]['valid'])
+        with self.assertRaises(ValidationError):
+            apply_import(self.ops,batch.pk,expected=batch.version,confirmed=True)
+        self.assertFalse(StockContainer.objects.filter(code='SAME-CONT').exists())
+
+    def test_storage_import_enforces_delegated_tree_and_position_limit(self):
+        self.grant(Capability.EDIT_STORAGE,location=self.freezer)
+        rows=[{'code':'SCOPED-RACK','name':'Rack délégué','kind_code':self.kind.code,
+               'parent_code':self.freezer.code},
+              {'code':'SCOPED-BOX','name':'Boîte déléguée','kind_code':self.kind.code,
+               'parent_code':'SCOPED-RACK'}]
+        batch=self.preview('LOCATIONS',rows,user=self.operator)
+        self.assertTrue(batch.report['valid'],batch.report)
+        require_batch(self.operator,batch)
+        apply_import(self.operator,batch.pk,expected=batch.version,confirmed=True)
+        self.assertEqual(Location.objects.get(code='SCOPED-BOX').parent.code,'SCOPED-RACK')
+        outside=self.preview('LOCATIONS',[{'code':'OUTSIDE','name':'Hors périmètre',
+            'kind_code':self.kind.code,'parent_code':self.lab.code}],user=self.operator)
+        self.assertFalse(outside.report['valid'])
+        self.assertFalse(Location.objects.filter(code='OUTSIDE').exists())
+        with self.assertRaises(ValidationError):
+            self.preview('LOCATIONS',[{'code':'TOO-MANY','name':'Boîte surdimensionnée',
+                'kind_code':self.storage_kind.code,'parent_code':self.freezer.code,
+                'grid_rows':'201','grid_columns':'100'}])
+        self.assertFalse(Location.objects.filter(code='TOO-MANY').exists())
+
+    def test_unknown_sample_source_never_creates_a_biobank_record(self):
+        from accounts.models import MemberProfile
+        from core.models import Request,Service
+        member,_=MemberProfile.objects.get_or_create(user=self.operator)
+        service=Service.objects.create(code='SOURCE-CHECK',name='Service échantillons')
+        req=Request.objects.create(requester=self.outsider,assigned_to=member,service=service,
+            title='Échantillons déclarés',status='IN_PROGRESS',sample_table=[{'sample_code':'KNOWN'}])
+        base={'code':'UNKNOWN-SOURCE','location_code':self.freezer.code,'amount':'5',
+            'unit_code':self.ul.code,'received_on':timezone.localdate().isoformat(),
+            'request_reference':str(req.pk),'source_code':'MISSING'}
+        wrong_sample=self.preview('SAMPLES',[base])
+        self.assertFalse(wrong_sample.report['valid'])
+        self.assertIn('introuvable',wrong_sample.report['preview'][0]['message'].lower())
+        unknown_request=self.preview('SAMPLES',[{**base,'request_reference':str(uuid.uuid4())}])
+        self.assertFalse(unknown_request.report['valid'])
+        unlinked=self.preview('SAMPLES',[{**base,'request_reference':''}])
+        self.assertFalse(unlinked.report['valid'])
+        missing_position=self.preview('SAMPLES',[{**base,'request_reference':'',
+            'source_code':'','position_row':'1','position_column':'1'}])
+        self.assertFalse(missing_position.report['valid'])
+        self.assertFalse(BiologicalSample.objects.filter(code='UNKNOWN-SOURCE').exists())
+
+    def test_preview_rejects_reference_creation_races_at_confirmation(self):
+        catalog={'code':'NEW-RACE','name':'Article prévu','category_code':self.category.code,
+            'base_unit_code':self.unit.code}
+        article_batch=self.preview('CATALOG',[catalog])
+        self.assertTrue(article_batch.report['valid'])
+        save_article(self.ops,{'code':'NEW-RACE','name':'Créé par une autre opération',
+            'category':self.category,'base_unit':self.unit})
+        with self.assertRaises(Conflict):
+            apply_import(self.ops,article_batch.pk,expected=article_batch.version,confirmed=True)
+        self.assertEqual(Article.objects.get(code='NEW-RACE').name,'Créé par une autre opération')
+
+        row=self.receipt_row('RACE-CONTAINER')
+        row.update(article_code='RACE-ARTICLE',new_name='Article prévu',
+            new_category_code=self.category.code,new_base_unit_code=self.unit.code)
+        stock_batch=self.preview('INITIAL',[row])
+        self.assertTrue(stock_batch.report['valid'])
+        save_article(self.ops,{'code':'RACE-ARTICLE','name':'Créé hors import',
+            'category':self.category,'base_unit':self.unit})
+        with self.assertRaises(Conflict):
+            apply_import(self.ops,stock_batch.pk,expected=stock_batch.version,confirmed=True)
+        self.assertFalse(StockContainer.objects.filter(code='RACE-CONTAINER').exists())
+
+    def test_imported_receipt_preserves_dated_supplier_and_price_evidence(self):
+        today=timezone.localdate()
+        row=self.receipt_row('DATED-CONTAINER')
+        row.update(expires_on=(today+timedelta(days=90)).isoformat(),
+            manufactured_on=(today-timedelta(days=10)).isoformat(),
+            supplier_code=self.party.code,unit_price_base='12,50',cold_chain_ok='oui')
+        batch=self.preview('RECEIPTS',[row])
+        self.assertTrue(batch.report['valid'],batch.report)
+        apply_import(self.ops,batch.pk,expected=batch.version,confirmed=True)
+        receipt=StockMovement.objects.get(kind='RECEIPT').receipt
+        self.assertEqual(receipt.supplier,self.party)
+        self.assertEqual(receipt.unit_price,Decimal('12.50'))
+        self.assertEqual(receipt.container.lot.expires_on,today+timedelta(days=90))
+        self.assertEqual(receipt.container.lot.manufactured_on,today-timedelta(days=10))
+
     def test_catalogue_change_after_preview_aborts_receipt_import(self):
         batch=self.preview('INITIAL',[self.receipt_row()])
         self.assertTrue(batch.report['valid'])
@@ -240,6 +329,38 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
         self.assertEqual(result.status_code,302)
         self.assertEqual(StockContainer.objects.get().quantity,10)
         self.assertEqual(self.client.post(reverse('erp:import-detail',args=[batch.pk]),{'expected_version':batch.version,'confirmed':'on'}).status_code,302)
+
+
+    def test_http_import_failures_cancellation_and_access_boundaries(self):
+        self.client.force_login(self.ops)
+        invalid = SimpleUploadedFile('broken.csv', b'wrong;header\nA;B\n')
+        response = self.client.post(reverse('erp:imports'), {'key': str(uuid.uuid4()),
+            'kind': 'CATALOG', 'reason': 'Fichier invalide', 'file': invalid})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].errors)
+        self.assertFalse(ImportBatch.objects.exists())
+        batch = self.preview('RECEIPTS', [self.receipt_row()])
+        detail = reverse('erp:import-detail', args=[batch.pk])
+        cancel = reverse('erp:import-cancel', args=[batch.pk])
+        self.assertEqual(self.client.get(cancel).status_code, 200)
+        stale = self.client.post(detail, {'expected_version': batch.version + 1, 'confirmed': 'on'})
+        self.assertEqual(stale.status_code, 400)
+        self.assertFalse(StockContainer.objects.exists())
+        response = self.client.post(cancel, {'expected_version': batch.version + 1, 'reason': 'Abandon'})
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post(cancel, {'expected_version': batch.version, 'reason': 'Reprise à corriger'})
+        self.assertEqual(response.status_code, 302)
+        batch.refresh_from_db()
+        self.assertEqual(batch.status, 'CANCELLED')
+        response = self.client.post(cancel, {'expected_version': batch.version, 'reason': 'Déjà abandonné'})
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post(detail, {'expected_version': batch.version, 'confirmed': 'on'})
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(StockContainer.objects.exists())
+        self.assertEqual(self.client.get(reverse('erp:import-template', args=['UNKNOWN'])).status_code, 404)
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(reverse('erp:imports')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('erp:import-template', args=['CATALOG'])).status_code, 403)
 
 
 class TableIntakeTests(SimpleTestCase):

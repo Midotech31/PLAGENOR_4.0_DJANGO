@@ -130,7 +130,9 @@ def replace_catalog(data, catalog):
 def diff_catalog(before, after):
     old_lots = {lot['id']: lot for lot in before['lots']}
     rows, totals = [], {'added': 0, 'updated': 0, 'removed': 0, 'unchanged': 0}
-    for lot in after['lots']:
+    remaining_ids = {lot['id'] for lot in after['lots']}
+    removed_lots = [dict(lot, items=[]) for lot in before['lots'] if lot['id'] not in remaining_ids]
+    for lot in [*after['lots'], *removed_lots]:
         previous = old_lots.get(lot['id'], {'items': []})
         old = {i['key']: i for i in previous['items']}
         new = {i['key']: i for i in lot['items']}

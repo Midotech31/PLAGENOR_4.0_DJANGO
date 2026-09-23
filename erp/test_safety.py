@@ -204,3 +204,70 @@ class SafetyDocumentTests(OperationFixtures,TestCase):
         initial.refresh_from_db()
         self.assertEqual(initial.after['tags'],[first.code])
         self.assertEqual(events.count(),3)
+
+    def test_safety_forms_persist_changes_and_refuse_stale_writes(self):
+        from erp.models import StorageSafetyRule
+        self.client.force_login(self.ops)
+        tag_data = {'code': 'HTTP-HAZARD', 'name': 'Danger documenté', 'ghs_code': 'GHS05',
+            'active': 'on', 'expected_version': 1}
+        response = self.client.post(reverse('erp:hazard-new'), tag_data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        tag = HazardTag.objects.get(code='HTTP-HAZARD')
+        tag_data.update(expected_version=tag.version, name='Désignation révisée')
+        self.assertEqual(self.client.post(reverse('erp:hazard-edit', args=[tag.pk]), tag_data).status_code, 302)
+        tag_data['name'] = 'Écrasement interdit'
+        self.assertEqual(self.client.post(reverse('erp:hazard-edit', args=[tag.pk]), tag_data).status_code, 400)
+        tag.refresh_from_db()
+        self.assertEqual(tag.name, 'Désignation révisée')
+        rule_data = {'location': self.freezer.pk, 'mode': 'PROHIBITED', 'first_tag': tag.pk,
+            'blocking': 'on', 'active': 'on', 'reference': 'Procédure vérifiée', 'expected_version': 1}
+        response = self.client.post(reverse('erp:storage-rule-new'), rule_data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        rule = StorageSafetyRule.objects.get(first_tag=tag)
+        rule_data.update(expected_version=rule.version, reference='Procédure révisée')
+        self.assertEqual(self.client.post(reverse('erp:storage-rule-edit', args=[rule.pk]), rule_data).status_code, 302)
+        self.assertEqual(self.client.post(reverse('erp:storage-rule-edit', args=[rule.pk]), rule_data).status_code, 400)
+        chemical = {'expected_version': self.article.version, 'classification': 'Classification fournie',
+            'source_reference': 'FDS vérifiée', 'reviewed_on': timezone.localdate().isoformat(), 'tags': [tag.pk]}
+        response = self.client.post(reverse('erp:chemical-edit', args=[self.article.pk]), chemical)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        self.assertEqual(self.client.post(reverse('erp:chemical-edit', args=[self.article.pk]), chemical).status_code, 400)
+        self.assertEqual(ChemicalProfile.objects.get(article=self.article).tags.get(), tag)
+
+    def test_document_http_validation_and_read_only_access(self):
+        self.client.force_login(self.ops)
+        self.assertEqual(self.client.get(reverse('erp:resource-documents', args=['article', uuid.uuid4()])).status_code, 404)
+        response = self.client.post(reverse('erp:resource-document-upload', args=['article', self.article.pk]),
+            {'title': 'Document invalide', 'kind': 'SDS', 'source': 'Source identifiée',
+             'file': SimpleUploadedFile('invalid.txt', b'Not a PDF')})
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(ResourceDocument.objects.exists())
+        self.grant(Capability.VIEW_CATALOG, category=self.category)
+        self.client.force_login(self.operator)
+        response = self.client.get(reverse('erp:resource-documents', args=['article', self.article.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['can_write'])
+
+    def test_safety_services_reject_protected_fields_and_duplicate_groups(self):
+        tag = self.tag()
+        with self.assertRaises(ValidationError):
+            save_hazard_tag(self.ops, {'version': 900}, pk=tag.pk, expected=tag.version)
+        with self.assertRaises(ValidationError):
+            save_chemical_profile(self.ops, self.article.pk, expected=self.article.version,
+                values={'reviewed_by': self.outsider}, tags=[])
+        with self.assertRaises(ValidationError):
+            save_chemical_profile(self.ops, self.article.pk, expected=self.article.version,
+                values={'classification': 'Source', 'source_reference': 'FDS', 'reviewed_on': timezone.localdate()},
+                tags=[tag, tag])
+        with self.assertRaises(ValidationError):
+            save_storage_rule(self.ops, {'created_by': self.outsider})
+        with self.assertRaises(ValidationError):
+            save_storage_rule(self.ops, {'location': self.freezer, 'mode': 'INCOMPATIBLE',
+                'first_tag': tag, 'second_tag': tag, 'reference': 'Source'})
+        with self.assertRaises(ValidationError):
+            document_target(ResourceDocument())
+        with self.assertRaises(ValidationError):
+            attach_document(self.ops, 'article', self.article.pk, title='', kind='SDS', filename='source.pdf',
+                data=pdf_bytes(), source='Source')
+        self.assertFalse(ChemicalProfile.objects.exists())
+        self.assertFalse(ResourceDocument.objects.exists())

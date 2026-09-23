@@ -193,3 +193,102 @@ class ConsumptionIntegrationTests(OperationFixtures, TestCase):
         self.assertEqual((self.container.quantity, self.container.reserved), (20, 0))
         self.assertFalse(StockReservation.objects.filter(request=self.req, remaining__gt=0).exists())
         self.assertEqual(reconcile_stock(self.admin), [])
+
+    def test_profile_rules_and_source_selection_guards(self):
+        updated = save_rule(self.ops, self.profile.pk, {'quantity': Decimal(3)},
+            expected=self.profile.version, pk=self.rule.pk)
+        self.assertEqual(updated.version, self.rule.version + 1)
+        self.profile.refresh_from_db()
+        self.profile.active = False
+        with self.assertRaises(ValidationError):
+            calculate_requirements(self.profile, 1)
+        self.profile.active = True
+        self.article.active = False
+        self.article.save()
+        with self.assertRaises(ValidationError):
+            calculate_requirements(self.profile, 1)
+        self.article.active = True
+        self.article.save()
+        source = source_samples(self.ops, self.req)[0]
+        sample = receive_sample(self.ops, key=uuid.uuid4(), code='SELECTION-GUARD', amount=10,
+            unit=self.ul, location=self.freezer, received_on=timezone.localdate(), reason='Réception',
+            request=self.req, source_key=source['key'], source_fingerprint=source['fingerprint'])
+        for keys, samples in [([source['key'], source['key']], []), (['unknown'], []),
+                              ([], []), ([source['key']], [sample]), ([], [sample, sample])]:
+            with self.subTest(keys=keys, samples=samples), self.assertRaises(ValidationError):
+                create_run(self.ops, request=self.req, profile=self.profile, code='INVALID', name='Invalid',
+                    sample_count=1, planned_on=timezone.localdate(), source_keys=keys, samples=samples)
+        self.assertFalse(AnalysisRun.objects.exists())
+        sample.status = 'DESTROYED'
+        sample.save()
+        with self.assertRaises(ValidationError):
+            self.make_run(samples=[sample])
+        self.profile.service = Service.objects.create(code='OTHER-RUN', name='Autre prestation')
+        self.profile.save()
+        with self.assertRaises(ValidationError):
+            self.make_run()
+
+    def test_malformed_reservations_are_atomic_and_keys_cannot_be_reused(self):
+        from erp.services.common import Conflict
+        run = self.make_run()
+        proposal = reservation_proposal(self.ops, run)['allocations']
+        invalid = [[], ['invalid'], [{'container': str(self.container.pk)}],
+            [dict(proposal[0], requirement=str(uuid.uuid4()))], [proposal[0], proposal[0]]]
+        for allocations in invalid:
+            with self.subTest(allocations=allocations), self.assertRaises(ValidationError):
+                reserve_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(),
+                    allocations=allocations, reason='Contrôle des allocations')
+            self.container.refresh_from_db()
+            self.assertEqual(self.container.reserved, 0)
+            self.assertFalse(RunAllocation.objects.exists())
+        key = uuid.uuid4()
+        reserve_run(self.ops, run.pk, expected=run.version, key=key,
+            allocations=proposal, reason='Réservation valide')
+        with self.assertRaises(Conflict):
+            reserve_run(self.ops, run.pk, expected=run.version, key=key,
+                allocations=proposal, reason='Autre opération')
+        self.assertEqual(RunAllocation.objects.count(), 1)
+        self.assertEqual(reconcile_stock(self.admin), [])
+
+    def test_confirmation_rejects_foreign_biology_and_changed_source(self):
+        from erp.services.common import Conflict
+        run = self.make_run()
+        reserve_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(),
+            allocations=reservation_proposal(self.ops, run)['allocations'], reason='Préparation')
+        run.refresh_from_db()
+        allocation = RunAllocation.objects.get(requirement__run=run)
+        actuals = {str(allocation.pk): '2'}
+        with self.assertRaises(ValidationError):
+            confirm_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(), actuals=actuals,
+                biological_quantities={str(uuid.uuid4()): '1'}, reason='Analyse', confirmed=True)
+        self.req.sample_table = [{'sample_code': 'SOURCE-CHANGED', 'quantity': '50', 'quantity_unit': 'µL'}]
+        self.req.save()
+        with self.assertRaises(Conflict):
+            confirm_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(), actuals=actuals,
+                reason='Analyse', confirmed=True)
+        self.container.refresh_from_db()
+        self.assertEqual((self.container.quantity, self.container.reserved), (20, 2))
+        self.assertFalse(RunConsumption.objects.exists())
+        cancel_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(), reason='Source modifiée')
+        run.refresh_from_db()
+        with self.assertRaises(ValidationError):
+            reserve_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(),
+                allocations=[], reason='Déjà annulée')
+        with self.assertRaises(ValidationError):
+            cancel_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(), reason='Déjà annulée')
+        self.assertEqual(reconcile_stock(self.admin), [])
+
+    def test_shortage_and_request_closure_require_authenticated_actor(self):
+        from django.contrib.auth.models import AnonymousUser
+        run = self.make_run()
+        self.container.quantity = 1
+        self.container.save()
+        proposal = reservation_proposal(self.ops, run)
+        self.assertEqual(Decimal(proposal['shortages'][0]['quantity']), 1)
+        self.req.archived = True
+        self.req.save()
+        for actor in [None, AnonymousUser()]:
+            with self.subTest(actor=actor), self.assertRaises(PermissionDenied):
+                close_request_resources(actor, self.req, 'Clôture')
+        run.refresh_from_db()
+        self.assertEqual(run.status, 'PLANNED')
