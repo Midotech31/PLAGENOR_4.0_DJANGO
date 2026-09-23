@@ -197,7 +197,6 @@ jobs:
   container:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: sqlite
     steps:
       - uses: actions/checkout@v7
       - name: Build production image
