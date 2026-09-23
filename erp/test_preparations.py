@@ -103,3 +103,19 @@ class PreparationTests(OperationFixtures,TestCase):
         self.assertEqual(self.client.get(reverse('erp:preparation-detail',args=[0])).status_code,404)
         self.assertEqual(self.client.get('/erp/preparations/'+str(uuid.uuid4())+'/').status_code,404)
         self.assertEqual(reconcile_stock(self.ops),[])
+
+    def test_http_preparation_overdraw_rolls_back_output_and_consumption(self):
+        self.client.force_login(self.ops)
+        data = {'key': uuid.uuid4(), 'article': self.liquid.pk, 'location': self.freezer.pk,
+            'lot_code': 'OVERDRAW-LOT', 'container_code': 'OVERDRAW-CONT', 'amount': '20', 'unit': self.ml.pk,
+            'prepared_on': timezone.localdate().isoformat(), 'protocol_reference': 'SOP-01', 'reason': 'Préparation',
+            'sources-TOTAL_FORMS': '1', 'sources-INITIAL_FORMS': '0', 'sources-MIN_NUM_FORMS': '1',
+            'sources-MAX_NUM_FORMS': '50', 'sources-0-container': self.source.pk,
+            'sources-0-amount': '101', 'sources-0-unit': self.ml.pk}
+        response = self.client.post(reverse('erp:preparation-create'), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(InternalPreparation.objects.exists())
+        self.source.refresh_from_db()
+        self.assertEqual(self.source.quantity, 100)
+        self.assertEqual(reconcile_stock(self.ops), [])

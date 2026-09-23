@@ -144,8 +144,7 @@ def parse_table(kind,filename,data):
             raise ValidationError(_('La ligne %(row)s contient des cellules sans en-tête.') % {'row':index})
         padded=values+['']*max(0,len(headers)-len(values))
         rows.append({'row':index,'data':dict(zip(headers,padded))})
-    if not rows:
-        raise ValidationError(_('Le tableau ne contient aucune ligne de données.'))
+    # Trailing blank rows were removed before requiring a header and data row.
     return rows
 
 

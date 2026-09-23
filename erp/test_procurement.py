@@ -420,3 +420,106 @@ class ProcurementChainTests(OperationFixtures,TestCase):
         self.assertEqual(reconcile_stock(self.ops), [])
         self.client.force_login(self.operator)
         self.assertEqual(self.client.get(receipt_route).status_code, 403)
+
+    def test_purchase_document_access_uses_plan_scope_and_financial_permission(self):
+        from erp.services.safety import attach_document, require_target, target_cost_access
+        from erp.test_safety import pdf_bytes
+        from erp.safety_forms import DocumentForm
+        order, _ = self.order()
+        self.assertEqual(require_target(self.ops, 'order', order.pk, write=True), order)
+        self.assertTrue(target_cost_access(self.ops, 'order', order))
+        self.assertEqual(require_target(self.operator, 'order', order.pk), order)
+        with self.assertRaises(PermissionDenied):
+            require_target(self.operator, 'order', order.pk, write=True)
+        document = attach_document(self.ops, 'order', order.pk, title='Commande signée', kind='OTHER',
+            filename='order.pdf', data=pdf_bytes('Commande signée'), source='Service des marchés')
+        self.assertTrue(document.financial)
+        form = DocumentForm(user=self.ops, target_kind='order', target=order)
+        self.assertTrue(form.fields['financial'].disabled)
+        self.assertTrue(form.fields['financial'].initial)
+        self.assertIn(document.title, form.fields['supersedes'].label_from_instance(document))
+
+    def test_plan_completion_and_supplier_guards_preserve_decisions(self):
+        from unittest.mock import patch
+        from erp.services.procurement import validate_plan
+        with self.assertRaises(ValidationError):
+            approve_plan(self.ops, self.plan.pk, expected=self.plan.version, reason='Pas soumis')
+        self.decide()
+        with self.assertRaises(ValidationError):
+            submit_plan(self.operator, self.plan.pk, expected=self.plan.version, reason='')
+        self.party.active = False
+        self.party.save()
+        with self.assertRaises(ValidationError):
+            decide_plan_line(self.operator, self.line.pk, expected=self.plan.version,
+                values={'supplier': self.party, 'decision_reason': 'Fournisseur désactivé'})
+        ProcurementLine.objects.filter(pk=self.line.pk).update(estimated_price=None)
+        with self.assertRaises(ValidationError):
+            validate_plan(self.plan)
+        with patch('erp.services.procurement.timezone.localdate', return_value=self.plan.ends_on+timedelta(days=1)):
+            with self.assertRaises(ValidationError):
+                refresh_forecast(self.ops, self.line.pk, expected=self.plan.version)
+        with patch('erp.services.procurement.forecast_months', side_effect=ValueError('Historique invalide')):
+            with self.assertRaisesMessage(ValidationError, 'Historique invalide'):
+                refresh_forecast(self.ops, self.line.pk, expected=self.plan.version)
+        self.assertFalse(ForecastObservation.objects.exists())
+
+    def test_excluded_plan_lines_are_not_budgeted_or_copied_into_cdc(self):
+        extra = add_plan_article(self.ops, self.plan.pk, expected=self.plan.version,
+            article=self.liquid, lot_name='Non retenu')
+        self.plan.refresh_from_db()
+        decide_plan_line(self.ops, extra.pk, expected=self.plan.version,
+            values={'included': False, 'decision_reason': 'Besoin différé'})
+        self.plan.refresh_from_db()
+        self.assertEqual(plan_totals(self.ops, self.plan)['incomplete_lines'], 1)
+        self.approve()
+        dossier = plan_to_cdc(self.ops, self.plan.pk, expected=self.plan.version,
+            reference='89/SME/SDFM/SG/ESSBO/2026', family='reagents')
+        self.assertEqual(CdcItem.objects.filter(lot__dossier=dossier).count(), 1)
+        self.plan.refresh_from_db()
+        with self.assertRaises(Conflict):
+            plan_to_cdc(self.ops, self.plan.pk, expected=self.plan.version,
+                reference='90/SME/SDFM/SG/ESSBO/2026', family='reagents')
+
+    def test_order_rejects_unapproved_plan_inactive_supplier_future_date_and_bad_currency(self):
+        values = {'expected': self.plan.version, 'reference': 'GUARD-ORDER', 'supplier': self.party,
+            'ordered_on': timezone.localdate(), 'expected_on': timezone.localdate()+timedelta(days=30)}
+        with self.assertRaises(ValidationError):
+            create_order(self.ops, self.plan.pk, **values)
+        self.approve()
+        values['expected'] = self.plan.version
+        self.party.active = False
+        self.party.save()
+        with self.assertRaises(ValidationError):
+            create_order(self.ops, self.plan.pk, **values)
+        self.party.active = True
+        self.party.save()
+        with self.assertRaises(ValidationError):
+            create_order(self.ops, self.plan.pk, **dict(values, ordered_on=timezone.localdate()+timedelta(days=1)))
+        order = create_order(self.ops, self.plan.pk, **values)
+        with self.assertRaises(ValidationError):
+            save_order_line(self.ops, order.pk, expected=order.version, plan_line=self.line, quantity=10,
+                unit_price=100, tax_rate=19, currency='12!')
+        foreign = ProcurementLine(pk=uuid.uuid4())
+        with self.assertRaises(ValidationError):
+            save_order_line(self.ops, order.pk, expected=order.version, plan_line=foreign, quantity=10,
+                unit_price=100, tax_rate=19, currency='DZD')
+        self.assertFalse(order.lines.exists())
+
+    def test_category_scoped_forms_and_receipt_financial_permission(self):
+        from erp.models import Capability
+        from erp.procurement_forms import PlanArticleForm, OrderReceiptForm
+        self.plan.work.category = self.category
+        self.plan.work.save(update_fields=['category'])
+        self.assertEqual(str(self.plan), self.plan.reference)
+        self.assertEqual(list(PlanArticleForm(plan=self.plan).fields['article'].queryset), [self.article])
+        order, line = self.order()
+        self.assertEqual(str(order), order.reference)
+        self.grant(Capability.RECEIVE_STOCK, category=self.category, location=self.freezer)
+        self.assertNotIn('actual_unit_price', OrderReceiptForm(user=self.operator, line=line).fields)
+        _, data = self.receive_order(order, line)
+        with self.assertRaises(PermissionDenied):
+            receive_order_line(self.operator, line.pk, **{**data, 'actual_unit_price': 100})
+        with self.assertRaises(Conflict):
+            receive_order_line(self.ops, line.pk, **{**data, 'variance_reason': 'Modification après réception'})
+        self.assertEqual(received_quantity(line), 4)
+        self.assertEqual(reconcile_stock(self.ops), [])

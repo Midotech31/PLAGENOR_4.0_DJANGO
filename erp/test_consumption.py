@@ -292,3 +292,63 @@ class ConsumptionIntegrationTests(OperationFixtures, TestCase):
                 close_request_resources(actor, self.req, 'Clôture')
         run.refresh_from_db()
         self.assertEqual(run.status, 'PLANNED')
+
+    def test_linked_planning_rechecks_run_identity_status_and_input_completeness(self):
+        from erp.services.planning import create_activity, readiness
+        from erp.services.work import transition_work
+        run = self.make_run()
+        start, end = timezone.now(), timezone.now()+timedelta(hours=1)
+        values = {'key': uuid.uuid4(), 'kind': 'CONTROL', 'title': 'Analyse planifiée', 'assignee': self.ops,
+            'starts_at': start, 'ends_at': end, 'run': run}
+        with self.assertRaises(ValidationError):
+            create_activity(self.ops, **values)
+        other = Request.objects.create(display_id='REQ-OTHER-PLAN', requester=self.outsider, service=self.service,
+            title='Autre demande', status='IN_PROGRESS')
+        values['kind'] = 'ANALYSIS'
+        with self.assertRaises(ValidationError):
+            create_activity(self.ops, **dict(values, request=other))
+        schedule = create_activity(self.ops, **values)
+        with self.assertRaises(ValidationError):
+            transition_work(self.ops, schedule.work_id, expected=schedule.work.version,
+                state='SUBMITTED', reason='Pas démarrée')
+        for state, word in [('CANCELLED', 'annulée'), ('COMPLETED', 'confirmées')]:
+            AnalysisRun.objects.filter(pk=run.pk).update(status=state)
+            issues = readiness(self.ops, schedule.work)['issues']
+            self.assertTrue(any(word in str(issue) for issue in issues), issues)
+        # A legacy/incomplete run must never be presented as ready for execution.
+        legacy = AnalysisRun.objects.create(code='LEGACY-NO-INPUT', name='Série incomplète', request=self.req,
+            profile=self.profile, sample_count=1, planned_on=timezone.localdate(), created_by=self.ops)
+        missing = create_activity(self.ops, **dict(values, key=uuid.uuid4(), run=legacy,
+            starts_at=end, ends_at=end+timedelta(hours=1)))
+        issues = readiness(self.ops, missing.work)['issues']
+        self.assertTrue(any('Aucun échantillon' in str(issue) for issue in issues), issues)
+
+    def test_request_links_refuse_unassigned_and_closed_writes(self):
+        from erp.services.links import lock_request, request_scope, require_request
+        self.assertFalse(request_scope(self.outsider).exists())
+        with self.assertRaises(PermissionDenied):
+            lock_request(self.second, self.req)
+        self.req.archived = True
+        self.req.save()
+        with self.assertRaises(ValidationError):
+            require_request(self.ops, self.req)
+        with self.assertRaises(ValidationError):
+            lock_request(self.ops, self.req)
+        self.assertEqual(lock_request(self.ops, self.req, allow_closed=True), self.req)
+
+    @override_settings(SECURE_SSL_REDIRECT=False, STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+    def test_reservation_page_prefill_and_external_user_restrictions(self):
+        from django.urls import reverse
+        run = self.make_run()
+        self.client.force_login(self.ops)
+        response = self.client.get(reverse('erp:run-operation', args=[run.pk, 'reserve']), {
+            'requirement': run.requirements.get().pk, 'container': self.container.pk, 'amount': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['form'].initial['amount'], '2')
+        self.client.force_login(self.outsider)
+        for route in [reverse('erp:profile-list'), reverse('erp:profile-detail', args=[self.profile.pk]),
+                      reverse('erp:work-list'), reverse('erp:preparation-create')]:
+            with self.subTest(route=route):
+                self.assertEqual(self.client.get(route).status_code, 403)

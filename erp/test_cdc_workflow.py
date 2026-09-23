@@ -128,3 +128,97 @@ class CdcDelegationHttpTests(OperationFixtures, TestCase):
             self.assertEqual(self.client.get(reverse('erp:work-delegate', args=[self.work.pk])).status_code, 403)
         self.work.refresh_from_db()
         self.assertEqual(self.work.status, 'ASSIGNED')
+
+    def test_lot_item_and_clause_forms_preserve_versions_on_rejected_edits(self):
+        from erp.cdc.catalog import document
+        from erp.cdc.schedule_adapter import managed_ids
+        self.client.force_login(self.ops)
+        lot = self.dossier.lots.first()
+        route = reverse('erp:cdc-lot-edit', args=[lot.pk])
+        data = {'expected_version': self.dossier.version+1, 'name': lot.name, 'name_ar': lot.name_ar,
+            'reason': 'Intitulé vérifié'}
+        self.assertEqual(self.client.post(route, data).status_code, 400)
+        data['expected_version'] = self.dossier.version
+        self.assertEqual(self.client.post(route, data).status_code, 302)
+        self.dossier.refresh_from_db()
+        item_data = {'expected_version': self.dossier.version, 'article': self.article.pk,
+            'purchase_unit': self.unit.pk, 'designation': '', 'unit_label': '', 'quantity': '2',
+            'active': 'on', 'currency': 'DZD', 'reason': 'Besoin documenté'}
+        route = reverse('erp:cdc-item-new', args=[lot.pk])
+        response = self.client.post(route, item_data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        item = lot.items.get(article=self.article)
+        self.assertEqual(item.designation, self.article.name)
+        self.assertEqual(item.unit_label, self.unit.name)
+        self.assertEqual(self.client.post(route, item_data).status_code, 400)
+        managed, _ = managed_ids(self.dossier.family)
+        block = next(b for b in document(self.dossier.family).source_index
+            if not b['guard'] and b['id'] not in managed and b['text'].strip())
+        self.dossier.refresh_from_db()
+        paragraph = {'expected_version': self.dossier.version+1, 'paragraph_id': block['id'],
+            'value': block['text'], 'reason': 'Relecture de clause'}
+        self.assertEqual(self.client.post(reverse('erp:cdc-paragraph', args=[self.dossier.pk]), paragraph).status_code, 400)
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(reverse('erp:cdc-list')).status_code, 403)
+
+    def test_native_generation_and_explicit_review_approval(self):
+        from erp.models import CdcApproval, CdcGeneration
+        self.client.force_login(self.ops)
+        values = {key: self.dossier.data['consultation'][key] for key in FIELDS}
+        values['confirmed'] = True
+        save_consultation(self.ops, self.dossier.pk, expected=self.dossier.version, values=values,
+            reference=self.dossier.reference, reason='Variables vérifiées pour la recette')
+        self.dossier.refresh_from_db()
+        detail = reverse('erp:cdc-detail', args=[self.dossier.pk])
+        data = {'expected_version': self.dossier.version+1, 'action': 'generate', 'reason': 'Revue'}
+        self.assertEqual(self.client.post(detail, data).status_code, 400)
+        data['expected_version'] = self.dossier.version
+        response = self.client.post(detail, data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        generation = CdcGeneration.objects.get(revision__dossier=self.dossier)
+        self.assertGreater(generation.pages, 0)
+        self.assertTrue(bytes(generation.pdf).startswith(b'%PDF'))
+        data['action'] = 'unknown'
+        self.assertEqual(self.client.post(detail, data).status_code, 400)
+        data['action'] = 'submit'
+        self.assertEqual(self.client.post(detail, data).status_code, 302)
+        approval = {'expected_version': self.dossier.version, 'generation': generation.pk,
+            'reviewed_pages': generation.pages+1, 'statement': 'Revue simulée pour le test automatisé',
+            'visual_review': 'on', 'content_review': 'on'}
+        route = reverse('erp:cdc-approve', args=[self.dossier.pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        self.assertEqual(self.client.post(route, approval).status_code, 400)
+        self.assertFalse(CdcApproval.objects.exists())
+        approval['reviewed_pages'] = generation.pages
+        response = self.client.post(route, approval)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        self.assertEqual(CdcApproval.objects.get().generation_id, generation.pk)
+        self.dossier.work.refresh_from_db()
+        self.assertEqual(self.dossier.work.status, 'APPROVED')
+
+    def test_scoped_catalog_and_consultation_guards_preserve_revision(self):
+        from erp.cdc_forms import CdcItemForm
+        from erp.services.cdc import save_cdc_item
+        self.work.category = self.category
+        self.work.save(update_fields=['category'])
+        self.assertEqual(str(self.dossier), self.dossier.reference)
+        lot = self.dossier.lots.first()
+        self.assertEqual(str(lot), lot.name)
+        self.assertEqual(list(CdcItemForm(dossier=self.dossier, user=self.ops).fields['article'].queryset), [self.article])
+        before = self.dossier.revision_number
+        with self.assertRaisesRegex(ValidationError, 'toutes les rubriques'):
+            save_consultation(self.ops, self.dossier.pk, expected=self.dossier.version, values={})
+        with self.assertRaises(PermissionDenied):
+            save_cdc_item(self.ops, lot.pk, expected=self.dossier.version, values={'quantity': 1},
+                article=self.liquid, purchase_unit=self.ml)
+        save_cdc_item(self.ops, lot.pk, expected=self.dossier.version, values={'quantity': 1},
+            article=self.article, purchase_unit=self.unit)
+        self.dossier.refresh_from_db()
+        item = lot.items.get(article=self.article)
+        with self.assertRaisesRegex(ValidationError, 'unité documentaire'):
+            save_cdc_item(self.ops, lot.pk, pk=item.pk, expected=self.dossier.version,
+                values={'unit_label': 'Unité incohérente'})
+        self.dossier.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(self.dossier.revision_number, before + 1)
+        self.assertEqual(item.unit_label, self.unit.name)

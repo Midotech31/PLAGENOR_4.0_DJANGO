@@ -411,3 +411,61 @@ class WorkAndStockTests(OperationFixtures, TestCase):
                 values={'estimated_price': Decimal(100), 'tax_rate': Decimal(0), 'price_source': 'Devis fournisseur'})
         with self.assertRaises(ValidationError):
             old_revision.delete()
+
+    def test_stock_http_release_reversal_and_read_only_permissions(self):
+        container, receipt, _ = self.receive()
+        reservation = reserve_stock(self.ops, container.pk, key=uuid.uuid4(), amount=2,
+            unit=self.unit, reference='Analyse prévue')
+        self.client.force_login(self.ops)
+        self.assertEqual(self.client.get(reverse('erp:stock-list'), {'location': 'invalid'}).status_code, 404)
+        release = reverse('erp:reservation-release', args=[reservation.pk])
+        self.assertEqual(self.client.get(release).status_code, 200)
+        data = {'key': str(uuid.uuid4()), 'reason': 'Besoin annulé'}
+        self.assertEqual(self.client.post(release, data).status_code, 302)
+        self.assertEqual(self.client.post(release, dict(data, key=str(uuid.uuid4()))).status_code, 400)
+        consumed = remove_stock(self.ops, container.pk, key=uuid.uuid4(), amount=1, unit=self.unit, reason='Consommation')
+        reverse_route = reverse('erp:movement-reverse', args=[consumed.pk])
+        self.assertEqual(self.client.get(reverse_route).status_code, 200)
+        self.assertEqual(self.client.post(reverse_route, {'key': str(uuid.uuid4()), 'reason': 'Consommation erronée'}).status_code, 302)
+        self.assertEqual(self.client.post(reverse_route, {'key': str(uuid.uuid4()), 'reason': 'Déjà contre-passée'}).status_code, 400)
+        container.refresh_from_db()
+        self.assertEqual((container.quantity, container.reserved), (10, 0))
+        self.assertEqual(reconcile_stock(self.ops), [])
+        self.grant(Capability.VIEW_STOCK, category=self.category, location=self.freezer)
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(release).status_code, 403)
+        self.assertEqual(self.client.get(reverse('erp:receipt-create')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('erp:stock-action', args=[container.pk, 'remove'])).status_code, 403)
+
+    def test_stock_retry_and_reservation_guards_keep_ledger_balanced(self):
+        container, _, _ = self.receive()
+        other, _, _ = self.receive(suffix='OTHER')
+        reserve = dict(key=uuid.uuid4(), amount=2, unit=self.unit, reference='Analyse prévue')
+        reservation = reserve_stock(self.ops, container.pk, **reserve)
+        self.assertEqual(reserve_stock(self.ops, container.pk, **reserve).pk, reservation.pk)
+        for target, amount in [(other, 1), (container, 3)]:
+            with self.subTest(container=target.code, amount=amount), self.assertRaises(ValidationError):
+                remove_stock(self.ops, target.pk, key=uuid.uuid4(), amount=amount, unit=self.unit,
+                    reservation=reservation, reason='Consommation réservée')
+        consume = dict(key=uuid.uuid4(), amount=1, unit=self.unit, reservation=reservation, reason='Analyse réalisée')
+        movement = remove_stock(self.ops, container.pk, **consume)
+        self.assertEqual(remove_stock(self.ops, container.pk, **consume).pk, movement.pk)
+        container.refresh_from_db()
+        reservation.refresh_from_db()
+        self.assertEqual((container.quantity, container.reserved, reservation.remaining), (9, 1, 1))
+        with self.assertRaises(Conflict):
+            transfer_stock(self.ops, container.pk, key=uuid.uuid4(), destination=other.location,
+                expected=container.version-1, reason='Transfert périmé')
+        self.assertEqual(reconcile_stock(self.ops), [])
+
+    def test_expired_lot_cannot_be_released(self):
+        container, _, _ = self.receive(accepted=False)
+        lot = container.lot
+        lot.expires_on = timezone.localdate() - timedelta(days=1)
+        lot.save(update_fields=['expires_on'])
+        before_status = lot.status
+        with self.assertRaisesRegex(ValidationError, 'expiré'):
+            control_lot(self.ops, lot.pk, expected=lot.version, status='AVAILABLE', reason='Contrôle')
+        lot.refresh_from_db()
+        self.assertEqual(lot.status, before_status)
+        self.assertEqual(reconcile_stock(self.ops), [])

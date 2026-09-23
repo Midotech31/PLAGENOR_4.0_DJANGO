@@ -271,3 +271,42 @@ class SafetyDocumentTests(OperationFixtures,TestCase):
                 data=pdf_bytes(), source='Source')
         self.assertFalse(ChemicalProfile.objects.exists())
         self.assertFalse(ResourceDocument.objects.exists())
+
+    def test_receipt_sample_and_work_document_scopes_and_financial_supersession(self):
+        from erp.services.biobank import receive_sample
+        container, movement, _ = self.receive()
+        work = create_work(self.ops, kind='CONTROL', title='Dossier de contrôle', assignee=self.operator)
+        sample = receive_sample(self.ops, key=uuid.uuid4(), code='DOC-SAMPLE', amount=10,
+            unit=self.ul, location=self.freezer, received_on=timezone.localdate(), reason='Réception')
+        for kind, target in [('receipt', movement.receipt), ('sample', sample), ('work', work)]:
+            self.assertEqual(require_target(self.ops, kind, target.pk, write=True), target)
+            doc = attach_document(self.ops, kind, target.pk, title='Justificatif', kind='OTHER',
+                filename='evidence.pdf', data=pdf_bytes(kind), source='Source contrôlée')
+            self.assertEqual(document_target(doc), (kind, target.pk))
+            self.assertEqual(target_cost_access(self.ops, kind, target), kind != 'sample')
+        finance = attach_document(self.ops, 'article', self.article.pk, title='Document restreint', kind='SDS',
+            filename='financial.pdf', data=pdf_bytes('Financial source'), source='Source', financial=True)
+        self.grant(Capability.EDIT_CATALOG, category=self.category)
+        with self.assertRaises(PermissionDenied):
+            attach_document(self.operator, 'article', self.article.pk, title='Révision', kind='SDS',
+                filename='revision.pdf', data=pdf_bytes('Financial revision'), source='Nouvelle source', supersedes=finance)
+        self.assertFalse(ResourceDocument.objects.filter(supersedes=finance).exists())
+
+    def test_financial_upload_and_cross_target_replacement_are_rejected(self):
+        from erp.safety_forms import DocumentForm
+        self.grant(Capability.EDIT_CATALOG, category=self.category)
+        self.assertEqual(require_target(self.operator, 'article', self.article.pk, write=True), self.article)
+        self.assertFalse(target_cost_access(self.operator, 'article', self.article))
+        kwargs = dict(title='Source', kind='SDS', filename='source.pdf', data=pdf_bytes('Initial'), source='Fabricant')
+        with self.assertRaises(PermissionDenied):
+            attach_document(self.operator, 'article', self.article.pk, financial=True, **kwargs)
+        original = attach_document(self.ops, 'article', self.liquid.pk, **kwargs)
+        kwargs['data'] = pdf_bytes('Replacement')
+        with self.assertRaisesRegex(ValidationError, 'même dossier'):
+            attach_document(self.ops, 'article', self.article.pk, supersedes=original, **kwargs)
+        restricted = attach_document(self.ops, 'article', self.article.pk, financial=True, **kwargs)
+        form = DocumentForm(user=self.operator, target_kind='article', target=self.article)
+        self.assertNotIn('financial', form.fields)
+        self.assertFalse(form.fields['supersedes'].queryset.filter(pk=restricted.pk).exists())
+        self.assertEqual(ResourceDocument.objects.count(), 2)
+        self.assertFalse(ResourceDocument.objects.filter(supersedes__isnull=False).exists())

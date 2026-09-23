@@ -56,7 +56,9 @@ test('Admin Ops assigns, checks, starts and approves one centrally scheduled act
   await expect(page.locator('.erp-heading h1')).toHaveText(`Activity ${suffix}`);
   await audit(page);
   await page.screenshot({path:info.outputPath('activity-readiness.png'),fullPage:true});
-  await page.goto('/erp/planning/');
+  // A slot can cross midnight and appear on two days in the weekly calendar.
+  // Check its single occurrence on today's day view.
+  await page.goto(`/erp/planning/?view=day&date=${local(new Date()).slice(0,10)}`);
   await expect(page.locator('.planning-slot').filter({hasText:`Activity ${suffix}`})).toHaveCount(1);
   await audit(page);
   await page.screenshot({path:info.outputPath('planning-workspace.png'),fullPage:true});

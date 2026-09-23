@@ -363,6 +363,70 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
         self.assertEqual(self.client.get(reverse('erp:import-template', args=['CATALOG'])).status_code, 403)
 
 
+    def test_catalog_import_preserves_optional_references_and_rechecks_scope(self):
+        self.grant(Capability.EDIT_CATALOG, category=self.category)
+        row = {'code': 'FULL-CATALOG', 'name': 'Article documenté', 'category_code': self.category.code,
+            'base_unit_code': self.unit.code, 'purchase_unit_code': self.unit.code,
+            'manufacturer_code': self.party.code, 'supplier_code': self.party.code,
+            'name_en': 'Documented item', 'name_ar': 'مادة', 'manufacturer_reference': 'REF-001',
+            'cas': '50-00-0', 'packaging': 'Unité', 'specifications': 'Source fournie'}
+        batch = self.preview('CATALOG', [row], user=self.operator)
+        self.assertTrue(batch.report['valid'], batch.report)
+        require_batch(self.operator, batch)
+        apply_import(self.operator, batch.pk, expected=batch.version, confirmed=True)
+        article = Article.objects.get(code=row['code'])
+        self.assertEqual(article.name_en, row['name_en'])
+        self.assertEqual(article.manufacturer_id, self.party.pk)
+        self.assertEqual(article.preferred_supplier_id, self.party.pk)
+        row['code'] = 'SECOND-CATALOG'
+        row['manufacturer_reference'] = 'REF-002'
+        pending = self.preview('CATALOG', [row], user=self.operator)
+        self.assertTrue(pending.report['valid'], pending.report)
+        type(self.category).objects.filter(pk=self.category.pk).update(code='RENAMED-CATEGORY')
+        with self.assertRaises(PermissionDenied):
+            require_batch(self.operator, pending)
+        self.assertFalse(Article.objects.filter(code=row['code']).exists())
+
+    def test_invalid_import_domain_reason_and_required_values_write_no_business_data(self):
+        from erp.services.bulk_imports import require_kind
+        with self.assertRaises(ValidationError):
+            require_kind(self.ops, 'UNKNOWN')
+        for kind in ('CATALOG', 'TEMPERATURE'):
+            with self.subTest(kind=kind), self.assertRaises(PermissionDenied):
+                require_kind(self.operator, kind)
+        for reason in ('', 'x' * 501):
+            with self.subTest(reason=reason), self.assertRaises(ValidationError):
+                preview_import(self.ops, key=uuid.uuid4(), kind='RECEIPTS', filename='data.csv',
+                    data=csv_file([self.receipt_row()]), reason=reason)
+        blank = dict(self.receipt_row(), condition='')
+        batch = self.preview('RECEIPTS', [blank])
+        self.assertFalse(batch.report['valid'])
+        with self.assertRaises(ValidationError):
+            apply_import(self.ops, batch.pk, expected=batch.version, confirmed=True)
+        for kind, changes in [('INITIAL', {'article_code': 'UNKNOWN'}),
+                              ('RECEIPTS', {'article_code': 'UNKNOWN'}),
+                              ('INITIAL', {'new_name': 'Contradiction', 'new_category_code': self.category.code,
+                                           'new_base_unit_code': self.unit.code})]:
+            batch = self.preview(kind, [dict(self.receipt_row(), **changes)])
+            self.assertFalse(batch.report['valid'], changes)
+        self.assertFalse(StockMovement.objects.exists())
+
+    def test_delegated_temperature_and_priced_receipt_import_require_current_permissions(self):
+        self.grant(Capability.MANAGE_BIOBANK, location=self.freezer)
+        temperature = {'location_code': self.freezer.code, 'measured_at': '2026-01-01 12:00', 'value': '-80'}
+        batch = self.preview('TEMPERATURE', [temperature], user=self.operator)
+        require_batch(self.operator, batch)
+        apply_import(self.operator, batch.pk, expected=batch.version, confirmed=True)
+        self.assertEqual(TemperatureReading.objects.get().value, -80)
+        self.grant(Capability.RECEIVE_STOCK, category=self.category, location=self.freezer)
+        self.grant(Capability.EDIT_COST, category=self.category)
+        batch = self.preview('RECEIPTS', [dict(self.receipt_row(), unit_price_base='10')], user=self.operator)
+        require_batch(self.operator, batch)
+        apply_import(self.operator, batch.pk, expected=batch.version, confirmed=True)
+        self.assertEqual(StockContainer.objects.get().quantity, 10)
+        self.assertEqual(reconcile_stock(self.admin), [])
+
+
 class TableIntakeTests(SimpleTestCase):
     def setUp(self):
         self.helpers=runpy.run_path(str(Path(table_probe.__file__).resolve().parents[1]/'core/document_probe.py'))

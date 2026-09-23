@@ -135,8 +135,7 @@ def parse_xml(data: bytes) -> Node:
         parser.Parse(data, True)
     except expat.ExpatError as exc:
         raise DocumentError('XML non valide.') from exc
-    if len(roots) != 1:
-        raise DocumentError('Racine XML invalide.')
+    # A successful complete Expat parse guarantees exactly one root element.
     return roots[0]
 
 

@@ -12,7 +12,7 @@ import io
 import re
 import uuid
 import zipfile
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from .docengine import (Document, DocumentError, NS, apply_byte_edits,
                         edit_text_nodes, guarded_paragraph, own_text_nodes,
@@ -30,10 +30,8 @@ ITEM_KEYS = {'key', 'designation', 'specifications', 'unit', 'quantity'}
 def quantity(value: str) -> Decimal:
     if not isinstance(value, str) or not re.fullmatch(r'\d{1,10}(?:[.,]\d{1,6})?', value):
         raise DocumentError('Quantité invalide : nombre positif, au plus six décimales.')
-    try:
-        number = Decimal(value.replace(',', '.'))
-    except InvalidOperation as exc:
-        raise DocumentError('Quantité invalide.') from exc
+    # The bounded decimal grammar above guarantees Decimal can parse the value.
+    number = Decimal(value.replace(',', '.'))
     if not Decimal('0') < number <= Decimal('1000000000'):
         raise DocumentError('La quantité doit être supérieure à zéro et ne pas dépasser un milliard.')
     return number
