@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase
 
-from erp.cdc import institutional, procurement, source_noise
+from erp.cdc import institutional, lot_catalog, procurement, source_noise
 from erp.cdc.docengine import DocumentError, NS
 
 
@@ -154,3 +154,90 @@ class SourceNoiseEdgeCoverageTests(SimpleTestCase):
         spans,report=source_noise.apply_noise_spans("works",{},doc)
         self.assertEqual(report["removed"],[pid])
         self.assertEqual(spans[pid][0]["after"],"")
+
+
+class LotCatalogValidationCoverageTests(SimpleTestCase):
+    def lot(self, number=1, name="Lot A", items=None, source_slot=0, identity=None):
+        return {
+            "id": identity or str(uuid.uuid4()), "number": number, "name": name,
+            "name_ar": "", "source_slot": source_slot, "items": items or [],
+        }
+
+    def item(self, key=None, position=1):
+        return {
+            "key": key or "new-" + str(uuid.uuid4()), "position": position,
+            "designation": "Article", "specifications": "", "unit": "u",
+            "packaging": "", "quantity": "1", "details": "",
+        }
+
+    def test_text_uuid_and_catalog_shape_validation(self):
+        for value in (None, 1):
+            with self.subTest(value=value), self.assertRaises(DocumentError):
+                lot_catalog.text(value, "X", 10)
+        for value in ("", "x" * 11):
+            with self.subTest(value=value), self.assertRaises(DocumentError):
+                lot_catalog.text(value, "X", 10, required=True)
+        with self.assertRaises(DocumentError):
+            lot_catalog.text("a\tb", "X", 10)
+        with self.assertRaises(DocumentError):
+            lot_catalog.text("{{ x }}", "X", 20)
+        self.assertFalse(lot_catalog.valid_uuid("bad"))
+        self.assertFalse(lot_catalog.valid_uuid(None))
+
+        invalids = [
+            {},
+            {"schema":1,"lots":[]},
+            {"schema":1,"lots":[{"bad":"shape"}]},
+        ]
+        for value in invalids:
+            with self.subTest(value=value), self.assertRaises(DocumentError):
+                lot_catalog.validate_catalog(value)
+
+    def test_lot_identity_number_name_slot_and_item_validation(self):
+        base=self.lot()
+        duplicate_id=base["id"]
+        cases=[
+            {"schema":1,"lots":[base,self.lot(2,"Lot B",identity=duplicate_id)]},
+            {"schema":1,"lots":[self.lot(number=2)]},
+            {"schema":1,"lots":[self.lot(),self.lot(2," lot   a ")]},
+            {"schema":1,"lots":[self.lot(source_slot=51)]},
+            {"schema":1,"lots":[self.lot(items="bad")]},
+        ]
+        for value in cases:
+            with self.subTest(value=value), self.assertRaises(DocumentError):
+                lot_catalog.validate_catalog(value)
+
+        bad_columns=self.item(); bad_columns["price"]="10"
+        bad_key=self.item(key="bad")
+        malformed_new=self.item(key="new-00000000-0000-0000-0000-00000000000x")
+        wrong_position=self.item(position=2)
+        for item in (bad_columns,bad_key,malformed_new,wrong_position):
+            with self.subTest(item=item), self.assertRaises(DocumentError):
+                lot_catalog.validate_catalog({"schema":1,"lots":[self.lot(items=[item])]})
+
+    def test_global_item_limit_and_procurement_catalog_derivation(self):
+        def fresh(pos):
+            return self.item(position=pos)
+        lots=[
+            self.lot(1,"A",[fresh(i) for i in range(1,502)]),
+            self.lot(2,"B",[fresh(i) for i in range(1,501)]),
+        ]
+        with patch.object(lot_catalog,"text"), patch.object(lot_catalog,"quantity"):
+            with self.assertRaises(DocumentError):
+                lot_catalog.validate_catalog({"schema":1,"lots":lots})
+
+        data={
+            "family":"equipment","source_sha256":"sha",
+            "procurement":{"lots":[
+                {"number":1,"items":[{"key":"source-1-1","designation":"D","specifications":"S","unit":"u","quantity":"1"}]},
+                {"number":2,"items":[{"key":"source-2-1","designation":"D2","specifications":"S2","unit":"u","quantity":"2"}]},
+            ]},
+        }
+        mapping=[
+            {"items":[{"data":{"key":"source-1-1"}}]},
+            {"items":[{"data":{"key":"source-2-1"}}]},
+        ]
+        with patch("erp.cdc.schedule_adapter.source_mapping",return_value=mapping):
+            value=lot_catalog.get_catalog(data)
+        self.assertEqual(value["lots"][0]["items"][0]["position"],1)
+        self.assertEqual(value["lots"][1]["items"][0]["quantity"],"2")
