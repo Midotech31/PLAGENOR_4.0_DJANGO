@@ -265,7 +265,7 @@ class CatalogCoverageTests(SimpleTestCase):
         with patch.object(catalog, "validate_data", return_value=data), \
              patch.object(catalog, "profile", return_value={"issues":[{"id":"I1","summary":"warn"}],"reference":original}), \
              patch.object(catalog, "resolved_issue", return_value=False), \
-             patch.object(catalog, "binding_findings", create=True, return_value=[]), \
+             patch("erp.cdc.schedule_adapter.binding_findings", return_value=[]), \
              patch.object(catalog, "consultation_findings", return_value=[]), \
              patch("erp.cdc.common_data.manual_conflicts", return_value=[]), \
              patch.object(catalog, "effective_edits", return_value={"p":"{{ unresolved }}"}):
