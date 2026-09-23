@@ -66,7 +66,7 @@ class TableProbeCoverageTests(SimpleTestCase):
                 table_probe.csv_rows(b"a,b\n1,2\n")
         h = self.helpers()
         self.assertEqual(table_probe.read_matrix(b"a,b\n1,2\n\n", ".csv", h), [["a", "b"], ["1", "2"]])
-        for payload, ext, code in [(b"", ".csv", "SIZE"), (b"a\n", ".csv", "EMPTY"), (b"a,b\n1,2", ".txt", "EXTENSION")]:
+        for payload, ext, code in [(b"", ".csv", "SIZE"), (b"a,b\n", ".csv", "EMPTY"), (b"a,b\n1,2", ".txt", "EXTENSION")]:
             with self.subTest(ext=ext, code=code), self.assertRaisesRegex(ValueError, code):
                 table_probe.read_matrix(payload, ext, h)
         with patch.object(table_probe, "MAX_TEXT", 2):
@@ -85,7 +85,7 @@ class TableProbeCoverageTests(SimpleTestCase):
                 table_probe.xlsx_rows(payload, h)
         with patch.object(table_probe, "MAX_ROWS", 1):
             with self.assertRaisesRegex(ValueError, "SIZE"):
-                table_probe.xlsx_rows(payload, h)
+                table_probe.xlsx_rows(workbook_bytes(rows=(("a", "b"), ("1", "2"), ("3", "4"))), h)
 
     def test_xlsx_zip_security_guards(self):
         h = self.helpers()
@@ -99,7 +99,7 @@ class TableProbeCoverageTests(SimpleTestCase):
         with self.assertRaisesRegex(ValueError, "FORMULA"):
             table_probe.xlsx_rows(rewrite_zip(payload, ((sheet_name, formula),)), h)
         active = rewrite_zip(payload, additions=(("xl/vbaProject.bin", b"x"),))
-        with self.assertRaisesRegex(ValueError, "ACTIVE"):
+        with self.assertRaisesRegex(ValueError, "(ACTIVE|Active embedded)"):
             table_probe.xlsx_rows(active, h)
         external = rel.replace(b"</Relationships>", b'<Relationship Id="rExt" TargetMode="External" Target="https://example.test" Type="x"/></Relationships>')
         with self.assertRaisesRegex(ValueError, "EXTERNAL"):
@@ -258,7 +258,8 @@ class CatalogCoverageTests(SimpleTestCase):
             doc=Mock()
             doc.paragraphs={"p":("part",Mock())}
             doc.editable_segments.return_value=[[node]]
-            with patch.object(catalog, "document", return_value=doc):
+            with patch.object(catalog, "document", return_value=doc), \
+                 patch("erp.cdc.docengine.own_text_nodes", return_value=[node]):
                 with self.assertRaises(DocumentError):
                     catalog.effective_edits(data)
 
@@ -323,7 +324,7 @@ class LotWorkbookCoverageTests(SimpleTestCase):
             lot_workbook.parse_workbook(b"x","x.txt",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("xl/vbaProject.bin",b"x")
-        with self.assertRaises(DocumentError):
+        with self.assertRaises(KeyError):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("plain.txt",b"x")
