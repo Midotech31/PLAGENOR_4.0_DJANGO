@@ -74,7 +74,7 @@ test('announcements create toggle and delete persist', async ({ page }, testInfo
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=system');
   row = page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
-  await expect(row.locator('.badge-status')).toContainText(/^(Non|No|لا)$/);
+  await expect(row.locator('td').nth(2)).toContainText(/^(Non|No|لا)$/);
   await submitFormAndSettle(row.locator('form[action$="/delete/"]'), page);
   await page.goto('/dashboard/home/?tab=system');
   await expect(page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' })).toHaveCount(0);
