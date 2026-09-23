@@ -57,9 +57,9 @@ class OperationalFormCoverageTests(OperationFixtures, TestCase):
         cdc = create_work(self.ops, kind="CDC", title="CDC coverage", assignee=self.operator)
         cdc_form = work_forms.DelegationForm(instance=cdc, user=self.ops)
         self.assertFalse(cdc_form.fields["allow_costs"].disabled)
-        op = work_forms.OperationForm()
-        op.fields["text"] = forms.CharField(widget=forms.Textarea())
-        op.__init__()
+        class DemoOperationForm(work_forms.OperationForm):
+            text = forms.CharField(widget=forms.Textarea())
+        op = DemoOperationForm()
         self.assertEqual(op.fields["text"].widget.attrs.get("rows"), 3)
 
     def test_alert_forms_parse_thresholds_and_limit_assignment(self):
