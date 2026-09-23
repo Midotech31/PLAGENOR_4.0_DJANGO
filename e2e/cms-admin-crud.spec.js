@@ -73,7 +73,7 @@ test('announcements create toggle and delete persist', async ({ page }, testInfo
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=system');
   row = page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' });
-  await expect(row).toContainText('Non');
+  await expect(row.locator('.badge-status')).toContainText(/^(Non|No|لا)$/);
   await submitFormAndSettle(row.locator('form[action$="/delete/"]'), page);
   await page.goto('/dashboard/home/?tab=system');
   await expect(page.locator('tr:visible').filter({ hasText: 'Annonce CMS navigateur ' + suffix + '' })).toHaveCount(0);
@@ -106,9 +106,13 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await asAdmin(page);
   page.on('dialog', dialog => dialog.accept());
   await page.goto('/dashboard/home/?tab=users');
-  const card = page.locator('.card').filter({ has: page.getByRole('heading', { name: 'Créer un utilisateur' }) });
-  await card.getByRole('button', { name: 'Afficher' }).click();
-  const create = card.locator('form[action="/dashboard/home/user/create/"]');
+  const create = page.locator('form[action="/dashboard/home/user/create/"]');
+  await create.evaluate(form => {
+    const card = form.closest('.card');
+    const toggle = card && card.querySelector('.card-header button');
+    if (toggle) toggle.click();
+  });
+  await expect(create).toBeVisible();
   await create.locator('[name="username"]').fill(username);
   await create.locator('[name="first_name"]').fill('CMS');
   await create.locator('[name="last_name"]').fill('Browser');
@@ -134,10 +138,10 @@ test('admin-created user survives edit and activation toggle', async ({ page }, 
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
   row = page.locator('tr:visible').filter({ hasText: email });
-  await expect(row).toContainText('Inactif');
+  await expect(row.locator('.badge-status')).toContainText(/^(Inactif|Inactive|غير نشط)$/);
   await clickAndSettle(row.locator('form[action$="/toggle/"] button'), page);
   await page.goto('/dashboard/home/?tab=users&user_q=' + encodeURIComponent(username));
-  await expect(page.locator('tr:visible').filter({ hasText: email })).toContainText('Actif');
+  await expect(page.locator('tr:visible').filter({ hasText: email }).locator('.badge-status')).toContainText(/^(Actif|Active|نشط)$/);
 });
 
 test('document block CRUD persists relation and text', async ({ page }, testInfo) => {
@@ -196,15 +200,15 @@ test('service soft-delete and reactivation persist without losing values', async
   await clickAndSettle(form.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=services');
   let row = page.locator('tr:visible').filter({ hasText: code });
-  await expect(row).toContainText('1111,25');
+  await expect(row).toContainText(/1111[,.]25/);
   await clickAndSettle(row.locator('form[action$="/delete/"] button'), page);
   await page.goto('/dashboard/home/?tab=services');
   row = page.locator('tr:visible').filter({ hasText: code });
-  await expect(row).toContainText('Non');
+  await expect(row.locator('.badge-status')).toContainText(/^(Non|No|لا)$/);
   await clickAndSettle(row.locator('form[action$="/reactivate/"] button'), page);
   await page.goto('/dashboard/home/?tab=services');
   row = page.locator('tr:visible').filter({ hasText: code });
-  await expect(row).toContainText('Oui');
+  await expect(row.locator('.badge-status')).toContainText(/^(Oui|Yes|نعم)$/);
   const href = await row.locator('a[href$="/edit/"]').getAttribute('href');
   await page.goto(href);
   await expect(page.locator('[name="ibtikar_price"]')).toHaveValue('1111.25');
