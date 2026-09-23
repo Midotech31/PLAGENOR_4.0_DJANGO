@@ -132,6 +132,9 @@ class ConsumptionIntegrationTests(OperationFixtures, TestCase):
         self.assertEqual((self.container.quantity, self.container.reserved), (Decimal('18.5'), 0))
         consumed = RunConsumption.objects.get(run=run)
         self.assertEqual(consumed.movement.request_id, self.req.pk)
+        from erp.services.consumption import lot_trace
+        self.assertEqual(list(lot_trace(self.ops, self.container.lot)), [consumed])
+        self.assertFalse(lot_trace(self.outsider, self.container.lot).exists())
         self.assertEqual(run.inputs.get().source_key, source_samples(self.admin, self.req)[0]['key'])
         self.assertEqual(reconcile_stock(self.admin), [])
 
@@ -352,3 +355,37 @@ class ConsumptionIntegrationTests(OperationFixtures, TestCase):
                       reverse('erp:work-list'), reverse('erp:preparation-create')]:
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(route).status_code, 403)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_unnamed_source_rows_have_stable_distinct_keys_and_unknown_source_is_404(self):
+        from django.urls import reverse
+        self.req.sample_table = [{'sample_type': 'ADN'}, {'sample_type': 'ARN'}]
+        self.req.save(update_fields=['sample_table'])
+        rows = source_samples(self.ops, self.req)
+        self.assertEqual([row['key'] for row in rows], ['row:0', 'row:1'])
+        self.assertEqual([row['code'] for row in rows], ['1', '2'])
+        self.assertNotEqual(rows[0]['fingerprint'], rows[1]['fingerprint'])
+        self.client.force_login(self.ops)
+        self.assertEqual(self.client.get(reverse('erp:sample-source-receive', args=[self.req.pk, 'row:99'])).status_code, 404)
+
+    def test_inconsistent_restored_closure_cannot_release_reservation_twice(self):
+        from erp.services.consumption import close_request_resources
+        from erp.services.stock import _movement
+        from erp.services.common import Conflict
+        run = self.make_run()
+        reserve_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(),
+            allocations=reservation_proposal(self.ops, run)['allocations'], reason='Analyse prévue')
+        reservation = RunAllocation.objects.get(requirement__run=run).reservation
+        reason = 'Clôture restaurée'
+        _movement(self.ops, uuid.uuid5(self.req.pk, 'close-reservation:' + str(reservation.pk)), 'RELEASE',
+            {'reservation': str(reservation.pk), 'closed_request': str(self.req.pk)}, request=self.req, reason=reason)
+        Request.objects.filter(pk=self.req.pk).update(status='REJECTED')
+        self.req.refresh_from_db()
+        with self.assertRaisesRegex(Conflict, 'déjà été enregistrée'):
+            close_request_resources(self.ops, self.req, reason)
+        reservation.refresh_from_db()
+        self.container.refresh_from_db()
+        run.refresh_from_db()
+        self.assertEqual((reservation.remaining, self.container.reserved), (2, 2))
+        self.assertEqual(run.status, 'RESERVED')
+        self.assertEqual(reconcile_stock(self.ops), [])

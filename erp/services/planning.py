@@ -105,8 +105,8 @@ def save_schedule(user, work_id, *, expected, starts_at, ends_at, resources=(), 
         request = Request.objects.get(pk=request.pk)
         if request.archived or request.status in ('REJECTED', 'ARCHIVED'):
             raise ValidationError(_('La demande liée est rejetée ou archivée.'))
-        if not request_scope(user, write=True).filter(pk=request.pk).exists():
-            raise PermissionDenied
+        # require_manager above grants the caller access to every request;
+        # the assignee still needs their own explicit processing permission.
         if work.assignee_id and not request_scope(work.assignee, write=True).filter(pk=request.pk).exists():
             raise ValidationError(_('Le membre doit déjà être autorisé à traiter cette demande.'))
     ids = [resource.pk for resource in resources]

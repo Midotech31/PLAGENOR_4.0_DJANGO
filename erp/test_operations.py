@@ -469,3 +469,12 @@ class WorkAndStockTests(OperationFixtures, TestCase):
         lot.refresh_from_db()
         self.assertEqual(lot.status, before_status)
         self.assertEqual(reconcile_stock(self.ops), [])
+
+    def test_manager_cannot_approve_or_request_changes_before_submission(self):
+        work = create_work(self.ops, kind='CONTROL', title='Contrôle à réaliser', assignee=self.operator)
+        for state in ['APPROVED', 'CHANGES_REQUESTED']:
+            with self.subTest(state=state), self.assertRaisesRegex(ValidationError, 'doit d’abord être soumise'):
+                transition_work(self.ops, work.pk, expected=work.version, state=state, reason='Revue prématurée')
+        work.refresh_from_db()
+        self.assertEqual(work.status, 'ASSIGNED')
+        self.assertIsNone(work.approved_at)

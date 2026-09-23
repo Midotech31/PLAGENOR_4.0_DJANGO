@@ -523,3 +523,74 @@ class ProcurementChainTests(OperationFixtures,TestCase):
             receive_order_line(self.ops, line.pk, **{**data, 'variance_reason': 'Modification après réception'})
         self.assertEqual(received_quantity(line), 4)
         self.assertEqual(reconcile_stock(self.ops), [])
+
+    def test_estimate_uses_documented_purchase_price_when_receiving_without_cost_rights(self):
+        from erp.services.reports import stock_value_estimate
+        order, line = self.order()
+        from erp.models import Capability
+        self.grant(Capability.RECEIVE_STOCK, category=self.category, location=self.freezer)
+        link = receive_order_line(self.operator, line.pk, expected=order.version, key=uuid.uuid4(), amount=4,
+            location=self.freezer, lot_code='NO-PRICE-LOT', manufacturer_lot='M-LOT', container_code='NO-PRICE-CONT',
+            received_on=timezone.localdate(), condition='Intact')
+        self.assertIsNone(link.receipt.unit_price)
+        value = stock_value_estimate(self.ops, {})
+        self.assertEqual(value['currencies'], {'DZD': Decimal('400')})
+        self.assertEqual(value['unpriced_containers'], 0)
+
+    def test_approved_snapshot_remains_frozen_if_work_status_is_inconsistent(self):
+        from erp.models import WorkItem
+        self.approve()
+        # Legacy/restored data can have a stale task state; the approved
+        # procurement snapshot must still prohibit changes.
+        WorkItem.objects.filter(pk=self.plan.work_id).update(status='ASSIGNED')
+        with self.assertRaisesRegex(ValidationError, 'plan approuvé est figé'):
+            add_plan_article(self.operator, self.plan.pk, expected=self.plan.version, article=self.liquid, lot_name='Ajout')
+        self.assertFalse(self.plan.lines.filter(article=self.liquid).exists())
+
+    def test_committed_demand_before_supplier_lead_time_requires_attention(self):
+        from accounts.models import MemberProfile
+        from core.models import Request, Service
+        from erp.services.biobank import source_samples
+        from erp.services.consumption import create_run, save_profile, save_rule
+        self.article.lead_time_days = 730
+        self.article.save(update_fields=['lead_time_days'])
+        service = Service.objects.create(code='EARLY-DEMAND', name='Activité confirmée')
+        member, _ = MemberProfile.objects.get_or_create(user=self.operator)
+        request = Request.objects.create(service=service, requester=self.outsider, assigned_to=member,
+            title='Besoin confirmé', status='IN_PROGRESS', sample_table=[{'sample_code': 'EARLY-1'}])
+        profile = save_profile(self.ops, {'code': 'EARLY-PROFILE', 'name': 'Protocole', 'service': service,
+            'reference_samples': 1, 'protocol_reference': 'SOP-EARLY'})
+        save_rule(self.ops, profile.pk, {'article': self.article, 'quantity': Decimal(2), 'unit': self.unit,
+            'basis': 'BATCH'}, expected=profile.version)
+        create_run(self.ops, request=request, profile=profile, code='EARLY-RUN', name='Analyse confirmée',
+            sample_count=1, planned_on=self.plan.starts_on, source_keys=[source_samples(self.ops, request)[0]['key']],
+            committed=True, incremental_demand=True)
+        forecast = refresh_forecast(self.operator, self.line.pk, expected=self.plan.version)
+        self.assertIn('SHORTAGE_BEFORE_NORMAL_DELIVERY', forecast.result['warnings'])
+        self.assertEqual(forecast.result['projection']['first_shortage'], self.plan.starts_on.isoformat())
+        self.line.refresh_from_db()
+        self.assertIsNone(self.line.retained_quantity)
+        self.assertFalse(PurchaseOrder.objects.exists())
+
+    def test_receipt_idempotency_key_cannot_cross_order_lines(self):
+        first_order, first_line = self.order()
+        first_link, data = self.receive_order(first_order, first_line)
+        self.plan = create_plan(self.ops, reference='PLAN-OTHER-ORDER', year=timezone.localdate().year+1,
+            title='Autre commande', assignee=self.operator, allow_costs=True)
+        self.line = add_plan_article(self.operator, self.plan.pk, expected=self.plan.version,
+            article=self.article, lot_name='Consommables')
+        self.plan.refresh_from_db()
+        self.approve()
+        order = create_order(self.ops, self.plan.pk, expected=self.plan.version, reference='PO-OTHER', supplier=self.party,
+            ordered_on=timezone.localdate(), expected_on=timezone.localdate()+timedelta(days=30))
+        line = save_order_line(self.ops, order.pk, expected=order.version, plan_line=self.line,
+            quantity=10, unit_price=100, tax_rate=19, currency='DZD')
+        order.refresh_from_db()
+        confirm_order(self.ops, order.pk, expected=order.version, reason='Commande confirmée')
+        order.refresh_from_db()
+        with self.assertRaisesRegex(Conflict, 'autre ligne de commande'):
+            receive_order_line(self.ops, line.pk, **{**data, 'expected': order.version})
+        self.assertEqual(received_quantity(line), 0)
+        self.assertEqual(received_quantity(first_line), 4)
+        self.assertEqual(StockMovement.objects.filter(kind='RECEIPT').count(), 1)
+        self.assertEqual(reconcile_stock(self.ops), [])

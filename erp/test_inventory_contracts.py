@@ -1,7 +1,7 @@
 """Inventory authorization and snapshot boundaries preserve stock ledger integrity."""
 import uuid
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from erp.models import InventoryCampaign, StockMovement, WorkItem
 from erp.services.common import Conflict
@@ -64,3 +64,39 @@ class InventoryContracts(OperationFixtures, TestCase):
         container.refresh_from_db()
         self.assertEqual(container.quantity, 9)
         self.assertEqual(reconcile_stock(self.ops), [])
+
+    def test_restored_adjustment_key_cannot_be_posted_twice(self):
+        from erp.services.stock import _movement
+        container, _, _ = self.receive()
+        campaign = create_inventory(self.ops, title='Comptage restauré', assignee=self.operator)
+        line = campaign.lines.get()
+        count_inventory(self.operator, line.pk, expected=line.version, container_version=container.version, amount=9)
+        campaign.work.refresh_from_db()
+        submit_inventory(self.operator, campaign.pk, expected=campaign.work.version, reason='Comptage terminé')
+        campaign.work.refresh_from_db()
+        key, reason = uuid.uuid4(), 'Validation restaurée'
+        # Simulate a restored ledger header whose campaign link is absent.
+        _movement(self.ops, key, 'INVENTORY', {'campaign': campaign.pk, 'reason': reason}, reason=reason)
+        with self.assertRaisesRegex(Conflict, 'Identifiant d’ajustement déjà utilisé'):
+            approve_inventory(self.ops, campaign.pk, expected=campaign.work.version, key=key, reason=reason)
+        campaign.refresh_from_db()
+        container.refresh_from_db()
+        self.assertIsNone(campaign.adjustment_id)
+        self.assertEqual(container.quantity, 10)
+        self.assertEqual(reconcile_stock(self.ops), [])
+
+
+    @override_settings(SECURE_SSL_REDIRECT=False, DATA_UPLOAD_MAX_NUMBER_FIELDS=11000,
+        STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+                  'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+    def test_http_recount_enforces_own_selection_limit(self):
+        from django.urls import reverse
+        self.receive()
+        campaign = create_inventory(self.ops, title='Sélection bornée', assignee=self.operator)
+        self.client.force_login(self.ops)
+        response = self.client.post(reverse('erp:inventory-detail', args=[campaign.pk]), {
+            'expected_version': campaign.work.version, 'key': uuid.uuid4(), 'reason': 'Recomptage',
+            'action': 'recount', 'lines': [str(campaign.lines.get().pk)] * 10001})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Sélection trop volumineuse', str(response.context['form'].non_field_errors()))
+        self.assertFalse(campaign.lines.filter(needs_recount=True).exists())

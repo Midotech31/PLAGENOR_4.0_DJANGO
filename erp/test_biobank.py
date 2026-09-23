@@ -504,3 +504,26 @@ class BiobankTests(OperationFixtures, TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertTrue(response.context['form'].non_field_errors())
         self.assertFalse(StorageIncident.objects.exists())
+
+    def test_temperature_delegation_cannot_be_reused_for_another_task_kind(self):
+        task = create_work(self.ops, kind='CONTROL', title='Contrôle sans relevé', assignee=self.operator,
+            location=self.freezer)
+        with self.assertRaises(PermissionDenied):
+            record_temperature(self.operator, location=self.freezer, measured_at=timezone.now(), value=-80, work=task)
+        self.assertFalse(TemperatureReading.objects.exists())
+
+    def test_transfer_preview_cannot_be_applied_by_another_manager(self):
+        self.sample()
+        self.client.force_login(self.ops)
+        route = reverse('erp:mass-transfer')
+        data = {'key': uuid.uuid4(), 'source': self.box_location.pk, 'destination': self.target.pk,
+            'reason': 'Transfert vérifié', 'action': 'preview'}
+        response = self.client.post(route, data)
+        self.assertEqual(response.status_code, 200)
+        token = response.context['form'].data['preview_token']
+        self.client.force_login(self.admin)
+        response = self.client.post(route, {**data, 'action': 'apply', 'preview_token': token})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('ne correspond pas', str(response.context['form'].non_field_errors()))
+        self.assertFalse(StorageTransfer.objects.exists())
+        self.assertEqual(BiologicalSample.objects.get().location_id, self.box_location.pk)

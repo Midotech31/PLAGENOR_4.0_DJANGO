@@ -241,9 +241,9 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
     def test_plan_import_has_one_combined_revision_and_does_not_auto_approve(self):
         plan=create_plan(self.ops,reference='IMPORT-PLAN',year=timezone.localdate().year+1,title='Plan importé',assignee=self.operator,allow_costs=True)
         rows=[{'article_code':self.article.code,'lot_name':'Réactifs','retained_quantity':'5','decision_reason':'Besoin vérifié',
-            'estimated_price':'20','tax_rate':'19','currency':'DZD','source':'Devis fournisseur'},
+            'estimated_price':'20','tax_rate':'19','currency':'DZD','source':'Devis fournisseur','supplier_code':self.party.code},
             {'article_code':self.liquid.code,'lot_name':'Produits','retained_quantity':'10','decision_reason':'Consommation prévue',
-            'estimated_price':'10','tax_rate':'0','currency':'DZD','source':'Document de prix'}]
+            'estimated_price':'10','tax_rate':'0','currency':'DZD','source':'Document de prix','supplier_code':self.party.code}]
         baseline=plan.revision_number
         batch=self.preview('PLAN',rows,user=self.operator,plan=plan)
         self.assertTrue(batch.report['valid'],batch.report)
@@ -251,6 +251,7 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
         apply_import(self.operator,batch.pk,expected=batch.version,confirmed=True)
         plan.refresh_from_db()
         self.assertEqual(plan.lines.count(),2)
+        self.assertTrue(all(line.supplier_id == self.party.pk for line in plan.lines.all()))
         self.assertEqual(plan.revision_number,baseline+1)
         self.assertIsNone(plan.approved_revision_id)
         self.assertEqual(plan.work.status,'ASSIGNED')
@@ -264,9 +265,11 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
             title='Demande importée',display_id='PLAGENOR-IMPORT-1',status='IN_PROGRESS',sample_table=[{'sample_code':'DECLARED-1','sample_type':'ADN'}])
         row={'code':'IMPORTED-SAMPLE','location_code':self.freezer.code,'amount':'25','unit_code':self.ul.code,
             'received_on':timezone.localdate().isoformat(),'request_reference':req.display_id,'source_code':'DECLARED-1'}
-        batch=self.preview('SAMPLES',[row])
+        self.grant(Capability.MANAGE_BIOBANK, location=self.freezer)
+        batch=self.preview('SAMPLES',[row],user=self.operator)
         self.assertTrue(batch.report['valid'],batch.report)
-        apply_import(self.ops,batch.pk,expected=batch.version,confirmed=True)
+        require_batch(self.operator,batch)
+        apply_import(self.operator,batch.pk,expected=batch.version,confirmed=True)
         sample=BiologicalSample.objects.get(code='IMPORTED-SAMPLE')
         self.assertEqual(sample.origin_request_id,req.pk)
         self.assertEqual(sample.source_snapshot['row']['sample_code'],'DECLARED-1')
@@ -425,6 +428,39 @@ class ImportIntegrationTests(OperationFixtures,TestCase):
         apply_import(self.operator, batch.pk, expected=batch.version, confirmed=True)
         self.assertEqual(StockContainer.objects.get().quantity, 10)
         self.assertEqual(reconcile_stock(self.admin), [])
+
+
+    def test_location_import_race_keeps_existing_location_and_translations(self):
+        from erp.services.storage import save_location
+        row = {'code': 'LOCATION-RACE', 'name': 'Emplacement prévu', 'kind_code': self.storage_kind.code,
+            'parent_code': self.freezer.code, 'name_en': 'Planned location', 'name_ar': 'موقع التخزين'}
+        batch = self.preview('LOCATIONS', [row])
+        self.assertTrue(batch.report['valid'], batch.report)
+        winner = save_location(self.ops, {'code': row['code'], 'name': 'Créé entre-temps',
+            'kind': self.storage_kind, 'parent': self.freezer})
+        with self.assertRaises(Conflict):
+            apply_import(self.ops, batch.pk, expected=batch.version, confirmed=True)
+        winner.refresh_from_db()
+        self.assertEqual(winner.name, 'Créé entre-temps')
+        fresh = self.preview('LOCATIONS', [row])
+        apply_import(self.ops, fresh.pk, expected=fresh.version, confirmed=True)
+        winner.refresh_from_db()
+        self.assertEqual((winner.name_en, winner.name_ar), (row['name_en'], row['name_ar']))
+
+    def test_unrelated_plan_and_invalid_preview_cannot_be_applied(self):
+        self.grant(Capability.EDIT_CATALOG, category=self.category)
+        row = {'code': 'INVALID-PREVIEW', 'name': '', 'category_code': self.category.code,
+            'base_unit_code': self.unit.code}
+        batch = self.preview('CATALOG', [row], user=self.operator)
+        self.assertFalse(batch.report['valid'])
+        require_batch(self.operator, batch)
+        with self.assertRaises(ValidationError):
+            apply_import(self.operator, batch.pk, expected=batch.version, confirmed=True)
+        plan = create_plan(self.ops, reference='WRONG-IMPORT-PLAN', year=timezone.localdate().year+1,
+            title='Plan de contrôle', assignee=self.operator)
+        with self.assertRaisesRegex(ValidationError, 'associé'):
+            self.preview('CATALOG', [row], plan=plan)
+        self.assertFalse(Article.objects.filter(code=row['code']).exists())
 
 
 class TableIntakeTests(SimpleTestCase):

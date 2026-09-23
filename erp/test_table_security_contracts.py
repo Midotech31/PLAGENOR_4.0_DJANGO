@@ -55,3 +55,10 @@ class TableSecurityContracts(SimpleTestCase):
         with patch('erp.services.table_intake.read_matrix', return_value=matrix):
             rows = parse_table('CATALOG', 'input.csv', b'input')
         self.assertEqual(rows, [{'row': 3, 'data': dict(zip(matrix[0], matrix[2]))}])
+
+    def test_extra_data_columns_are_reported_with_original_row_number(self):
+        from django.core.exceptions import ValidationError
+        matrix = [['code', 'name', 'category_code', 'base_unit_code'], ['A', 'Article', 'REAGENTS', 'PIECE', 'Unmapped value']]
+        with patch('erp.services.table_intake.read_matrix', return_value=matrix):
+            with self.assertRaisesRegex(ValidationError, 'ligne 2.*sans en-tête'):
+                parse_table('CATALOG', 'input.csv', b'input')

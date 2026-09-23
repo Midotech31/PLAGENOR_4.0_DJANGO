@@ -474,3 +474,53 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
         self.assertEqual(approval.reviewed_pages, 1)
         self.dossier.work.refresh_from_db()
         self.assertEqual(self.dossier.work.status, 'APPROVED')
+
+    def test_encrypted_pdf_and_competing_generation(self):
+        revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        def encrypted(source):
+            return _pdf(source.with_suffix('.pdf'), encrypted=True)
+        with patch('erp.services.cdc.controls', return_value=[]), \
+             patch('erp.services.cdc.generate_document', return_value=(b'DOCX', {})), \
+             patch('erp.services.cdc.normalize_word_layout', return_value=(b'DOCX', {})), \
+             patch('erp.services.cdc.convert_docx_to_pdf', side_effect=encrypted):
+            with self.assertRaisesRegex(ValidationError, 'PDF généré est invalide'):
+                generate_cdc(self.operator, revision.pk)
+        self.assertFalse(revision.generations.exists())
+        winner = []
+        def competing_conversion(source):
+            result = _pdf(source.with_suffix('.pdf'))
+            winner.append(CdcGeneration.objects.create(revision=revision, actor=self.ops,
+                docx=b'DOCX', pdf=result.read_bytes(), docx_sha256='a'*64, pdf_sha256='b'*64, pages=1, checks={}))
+            return result
+        with patch('erp.services.cdc.controls', return_value=[]), \
+             patch('erp.services.cdc.generate_document', return_value=(b'DOCX', {})), \
+             patch('erp.services.cdc.normalize_word_layout', return_value=(b'DOCX', {})), \
+             patch('erp.services.cdc.convert_docx_to_pdf', side_effect=competing_conversion):
+            generated = generate_cdc(self.operator, revision.pk)
+        self.assertEqual(generated.pk, winner[0].pk)
+        self.assertEqual(revision.generations.count(), 1)
+
+    def test_approval_refuses_pdf_from_previous_revision(self):
+        from erp.services.common import Conflict
+        from erp.models import WorkItem
+        from erp.services.work import transition_work
+        self._confirm_consultation()
+        old_revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        old_pdf = CdcGeneration.objects.create(revision=old_revision, actor=self.ops, docx=b'old', pdf=b'old',
+            docx_sha256='a'*64, pdf_sha256='b'*64, pages=1, checks={})
+        latest = save_cdc_lot(self.operator, self.lot.pk, expected=self.dossier.version,
+            name='Lot révisé', name_ar='حصة', reason='Actualisation')
+        self.dossier.refresh_from_db()
+        CdcGeneration.objects.create(revision=latest, actor=self.ops, docx=b'new', pdf=b'new',
+            docx_sha256='c'*64, pdf_sha256='d'*64, pages=1, checks={})
+        submit_dossier(self.operator, self.dossier.pk, expected=self.dossier.version, reason='Version actuelle')
+        self.dossier.refresh_from_db()
+        self.dossier.work.refresh_from_db()
+        with self.assertRaisesRegex(ValidationError, 'depuis son dossier métier'):
+            transition_work(self.ops, self.dossier.work_id, expected=self.dossier.work.version,
+                state=WorkItem.Status.APPROVED, reason='Validation hors dossier')
+        with self.assertRaises(Conflict):
+            approve_dossier(self.ops, self.dossier.pk, expected=self.dossier.version, generation_id=old_pdf.pk,
+                reviewed_pages=1, statement='Ancien PDF', visual_review=True, content_review=True)
+        self.dossier.work.refresh_from_db()
+        self.assertEqual(self.dossier.work.status, 'SUBMITTED')

@@ -204,3 +204,23 @@ class ReportTests(OperationFixtures,TestCase):
             response = self.client.get(reverse('erp:reports'), {'kind': 'STOCK'})
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, 'Rapport indisponible', status_code=400)
+
+    def test_export_rejects_oversize_before_writing_and_preserves_numbers(self):
+        from unittest.mock import Mock
+        from erp.services.reports import Report
+        queryset = Mock()
+        queryset.count.return_value = 100001
+        dataset = Report('Limite', ['Nombre'], queryset, lambda row: row)
+        output = BytesIO()
+        with self.assertRaisesRegex(ValidationError, '100 000'):
+            export_report(dataset, output)
+        self.assertEqual(output.getvalue(), b'')
+        queryset.iterator.assert_not_called()
+        queryset.count.return_value = 1
+        queryset.iterator.return_value = [[2, 1.25]]
+        dataset.headers = ['Entier', 'Fraction']
+        self.assertEqual(export_report(dataset, output), 1)
+        book = load_workbook(BytesIO(output.getvalue()))
+        self.assertEqual((book['Données']['A5'].value, book['Données']['B5'].value), (2, 1.25))
+        self.assertEqual((book['Données']['A5'].data_type, book['Données']['B5'].data_type), ('n', 'n'))
+        book.close()

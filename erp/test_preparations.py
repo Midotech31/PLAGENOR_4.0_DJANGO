@@ -119,3 +119,14 @@ class PreparationTests(OperationFixtures,TestCase):
         self.source.refresh_from_db()
         self.assertEqual(self.source.quantity, 100)
         self.assertEqual(reconcile_stock(self.ops), [])
+
+    def test_preparation_date_cannot_precede_source_manufacturing(self):
+        values = self.values()
+        self.source.lot.manufactured_on = timezone.localdate()
+        self.source.lot.save(update_fields=['manufactured_on'])
+        values['prepared_on'] = timezone.localdate() - timedelta(days=1)
+        with self.assertRaisesRegex(ValidationError, 'postérieur'):
+            prepare_stock(self.ops, **values)
+        self.assertFalse(InternalPreparation.objects.exists())
+        self.source.refresh_from_db()
+        self.assertEqual(self.source.quantity, 100)

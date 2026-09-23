@@ -414,3 +414,40 @@ class PlanningTests(OperationFixtures, TestCase):
                 assignee=self.second, reason='Membre non autorisé')
         schedule.work.refresh_from_db()
         self.assertEqual(schedule.work.assignee_id, self.operator.pk)
+
+    def test_unavailability_http_rejects_missing_target(self):
+        self.client.force_login(self.ops)
+        response = self.client.post(reverse('erp:unavailability-create'), {
+            'starts_at': self.start.isoformat(), 'ends_at': self.end.isoformat(), 'reason': 'Maintenance sans cible'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(AvailabilityBlock.objects.exists())
+
+    def test_dependency_limit_rejects_large_imported_graph_before_mutation(self):
+        work = create_work(self.ops, kind='CONTROL', title='Activité à protéger', assignee=self.operator)
+        nodes = [WorkItem(kind='CONTROL', title=f'Historique {index}', created_by=self.ops) for index in range(10101)]
+        WorkItem.objects.bulk_create(nodes)
+        # Each imported node has at most 100 direct prerequisites, but the
+        # complete reachable graph exceeds the traversal safety limit.
+        links = [ActivityDependency(work=nodes[0], prerequisite=node) for node in nodes[1:101]]
+        for index, parent in enumerate(nodes[1:101]):
+            links.extend(ActivityDependency(work=parent, prerequisite=node)
+                for node in nodes[101+index*100:201+index*100])
+        ActivityDependency.objects.bulk_create(links)
+        with self.assertRaisesRegex(ValidationError, 'limite de vérification'):
+            set_dependencies(self.ops, work.pk, expected=work.version, prerequisites=[nodes[0]], reason='Graphe importé')
+        work.refresh_from_db()
+        self.assertFalse(work.prerequisites.exists())
+        self.assertEqual(work.version, 1)
+
+    def test_unavailability_database_failure_is_presented_without_partial_save(self):
+        from unittest.mock import patch
+        from django.db import IntegrityError
+        self.client.force_login(self.ops)
+        with patch('erp.models.AvailabilityBlock.save', side_effect=IntegrityError('Concurrent resource change')):
+            response = self.client.post(reverse('erp:unavailability-create'), {
+                'starts_at': self.start.isoformat(), 'ends_at': self.end.isoformat(),
+                'resource': self.resource.pk, 'reason': 'Maintenance documentée'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(AvailabilityBlock.objects.exists())

@@ -185,8 +185,8 @@ class CdcTemplateContracts(SimpleTestCase):
         from erp.cdc import consultation, common_data
         self.assertEqual(consultation._display_time('9:05', arabic=True), '09:05')
         self.assertEqual(consultation._split_ar('المشروع (FABLAB) وصف'), ('المشروع', '(FABLAB) وصف'))
-        original = consultation.AR_OBJECT_MARKERS['reagents'][0] + ' وصف غير مكتمل'
-        self.assertEqual(consultation._replace_ar_object(original, 'reagents', 'الجديد'), original)
+        original = consultation.AR_OBJECT_MARKERS['works'][0] + ' وصف غير مكتمل'
+        self.assertEqual(consultation._replace_ar_object(original, 'works', 'الجديد'), original)
         self.assertEqual(common_data.owner_label({'sources': ['CDC', 'Catalogue']}), 'CDC + Catalogue')
 
     def test_source_test_adapter_rejects_unsupported_marks(self):
@@ -220,3 +220,113 @@ class CdcTemplateContracts(SimpleTestCase):
         corrupted = buffer.getvalue().replace(b'unique_payload', b'broken_payload')
         with self.assertRaisesRegex(DocumentError, 'Archive endommagée'):
             safe_zip(corrupted)
+
+    def test_missing_word_tables_and_lot_label_anchors_fail_closed(self):
+        from erp.test_coverage_completion_cdc import _minimal_docx
+        from erp.cdc.lot_catalog import get_catalog
+        data = catalog.initial_data('equipment')
+        data['procurement'] = procurement.initial_procurement()
+        data['procurement']['lots'][0]['items'][0]['quantity'] = '234'
+        with self.assertRaisesRegex(DocumentError, 'non retrouvé'):
+            procurement.apply_procurement(_minimal_docx(), data)
+        del data['procurement']
+        data['lot_catalog'] = get_catalog(data)
+        data['lot_catalog']['lots'][0]['name'] = 'Nom révisé'
+        with self.assertRaisesRegex(DocumentError, 'aucun ancrage'):
+            schedule_adapter.rename_labels(_minimal_docx(), data)
+        data['lot_catalog']['lots'][0]['name'] = 'Equipements et appareillages scientifiques de laboratoire'
+        with self.assertRaisesRegex(DocumentError, 'Conflit de modification'):
+            schedule_adapter.apply_catalog(_minimal_docx(), data)
+
+    def test_numerically_equal_legacy_quantity_does_not_rewrite_tables(self):
+        data = catalog.initial_data('equipment')
+        data['procurement'] = procurement.initial_procurement()
+        data['procurement']['lots'][0]['items'][0]['quantity'] += '.00'
+        source = catalog.document('equipment').data
+        output, report = procurement.apply_procurement(source, data)
+        self.assertEqual(output, source)
+        self.assertEqual(report, {'status': 'UNCHANGED', 'tables': []})
+
+    def test_bpu_designation_must_have_exactly_one_paragraph_before_price(self):
+        import copy
+        doc = Document(catalog.document('equipment').data)
+        tid = procurement.mapping()[0]['tables']['bpu']['id']
+        cell = procurement.children(procurement.children(doc.tables[tid][1], 'tr')[1], 'tc')[1]
+        original = procurement.cell_paragraphs(cell)[0]
+        duplicate = copy.deepcopy(original)
+        duplicate.parent = cell
+        cell.children.insert(cell.children.index(original), duplicate)
+        with patch('erp.cdc.catalog.document', return_value=doc), self.assertRaisesRegex(DocumentError, 'Désignation BPU'):
+            procurement.mapping.__wrapped__()
+
+    def test_reference_replacement_updates_manual_paragraph_and_rejects_stale_output(self):
+        data = catalog.initial_data('equipment')
+        data['reference'] = '88/SME/SDFM/SG/ESSBO/2027'
+        blocks = {b['id']: b for b in catalog.profile('equipment')['paragraphs']}
+        binding = next(b for b in catalog.reference_spans('equipment') if not blocks[b['id']]['guard'])
+        data['paragraphs'][binding['id']] = blocks[binding['id']]['text']
+        paragraphs, _ = catalog.generation_edits(data)
+        self.assertIn(data['reference'], paragraphs[binding['id']])
+        source = catalog.document('equipment')
+        unchanged, report = source.generate({})
+        # A renderer that silently drops requested edits must not produce an
+        # accepted CDC: the independent output scan must catch old references.
+        with patch.object(Document, 'generate', return_value=(unchanged, report)):
+            with self.assertRaisesRegex(DocumentError, 'ancienne référence subsiste'):
+                catalog.generate_document(data)
+
+    def test_custom_reference_requires_explicit_bilingual_correspondence(self):
+        data = catalog.initial_data('equipment')
+        data['reference'] = 'CUSTOM/2027'
+        with self.assertRaisesRegex(DocumentError, 'correspondance arabe explicite'):
+            catalog.generate_document(data)
+
+    def test_legacy_article_only_generation_marks_document_part_as_changed(self):
+        data = catalog.initial_data('equipment')
+        del data['institutional_policy']
+        del data['consultation']
+        data['procurement'] = procurement.initial_procurement()
+        data['procurement']['lots'][0]['items'][0]['quantity'] = '234'
+        output, report = catalog.generate_document(data)
+        self.assertEqual(report['procurement']['status'], 'GENERATED')
+        self.assertEqual(report['changed_parts'].count('word/document.xml'), 1)
+        self.assertNotIn('word/document.xml', report['preserved_parts'])
+        self.assertNotEqual(output, catalog.document('equipment').data)
+
+    def test_word_identity_collision_is_detected_after_article_cloning(self):
+        import copy
+        import uuid
+        from erp.cdc.lot_catalog import get_catalog
+        for modern in [False, True]:
+            data = catalog.initial_data('equipment')
+            key = 'lot_catalog' if modern else 'procurement'
+            data[key] = get_catalog(data) if modern else procurement.initial_procurement()
+            lot = data[key]['lots'][0]
+            new = copy.deepcopy(lot['items'][0])
+            new['key'] = 'new-' + str(uuid.uuid4())
+            if modern:
+                new['position'] = len(lot['items']) + 1
+            lot['items'].append(new)
+            module = schedule_adapter if modern else procurement
+            apply = module.apply_catalog if modern else module.apply_procurement
+            with self.subTest(modern=modern), patch.object(module, '_fresh_identity', side_effect=lambda raw, seed: raw):
+                with self.assertRaisesRegex(DocumentError, '(identifiant|Identifiant).*dupliqué'):
+                    apply(catalog.document('equipment').data, data)
+
+    def test_unsafe_source_row_cannot_be_cloned(self):
+        import copy
+        import uuid
+        doc = Document(catalog.document('equipment').data)
+        with patch('erp.cdc.catalog.document', return_value=doc):
+            mapping = procurement.mapping.__wrapped__()
+        row = mapping[0]['tables']['cptc']['rows'][1]
+        drawing = parse_xml(b'<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
+        drawing.parent = row
+        row.children.append(drawing)
+        data = catalog.initial_data('equipment')
+        data['procurement'] = procurement.initial_procurement()
+        item = copy.deepcopy(data['procurement']['lots'][0]['items'][0])
+        item['key'] = 'new-' + str(uuid.uuid4())
+        data['procurement']['lots'][0]['items'].append(item)
+        with patch.object(procurement, 'mapping', return_value=mapping), self.assertRaisesRegex(DocumentError, 'non duplicable'):
+            procurement.apply_procurement(doc.data, data)
