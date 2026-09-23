@@ -4,14 +4,17 @@ from unittest.mock import Mock, patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from erp import permissions
 from erp.management.commands import send_erp_alert_digest
-from erp.models import Capability, StockContainer
+from erp.models import AlertAcknowledgement, Capability, StockContainer, WorkItem
 from erp.services.access import save_grant
 from erp.services.preparations import prepare_stock
+from erp.services import alerts
+from erp.services.work import create_work, transition_work
 from erp.templatetags import erp_permissions
 from erp.test_operations import OperationFixtures
 
@@ -71,3 +74,33 @@ class MiscOperationalCoverageTests(OperationFixtures, TestCase):
         first = prepare_stock(self.admin, **values)
         second = prepare_stock(self.admin, **values)
         self.assertEqual(second.pk, first.pk)
+
+
+    def test_alert_acknowledgement_replay_and_work_transition_special_cases(self):
+        row = {
+            "signature": "a" * 64, "data": {"kind": "TEST"},
+            "location_id": None, "category_id": None, "code": "TEST",
+            "message": "Alerte de couverture", "severity": "LOW",
+        }
+        with patch.object(alerts, "collect_alerts", return_value={"alerts": [row]}):
+            first = alerts.acknowledge(self.ops, row["signature"], reason="Traitée")
+            second = alerts.acknowledge(self.ops, row["signature"], reason="Traitée")
+        self.assertEqual(first.pk, second.pk)
+
+        cdc = create_work(self.ops, kind=WorkItem.Kind.CDC, title="CDC spécial")
+        WorkItem.objects.filter(pk=cdc.pk).update(status=WorkItem.Status.SUBMITTED)
+        cdc.refresh_from_db()
+        with self.assertRaises(ValidationError):
+            transition_work(
+                self.ops, cdc.pk, expected=cdc.version,
+                state=WorkItem.Status.APPROVED, reason="Validation directe interdite",
+            )
+
+        task = create_work(self.ops, kind=WorkItem.Kind.CONTROL, title="Corrections")
+        WorkItem.objects.filter(pk=task.pk).update(status=WorkItem.Status.SUBMITTED)
+        task.refresh_from_db()
+        with self.assertRaises(ValidationError):
+            transition_work(
+                self.ops, task.pk, expected=task.version,
+                state=WorkItem.Status.CHANGES_REQUESTED, reason="",
+            )
