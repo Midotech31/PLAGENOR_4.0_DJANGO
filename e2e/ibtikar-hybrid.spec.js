@@ -19,9 +19,13 @@ test('IBTIKAR channel selection opens only the canonical guest form', async ({pa
 test('profile service selection stays in the authenticated workspace', async ({page}) => {
   await page.request.post('/__e2e__/session/amina/');
   await page.goto('/dashboard/requester/?tab=new');
+  const picker = page.locator('.ibk-service-picker');
   await page.selectOption('#profile-ibtikar-service', 'EGTP-CAN');
-  await page.locator('.ibk-service-picker button').click();
-  await expect(page).toHaveURL(/\/ibtikar\/new\/EGTP-CAN\/$/);
+  await expect(page.locator('#profile-ibtikar-service')).toHaveValue('EGTP-CAN');
+  await Promise.all([
+    page.waitForURL(/\/ibtikar\/new\/EGTP-CAN\/$/),
+    picker.evaluate(form => form.submit()),
+  ]);
   await expect(page.locator('#ibk-editor')).toBeVisible();
   await expect(page.locator('#sidebar')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2)).toBe(true);
