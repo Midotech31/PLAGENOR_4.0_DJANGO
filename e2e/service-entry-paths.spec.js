@@ -17,6 +17,7 @@ for (const suffix of ['', 'detail/']) {
     await page.locator('[data-service-entry="choices"]').screenshot({path:testInfo.outputPath('entry-paths.png')});
     await page.locator('[data-entry-action="guest"]').click();
     await expect(page).toHaveURL(/\/guest-submit\/\?service=EGTP-IMT$/);
+    await expect(page.locator('#id_channel')).toBeVisible();
     expect(await page.locator('#id_channel option').evaluateAll(items=>items.map(x=>x.value))).toEqual(['GENOCLAB','IBTIKAR']);
     await expect(page.locator('#guest-service-choice')).toHaveValue('EGTP-IMT');
     await page.locator('#id_channel').selectOption('IBTIKAR');

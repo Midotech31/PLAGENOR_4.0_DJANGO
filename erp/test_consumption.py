@@ -9,6 +9,7 @@ from django.utils import timezone
 from accounts.models import MemberProfile
 from core.models import Request, Service
 from erp.models import AnalysisRun, RunAllocation, RunConsumption, StockMovement, StockReservation
+from erp.consumption_forms import RunConfirmForm, RunCreateForm, RunReserveForm
 from erp.services.biobank import receive_sample, reconcile_biobank, source_samples
 from erp.services.consumption import (calculate_requirements, cancel_run, close_request_resources,
     confirm_run, create_run, reservation_proposal, reserve_run, save_profile, save_rule)
@@ -36,6 +37,57 @@ class ConsumptionIntegrationTests(OperationFixtures, TestCase):
         return create_run(self.ops, request=self.req, profile=self.profile, code=name,
             name='Série documentée', sample_count=1, planned_on=timezone.localdate(),
             source_keys=source_keys, samples=samples)
+
+    def test_run_creation_form_limits_profiles_samples_and_management_flags(self):
+        manager_form = RunCreateForm(user=self.ops, request=self.req)
+        operator_form = RunCreateForm(user=self.operator, request=self.req)
+        self.assertEqual(list(manager_form.fields['profile'].queryset), [self.profile])
+        self.assertEqual(manager_form.fields['source_keys'].choices[0][0],
+            source_samples(self.ops, self.req)[0]['key'])
+        self.assertIn('committed', manager_form.fields)
+        self.assertIn('incremental_demand', manager_form.fields)
+        self.assertNotIn('committed', operator_form.fields)
+        self.assertNotIn('incremental_demand', operator_form.fields)
+        self.assertEqual(list(manager_form.fields['samples'].queryset), [])
+        source = source_samples(self.ops, self.req)[0]
+        sample = receive_sample(self.ops, key=uuid.uuid4(), code='FORM-SAMPLE', amount=10, unit=self.ul,
+            location=self.freezer, received_on=timezone.localdate(), reason='Réception pour la série',
+            request=self.req, source_key=source['key'], source_fingerprint=source['fingerprint'])
+        refreshed = RunCreateForm(user=self.ops, request=self.req)
+        self.assertEqual(list(refreshed.fields['samples'].queryset), [sample])
+        self.assertIn(sample.code, refreshed.fields['samples'].label_from_instance(sample))
+
+    def test_reservation_and_confirmation_forms_follow_real_allocations(self):
+        run = self.make_run()
+        reservation_form = RunReserveForm(user=self.ops, run=run)
+        requirement = run.requirements.get()
+        self.assertEqual(list(reservation_form.fields['requirement'].queryset), [requirement])
+        self.assertEqual(list(reservation_form.fields['container'].queryset), [self.container])
+        self.assertIn(str(requirement.article),
+            reservation_form.fields['requirement'].label_from_instance(requirement))
+        self.assertIn(self.container.code,
+            reservation_form.fields['container'].label_from_instance(self.container))
+        self.assertEqual(RunConfirmForm(run=run).actual_fields, {})
+        reserve_run(self.ops, run.pk, expected=run.version, key=uuid.uuid4(),
+            allocations=reservation_proposal(self.ops, run)['allocations'], reason='Série préparée')
+        run.refresh_from_db()
+        allocation = RunAllocation.objects.get(requirement__run=run)
+        form = RunConfirmForm(run=run)
+        amount_name = form.actual_fields[str(allocation.pk)]
+        self.assertEqual(form.fields[amount_name].initial, allocation.reservation.remaining)
+        self.assertEqual(form.fields[amount_name].max_value, allocation.reservation.remaining)
+        self.assertEqual(len(form.groups), 3)
+        self.assertEqual(form.biological_fields, {})
+        source = source_samples(self.ops, self.req)[0]
+        sample = receive_sample(self.ops, key=uuid.uuid4(), code='BIOLOGY-FORM', amount=10, unit=self.ul,
+            location=self.freezer, received_on=timezone.localdate(), reason='Réception de contrôle',
+            request=self.req, source_key=source['key'], source_fingerprint=source['fingerprint'])
+        biological_run = self.make_run(name='RUN-BIO-FORM', samples=[sample])
+        biological_input = biological_run.inputs.get()
+        biological_form = RunConfirmForm(run=biological_run)
+        biological_name = biological_form.biological_fields[str(biological_input.pk)]
+        self.assertEqual(biological_form.fields[biological_name].initial, 0)
+        self.assertIn(sample.code, biological_form.fields[biological_name].label)
 
     def test_profile_arithmetic_and_role_restrictions(self):
         requirements = calculate_requirements(self.profile, 3)
