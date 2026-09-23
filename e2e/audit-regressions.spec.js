@@ -18,7 +18,7 @@ test('guest draft persists without invented contact data', async ({page}) => {
 test('commercial guest validation retains contact, options and multiple samples', async ({page}) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/guest-submit/?service=EGTP-CAN');
+  await page.goto('/guest-submit/?channel=GENOCLAB&service=EGTP-CAN');
   const form = page.locator('form').filter({has:page.locator('[name="guest_email"]')});
   await expect(page.locator('#sample-table-body tr')).toHaveCount(1);
   await page.locator('[name="guest_name"]').fill('Guest validation test');
