@@ -54,7 +54,7 @@ test('techniques and payment methods persist through reloads', async ({ page }, 
   await payment.locator('[name="name"]').fill('Virement CMS navigateur ' + suffix + '');
   await clickAndSettle(payment.locator('button[type="submit"]'), page);
   await page.goto('/dashboard/home/?tab=payments');
-  await expect(page.locator('tr:visible').filter({ hasText: 'Virement CMS navigateur ' + suffix + '' })).toHaveCount(1);
+  await expect(page.locator('li:visible').filter({ hasText: 'Virement CMS navigateur ' + suffix + '' })).toHaveCount(1);
 });
 
 test('announcements create toggle and delete persist', async ({ page }, testInfo) => {
