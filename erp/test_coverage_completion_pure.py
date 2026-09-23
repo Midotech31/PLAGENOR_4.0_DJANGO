@@ -324,11 +324,11 @@ class LotWorkbookCoverageTests(SimpleTestCase):
             lot_workbook.parse_workbook(b"x","x.txt",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("xl/vbaProject.bin",b"x")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(DocumentError):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w") as z:z.writestr("plain.txt",b"x")
-        with self.assertRaises(DocumentError):
+        with self.assertRaises(KeyError):
             lot_workbook.parse_workbook(buf.getvalue(),"x.xlsx",data,uuid.uuid4(),1,lambda x:x)
 
 
