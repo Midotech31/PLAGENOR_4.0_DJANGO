@@ -102,13 +102,22 @@ jobs:
           document-previews/VALIDATION.txt
         if-no-files-found: error
         retention-days: 30
-    - name: Dependency vulnerability audit
-      run: |
-        pip-audit -r requirements.txt
-    - name: Static security scan
-      run: |
-        bandit -r accounts core dashboard documents notifications plagenor erp \
-          -x '*/migrations/*,*/tests.py' -ll
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit bandit
+      - name: Dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: Static security scan
+        run: |
+          bandit -r accounts core dashboard documents notifications plagenor erp \
+            -x '*/migrations/*,*/tests.py,*/test_*.py,*/tests/*' -ll
 
   postgres:
     runs-on: ubuntu-latest
