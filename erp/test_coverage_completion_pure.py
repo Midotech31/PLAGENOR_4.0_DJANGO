@@ -263,14 +263,16 @@ class CatalogCoverageTests(SimpleTestCase):
                 with self.assertRaises(DocumentError):
                     catalog.effective_edits(data)
 
-        with patch.object(catalog, "validate_data", return_value=data), \
+        controls_data = copy.deepcopy(data)
+        controls_data["reference"] = "17/OTHER/2026"
+        with patch.object(catalog, "validate_data", return_value=controls_data), \
              patch.object(catalog, "profile", return_value={"issues":[{"id":"I1","summary":"warn"}],"reference":original}), \
              patch.object(catalog, "resolved_issue", return_value=False), \
              patch("erp.cdc.schedule_adapter.binding_findings", return_value=[]), \
              patch.object(catalog, "consultation_findings", return_value=[]), \
              patch("erp.cdc.common_data.manual_conflicts", return_value=[]), \
              patch.object(catalog, "effective_edits", return_value={"p":"{{ unresolved }}"}):
-            findings = catalog.controls(data)
+            findings = catalog.controls(controls_data)
         ids={x["id"] for x in findings}
         self.assertIn("I1",ids); self.assertIn("UNRESOLVED_MARKER",ids); self.assertIn("AR_MAPPING_REQUIRED",ids)
 
