@@ -12,8 +12,8 @@ from erp.cdc.governance_annex import append_governance_annex
 from erp.models import (CdcClause, CdcClauseRevision, CdcCriterion, CdcRequirement,
     CdcReviewDecision, WorkItem)
 from erp.services.cdc import (approve_dossier, create_clause_revision, create_dossier,
-    document_data, duplicate_dossier, governance_findings, review_dossier, review_state,
-    save_clause, save_criterion, save_requirement, select_clause)
+    document_data, duplicate_dossier, governance_findings, governance_snapshot_findings,
+    review_dossier, review_state, save_clause, save_criterion, save_requirement, select_clause)
 from erp.services.cdc_exchange import add_lot, arrange_item, restore_revision
 from erp.test_operations import OperationFixtures
 
@@ -403,3 +403,144 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
             archive.writestr('word/document.xml', b'<broken')
         with self.assertRaises(DocumentError):
             append_governance_annex(malformed.getvalue(), {'requirements': [{}]}, 1)
+
+
+    def test_snapshot_validator_rejects_malformed_structured_data(self):
+        finding = governance_snapshot_findings({'requirements': {}, 'criteria': [], 'clauses': []})
+        self.assertEqual(finding[0]['code'], 'governance-structure')
+        oversized = {'requirements': [{}] * 5001, 'criteria': [], 'clauses': []}
+        self.assertEqual(governance_snapshot_findings(oversized)[0]['code'], 'governance-size')
+
+        data = {'requirements': [
+                'invalid',
+                {'kind': 'UNKNOWN', 'statement': ''},
+                {'kind': 'MANDATORY', 'statement': 'A', 'evidence': '', 'verification_method': '', 'justification': ''},
+                {'kind': 'ELIMINATORY', 'statement': 'B', 'evidence': 'E', 'verification_method': 'V', 'justification': ''},
+            ],
+            'criteria': [
+                'invalid',
+                {'code': 'BAD', 'title': '', 'method': 'UNKNOWN', 'weight': 'abc'},
+                {'code': 'GLOBAL', 'title': 'Global', 'method': 'BINARY', 'weight': '40',
+                 'lot': None, 'eliminatory': True, 'evidence': ''},
+                {'code': 'LOT', 'title': 'Lot', 'method': 'BINARY', 'weight': '100',
+                 'lot': 'lot-1', 'eliminatory': False, 'evidence': 'preuve'},
+            ],
+            'clauses': [
+                'invalid',
+                {'code': '', 'revision': 0, 'text_fr': '', 'source': ''},
+            ]}
+        codes = {row['code'] for row in governance_snapshot_findings(data)}
+        self.assertTrue({'requirement-structure', 'requirement-evidence', 'requirement-verification',
+            'requirement-eliminatory-justification', 'criterion-structure', 'criterion-evidence',
+            'criteria-scope-mixed', 'criteria-total', 'clause-structure'} <= codes)
+
+    def test_snapshot_validator_accepts_complete_governance_and_optional_information(self):
+        data = {'requirements': [
+                {'kind': 'INFORMATIONAL', 'statement': 'Information', 'evidence': '',
+                 'verification_method': '', 'justification': ''},
+                {'kind': 'MANDATORY', 'statement': 'Obligation', 'evidence': 'Preuve',
+                 'verification_method': 'Contrôle', 'justification': ''},
+            ],
+            'criteria': [
+                {'code': 'A', 'title': 'A', 'method': 'PROPORTIONAL', 'weight': '60',
+                 'lot': None, 'eliminatory': False, 'evidence': ''},
+                {'code': 'B', 'title': 'B', 'method': 'BINARY', 'weight': '40',
+                 'lot': None, 'eliminatory': False, 'evidence': ''},
+            ],
+            'clauses': [
+                {'code': 'C', 'revision': 1, 'text_fr': 'Texte', 'source': 'Source'},
+            ]}
+        self.assertEqual(governance_snapshot_findings(data), [])
+
+    def test_restore_revision_restores_criteria_and_clauses_too(self):
+        clause = self.clause()
+        active = create_clause_revision(self.ops, clause, text_fr='Clause R1',
+            source_reference='Source R1', activate=True)
+        select_clause(self.operator, self.dossier.pk, expected=self.dossier.version,
+            revision=active, position=1, mandatory=True, reason='R1')
+        self.refresh()
+        save_criterion(self.operator, self.dossier.pk, expected=self.dossier.version,
+            values={'lot': None, 'code': 'REST', 'title': 'Critère R1', 'method': 'BINARY',
+                'weight': Decimal('100'), 'threshold': None, 'eliminatory': False,
+                'evidence': 'Preuve', 'position': 1, 'active': True}, reason='R1')
+        source = self.dossier.revisions.order_by('-number').first()
+
+        self.refresh()
+        criterion = self.dossier.criteria.get(code='REST')
+        save_criterion(self.operator, self.dossier.pk, expected=self.dossier.version,
+            pk=criterion.pk, values={'title': 'Critère modifié', 'active': False}, reason='R2')
+        self.refresh()
+        selection = self.dossier.clause_selections.get()
+        selection.active = False
+        selection.save(update_fields=['active'])
+        restored = restore_revision(self.ops, source.pk, expected=self.dossier.version,
+            reason='Restaurer gouvernance')
+        criterion.refresh_from_db()
+        selection.refresh_from_db()
+        self.assertEqual(criterion.title, 'Critère R1')
+        self.assertTrue(criterion.active)
+        self.assertTrue(selection.active)
+        self.assertEqual(restored.data['criteria'][0]['code'], 'REST')
+        self.assertEqual(restored.data['clauses'][0]['code'], clause.code)
+
+    def test_http_edit_existing_requirement_criterion_and_clause_search(self):
+        save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+            values={'position': 1, 'kind': 'MANDATORY', 'statement': 'Avant',
+                'evidence': 'Preuve', 'verification_method': 'Contrôle',
+                'justification': '', 'active': True}, reason='Créer')
+        self.refresh()
+        requirement = CdcRequirement.objects.get(item=self.item)
+        self.client.force_login(self.operator)
+        url = reverse('erp:cdc-requirement-edit', args=[self.item.pk, requirement.pk])
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(url, {'expected_version': self.dossier.version,
+            'position': 1, 'kind': 'MANDATORY', 'statement': 'Après',
+            'evidence': 'Preuve', 'verification_method': 'Contrôle',
+            'justification': '', 'active': 'on', 'reason': 'Modifier'})
+        self.assertEqual(response.status_code, 302)
+        requirement.refresh_from_db()
+        self.assertEqual(requirement.statement, 'Après')
+
+        self.refresh()
+        save_criterion(self.operator, self.dossier.pk, expected=self.dossier.version,
+            values={'lot': None, 'code': 'EDIT', 'title': 'Avant', 'method': 'BINARY',
+                'weight': Decimal('100'), 'threshold': None, 'eliminatory': False,
+                'evidence': 'Preuve', 'position': 1, 'active': True}, reason='Créer')
+        self.refresh()
+        criterion = self.dossier.criteria.get(code='EDIT')
+        url = reverse('erp:cdc-criterion-edit', args=[self.dossier.pk, criterion.pk])
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(url, {'expected_version': self.dossier.version,
+            'lot': '', 'code': 'EDIT', 'title': 'Après', 'method': 'BINARY',
+            'weight': '100', 'threshold': '', 'evidence': 'Preuve',
+            'position': 1, 'active': 'on', 'reason': 'Modifier'})
+        self.assertEqual(response.status_code, 302)
+        criterion.refresh_from_db()
+        self.assertEqual(criterion.title, 'Après')
+
+        clause = self.clause()
+        self.client.force_login(self.ops)
+        response = self.client.get(reverse('erp:cdc-clause-library'), {'q': 'TECH.CLAUSE'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TECH.CLAUSE')
+        response = self.client.post(reverse('erp:cdc-clause-edit', args=[clause.pk]), {
+            'code': clause.code, 'name': clause.name, 'name_en': clause.name_en,
+            'name_ar': clause.name_ar, 'title': 'Titre HTTP modifié',
+            'active': 'on', 'reason': 'Mise à jour'})
+        self.assertEqual(response.status_code, 302)
+        clause.refresh_from_db()
+        self.assertEqual(clause.title, 'Titre HTTP modifié')
+
+    def test_review_state_without_financial_stage_when_costs_are_hidden(self):
+        dossier = create_dossier(self.ops, family='works',
+            reference='94/SME/SDFM/SG/ESSBO/2026', title='CDC sans coûts',
+            assignee=self.operator, allow_costs=False)
+        dossier.work.status = WorkItem.Status.SUBMITTED
+        dossier.work.save(update_fields=['status'])
+        review_dossier(self.ops, dossier.pk, expected=dossier.version,
+            stage='TECHNICAL', outcome='APPROVED', comment='Technique')
+        review_dossier(self.ops, dossier.pk, expected=dossier.version,
+            stage='ADMIN_LEGAL', outcome='APPROVED', comment='Juridique')
+        state = review_state(dossier)
+        self.assertEqual(state['required'], ['TECHNICAL', 'ADMIN_LEGAL'])
+        self.assertTrue(state['complete'])
