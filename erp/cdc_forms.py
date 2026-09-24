@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
 from .models import (Article, CdcClause, CdcClauseRevision, CdcCriterion, CdcDossier, CdcGeneration,
-    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, Unit, WorkItem)
+    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, Party, Unit, WorkItem)
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -74,7 +74,7 @@ class CdcItemForm(VersionedForm):
     class Meta:
         model = CdcItem
         fields = ['article', 'purchase_unit', 'designation', 'specifications', 'unit_label', 'packaging',
-                  'quantity', 'details', 'active', 'estimated_price', 'tax_rate', 'price_source', 'currency']
+                  'quantity', 'details', 'active', 'estimate_supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']
 
     def __init__(self, *args, dossier, **kwargs):
         super().__init__(*args, **kwargs)
@@ -84,15 +84,16 @@ class CdcItemForm(VersionedForm):
             articles = articles.filter(category_id=dossier.work.category_id)
         self.fields['article'].queryset = articles
         self.fields['purchase_unit'].queryset = Unit.objects.filter(active=True)
+        self.fields['estimate_supplier'].queryset = Party.objects.filter(active=True, is_supplier=True)
         for name in ('designation', 'unit_label'):
             self.fields[name].required = False
         if not work_allowed(self.user, dossier.work, costs=True):
-            for name in ('estimated_price', 'tax_rate', 'price_source', 'currency'):
+            for name in ('estimate_supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency'):
                 del self.fields[name]
         groups = [(_('Référentiel commun'), ['article', 'purchase_unit', 'refresh_catalog']),
                   (_('Besoin technique'), ['designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'])]
         if 'estimated_price' in self.fields:
-            groups.append((_('Estimation interne'), ['estimated_price', 'tax_rate', 'price_source', 'currency']))
+            groups.append((_('Estimation interne'), ['estimate_supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']))
         groups.append((_('Historique'), ['reason']))
         self.groups = [{'title': label, 'fields': [self[field] for field in fields]} for label, fields in groups]
 
