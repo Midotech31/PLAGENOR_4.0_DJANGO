@@ -252,11 +252,14 @@ def cdc_clauses(request, pk):
     managed, tables = managed_ids(dossier.family)
     search = request.GET.get('q', '').casefold().strip()[:200]
     selected = {row.clause.paragraph_id: row for row in dossier.clause_selections.select_related('clause', 'selected_version')}
+    library = {row.paragraph_id: row for row in CdcClause.objects.filter(family=dossier.family, active=True).select_related('current_version')}
     blocks = [{'id': row['id'], 'text': projected.get(row['id'], row['text']),
                'editable': not row['guard'] and row['id'] not in managed,
                'library_managed': row['id'] in selected,
                'library_clause_id': selected[row['id']].clause_id if row['id'] in selected else None,
-               'library_version': selected[row['id']].selected_version.number if row['id'] in selected else None}
+               'library_version': selected[row['id']].selected_version.number if row['id'] in selected else None,
+               'available_clause_id': library[row['id']].pk if row['id'] in library else None,
+               'available_version': library[row['id']].current_version.number if row['id'] in library and library[row['id']].current_version_id else None}
               for row in document(dossier.family).source_index if row['text'].strip()]
     if search:
         blocks = [block for block in blocks if search in block['text'].casefold()]
