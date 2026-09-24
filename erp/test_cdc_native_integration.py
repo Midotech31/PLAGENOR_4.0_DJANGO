@@ -177,6 +177,7 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             reference='73/SME/SDFM/SG/ESSBO/2026', family='reagents',
             assignee=self.operator)
         self.assertEqual(dossier.procurement_plan.pk, plan.pk)
+        plan.refresh_from_db()
 
         order = create_order(self.ops, plan.pk, expected=plan.version,
             reference='CHAIN-PO', supplier=self.party,
