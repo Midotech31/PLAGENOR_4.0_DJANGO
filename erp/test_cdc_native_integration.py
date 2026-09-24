@@ -298,3 +298,16 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         detail = self.client.get(reverse('erp:cdc-detail', args=[dossier.pk]))
         self.assertContains(detail, 'Pièces jointes')
         self.assertContains(detail, 'archivé')
+        lot = dossier.lots.first()
+        self.assertNotContains(self.client.get(reverse('erp:cdc-lot', args=[lot.pk])),
+            'Ajouter un article')
+        self.assertNotContains(self.client.get(reverse('erp:cdc-clauses', args=[dossier.pk])),
+            'Modifier cette clause')
+        for url in (
+            reverse('erp:cdc-consultation', args=[dossier.pk]),
+            reverse('erp:cdc-lot-edit', args=[lot.pk]),
+            reverse('erp:cdc-item-new', args=[lot.pk]),
+            reverse('erp:cdc-criterion-create', args=[dossier.pk]),
+            reverse('erp:cdc-clause-select', args=[dossier.pk]),
+        ):
+            self.assertEqual(self.client.get(url).status_code, 403)
