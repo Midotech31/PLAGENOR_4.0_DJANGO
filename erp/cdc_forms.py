@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
 from .models import (Article, CdcClauseVersion, CdcCriterion, CdcDossier, CdcGeneration,
-                     CdcItem, CdcReviewDecision, Party, Unit, WorkItem)
+                     CdcItem, CdcRequirement, CdcReviewDecision, Party, Unit, WorkItem)
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -162,7 +162,7 @@ class CdcCriterionForm(VersionedForm):
 
     class Meta:
         model = CdcCriterion
-        fields = ['lot', 'code', 'category', 'title', 'description', 'expected_evidence',
+        fields = ['lot', 'requirement', 'code', 'category', 'title', 'description', 'expected_evidence',
                   'min_score', 'max_score', 'weight', 'threshold', 'formula',
                   'rounding_rule', 'eliminatory', 'source', 'justification', 'position', 'active']
 
@@ -170,6 +170,9 @@ class CdcCriterionForm(VersionedForm):
         super().__init__(*args, **kwargs)
         self.fields['expected_version'].initial = dossier.version
         self.fields['lot'].queryset = dossier.lots.filter(active=True).order_by('position')
+        self.fields['requirement'].queryset = CdcRequirement.objects.filter(
+            item__lot__dossier=dossier, item__lot__active=True, item__active=True, active=True
+        ).select_related('item', 'item__lot').order_by('item__lot__position', 'item__position', 'position')
 
 
 class CdcClausePublishForm(OperationForm):
@@ -199,3 +202,19 @@ class CdcClauseSelectForm(OperationForm):
         self.fields['version'].queryset = clause.versions.order_by('-number')
         self.fields['version'].label_from_instance = lambda value: str(_('Version %(number)s — %(source)s')) % {
             'number': value.number, 'source': value.source}
+
+
+class CdcRequirementForm(VersionedForm):
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, widget=forms.Textarea)
+
+    class Meta:
+        model = CdcRequirement
+        fields = ['item', 'code', 'kind', 'statement', 'evidence', 'verification',
+                  'justification', 'position', 'active']
+
+    def __init__(self, *args, dossier, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].initial = dossier.version
+        self.fields['item'].queryset = CdcItem.objects.filter(
+            lot__dossier=dossier, lot__active=True, active=True
+        ).select_related('lot').order_by('lot__position', 'position')
