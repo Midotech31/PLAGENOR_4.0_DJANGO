@@ -23,6 +23,10 @@ class Capability(models.TextChoices):
     MANAGE_BIOBANK = 'manage_biobank', _('Gérer l’échantillothèque')
     VIEW_PLANNING = 'view_planning', _('Consulter les besoins prévisionnels')
     EDIT_PLANNING = 'edit_planning', _('Préparer les besoins prévisionnels')
+    REVIEW_CDC_TECHNICAL = 'review_cdc_technical', _('Effectuer la revue technique des CDC')
+    REVIEW_CDC_ADMIN = 'review_cdc_admin', _('Effectuer la revue administrative et juridique des CDC')
+    REVIEW_CDC_FINANCIAL = 'review_cdc_financial', _('Effectuer la revue financière des CDC')
+    APPROVE_CDC = 'approve_cdc', _('Approuver définitivement les CDC')
 
 
 class AccessGrant(Record):
