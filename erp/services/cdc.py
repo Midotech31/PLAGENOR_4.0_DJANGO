@@ -82,6 +82,19 @@ def _cdc_read_allowed(user, work):
                for capability in CDC_READ_CAPABILITIES)
 
 
+def cdc_cost_allowed(user, dossier):
+    if work_allowed(user, dossier.work, costs=True):
+        return True
+    if not dossier.work.allow_costs or dossier.work.status not in CDC_REVIEW_VISIBLE_STATES:
+        return False
+    return bool(
+        permitted(user, Capability.REVIEW_CDC_FINANCIAL,
+            location=dossier.work.location, category=dossier.work.category)
+        or permitted(user, Capability.APPROVE_CDC,
+            location=dossier.work.location, category=dossier.work.category)
+    )
+
+
 def dossier_scope(user):
     qs = CdcDossier.objects.select_related('work', 'work__assignee')
     if is_manager(user):
@@ -767,7 +780,8 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
 
 
 def estimate_totals(user, dossier):
-    require_work(user, dossier.work, costs=True)
+    if not cdc_cost_allowed(user, dossier):
+        raise PermissionDenied
     totals, missing = {}, 0
     for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True):
         if item.estimated_price is None or item.tax_rate is None:
