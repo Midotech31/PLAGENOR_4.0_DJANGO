@@ -19,8 +19,10 @@ from erp.cdc.consultation import FIELDS, validate_consultation
 from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
-from erp.models import (Article, CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot,
-                        CdcRevision, LocationClosure, StockContainer, Unit, WorkItem)
+from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcClauseSelection,
+                        CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement,
+                        CdcReviewDecision, CdcRevision, CdcSection, LocationClosure, StockContainer,
+                        Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, snapshot
@@ -62,6 +64,36 @@ def document_data(dossier):
         lots.append({'id': str(lot.pk), 'number': position, 'name': lot.name,
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
+    data['structured_sections'] = [
+        {'key': section.key, 'title': section.title, 'content': section.content,
+         'position': section.position, 'required': section.required, 'source': section.source}
+        for section in dossier.structured_sections.filter(active=True).order_by('position', 'id')
+    ]
+    data['requirements'] = [
+        {'item': str(requirement.item_id), 'position': requirement.position, 'kind': requirement.kind,
+         'statement': requirement.statement, 'evidence': requirement.evidence,
+         'verification_method': requirement.verification_method, 'justification': requirement.justification}
+        for requirement in CdcRequirement.objects.filter(
+            item__lot__dossier=dossier, item__active=True, item__lot__active=True, active=True
+        ).order_by('item__lot__position', 'item__position', 'position', 'id')
+    ]
+    data['criteria'] = [
+        {'code': criterion.code, 'lot': str(criterion.lot_id) if criterion.lot_id else None,
+         'title': criterion.title, 'method': criterion.method, 'weight': str(criterion.weight),
+         'threshold': str(criterion.threshold) if criterion.threshold is not None else None,
+         'eliminatory': criterion.eliminatory, 'evidence': criterion.evidence,
+         'position': criterion.position}
+        for criterion in dossier.criteria.filter(active=True).order_by('lot_id', 'position', 'id')
+    ]
+    data['clauses'] = [
+        {'code': selection.revision.clause.code, 'revision': selection.revision.number,
+         'title': selection.revision.clause.title, 'text_fr': selection.revision.text_fr,
+         'text_en': selection.revision.text_en, 'text_ar': selection.revision.text_ar,
+         'source': selection.revision.source_reference, 'mandatory': selection.mandatory,
+         'position': selection.position}
+        for selection in dossier.clause_selections.filter(active=True).select_related(
+            'revision__clause').order_by('position', 'id')
+    ]
     data.pop('procurement', None)
     validate_data(data, dossier.family)
     return data
@@ -89,6 +121,206 @@ def _revision(user, dossier, reason=''):
         data=data, estimates=estimates, sha256=digest, reason=reason[:500])
     audit(user, dossier, 'revision_created', reason=reason[:500])
     return revision
+
+
+
+
+def governance_findings(dossier):
+    """Return CDC Toolkit controls that complement the document-template controls."""
+    findings = []
+    for requirement in CdcRequirement.objects.filter(
+            item__lot__dossier=dossier, item__lot__active=True, item__active=True, active=True):
+        if requirement.kind != CdcRequirement.Kind.INFORMATIONAL:
+            if not requirement.evidence.strip():
+                findings.append({'severity': 'error', 'code': 'requirement-evidence',
+                    'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                    'message': str(_('Une exigence non informative doit préciser la preuve attendue.'))})
+            if not requirement.verification_method.strip():
+                findings.append({'severity': 'error', 'code': 'requirement-verification',
+                    'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                    'message': str(_('Une exigence non informative doit préciser sa méthode de vérification.'))})
+        if requirement.kind == CdcRequirement.Kind.ELIMINATORY and not requirement.justification.strip():
+            findings.append({'severity': 'error', 'code': 'requirement-eliminatory-justification',
+                'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                'message': str(_('Une exigence éliminatoire doit être explicitement justifiée.'))})
+
+    active_criteria = list(dossier.criteria.filter(active=True).select_related('lot'))
+    if active_criteria:
+        global_rows = [row for row in active_criteria if row.lot_id is None]
+        lot_rows = [row for row in active_criteria if row.lot_id is not None]
+        if global_rows and lot_rows:
+            findings.append({'severity': 'error', 'code': 'criteria-scope-mixed', 'field': 'criteria',
+                'source': 'CDC Toolkit',
+                'message': str(_('Ne mélangez pas une grille globale avec des grilles par lot.'))})
+        scopes = {}
+        for row in active_criteria:
+            scopes.setdefault(row.lot_id, Decimal(0))
+            scopes[row.lot_id] += row.weight
+            if row.eliminatory and not row.evidence.strip():
+                findings.append({'severity': 'error', 'code': 'criterion-evidence',
+                    'field': f'criterion:{row.pk}', 'source': 'CDC Toolkit',
+                    'message': str(_('Un critère éliminatoire doit préciser le justificatif attendu.'))})
+        for lot_id, total in scopes.items():
+            if total != Decimal('100'):
+                findings.append({'severity': 'error', 'code': 'criteria-total',
+                    'field': 'criteria' if lot_id is None else f'lot:{lot_id}',
+                    'source': 'CDC Toolkit',
+                    'message': str(_('Les pondérations actives doivent totaliser exactement 100 points par périmètre.'))})
+
+    for section in dossier.structured_sections.filter(active=True, required=True):
+        if not section.content.strip():
+            findings.append({'severity': 'error', 'code': 'required-section-empty',
+                'field': f'section:{section.pk}', 'source': 'CDC Toolkit',
+                'message': str(_('Une section obligatoire active ne peut pas être vide.'))})
+
+    for selection in dossier.clause_selections.filter(active=True).select_related('revision'):
+        if selection.revision.status != CdcClauseRevision.Status.ACTIVE:
+            findings.append({'severity': 'error', 'code': 'clause-not-active',
+                'field': f'clause:{selection.pk}', 'source': 'CDC Toolkit',
+                'message': str(_('Une clause retenue doit pointer vers une révision validée et active.'))})
+    return findings
+
+
+def dossier_findings(dossier):
+    return [*controls(document_data(dossier)), *governance_findings(dossier)]
+
+
+@transaction.atomic
+def save_section(user, dossier_id, *, expected, values, pk=None, reason=''):
+    dossier = _dossier(user, dossier_id, edit=True)
+    check_version(dossier, expected)
+    section = CdcSection.objects.get(pk=pk, dossier=dossier) if pk else CdcSection(dossier=dossier)
+    for key in ('key', 'title', 'content', 'position', 'active', 'required', 'source'):
+        if key in values:
+            setattr(section, key, values[key])
+    if pk:
+        section.version += 1
+    section.full_clean()
+    section.save()
+    audit(user, dossier, 'cdc_section_saved', reason=reason[:500])
+    return _revision(user, dossier, reason)
+
+
+@transaction.atomic
+def save_requirement(user, item_id, *, expected, values, pk=None, reason=''):
+    item = CdcItem.objects.select_related('lot__dossier__work').get(pk=item_id)
+    dossier = _dossier(user, item.lot.dossier_id, edit=True)
+    check_version(dossier, expected)
+    requirement = CdcRequirement.objects.get(pk=pk, item=item) if pk else CdcRequirement(item=item)
+    for key in ('position', 'kind', 'statement', 'evidence', 'verification_method', 'justification', 'active'):
+        if key in values:
+            setattr(requirement, key, values[key])
+    if requirement.kind != CdcRequirement.Kind.INFORMATIONAL:
+        if not requirement.evidence.strip() or not requirement.verification_method.strip():
+            raise ValidationError(_('Une exigence non informative exige une preuve et une méthode de vérification.'))
+    if requirement.kind == CdcRequirement.Kind.ELIMINATORY and not requirement.justification.strip():
+        raise ValidationError(_('Justifiez toute exigence éliminatoire.'))
+    if pk:
+        requirement.version += 1
+    requirement.full_clean()
+    requirement.save()
+    audit(user, dossier, 'cdc_requirement_saved', reason=reason[:500])
+    return _revision(user, dossier, reason)
+
+
+@transaction.atomic
+def save_criterion(user, dossier_id, *, expected, values, pk=None, reason=''):
+    dossier = _dossier(user, dossier_id, edit=True)
+    check_version(dossier, expected)
+    criterion = CdcCriterion.objects.get(pk=pk, dossier=dossier) if pk else CdcCriterion(dossier=dossier)
+    lot = values.get('lot')
+    if lot is not None and lot.dossier_id != dossier.pk:
+        raise ValidationError(_('Le lot sélectionné ne correspond pas à ce cahier des charges.'))
+    for key in ('lot', 'code', 'title', 'method', 'weight', 'threshold',
+                'eliminatory', 'evidence', 'position', 'active'):
+        if key in values:
+            setattr(criterion, key, values[key])
+    if criterion.eliminatory and not criterion.evidence.strip():
+        raise ValidationError(_('Un critère éliminatoire doit préciser le justificatif attendu.'))
+    if pk:
+        criterion.version += 1
+    criterion.full_clean()
+    criterion.save()
+    audit(user, dossier, 'cdc_criterion_saved', reason=reason[:500])
+    return _revision(user, dossier, reason)
+
+
+@transaction.atomic
+def create_clause_revision(user, clause, *, text_fr, source_reference, text_en='', text_ar='',
+                           activate=False):
+    require_manager(user)
+    clause = CdcClause.objects.select_for_update().get(pk=clause.pk)
+    text_fr, source_reference = text_fr.strip(), source_reference.strip()
+    if not text_fr or not source_reference:
+        raise ValidationError(_('Le texte français et la source de la clause sont obligatoires.'))
+    number = (clause.revisions.order_by('-number').values_list('number', flat=True).first() or 0) + 1
+    digest = hashlib.sha256(json.dumps(
+        {'text_fr': text_fr, 'text_en': text_en.strip(), 'text_ar': text_ar.strip(),
+         'source': source_reference}, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    revision = CdcClauseRevision.objects.create(clause=clause, number=number, actor=user,
+        text_fr=text_fr, text_en=text_en.strip(), text_ar=text_ar.strip(),
+        source_reference=source_reference,
+        status=CdcClauseRevision.Status.ACTIVE if activate else CdcClauseRevision.Status.DRAFT,
+        sha256=digest)
+    if activate:
+        clause.active_revision = revision
+        clause.version += 1
+        clause.save(update_fields=['active_revision', 'version', 'updated_at'])
+    audit(user, clause, 'clause_revision_created', reason=str(number))
+    return revision
+
+
+@transaction.atomic
+def select_clause(user, dossier_id, *, expected, revision, position=1, mandatory=False, note='', active=True, reason=''):
+    dossier = _dossier(user, dossier_id, edit=True)
+    check_version(dossier, expected)
+    revision = CdcClauseRevision.objects.select_related('clause').get(pk=revision.pk)
+    if revision.status != CdcClauseRevision.Status.ACTIVE or revision.clause.active_revision_id != revision.pk:
+        raise ValidationError(_('Sélectionnez uniquement la révision active et validée de la clause.'))
+    selection, created = CdcClauseSelection.objects.get_or_create(dossier=dossier, revision=revision,
+        defaults={'position': position, 'mandatory': mandatory, 'note': note, 'active': active})
+    if not created:
+        selection.position, selection.mandatory, selection.note, selection.active = position, mandatory, note, active
+        selection.version += 1
+        selection.save()
+    audit(user, dossier, 'cdc_clause_selected', reason=reason[:500])
+    return _revision(user, dossier, reason)
+
+
+@transaction.atomic
+def review_dossier(user, dossier_id, *, expected, stage, outcome, comment):
+    require_manager(user)
+    dossier = _dossier(user, dossier_id)
+    check_version(dossier, expected)
+    if dossier.work.status != WorkItem.Status.SUBMITTED:
+        raise ValidationError(_('Le cahier des charges doit être soumis avant sa revue.'))
+    comment = comment.strip()
+    if not comment:
+        raise ValidationError(_('Le compte rendu de revue est obligatoire.'))
+    revision = dossier.revisions.get(number=dossier.revision_number)
+    if CdcReviewDecision.objects.filter(revision=revision, stage=stage).exists():
+        raise ValidationError(_('Cette étape de revue a déjà été enregistrée pour la révision courante.'))
+    decision = CdcReviewDecision.objects.create(dossier=dossier, revision=revision, stage=stage,
+        outcome=outcome, actor=user, comment=comment)
+    audit(user, dossier, 'cdc_review_recorded', reason=f'{stage}:{outcome}')
+    if outcome == CdcReviewDecision.Outcome.CHANGES:
+        _transition(user, dossier.work, WorkItem.Status.CHANGES_REQUESTED, comment)
+    else:
+        from .work import _notify
+        if dossier.work.assignee_id:
+            _notify(dossier.work, dossier.work.assignee, _('Une étape de revue du cahier des charges a été validée.'))
+    return decision
+
+
+def review_state(dossier):
+    revision = dossier.revisions.filter(number=dossier.revision_number).first()
+    decisions = {row.stage: row for row in CdcReviewDecision.objects.filter(revision=revision)} if revision else {}
+    required = [CdcReviewDecision.Stage.TECHNICAL, CdcReviewDecision.Stage.ADMIN_LEGAL]
+    if dossier.work.allow_costs:
+        required.append(CdcReviewDecision.Stage.FINANCIAL)
+    return {'revision': revision, 'decisions': decisions, 'required': required,
+            'complete': all(stage in decisions and decisions[stage].outcome == CdcReviewDecision.Outcome.APPROVED
+                            for stage in required)}
 
 
 @transaction.atomic
@@ -282,7 +514,7 @@ def submit_dossier(user, pk, *, expected, reason=''):
     dossier = _dossier(user, pk, edit=True)
     check_version(dossier, expected)
     data = document_data(dossier)
-    findings = controls(data)
+    findings = dossier_findings(dossier)
     errors = [finding for finding in findings if finding['severity'] == 'error']
     if errors or not data.get('consultation', {}).get('confirmed'):
         raise ValidationError(_('Corrigez les contrôles bloquants et confirmez les variables du dossier avant soumission.'))
@@ -300,7 +532,7 @@ def generate_cdc(user, revision_id):
     if revision.generations.exists():
         return revision.generations.order_by('-created_at', '-id').first()
     data = copy.deepcopy(revision.data)
-    findings = controls(data)
+    findings = dossier_findings(revision.dossier)
     if any(finding['severity'] == 'error' for finding in findings):
         raise ValidationError(_('La génération est bloquée par des incohérences du dossier.'))
     payload, report = generate_document(data)
@@ -339,6 +571,8 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
+    if not review_state(dossier)['complete']:
+        raise ValidationError(_('Toutes les revues obligatoires de la révision courante doivent être approuvées avant validation finale.'))
     generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
     if generation.revision.number != dossier.revision_number:
         raise Conflict(_('Cette génération ne correspond plus à la dernière révision du dossier.'))
