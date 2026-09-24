@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from accounts.models import MemberProfile
 from core.models import Request, Service
-from erp.models import (Capability, CdcItem, ProcurementRequirementLink, RunAllocation,
+from erp.models import (Capability, CdcItem, ProcurementCdcItemLink, ProcurementRequirementLink, RunAllocation,
     StockLot, WorkItem)
 from erp.services.biobank import source_samples
 from erp.services.cdc import (archive_dossier, create_dossier, duplicate_dossier,
@@ -114,6 +114,18 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         line = plan.lines.get()
         self.assertEqual(line.article_id, self.article.pk)
         self.assertEqual(line.proposed_quantity, 7)
+        source = ProcurementCdcItemLink.objects.get(line=line)
+        self.assertEqual(source.item.article_id, self.article.pk)
+        self.assertEqual(source.required_quantity, 12)
+        self.assertEqual(source.stock_covered_quantity, 5)
+        self.assertEqual(source.shortage_quantity, 7)
+        snapshot = plan.revisions.order_by('-number').first().data['lines'][0]['cdc_sources'][0]
+        self.assertEqual(snapshot['item'], str(source.item_id))
+        self.assertEqual(snapshot['shortage_quantity'], '7.000000')
+        self.client.force_login(self.ops)
+        detail = self.client.get(reverse('erp:procurement-detail', args=[plan.pk]))
+        self.assertContains(detail, 'Source CDC')
+        self.assertContains(detail, dossier.reference)
         self.assertEqual(plan_from_cdc(self.ops, dossier.pk, expected=dossier.version,
             plan_reference='IGNORED', year=timezone.localdate().year,
             reason='Idempotent').pk, plan.pk)
