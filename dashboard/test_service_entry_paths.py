@@ -74,6 +74,20 @@ class ServiceEntryPathTests(TestCase):
         self.assertFalse(page.xpath('//a[@href="/ibtikar/"]'))
         self.assertEqual(Request.objects.count(),0)
 
+    def test_direct_ibtikar_entry_routes_to_authorized_workspace(self):
+        entry=reverse('ibtikar:index')
+        guest=self.client.get(entry)
+        self.assertRedirects(guest,reverse('guest_submit')+'?channel=IBTIKAR',fetch_redirect_response=False)
+        service=self.client.get(entry,{'service':'EGTP-IMT'})
+        self.assertRedirects(service,reverse('ibtikar:new',args=['EGTP-IMT']),fetch_redirect_response=False)
+        self.assertEqual(self.client.get(entry,{'service':'UNKNOWN-SERVICE'}).status_code,404)
+
+        admin=User.objects.create_user(username='ibtikar-entry-admin',role='PLATFORM_ADMIN',password=None)
+        self.client.force_login(admin)
+        workspace=self.client.get(entry)
+        self.assertEqual(workspace.status_code,200)
+        self.assertContains(workspace,'EGTP-IMT')
+
     def test_inactive_and_unknown_services_cannot_open_entry_pages(self):
         Service.objects.filter(code='EGTP-IMT').update(active=False)
         for route in ('service_landing','service_detail'):

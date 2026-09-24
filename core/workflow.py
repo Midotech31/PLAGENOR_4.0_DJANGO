@@ -191,6 +191,9 @@ def transition(request_obj, to_status, actor, notes='', force=False):
 
         locked.status = to_status
         locked.save(update_fields=['status', 'updated_at'])
+        if to_status in ('REJECTED', 'ARCHIVED'):
+            from erp.services.consumption import close_request_resources
+            close_request_resources(actor, locked, str(_('Clôture de la demande PLAGENOR.')))
         if to_status == 'QUOTE_SENT':
             from documents.generators import generate_quote
             generate_quote(locked)

@@ -17,12 +17,15 @@ for (const suffix of ['', 'detail/']) {
     await page.locator('[data-service-entry="choices"]').screenshot({path:testInfo.outputPath('entry-paths.png')});
     await page.locator('[data-entry-action="guest"]').click();
     await expect(page).toHaveURL(/\/guest-submit\/\?service=EGTP-IMT$/);
+    await expect(page.locator('#id_channel')).toBeVisible();
     expect(await page.locator('#id_channel option').evaluateAll(items=>items.map(x=>x.value))).toEqual(['GENOCLAB','IBTIKAR']);
-    const service = await page.locator('#id_service option[data-code="EGTP-IMT"]').getAttribute('value');
-    await expect(page.locator('#id_service')).toHaveValue(service);
+    await expect(page.locator('#guest-service-choice')).toHaveValue('EGTP-IMT');
     await page.locator('#id_channel').selectOption('IBTIKAR');
-    await expect(page.locator('#id_service')).toHaveValue(service);
-    await expect(page.locator('#dynamic-service-form')).toBeEmpty();
+    await Promise.all([
+      page.waitForURL(/\/ibtikar\/new\/EGTP-IMT\/$/),
+      page.locator('[data-guest-channel-picker] button[type="submit"]').click(),
+    ]);
+    await expect(page.locator('#ibk-editor')).toBeVisible();
   });
 }
 

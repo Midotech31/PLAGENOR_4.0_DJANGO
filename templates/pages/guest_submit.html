@@ -6,8 +6,9 @@
 
 {% block content %}
 <section class="section" style="max-width:960px; margin:40px auto; padding:0 32px;">
+    <link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">
     <h2 class="section-title">{% trans "Soumettre une demande (invité)" %}</h2>
-    <p class="section-subtitle">{% trans "Soumettez une demande d'analyse sans créer de compte. Vous recevrez un code de suivi." %}</p>
+    <p class="section-subtitle">{% trans "Choisissez le canal et la prestation. Les informations demandées s’adaptent à votre sélection." %}</p>
 
     {# Inciter à créer un compte plutôt que de soumettre en invité, sans bloquer l'invité. #}
     <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
@@ -28,6 +29,10 @@
         <a href="{% url 'accounts:register' %}" class="btn btn-primary" style="white-space:nowrap;">{% trans "Créer un compte" %}</a>
     </div>
 
+    {% if not show_commercial_form %}
+    {% include 'includes/guest_channel_picker.html' %}
+    {% else %}
+    <p><a href="{% url 'guest_submit' %}?channel=GENOCLAB">← {% trans "Changer de canal ou de prestation" %}</a></p>
     <div class="card" style="margin-top: 24px;">
         <div class="card-body" style="padding: 32px;">
             <form method="post" action="{% url 'guest_submit' %}">
@@ -76,19 +81,13 @@
                 </div>
 
                 <h4 style="margin: 24px 0 16px;">{% trans "Détails de la demande" %}</h4>
-                <div class="form-group">
-                    <label for="id_channel">{% trans "Canal" %} *</label>
-                    <select name="channel" id="id_channel" class="form-control" required>
-                        <option value="GENOCLAB" {% if posted.channel != "IBTIKAR" %}selected{% endif %}>GENOCLAB ({% trans "externe" %})</option>
-                        <option value="IBTIKAR" {% if posted.channel == "IBTIKAR" %}selected{% endif %}>IBTIKAR</option>
-                    </select>
-                </div>
+                <input type="hidden" name="channel" value="GENOCLAB">
                 <div class="form-group">
                     <label for="id_service">{% trans "Service" %} *</label>
                     <select name="service_id" id="id_service" data-channel="GENOCLAB" class="form-control" required>
                         <option value="">{% trans "Sélectionner un service..." %}</option>
-                        {% for s in services %}
-                        <option value="{{ s.pk }}" data-code="{{ s.code }}"
+                        {% for s in selected_services %}
+                        <option value="{{ s.pk }}" data-code="{{ s.code }}" {% if s == selected_service %}selected{% endif %}
                                 data-channel-availability="{{ s.channel_availability }}"
                                 data-ibtikar-price="{% if estimates_visible %}{{ s.ibtikar_price }}{% endif %}"
                                 data-genoclab-price="{% if estimates_visible %}{{ s.genoclab_price }}{% endif %}">{{ s.code }} — {{ s.name }}</option>
@@ -113,11 +112,12 @@
                     </select>
                 </div>
 
-                <button type="submit" id="guest-submit-button" data-commercial-label="{% trans 'Soumettre la demande' %}" data-ibtikar-label="{% trans 'Continuer' %}" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Soumettre la demande" %}</button>
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:16px;">{% trans "Soumettre la demande" %}</button>
             </form>
         </div>
     </div>
 
+    {% endif %}
     <p style="text-align:center; margin-top:16px;" class="text-muted">
         {% trans "Vous avez déjà un compte?" %} <a href="{% url 'accounts:login' %}">{% trans "Connexion" %}</a>
     </p>

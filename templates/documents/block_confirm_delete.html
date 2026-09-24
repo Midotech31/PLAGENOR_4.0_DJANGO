@@ -10,18 +10,18 @@
 
 <div class="card">
     <div class="card-body">
-        <p><strong>{% trans "Type" %} :</strong> {{ block.get_template_type_display }}</p>
+        <p><strong>{% trans "Type" %} :</strong> {{ document_block.get_template_type_display }}</p>
         <p><strong>{% trans "Services concernés" %} :</strong>
-            {% if block.services.all %}
-                {% for s in block.services.all %}<span class="font-mono">{{ s.code }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% if document_block.services.all %}
+                {% for s in document_block.services.all %}<span class="font-mono">{{ s.code }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}
             {% else %}
                 <em>{% trans "Global (tous les services)" %}</em>
             {% endif %}
         </p>
-        <p><strong>{% trans "Position" %} :</strong> {{ block.get_position_display }}</p>
-        <p><strong>{% trans "Langue" %} :</strong> {{ block.get_language_display }}</p>
-        {% if block.title %}<p><strong>{% trans "Titre" %} :</strong> {{ block.title }}</p>{% endif %}
-        <pre style="background:#f5f5f5;padding:12px;white-space:pre-wrap;">{{ block.body }}</pre>
+        <p><strong>{% trans "Position" %} :</strong> {{ document_block.get_position_display }}</p>
+        <p><strong>{% trans "Langue" %} :</strong> {{ document_block.get_language_display }}</p>
+        {% if document_block.title %}<p><strong>{% trans "Titre" %} :</strong> {{ document_block.title }}</p>{% endif %}
+        <pre style="background:#f5f5f5;padding:12px;white-space:pre-wrap;">{{ document_block.body }}</pre>
 
         <form method="post" style="display:inline;">
             {% csrf_token %}

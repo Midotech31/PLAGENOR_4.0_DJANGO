@@ -53,8 +53,8 @@ jobs:
       run: |
         coverage run manage.py test
         # Enforced regression floor, verified by the full Django suite.
-        coverage report --fail-under=100
         coverage json -o coverage.json
+        coverage report --fail-under=100
     - name: Render document previews with LibreOffice
       run: |
         set -euo pipefail
@@ -90,6 +90,7 @@ jobs:
         cat document-previews/VALIDATION.txt
 
     - name: Upload coverage and rendered document evidence
+      if: always()
       uses: actions/upload-artifact@v7
       with:
         name: application-validation
@@ -101,13 +102,22 @@ jobs:
           document-previews/VALIDATION.txt
         if-no-files-found: error
         retention-days: 30
-    - name: Dependency vulnerability audit
-      run: |
-        pip-audit -r requirements.txt
-    - name: Static security scan
-      run: |
-        bandit -r accounts core dashboard documents notifications plagenor \
-          -x '*/migrations/*,*/tests.py' -ll
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit bandit
+      - name: Dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: Static security scan
+        run: |
+          bandit -r accounts core dashboard documents notifications plagenor erp \
+            -x '*/migrations/*,*/tests.py,*/test_*.py,*/tests/*' -ll
 
   postgres:
     runs-on: ubuntu-latest
@@ -140,6 +150,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
+      - name: Install document conversion dependencies for PostgreSQL regression
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreoffice-writer default-jre-headless fonts-dejavu-core fonts-liberation2
       - run: |
           pip install -r requirements-dev.txt
           pip check
@@ -147,6 +161,12 @@ jobs:
       - run: python manage.py check --deploy
       - name: Verify multi-sample HTTP submission on PostgreSQL
         run: python manage.py test core.test_ibtikar_acceptance.AcceptanceFlows.test_two_hundred_rows_survive_the_http_parser_and_draft_save
+      - name: Verify operational and planning concurrency on PostgreSQL
+        run: |
+          set -euo pipefail
+          mkdir -p test-results/postgres
+          git rev-parse HEAD > test-results/postgres/commit.txt
+          python manage.py test erp.test_postgres_operations --noinput --verbosity 2 2>&1 | tee test-results/postgres/operations.log
       - name: Run PostgreSQL regression suite
         run: |
           set -euo pipefail
@@ -157,6 +177,7 @@ jobs:
       - name: Preserve PostgreSQL regression evidence
         if: always()
         run: |
+          mkdir -p test-results/postgres
           sha256sum core/test_ibtikar_acceptance.py core/test_ibtikar_forms.py core/ibtikar/definitions.json > test-results/postgres/source-after.sha256
           cp core/test_ibtikar_acceptance.py core/test_ibtikar_forms.py test-results/postgres/
       - name: Upload PostgreSQL regression evidence
@@ -189,7 +210,6 @@ jobs:
   container:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: sqlite
     steps:
       - uses: actions/checkout@v7
       - name: Build production image
@@ -250,6 +270,11 @@ jobs:
           npm ci
           npm audit --audit-level=high
           npx playwright install --with-deps chromium firefox
+      - name: Compile application translations
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+          python manage.py compilemessages
       - name: Run browser E2E and WCAG 2.2 AA gates
         run: npm run test:e2e
       - name: Upload browser evidence

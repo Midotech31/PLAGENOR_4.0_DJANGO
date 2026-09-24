@@ -998,30 +998,13 @@
             </div>
         </div>
 
-        <!-- DOCX Template Management -->
         <div class="card">
-            <div class="card-header"><h3>{% trans "Templates DOCX globaux" %}</h3></div>
+            <div class="card-header"><h3>{% trans "Stockage documentaire persistant" %}</h3></div>
             <div class="card-body">
-                <p class="text-muted" style="margin-bottom:16px;">{% trans "Mettez à jour les templates DOCX utilisés pour la génération automatique des documents. Un backup est créé automatiquement avant chaque mise à jour." %}</p>
-                <div class="grid-2" style="gap:16px;">
-                    {% for tpl_type, tpl_label in template_types %}
-                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <strong>{{ tpl_label }}</strong>
-                            <a href="{% url 'dashboard:superadmin_template_download' tpl_type %}" class="btn btn-sm btn-outline" style="font-size:0.78rem;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;vertical-align:middle;margin-inline-end:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                {% trans "Télécharger" %}
-                            </a>
-                        </div>
-                        <form method="post" action="{% url 'dashboard:superadmin_template_upload' %}" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input type="hidden" name="template_type" value="{{ tpl_type }}">
-                            <div class="form-group"><input type="file" name="template_file" class="form-control" accept=".docx" required></div>
-                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Mettre à jour" %}</button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                </div>
+                <p class="text-muted" style="margin-bottom:12px;">
+                    {% trans "Les modèles modifiables sont enregistrés via le gestionnaire de modèles DOCX personnalisés et le stockage persistant configuré. Les fichiers du conteneur ne sont pas utilisés comme stockage administratif." %}
+                </p>
+                <a href="{% url 'documents:template_list' %}" class="btn btn-primary">{% trans "Gérer les modèles DOCX" %}</a>
             </div>
         </div>
     </div>

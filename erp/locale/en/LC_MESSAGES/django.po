@@ -1,0 +1,1290 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PLAGENOR ERP\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Actifs"
+msgstr "Active"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Adresse"
+msgstr "Address"
+
+msgid "Adresse électronique"
+msgstr "Email address"
+
+msgid "Ajouter"
+msgstr "Add"
+
+msgid "Ajouter un sous-emplacement"
+msgstr "Add a sublocation"
+
+msgid "Ajouter une conversion"
+msgstr "Add a conversion"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Approvisionnement"
+msgstr "Procurement"
+
+msgid "Après"
+msgstr "After"
+
+msgid "Articles"
+msgstr "Items"
+
+msgid "Articles, unités, partenaires et emplacements partagés."
+msgstr "Shared items, units, partners and storage locations."
+
+msgid "Aucun enregistrement dans ce périmètre."
+msgstr "No records within this scope."
+
+msgid "Aucun prix enregistré."
+msgstr "No price recorded."
+
+msgid "Aucun sous-emplacement enregistré."
+msgstr "No sublocation recorded."
+
+msgid "Aucune conversion spécifique enregistrée."
+msgstr "No item-specific conversion recorded."
+
+msgid "Aucune conversion validée ne relie ces unités pour cet article."
+msgstr "No approved conversion connects these units for this item."
+
+msgid "Aucune opération enregistrée."
+msgstr "No operation recorded."
+
+msgid "Autre dimension"
+msgstr "Other dimension"
+
+msgid "Avant"
+msgstr "Before"
+
+msgid "Capacité (positions)"
+msgstr "Capacity (positions)"
+
+msgid "Catégorie"
+msgstr "Category"
+
+msgid "Catégorie / périmètre"
+msgstr "Category / scope"
+
+msgid "Catégorie autorisée"
+msgstr "Authorized category"
+
+msgid "Catégorie parente"
+msgstr "Parent category"
+
+msgid "Catégories"
+msgstr "Categories"
+
+msgid "Cet enregistrement a changé. Rechargez-le avant de réessayer."
+msgstr "This record has changed. Reload it before trying again."
+
+msgid "Cette unité nécessite une conversion propre à chaque article."
+msgstr "This unit requires an item-specific conversion."
+
+msgid "Champ non modifiable."
+msgstr "This field cannot be modified."
+
+msgid "Code / utilisateur"
+msgstr "Code / user"
+
+msgid "Code de devise à trois lettres requis."
+msgstr "A three-letter currency code is required."
+
+msgid "Code interne"
+msgstr "Internal code"
+
+msgid "Colonnes de la boîte"
+msgstr "Box columns"
+
+msgid "Concentration"
+msgstr "Concentration"
+
+msgid "Conditionnement"
+msgstr "Packaging"
+
+msgid "Conditionnement décrit"
+msgstr "Packaging description"
+
+msgid "Conservation"
+msgstr "Storage conditions"
+
+msgid "Consignes de conservation"
+msgstr "Storage instructions"
+
+msgid "Consignes et observations"
+msgstr "Instructions and notes"
+
+msgid "Consulter"
+msgstr "View"
+
+msgid "Consulter le catalogue"
+msgstr "View the catalogue"
+
+msgid "Consulter les coûts"
+msgstr "View costs"
+
+msgid "Consulter les emplacements"
+msgstr "View locations"
+
+msgid "Consulter les valeurs historisées"
+msgstr "View recorded values"
+
+msgid "Conversion d’unité"
+msgstr "Unit conversion"
+
+msgid "Conversions et conditionnements"
+msgstr "Conversions and packaging"
+
+msgid "Corrigez les informations signalées."
+msgstr "Correct the highlighted information."
+
+msgid "Criticité"
+msgstr "Criticality"
+
+msgid "Critique"
+msgstr "Critical"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Date de référence"
+msgstr "Reference date"
+
+msgid "Devise"
+msgstr "Currency"
+
+msgid "Dimension"
+msgstr "Dimension"
+
+msgid "Durée de conservation (jours)"
+msgstr "Shelf life (days)"
+
+msgid "Délai fournisseur (jours)"
+msgstr "Supplier lead time (days)"
+
+msgid "Délégations ERP"
+msgstr "ERP delegations"
+
+msgid "Désactivez d’abord les emplacements enfants."
+msgstr "Deactivate the child locations first."
+
+msgid "Désignation / permission"
+msgstr "Description / permission"
+
+msgid "Désignation anglaise"
+msgstr "English name"
+
+msgid "Désignation arabe"
+msgstr "Arabic name"
+
+msgid "Désignation française"
+msgstr "French name"
+
+msgid "Emplacement parent"
+msgstr "Parent location"
+
+msgid "Emplacements"
+msgstr "Locations"
+
+msgid "Enregistrement sauvegardé."
+msgstr "Record saved."
+
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "Enregistrer les prix"
+msgstr "Record prices"
+
+msgid "Enregistrer un prix"
+msgstr "Record a price"
+
+msgid "Fabricant"
+msgstr "Manufacturer"
+
+msgid "Facteur vers l’unité de référence"
+msgstr "Factor to the reference unit"
+
+msgid "Faible"
+msgstr "Low"
+
+msgid "Fil d’Ariane"
+msgstr "Breadcrumb"
+
+msgid "Filtrer"
+msgstr "Filter"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Fournisseur"
+msgstr "Supplier"
+
+msgid "Fournisseur préféré"
+msgstr "Preferred supplier"
+
+msgid "Fournisseurs et fabricants"
+msgstr "Suppliers and manufacturers"
+
+msgid "Gestion / ERP"
+msgstr "Management / ERP"
+
+msgid "Grade / pureté"
+msgstr "Grade / purity"
+
+msgid "Gérer le catalogue"
+msgstr "Manage the catalogue"
+
+msgid "Gérer les emplacements"
+msgstr "Manage locations"
+
+msgid "Haute"
+msgstr "High"
+
+msgid "Historique des opérations"
+msgstr "Operation history"
+
+msgid "Historique des prix"
+msgstr "Price history"
+
+msgid "Identification"
+msgstr "Identification"
+
+msgid "Inactif"
+msgstr "Inactive"
+
+msgid "Inactifs"
+msgstr "Inactive"
+
+msgid "Informations scientifiques"
+msgstr "Scientific information"
+
+msgid "Justification"
+msgstr "Justification"
+
+msgid "Justification de la conversion"
+msgstr "Conversion justification"
+
+msgid "La capacité doit correspondre au nombre de positions de la grille."
+msgstr "Capacity must match the number of grid positions."
+
+msgid "La conversion doit concerner une unité alternative du même article."
+msgstr "The conversion must use an alternative unit for the same item."
+
+msgid ""
+"La conversion dépasse la précision de six décimales ; aucun arrondi "
+"silencieux n’est appliqué."
+msgstr ""
+"The conversion exceeds six decimal places; no silent rounding is applied."
+
+msgid "La dimension et le facteur d’une unité existante sont immuables."
+msgstr "The dimension and factor of an existing unit cannot be changed."
+
+msgid "La température cible doit appartenir à la plage autorisée."
+msgstr "The target temperature must be within the permitted range."
+
+msgid "Le fabricant sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "The selected party is inactive or is not a manufacturer."
+
+msgid "Le fournisseur sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "The selected party is inactive or is not a supplier."
+
+msgid "Le type d’emplacement doit être actif."
+msgstr "The location type must be active."
+
+msgid ""
+"Les champs facultatifs restent vides lorsque l’information est inconnue."
+msgstr "Optional fields remain empty when the information is unknown."
+
+msgid "Lignes de la boîte"
+msgstr "Box rows"
+
+msgid "L’article et les unités doivent être actifs."
+msgstr "The item and its units must be active."
+
+msgid "L’emplacement parent doit être actif."
+msgstr "The parent location must be active."
+
+msgid "L’unité de gestion d’un article existant ne peut pas être remplacée."
+msgstr "The base unit of an existing item cannot be replaced."
+
+msgid "Masse"
+msgstr "Mass"
+
+msgid "Membre de l’équipe"
+msgstr "Team member"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Moyenne"
+msgstr "Medium"
+
+msgid "Multiple de commande"
+msgstr "Order multiple"
+
+msgid "Non"
+msgstr "No"
+
+msgid "Non renseigné"
+msgstr "Not provided"
+
+msgid "Numéro CAS"
+msgstr "CAS number"
+
+msgid "Observations"
+msgstr "Notes"
+
+msgid "Observations internes ; aucune TVA universelle n’est appliquée."
+msgstr "Internal observations; no universal VAT rate is applied."
+
+msgid "Oui"
+msgstr "Yes"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Pagination"
+msgstr "Pagination"
+
+msgid "Pays"
+msgstr "Country"
+
+msgid "Permission"
+msgstr "Permission"
+
+msgid "Pièces"
+msgstr "Pieces"
+
+msgid "Prix unitaire"
+msgstr "Unit price"
+
+msgid "Précédent"
+msgstr "Previous"
+
+msgid "Périmètre de stockage"
+msgstr "Storage scope"
+
+msgid "Quantité dans l’unité de gestion"
+msgstr "Quantity in the base unit"
+
+msgid "Rechercher"
+msgstr "Search"
+
+msgid "Renseignez ensemble la concentration et son unité."
+msgstr "Provide both the concentration and its unit."
+
+msgid "Réactions"
+msgstr "Reactions"
+
+msgid "Référence catalogue"
+msgstr "Catalogue reference"
+
+msgid "Référence fabricant"
+msgstr "Manufacturer reference"
+
+msgid "Référentiel des articles"
+msgstr "Item catalogue"
+
+msgid "Référentiels scientifiques"
+msgstr "Scientific reference data"
+
+msgid ""
+"Saisissez une quantité finie, positive ou nulle, dans les limites "
+"autorisées."
+msgstr ""
+"A finite, non-negative quantity within the permitted limits is required."
+
+msgid "Sensible à la lumière"
+msgstr "Light-sensitive"
+
+msgid "Seuil de réapprovisionnement"
+msgstr "Reorder point"
+
+msgid "Seul un membre actif de l’équipe peut recevoir une délégation ERP."
+msgstr "Only an active team member may receive an ERP delegation."
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Source du prix"
+msgstr "Price source"
+
+msgid "Sous-emplacements"
+msgstr "Sublocations"
+
+msgid "Spécifications techniques"
+msgstr "Technical specifications"
+
+msgid "Stabilité après ouverture (jours)"
+msgstr "Stability after opening (days)"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Stock cible"
+msgstr "Target stock"
+
+msgid "Stock de sécurité"
+msgstr "Safety stock"
+
+msgid "Stock minimal"
+msgstr "Minimum stock"
+
+msgid "Stockage autorisé"
+msgstr "Storage permitted"
+
+msgid "Stockage réfrigéré"
+msgstr "Cold storage"
+
+msgid "Suivant"
+msgstr "Next"
+
+msgid "Sélectionnez un fournisseur."
+msgstr "Select a supplier."
+
+msgid "Sélectionnez une unité et une catégorie actives."
+msgstr "Select an active unit and category."
+
+msgid "Température cible (°C)"
+msgstr "Target temperature (°C)"
+
+msgid "Température maximale (°C)"
+msgstr "Maximum temperature (°C)"
+
+msgid "Température minimale (°C)"
+msgstr "Minimum temperature (°C)"
+
+msgid "Tests"
+msgstr "Tests"
+
+msgid "Tous"
+msgstr "All"
+
+msgid "Type de référentiel non autorisé."
+msgstr "This reference-data type is not permitted."
+
+msgid "Type d’emplacement"
+msgstr "Location type"
+
+msgid "Types d’emplacements"
+msgstr "Location types"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+msgid "Un code interne attribué est immuable."
+msgstr "An assigned internal code cannot be changed."
+
+msgid "Un enregistrement avec cette identité existe déjà."
+msgstr "A record with this identity already exists."
+
+msgid "Un référentiel unique, des modifications historisées."
+msgstr "One shared catalogue, with a complete change history."
+
+msgid ""
+"Une conversion spécifique prévaut sur la conversion générale de dimension."
+msgstr ""
+"An item-specific conversion takes precedence over the general dimension "
+"conversion."
+
+msgid "Une hiérarchie ne peut pas contenir de cycle."
+msgstr "A hierarchy cannot contain a cycle."
+
+msgid ""
+"Une observation ne peut pas être attribuée à un autre article ou "
+"utilisateur."
+msgstr "An observation cannot be attributed to a different item or user."
+
+msgid "Une permission de catalogue ou de coût est limitée par catégorie."
+msgstr "Catalogue and cost permissions are scoped by category."
+
+msgid ""
+"Une permission de stockage est limitée par emplacement, pas par catégorie."
+msgstr "Storage permissions are scoped by location, not category."
+
+msgid "Une unité active et une justification sont obligatoires."
+msgstr "An active unit and a justification are required."
+
+msgid "Une écriture historique ne peut pas être modifiée."
+msgstr "A historical record cannot be modified."
+
+msgid "Une écriture historique ne peut pas être supprimée."
+msgstr "A historical record cannot be deleted."
+
+msgid "Unité"
+msgstr "Unit"
+
+msgid "Unité alternative"
+msgstr "Alternative unit"
+
+msgid "Unité de concentration"
+msgstr "Concentration unit"
+
+msgid "Unité de consommation"
+msgstr "Consumption unit"
+
+msgid "Unité de gestion"
+msgstr "Base unit"
+
+msgid "Unité du prix"
+msgstr "Price unit"
+
+msgid "Unité d’achat"
+msgstr "Purchase unit"
+
+msgid "Unités"
+msgstr "Units"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Type de ressource"
+msgstr "Resource type"
+
+msgid "Gestion des ressources scientifiques"
+msgstr "Scientific resource management"
+
+msgid "Une ressource sélectionnée est inconnue ou désactivée."
+msgstr "A selected resource is unknown or inactive."
+
+msgid "Relevé de température"
+msgstr "Temperature reading"
+
+msgid "Déléguer / réaffecter"
+msgstr "Delegate / reassign"
+
+msgid "Planning et préparation"
+msgstr "Planning and preparation"
+
+msgid "Demande liée"
+msgstr "Linked request"
+
+msgid "Aucune tâche en attente de planification."
+msgstr "No tasks awaiting scheduling."
+
+msgid "Intitulé"
+msgstr "Title"
+
+msgid "Ressources réservables"
+msgstr "Bookable resources"
+
+msgid "Le responsable n’est plus autorisé à traiter la demande liée."
+msgstr "The assignee is no longer authorised to process the linked request."
+
+msgid "Équipement"
+msgstr "Equipment"
+
+msgid "Mois"
+msgstr "Month"
+
+msgid "Périodes du calendrier"
+msgstr "Calendar periods"
+
+msgid "Priorité"
+msgstr "Priority"
+
+msgid "Urgente"
+msgstr "Urgent"
+
+msgid "Aucune indisponibilité active."
+msgstr "No active unavailability periods."
+
+msgid "Planifier / replanifier"
+msgstr "Schedule / reschedule"
+
+msgid "Retour au planning"
+msgstr "Back to planning"
+
+msgid "Justifiez la modification du planning."
+msgstr "Provide a reason for rescheduling."
+
+msgid "Autre activité"
+msgstr "Other activity"
+
+msgid "Lever une indisponibilité"
+msgstr "Clear an unavailability period"
+
+msgid "Une ressource se trouve dans un emplacement désactivé."
+msgstr "A resource is located in an inactive location."
+
+msgid ""
+"L’affichage est limité à 500 activités. Affinez la période ou les filtres. "
+"Les totaux restent calculés sur toute la sélection."
+msgstr ""
+"The display is limited to 500 activities. Narrow the period or filters. "
+"Totals still include the full selection."
+
+msgid "Le responsable est indisponible sur ce créneau."
+msgstr "The assignee is unavailable during this time slot."
+
+msgid "Un prérequis est planifié après le début de cette activité."
+msgstr "A prerequisite is scheduled to end after this activity starts."
+
+msgid "Toutes les demandes visibles possèdent une activité ou sont clôturées."
+msgstr "All visible requests have an activity or are closed."
+
+msgid "Le créneau prévu est terminé. Une replanification est nécessaire."
+msgstr "The scheduled time slot has ended. Rescheduling is required."
+
+msgid "Annulé"
+msgstr "Cancelled"
+
+msgid "Vue"
+msgstr "View"
+
+msgid "Consignes de réservation"
+msgstr "Booking instructions"
+
+msgid "Contrôle opérationnel"
+msgstr "Operational check"
+
+msgid "Répétition"
+msgstr "Recurrence"
+
+msgid ""
+"Le planning d’une activité soumise ou clôturée ne peut pas être modifié."
+msgstr "A submitted or closed activity cannot be rescheduled."
+
+msgid "Corrections demandées"
+msgstr "Changes requested"
+
+msgid "Travaux soumis à validation"
+msgstr "Work submitted for approval"
+
+msgid "Ressource"
+msgstr "Resource"
+
+msgid ""
+"Une activité dépendante commencerait avant la fin de ce créneau. "
+"Replanifiez-la explicitement."
+msgstr ""
+"A dependent activity would start before this slot ends. Reschedule it "
+"explicitly."
+
+msgid "Équipement ou salle réservable"
+msgstr "Bookable instrument or room"
+
+msgid "Brouillon"
+msgstr "Draft"
+
+msgid "Ces dépendances formeraient un cycle."
+msgstr "These dependencies would create a cycle."
+
+msgid "Début d’indisponibilité"
+msgstr "Unavailable from"
+
+msgid "Afficher"
+msgstr "Show"
+
+msgid "Tous les types"
+msgstr "All types"
+
+msgid ""
+"Créez le CDC, l’inventaire ou le plan depuis son module, puis planifiez sa "
+"tâche existante."
+msgstr ""
+"Create the procurement dossier, inventory or plan in its module, then "
+"schedule its existing task."
+
+msgid "Ressources et indisponibilités"
+msgstr "Resources and unavailability"
+
+msgid "Cette clé de création appartient à une autre opération."
+msgstr "This creation identifier belongs to another operation."
+
+msgid ""
+"Aucun blocage détecté pour les ressources déclarées. Les conditions seront "
+"revérifiées au démarrage."
+msgstr ""
+"No blocking issue was detected for the declared resources. Conditions will "
+"be checked again at the start."
+
+msgid "Chaque ressource est réservée exclusivement pendant le créneau."
+msgstr "Each resource is reserved exclusively for the time slot."
+
+msgid "Gestion des ressources"
+msgstr "Resource management"
+
+msgid "Consignes et résultat attendu"
+msgstr "Instructions and expected outcome"
+
+msgid "Définissez une répétition valide de 1 à 60 occurrences."
+msgstr "Choose a valid recurrence with 1 to 60 occurrences."
+
+msgid "Type d’activité"
+msgstr "Activity type"
+
+msgid "Planifier une activité"
+msgstr "Schedule an activity"
+
+msgid "Le graphe de dépendances dépasse la limite de vérification."
+msgstr "The dependency graph exceeds the verification limit."
+
+msgid "Semaine"
+msgstr "Week"
+
+msgid "Consignes"
+msgstr "Instructions"
+
+msgid ""
+"Décrivez la vérification des ressources et documents en 1 à 2 000 "
+"caractères."
+msgstr "Describe the resource and document checks in 1 to 2,000 characters."
+
+msgid "Responsabilités, ressources et validations dans un même espace."
+msgstr "Responsibilities, resources and approvals in one workspace."
+
+msgid "Code"
+msgstr "Code"
+
+msgid "Un prérequis n’est pas encore validé."
+msgstr "A prerequisite has not yet been approved."
+
+msgid ""
+"Les demandes restent dans leur workflow métier. Leur planification réutilise"
+" ces mêmes dossiers."
+msgstr ""
+"Requests remain in their business workflow. Scheduling reuses the same "
+"records."
+
+msgid "Traçabilité de l’exécution"
+msgstr "Execution traceability"
+
+msgid "Le démarrage est hors du créneau prévu. Faites replanifier l’activité."
+msgstr ""
+"The start is outside the scheduled slot. Have the activity rescheduled."
+
+msgid "Formation"
+msgstr "Training"
+
+msgid "Ressource indisponible"
+msgstr "Unavailable resource"
+
+msgid "Validé"
+msgstr "Approved"
+
+msgid "Heure locale"
+msgstr "Local time"
+
+msgid "Aucune charge affectée sur cette période."
+msgstr "No workload assigned in this period."
+
+msgid "Localisation"
+msgstr "Location"
+
+msgid "Demandes actives sans activité planifiée"
+msgstr "Active requests without scheduled activities"
+
+msgid ""
+"Les occurrences sont créées maintenant et restent modifiables "
+"individuellement. Aucun dossier métier n’est dupliqué."
+msgstr ""
+"Occurrences are created now and remain individually editable. No business "
+"dossier is duplicated."
+
+msgid "En cours"
+msgstr "In progress"
+
+msgid "Chaque semaine"
+msgstr "Every week"
+
+msgid "Affecté"
+msgstr "Assigned"
+
+msgid "Équipements et salles à réserver"
+msgstr "Equipment and rooms to book"
+
+msgid "Recherche"
+msgstr "Search"
+
+msgid "Disponibilité opérationnelle"
+msgstr "Operational availability"
+
+msgid "Salle"
+msgstr "Room"
+
+msgid "Aucun responsable actif n’est affecté."
+msgstr "No active team member is assigned."
+
+msgid "Définir le créneau"
+msgstr "Set the time slot"
+
+msgid ""
+"Une indisponibilité affecte votre activité. Son horaire n’a pas été déplacé "
+"automatiquement."
+msgstr ""
+"An unavailability period affects your activity. Its time has not been "
+"changed automatically."
+
+msgid ""
+"Seule une activité analytique peut être rattachée à une série non annulée."
+msgstr "Only an analytical activity can be linked to an open run."
+
+msgid ""
+"La fin doit suivre le début ; une activité ne peut pas dépasser 366 jours."
+msgstr "The finish must follow the start; an activity cannot exceed 366 days."
+
+msgid "Active"
+msgstr "Active"
+
+msgid ""
+"Les équipements et salles sont réservés exclusivement. Une indisponibilité "
+"signale les activités affectées sans déplacer leur horaire."
+msgstr ""
+"Equipment and rooms are exclusively booked. Unavailability flags affected "
+"activities without changing their scheduled times."
+
+msgid "Les consommations de cette série sont déjà confirmées."
+msgstr "Consumption for this run has already been confirmed."
+
+msgid "Indisponibilité ou maintenance"
+msgstr "Unavailability or maintenance"
+
+msgid "Les dates doivent comporter un fuseau horaire valide."
+msgstr "Dates must include a valid time zone."
+
+msgid "Fin déclarée"
+msgstr "Reported finish"
+
+msgid "Définir les prérequis"
+msgstr "Set prerequisites"
+
+msgid "Type de tâche"
+msgstr "Task type"
+
+msgid "Sélectionnez soit un membre, soit une ressource."
+msgstr "Select either a team member or a resource."
+
+msgid "À planifier"
+msgstr "To schedule"
+
+msgid "Aucun échantillon n’est identifié pour cette série."
+msgstr "No sample is identified for this run."
+
+msgid "La série ou sa demande est annulée, rejetée ou archivée."
+msgstr "The run or its request is cancelled, rejected or archived."
+
+msgid "Une ressource est indisponible ou en maintenance sur ce créneau."
+msgstr "A resource is unavailable or under maintenance during this slot."
+
+msgid "À valider"
+msgstr "To approve"
+
+msgid "Vérification des ressources"
+msgstr "Resource check"
+
+msgid "Ouvrir l’inventaire"
+msgstr "Open the inventory"
+
+msgid "Un équipement ou une salle est déjà réservé sur ce créneau."
+msgstr "An instrument or room is already booked in this time slot."
+
+msgid "Échéances dépassées"
+msgstr "Overdue deadlines"
+
+msgid "Aucune échéance dépassée."
+msgstr "No overdue deadlines."
+
+msgid "Aucune ressource matérielle réservée"
+msgstr "No equipment or room reserved"
+
+msgid "Pilotage PLAGENOR"
+msgstr "PLAGENOR operations"
+
+msgid "Activités à valider avant le démarrage"
+msgstr "Activities requiring approval before starting"
+
+msgid "Début prévu"
+msgstr "Scheduled start"
+
+msgid "Série analytique liée"
+msgstr "Linked analytical run"
+
+msgid "Fin d’indisponibilité"
+msgstr "Unavailable until"
+
+msgid "Planning & activités"
+msgstr "Planning & activities"
+
+msgid "Créneau prévu"
+msgstr "Scheduled time slot"
+
+msgid "Justifiez les prérequis et limitez-les à 100 activités."
+msgstr "Justify the prerequisites and limit them to 100 activities."
+
+msgid "En retard"
+msgstr "Overdue"
+
+msgid "Activité analytique"
+msgstr "Analytical activity"
+
+msgid "Aucune activité"
+msgstr "No activity"
+
+msgid "Liste"
+msgstr "List"
+
+msgid "Validation finale"
+msgstr "Final approval"
+
+msgid "Aucun prérequis déclaré."
+msgstr "No prerequisites declared."
+
+msgid "Aucun travail en attente de validation."
+msgstr "No work awaiting approval."
+
+msgid ""
+"J’ai vérifié les ressources, les documents et les conditions nécessaires à "
+"cette activité"
+msgstr ""
+"I have checked the resources, documents and conditions required for this "
+"activity"
+
+msgid "Ouvrir le cahier des charges"
+msgstr "Open the procurement specifications"
+
+msgid "La demande liée est rejetée ou archivée."
+msgstr "The linked request is rejected or archived."
+
+msgid "Contrôle qualité"
+msgstr "Quality control"
+
+msgid "Planifier, affecter, vérifier et valider"
+msgstr "Plan, assign, check and approve"
+
+msgid "Maintenance"
+msgstr "Maintenance"
+
+msgid "Soumis à validation"
+msgstr "Submitted for approval"
+
+msgid "Aucune ressource configurée."
+msgstr "No resources configured."
+
+msgid "Chaque jour"
+msgstr "Every day"
+
+msgid "Jour"
+msgstr "Day"
+
+msgid "activités sur la période"
+msgstr "activities in this period"
+
+msgid "Définir ou modifier le créneau"
+msgstr "Set or change the time slot"
+
+msgid "Membre indisponible"
+msgstr "Unavailable team member"
+
+msgid "Dernière vérification des ressources"
+msgstr "Last resource check"
+
+msgid "Prérequis géré par une autre équipe"
+msgstr "Prerequisite managed by another team"
+
+msgid ""
+"Un échantillon de la série n’est pas réceptionné ou n’est pas utilisable."
+msgstr "A sample in the run has not been received or is not usable."
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Séries analytiques"
+msgstr "Analytical runs"
+
+msgid "Vérification consignée"
+msgstr "Recorded check"
+
+msgid "Indisponibilités actives"
+msgstr "Active unavailability periods"
+
+msgid "Ressources réservées"
+msgstr "Reserved resources"
+
+msgid "Échéance"
+msgstr "Deadline"
+
+msgid "Ajouter une ressource"
+msgstr "Add a resource"
+
+msgid "Démarrage enregistré"
+msgstr "Recorded start"
+
+msgid "Tâches sans créneau"
+msgstr "Unscheduled tasks"
+
+msgid "Planifier une étape"
+msgstr "Schedule a step"
+
+msgid "Fin prévue"
+msgstr "Scheduled finish"
+
+msgid "Le planning de votre activité a été défini ou modifié."
+msgstr "Your activity’s schedule has been set or changed."
+
+msgid "Nombre d’occurrences à créer"
+msgstr "Number of occurrences to create"
+
+msgid "Lever l’indisponibilité"
+msgstr "Clear unavailability"
+
+msgid ""
+"Durées réservées dans le calendrier ; ce ne sont pas des heures "
+"effectivement travaillées."
+msgstr "Time reserved in the calendar, not hours actually worked."
+
+msgid "Intitulé de l’activité"
+msgstr "Activity title"
+
+msgid "Préparer les prérequis"
+msgstr "Manage prerequisites"
+
+msgid "Enregistrer la vérification"
+msgstr "Record the check"
+
+msgid "Compte rendu / justification"
+msgstr "Completion report / justification"
+
+msgid "Déclarer une indisponibilité"
+msgstr "Record unavailability"
+
+msgid "Cahier des charges"
+msgstr "Procurement specifications"
+
+msgid ""
+"Une activité planifiée doit être démarrée puis accompagnée d’un compte "
+"rendu."
+msgstr ""
+"A scheduled activity must be started and then accompanied by a completion "
+"report."
+
+msgid "La série ne correspond pas à la demande sélectionnée."
+msgstr "The run does not match the selected request."
+
+msgid "Justification de la modification"
+msgstr "Reason for the change"
+
+msgid "Autre ressource"
+msgstr "Other resource"
+
+msgid "Ouvrir la série analytique"
+msgstr "Open the analytical run"
+
+msgid "Le responsable est déjà affecté à une autre activité sur ce créneau."
+msgstr ""
+"The assignee is already scheduled for another activity in this time slot."
+
+msgid "Justifiez la levée de l’indisponibilité."
+msgstr "Provide a reason for clearing the unavailability."
+
+msgid "Identifiant de création invalide."
+msgstr "Invalid creation identifier."
+
+msgid "Non affecté"
+msgstr "Unassigned"
+
+msgid "Justification de la levée d’indisponibilité"
+msgstr "Reason for clearing unavailability"
+
+msgid "Normale"
+msgstr "Normal"
+
+msgid "Exécution, compte rendu et validation"
+msgstr "Execution, report and approval"
+
+msgid "Aujourd’hui"
+msgstr "Today"
+
+msgid "Le membre doit déjà être autorisé à traiter cette demande."
+msgstr "The team member must already be authorised to process this request."
+
+msgid "Cette activité n’a pas encore de créneau."
+msgstr "This activity has no scheduled time slot yet."
+
+msgid "Plan d’approvisionnement"
+msgstr "Procurement plan"
+
+msgid "Réunion"
+msgstr "Meeting"
+
+msgid "Toutes les tâches"
+msgstr "All tasks"
+
+msgid "Contrôle de réception"
+msgstr "Receipt inspection"
+
+msgid "Un prérequis est inconnu ou correspond à l’activité elle-même."
+msgstr "A prerequisite is unknown or is the activity itself."
+
+msgid "Numéro de série"
+msgstr "Serial number"
+
+msgid "Vérifications effectuées et références des pièces contrôlées"
+msgstr "Checks performed and references of reviewed documents"
+
+msgid "Prérequis et dépendances"
+msgstr "Prerequisites and dependencies"
+
+msgid "Charge planifiée sur la période"
+msgstr "Planned workload for the period"
+
+msgid "Aucune activité sur cette période."
+msgstr "No activities in this period."
+
+msgid "Consulter toutes les tâches"
+msgstr "View all tasks"
+
+msgid "Responsable"
+msgstr "Manager"
+
+msgid "Justification des prérequis"
+msgstr "Reason for prerequisites"
+
+msgid "Le nouveau responsable n’est pas autorisé à traiter la demande liée."
+msgstr "The new assignee is not authorised to process the linked request."
+
+msgid "Confirmez d’abord les consommations réelles dans la série analytique."
+msgstr "First confirm actual consumption in the analytical run."
+
+msgid ""
+"La vérification des ressources et des documents requis reste à confirmer."
+msgstr "The required resource and document checks still need confirmation."
+
+msgid "Une série analytique doit être planifiée individuellement."
+msgstr "An analytical run must be scheduled individually."
+
+msgid "Tâches et délégations"
+msgstr "Tasks and delegation"
+
+msgid "Membre responsable"
+msgstr "Assigned team member"
+
+msgid "Affecter une tâche sans créneau"
+msgstr "Assign an unscheduled task"
+
+msgid ""
+"Les réservations utilisables ne couvrent pas toutes les quantités prévues "
+"pour la série."
+msgstr "Usable reservations do not cover all quantities planned for the run."
+
+msgid "Calendrier des activités"
+msgstr "Activity calendar"
+
+msgid "Une seule fois"
+msgstr "Once"
+
+msgid "Motif"
+msgstr "Reason"
+
+msgid "Inventaire physique"
+msgstr "Physical inventory"
+
+msgid "Autoriser les estimations de ce dossier"
+msgstr "Allow access to this dossier’s estimates"
+
+msgid "Toute l’équipe"
+msgstr "Whole team"
+
+msgid "Besoins, lots réservés et consommations réelles"
+msgstr "Requirements, reserved batches and actual consumption"
+
+msgid "activités"
+msgstr "activities"
+
+msgid "Vérification avant démarrage"
+msgstr "Pre-start readiness check"
+
+msgid "Une continuité entre ressources, responsabilités et approvisionnement."
+msgstr "Connecting resources, responsibilities and procurement."
+
+msgid "Vers"
+msgstr "To"
+
+msgid "Disponibilité"
+msgstr "Availability"
+
+msgid "Révision"
+msgstr "Revision"
+
+msgid "Nom"
+msgstr "Last name"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Mise à jour"
+msgstr "Updated"
+
+msgid "Quantité"
+msgstr "Quantity"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "De"
+msgstr "From"
+
+msgid "Rapport"
+msgstr "Report"
+
+msgid "Référence"
+msgstr "Reference"
+
+msgid "Rejeté"
+msgstr "Rejected"
+
+msgid "Fichier"
+msgstr "File"
+
+msgid "Disponible"
+msgstr "Available"
+
+msgid "Attention"
+msgstr "Warning"
+
+msgid "Type de document"
+msgstr "Document type"
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Aperçu"
+msgstr "Preview"
+
+msgid "Historique"
+msgstr "History"
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "Validation is busy. Please try again shortly."
+
+msgid "Clôturé"
+msgstr "Closed"
+
+msgid "Demande"
+msgstr "Request"
+
+msgid "Inactive"
+msgstr "Inactive"

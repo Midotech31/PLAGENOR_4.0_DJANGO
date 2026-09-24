@@ -218,7 +218,7 @@ class Command(BaseCommand):
         )
 
         self.stdout.write('')
-        self.stdout.write(self.style.SUCCESS(f"✓ Demo request {req.display_id} created."))
+        self.stdout.write(self.style.SUCCESS(f"Demo request {req.display_id} created."))
         self.stdout.write('')
         self.stdout.write('  status      : ' + req.status)
         self.stdout.write('  service     : ' + service.code + ' — ' + service.name)

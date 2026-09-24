@@ -97,7 +97,8 @@ class AcceptanceFlows(TestCase):
         self.assertEqual(next(x for x in schema_for_service(pcr)['parameters'] if x['name']=='pcr_kit')['options'][0]['value'],'Approved A')
 
     def test_legacy_import_payload_limit_and_guest_query_routing(self):
-        for query,target in [({'channel':'IBTIKAR'},reverse('ibtikar:index')),({'channel':'IBTIKAR','service':'EGTP-CAN'},reverse('ibtikar:new',args=['EGTP-CAN']))]:
+        self.assertContains(self.client.get(reverse('guest_submit'), {'channel':'IBTIKAR'}), 'data-guest-channel-picker')
+        for query,target in [({'channel':'IBTIKAR','service':'EGTP-CAN'},reverse('ibtikar:new',args=['EGTP-CAN']))]:
             self.assertRedirects(self.client.get(reverse('guest_submit'),query),target,fetch_redirect_response=False)
         service=Service.objects.get(code='EGTP-CAN')
         response=self.client.post(reverse('dashboard:requester_create'),{'service_id':str(service.pk),'param_description':'x'*500001})
@@ -113,7 +114,7 @@ class AcceptanceFlows(TestCase):
         response=self.client.post(reverse('accounts:convert_guest_verify',args=[token]),{'password':'Fixture-conversion-only!2026'})
         self.assertRedirects(response,reverse('ibtikar:index'),fetch_redirect_response=False)
         obj.request.refresh_from_db();self.assertIsNotNone(obj.request.requester_id)
-        self.assertContains(self.client.get(reverse('ibtikar:index')),obj.request.display_id)
+        self.assertContains(self.client.get(reverse('ibtikar:index'), follow=True),obj.request.display_id)
 
     def test_staff_assignment_permissions_and_closed_requests(self):
         from core.ibtikar.views import may_read
@@ -138,7 +139,7 @@ class AcceptanceFlows(TestCase):
         for values,actor,revision in [({},self.ops,0),({},self.requester,1),({'validated_price':'10','price_justification':'short'},self.ops,1),({'validated_price':'NaN','price_justification':'Explicit pricing reason'},self.ops,1),({'validated_price':'200001','price_justification':'Explicit pricing reason'},self.ops,1)]:
             with self.subTest(values=values),self.assertRaises(ValidationError):save_staff(obj.pk,values,actor,revision)
         save_staff(obj.pk,{'validated_price':'100','price_justification':'Explicit pricing reason'},self.ops,1)
-        with self.assertRaises(ValidationError):save_staff(obj.pk,{},self.ops,2)
+        with self.assertRaises(ValidationError):save_staff(obj.pk,{'validated_price':None},self.ops,2)
         self.client.force_login(self.ops)
         response=self.client.post(reverse('ibtikar:staff',args=[obj.request_id]),{'revision':'bad'})
         self.assertEqual(response.status_code,400)

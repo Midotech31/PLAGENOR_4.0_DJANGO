@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% load i18n %}
 
 {% block title %}{% trans "Préparer le devis" %} — {{ req.display_id }}{% endblock %}
@@ -125,11 +126,11 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="text-sm">{% trans "Frais administratifs (DA)" %}</label>
-                            <input type="number" name="admin_fees" id="admin_fees" step="0.01" value="{{ existing_quote.admin_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                            <input type="number" name="admin_fees" id="admin_fees" step="0.01" value="{{ existing_quote.admin_fees|default:0|unlocalize }}" class="form-control" oninput="recalcTotals()">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="text-sm">{% trans "Frais de rapport (DA)" %}</label>
-                            <input type="number" name="report_fees" id="report_fees" step="0.01" value="{{ existing_quote.report_fees|default:0 }}" class="form-control" oninput="recalcTotals()">
+                            <input type="number" name="report_fees" id="report_fees" step="0.01" value="{{ existing_quote.report_fees|default:0|unlocalize }}" class="form-control" oninput="recalcTotals()">
                         </div>
                     </div>
                     <div class="form-group" style="margin-top:12px;">

@@ -1,4 +1,4 @@
-{% extends 'base_public.html' %}
+{% extends workspace_base|default:"base_public.html" %}
 {% load i18n static %}
 {% block title %}{% trans "Formulaires IBTIKAR" %} — PLAGENOR 4.0{% endblock %}
 {% block content %}

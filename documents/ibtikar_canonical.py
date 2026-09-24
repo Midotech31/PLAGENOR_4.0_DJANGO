@@ -5,6 +5,7 @@ import re
 import uuid
 
 from docx import Document
+from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -32,6 +33,9 @@ TEXT = {
     'operator_signature': ('Signature de l’opérateur', 'Operator signature', 'توقيع الموظف المكلف'),
     'head': ('Visa du Chef du Service Commun', 'Common Service Head endorsement', 'تأشيرة رئيس المصلحة المشتركة'),
     'director': ('Visa du Directeur de l’ESSBO', 'ESSBO Director endorsement', 'تأشيرة مدير المدرسة'),
+    'staff_help': ('À compléter par le personnel habilité lors de la réception et du traitement, dans l’application ou sur la fiche imprimée.',
+                   'To be completed by authorised staff during receipt and processing, in the application or on the printed form.',
+                   'يستكملها الموظفون المخولون عند الاستلام والمعالجة، في التطبيق أو على الاستمارة المطبوعة.'),
     'unknown': ('Non renseigné', 'Not provided', 'غير مذكور'),
     'source': ('Version du formulaire source', 'Source form version', 'نسخة الاستمارة المرجعية'),
     'revision': ('Révision numérique', 'Digital revision', 'المراجعة الرقمية'),
@@ -91,7 +95,7 @@ def _display(row):
     return '\n'.join(selected) if selected else str(row.get('display', ''))
 
 
-def _kv_table(doc, rows, language, *, dense=False):
+def _kv_table(doc, rows, language, *, dense=False, writable=False):
     if not rows:
         return None
     table = doc.add_table(rows=0, cols=2)
@@ -103,6 +107,10 @@ def _kv_table(doc, rows, language, *, dense=False):
         cells[0].width, cells[1].width = Cm(6.1), Cm(11.0)
         cells[0].text = str(item['label'])
         cells[1].text = _display(item)
+        if writable:
+            row = table.rows[-1]
+            row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+            row.height = Cm(1.25 if item.get('field_type') == 'textarea' else 0.85)
         set_cant_split(table.rows[-1])
     style_key_value_table(table, theme=PLAGENOR_THEME, dense=dense)
     if language == 'ar':
@@ -120,7 +128,7 @@ def _control_table(doc, project, metadata, language):
         {'label': text('source', language), 'display': project.get('source_version') or text('unknown', language)},
         {'label': text('revision', language), 'display': str(metadata.get('revision') or text('unknown', language))},
         {'label': 'Code', 'display': project['service_code']},
-        {'label': text('reference', language), 'display': metadata.get('external_reference') or text('unknown', language)},
+        {'label': text('reference', language), 'display': metadata.get('external_reference') or ''},
         {'label': text('count', language), 'display': project.get('sample_count', 0)},
     ]
     return _kv_table(doc, rows, language, dense=True)
@@ -279,12 +287,14 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     add_callout(doc, ethics, theme=PLAGENOR_THEME)
     add_section_heading(doc, text('signature', language), theme=PLAGENOR_THEME)
     _signature_image(doc, signature_bytes)
-    add_section_heading(doc, text('staff', language), theme=PLAGENOR_THEME)
+    heading = add_section_heading(doc, text('staff', language), theme=PLAGENOR_THEME)
+    heading.paragraph_format.page_break_before = True
+    doc.add_paragraph(text('staff_help', language))
     if metadata.get('operator_name'):
         p = doc.add_paragraph(f"{text('operator', language)} : {metadata['operator_name']}")
         p.paragraph_format.keep_with_next = True
     staff_rows = project.get('staff') or []
-    _kv_table(doc, staff_rows, language, dense=True)
+    _kv_table(doc, staff_rows, language, writable=True)
     add_signature_grid(
         doc, [text('operator_signature', language), text('head', language), text('director', language)],
         theme=PLAGENOR_THEME,
@@ -304,7 +314,7 @@ def generate_canonical_form(req):
     from django.utils.translation import get_language
     from core.ibtikar.models import IbtikarSubmission
     from core.ibtikar.schema import (
-        active_data, active_names, label, projection, schema_for_service,
+        active_data, active_names, label, projection, reference_projection, schema_for_service,
     )
     from core.ibtikar.legacy import document_initial
     language = (get_language() or 'fr').split('-')[0]
@@ -312,11 +322,7 @@ def generate_canonical_form(req):
     attachments, signature, legacy = [], None, None
     if submission:
         schema = submission.schema
-        project = projection(
-            schema, submission.applicant, submission.parameters,
-            submission.samples, submission.staff, language,
-            print_blank_staff=True,
-        )
+        project = reference_projection(submission, language)
         active_samples = [
             active_data(schema, 'samples', row, submission.parameters)
             for row in submission.samples

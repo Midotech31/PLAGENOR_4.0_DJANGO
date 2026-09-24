@@ -94,7 +94,9 @@ class UncoveredContractsTests(TestCase):
             for params in ({}, {'analysis_mode':'missing'}):
                 with self.assertRaises(PricingConfigurationError):
                     resolve_cost(self.service, 'GENOCLAB', sample_table=[{'id':1}], service_params=params)
-            for invalid in (['invalid'], {'base_price': {'default':10}}):
+            self.service.pricing_data = {'base_price': {'default':10}, 'multipliers':{}}
+            self.assertEqual(resolve_cost(self.service, 'GENOCLAB', sample_table=[{'id':1}])['total'], Decimal('10.00'))
+            for invalid in (['invalid'], {'multipliers': {'full': 2}}):
                 self.service.pricing_data = invalid
                 with self.assertRaises(PricingConfigurationError):
                     resolve_cost(self.service, 'GENOCLAB', sample_table=[{'id':1}])

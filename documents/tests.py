@@ -445,6 +445,10 @@ class DocumentViewCoverageTests(TestCase):
 
     def test_template_management_crud_and_toggle(self):
         from documents.models import ServiceTemplate
+        import io
+        from docx import Document
+        buffer = io.BytesIO(); Document().save(buffer)
+        valid_docx = buffer.getvalue()
 
         self.client.force_login(self.admin)
         for url in (
@@ -456,11 +460,11 @@ class DocumentViewCoverageTests(TestCase):
             self.assertEqual(self.client.get(url).status_code, 200)
 
         invalid = self.client.post('/documents/templates/create/', {'name': ''})
-        self.assertEqual(invalid.status_code, 200)
+        self.assertEqual(invalid.status_code, 400)
         created = self.client.post('/documents/templates/create/', {
             'service': str(self.service.pk), 'template_type': 'IBTIKAR_FORM',
             'name': 'Uploaded template', 'description': 'Coverage',
-            'file': SimpleUploadedFile('new.docx', b'docx'),
+            'file': SimpleUploadedFile('new.docx', valid_docx, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
         })
         self.assertEqual(created.status_code, 302)
         uploaded = ServiceTemplate.objects.get(name='Uploaded template')
@@ -474,10 +478,10 @@ class DocumentViewCoverageTests(TestCase):
 
         invalid_edit = self.client.post(
             f'/documents/templates/{uploaded.pk}/edit/', {'name': ''})
-        self.assertEqual(invalid_edit.status_code, 200)
+        self.assertEqual(invalid_edit.status_code, 400)
         valid_edit = self.client.post(f'/documents/templates/{uploaded.pk}/edit/', {
             'name': 'Renamed template', 'description': 'Updated', 'is_active': 'on',
-            'file': SimpleUploadedFile('replacement.docx', b'new docx'),
+            'file': SimpleUploadedFile('replacement.docx', valid_docx, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
         })
         self.assertEqual(valid_edit.status_code, 302)
         deleted = self.client.post(f'/documents/templates/{uploaded.pk}/delete/')
@@ -502,11 +506,11 @@ class DocumentViewCoverageTests(TestCase):
              'body': 'x', 'services': ['not-a-uuid']},
         ]
         for payload in invalid_payloads:
-            self.assertEqual(self.client.post('/documents/blocks/create/', payload).status_code, 200)
+            self.assertEqual(self.client.post('/documents/blocks/create/', payload).status_code, 400)
 
         created = self.client.post('/documents/blocks/create/', {
             'template_type': 'QUOTE', 'position': 'TOP', 'language': 'en',
-            'title': 'English notice', 'body': 'Required text', 'priority': 'bad',
+            'title': 'English notice', 'body': 'Required text', 'priority': '0',
             'is_active': 'on', 'services': [str(self.service.pk)],
         })
         self.assertEqual(created.status_code, 302)

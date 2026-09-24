@@ -1,0 +1,529 @@
+from datetime import timedelta
+from decimal import Decimal
+import uuid
+
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError, transaction
+from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
+
+from accounts.models import MemberProfile
+from core.models import Request, Service
+from core.ibtikar.models import IbtikarSubmission
+from core.ibtikar.schema import get_schema, schema_digest
+from erp.models import (BiologicalSample, Capability, Location, PositionReservation, SampleEvent,
+    StorageIncident, StoragePosition, StorageTransfer, TemperatureReading, WorkItem)
+from erp.services.biobank import (aliquot_sample, biobank_scope, build_positions,
+    convert_sample_quantity, receive_sample, reconcile_biobank, reserve_position,
+    sample_action, source_samples, transfer_sample)
+from erp.services.cold_storage import (apply_transfer_plan, create_incident,
+    record_temperature, resolve_incident, transfer_plan)
+from erp.services.common import Conflict
+from erp.services.storage import save_location
+from erp.services.work import create_work
+from erp.test_operations import OperationFixtures
+
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'], SECURE_SSL_REDIRECT=False,
+    STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+              'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+class BiobankTests(OperationFixtures, TestCase):
+    def setUp(self):
+        self.box_location = save_location(self.admin, {'code': 'CRYO1', 'name': 'Cryoboîte 1',
+            'kind': self.storage_kind, 'parent': self.rack, 'grid_rows': 2, 'grid_columns': 3})
+        self.target = save_location(self.admin, {'code': 'CRYO2', 'name': 'Cryoboîte 2',
+            'kind': self.storage_kind, 'parent': self.freezer, 'grid_rows': 2, 'grid_columns': 3})
+        self.workbench = save_location(self.admin, {'code': 'BENCH', 'name': 'Paillasse', 'kind': self.storage_kind, 'parent': self.lab})
+        self.positions = list(self.box_location.positions.order_by('row', 'column'))
+        self.targets = list(self.target.positions.order_by('row', 'column'))
+
+    def sample(self, code='S-1', amount=100, **changes):
+        values = {'key': uuid.uuid4(), 'code': code, 'amount': Decimal(amount), 'unit': self.ul,
+            'location': self.box_location, 'position': self.positions[0],
+            'received_on': timezone.localdate(), 'reason': 'Réception physique contrôlée',
+            'sample_type': 'ADN extrait', 'matrix': 'Culture bactérienne', 'freeze_thaw_limit': 2}
+        values.update(changes)
+        return receive_sample(self.admin, **values), values
+
+    def test_grids_created_idempotently_and_occupied_positions_are_unique(self):
+        self.assertEqual(len(self.positions), 6)
+        build_positions(self.admin, self.box_location.pk, expected=self.box_location.version)
+        self.assertEqual(self.box_location.positions.count(), 6)
+        sample, values = self.sample()
+        self.assertEqual(receive_sample(self.admin, **values).pk, sample.pk)
+        self.assertEqual(BiologicalSample.objects.count(), 1)
+        with self.assertRaises(ValidationError):
+            self.sample('S-2')
+        with self.assertRaises(ValidationError):
+            save_location(self.admin, {'grid_rows': 1, 'grid_columns': 1, 'capacity': 1},
+                pk=self.box_location.pk, expected=self.box_location.version)
+        with self.assertRaises(ValidationError):
+            save_location(self.admin, {'active': False}, pk=self.box_location.pk, expected=self.box_location.version)
+        self.assertEqual(reconcile_biobank(self.admin), [])
+        self.assertEqual(sample.events.count(), 1)
+
+    def test_position_reservations_expire_and_respect_assignee(self):
+        reservation = reserve_position(self.admin, self.positions[0].pk, assignee=self.operator,
+            until=timezone.now() + timedelta(hours=1), reason='Réception planifiée')
+        with self.assertRaises(ValidationError):
+            self.sample()
+        self.grant(Capability.MANAGE_BIOBANK, location=self.freezer)
+        values = {'key': uuid.uuid4(), 'code': 'S-OP', 'amount': 10, 'unit': self.ul,
+            'location': self.box_location, 'position': self.positions[0], 'received_on': timezone.localdate(), 'reason': 'Réception assignée'}
+        sample = receive_sample(self.operator, **values)
+        reservation.refresh_from_db()
+        self.assertFalse(reservation.active)
+        self.assertEqual(sample.position_id, self.positions[0].pk)
+        with self.assertRaises(PermissionDenied):
+            reserve_position(self.operator, self.positions[1].pk, assignee=self.second,
+                until=timezone.now()+timedelta(hours=1), reason='Interdit')
+        reservation2 = reserve_position(self.admin, self.positions[1].pk, assignee=self.second,
+            until=timezone.now()+timedelta(hours=1), reason='À expirer')
+        PositionReservation.objects.filter(pk=reservation2.pk).update(until=timezone.now()-timedelta(minutes=1))
+        self.sample('S-EXP', position=self.positions[1])
+        reservation2.refresh_from_db()
+        self.assertFalse(reservation2.active)
+
+    def test_sample_receipt_rejects_invalid_values_atomically(self):
+        _, valid = self.sample()
+        invalid = [{'amount': 0}, {'amount': 'NaN'}, {'amount': '0.0000001'},
+            {'received_on': timezone.localdate()+timedelta(days=1)}, {'position': None},
+            {'position': self.targets[0]}, {'collected_on': timezone.localdate()+timedelta(days=1)},
+            {'concentration_value': Decimal('5')}, {'temperature_min': 2, 'temperature_max': -20},
+            {'source_key': 'unlinked'}, {'reason': ''}]
+        for values in invalid:
+            with self.subTest(values=values), self.assertRaises(ValidationError):
+                receive_sample(self.admin, **{**valid, 'key': uuid.uuid4(), 'code': 'BAD', 'position': self.positions[1], **values})
+            self.assertEqual(BiologicalSample.objects.count(), 1)
+            self.assertEqual(SampleEvent.objects.count(), 1)
+        with self.assertRaises(Conflict):
+            receive_sample(self.admin, **{**valid, 'amount': 101})
+        self.assertEqual(convert_sample_quantity(1, self.ml, self.ul), Decimal(1000))
+        with self.assertRaises(ValidationError):
+            convert_sample_quantity(1, self.unit, self.ml)
+
+    def test_request_source_bridge_has_no_duplicate_and_no_silent_source_update(self):
+        service = Service.objects.create(code='EGTP-GDE', name='Extraction')
+        profile, _ = MemberProfile.objects.get_or_create(user=self.operator)
+        req = Request.objects.create(requester=self.outsider, assigned_to=profile, service=service,
+            status='IN_PROGRESS', title='Demande synthétique', sample_table=[{'sample_code': 'B1', 'quantity': '25', 'quantity_unit': 'µL', 'sample_type': 'ADN'}])
+        self.grant(Capability.MANAGE_BIOBANK, location=self.freezer)
+        source = source_samples(self.operator, req)[0]
+        sample, values = self.sample(request=req, source_key=source['key'], source_fingerprint=source['fingerprint'])
+        self.assertEqual(sample.origin_request_id, req.pk)
+        self.assertEqual(source_samples(self.operator, req)[0]['existing'].pk, sample.pk)
+        with self.assertRaises(Conflict):
+            receive_sample(self.admin, **{**values, 'key': uuid.uuid4(), 'code': 'DUP', 'position': self.positions[1]})
+        req.sample_table[0]['quantity'] = '30'
+        req.save(update_fields=['sample_table'])
+        self.assertTrue(source_samples(self.operator, req)[0]['source_changed'])
+        sample.refresh_from_db()
+        self.assertEqual(sample.source_snapshot['row']['quantity'], '25')
+        with self.assertRaises(PermissionDenied):
+            source_samples(self.second, req)
+        self.client.force_login(self.operator)
+        response = self.client.get(reverse('erp:sample-sources', args=[req.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'B1')
+        req.sample_table = [{'sample_code': 'B1'}, {'sample_code': 'b1'}]
+        req.save(update_fields=['sample_table'])
+        with self.assertRaises(ValidationError):
+            source_samples(self.operator, req)
+
+    def test_ibtikar_source_reordering_keeps_identity_and_stale_receipt_is_rejected(self):
+        service = Service.objects.create(code='EGTP-GDE', name='Extraction')
+        req = Request.objects.create(requester=self.outsider, service=service, title='IBTIKAR de recette', status='IN_PROGRESS')
+        schema = get_schema('EGTP-GDE')
+        submission = IbtikarSubmission.objects.create(request=req, schema=schema, schema_hash=schema_digest(schema),
+            samples=[{'sample_code': 'A', 'quantity': '10'}, {'sample_code': 'B', 'quantity': '20'}])
+        sources = source_samples(self.admin, req)
+        submission.samples.reverse()
+        submission.save(update_fields=['samples'])
+        reordered = source_samples(self.admin, req)
+        self.assertEqual(sources[0]['key'], reordered[1]['key'])
+        self.assertEqual(sources[0]['fingerprint'], reordered[1]['fingerprint'])
+        submission.samples[1]['quantity'] = '50'
+        submission.save(update_fields=['samples'])
+        with self.assertRaises(Conflict):
+            self.sample(request=req, source_key=sources[0]['key'], source_fingerprint=sources[0]['fingerprint'])
+        self.assertFalse(BiologicalSample.objects.exists())
+
+    def test_malformed_source_and_collection_date_cannot_enter_the_biobank(self):
+        service=Service.objects.create(code='SOURCE-DATE',name='Contrôle des prélèvements')
+        req=Request.objects.create(requester=self.outsider,service=service,
+            title='Demande avec date invalide',status='IN_PROGRESS',sample_table='invalid')
+        with self.assertRaises(ValidationError):
+            source_samples(self.admin,req)
+        req.sample_table=[{'sample_code':'B-1','collection_date':'31/12/2026'}]
+        req.save(update_fields=['sample_table'])
+        source=source_samples(self.admin,req)[0]
+        with self.assertRaises(ValidationError):
+            self.sample(request=req,source_key=source['key'],source_fingerprint=source['fingerprint'])
+        self.assertFalse(BiologicalSample.objects.exists())
+        req.sample_table=[None]
+        req.save(update_fields=['sample_table'])
+        with self.assertRaises(ValidationError):
+            source_samples(self.admin,req)
+
+    def test_capacity_and_terminal_events_preserve_biological_accounting(self):
+        self.workbench=save_location(self.admin,{'capacity':1},pk=self.workbench.pk,
+            expected=self.workbench.version)
+        first,_=self.sample('CAPACITY-1',location=self.workbench,position=None)
+        with self.assertRaises(ValidationError):
+            self.sample('CAPACITY-2',location=self.workbench,position=None)
+        self.assertEqual(BiologicalSample.objects.count(),1)
+        shipped=sample_action(self.admin,first.pk,key=uuid.uuid4(),action='SHIPMENT',
+            reason='Expédition documentée')
+        first.refresh_from_db()
+        self.assertEqual((first.status,first.remaining_quantity),('SHIPPED',0))
+        self.assertEqual(shipped.quantity_delta,-100)
+        with self.assertRaises(ValidationError):
+            sample_action(self.admin,first.pk,key=uuid.uuid4(),action='ANALYSIS',reason='Clôturé')
+        destroyed,_=self.sample('CAPACITY-3',location=self.workbench,position=None)
+        sample_action(self.admin,destroyed.pk,key=uuid.uuid4(),action='DESTRUCTION',
+            reason='Élimination contrôlée')
+        destroyed.refresh_from_db()
+        self.assertEqual((destroyed.status,destroyed.remaining_quantity),('DESTROYED',0))
+        self.assertEqual(reconcile_biobank(self.admin),[])
+
+    def test_position_builder_rejects_a_grid_over_ten_thousand_slots(self):
+        Location.objects.filter(pk=self.box_location.pk).update(grid_rows=101,grid_columns=100)
+        with self.assertRaises(ValidationError):
+            build_positions(self.admin,self.box_location.pk,expected=self.box_location.version)
+        self.assertEqual(self.box_location.positions.count(),6)
+
+    def test_aliquot_parent_volume_conservation_and_idempotent_retry(self):
+        parent, _ = self.sample()
+        key = uuid.uuid4()
+        values = {'key': key, 'code': 'A-1', 'amount': Decimal('0.025'), 'unit': self.ml,
+            'location': self.box_location, 'position': self.positions[1], 'reason': 'Aliquot pour analyse'}
+        child = aliquot_sample(self.admin, parent.pk, **values)
+        self.assertEqual(aliquot_sample(self.admin, parent.pk, **values).pk, child.pk)
+        parent.refresh_from_db()
+        self.assertEqual((parent.remaining_quantity, child.remaining_quantity), (75, 25))
+        self.assertEqual(child.parent_id, parent.pk)
+        self.assertEqual(child.root_sample_id, parent.pk)
+        self.assertEqual(child.sample_type, '')
+        self.assertEqual(child.shared_metadata.sample_type, 'ADN extrait')
+        self.assertEqual(reconcile_biobank(self.admin), [])
+        with self.assertRaises(ValidationError):
+            aliquot_sample(self.admin, parent.pk, **{**values, 'key': uuid.uuid4(), 'code': 'A-2', 'amount': 76, 'unit': self.ul, 'position': self.positions[2]})
+        self.assertEqual(BiologicalSample.objects.count(), 2)
+        self.assertEqual(reconcile_biobank(self.admin), [])
+
+    def test_chain_of_custody_checkout_return_thaw_and_terminal_consumption(self):
+        sample, _ = self.sample()
+        checkout = sample_action(self.admin, sample.pk, key=uuid.uuid4(), action='CHECK_OUT', reason='Préparation analyse',
+            destination=self.workbench, thawed=True)
+        sample.refresh_from_db()
+        self.assertEqual(sample.status, 'OUT')
+        self.assertIsNone(sample.position_id)
+        self.assertEqual(sample.freeze_thaw_cycles, 0)
+        BiologicalSample.objects.filter(pk=sample.pk).update(checked_out_at=timezone.now()-timedelta(minutes=15))
+        values = {'key': uuid.uuid4(), 'action': 'RETURN', 'reason': 'Retour au froid', 'destination': self.box_location, 'position': self.positions[0]}
+        returned = sample_action(self.admin, sample.pk, **values)
+        self.assertEqual(sample_action(self.admin, sample.pk, **values).pk, returned.pk)
+        sample.refresh_from_db()
+        self.assertEqual(sample.status, 'STORED')
+        self.assertEqual(sample.freeze_thaw_cycles, 1)
+        self.assertGreaterEqual(sample.out_of_storage_seconds, 900)
+        self.assertEqual(returned.from_location_id, self.workbench.pk)
+        self.assertEqual(returned.to_location_id, self.box_location.pk)
+        sample_action(self.admin, sample.pk, key=uuid.uuid4(), action='CONSUMPTION', reason='Analyse consommative', amount=100, unit=self.ul)
+        sample.refresh_from_db()
+        self.assertEqual(sample.status, 'EXHAUSTED')
+        self.assertIsNone(sample.position_id)
+        with self.assertRaises(ValidationError):
+            sample_action(self.admin, sample.pk, key=uuid.uuid4(), action='CONSUMPTION', reason='Épuisé', amount=1, unit=self.ul)
+        self.assertEqual(reconcile_biobank(self.admin), [])
+        with self.assertRaises(ValidationError):
+            sample.events.all().delete()
+
+    def test_quarantine_requires_admin_release_and_scope_for_both_locations(self):
+        sample, _ = self.sample()
+        self.grant(Capability.MANAGE_BIOBANK, location=self.box_location)
+        sample_action(self.operator, sample.pk, key=uuid.uuid4(), action='QUARANTINE', reason='Anomalie détectée')
+        with self.assertRaises(PermissionDenied):
+            sample_action(self.operator, sample.pk, key=uuid.uuid4(), action='RELEASE', reason='Auto-validation')
+        with self.assertRaises(ValidationError):
+            sample_action(self.admin, sample.pk, key=uuid.uuid4(), action='CONSUMPTION', reason='Bloqué', amount=1, unit=self.ul)
+        with self.assertRaises(PermissionDenied):
+            transfer_sample(self.operator, sample.pk, key=uuid.uuid4(), destination=self.target, position=self.targets[0], reason='Hors périmètre')
+        sample_action(self.admin, sample.pk, key=uuid.uuid4(), action='RELEASE', reason='Contrôle concluant')
+        key = uuid.uuid4()
+        moved = transfer_sample(self.admin, sample.pk, key=key, destination=self.target, position=self.targets[0], reason='Rangement validé')
+        self.assertEqual(transfer_sample(self.admin, sample.pk, key=key, destination=self.target, position=self.targets[0], reason='Rangement validé').pk, moved.pk)
+        self.assertFalse(biobank_scope(self.operator).filter(pk=sample.pk).exists())
+        sample.refresh_from_db()
+        self.assertEqual(sample.freeze_thaw_cycles, 0)
+        self.assertEqual(reconcile_biobank(self.admin), [])
+
+    def test_mass_transfer_preview_is_atomic_stale_safe_and_idempotent(self):
+        first, _ = self.sample('S-1')
+        second, _ = self.sample('S-2', position=self.positions[1])
+        mapping = transfer_plan(self.admin, self.box_location, self.target)
+        self.assertEqual(len(mapping), 2)
+        key = uuid.uuid4()
+        transfer = apply_transfer_plan(self.admin, key=key, source=self.box_location, destination=self.target,
+            mapping=mapping, reason='Maintenance du stockage')
+        self.assertEqual(apply_transfer_plan(self.admin, key=key, source=self.box_location, destination=self.target,
+            mapping=mapping, reason='Maintenance du stockage').pk, transfer.pk)
+        self.assertEqual(BiologicalSample.objects.filter(location=self.target).count(), 2)
+        self.assertEqual(SampleEvent.objects.filter(kind='TRANSFER').count(), 2)
+        self.assertEqual(reconcile_biobank(self.admin), [])
+        back = transfer_plan(self.admin, self.target, self.box_location)
+        second.refresh_from_db()
+        sample_action(self.admin, second.pk, key=uuid.uuid4(), action='CONSUMPTION', reason='Modification après aperçu', amount=1, unit=self.ul)
+        with self.assertRaises(Conflict):
+            apply_transfer_plan(self.admin, key=uuid.uuid4(), source=self.target, destination=self.box_location,
+                mapping=back, reason='Plan périmé')
+        self.assertEqual(BiologicalSample.objects.filter(location=self.target).count(), 2)
+        self.assertEqual(StorageTransfer.objects.count(), 1)
+        self.assertEqual(SampleEvent.objects.filter(kind='TRANSFER').count(), 2)
+
+    def test_temperatures_snapshot_thresholds_group_incidents_and_require_review(self):
+        first = record_temperature(self.admin, location=self.freezer, measured_at=timezone.now(), value=-65)
+        second = record_temperature(self.admin, location=self.freezer, measured_at=timezone.now(), value=-64)
+        self.assertTrue(first.out_of_range)
+        self.assertEqual(first.incident_id, second.incident_id)
+        third = record_temperature(self.admin, location=self.freezer, measured_at=timezone.now(), value=-80)
+        self.assertFalse(third.out_of_range)
+        incident = first.incident
+        self.assertIsNone(incident.resolved_at)
+        self.freezer.temperature_max = Decimal('-60')
+        self.freezer.save(update_fields=['temperature_max'])
+        first.refresh_from_db()
+        self.assertEqual(first.maximum_snapshot, -70)
+        with self.assertRaises(PermissionDenied):
+            resolve_incident(self.operator, incident.pk, expected=incident.version,
+                resolved_at=timezone.now(), corrective_action='Non habilité')
+        resolve_incident(self.ops, incident.pk, expected=incident.version, resolved_at=timezone.now(),
+            corrective_action='Sonde vérifiée, équipement stabilisé et impact examiné')
+        incident.refresh_from_db()
+        self.assertIsNotNone(incident.resolved_at)
+        with self.assertRaises(ValidationError):
+            TemperatureReading.objects.filter(pk=first.pk).update(value=0)
+
+    def test_delegated_temperature_task_does_not_grant_biobank_access(self):
+        work = create_work(self.ops, kind='TEMPERATURE', title='Relever le congélateur', assignee=self.operator, location=self.freezer)
+        self.assertFalse(biobank_scope(self.operator).exists())
+        reading = record_temperature(self.operator, location=self.freezer, measured_at=timezone.now(), value=-80, work=work)
+        self.assertEqual(reading.actor_id, self.operator.pk)
+        work.refresh_from_db()
+        self.assertEqual(work.status, 'SUBMITTED')
+        with self.assertRaises(PermissionDenied):
+            record_temperature(self.operator, location=self.target, measured_at=timezone.now(), value=-80)
+
+    def test_ui_access_and_grid_receipt_action_pages(self):
+        sample, _ = self.sample()
+        self.client.force_login(self.admin)
+        routes = [('erp:sample-list', []), ('erp:sample-detail', [sample.pk]),
+            ('erp:sample-receive', []), ('erp:sample-operation', [sample.pk, 'action']),
+            ('erp:sample-operation', [sample.pk, 'aliquot']), ('erp:sample-operation', [sample.pk, 'transfer']),
+            ('erp:storage-maps', []), ('erp:storage-grid', [self.box_location.pk]),
+            ('erp:temperature-create', []), ('erp:cold-incidents', []), ('erp:mass-transfer', [])]
+        for name, args in routes:
+            with self.subTest(name=name, args=args):
+                self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200)
+        response = self.client.get(reverse('erp:position-options'), {'location': self.box_location.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['positions']), 6)
+        self.assertTrue(response.json()['positions'][0]['occupied'])
+        self.client.force_login(self.outsider)
+        for name, args in [('erp:sample-list', []), ('erp:sample-receive', [])]:
+            self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 403)
+
+    def test_position_reservations_http_and_scoped_sample_history(self):
+        self.client.force_login(self.ops)
+        sample, _ = self.sample()
+        route = reverse('erp:position-reserve', args=[self.positions[1].pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'assignee': self.ops.pk, 'until': (timezone.now()+timedelta(days=1)).isoformat(),
+                'reason': 'Réception à préparer'}
+        self.assertEqual(self.client.post(route, data).status_code, 302)
+        occupied = reverse('erp:position-reserve', args=[sample.position_id])
+        response = self.client.post(occupied, data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(PositionReservation.objects.count(), 1)
+        route = reverse('erp:sample-operation', args=[sample.pk, 'aliquot'])
+        response = self.client.post(route, {'key': str(uuid.uuid4()), 'expected_version': sample.version,
+            'destination': self.target.pk, 'position': self.targets[0].pk, 'code': 'HTTP-ALIQUOT',
+            'amount': '5', 'unit': self.ul.pk, 'reason': 'Préparation analytique'})
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        sample.refresh_from_db()
+        self.assertEqual(sample.remaining_quantity, 95)
+        self.grant(Capability.VIEW_BIOBANK, location=self.box_location)
+        self.client.force_login(self.operator)
+        response = self.client.get(reverse('erp:sample-detail', args=[sample.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['can_write'])
+        self.assertTrue(list(response.context['events']))
+        self.assertEqual(reconcile_biobank(self.admin), [])
+
+    def test_incident_http_create_stale_resolution_and_chronology(self):
+        self.client.force_login(self.ops)
+        start = timezone.now() - timedelta(hours=1)
+        response = self.client.post(reverse('erp:cold-incidents'), {'location': self.freezer.pk,
+            'kind': 'FAILURE', 'started_at': start.isoformat(), 'description': 'Incident constaté'})
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        incident = StorageIncident.objects.get()
+        route = reverse('erp:incident-resolve', args=[incident.pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'expected_version': incident.version + 1, 'resolved_at': timezone.now().isoformat(),
+            'corrective_action': 'Vérification et remise en service'}
+        self.assertEqual(self.client.post(route, data).status_code, 400)
+        data['expected_version'] = incident.version
+        self.assertEqual(self.client.post(route, data).status_code, 302)
+        incident.refresh_from_db()
+        self.assertIsNotNone(incident.resolved_at)
+        self.assertEqual(incident.corrective_action, data['corrective_action'])
+
+    def test_temperature_http_validates_record_and_task_scope(self):
+        self.client.force_login(self.ops)
+        work = create_work(self.ops, kind='TEMPERATURE', title='Relevé', assignee=self.ops, location=self.freezer)
+        route = reverse('erp:temperature-create') + '?task=' + str(work.pk)
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'location': self.freezer.pk, 'measured_at': (timezone.now()+timedelta(days=1)).isoformat(),
+            'value': '-80', 'comment': 'Contrôle'}
+        self.assertEqual(self.client.post(route, data).status_code, 400)
+        self.assertFalse(TemperatureReading.objects.exists())
+        data['measured_at'] = timezone.now().isoformat()
+        response = self.client.post(route, data)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
+        self.assertEqual(TemperatureReading.objects.get().location_id, self.freezer.pk)
+        work.refresh_from_db()
+        self.assertEqual(work.status, 'SUBMITTED')
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(reverse('erp:temperature-create')).status_code, 403)
+
+    def test_invalid_storage_and_task_links_return_not_found(self):
+        self.client.force_login(self.ops)
+        for route, params in [('erp:storage-maps', {'parent': 'not-a-uuid'}),
+                              ('erp:temperature-create', {'task': 'not-a-uuid'})]:
+            with self.subTest(route=route):
+                self.assertEqual(self.client.get(reverse(route), params).status_code, 404)
+        response = self.client.get(reverse('erp:storage-maps'), {'parent': str(self.rack.pk)})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['parent'], self.rack)
+
+    def test_mass_transfer_rejects_invalid_subtrees_capacity_and_mapping_atomically(self):
+        for source, destination in [(self.freezer, self.box_location), (self.box_location, self.target)]:
+            with self.subTest(source=source.code), self.assertRaises(ValidationError):
+                transfer_plan(self.ops, source, destination)
+        sample, _ = self.sample()
+        with self.assertRaises(ValidationError):
+            transfer_plan(self.ops, self.box_location, self.workbench)
+        mapping = transfer_plan(self.ops, self.box_location, self.target)
+        incident = create_incident(self.ops, location=self.target, kind='FAILURE',
+            started_at=timezone.now(), description='Incident sur une autre enceinte')
+        cases = [dict(mapping=[]), dict(mapping=mapping, reason=''),
+                 dict(mapping=mapping, destination=self.box_location), dict(mapping=mapping, incident=incident),
+                 dict(mapping=mapping*2), dict(mapping=[dict(mapping[0], from_location=str(self.lab.pk))]),
+                 dict(mapping=[dict(mapping[0], to_location=str(self.lab.pk))])]
+        for changes in cases:
+            values = {'key': uuid.uuid4(), 'source': self.box_location, 'destination': self.target,
+                'mapping': mapping, 'reason': 'Transfert contrôlé', **changes}
+            with self.subTest(changes=changes), self.assertRaises(ValidationError):
+                apply_transfer_plan(self.ops, **values)
+            sample.refresh_from_db()
+            self.assertEqual(sample.location_id, self.box_location.pk)
+            self.assertFalse(StorageTransfer.objects.exists())
+        key = uuid.uuid4()
+        apply_transfer_plan(self.ops, key=key, source=self.box_location, destination=self.target,
+            mapping=mapping, reason='Transfert contrôlé')
+        with self.assertRaises(Conflict):
+            apply_transfer_plan(self.ops, key=key, source=self.box_location, destination=self.target,
+                mapping=mapping, reason='Opération différente')
+        self.assertEqual(reconcile_biobank(self.ops), [])
+
+    def test_quarantine_blocks_analysis_and_checkout_until_manager_release(self):
+        sample, _ = self.sample()
+        with self.assertRaises(ValidationError):
+            sample_action(self.ops, sample.pk, key=uuid.uuid4(), action='RELEASE', reason='Non quarantainé')
+        sample_action(self.ops, sample.pk, key=uuid.uuid4(), action='QUARANTINE', reason='Contrôle requis')
+        for action in ['ANALYSIS', 'CHECK_OUT']:
+            with self.subTest(action=action), self.assertRaises(ValidationError):
+                sample_action(self.ops, sample.pk, key=uuid.uuid4(), action=action,
+                    destination=self.workbench, reason='Bloqué en quarantaine')
+        sample_action(self.ops, sample.pk, key=uuid.uuid4(), action='RELEASE', reason='Contrôle conforme')
+        event = sample_action(self.ops, sample.pk, key=uuid.uuid4(), action='ANALYSIS', reason='Analyse sans consommation')
+        self.assertEqual(event.quantity_delta, 0)
+        sample.refresh_from_db()
+        self.assertEqual(sample.remaining_quantity, 100)
+        self.assertEqual(reconcile_biobank(self.ops), [])
+
+    def test_aliquot_entire_volume_closes_parent_and_refuses_further_transfer(self):
+        parent, _ = self.sample()
+        child = aliquot_sample(self.ops, parent.pk, key=uuid.uuid4(), code='FULL-ALIQUOT', amount=100,
+            unit=self.ul, location=self.target, position=self.targets[0], reason='Transfert intégral en aliquote')
+        parent.refresh_from_db()
+        self.assertEqual((parent.remaining_quantity, parent.status, parent.position), (0, 'EXHAUSTED', None))
+        self.assertEqual((child.remaining_quantity, child.parent_id), (100, parent.pk))
+        with self.assertRaisesRegex(ValidationError, 'stocké'):
+            transfer_sample(self.ops, parent.pk, key=uuid.uuid4(), destination=self.target,
+                position=self.targets[1], reason='Parent épuisé')
+        with self.assertRaises(Conflict):
+            sample_action(self.ops, child.pk, key=uuid.uuid4(), action='QUARANTINE',
+                expected=child.version-1, reason='Version périmée')
+        child.refresh_from_db()
+        self.assertEqual(child.status, 'STORED')
+        self.assertEqual(reconcile_biobank(self.ops), [])
+
+    def test_existing_grid_cannot_be_shrunk_by_rebuilding_positions(self):
+        Location.objects.filter(pk=self.box_location.pk).update(grid_rows=1)
+        before = set(self.box_location.positions.values_list('pk', flat=True))
+        with self.assertRaisesRegex(ValidationError, 'positions existantes'):
+            build_positions(self.ops, self.box_location.pk, expected=self.box_location.version)
+        self.assertEqual(set(self.box_location.positions.values_list('pk', flat=True)), before)
+
+    def test_package_conversion_requires_explicit_compatible_unit(self):
+        from erp.models import Unit
+        from erp.services.catalog import save_reference
+        first = save_reference(self.admin, Unit, {'code': 'BIO-PACK-A', 'name': 'Flacon A', 'dimension': 'PACKAGE'})
+        second = save_reference(self.admin, Unit, {'code': 'BIO-PACK-B', 'name': 'Flacon B', 'dimension': 'PACKAGE'})
+        with self.assertRaisesRegex(ValidationError, 'conditionnement'):
+            convert_sample_quantity(1, first, second)
+        self.assertEqual(convert_sample_quantity(2, first, first), 2)
+
+    def test_biobank_http_invalid_locations_and_overdraw_are_rejected(self):
+        self.client.force_login(self.ops)
+        self.assertEqual(self.client.get(reverse('erp:position-options'), {'location': 'invalid-uuid'}).status_code, 404)
+        response = self.client.get(reverse('erp:sample-receive'), {'location': 'invalid-uuid', 'position': self.positions[0].pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['form'].fields['position'].queryset.exists())
+        sample, _ = self.sample()
+        response = self.client.post(reverse('erp:sample-operation', args=[sample.pk, 'aliquot']), {
+            'key': uuid.uuid4(), 'expected_version': sample.version, 'destination': self.target.pk,
+            'position': self.targets[0].pk, 'code': 'OVERDRAW', 'amount': '101', 'unit': self.ul.pk, 'reason': 'Test quantité'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(BiologicalSample.objects.filter(code='OVERDRAW').exists())
+        response = self.client.post(reverse('erp:cold-incidents'), {'location': self.freezer.pk,
+            'kind': 'FAILURE', 'started_at': (timezone.now()+timedelta(days=1)).isoformat(), 'description': 'Date future'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertFalse(StorageIncident.objects.exists())
+
+    def test_temperature_delegation_cannot_be_reused_for_another_task_kind(self):
+        task = create_work(self.ops, kind='CONTROL', title='Contrôle sans relevé', assignee=self.operator,
+            location=self.freezer)
+        with self.assertRaises(PermissionDenied):
+            record_temperature(self.operator, location=self.freezer, measured_at=timezone.now(), value=-80, work=task)
+        self.assertFalse(TemperatureReading.objects.exists())
+
+    def test_transfer_preview_cannot_be_applied_by_another_manager(self):
+        self.sample()
+        self.client.force_login(self.ops)
+        route = reverse('erp:mass-transfer')
+        data = {'key': uuid.uuid4(), 'source': self.box_location.pk, 'destination': self.target.pk,
+            'reason': 'Transfert vérifié', 'action': 'preview'}
+        response = self.client.post(route, data)
+        self.assertEqual(response.status_code, 200)
+        token = response.context['form'].data['preview_token']
+        self.client.force_login(self.admin)
+        response = self.client.post(route, {**data, 'action': 'apply', 'preview_token': token})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('ne correspond pas', str(response.context['form'].non_field_errors()))
+        self.assertFalse(StorageTransfer.objects.exists())
+        self.assertEqual(BiologicalSample.objects.get().location_id, self.box_location.pk)

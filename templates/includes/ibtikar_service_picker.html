@@ -1,0 +1,9 @@
+{% load i18n %}
+<form method="get" action="{% url 'ibtikar:index' %}" class="ibk-service-picker no-validation">
+    <label for="profile-ibtikar-service">{% trans "Service" %} *</label>
+    <select name="service" id="profile-ibtikar-service" class="form-control" required>
+        <option value="">{% trans "Sélectionner un service..." %}</option>
+        {% for service in services %}<option value="{{ service.code }}">{{ service.code }} — {{ service.name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">{% trans "Renseigner ma fiche IBTIKAR" %}</button>
+</form>

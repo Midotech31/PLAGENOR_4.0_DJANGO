@@ -1,0 +1,440 @@
+{
+  "schema": 1,
+  "id": "ESSBO_COORD_LOTS_20260907_V1",
+  "confirmed_utc": "2026-09-07T14:41:47.634104+00:00",
+  "authority": "Confirmation explicite de l’utilisateur dans cette conversation",
+  "legal_validation": "NOT_CLAIMED",
+  "values": {
+    "postal_code": "31000",
+    "phone_fax": "041.24.63.76",
+    "reagents_ar_lot_numbers": [
+      "01",
+      "02",
+      "03",
+      "04"
+    ]
+  },
+  "source_sha256": {
+    "equipment": "bb4ea598fe896b6b157ab706d03723236fc16820e093b6b541adb6c208dcf1dc",
+    "reagents": "62825773e9b1206622136469527e62ffc557575e5b939760a15229c471deb208",
+    "works": "5b8b04a806ea8add6d32d6bcec5c6432fba5bb6bfba3bbe2ded3663178f90647"
+  },
+  "bindings": {
+    "equipment": [
+      {
+        "id": "word/document.xml:p28:5c1551d102aa",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "after": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p29:c09c36f58ad8",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél/ Fax : 041.24.63.59",
+        "after": "Tél/ Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p206:5c066e243750",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "after": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p207:fef819d56f91",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "ou l’envoyer par fax au N°  041.24.63.76; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "after": "ou l’envoyer par fax au N°  041.24.63.76; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p301:16641ba97391",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saïm Mohamed",
+        "after": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saïm Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p302:5901aa419901",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél./Fax : 041.24.63.59",
+        "after": "Tél./Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p671:5cb6587288d6",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "after": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p711:9738be50d954",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12 h au niveau du : L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.76",
+        "after": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12 h au niveau du : L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.76",
+        "keys": [
+          "phone_fax",
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p713:3b614cc99bd7",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15, au niveau de la Salle de la réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "after": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15, au niveau de la Salle de la réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p745:831bf0c173d0",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "يتم سحب دفتر الشروط من قبل المرشحين أو ممثليهم الموكلين من طرفهم، من المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر، ابتداء من أول نشر هذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة الاف (0005) دينار جزائري غير قابلة للتعويض، مودعة بحوالة بريدية تحت اسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران تحت رقم  00831001131000208471 . ",
+        "after": "يتم سحب دفتر الشروط من قبل المرشحين أو ممثليهم الموكلين من طرفهم، من المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر، ابتداء من أول نشر هذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة الاف (0005) دينار جزائري غير قابلة للتعويض، مودعة بحوالة بريدية تحت اسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران تحت رقم  00831001131000208471 . ",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p778:53230ad27e51",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "حدد تاريخ إيداع العروض بآخر يوم من مدة تحضير العروض، و ذلك من اول ظهور للإعلان في الجرائد الوطنية، على الساعة 12سا على مستوى: المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر ، رقم الهاتف: 041.24.63.59",
+        "after": "حدد تاريخ إيداع العروض بآخر يوم من مدة تحضير العروض، و ذلك من اول ظهور للإعلان في الجرائد الوطنية، على الساعة 12سا على مستوى: المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر ، رقم الهاتف: 041.24.63.76",
+        "keys": [
+          "phone_fax",
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p780:e9d835d4422d",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "تاريخ فتح الأظرفة: يتم فتح الأظرفة في جلسة علنية بحضور المترشحين او المتعهدين أو ممثليهم، في نفس يوم إيداع العروض على الساعة 12H15 بقاعة الاجتماعات للمدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر.",
+        "after": "تاريخ فتح الأظرفة: يتم فتح الأظرفة في جلسة علنية بحضور المترشحين او المتعهدين أو ممثليهم، في نفس يوم إيداع العروض على الساعة 12H15 بقاعة الاجتماعات للمدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر.",
+        "keys": [
+          "postal_code"
+        ]
+      }
+    ],
+    "reagents": [
+      {
+        "id": "word/document.xml:p29:e7177997fed2",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "after": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p30:2911b1cbf5f1",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél./ Fax : 041.24.63.59",
+        "after": "Tél./ Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p198:f0a70edfb980",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "after": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p199:a56a7a8532d0",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "ou l’envoyer par fax au N° : 041.24.63.69 /: 041.24.63.76; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "after": "ou l’envoyer par fax au N° : 041.24.63.76; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p289:938704cccb4b",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saïm Mohamed",
+        "after": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saïm Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p290:ad3bc097dac4",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél./Fax : 041.24.63.59",
+        "after": "Tél./Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p613:b3ecde018d41",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "after": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p653:34a8ad74cdd4",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12 h au niveau du : L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.76",
+        "after": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12 h au niveau du : L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.76",
+        "keys": [
+          "phone_fax",
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p655:b6a7c0368522",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15, au niveau de la Salle de la réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "after": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15, au niveau de la Salle de la réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p671:f14f674ea27b",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "الحصة 01",
+        "after": "الحصة 01",
+        "keys": [
+          "reagents_ar_lot_numbers"
+        ]
+      },
+      {
+        "id": "word/document.xml:p673:5a0ab4e98590",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "الحصة 02",
+        "after": "الحصة 02",
+        "keys": [
+          "reagents_ar_lot_numbers"
+        ]
+      },
+      {
+        "id": "word/document.xml:p675:1322f6553c77",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "الحصة 04",
+        "after": "الحصة 03",
+        "keys": [
+          "reagents_ar_lot_numbers"
+        ]
+      },
+      {
+        "id": "word/document.xml:p677:5ae937350ccc",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "الحصة 05",
+        "after": "الحصة 04",
+        "keys": [
+          "reagents_ar_lot_numbers"
+        ]
+      },
+      {
+        "id": "word/document.xml:p683:ddd90e199bd8",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "يمكن للمترشحين المهتمين سحب دفتر الشروط من المدرسة العليا في العلوم البيولوجية بوهران – حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد، 31000 وهران، ابتداءً من أول نشر لهذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة آلاف (5000) دينار جزائري غير قابل للتعويض، يودع في الحساب البريدي الجاري رقم 0000324044 مفتاح 14 باسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران.",
+        "after": "يمكن للمترشحين المهتمين سحب دفتر الشروط من المدرسة العليا في العلوم البيولوجية بوهران – حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد، 31000 وهران، ابتداءً من أول نشر لهذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة آلاف (5000) دينار جزائري غير قابل للتعويض، يودع في الحساب البريدي الجاري رقم 0000324044 مفتاح 14 باسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p719:0b8ee579e8b0",
+        "part": "word/document.xml",
+        "segment": 3,
+        "before": "31000 وهران – الجزائر",
+        "after": "31000 وهران – الجزائر",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p719:0b8ee579e8b0",
+        "part": "word/document.xml",
+        "segment": 4,
+        "before": "الهاتف: 041.24.63.59",
+        "after": "الهاتف: 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "word/document.xml:p26:4796118c2580",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "after": "Adresse : Cité Emir Abdelkader, Ex-INESSMO, 31000. Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p27:636dc22e85b2",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél./ Fax : 041.24.63.76",
+        "after": "Tél./ Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p223:b32de0388e64",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "after": "École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p224:14000b62334b",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Ou l’envoyer par fax au N° : 041.24.63.59; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "after": "Ou l’envoyer par fax au N° : 041.24.63.76; dans un délai de dix (10) jours à compter de la date de la première parution de l’avis d’appel d’offres.",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p316:3ad886519bfe",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed",
+        "after": "Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p317:43f2a19a7bd5",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Tél./Fax : 041.24.63.59",
+        "after": "Tél./Fax : 041.24.63.76",
+        "keys": [
+          "phone_fax"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6670:5d67da835ac8",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "after": "Les candidats intéressés peuvent directement ou par le bais d’un représentant dûment mandaté par leur soin, retirer le cahier des charges auprès de l’Ecole Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, BP 1042 Saim Mohamed contre paiement de Cinq mille (5000) Dinars Algériens, non remboursables par mandat poste au nom de l’agent comptable de l’Ecole Supérieure en Sciences Biologiques d’Oran, Compte Trésor Numéro du RIB 00831001131000208471. La quittance de paiement constitue une pièce justificative qui doit obligatoirement être jointe au dossier au moment du dépôt de l’offre.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6706:9ecb766de44e",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12h00 au niveau de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.59",
+        "after": "La date de dépôt des offres est fixée au dernier jour de la durée de préparation des offres à 12h00 au niveau de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran., BP 1042 Saim Mohamed. Tel : 041.24.63.76",
+        "keys": [
+          "phone_fax",
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6708:3eeb74258ba3",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15 minutes, au niveau de la Salle de réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "after": "L’ouverture des plis aura lieu en séance publique en présence des candidats ou soumissionnaires ou leurs représentants, le même jour de dépôt des offres à 12h15 minutes, au niveau de la Salle de réunion de L’École Supérieure en Sciences Biologiques d’Oran, Cité Emir Abdelkader, Ex-INESSMO, 31000, Oran, BP 1042 Saim Mohamed.",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6731:4cf363c2239b",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "يتم سحب دفتر الشروط من قبل المرشحين أو ممثليهم الموكلين من طرفهم، من المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر، ابتداء من أول نشر هذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة الاف (0005) دينار جزائري غير قابلة للتعويض، مودعة بحوالة بريدية تحت اسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران تحت رقم  00831001131000208471 . ",
+        "after": "يتم سحب دفتر الشروط من قبل المرشحين أو ممثليهم الموكلين من طرفهم، من المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر، ابتداء من أول نشر هذا الإعلان في الجرائد الوطنية، مقابل دفع مبلغ خمسة الاف (0005) دينار جزائري غير قابلة للتعويض، مودعة بحوالة بريدية تحت اسم العون المحاسب للمدرسة العليا في العلوم البيولوجية بوهران تحت رقم  00831001131000208471 . ",
+        "keys": [
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6766:b2940a22cd14",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "حدد تاريخ إيداع العروض بآخر يوم من مدة تحضير العروض، وذلك من اول ظهور للإعلان في الجرائد الوطنية، على الساعة 12 سا على مستوى: المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31003 وهران-الجزائر، رقم الهاتف: 041.24.63.76",
+        "after": "حدد تاريخ إيداع العروض بآخر يوم من مدة تحضير العروض، وذلك من اول ظهور للإعلان في الجرائد الوطنية، على الساعة 12 سا على مستوى: المدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر، رقم الهاتف: 041.24.63.76",
+        "keys": [
+          "phone_fax",
+          "postal_code"
+        ]
+      },
+      {
+        "id": "word/document.xml:p6768:a7ca4968c8b4",
+        "part": "word/document.xml",
+        "segment": 0,
+        "before": "تاريخ فتح الأظرفة: يتم فتح الأظرفة في جلسة علنية بحضور المترشحين او المتعهدين أو ممثليهم، في نفس يوم إيداع العروض على الساعة 12 سا  و 15 دقيقة بقاعة الاجتماعات للمدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31003 وهران-الجزائر.",
+        "after": "تاريخ فتح الأظرفة: يتم فتح الأظرفة في جلسة علنية بحضور المترشحين او المتعهدين أو ممثليهم، في نفس يوم إيداع العروض على الساعة 12 سا  و 15 دقيقة بقاعة الاجتماعات للمدرسة العليا في العلوم البيولوجية بوهران - حي الأمير عبد القادر (Ex-INESSMO) ص.ب 1042 صايم محمد 31000 وهران-الجزائر.",
+        "keys": [
+          "postal_code"
+        ]
+      }
+    ]
+  },
+  "resolved_issue_ids": [
+    "ESSBO-006",
+    "INST-PHONE-WORKS",
+    "INST-POSTCODE-WORKS"
+  ]
+}

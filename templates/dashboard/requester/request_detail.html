@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% load i18n dashboard_extras %}
+{% load i18n static dashboard_extras %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">{% endblock %}
 
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
@@ -69,10 +70,15 @@
         {% if req.ibtikar_form %}
         {% load ibtikar_tags %}{% ibtikar_projection req as canonical %}
         <section class="card mb-4"><div class="card-body">
+            <h3>{% trans "Demandeur et projet" %}</h3>
+            <dl>{% include 'ibtikar/projection.html' with rows=canonical.applicant %}</dl>
             <h3>{% trans "Paramètres de la prestation" %}</h3>
             <dl>{% include 'ibtikar/projection.html' with rows=canonical.parameters %}</dl>
             <h3>{% trans "Échantillons / amorces" %}</h3>
             {% for rows in canonical.samples %}<h4>{{ forloop.counter }}</h4><dl>{% include 'ibtikar/projection.html' %}</dl>{% endfor %}
+            <h3>{% trans "Cadre réservé à PLAGENOR" %}</h3>
+            <p class="ibk-help">{% trans "À compléter par le personnel habilité lors de la réception et du traitement, dans l’application ou sur la fiche imprimée." %}</p>
+            <dl>{% include 'ibtikar/projection.html' with rows=canonical.staff %}</dl>
         </div></section>
         {% else %}
         <!-- Service Parameters -->

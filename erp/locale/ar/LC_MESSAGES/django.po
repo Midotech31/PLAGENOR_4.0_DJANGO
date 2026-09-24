@@ -1,0 +1,1272 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PLAGENOR ERP\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+
+msgid "Actif"
+msgstr "نشط"
+
+msgid "Actifs"
+msgstr "النشطة"
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "Adresse"
+msgstr "العنوان"
+
+msgid "Adresse électronique"
+msgstr "البريد الإلكتروني"
+
+msgid "Ajouter"
+msgstr "إضافة"
+
+msgid "Ajouter un sous-emplacement"
+msgstr "إضافة موقع فرعي"
+
+msgid "Ajouter une conversion"
+msgstr "إضافة تحويل"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+msgid "Approvisionnement"
+msgstr "التموين"
+
+msgid "Après"
+msgstr "بعد"
+
+msgid "Articles"
+msgstr "المواد"
+
+msgid "Articles, unités, partenaires et emplacements partagés."
+msgstr "مرجع موحّد للمواد والوحدات والشركاء ومواقع التخزين."
+
+msgid "Aucun enregistrement dans ce périmètre."
+msgstr "لا توجد سجلات ضمن هذا النطاق."
+
+msgid "Aucun prix enregistré."
+msgstr "لا يوجد سعر مسجّل."
+
+msgid "Aucun sous-emplacement enregistré."
+msgstr "لا يوجد موقع فرعي مسجّل."
+
+msgid "Aucune conversion spécifique enregistrée."
+msgstr "لا يوجد تحويل خاص بهذه المادة."
+
+msgid "Aucune conversion validée ne relie ces unités pour cet article."
+msgstr "لا يوجد تحويل معتمد يربط هذه الوحدات لهذه المادة."
+
+msgid "Aucune opération enregistrée."
+msgstr "لا توجد عملية مسجّلة."
+
+msgid "Autre dimension"
+msgstr "بُعد آخر"
+
+msgid "Avant"
+msgstr "قبل"
+
+msgid "Capacité (positions)"
+msgstr "السعة (مواضع)"
+
+msgid "Catégorie"
+msgstr "الفئة"
+
+msgid "Catégorie / périmètre"
+msgstr "الفئة / النطاق"
+
+msgid "Catégorie autorisée"
+msgstr "الفئة المسموح بها"
+
+msgid "Catégorie parente"
+msgstr "الفئة الأم"
+
+msgid "Catégories"
+msgstr "الفئات"
+
+msgid "Cet enregistrement a changé. Rechargez-le avant de réessayer."
+msgstr "تغيّر هذا السجل. أعد تحميله قبل المحاولة مجددًا."
+
+msgid "Cette unité nécessite une conversion propre à chaque article."
+msgstr "تتطلب هذه الوحدة تحويلًا خاصًا بكل مادة."
+
+msgid "Champ non modifiable."
+msgstr "لا يمكن تعديل هذا الحقل."
+
+msgid "Code / utilisateur"
+msgstr "الرمز / المستخدم"
+
+msgid "Code de devise à trois lettres requis."
+msgstr "يجب إدخال رمز العملة المكوّن من ثلاثة أحرف."
+
+msgid "Code interne"
+msgstr "الرمز الداخلي"
+
+msgid "Colonnes de la boîte"
+msgstr "أعمدة العلبة"
+
+msgid "Concentration"
+msgstr "التركيز"
+
+msgid "Conditionnement"
+msgstr "التعبئة"
+
+msgid "Conditionnement décrit"
+msgstr "وصف التعبئة"
+
+msgid "Conservation"
+msgstr "شروط الحفظ"
+
+msgid "Consignes de conservation"
+msgstr "تعليمات الحفظ"
+
+msgid "Consignes et observations"
+msgstr "التعليمات والملاحظات"
+
+msgid "Consulter"
+msgstr "عرض"
+
+msgid "Consulter le catalogue"
+msgstr "عرض الدليل"
+
+msgid "Consulter les coûts"
+msgstr "عرض التكاليف"
+
+msgid "Consulter les emplacements"
+msgstr "عرض المواقع"
+
+msgid "Consulter les valeurs historisées"
+msgstr "عرض القيم المحفوظة"
+
+msgid "Conversion d’unité"
+msgstr "تحويل الوحدات"
+
+msgid "Conversions et conditionnements"
+msgstr "التحويلات والتعبئة"
+
+msgid "Corrigez les informations signalées."
+msgstr "صحّح المعلومات المشار إليها."
+
+msgid "Criticité"
+msgstr "الأهمية التشغيلية"
+
+msgid "Critique"
+msgstr "حرجة"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Date de référence"
+msgstr "التاريخ المرجعي"
+
+msgid "Devise"
+msgstr "العملة"
+
+msgid "Dimension"
+msgstr "البُعد"
+
+msgid "Durée de conservation (jours)"
+msgstr "مدة الصلاحية (أيام)"
+
+msgid "Délai fournisseur (jours)"
+msgstr "مهلة التوريد (أيام)"
+
+msgid "Délégations ERP"
+msgstr "تفويضات نظام ERP"
+
+msgid "Désactivez d’abord les emplacements enfants."
+msgstr "عطّل المواقع الفرعية أولًا."
+
+msgid "Désignation / permission"
+msgstr "التسمية / الصلاحية"
+
+msgid "Désignation anglaise"
+msgstr "التسمية بالإنجليزية"
+
+msgid "Désignation arabe"
+msgstr "التسمية بالعربية"
+
+msgid "Désignation française"
+msgstr "التسمية بالفرنسية"
+
+msgid "Emplacement parent"
+msgstr "الموقع الأب"
+
+msgid "Emplacements"
+msgstr "مواقع التخزين"
+
+msgid "Enregistrement sauvegardé."
+msgstr "تم حفظ السجل."
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+msgid "Enregistrer les prix"
+msgstr "تسجيل الأسعار"
+
+msgid "Enregistrer un prix"
+msgstr "تسجيل سعر"
+
+msgid "Fabricant"
+msgstr "المصنّع"
+
+msgid "Facteur vers l’unité de référence"
+msgstr "معامل التحويل إلى الوحدة المرجعية"
+
+msgid "Faible"
+msgstr "منخفضة"
+
+msgid "Fil d’Ariane"
+msgstr "مسار التنقّل"
+
+msgid "Filtrer"
+msgstr "تصفية"
+
+msgid "Format"
+msgstr "الشكل"
+
+msgid "Fournisseur"
+msgstr "المورّد"
+
+msgid "Fournisseur préféré"
+msgstr "المورّد المفضّل"
+
+msgid "Fournisseurs et fabricants"
+msgstr "المورّدون والمصنّعون"
+
+msgid "Gestion / ERP"
+msgstr "التسيير / ERP"
+
+msgid "Grade / pureté"
+msgstr "الدرجة / النقاوة"
+
+msgid "Gérer le catalogue"
+msgstr "إدارة الدليل"
+
+msgid "Gérer les emplacements"
+msgstr "إدارة مواقع التخزين"
+
+msgid "Haute"
+msgstr "عالية"
+
+msgid "Historique des opérations"
+msgstr "سجل العمليات"
+
+msgid "Historique des prix"
+msgstr "سجل الأسعار"
+
+msgid "Identification"
+msgstr "التعريف"
+
+msgid "Inactif"
+msgstr "غير نشط"
+
+msgid "Inactifs"
+msgstr "غير النشطة"
+
+msgid "Informations scientifiques"
+msgstr "المعلومات العلمية"
+
+msgid "Justification"
+msgstr "التبرير"
+
+msgid "Justification de la conversion"
+msgstr "تبرير التحويل"
+
+msgid "La capacité doit correspondre au nombre de positions de la grille."
+msgstr "يجب أن تتوافق السعة مع عدد مواضع الشبكة."
+
+msgid "La conversion doit concerner une unité alternative du même article."
+msgstr "يجب أن يتعلق التحويل بوحدة بديلة للمادة نفسها."
+
+msgid ""
+"La conversion dépasse la précision de six décimales ; aucun arrondi "
+"silencieux n’est appliqué."
+msgstr "يتجاوز التحويل دقة ست منازل عشرية؛ لا يُطبّق أي تقريب دون تنبيه."
+
+msgid "La dimension et le facteur d’une unité existante sont immuables."
+msgstr "لا يمكن تغيير بُعد وحدة موجودة أو معاملها."
+
+msgid "La température cible doit appartenir à la plage autorisée."
+msgstr "يجب أن تقع درجة الحرارة المستهدفة ضمن المجال المسموح به."
+
+msgid "Le fabricant sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "الجهة المحددة غير نشطة أو ليست مصنّعًا."
+
+msgid "Le fournisseur sélectionné n’est pas actif ou n’a pas cette qualité."
+msgstr "الجهة المحددة غير نشطة أو ليست مورّدًا."
+
+msgid "Le type d’emplacement doit être actif."
+msgstr "يجب أن يكون نوع الموقع نشطًا."
+
+msgid ""
+"Les champs facultatifs restent vides lorsque l’information est inconnue."
+msgstr "تُترك الحقول الاختيارية فارغة عندما تكون المعلومات غير معروفة."
+
+msgid "Lignes de la boîte"
+msgstr "صفوف العلبة"
+
+msgid "L’article et les unités doivent être actifs."
+msgstr "يجب أن تكون المادة ووحداتها نشطة."
+
+msgid "L’emplacement parent doit être actif."
+msgstr "يجب أن يكون الموقع الأب نشطًا."
+
+msgid "L’unité de gestion d’un article existant ne peut pas être remplacée."
+msgstr "لا يمكن استبدال وحدة تسيير مادة موجودة."
+
+msgid "Masse"
+msgstr "الكتلة"
+
+msgid "Membre de l’équipe"
+msgstr "عضو الفريق"
+
+msgid "Modifier"
+msgstr "تعديل"
+
+msgid "Moyenne"
+msgstr "متوسطة"
+
+msgid "Multiple de commande"
+msgstr "مضاعف كمية الطلب"
+
+msgid "Non"
+msgstr "لا"
+
+msgid "Non renseigné"
+msgstr "غير مذكور"
+
+msgid "Numéro CAS"
+msgstr "رقم CAS"
+
+msgid "Observations"
+msgstr "الملاحظات"
+
+msgid "Observations internes ; aucune TVA universelle n’est appliquée."
+msgstr "ملاحظات داخلية؛ لا تُطبّق نسبة موحّدة للرسم على القيمة المضافة."
+
+msgid "Oui"
+msgstr "نعم"
+
+msgid "Page"
+msgstr "صفحة"
+
+msgid "Pagination"
+msgstr "التنقّل بين الصفحات"
+
+msgid "Pays"
+msgstr "البلد"
+
+msgid "Permission"
+msgstr "الصلاحية"
+
+msgid "Pièces"
+msgstr "القطع"
+
+msgid "Prix unitaire"
+msgstr "سعر الوحدة"
+
+msgid "Précédent"
+msgstr "السابق"
+
+msgid "Périmètre de stockage"
+msgstr "نطاق التخزين"
+
+msgid "Quantité dans l’unité de gestion"
+msgstr "الكمية بوحدة التسيير"
+
+msgid "Rechercher"
+msgstr "بحث"
+
+msgid "Renseignez ensemble la concentration et son unité."
+msgstr "أدخل التركيز ووحدته معًا."
+
+msgid "Réactions"
+msgstr "التفاعلات"
+
+msgid "Référence catalogue"
+msgstr "مرجع الدليل"
+
+msgid "Référence fabricant"
+msgstr "مرجع المصنّع"
+
+msgid "Référentiel des articles"
+msgstr "دليل المواد"
+
+msgid "Référentiels scientifiques"
+msgstr "المرجعيات العلمية"
+
+msgid ""
+"Saisissez une quantité finie, positive ou nulle, dans les limites "
+"autorisées."
+msgstr "يجب إدخال كمية محدودة وغير سالبة ضمن الحدود المسموح بها."
+
+msgid "Sensible à la lumière"
+msgstr "حسّاس للضوء"
+
+msgid "Seuil de réapprovisionnement"
+msgstr "حد إعادة التموين"
+
+msgid "Seul un membre actif de l’équipe peut recevoir une délégation ERP."
+msgstr "لا تُمنح صلاحيات ERP إلا لعضو نشط في الفريق."
+
+msgid "Source"
+msgstr "المصدر"
+
+msgid "Source du prix"
+msgstr "مصدر السعر"
+
+msgid "Sous-emplacements"
+msgstr "المواقع الفرعية"
+
+msgid "Spécifications techniques"
+msgstr "المواصفات التقنية"
+
+msgid "Stabilité après ouverture (jours)"
+msgstr "الثبات بعد الفتح (أيام)"
+
+msgid "Statut"
+msgstr "الحالة"
+
+msgid "Stock cible"
+msgstr "المخزون المستهدف"
+
+msgid "Stock de sécurité"
+msgstr "مخزون الأمان"
+
+msgid "Stock minimal"
+msgstr "الحد الأدنى للمخزون"
+
+msgid "Stockage autorisé"
+msgstr "السماح بالتخزين"
+
+msgid "Stockage réfrigéré"
+msgstr "التخزين البارد"
+
+msgid "Suivant"
+msgstr "التالي"
+
+msgid "Sélectionnez un fournisseur."
+msgstr "اختر مورّدًا."
+
+msgid "Sélectionnez une unité et une catégorie actives."
+msgstr "اختر وحدة وفئة نشطتين."
+
+msgid "Température cible (°C)"
+msgstr "درجة الحرارة المستهدفة (°C)"
+
+msgid "Température maximale (°C)"
+msgstr "درجة الحرارة القصوى (°C)"
+
+msgid "Température minimale (°C)"
+msgstr "درجة الحرارة الدنيا (°C)"
+
+msgid "Tests"
+msgstr "الاختبارات"
+
+msgid "Tous"
+msgstr "الكل"
+
+msgid "Type de référentiel non autorisé."
+msgstr "هذا النوع من المرجعيات غير مسموح به."
+
+msgid "Type d’emplacement"
+msgstr "نوع الموقع"
+
+msgid "Types d’emplacements"
+msgstr "أنواع المواقع"
+
+msgid "Téléphone"
+msgstr "الهاتف"
+
+msgid "Un code interne attribué est immuable."
+msgstr "لا يمكن تغيير الرمز الداخلي بعد إسناده."
+
+msgid "Un enregistrement avec cette identité existe déjà."
+msgstr "يوجد سجل بهذه الهوية بالفعل."
+
+msgid "Un référentiel unique, des modifications historisées."
+msgstr "مرجع موحّد مع حفظ سجل التعديلات."
+
+msgid ""
+"Une conversion spécifique prévaut sur la conversion générale de dimension."
+msgstr "يُعتمد التحويل الخاص بالمادة قبل التحويل العام للبُعد."
+
+msgid "Une hiérarchie ne peut pas contenir de cycle."
+msgstr "لا يمكن أن يتضمن التسلسل الهرمي حلقة مغلقة."
+
+msgid ""
+"Une observation ne peut pas être attribuée à un autre article ou "
+"utilisateur."
+msgstr "لا يمكن إسناد الملاحظة إلى مادة أو مستخدم آخر."
+
+msgid "Une permission de catalogue ou de coût est limitée par catégorie."
+msgstr "تُحدّد صلاحيات الدليل والتكاليف حسب الفئة."
+
+msgid ""
+"Une permission de stockage est limitée par emplacement, pas par catégorie."
+msgstr "تُحدّد صلاحيات التخزين حسب الموقع، وليس الفئة."
+
+msgid "Une unité active et une justification sont obligatoires."
+msgstr "يجب تحديد وحدة نشطة وتقديم تبرير."
+
+msgid "Une écriture historique ne peut pas être modifiée."
+msgstr "لا يمكن تعديل سجل تاريخي."
+
+msgid "Une écriture historique ne peut pas être supprimée."
+msgstr "لا يمكن حذف سجل تاريخي."
+
+msgid "Unité"
+msgstr "الوحدة"
+
+msgid "Unité alternative"
+msgstr "الوحدة البديلة"
+
+msgid "Unité de concentration"
+msgstr "وحدة التركيز"
+
+msgid "Unité de consommation"
+msgstr "وحدة الاستهلاك"
+
+msgid "Unité de gestion"
+msgstr "وحدة التسيير"
+
+msgid "Unité du prix"
+msgstr "وحدة التسعير"
+
+msgid "Unité d’achat"
+msgstr "وحدة الشراء"
+
+msgid "Unités"
+msgstr "الوحدات"
+
+msgid "Volume"
+msgstr "الحجم"
+
+msgid "Type de ressource"
+msgstr "نوع المورد"
+
+msgid "Gestion des ressources scientifiques"
+msgstr "تسيير الموارد العلمية"
+
+msgid "Une ressource sélectionnée est inconnue ou désactivée."
+msgstr "أحد الموارد المحددة غير معروف أو غير نشط."
+
+msgid "Relevé de température"
+msgstr "تسجيل درجة الحرارة"
+
+msgid "Déléguer / réaffecter"
+msgstr "تفويض / إعادة إسناد"
+
+msgid "Planning et préparation"
+msgstr "التخطيط والتحضير"
+
+msgid "Demande liée"
+msgstr "الطلب المرتبط"
+
+msgid "Aucune tâche en attente de planification."
+msgstr "لا توجد مهام في انتظار الجدولة."
+
+msgid "Intitulé"
+msgstr "العنوان"
+
+msgid "Ressources réservables"
+msgstr "الموارد القابلة للحجز"
+
+msgid "Le responsable n’est plus autorisé à traiter la demande liée."
+msgstr "لم يعد المسؤول مخولاً لمعالجة الطلب المرتبط."
+
+msgid "Équipement"
+msgstr "تجهيز"
+
+msgid "Mois"
+msgstr "شهر"
+
+msgid "Périodes du calendrier"
+msgstr "فترات الرزنامة"
+
+msgid "Priorité"
+msgstr "الأولوية"
+
+msgid "Urgente"
+msgstr "عاجلة"
+
+msgid "Aucune indisponibilité active."
+msgstr "لا توجد فترات عدم توفر سارية."
+
+msgid "Planifier / replanifier"
+msgstr "جدولة / إعادة جدولة"
+
+msgid "Retour au planning"
+msgstr "العودة إلى التخطيط"
+
+msgid "Justifiez la modification du planning."
+msgstr "برر تعديل الجدولة."
+
+msgid "Autre activité"
+msgstr "نشاط آخر"
+
+msgid "Lever une indisponibilité"
+msgstr "إنهاء فترة عدم التوفر"
+
+msgid "Une ressource se trouve dans un emplacement désactivé."
+msgstr "يوجد أحد الموارد في موقع غير نشط."
+
+msgid ""
+"L’affichage est limité à 500 activités. Affinez la période ou les filtres. "
+"Les totaux restent calculés sur toute la sélection."
+msgstr ""
+"يقتصر العرض على 500 نشاط. ضيّق الفترة أو المرشحات. وتبقى الإجماليات محسوبة "
+"لجميع العناصر المحددة."
+
+msgid "Le responsable est indisponible sur ce créneau."
+msgstr "المسؤول غير متاح خلال هذه الفترة."
+
+msgid "Un prérequis est planifié après le début de cette activité."
+msgstr "نهاية أحد المتطلبات المسبقة مبرمجة بعد بداية هذا النشاط."
+
+msgid "Toutes les demandes visibles possèdent une activité ou sont clôturées."
+msgstr "جميع الطلبات الظاهرة لها نشاط أو هي مغلقة."
+
+msgid "Le créneau prévu est terminé. Une replanification est nécessaire."
+msgstr "انتهت الفترة المبرمجة. يلزم إعادة الجدولة."
+
+msgid "Annulé"
+msgstr "ملغاة"
+
+msgid "Vue"
+msgstr "العرض"
+
+msgid "Consignes de réservation"
+msgstr "تعليمات الحجز"
+
+msgid "Contrôle opérationnel"
+msgstr "فحص تشغيلي"
+
+msgid "Répétition"
+msgstr "التكرار"
+
+msgid ""
+"Le planning d’une activité soumise ou clôturée ne peut pas être modifié."
+msgstr "لا يمكن تعديل موعد نشاط مودع للاعتماد أو مغلق."
+
+msgid "Corrections demandées"
+msgstr "تصحيحات مطلوبة"
+
+msgid "Travaux soumis à validation"
+msgstr "الأعمال المودعة للاعتماد"
+
+msgid "Ressource"
+msgstr "مورد"
+
+msgid ""
+"Une activité dépendante commencerait avant la fin de ce créneau. "
+"Replanifiez-la explicitement."
+msgstr "سيبدأ نشاط تابع قبل نهاية هذه الفترة. أعد جدولته بشكل صريح."
+
+msgid "Équipement ou salle réservable"
+msgstr "تجهيز أو قاعة قابلة للحجز"
+
+msgid "Brouillon"
+msgstr "مسودة"
+
+msgid "Ces dépendances formeraient un cycle."
+msgstr "ستُنشئ هذه التبعيات حلقة دائرية."
+
+msgid "Début d’indisponibilité"
+msgstr "بداية عدم التوفر"
+
+msgid "Afficher"
+msgstr "إظهار"
+
+msgid "Tous les types"
+msgstr "جميع الأنواع"
+
+msgid ""
+"Créez le CDC, l’inventaire ou le plan depuis son module, puis planifiez sa "
+"tâche existante."
+msgstr "أنشئ دفتر الشروط أو الجرد أو المخطط من وحدته، ثم جدول مهمته الموجودة."
+
+msgid "Ressources et indisponibilités"
+msgstr "الموارد وعدم التوفر"
+
+msgid "Cette clé de création appartient à une autre opération."
+msgstr "معرّف الإنشاء هذا مرتبط بعملية أخرى."
+
+msgid ""
+"Aucun blocage détecté pour les ressources déclarées. Les conditions seront "
+"revérifiées au démarrage."
+msgstr "لم تُكتشف عوائق في الموارد المحددة. ستُراجع الشروط مجدداً عند البدء."
+
+msgid "Chaque ressource est réservée exclusivement pendant le créneau."
+msgstr "يُحجز كل مورد حصرياً خلال الفترة المحددة."
+
+msgid "Gestion des ressources"
+msgstr "تسيير الموارد"
+
+msgid "Consignes et résultat attendu"
+msgstr "التعليمات والنتيجة المنتظرة"
+
+msgid "Définissez une répétition valide de 1 à 60 occurrences."
+msgstr "حدد تكراراً صالحاً يتضمن من 1 إلى 60 موعداً."
+
+msgid "Type d’activité"
+msgstr "نوع النشاط"
+
+msgid "Planifier une activité"
+msgstr "جدولة نشاط"
+
+msgid "Le graphe de dépendances dépasse la limite de vérification."
+msgstr "يتجاوز مخطط التبعيات حد التحقق المسموح."
+
+msgid "Semaine"
+msgstr "أسبوع"
+
+msgid "Consignes"
+msgstr "التعليمات"
+
+msgid ""
+"Décrivez la vérification des ressources et documents en 1 à 2 000 "
+"caractères."
+msgstr "صف التحقق من الموارد والوثائق في نص من حرف واحد إلى 2000 حرف."
+
+msgid "Responsabilités, ressources et validations dans un même espace."
+msgstr "المسؤوليات والموارد والاعتمادات في فضاء واحد."
+
+msgid "Code"
+msgstr "الرمز"
+
+msgid "Un prérequis n’est pas encore validé."
+msgstr "لم يُعتمد أحد المتطلبات المسبقة بعد."
+
+msgid ""
+"Les demandes restent dans leur workflow métier. Leur planification réutilise"
+" ces mêmes dossiers."
+msgstr ""
+"تبقى الطلبات ضمن مسارها التشغيلي. وتعيد الجدولة استخدام الملفات نفسها."
+
+msgid "Traçabilité de l’exécution"
+msgstr "تتبع التنفيذ"
+
+msgid "Le démarrage est hors du créneau prévu. Faites replanifier l’activité."
+msgstr "وقت البدء خارج الفترة المبرمجة. اطلب إعادة جدولة النشاط."
+
+msgid "Formation"
+msgstr "تكوين"
+
+msgid "Ressource indisponible"
+msgstr "مورد غير متاح"
+
+msgid "Validé"
+msgstr "معتمدة"
+
+msgid "Heure locale"
+msgstr "التوقيت المحلي"
+
+msgid "Aucune charge affectée sur cette période."
+msgstr "لا يوجد عبء عمل مسند خلال هذه الفترة."
+
+msgid "Localisation"
+msgstr "الموقع"
+
+msgid "Demandes actives sans activité planifiée"
+msgstr "طلبات نشطة دون أنشطة مبرمجة"
+
+msgid ""
+"Les occurrences sont créées maintenant et restent modifiables "
+"individuellement. Aucun dossier métier n’est dupliqué."
+msgstr ""
+"تُنشأ المواعيد الآن وتبقى قابلة للتعديل بشكل منفرد. ولا يُكرر أي ملف تشغيلي."
+
+msgid "En cours"
+msgstr "قيد التنفيذ"
+
+msgid "Chaque semaine"
+msgstr "كل أسبوع"
+
+msgid "Affecté"
+msgstr "مسندة"
+
+msgid "Équipements et salles à réserver"
+msgstr "التجهيزات والقاعات المطلوب حجزها"
+
+msgid "Recherche"
+msgstr "بحث"
+
+msgid "Disponibilité opérationnelle"
+msgstr "التوفر التشغيلي"
+
+msgid "Salle"
+msgstr "قاعة"
+
+msgid "Aucun responsable actif n’est affecté."
+msgstr "لم يُعيّن مسؤول ذو حساب نشط."
+
+msgid "Définir le créneau"
+msgstr "تحديد الفترة الزمنية"
+
+msgid ""
+"Une indisponibilité affecte votre activité. Son horaire n’a pas été déplacé "
+"automatiquement."
+msgstr "تتأثر مهمتك بفترة عدم توفر. لم يُغيّر موعدها تلقائياً."
+
+msgid ""
+"Seule une activité analytique peut être rattachée à une série non annulée."
+msgstr "لا يمكن ربط سلسلة تحليلية مفتوحة إلا بنشاط تحليلي."
+
+msgid ""
+"La fin doit suivre le début ; une activité ne peut pas dépasser 366 jours."
+msgstr ""
+"يجب أن تكون النهاية بعد البداية؛ ولا يمكن أن تتجاوز مدة النشاط 366 يوماً."
+
+msgid "Active"
+msgstr "نشطة"
+
+msgid ""
+"Les équipements et salles sont réservés exclusivement. Une indisponibilité "
+"signale les activités affectées sans déplacer leur horaire."
+msgstr ""
+"تُحجز التجهيزات والقاعات حصرياً. ويُشار إلى الأنشطة المتأثرة بعدم التوفر دون"
+" تغيير مواعيدها."
+
+msgid "Les consommations de cette série sont déjà confirmées."
+msgstr "تم تأكيد استهلاك هذه السلسلة التحليلية مسبقاً."
+
+msgid "Indisponibilité ou maintenance"
+msgstr "عدم التوفر أو الصيانة"
+
+msgid "Les dates doivent comporter un fuseau horaire valide."
+msgstr "يجب أن تتضمن التواريخ منطقة زمنية صالحة."
+
+msgid "Fin déclarée"
+msgstr "النهاية المصرح بها"
+
+msgid "Définir les prérequis"
+msgstr "تحديد المتطلبات المسبقة"
+
+msgid "Type de tâche"
+msgstr "نوع المهمة"
+
+msgid "Sélectionnez soit un membre, soit une ressource."
+msgstr "حدد عضواً أو مورداً، وليس كليهما."
+
+msgid "À planifier"
+msgstr "بحاجة إلى جدولة"
+
+msgid "Aucun échantillon n’est identifié pour cette série."
+msgstr "لم تُحدد أي عينة لهذه السلسلة التحليلية."
+
+msgid "La série ou sa demande est annulée, rejetée ou archivée."
+msgstr "السلسلة التحليلية أو طلبها ملغى أو مرفوض أو مؤرشف."
+
+msgid "Une ressource est indisponible ou en maintenance sur ce créneau."
+msgstr "أحد الموارد غير متاح أو يخضع للصيانة خلال هذه الفترة."
+
+msgid "À valider"
+msgstr "بانتظار الاعتماد"
+
+msgid "Vérification des ressources"
+msgstr "التحقق من الموارد"
+
+msgid "Ouvrir l’inventaire"
+msgstr "فتح الجرد"
+
+msgid "Un équipement ou une salle est déjà réservé sur ce créneau."
+msgstr "أحد التجهيزات أو القاعات محجوز خلال هذه الفترة."
+
+msgid "Échéances dépassées"
+msgstr "آجال متجاوزة"
+
+msgid "Aucune échéance dépassée."
+msgstr "لا توجد آجال متجاوزة."
+
+msgid "Aucune ressource matérielle réservée"
+msgstr "لم يُحجز أي تجهيز أو قاعة"
+
+msgid "Pilotage PLAGENOR"
+msgstr "تسيير عمليات بلاجينور"
+
+msgid "Activités à valider avant le démarrage"
+msgstr "الأنشطة المطلوب اعتمادها قبل البدء"
+
+msgid "Début prévu"
+msgstr "البداية المبرمجة"
+
+msgid "Série analytique liée"
+msgstr "السلسلة التحليلية المرتبطة"
+
+msgid "Fin d’indisponibilité"
+msgstr "نهاية عدم التوفر"
+
+msgid "Planning & activités"
+msgstr "التخطيط والأنشطة"
+
+msgid "Créneau prévu"
+msgstr "الفترة الزمنية المبرمجة"
+
+msgid "Justifiez les prérequis et limitez-les à 100 activités."
+msgstr "برر المتطلبات المسبقة وحددها في 100 نشاط كحد أقصى."
+
+msgid "En retard"
+msgstr "متأخرة"
+
+msgid "Activité analytique"
+msgstr "نشاط تحليلي"
+
+msgid "Aucune activité"
+msgstr "لا توجد أنشطة"
+
+msgid "Liste"
+msgstr "قائمة"
+
+msgid "Validation finale"
+msgstr "الاعتماد النهائي"
+
+msgid "Aucun prérequis déclaré."
+msgstr "لم تُحدد متطلبات مسبقة."
+
+msgid "Aucun travail en attente de validation."
+msgstr "لا توجد أعمال في انتظار الاعتماد."
+
+msgid ""
+"J’ai vérifié les ressources, les documents et les conditions nécessaires à "
+"cette activité"
+msgstr "تحققت من الموارد والوثائق والشروط اللازمة لهذا النشاط"
+
+msgid "Ouvrir le cahier des charges"
+msgstr "فتح دفتر الشروط"
+
+msgid "La demande liée est rejetée ou archivée."
+msgstr "الطلب المرتبط مرفوض أو مؤرشف."
+
+msgid "Contrôle qualité"
+msgstr "مراقبة الجودة"
+
+msgid "Planifier, affecter, vérifier et valider"
+msgstr "التخطيط والإسناد والتحقق والاعتماد"
+
+msgid "Maintenance"
+msgstr "صيانة"
+
+msgid "Soumis à validation"
+msgstr "مودعة للاعتماد"
+
+msgid "Aucune ressource configurée."
+msgstr "لم تُهيأ أي موارد."
+
+msgid "Chaque jour"
+msgstr "كل يوم"
+
+msgid "Jour"
+msgstr "يوم"
+
+msgid "activités sur la période"
+msgstr "أنشطة خلال الفترة"
+
+msgid "Définir ou modifier le créneau"
+msgstr "تحديد الفترة الزمنية أو تعديلها"
+
+msgid "Membre indisponible"
+msgstr "عضو غير متاح"
+
+msgid "Dernière vérification des ressources"
+msgstr "آخر تحقق من الموارد"
+
+msgid "Prérequis géré par une autre équipe"
+msgstr "متطلب مسبق يشرف عليه فريق آخر"
+
+msgid ""
+"Un échantillon de la série n’est pas réceptionné ou n’est pas utilisable."
+msgstr "إحدى عينات السلسلة لم تُستلم أو غير قابلة للاستخدام."
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "Séries analytiques"
+msgstr "السلاسل التحليلية"
+
+msgid "Vérification consignée"
+msgstr "التحقق المسجل"
+
+msgid "Indisponibilités actives"
+msgstr "فترات عدم التوفر السارية"
+
+msgid "Ressources réservées"
+msgstr "الموارد المحجوزة"
+
+msgid "Échéance"
+msgstr "الأجل"
+
+msgid "Ajouter une ressource"
+msgstr "إضافة مورد"
+
+msgid "Démarrage enregistré"
+msgstr "البداية المسجلة"
+
+msgid "Tâches sans créneau"
+msgstr "مهام دون موعد"
+
+msgid "Planifier une étape"
+msgstr "جدولة مرحلة"
+
+msgid "Fin prévue"
+msgstr "النهاية المبرمجة"
+
+msgid "Le planning de votre activité a été défini ou modifié."
+msgstr "حُدد موعد نشاطك أو عُدّل."
+
+msgid "Nombre d’occurrences à créer"
+msgstr "عدد المواعيد المطلوب إنشاؤها"
+
+msgid "Lever l’indisponibilité"
+msgstr "إنهاء عدم التوفر"
+
+msgid ""
+"Durées réservées dans le calendrier ; ce ne sont pas des heures "
+"effectivement travaillées."
+msgstr "مدد محجوزة في الرزنامة، وليست ساعات عمل منجزة فعلياً."
+
+msgid "Intitulé de l’activité"
+msgstr "عنوان النشاط"
+
+msgid "Préparer les prérequis"
+msgstr "تسيير المتطلبات المسبقة"
+
+msgid "Enregistrer la vérification"
+msgstr "تسجيل التحقق"
+
+msgid "Compte rendu / justification"
+msgstr "تقرير الإنجاز / التبرير"
+
+msgid "Déclarer une indisponibilité"
+msgstr "تسجيل عدم التوفر"
+
+msgid "Cahier des charges"
+msgstr "دفتر الشروط"
+
+msgid ""
+"Une activité planifiée doit être démarrée puis accompagnée d’un compte "
+"rendu."
+msgstr "يجب بدء النشاط المبرمج ثم إرفاقه بتقرير إنجاز."
+
+msgid "La série ne correspond pas à la demande sélectionnée."
+msgstr "السلسلة التحليلية لا تتوافق مع الطلب المحدد."
+
+msgid "Justification de la modification"
+msgstr "تبرير التعديل"
+
+msgid "Autre ressource"
+msgstr "مورد آخر"
+
+msgid "Ouvrir la série analytique"
+msgstr "فتح السلسلة التحليلية"
+
+msgid "Le responsable est déjà affecté à une autre activité sur ce créneau."
+msgstr "المسؤول مكلّف بنشاط آخر خلال هذه الفترة."
+
+msgid "Justifiez la levée de l’indisponibilité."
+msgstr "برر إنهاء فترة عدم التوفر."
+
+msgid "Identifiant de création invalide."
+msgstr "معرّف الإنشاء غير صالح."
+
+msgid "Non affecté"
+msgstr "غير مسندة"
+
+msgid "Justification de la levée d’indisponibilité"
+msgstr "تبرير إنهاء عدم التوفر"
+
+msgid "Normale"
+msgstr "عادية"
+
+msgid "Exécution, compte rendu et validation"
+msgstr "التنفيذ والتقرير والاعتماد"
+
+msgid "Aujourd’hui"
+msgstr "اليوم"
+
+msgid "Le membre doit déjà être autorisé à traiter cette demande."
+msgstr "يجب أن يكون العضو مخولاً مسبقاً لمعالجة هذا الطلب."
+
+msgid "Cette activité n’a pas encore de créneau."
+msgstr "لم يُحدد موعد لهذا النشاط بعد."
+
+msgid "Plan d’approvisionnement"
+msgstr "مخطط التموين"
+
+msgid "Réunion"
+msgstr "اجتماع"
+
+msgid "Toutes les tâches"
+msgstr "جميع المهام"
+
+msgid "Contrôle de réception"
+msgstr "فحص الاستلام"
+
+msgid "Un prérequis est inconnu ou correspond à l’activité elle-même."
+msgstr "أحد المتطلبات المسبقة غير معروف أو يطابق النشاط نفسه."
+
+msgid "Numéro de série"
+msgstr "الرقم التسلسلي"
+
+msgid "Vérifications effectuées et références des pièces contrôlées"
+msgstr "التحققات المنجزة ومراجع الوثائق المفحوصة"
+
+msgid "Prérequis et dépendances"
+msgstr "المتطلبات المسبقة والتبعيات"
+
+msgid "Charge planifiée sur la période"
+msgstr "عبء العمل المبرمج خلال الفترة"
+
+msgid "Aucune activité sur cette période."
+msgstr "لا توجد أنشطة خلال هذه الفترة."
+
+msgid "Consulter toutes les tâches"
+msgstr "عرض جميع المهام"
+
+msgid "Responsable"
+msgstr "المسؤول"
+
+msgid "Justification des prérequis"
+msgstr "تبرير المتطلبات المسبقة"
+
+msgid "Le nouveau responsable n’est pas autorisé à traiter la demande liée."
+msgstr "المسؤول الجديد غير مخول لمعالجة الطلب المرتبط."
+
+msgid "Confirmez d’abord les consommations réelles dans la série analytique."
+msgstr "أكد أولاً الاستهلاك الفعلي ضمن السلسلة التحليلية."
+
+msgid ""
+"La vérification des ressources et des documents requis reste à confirmer."
+msgstr "لا يزال التحقق من الموارد والوثائق المطلوبة بحاجة إلى تأكيد."
+
+msgid "Une série analytique doit être planifiée individuellement."
+msgstr "يجب جدولة كل سلسلة تحليلية على حدة."
+
+msgid "Tâches et délégations"
+msgstr "المهام والتفويضات"
+
+msgid "Membre responsable"
+msgstr "العضو المسؤول"
+
+msgid "Affecter une tâche sans créneau"
+msgstr "إسناد مهمة دون موعد محدد"
+
+msgid ""
+"Les réservations utilisables ne couvrent pas toutes les quantités prévues "
+"pour la série."
+msgstr ""
+"لا تغطي الحجوزات القابلة للاستخدام جميع الكميات المقررة للسلسلة التحليلية."
+
+msgid "Calendrier des activités"
+msgstr "رزنامة الأنشطة"
+
+msgid "Une seule fois"
+msgstr "مرة واحدة"
+
+msgid "Motif"
+msgstr "السبب"
+
+msgid "Inventaire physique"
+msgstr "الجرد الفعلي"
+
+msgid "Autoriser les estimations de ce dossier"
+msgstr "السماح بالاطلاع على تقديرات هذا الملف"
+
+msgid "Toute l’équipe"
+msgstr "كل الفريق"
+
+msgid "Besoins, lots réservés et consommations réelles"
+msgstr "الاحتياجات والدفعات المحجوزة والاستهلاك الفعلي"
+
+msgid "activités"
+msgstr "أنشطة"
+
+msgid "Vérification avant démarrage"
+msgstr "التحقق من الجاهزية قبل البدء"
+
+msgid "Une continuité entre ressources, responsabilités et approvisionnement."
+msgstr "ربط الموارد والمسؤوليات والتموين."
+
+msgid "Vers"
+msgstr "إلى"
+
+msgid "Disponibilité"
+msgstr "التوفُّر"
+
+msgid "Révision"
+msgstr "مراجعة"
+
+msgid "Nom"
+msgstr "اللقب"
+
+msgid "Total"
+msgstr "الإجمالي"
+
+msgid "Mise à jour"
+msgstr "آخر تحديث"
+
+msgid "Quantité"
+msgstr "الكمية"
+
+msgid "Retour"
+msgstr "رجوع"
+
+msgid "De"
+msgstr "من"
+
+msgid "Rapport"
+msgstr "التقرير"
+
+msgid "Référence"
+msgstr "المرجع"
+
+msgid "Rejeté"
+msgstr "مرفوض"
+
+msgid "Fichier"
+msgstr "الملف"
+
+msgid "Disponible"
+msgstr "متاح"
+
+msgid "Attention"
+msgstr "تنبيه"
+
+msgid "Type de document"
+msgstr "نوع الوثيقة"
+
+msgid "Tous les statuts"
+msgstr "جميع الحالات"
+
+msgid "Position"
+msgstr "الموضع"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Document"
+msgstr "مستند"
+
+msgid "Aperçu"
+msgstr "معاينة"
+
+msgid "Historique"
+msgstr "السجل"
+
+msgid "Validation occupée. Réessayez dans quelques instants."
+msgstr "التحقق مشغول حاليًا. يرجى إعادة المحاولة بعد لحظات."
+
+msgid "Clôturé"
+msgstr "مُغلَق"
+
+msgid "Demande"
+msgstr "الطلب"
+
+msgid "Inactive"
+msgstr "غير نشطة"

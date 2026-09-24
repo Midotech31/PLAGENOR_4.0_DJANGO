@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/ibtikar-forms.css' %}">{% endblock %}
 
 {% block title %}{% trans "Demandeur IBTIKAR" %} — {% trans "PLAGENOR 4.0" %}{% endblock %}
 
@@ -43,7 +44,7 @@
             <div class="form-group" style="margin:0; flex:1; min-width:220px;">
                 <label style="font-weight:600; font-size:.9rem;">{% trans "Solde IBTIKAR résiduel (DA)" %}</label>
                 <input type="number" name="declared_balance" class="form-control"
-                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:'0u' }}"
                        required autofocus placeholder="0">
             </div>
             <button type="submit" class="btn btn-primary">{% trans "Valider mon solde" %}</button>
@@ -83,8 +84,8 @@
             <div class="form-group" style="margin:0; flex:1; min-width:220px;">
                 <label style="font-weight:600; font-size:.9rem;">{% trans "Nouveau solde IBTIKAR (DA)" %}</label>
                 <input type="number" name="declared_balance" class="form-control"
-                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:0 }}"
-                       value="{{ budget_context.budget_remaining|floatformat:0 }}" required>
+                       step="1" min="0" max="{{ budget_context.budget_cap|floatformat:'0u' }}"
+                       value="{{ budget_context.budget_remaining|floatformat:'0u' }}" required>
                 <small class="text-muted" style="display:block; margin-top:4px;">
                     {% blocktrans with cap=budget_context.budget_cap|floatformat:0 %}Plafond annuel encadré par la DGRSDT : {{ cap }} DA.{% endblocktrans %}
                 </small>
@@ -109,7 +110,8 @@
     <div x-show="tab === 'new'" class="card"><div class="card-body">
         <h2>{% trans "Nouvelle demande IBTIKAR" %}</h2>
         <p>{% trans "Choisissez la prestation. Les informations demandées et la fiche finale s’adaptent à vos choix réels." %}</p>
-        <a class="btn btn-primary" href="{% url 'ibtikar:index' %}">{% trans "Ouvrir les formulaires IBTIKAR" %}</a> <a class="btn btn-outline" href="{% url 'dashboard:client' %}">{% trans "Demande commerciale" %}</a>
+        {% include 'includes/ibtikar_service_picker.html' %}
+        <p><a class="btn btn-outline" href="{% url 'dashboard:client' %}">{% trans "Demande commerciale" %}</a></p>
     </div></div>
 
     <!-- My Requests -->

@@ -25,7 +25,7 @@
                     <select name="service" id="service" class="form-control" required>
                         <option value="">{% trans "Sélectionner un service" %}</option>
                         {% for service in services %}
-                        <option value="{{ service.id }}" {% if template.service_id == service.id %}selected{% endif %}>
+                        <option value="{{ service.id }}" {% if form_values.service == service.id|stringformat:'s' %}selected{% endif %}>
                             {{ service.code }} — {{ service.name }}
                         </option>
                         {% endfor %}
@@ -37,7 +37,7 @@
                     <select name="template_type" id="template_type" class="form-control" required>
                         <option value="">{% trans "Sélectionner un type" %}</option>
                         {% for value, label in template_types %}
-                        <option value="{{ value }}" {% if template.template_type == value %}selected{% endif %}>
+                        <option value="{{ value }}" {% if form_values.template_type == value %}selected{% endif %}>
                             {{ label }}
                         </option>
                         {% endfor %}
@@ -48,14 +48,14 @@
             <div class="form-group">
                 <label for="name">{% trans "Nom du modèle" %} *</label>
                 <input type="text" name="name" id="name" class="form-control" required
-                       value="{{ template.name|default:'' }}"
+                       value="{{ form_values.name|default:'' }}"
                        placeholder="{% trans 'ex: Formulaire IBTIKAR CAN 2024' %}">
             </div>
             
             <div class="form-group">
                 <label for="description">{% trans "Description" %}</label>
                 <textarea name="description" id="description" class="form-control" rows="3"
-                          placeholder="{% trans 'Décrivez ce modèle et son utilisation...' %}">{{ template.description|default:'' }}</textarea>
+                          placeholder="{% trans 'Décrivez ce modèle et son utilisation...' %}">{{ form_values.description|default:'' }}</textarea>
             </div>
             
             <div class="form-group">
@@ -85,7 +85,7 @@
             <div class="form-group">
                 <div class="custom-control custom-switch">
                     <input type="checkbox" name="is_active" id="is_active" class="custom-control-input"
-                           {% if template.is_active %}checked{% endif %}>
+                           {% if form_values.is_active %}checked{% endif %}>
                     <label class="custom-control-label" for="is_active">
                         {% trans "Modèle actif" %}
                     </label>

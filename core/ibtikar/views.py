@@ -13,6 +13,8 @@ from django.views.decorators.http import require_POST
 from core.exceptions import PricingConfigurationError
 from core.service_eligibility import services_for
 from core.ibtikar.forms import SchemaForm, cleaned_samples, make_sample_formset
+from core.ibtikar.workspace import workspace_context
+from core.ibtikar.schema import reference_projection, project_group
 from core.ibtikar.legacy import legacy_initial
 from core.ibtikar.models import IbtikarAttachment, IbtikarSubmission
 from core.ibtikar.schema import definitions, get_schema, label, projection, active_names, schema_for_service, active_data
@@ -65,9 +67,18 @@ def visible_prices(request):
 
 
 def index(request):
+    code = request.GET.get('service', '').strip()
+    if code:
+        service = get_object_or_404(services_for('IBTIKAR'), code=code)
+        return redirect('ibtikar:new', code=service.code)
+    actor = user_actor(request)
+    if not actor:
+        return redirect(reverse('guest_submit') + '?channel=IBTIKAR')
+    if actor.role in ('REQUESTER', 'CLIENT'):
+        return redirect(reverse('dashboard:requester') + '?tab=new')
     services = services_for('IBTIKAR').order_by('code')
     own = Request.objects.filter(requester=request.user, channel='IBTIKAR').select_related('service')[:100] if request.user.is_authenticated else []
-    return render(request, 'ibtikar/index.html', {'services': services, 'own_requests': own})
+    return render(request, 'ibtikar/index.html', {'services': services, 'own_requests': own, **workspace_context(request)})
 
 
 def profile_initial(user):
@@ -163,6 +174,7 @@ def editor(request, code=None, pk=None, token=None):
         existing_attachments=existing_rows, legacy=bool(legacy or imported),
         allow_draft=not req or req.status == 'DRAFT', prices_visible=visible_prices(request),
         estimate_url=reverse('ibtikar:estimate', args=[service.code]) + (('?request=' + str(req.pk) + ('&access=' + str(token) if token else '')) if req else ''))
+    context.update(workspace_context(request))
     return render(request, 'ibtikar/editor.html', context, status=400 if bound is not None else 200)
 
 
@@ -172,8 +184,7 @@ def detail(request, pk=None, token=None):
     current = IbtikarSubmission.objects.filter(request=req).first()
     user = user_actor(request)
     if current:
-        project = projection(current.schema, current.applicant, current.parameters,
-                             current.samples, current.staff, get_language() or 'fr')
+        project = reference_projection(current, get_language() or 'fr')
         if not visible_prices(request):
             project['staff'] = [row for row in project['staff'] if row['name'] not in ('validated_price', 'price_justification')]
         active = active_names(current.schema['attachments'], {}, current.parameters, [active_data(current.schema, 'samples', row, current.parameters) for row in current.samples])
@@ -184,7 +195,15 @@ def detail(request, pk=None, token=None):
     else:
         project = None
         attachments = []
+    internal_staff = []
+    if current and user and user.role in ('SUPER_ADMIN', 'PLATFORM_ADMIN', 'FINANCE'):
+        internal_staff = project_group(
+            [field for field in current.schema['staff'] if field['name'] in ('validated_price', 'price_justification')],
+            current.staff, get_language() or 'fr',
+        )
     return render(request, 'ibtikar/detail.html', {
+        'internal_staff': internal_staff,
+        **workspace_context(request),
         'req': req, 'submission': current, 'projection': project, 'attachments': attachments,
         'can_edit': may_edit(request, req, token),
         'edit_url': reverse('ibtikar:guest_edit', args=[token]) if token else reverse('ibtikar:edit', args=[req.pk]),
@@ -221,7 +240,7 @@ def staff_editor(request, pk):
             errors.extend(exc.messages if isinstance(exc, ValidationError) else [str(exc)])
         else:
             return redirect('ibtikar:detail', pk=req.pk)
-    return render(request, 'ibtikar/staff.html', {'req': req, 'form': form,
+    return render(request, 'ibtikar/staff.html', {'req': req, 'form': form, **workspace_context(request),
                    'revision': current.revision, 'errors': errors, 'estimate': current.estimate},
                    status=400 if request.method == 'POST' else 200)
 

@@ -1,0 +1,22 @@
+{% load i18n %}
+<form method="get" action="{% url 'guest_submit' %}" class="ibk-section no-validation" data-guest-channel-picker>
+    <h2>{% trans "Canal et prestation" %}</h2>
+    <div class="ibk-fields">
+        <div class="form-group">
+            <label for="id_channel">{% trans "Canal" %} *</label>
+            <select name="channel" id="id_channel" class="form-control" required>
+                <option value="GENOCLAB" {% if selected_channel == 'GENOCLAB' %}selected{% endif %}>GENOCLAB ({% trans "externe" %})</option>
+                <option value="IBTIKAR" {% if selected_channel == 'IBTIKAR' %}selected{% endif %}>IBTIKAR</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="guest-service-choice">{% trans "Service" %} *</label>
+            <select name="service" id="guest-service-choice" class="form-control" required>
+                <option value="">{% trans "Sélectionner un service..." %}</option>
+                {% for service in services %}<option value="{{ service.code }}" data-channel-availability="{{ service.channel_availability }}"{% if selected_service and service.pk == selected_service.pk %} selected{% endif %}>{{ service.code }} — {{ service.name }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+    <p class="ibk-help">{% trans "Le choix IBTIKAR ouvre le formulaire unique utilisé pour générer votre fiche imprimable." %}</p>
+    <button type="submit" class="btn btn-primary">{% trans "Continuer" %}</button>
+</form>
