@@ -53,6 +53,8 @@ def _capability_scope(user):
     condition = Q(pk__in=[])
     for capability in CDC_READ_CAPABILITIES:
         for grant in grants(user, capability):
+            if not grant.category_id and not grant.location_id:
+                return None
             scope = Q()
             if grant.category_id:
                 scope &= Q(work__category_id=grant.category_id)
@@ -60,8 +62,6 @@ def _capability_scope(user):
                 descendants = LocationClosure.objects.filter(
                     ancestor_id=grant.location_id).values('descendant_id')
                 scope &= Q(work__location_id__in=descendants)
-            if not scope:
-                return Q()
             condition |= scope
     return condition
 
@@ -79,6 +79,8 @@ def dossier_scope(user):
         return qs
     own = Q(work__in=work_scope(user))
     review = _capability_scope(user)
+    if review is None:
+        return qs
     return qs.filter(own | review).distinct()
 
 
