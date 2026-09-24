@@ -205,7 +205,7 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.dossier.work.status = WorkItem.Status.IN_PROGRESS
         self.dossier.work.save(update_fields=['status'])
         criterion, new_revision = save_criterion(self.operator, self.dossier,
-            expected=self.dossier.version, values=self.criterion_values(), reason='Nouvelle révision')
+            expected=self.dossier.version, pk=criterion.pk, values=self.criterion_values(), reason='Nouvelle révision')
         self.assertNotEqual(stale.number, new_revision.number)
         self.dossier.work.status = WorkItem.Status.SUBMITTED
         self.dossier.work.save(update_fields=['status'])
