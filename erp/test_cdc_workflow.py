@@ -169,6 +169,16 @@ class CdcDelegationHttpTests(OperationFixtures, TestCase):
         save_consultation(self.ops, self.dossier.pk, expected=self.dossier.version, values=values,
             reference=self.dossier.reference, reason='Variables vérifiées pour la recette')
         self.dossier.refresh_from_db()
+        from erp.models import CdcCriterion
+        from erp.services.cdc_governance import review_revision, save_criterion
+        save_criterion(self.ops, self.dossier, expected=self.dossier.version, reason='Grille validée', values={
+            'lot': self.dossier.lots.first(), 'code': 'TECH-01', 'category': CdcCriterion.Category.TECHNICAL,
+            'title': 'Conformité technique', 'description': 'Contrôle', 'expected_evidence': 'Fiche technique',
+            'min_score': Decimal('0'), 'max_score': Decimal('20'), 'weight': Decimal('100'),
+            'threshold': Decimal('10'), 'formula': '', 'rounding_rule': 'Deux décimales',
+            'eliminatory': False, 'source': 'Grille institutionnelle', 'justification': 'Méthode validée',
+            'position': 1, 'active': True})
+        self.dossier.refresh_from_db()
         detail = reverse('erp:cdc-detail', args=[self.dossier.pk])
         data = {'expected_version': self.dossier.version+1, 'action': 'generate', 'reason': 'Revue'}
         self.assertEqual(self.client.post(detail, data).status_code, 400)
@@ -189,6 +199,11 @@ class CdcDelegationHttpTests(OperationFixtures, TestCase):
         self.assertEqual(self.client.get(route).status_code, 200)
         self.assertEqual(self.client.post(route, approval).status_code, 400)
         self.assertFalse(CdcApproval.objects.exists())
+        revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        review_revision(self.ops, revision, stage='TECHNICAL', decision='APPROVED', comment='Revue technique')
+        review_revision(self.ops, revision, stage='ADMIN', decision='APPROVED', comment='Revue administrative')
+        review_revision(self.ops, revision, stage='FINANCIAL', decision='APPROVED', comment='Revue financière')
+        self.assertEqual(self.client.post(route, approval).status_code, 400)
         approval['reviewed_pages'] = generation.pages
         response = self.client.post(route, approval)
         self.assertEqual(response.status_code, 302, response.context['form'].errors if response.context else '')
