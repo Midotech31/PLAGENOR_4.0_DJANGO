@@ -11,7 +11,9 @@ from erp.cdc.catalog import document
 from erp.cdc.schedule_adapter import managed_ids
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
                         CdcDossier, CdcReviewDecision, WorkItem)
-from erp.services.cdc import create_dossier, document_data, edit_cdc_paragraph, save_cdc_item
+from erp.services.cdc import (create_dossier, document_data, duplicate_dossier,
+    edit_cdc_paragraph, save_cdc_item)
+from erp.services.cdc_exchange import restore_revision
 from erp.services.cdc_governance import (apply_clause_selections, criteria_findings,
     governance_snapshot, publish_clause, review_revision, review_summary, save_criterion,
     select_clause)
@@ -279,3 +281,52 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
             'comment': 'Revue HTTP'})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(CdcReviewDecision.objects.filter(revision__dossier=self.dossier, stage='TECHNICAL').exists())
+
+
+    def test_duplication_and_revision_restore_preserve_governance_without_duplicate_references(self):
+        lot = self.dossier.lots.first()
+        item = lot.items.first()
+        save_cdc_item(self.ops, lot.pk, pk=item.pk, expected=self.dossier.version,
+            values={'estimated_price': Decimal('25'), 'tax_rate': Decimal('19'),
+                    'price_source': 'Devis A', 'currency': 'DZD'},
+            supplier=self.party, supplier_provided=True, reason='Prix et fournisseur')
+        self.refresh()
+        clause, version1, _ = publish_clause(self.ops, self.dossier, expected=self.dossier.version,
+            paragraph_id=self.block['id'], title='Clause de reprise', body='Texte historique',
+            source='Source validée', reason='Clause initiale')
+        self.refresh()
+        criterion, source_revision = save_criterion(self.ops, self.dossier, expected=self.dossier.version,
+            values=self.criterion_values(), reason='Grille initiale')
+        self.refresh()
+
+        duplicate = duplicate_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
+            reference='84/SME/SDFM/SG/ESSBO/2026', title='Copie gouvernée',
+            assignee=self.second, allow_costs=True, copy_estimates=False,
+            reason='Nouvelle procédure fondée sur le modèle validé')
+        copied_selection = duplicate.clause_selections.get()
+        self.assertEqual(copied_selection.clause_id, clause.pk)
+        self.assertEqual(copied_selection.selected_version_id, version1.pk)
+        self.assertEqual(duplicate.criteria.get(code='TECH-01').weight, Decimal('100'))
+        self.assertIsNone(duplicate.lots.filter(active=True).first().items.filter(active=True).first().supplier_id)
+
+        _, version2, _ = publish_clause(self.ops, self.dossier, expected=self.dossier.version,
+            paragraph_id=self.block['id'], title='Clause de reprise', body='Texte modifié',
+            source='Source validée v2', reason='Nouvelle version')
+        self.refresh()
+        save_criterion(self.ops, self.dossier, expected=self.dossier.version, pk=criterion.pk,
+            values=self.criterion_values(weight=Decimal('60')), reason='Modification provisoire')
+        self.refresh()
+        item.refresh_from_db()
+        save_cdc_item(self.ops, item.lot_id, pk=item.pk, expected=self.dossier.version,
+            values={}, supplier=None, supplier_provided=True, reason='Fournisseur retiré provisoirement')
+        self.refresh()
+        self.assertEqual(self.dossier.clause_selections.get().selected_version_id, version2.pk)
+        self.assertIsNone(CdcItem.objects.get(pk=item.pk).supplier_id)
+
+        restored = restore_revision(self.ops, source_revision.pk, expected=self.dossier.version,
+            reason='Retour contrôlé à la version antérieure')
+        self.refresh()
+        self.assertEqual(restored.data['paragraphs'][self.block['id']], 'Texte historique')
+        self.assertEqual(self.dossier.clause_selections.get().selected_version_id, version1.pk)
+        self.assertEqual(self.dossier.criteria.get(code='TECH-01').weight, Decimal('100'))
+        self.assertEqual(CdcItem.objects.get(pk=item.pk).supplier_id, self.party.pk)
