@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
+            model_name='cdcrevision',
+            name='governance',
+            field=models.JSONField(default=dict),
+        ),
+        migrations.AddField(
             model_name='cdcitem',
             name='supplier',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT,
