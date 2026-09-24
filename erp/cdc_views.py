@@ -15,11 +15,11 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from . import cdc_forms as forms
 from .cdc.catalog import controls, document, effective_edits
 from .cdc.docengine import DocumentError
-from .models import CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision, WorkItem
+from .models import CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision, ProcurementPlan, WorkItem
 from .permissions import has_access, is_manager, require_manager
-from .services.cdc import (approve_dossier, create_dossier, document_data, dossier_scope,
-    edit_cdc_paragraph, estimate_totals, generate_cdc, save_cdc_item, save_cdc_lot,
-    save_consultation, submit_dossier)
+from .services.cdc import (approve_dossier, archive_dossier, create_dossier, document_data, dossier_scope,
+    duplicate_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc, save_cdc_item, save_cdc_lot,
+    save_consultation, stock_status, submit_dossier)
 from .services.work import require_work, work_allowed
 from .views import add_validation
 
@@ -46,8 +46,15 @@ def cdc_list(request):
     search = request.GET.get('q', '').strip()[:200]
     if search:
         qs = qs.filter(Q(reference__icontains=search) | Q(work__title__icontains=search))
+    state=request.GET.get('state','active')
+    if state=='archived':
+        qs=qs.filter(archived_at__isnull=False)
+    elif state=='all':
+        pass
+    else:
+        state='active';qs=qs.filter(archived_at__isnull=True)
     return render(request, 'erp/cdc_list.html', {'page': Paginator(qs, 30).get_page(request.GET.get('page')),
-        'q': search, 'manager': is_manager(request.user)})
+        'q': search, 'state':state, 'manager': is_manager(request.user)})
 
 
 @login_required
@@ -100,8 +107,9 @@ def cdc_detail(request, pk):
         'lots': dossier.lots.filter(active=True).annotate(item_count=Count('items', filter=Q(items__active=True))),
         'form': form, 'findings': findings, 'generation': generation,
         'revisions': dossier.revisions.defer('data', 'estimates').order_by('-number')[:50],
-        'editable': work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
+        'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
+        'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
         'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False)},
         status=400 if request.method == 'POST' else 200)
 
@@ -269,3 +277,43 @@ def cdc_paragraph(request, pk):
         else:
             return redirect('erp:cdc-clauses', pk=pk)
     return _form_response(request, form, dossier, _('Modifier une clause source'))
+
+
+@login_required
+@require_http_methods(['GET','POST'])
+def cdc_duplicate(request,pk):
+    require_manager(request.user);dossier=get_object_or_404(dossier_scope(request.user),pk=pk)
+    initial={'expected_version':dossier.version,'title':dossier.work.title,'assignee':dossier.work.assignee,'due_on':dossier.work.due_on,'priority':dossier.work.priority,'instructions':dossier.work.instructions,'allow_costs':dossier.work.allow_costs}
+    form=forms.CdcDuplicateForm(request.POST or None,initial=initial)
+    if request.method=='POST' and form.is_valid():
+        values=dict(form.cleaned_data)
+        try:created=duplicate_dossier(request.user,pk,expected=values.pop('expected_version'),**values)
+        except ERRORS as error:_error(form,error)
+        else:return redirect('erp:cdc-detail',pk=created.pk)
+    return _form_response(request,form,dossier,_('Dupliquer ce cahier des charges'))
+
+@login_required
+@require_http_methods(['GET','POST'])
+def cdc_archive(request,pk):
+    require_manager(request.user);dossier=get_object_or_404(dossier_scope(request.user),pk=pk)
+    form=forms.CdcArchiveForm(request.POST or None,initial={'expected_version':dossier.version})
+    if request.method=='POST' and form.is_valid():
+        try:archive_dossier(request.user,pk,expected=form.cleaned_data['expected_version'],reason=form.cleaned_data['reason'])
+        except ERRORS as error:_error(form,error)
+        else:messages.success(request,_('Le cahier des charges est archivé et reste consultable en lecture seule.'));return redirect('erp:cdc-detail',pk=pk)
+    return _form_response(request,form,dossier,_('Archiver ce cahier des charges'))
+
+@login_required
+@require_http_methods(['GET','POST'])
+def cdc_procurement(request,pk):
+    require_manager(request.user);dossier=get_object_or_404(dossier_scope(request.user),pk=pk)
+    existing=ProcurementPlan.objects.filter(cdc=dossier).first()
+    if existing:return redirect('erp:procurement-detail',pk=existing.pk)
+    form=forms.CdcProcurementForm(request.POST or None,initial={'expected_version':dossier.version})
+    if request.method=='POST' and form.is_valid():
+        from .services.procurement import plan_from_cdc
+        values=dict(form.cleaned_data)
+        try:plan=plan_from_cdc(request.user,pk,expected=values.pop('expected_version'),**values)
+        except (ValidationError,IntegrityError) as error:_error(form,error)
+        else:return redirect('erp:procurement-detail',pk=plan.pk)
+    return _form_response(request,form,dossier,_('Créer un plan d’approvisionnement à partir du CDC'))
