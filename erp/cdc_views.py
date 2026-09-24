@@ -428,3 +428,19 @@ def cdc_clause_select(request, pk, clause_id):
             messages.success(request, _('La version de clause sélectionnée est figée dans une nouvelle révision du CDC.'))
             return redirect('erp:cdc-clauses', pk=dossier.pk)
     return _form_response(request, form, dossier, _('Choisir une version approuvée de la clause'))
+
+
+@login_required
+@require_GET
+def cdc_criteria_export(request, pk):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    revision = get_object_or_404(CdcRevision.objects.select_related('dossier', 'actor'),
+        dossier=dossier, number=dossier.revision_number)
+    from .services.cdc_exports import criteria_workbook
+    payload = criteria_workbook(revision)
+    response = FileResponse(io.BytesIO(payload), as_attachment=True,
+        filename='CDC-' + dossier.reference.replace('/', '-') + '-R' + str(revision.number) + '-criteres.xlsx',
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
