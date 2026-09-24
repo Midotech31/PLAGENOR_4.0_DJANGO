@@ -9,11 +9,11 @@ from django.urls import reverse
 
 from erp.cdc.docengine import DocumentError
 from erp.cdc.governance_annex import append_governance_annex
-from erp.models import (CdcClause, CdcClauseRevision, CdcCriterion, CdcRequirement,
+from erp.models import (Capability, CdcClause, CdcClauseRevision, CdcCriterion, CdcRequirement,
     CdcReviewDecision, WorkItem)
 from erp.services.cdc import (approve_dossier, create_clause_revision, create_dossier,
     document_data, duplicate_dossier, governance_findings, governance_snapshot_findings,
-    review_dossier, review_state, save_clause, save_criterion, save_requirement, select_clause)
+    review_dossier, review_state, save_cdc_item, save_clause, save_criterion, save_requirement, select_clause)
 from erp.services.cdc_exchange import add_lot, arrange_item, restore_revision
 from erp.test_operations import OperationFixtures
 
@@ -40,6 +40,42 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
             'title': 'Compatibilité et réception', 'active': True}, reason='Référentiel ESSBO')
         self.assertEqual(str(clause), 'Compatibilité et réception')
         return clause
+
+    def test_canonical_supplier_and_delegated_review_access(self):
+        save_cdc_item(self.operator, self.item.lot_id, expected=self.dossier.version, pk=self.item.pk,
+            values={'estimate_supplier': self.party, 'estimated_price': Decimal('1250.00'),
+                'tax_rate': Decimal('19'), 'price_source': 'Devis fournisseur', 'currency': 'DZD'},
+            reason='Estimation fournisseur canonique')
+        self.refresh()
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estimate_supplier_id, self.party.pk)
+        estimate = self.dossier.revisions.order_by('-number').first().estimates[0]
+        self.assertEqual(estimate['supplier'], str(self.party.pk))
+        self.assertEqual(estimate['supplier_snapshot']['code'], self.party.code)
+
+        self.dossier.work.status = WorkItem.Status.SUBMITTED
+        self.dossier.work.save(update_fields=['status'])
+        self.grant(Capability.REVIEW_CDC_TECHNICAL, user=self.second)
+        self.client.force_login(self.second)
+        self.assertEqual(self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse('erp:cdc-item-edit',
+            args=[self.item.lot_id, self.item.pk])).status_code, 403)
+        review = self.client.get(reverse('erp:cdc-review', args=[self.dossier.pk]))
+        self.assertEqual(review.status_code, 200)
+        self.assertContains(review, 'TECHNICAL')
+        self.assertNotContains(review, 'ADMIN_LEGAL')
+        response = self.client.post(reverse('erp:cdc-review', args=[self.dossier.pk]), {
+            'expected_version': self.dossier.version, 'stage': 'TECHNICAL',
+            'outcome': 'APPROVED', 'comment': 'Revue technique déléguée'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(CdcReviewDecision.objects.filter(dossier=self.dossier,
+            actor=self.second, stage=CdcReviewDecision.Stage.TECHNICAL).exists())
+
+        self.assertIn(self.client.get(reverse('erp:cdc-approve',
+            args=[self.dossier.pk])).status_code, (403, 404))
+        self.grant(Capability.APPROVE_CDC, user=self.second)
+        self.assertEqual(self.client.get(reverse('erp:cdc-approve',
+            args=[self.dossier.pk])).status_code, 200)
 
     def test_requirement_validation_update_snapshot_and_findings(self):
         with self.assertRaisesRegex(ValidationError, 'preuve'):
