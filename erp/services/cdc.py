@@ -637,6 +637,13 @@ def generate_cdc(user, revision_id):
     if annex['status'] == 'GENERATED':
         if 'word/document.xml' not in report.get('changed_parts', []):
             report.setdefault('changed_parts', []).append('word/document.xml')
+        report.get('preserved_parts', {}).pop('word/document.xml', None)
+        report.setdefault('changes', []).append({
+            'kind': 'cdc_governance_annex',
+            'requirements': annex['requirements'],
+            'criteria': annex['criteria'],
+            'clauses': annex['clauses'],
+        })
         report['output_sha256'] = sha(payload)
     payload, layout = normalize_word_layout(payload)
     report['output_sha256'] = sha(payload)
