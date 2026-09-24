@@ -106,11 +106,17 @@ def cdc_detail(request, pk):
     cost_access = work_allowed(request.user, dossier.work, costs=True)
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()
+    can_review = any(permitted(request.user, capability, location=dossier.work.location,
+        category=dossier.work.category) for capability in (
+            Capability.REVIEW_CDC_TECHNICAL, Capability.REVIEW_CDC_ADMIN, Capability.REVIEW_CDC_FINANCIAL))
+    can_approve = permitted(request.user, Capability.APPROVE_CDC,
+        location=dossier.work.location, category=dossier.work.category)
     return render(request, 'erp/cdc_detail.html', {'dossier': dossier, 'work': dossier.work,
         'lots': dossier.lots.filter(active=True).annotate(item_count=Count('items', filter=Q(items__active=True))),
         'form': form, 'findings': findings, 'generation': generation,
         'revisions': dossier.revisions.defer('data', 'estimates').order_by('-number')[:50],
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
+        'work_access': work_allowed(request.user, dossier.work), 'can_review': can_review, 'can_approve': can_approve,
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
         'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
         'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False),
@@ -331,11 +337,13 @@ def cdc_procurement(request,pk):
 @require_GET
 def cdc_governance(request, pk):
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    require_work(request.user, dossier.work)
+    can_review = any(permitted(request.user, capability, location=dossier.work.location,
+        category=dossier.work.category) for capability in (
+            Capability.REVIEW_CDC_TECHNICAL, Capability.REVIEW_CDC_ADMIN, Capability.REVIEW_CDC_FINANCIAL))
     return render(request, 'erp/cdc_governance.html', {
         'dossier': dossier, 'work': dossier.work,
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True),
-        'manager': is_manager(request.user),
+        'manager': is_manager(request.user), 'can_review': can_review,
         'criteria': dossier.criteria.select_related('lot').order_by('lot_id', 'position', 'id'),
         'clause_selections': dossier.clause_selections.select_related('revision__clause').order_by('position', 'id'),
         'review_state': review_state(dossier), 'findings': dossier_findings(dossier),
