@@ -135,7 +135,14 @@ class CdcParagraphForm(OperationForm):
 
 class CdcDuplicateForm(OperationForm):
     expected_version=forms.IntegerField(widget=forms.HiddenInput)
-    reference=forms.RegexField(label=_('Nouvelle référence'),max_length=90,regex=r'^[0-9]{1,4}/SME/SDFM/SG/ESSBO/[0-9]{4}    copy_estimates=forms.BooleanField(label=_('Reprendre explicitement les estimations internes'),required=False,help_text=_('Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes.'))
+    reference=forms.RegexField(label=_('Nouvelle référence'),max_length=90,regex=r'^[0-9]{1,4}/SME/SDFM/SG/ESSBO/[0-9]{4}$')
+    title=forms.CharField(label=_('Intitulé du nouveau dossier'),max_length=255)
+    assignee=forms.ModelChoiceField(label=_('Membre chargé de préparer le nouveau cahier des charges'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
+    due_on=forms.DateField(label=_('Échéance'),required=False,widget=forms.DateInput(attrs={'type':'date'}))
+    priority=forms.ChoiceField(label=_('Priorité'),choices=WorkItem.Priority.choices,initial=WorkItem.Priority.NORMAL)
+    instructions=forms.CharField(label=_('Consignes'),required=False,widget=forms.Textarea)
+    allow_costs=forms.BooleanField(label=_('Autoriser l’accès aux estimations financières'),required=False)
+    copy_estimates=forms.BooleanField(label=_('Reprendre explicitement les estimations internes'),required=False,help_text=_('Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes.'))
     reason=forms.CharField(label=_('Justification de la duplication'),max_length=500,widget=forms.Textarea)
 
 class CdcArchiveForm(OperationForm):
