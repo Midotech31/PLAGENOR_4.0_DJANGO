@@ -124,7 +124,8 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
             item.lot = lot
             item.source_key = 'new-' + str(uuid.uuid4())
             item.version = 1
-            # Reuse technical data only; estimates must be confirmed for the new lot.
+            # Reuse technical data only; estimates and their supplier provenance must be reconfirmed.
+            item.estimate_supplier = None
             item.estimated_price = item.tax_rate = None
             item.price_source = ''
             item.save()
@@ -153,6 +154,7 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     if action == 'move':
         CdcItem.objects.filter(pk=item.pk).update(active=False)
     else:
+        item.estimate_supplier = None
         item.estimated_price = item.tax_rate = None
         item.price_source = ''
     item.pk = None
@@ -220,6 +222,7 @@ def restore_revision(user, pk, *, expected, reason):
             item = CdcItem.objects.get(lot_id=lot['id'], source_key=row['key'])
             item.article_id, item.purchase_unit_id = value['article'], value['purchase_unit']
             item.article_snapshot, item.base_factor = value['article_snapshot'], value['base_factor']
+            item.estimate_supplier_id = value.get('supplier')
             item.estimated_price, item.tax_rate = value['price'], value['tax_rate']
             item.currency, item.price_source = value['currency'], value['source']
             item.save()
