@@ -9,7 +9,9 @@ from .stock import (InternalPreparation, StockContainer, StockEntry, StockLot, S
 
 from .inventory import InventoryCampaign, InventoryLine
 
-from .cdc import CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision
+from .cdc import (CdcApproval, CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
+                  CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcReviewDecision,
+                  CdcRevision, CdcWorkbookPreview)
 
 from .biobank import (BiologicalSample, PositionReservation, SampleEvent, StorageIncident, StoragePosition, TemperatureReading)
 
@@ -19,7 +21,7 @@ from .consumption import (AnalysisRun, ConsumptionProfile, ConsumptionRule, RunA
 
 from .planning import ActivityDependency, ActivitySchedule, AvailabilityBlock, PlanningResource
 
-from .procurement import (ForecastObservation, ProcurementLine, ProcurementPlan, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
+from .procurement import (ForecastObservation, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
 
 from .imports import ImportBatch
 

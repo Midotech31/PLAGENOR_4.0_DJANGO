@@ -1288,3 +1288,619 @@ msgstr "Request"
 
 msgid "Inactive"
 msgstr "Inactive"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Actualiser explicitement la fiche à partir du catalogue commun"
+msgstr "Explicitly refresh from the shared catalogue"
+
+msgid "Ajouter ou réutiliser un lot"
+msgstr "Add or reuse a lot"
+
+msgid "Ajouter un article"
+msgstr "Add an item"
+
+msgid "Ajouts"
+msgstr "Additions"
+
+msgid "Aménagement et travaux"
+msgstr "Fit-out and works"
+
+msgid "Analyser et prévisualiser"
+msgstr "Analyse and preview"
+
+msgid "Analyser un classeur modifié"
+msgstr "Analyse an edited workbook"
+
+msgid "Approvisionnement institutionnel"
+msgstr "Institutional procurement"
+
+msgid "Article"
+msgstr "Item"
+
+msgid "Article du référentiel commun"
+msgstr "Shared catalogue item"
+
+msgid "Articles du lot"
+msgstr "Lot items"
+
+msgid "Aucun cahier des charges dans votre périmètre."
+msgstr "No specifications dossier within your scope."
+
+msgid "Aucun contrôle automatique bloquant. La revue du contenu et de la mise en page reste nécessaire."
+msgstr "No blocking automated check. Content and layout still require review."
+
+msgid "Aucun texte correspondant."
+msgstr "No matching text."
+
+msgid "Aucune modification du dossier avant examen de l’aperçu et confirmation. Les prix des documents destinés aux soumissionnaires restent vierges."
+msgstr "The dossier is unchanged until you review and confirm the preview. Bidder price fields remain blank."
+
+msgid "Besoin technique"
+msgstr "Technical requirement"
+
+msgid "Cahiers des charges"
+msgstr "Specifications dossiers"
+
+msgid "Catalogue commun"
+msgstr "Shared catalogue"
+
+msgid "Ces estimations ne remplissent pas les prix réservés aux soumissionnaires dans le cahier des charges."
+msgstr "These estimates do not fill the bidder price fields in the specifications dossier."
+
+msgid "Cet aperçu a expiré. Analysez à nouveau votre fichier."
+msgstr "This preview has expired. Analyse your file again."
+
+msgid "Cet import a déjà été appliqué."
+msgstr "This import has already been applied."
+
+msgid "Cette révision est conservée telle qu’enregistrée. Une modification du catalogue actuel ne modifie pas ces données."
+msgstr "This revision is retained as recorded. Changes to the current catalogue do not alter it."
+
+msgid "Classeur Excel du dossier"
+msgstr "Dossier Excel workbook"
+
+msgid "Clauses et aperçu textuel"
+msgstr "Clauses and text preview"
+
+msgid "Compte rendu"
+msgstr "Report"
+
+msgid "Confirmer et enregistrer la nouvelle révision"
+msgstr "Confirm and save the new revision"
+
+msgid "Contrôle bloquant"
+msgstr "Blocking check"
+
+msgid "Contrôles documentaires"
+msgstr "Document checks"
+
+msgid "Créer un dossier"
+msgstr "Create a dossier"
+
+msgid "Document et soumission"
+msgstr "Document and submission"
+
+msgid "Dossier et objet"
+msgstr "Dossier and subject"
+
+msgid "Délai de préparation des offres (jours)"
+msgstr "Bid preparation period (days)"
+
+msgid "Délai en arabe, en lettres et en chiffres"
+msgstr "Period in Arabic, in words and figures"
+
+msgid "Délai en français, en lettres et en chiffres"
+msgstr "Period in French, in words and figures"
+
+msgid "Délais et horaires"
+msgstr "Periods and times"
+
+msgid "Délégation et suivi"
+msgstr "Delegation and follow-up"
+
+msgid "Désignation"
+msgstr "Description"
+
+msgid "Estimation interne"
+msgstr "Internal estimate"
+
+msgid "Examiner et valider définitivement"
+msgstr "Review and approve definitively"
+
+msgid "Examiner le PDF"
+msgstr "Review PDF"
+
+msgid "Exercice budgétaire"
+msgstr "Budget year"
+
+msgid "Export Excel impossible"
+msgstr "Excel export unavailable"
+
+msgid "Exporter avec les estimations DZD"
+msgstr "Export with DZD estimates"
+
+msgid "Exporter les articles"
+msgstr "Export items"
+
+msgid "Famille documentaire"
+msgstr "Document family"
+
+msgid "Financement"
+msgstr "Funding"
+
+msgid "Générer le Word et le PDF"
+msgstr "Generate Word and PDF"
+
+msgid "Heure d’ouverture des plis"
+msgstr "Bid opening time"
+
+msgid "Heure limite de dépôt"
+msgstr "Submission deadline time"
+
+msgid "Hors taxes"
+msgstr "Excluding tax"
+
+msgid "Import enregistré dans une nouvelle révision."
+msgstr "Import saved as a new revision."
+
+msgid "Importer aussi les estimations en DZD"
+msgstr "Also import DZD estimates"
+
+msgid "Inchangés"
+msgstr "Unchanged"
+
+msgid "Informations du dossier"
+msgstr "Dossier information"
+
+msgid "Intitulé du lot en arabe"
+msgstr "Lot title in Arabic"
+
+msgid "Intitulé du lot en français"
+msgstr "Lot title in French"
+
+msgid "Je confirme cette opération"
+msgstr "I confirm this operation"
+
+msgid "Justification de validation"
+msgstr "Approval justification"
+
+msgid "Justification des modifications"
+msgstr "Reason for changes"
+
+msgid "Justification et source des prix"
+msgstr "Justification and price source"
+
+msgid "Justifiez la reprise de cette révision."
+msgstr "Explain why this revision is being restored."
+
+msgid "Justifiez le retrait ou la réintégration du lot."
+msgstr "Explain why the lot is being removed or reinstated."
+
+msgid "Justifiez l’import et indiquez la source des prix si vous les importez."
+msgstr "Explain the import and identify the price source when importing prices."
+
+msgid "J’ai examiné toutes les pages du PDF et vérifié leur présentation"
+msgstr "I reviewed every PDF page and checked its layout"
+
+msgid "J’ai vérifié le contenu institutionnel, technique et administratif destiné à la diffusion"
+msgstr "I checked the institutional, technical and administrative content for publication"
+
+msgid "J’ai vérifié les informations propres à ce dossier et leur cohérence bilingue"
+msgstr "I checked this dossier's information and bilingual consistency"
+
+msgid "La désignation, les spécifications, le conditionnement et l’unité seront repris du catalogue. Les anciennes révisions resteront inchangées."
+msgstr "Description, specifications, packaging and unit will be taken from the catalogue. Previous revisions remain unchanged."
+
+msgid "Le classeur financier est en DZD. Exportez sans prix les dossiers comportant une autre devise."
+msgstr "The financial workbook uses DZD. Export without prices if the dossier includes another currency."
+
+msgid "Le fichier dépasse la limite de 20 Mo."
+msgstr "The file exceeds the 20 MB limit."
+
+msgid "Le modèle Travaux conserve son lot documentaire unique."
+msgstr "The Works template retains its single document lot."
+
+msgid "Les estimations DZD renseignées seront importées. Une cellule de prix vide efface l’estimation correspondante. Les taux de taxe restent inchangés."
+msgstr "Entered DZD estimates will be imported. An empty price cell clears that estimate. Tax rates remain unchanged."
+
+msgid "Les estimations Excel sont en DZD ; aucune conversion de devise implicite n’est autorisée."
+msgstr "Excel estimates use DZD; implicit currency conversion is not allowed."
+
+msgid "Les informations reprises du modèle doivent être vérifiées et confirmées pour ce dossier."
+msgstr "Information taken from the template must be checked and confirmed for this dossier."
+
+msgid "Les textes proviennent du modèle institutionnel. Cet aperçu textuel ne remplace pas la vérification du PDF."
+msgstr "Texts come from the institutional template. This text preview does not replace PDF review."
+
+msgid "Lot"
+msgstr "Lot"
+
+msgid "Lot retenu"
+msgstr "Included lot"
+
+msgid "Lots et articles — Excel"
+msgstr "Lots and items — Excel"
+
+msgid "Lots et besoins techniques"
+msgstr "Lots and technical requirements"
+
+msgid "Mettre à jour et ajouter, conserver les absents"
+msgstr "Update and add, retain absent items"
+
+msgid "Modalités de retrait en arabe"
+msgstr "Collection arrangements in Arabic"
+
+msgid "Modalités de retrait en français"
+msgstr "Collection arrangements in French"
+
+msgid "Mode d’import"
+msgstr "Import mode"
+
+msgid "Modifications"
+msgstr "Changes"
+
+msgid "Modifier cette clause"
+msgstr "Edit this clause"
+
+msgid "Modifier l’intitulé du lot"
+msgstr "Edit lot title"
+
+msgid "Modèle vide"
+msgstr "Blank template"
+
+msgid "Nombre de pages examinées"
+msgstr "Number of reviewed pages"
+
+msgid "Numéro du lot dans le modèle documentaire"
+msgstr "Lot number in the document template"
+
+msgid "Objet"
+msgstr "Subject"
+
+msgid "Objet en arabe"
+msgstr "Subject in Arabic"
+
+msgid "Objet en français"
+msgstr "Subject in French"
+
+msgid "Opération"
+msgstr "Operation"
+
+msgid "PDF examiné"
+msgstr "Reviewed PDF"
+
+msgid "Point à examiner"
+msgstr "Point to review"
+
+msgid "Prix unitaire estimé hors taxes"
+msgstr "Estimated unit price excluding tax"
+
+msgid "Précisions complémentaires"
+msgstr "Additional details"
+
+msgid "Préparation déléguée, catalogue partagé et validation finale réservée à l’administration."
+msgstr "Delegated preparation, shared catalogue and final approval reserved for management."
+
+msgid "Quantité prévue"
+msgstr "Planned quantity"
+
+msgid "Rattachez chaque lot à son emplacement dans le modèle. Zéro signifie non rattaché ; la génération restera bloquée."
+msgstr "Bind each lot to its template slot. Zero means unbound; generation will remain blocked."
+
+msgid "Rechercher dans les clauses"
+msgstr "Search clauses"
+
+msgid "Remplacer les articles des lots, retirer les absents"
+msgstr "Replace lot items, remove absent items"
+
+msgid "Reprendre cette révision"
+msgstr "Restore this revision"
+
+msgid "Reprendre la révision %(number)s dans une nouvelle révision"
+msgstr "Restore revision %(number)s as a new revision"
+
+msgid "Retenir cet article"
+msgstr "Include this item"
+
+msgid "Retenu"
+msgstr "Included"
+
+msgid "Retirer ou réintégrer ce lot"
+msgstr "Remove or reinstate this lot"
+
+msgid "Retirer ou réintégrer le lot : %(name)s"
+msgstr "Remove or reinstate lot: %(name)s"
+
+msgid "Retour au dossier"
+msgstr "Back to dossier"
+
+msgid "Retour sans appliquer"
+msgstr "Return without applying"
+
+msgid "Retrait et confirmation"
+msgstr "Collection and confirmation"
+
+msgid "Retraits"
+msgstr "Removals"
+
+msgid "Réactifs et consommables"
+msgstr "Reagents and consumables"
+
+msgid "Référence du dossier"
+msgstr "Dossier reference"
+
+msgid "Référentiel commun"
+msgstr "Shared reference catalogue"
+
+msgid "Réintégrer le lot"
+msgstr "Reinstate lot"
+
+msgid "Réutiliser les articles d’un lot existant"
+msgstr "Reuse items from an existing lot"
+
+msgid "Réutilisez un lot de la même famille documentaire."
+msgstr "Reuse a lot from the same document family."
+
+msgid "Révision %(revision)s — %(pages)s pages"
+msgstr "Revision %(revision)s — %(pages)s pages"
+
+msgid "Révision historique"
+msgstr "Historical revision"
+
+msgid "Révisions conservées"
+msgstr "Retained revisions"
+
+msgid "Soumettre pour validation"
+msgstr "Submit for approval"
+
+msgid "Source de l’estimation"
+msgstr "Estimate source"
+
+msgid "Spécifications"
+msgstr "Specifications"
+
+msgid "Structure institutionnelle : numéro/SME/SDFM/SG/ESSBO/année."
+msgstr "Institutional format: number/SME/SDFM/SG/ESSBO/year."
+
+msgid "Taux de taxe (%)"
+msgstr "Tax rate (%)"
+
+msgid "Taxe"
+msgstr "Tax"
+
+msgid "Taxes"
+msgstr "Taxes"
+
+msgid "Texte de la clause"
+msgstr "Clause text"
+
+msgid "Télécharger le Word"
+msgstr "Download Word"
+
+msgid "Télécharger le classeur du dossier"
+msgstr "Download the dossier workbook"
+
+msgid "Une feuille par lot. Conservez les en-têtes et utilisez un export de la révision actuelle."
+msgstr "One sheet per lot. Keep the headers and use an export of the current revision."
+
+msgid "Une unité liée au catalogue ne peut pas être changée dans Excel. Utilisez la fiche article du dossier."
+msgstr "A catalogue-linked unit cannot be changed in Excel. Use the dossier item form."
+
+msgid "Unité / conditionnement"
+msgstr "Unit / packaging"
+
+msgid "Unité documentaire"
+msgstr "Document unit"
+
+msgid "Unité d’achat structurée"
+msgstr "Structured purchase unit"
+
+msgid "Validité des offres (mois)"
+msgstr "Bid validity (months)"
+
+msgid "Validité en arabe, en lettres et en chiffres"
+msgstr "Validity in Arabic, in words and figures"
+
+msgid "Validité en français, en lettres et en chiffres"
+msgstr "Validity in French, in words and figures"
+
+msgid "Vérifier l’import Excel"
+msgstr "Review Excel import"
+
+msgid "articles retenus"
+msgstr "included items"
+
+msgid "Échanger les lots avec Excel"
+msgstr "Exchange lots with Excel"
+
+msgid "Équipements scientifiques"
+msgstr "Scientific equipment"
+
+msgid "Sélectionnez un article retenu, un lot du dossier et une opération justifiée."
+msgstr "Select an active item, a lot in this dossier and a justified operation."
+
+msgid "La position doit se situer parmi les articles retenus du lot."
+msgstr "The position must be within the active items of the lot."
+
+msgid "Déplacer"
+msgstr "Move"
+
+msgid "Dupliquer sans les prix"
+msgstr "Duplicate without prices"
+
+msgid "Lot de destination"
+msgstr "Destination lot"
+
+msgid "Position dans le lot"
+msgstr "Position in the lot"
+
+msgid "Déplacer ou dupliquer un article"
+msgstr "Move or duplicate an item"
+
+msgid "Déplacer ou dupliquer"
+msgstr "Move or duplicate"
+
+
+msgid "Un cahier des charges archivé est en lecture seule."
+msgstr "An archived specification is read-only."
+
+msgid "Justifiez la duplication du cahier des charges."
+msgstr "Provide a justification for duplicating the specification."
+
+msgid "Une justification d’archivage est obligatoire."
+msgstr "An archive justification is required."
+
+msgid "Ce cahier des charges est déjà archivé."
+msgstr "This specification is already archived."
+
+msgid "Seul un cahier des charges clôturé ou annulé peut être archivé."
+msgstr "Only a completed or cancelled specification can be archived."
+
+msgid "Un cahier des charges archivé ne peut plus produire de nouvelle génération."
+msgstr "An archived specification cannot generate a new document version."
+
+msgid "Un cahier des charges archivé ne peut pas ouvrir un nouveau plan."
+msgstr "An archived specification cannot open a new procurement plan."
+
+msgid "Justifiez la création du plan à partir du cahier des charges."
+msgstr "Justify creating the procurement plan from the specification."
+
+msgid "Rattachez tous les besoins actifs au catalogue commun avant de créer le plan."
+msgstr "Link all active needs to the shared catalogue before creating the plan."
+
+msgid "Le stock disponible couvre déjà les besoins structurés de ce cahier des charges."
+msgstr "Available stock already covers the structured needs in this specification."
+
+msgid "Besoins CDC"
+msgstr "Specification needs"
+
+msgid "Justifiez le transfert des manques vers l’approvisionnement."
+msgstr "Justify transferring shortages to procurement."
+
+msgid "Seule une activité engagée et encore planifiée peut créer un besoin d’approvisionnement."
+msgstr "Only a committed activity that is still planned can create a procurement need."
+
+msgid "La date de l’activité doit appartenir à la période du plan sélectionné."
+msgstr "The activity date must fall within the selected plan period."
+
+msgid "Le stock disponible couvre déjà tous les besoins de cette activité."
+msgstr "Available stock already covers all needs for this activity."
+
+msgid "Ce besoin est déjà pris en charge par un autre plan actif."
+msgstr "This need is already covered by another active plan."
+
+msgid "Besoins analytiques"
+msgstr "Analytical needs"
+
+msgid "De nouveaux manques issus d’une activité analytique ont été ajoutés au plan."
+msgstr "New shortages from an analytical activity were added to the plan."
+
+msgid "Nouvelle référence"
+msgstr "New reference"
+
+msgid "Intitulé du nouveau dossier"
+msgstr "New file title"
+
+msgid "Membre chargé de préparer le nouveau cahier des charges"
+msgstr "Member responsible for preparing the new specification"
+
+msgid "Reprendre explicitement les estimations internes"
+msgstr "Explicitly copy internal estimates"
+
+msgid "Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes."
+msgstr "By default, prices and taxes are not copied to avoid reusing outdated estimates."
+
+msgid "Justification de la duplication"
+msgstr "Duplication justification"
+
+msgid "Justification de l’archivage"
+msgstr "Archive justification"
+
+msgid "Référence du plan d’approvisionnement"
+msgstr "Procurement plan reference"
+
+msgid "Année du plan"
+msgstr "Plan year"
+
+msgid "Responsable du plan"
+msgstr "Plan owner"
+
+msgid "Justification / origine du besoin"
+msgstr "Justification / origin of the need"
+
+msgid "Justification du transfert des manques"
+msgstr "Shortage transfer justification"
+
+msgid "%(count)s besoin(s) de stock ont été rattachés au plan d’approvisionnement."
+msgstr "%(count)s stock need(s) were linked to the procurement plan."
+
+msgid "Transférer les manques vers l’approvisionnement"
+msgstr "Transfer shortages to procurement"
+
+msgid "Dupliquer ce cahier des charges"
+msgstr "Duplicate this specification"
+
+msgid "Le cahier des charges est archivé et reste consultable en lecture seule."
+msgstr "The specification is archived and remains available read-only."
+
+msgid "Archiver ce cahier des charges"
+msgstr "Archive this specification"
+
+msgid "Créer un plan d’approvisionnement à partir du CDC"
+msgstr "Create a procurement plan from the specification"
+
+msgid "État d’archivage"
+msgstr "Archive status"
+
+msgid "Archivés"
+msgstr "Archived"
+
+msgid "Archivé"
+msgstr "Archived"
+
+msgid "Pièces jointes"
+msgstr "Attachments"
+
+msgid "Créer le plan d’approvisionnement"
+msgstr "Create procurement plan"
+
+msgid "Dupliquer de manière contrôlée"
+msgstr "Controlled duplication"
+
+msgid "Archiver"
+msgstr "Archive"
+
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "This specification is archived in read-only mode."
+
+msgid "Disponibilité réelle du stock"
+msgstr "Actual stock availability"
+
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "active need(s) are not yet linked to the shared catalogue and cannot be checked automatically."
+
+msgid "Disponibilité du stock pour le CDC"
+msgstr "Stock availability for the specification"
+
+msgid "Besoin"
+msgstr "Need"
+
+msgid "Disponible non réservé"
+msgstr "Available unreserved"
+
+msgid "Manque"
+msgstr "Shortage"
+
+msgid "État"
+msgstr "Status"
+
+msgid "Insuffisant"
+msgstr "Insufficient"
+
+msgid "Absent"
+msgstr "Unavailable"
+
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "No structured need to compare with stock."

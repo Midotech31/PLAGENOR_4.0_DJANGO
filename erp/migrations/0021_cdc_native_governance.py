@@ -1,0 +1,148 @@
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+import django.core.validators
+import uuid
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ('erp', '0020_cdc_archive_and_procurement_requirement_links'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='cdcrevision',
+            name='governance',
+            field=models.JSONField(default=dict),
+        ),
+        migrations.AddField(
+            model_name='cdcitem',
+            name='supplier',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT,
+                related_name='cdc_items', to='erp.party', verbose_name='Fournisseur pressenti'),
+        ),
+        migrations.CreateModel(
+            name='CdcClause',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('version', models.PositiveIntegerField(default=1, editable=False)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('family', models.CharField(choices=[('reagents','Réactifs et consommables'),('equipment','Équipements scientifiques'),('works','Aménagement et travaux')], max_length=12)),
+                ('code', models.CharField(max_length=64)),
+                ('paragraph_id', models.CharField(max_length=160)),
+                ('title', models.CharField(max_length=255, verbose_name='Intitulé de la clause')),
+                ('category', models.CharField(blank=True, max_length=80, verbose_name='Catégorie')),
+                ('mandatory', models.BooleanField(default=False, verbose_name='Clause obligatoire')),
+                ('active', models.BooleanField(default=True, verbose_name='Active')),
+                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={'ordering':['family','code']},
+        ),
+        migrations.CreateModel(
+            name='CdcClauseVersion',
+            fields=[
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('number', models.PositiveIntegerField()),
+                ('body', models.TextField(verbose_name='Texte approuvé')),
+                ('source', models.CharField(max_length=500, verbose_name='Source / justification')),
+                ('effective_on', models.DateField(blank=True, null=True, verbose_name='Date d’effet')),
+                ('sha256', models.CharField(editable=False, max_length=64)),
+                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                ('clause', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='versions', to='erp.cdcclause')),
+            ],
+            options={'ordering':['-number']},
+        ),
+        migrations.AddField(
+            model_name='cdcclause',
+            name='current_version',
+            field=models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='erp.cdcclauseversion'),
+        ),
+        migrations.CreateModel(
+            name='CdcClauseSelection',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('version', models.PositiveIntegerField(default=1, editable=False)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('reason', models.CharField(max_length=500, verbose_name='Justification')),
+                ('clause', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='selections', to='erp.cdcclause')),
+                ('dossier', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='clause_selections', to='erp.cdcdossier')),
+                ('selected_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL)),
+                ('selected_version', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='selections', to='erp.cdcclauseversion')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='CdcRequirement',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('version', models.PositiveIntegerField(default=1, editable=False)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('code', models.CharField(max_length=64)),
+                ('kind', models.CharField(choices=[('MANDATORY','Obligatoire'),('MINIMUM','Minimale'),('DESIRABLE','Souhaitable'),('SCORED','Notée'),('INFORMATIONAL','Informative'),('ELIMINATORY','Éliminatoire')], max_length=16)),
+                ('statement', models.TextField(verbose_name='Exigence')),
+                ('evidence', models.TextField(blank=True, verbose_name='Preuve attendue')),
+                ('verification', models.TextField(blank=True, verbose_name='Méthode de vérification / réception')),
+                ('justification', models.TextField(blank=True, verbose_name='Justification')),
+                ('position', models.PositiveSmallIntegerField(default=1)),
+                ('active', models.BooleanField(default=True)),
+                ('item', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requirements', to='erp.cdcitem')),
+            ],
+            options={'ordering':['position','code']},
+        ),
+        migrations.CreateModel(
+            name='CdcCriterion',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('version', models.PositiveIntegerField(default=1, editable=False)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('code', models.CharField(max_length=64)),
+                ('category', models.CharField(choices=[('PARTICIPATION','Condition de participation'),('ADMIN','Conformité administrative'),('TECHNICAL','Critère technique'),('FINANCIAL','Critère financier'),('ELIMINATORY','Critère éliminatoire')], max_length=16)),
+                ('title', models.CharField(max_length=255, verbose_name='Intitulé')),
+                ('description', models.TextField(blank=True, verbose_name='Description')),
+                ('expected_evidence', models.TextField(blank=True, verbose_name='Preuve attendue')),
+                ('min_score', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
+                ('max_score', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
+                ('weight', models.DecimalField(decimal_places=2, default=0, max_digits=6, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)], verbose_name='Pondération (%)')),
+                ('threshold', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True, verbose_name='Seuil')),
+                ('formula', models.CharField(blank=True, max_length=500, verbose_name='Formule / méthode')),
+                ('rounding_rule', models.CharField(blank=True, max_length=120, verbose_name='Règle d’arrondi')),
+                ('eliminatory', models.BooleanField(default=False, verbose_name='Éliminatoire')),
+                ('source', models.CharField(max_length=500, verbose_name='Source')),
+                ('justification', models.CharField(blank=True, max_length=500, verbose_name='Justification')),
+                ('position', models.PositiveSmallIntegerField(default=1)),
+                ('active', models.BooleanField(default=True)),
+                ('dossier', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='criteria', to='erp.cdcdossier')),
+                ('lot', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='criteria', to='erp.cdclot')),
+                ('requirement', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='criteria', to='erp.cdcrequirement')),
+            ],
+            options={'ordering':['position','code']},
+        ),
+        migrations.CreateModel(
+            name='CdcReviewDecision',
+            fields=[
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('stage', models.CharField(choices=[('TECHNICAL','Revue technique'),('ADMIN','Revue administrative et juridique'),('FINANCIAL','Revue financière')], max_length=16)),
+                ('decision', models.CharField(choices=[('APPROVED','Approuvé'),('CHANGES','Corrections demandées')], max_length=12)),
+                ('comment', models.CharField(max_length=1000, verbose_name='Compte rendu')),
+                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                ('revision', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='review_decisions', to='erp.cdcrevision')),
+            ],
+            options={'ordering':['created_at']},
+        ),
+        migrations.AddConstraint(model_name='cdcclause', constraint=models.UniqueConstraint(fields=('family','code'), name='erp_cdc_clause_code')),
+        migrations.AddConstraint(model_name='cdcclause', constraint=models.UniqueConstraint(fields=('family','paragraph_id'), name='erp_cdc_clause_paragraph')),
+        migrations.AddConstraint(model_name='cdcclauseversion', constraint=models.UniqueConstraint(fields=('clause','number'), name='erp_cdc_clause_version')),
+        migrations.AddConstraint(model_name='cdcclauseselection', constraint=models.UniqueConstraint(fields=('dossier','clause'), name='erp_cdc_clause_selection')),
+        migrations.AddConstraint(model_name='cdcrequirement', constraint=models.UniqueConstraint(fields=('item','code'), name='erp_cdc_requirement_code')),
+        migrations.AddConstraint(model_name='cdccriterion', constraint=models.UniqueConstraint(fields=('dossier','code'), name='erp_cdc_criterion_code')),
+        migrations.AddConstraint(model_name='cdccriterion', constraint=models.CheckConstraint(condition=models.Q(weight__gte=0, weight__lte=100), name='erp_cdc_criterion_weight')),
+        migrations.AddConstraint(model_name='cdccriterion', constraint=models.CheckConstraint(condition=models.Q(min_score__isnull=True) | models.Q(max_score__isnull=True) | models.Q(min_score__lte=models.F('max_score')), name='erp_cdc_criterion_score_order')),
+        migrations.AddConstraint(model_name='cdcreviewdecision', constraint=models.UniqueConstraint(fields=('revision','stage'), name='erp_cdc_review_stage')),
+    ]

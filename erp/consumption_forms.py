@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from .forms import VersionedForm
-from .models import AnalysisRun, BiologicalSample, ConsumptionProfile, ConsumptionRule, RunAllocation, StockContainer
+from .models import AnalysisRun, BiologicalSample, ConsumptionProfile, ConsumptionRule, ProcurementPlan, RunAllocation, StockContainer, WorkItem
 from .permissions import is_manager, operational_scope
 from .services.biobank import biobank_scope, source_samples
 from .services.links import request_scope
@@ -101,3 +101,14 @@ class RunCancelForm(OperationForm):
     expected_version = forms.IntegerField(widget=forms.HiddenInput)
     key = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)
     reason = forms.CharField(label=_('Motif de l’annulation'), max_length=500, widget=forms.Textarea)
+
+
+class RunProcurementForm(OperationForm):
+    expected_version=forms.IntegerField(widget=forms.HiddenInput)
+    plan=forms.ModelChoiceField(label=_('Plan d’approvisionnement'),queryset=ProcurementPlan.objects.none())
+    reason=forms.CharField(label=_('Justification du transfert des manques'),max_length=500,widget=forms.Textarea)
+    def __init__(self,*args,user,run,**kwargs):
+        super().__init__(*args,**kwargs)
+        from .services.procurement import plan_scope
+        self.fields['expected_version'].initial=run.version
+        self.fields['plan'].queryset=plan_scope(user).filter(approved_revision__isnull=True,work__status__in=[WorkItem.Status.DRAFT,WorkItem.Status.ASSIGNED,WorkItem.Status.IN_PROGRESS,WorkItem.Status.CHANGES_REQUESTED],starts_on__lte=run.planned_on,ends_on__gte=run.planned_on)

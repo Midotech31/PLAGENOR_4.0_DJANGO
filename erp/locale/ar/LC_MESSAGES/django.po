@@ -1270,3 +1270,619 @@ msgstr "الطلب"
 
 msgid "Inactive"
 msgstr "غير نشطة"
+
+msgid "Action"
+msgstr "إجراء"
+
+msgid "Actualiser explicitement la fiche à partir du catalogue commun"
+msgstr "تحديث البيانات صراحة من الفهرس المشترك"
+
+msgid "Ajouter ou réutiliser un lot"
+msgstr "إضافة حصة أو إعادة استخدامها"
+
+msgid "Ajouter un article"
+msgstr "إضافة مادة"
+
+msgid "Ajouts"
+msgstr "إضافات"
+
+msgid "Aménagement et travaux"
+msgstr "التهيئة والأشغال"
+
+msgid "Analyser et prévisualiser"
+msgstr "تحليل ومعاينة"
+
+msgid "Analyser un classeur modifié"
+msgstr "تحليل مصنف معدّل"
+
+msgid "Approvisionnement institutionnel"
+msgstr "التموين المؤسسي"
+
+msgid "Article"
+msgstr "مادة"
+
+msgid "Article du référentiel commun"
+msgstr "مادة من الفهرس المشترك"
+
+msgid "Articles du lot"
+msgstr "مواد الحصة"
+
+msgid "Aucun cahier des charges dans votre périmètre."
+msgstr "لا يوجد دفتر شروط ضمن نطاق صلاحياتك."
+
+msgid "Aucun contrôle automatique bloquant. La revue du contenu et de la mise en page reste nécessaire."
+msgstr "لا يوجد مانع آلي. تظل مراجعة المحتوى والتنسيق ضرورية."
+
+msgid "Aucun texte correspondant."
+msgstr "لا يوجد نص مطابق."
+
+msgid "Aucune modification du dossier avant examen de l’aperçu et confirmation. Les prix des documents destinés aux soumissionnaires restent vierges."
+msgstr "لا يتغير الملف قبل مراجعة المعاينة وتأكيدها. تبقى خانات أسعار المتعهدين فارغة."
+
+msgid "Besoin technique"
+msgstr "احتياج تقني"
+
+msgid "Cahiers des charges"
+msgstr "دفاتر الشروط"
+
+msgid "Catalogue commun"
+msgstr "الفهرس المشترك"
+
+msgid "Ces estimations ne remplissent pas les prix réservés aux soumissionnaires dans le cahier des charges."
+msgstr "لا تملأ هذه التقديرات خانات الأسعار المخصصة للمتعهدين في دفتر الشروط."
+
+msgid "Cet aperçu a expiré. Analysez à nouveau votre fichier."
+msgstr "انتهت صلاحية هذه المعاينة. حلّل الملف مجددًا."
+
+msgid "Cet import a déjà été appliqué."
+msgstr "تم تطبيق هذا الاستيراد مسبقًا."
+
+msgid "Cette révision est conservée telle qu’enregistrée. Une modification du catalogue actuel ne modifie pas ces données."
+msgstr "تُحفظ هذه المراجعة كما سُجلت. لا تؤثر عليها تعديلات الفهرس الحالي."
+
+msgid "Classeur Excel du dossier"
+msgstr "مصنف Excel الخاص بالملف"
+
+msgid "Clauses et aperçu textuel"
+msgstr "البنود والمعاينة النصية"
+
+msgid "Compte rendu"
+msgstr "تقرير"
+
+msgid "Confirmer et enregistrer la nouvelle révision"
+msgstr "تأكيد المراجعة الجديدة وحفظها"
+
+msgid "Contrôle bloquant"
+msgstr "تحقق مانع"
+
+msgid "Contrôles documentaires"
+msgstr "التحقق من الوثائق"
+
+msgid "Créer un dossier"
+msgstr "إنشاء ملف"
+
+msgid "Document et soumission"
+msgstr "الوثيقة والإرسال للمراجعة"
+
+msgid "Dossier et objet"
+msgstr "الملف والموضوع"
+
+msgid "Délai de préparation des offres (jours)"
+msgstr "مدة تحضير العروض بالأيام"
+
+msgid "Délai en arabe, en lettres et en chiffres"
+msgstr "المدة بالعربية بالحروف والأرقام"
+
+msgid "Délai en français, en lettres et en chiffres"
+msgstr "المدة بالفرنسية بالحروف والأرقام"
+
+msgid "Délais et horaires"
+msgstr "المدد والتوقيت"
+
+msgid "Délégation et suivi"
+msgstr "التفويض والمتابعة"
+
+msgid "Désignation"
+msgstr "التسمية"
+
+msgid "Estimation interne"
+msgstr "التقدير الداخلي"
+
+msgid "Examiner et valider définitivement"
+msgstr "المراجعة والاعتماد النهائي"
+
+msgid "Examiner le PDF"
+msgstr "مراجعة PDF"
+
+msgid "Exercice budgétaire"
+msgstr "السنة المالية"
+
+msgid "Export Excel impossible"
+msgstr "تعذر التصدير إلى Excel"
+
+msgid "Exporter avec les estimations DZD"
+msgstr "التصدير مع التقديرات بالدينار الجزائري"
+
+msgid "Exporter les articles"
+msgstr "تصدير المواد"
+
+msgid "Famille documentaire"
+msgstr "فئة الوثائق"
+
+msgid "Financement"
+msgstr "التمويل"
+
+msgid "Générer le Word et le PDF"
+msgstr "إنشاء Word وPDF"
+
+msgid "Heure d’ouverture des plis"
+msgstr "وقت فتح الأظرفة"
+
+msgid "Heure limite de dépôt"
+msgstr "آخر وقت لإيداع العروض"
+
+msgid "Hors taxes"
+msgstr "خارج الرسوم"
+
+msgid "Import enregistré dans une nouvelle révision."
+msgstr "حُفظ الاستيراد في مراجعة جديدة."
+
+msgid "Importer aussi les estimations en DZD"
+msgstr "استيراد التقديرات بالدينار الجزائري أيضًا"
+
+msgid "Inchangés"
+msgstr "دون تغيير"
+
+msgid "Informations du dossier"
+msgstr "معلومات الملف"
+
+msgid "Intitulé du lot en arabe"
+msgstr "عنوان الحصة بالعربية"
+
+msgid "Intitulé du lot en français"
+msgstr "عنوان الحصة بالفرنسية"
+
+msgid "Je confirme cette opération"
+msgstr "أؤكد هذه العملية"
+
+msgid "Justification de validation"
+msgstr "مبرر الاعتماد"
+
+msgid "Justification des modifications"
+msgstr "مبرر التعديلات"
+
+msgid "Justification et source des prix"
+msgstr "المبرر ومصدر الأسعار"
+
+msgid "Justifiez la reprise de cette révision."
+msgstr "بيّن سبب استعادة هذه المراجعة."
+
+msgid "Justifiez le retrait ou la réintégration du lot."
+msgstr "بيّن سبب سحب الحصة أو إعادتها."
+
+msgid "Justifiez l’import et indiquez la source des prix si vous les importez."
+msgstr "برّر الاستيراد وحدد مصدر الأسعار عند استيرادها."
+
+msgid "J’ai examiné toutes les pages du PDF et vérifié leur présentation"
+msgstr "راجعت جميع صفحات PDF وتحققت من تنسيقها"
+
+msgid "J’ai vérifié le contenu institutionnel, technique et administratif destiné à la diffusion"
+msgstr "تحققت من المحتوى المؤسسي والتقني والإداري المخصص للنشر"
+
+msgid "J’ai vérifié les informations propres à ce dossier et leur cohérence bilingue"
+msgstr "تحققت من معلومات هذا الملف واتساقها بين اللغتين"
+
+msgid "La désignation, les spécifications, le conditionnement et l’unité seront repris du catalogue. Les anciennes révisions resteront inchangées."
+msgstr "ستُستمد التسمية والمواصفات والتعبئة والوحدة من الفهرس. تبقى المراجعات السابقة دون تغيير."
+
+msgid "Le classeur financier est en DZD. Exportez sans prix les dossiers comportant une autre devise."
+msgstr "يستخدم المصنف المالي الدينار الجزائري. صدّر دون أسعار إذا كان الملف يتضمن عملة أخرى."
+
+msgid "Le fichier dépasse la limite de 20 Mo."
+msgstr "يتجاوز الملف الحد الأقصى البالغ 20 ميغابايت."
+
+msgid "Le modèle Travaux conserve son lot documentaire unique."
+msgstr "يحتفظ نموذج الأشغال بحصته الوثائقية الوحيدة."
+
+msgid "Les estimations DZD renseignées seront importées. Une cellule de prix vide efface l’estimation correspondante. Les taux de taxe restent inchangés."
+msgstr "ستُستورد التقديرات المدخلة بالدينار الجزائري. تمحو خلية السعر الفارغة التقدير المقابل. تبقى معدلات الرسوم دون تغيير."
+
+msgid "Les estimations Excel sont en DZD ; aucune conversion de devise implicite n’est autorisée."
+msgstr "تقديرات Excel بالدينار الجزائري؛ لا يُسمح بتحويل العملة ضمنيًا."
+
+msgid "Les informations reprises du modèle doivent être vérifiées et confirmées pour ce dossier."
+msgstr "يجب التحقق من المعلومات المستمدة من النموذج وتأكيدها لهذا الملف."
+
+msgid "Les textes proviennent du modèle institutionnel. Cet aperçu textuel ne remplace pas la vérification du PDF."
+msgstr "النصوص مستمدة من النموذج المؤسسي. لا تغني المعاينة النصية عن مراجعة PDF."
+
+msgid "Lot"
+msgstr "حصة"
+
+msgid "Lot retenu"
+msgstr "حصة مدرجة"
+
+msgid "Lots et articles — Excel"
+msgstr "الحصص والمواد — Excel"
+
+msgid "Lots et besoins techniques"
+msgstr "الحصص والاحتياجات التقنية"
+
+msgid "Mettre à jour et ajouter, conserver les absents"
+msgstr "تحديث وإضافة مع الاحتفاظ بالمواد الغائبة"
+
+msgid "Modalités de retrait en arabe"
+msgstr "كيفية السحب بالعربية"
+
+msgid "Modalités de retrait en français"
+msgstr "كيفية السحب بالفرنسية"
+
+msgid "Mode d’import"
+msgstr "نمط الاستيراد"
+
+msgid "Modifications"
+msgstr "تعديلات"
+
+msgid "Modifier cette clause"
+msgstr "تعديل هذا البند"
+
+msgid "Modifier l’intitulé du lot"
+msgstr "تعديل عنوان الحصة"
+
+msgid "Modèle vide"
+msgstr "نموذج فارغ"
+
+msgid "Nombre de pages examinées"
+msgstr "عدد الصفحات المراجعة"
+
+msgid "Numéro du lot dans le modèle documentaire"
+msgstr "رقم الحصة في النموذج الوثائقي"
+
+msgid "Objet"
+msgstr "الموضوع"
+
+msgid "Objet en arabe"
+msgstr "الموضوع بالعربية"
+
+msgid "Objet en français"
+msgstr "الموضوع بالفرنسية"
+
+msgid "Opération"
+msgstr "العملية"
+
+msgid "PDF examiné"
+msgstr "ملف PDF المراجع"
+
+msgid "Point à examiner"
+msgstr "نقطة للمراجعة"
+
+msgid "Prix unitaire estimé hors taxes"
+msgstr "سعر الوحدة التقديري خارج الرسوم"
+
+msgid "Précisions complémentaires"
+msgstr "تفاصيل إضافية"
+
+msgid "Préparation déléguée, catalogue partagé et validation finale réservée à l’administration."
+msgstr "إعداد مفوّض وفهرس مشترك واعتماد نهائي مخصص للإدارة."
+
+msgid "Quantité prévue"
+msgstr "الكمية المخططة"
+
+msgid "Rattachez chaque lot à son emplacement dans le modèle. Zéro signifie non rattaché ; la génération restera bloquée."
+msgstr "اربط كل حصة بموضعها في النموذج. الصفر يعني عدم الربط؛ وسيبقى الإنشاء محظورًا."
+
+msgid "Rechercher dans les clauses"
+msgstr "البحث في البنود"
+
+msgid "Remplacer les articles des lots, retirer les absents"
+msgstr "استبدال مواد الحصص وسحب المواد الغائبة"
+
+msgid "Reprendre cette révision"
+msgstr "استعادة هذه المراجعة"
+
+msgid "Reprendre la révision %(number)s dans une nouvelle révision"
+msgstr "استعادة المراجعة %(number)s في مراجعة جديدة"
+
+msgid "Retenir cet article"
+msgstr "إدراج هذه المادة"
+
+msgid "Retenu"
+msgstr "مدرج"
+
+msgid "Retirer ou réintégrer ce lot"
+msgstr "سحب هذه الحصة أو إعادتها"
+
+msgid "Retirer ou réintégrer le lot : %(name)s"
+msgstr "سحب الحصة أو إعادتها: %(name)s"
+
+msgid "Retour au dossier"
+msgstr "العودة إلى الملف"
+
+msgid "Retour sans appliquer"
+msgstr "العودة دون تطبيق"
+
+msgid "Retrait et confirmation"
+msgstr "السحب والتأكيد"
+
+msgid "Retraits"
+msgstr "مواد مسحوبة"
+
+msgid "Réactifs et consommables"
+msgstr "الكواشف والمستهلكات"
+
+msgid "Référence du dossier"
+msgstr "مرجع الملف"
+
+msgid "Référentiel commun"
+msgstr "الفهرس المرجعي المشترك"
+
+msgid "Réintégrer le lot"
+msgstr "إعادة إدراج الحصة"
+
+msgid "Réutiliser les articles d’un lot existant"
+msgstr "إعادة استخدام مواد حصة موجودة"
+
+msgid "Réutilisez un lot de la même famille documentaire."
+msgstr "أعد استخدام حصة من الفئة الوثائقية نفسها."
+
+msgid "Révision %(revision)s — %(pages)s pages"
+msgstr "المراجعة %(revision)s — %(pages)s صفحات"
+
+msgid "Révision historique"
+msgstr "مراجعة محفوظة"
+
+msgid "Révisions conservées"
+msgstr "المراجعات المحفوظة"
+
+msgid "Soumettre pour validation"
+msgstr "الإرسال للاعتماد"
+
+msgid "Source de l’estimation"
+msgstr "مصدر التقدير"
+
+msgid "Spécifications"
+msgstr "المواصفات"
+
+msgid "Structure institutionnelle : numéro/SME/SDFM/SG/ESSBO/année."
+msgstr "الصيغة المؤسسية: الرقم/SME/SDFM/SG/ESSBO/السنة."
+
+msgid "Taux de taxe (%)"
+msgstr "معدل الرسم (%)"
+
+msgid "Taxe"
+msgstr "رسم"
+
+msgid "Taxes"
+msgstr "الرسوم"
+
+msgid "Texte de la clause"
+msgstr "نص البند"
+
+msgid "Télécharger le Word"
+msgstr "تنزيل Word"
+
+msgid "Télécharger le classeur du dossier"
+msgstr "تنزيل مصنف الملف"
+
+msgid "Une feuille par lot. Conservez les en-têtes et utilisez un export de la révision actuelle."
+msgstr "ورقة لكل حصة. احتفظ بالعناوين واستخدم تصديرًا من المراجعة الحالية."
+
+msgid "Une unité liée au catalogue ne peut pas être changée dans Excel. Utilisez la fiche article du dossier."
+msgstr "لا يمكن تغيير وحدة مرتبطة بالفهرس في Excel. استخدم استمارة المادة في الملف."
+
+msgid "Unité / conditionnement"
+msgstr "الوحدة / التعبئة"
+
+msgid "Unité documentaire"
+msgstr "الوحدة الوثائقية"
+
+msgid "Unité d’achat structurée"
+msgstr "وحدة الشراء المهيكلة"
+
+msgid "Validité des offres (mois)"
+msgstr "صلاحية العروض بالأشهر"
+
+msgid "Validité en arabe, en lettres et en chiffres"
+msgstr "الصلاحية بالعربية بالحروف والأرقام"
+
+msgid "Validité en français, en lettres et en chiffres"
+msgstr "الصلاحية بالفرنسية بالحروف والأرقام"
+
+msgid "Vérifier l’import Excel"
+msgstr "مراجعة استيراد Excel"
+
+msgid "articles retenus"
+msgstr "مواد مدرجة"
+
+msgid "Échanger les lots avec Excel"
+msgstr "تبادل الحصص عبر Excel"
+
+msgid "Équipements scientifiques"
+msgstr "التجهيزات العلمية"
+
+msgid "Sélectionnez un article retenu, un lot du dossier et une opération justifiée."
+msgstr "اختر مادة معتمدة وحصة من هذا الملف وعملية مبررة."
+
+msgid "La position doit se situer parmi les articles retenus du lot."
+msgstr "يجب أن يكون الموضع ضمن المواد المعتمدة في الحصة."
+
+msgid "Déplacer"
+msgstr "نقل"
+
+msgid "Dupliquer sans les prix"
+msgstr "نسخ دون الأسعار"
+
+msgid "Lot de destination"
+msgstr "الحصة المستهدفة"
+
+msgid "Position dans le lot"
+msgstr "الموضع في الحصة"
+
+msgid "Déplacer ou dupliquer un article"
+msgstr "نقل مادة أو نسخها"
+
+msgid "Déplacer ou dupliquer"
+msgstr "نقل أو نسخ"
+
+
+msgid "Un cahier des charges archivé est en lecture seule."
+msgstr "دفتر الشروط المؤرشف متاح للقراءة فقط."
+
+msgid "Justifiez la duplication du cahier des charges."
+msgstr "يرجى تبرير نسخ دفتر الشروط."
+
+msgid "Une justification d’archivage est obligatoire."
+msgstr "تبرير الأرشفة إلزامي."
+
+msgid "Ce cahier des charges est déjà archivé."
+msgstr "دفتر الشروط هذا مؤرشف بالفعل."
+
+msgid "Seul un cahier des charges clôturé ou annulé peut être archivé."
+msgstr "لا يمكن أرشفة دفتر الشروط إلا بعد إغلاقه أو إلغائه."
+
+msgid "Un cahier des charges archivé ne peut plus produire de nouvelle génération."
+msgstr "لا يمكن لدفتر شروط مؤرشف إنشاء نسخة وثائقية جديدة."
+
+msgid "Un cahier des charges archivé ne peut pas ouvrir un nouveau plan."
+msgstr "لا يمكن لدفتر شروط مؤرشف فتح خطة تموين جديدة."
+
+msgid "Justifiez la création du plan à partir du cahier des charges."
+msgstr "يرجى تبرير إنشاء خطة التموين انطلاقاً من دفتر الشروط."
+
+msgid "Rattachez tous les besoins actifs au catalogue commun avant de créer le plan."
+msgstr "اربط جميع الاحتياجات النشطة بالفهرس المشترك قبل إنشاء الخطة."
+
+msgid "Le stock disponible couvre déjà les besoins structurés de ce cahier des charges."
+msgstr "المخزون المتاح يغطي بالفعل الاحتياجات المهيكلة في دفتر الشروط هذا."
+
+msgid "Besoins CDC"
+msgstr "احتياجات دفتر الشروط"
+
+msgid "Justifiez le transfert des manques vers l’approvisionnement."
+msgstr "يرجى تبرير تحويل النواقص إلى التموين."
+
+msgid "Seule une activité engagée et encore planifiée peut créer un besoin d’approvisionnement."
+msgstr "لا يمكن إنشاء احتياج تموين إلا من نشاط معتمد وما زال مخططاً."
+
+msgid "La date de l’activité doit appartenir à la période du plan sélectionné."
+msgstr "يجب أن يقع تاريخ النشاط ضمن فترة الخطة المحددة."
+
+msgid "Le stock disponible couvre déjà tous les besoins de cette activité."
+msgstr "المخزون المتاح يغطي بالفعل جميع احتياجات هذا النشاط."
+
+msgid "Ce besoin est déjà pris en charge par un autre plan actif."
+msgstr "هذا الاحتياج مغطى بالفعل بخطة نشطة أخرى."
+
+msgid "Besoins analytiques"
+msgstr "احتياجات التحاليل"
+
+msgid "De nouveaux manques issus d’une activité analytique ont été ajoutés au plan."
+msgstr "أضيفت إلى الخطة نواقص جديدة ناتجة عن نشاط تحليلي."
+
+msgid "Nouvelle référence"
+msgstr "مرجع جديد"
+
+msgid "Intitulé du nouveau dossier"
+msgstr "عنوان الملف الجديد"
+
+msgid "Membre chargé de préparer le nouveau cahier des charges"
+msgstr "العضو المكلف بإعداد دفتر الشروط الجديد"
+
+msgid "Reprendre explicitement les estimations internes"
+msgstr "نسخ التقديرات الداخلية صراحةً"
+
+msgid "Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes."
+msgstr "افتراضياً لا تُنسخ الأسعار والضرائب لتجنب إعادة استخدام تقديرات قديمة."
+
+msgid "Justification de la duplication"
+msgstr "تبرير النسخ"
+
+msgid "Justification de l’archivage"
+msgstr "تبرير الأرشفة"
+
+msgid "Référence du plan d’approvisionnement"
+msgstr "مرجع خطة التموين"
+
+msgid "Année du plan"
+msgstr "سنة الخطة"
+
+msgid "Responsable du plan"
+msgstr "مسؤول الخطة"
+
+msgid "Justification / origine du besoin"
+msgstr "تبرير / مصدر الاحتياج"
+
+msgid "Justification du transfert des manques"
+msgstr "تبرير تحويل النواقص"
+
+msgid "%(count)s besoin(s) de stock ont été rattachés au plan d’approvisionnement."
+msgstr "تم ربط %(count)s من احتياجات المخزون بخطة التموين."
+
+msgid "Transférer les manques vers l’approvisionnement"
+msgstr "تحويل النواقص إلى التموين"
+
+msgid "Dupliquer ce cahier des charges"
+msgstr "نسخ دفتر الشروط هذا"
+
+msgid "Le cahier des charges est archivé et reste consultable en lecture seule."
+msgstr "تمت أرشفة دفتر الشروط ويظل متاحاً للقراءة فقط."
+
+msgid "Archiver ce cahier des charges"
+msgstr "أرشفة دفتر الشروط هذا"
+
+msgid "Créer un plan d’approvisionnement à partir du CDC"
+msgstr "إنشاء خطة تموين انطلاقاً من دفتر الشروط"
+
+msgid "État d’archivage"
+msgstr "حالة الأرشفة"
+
+msgid "Archivés"
+msgstr "مؤرشفة"
+
+msgid "Archivé"
+msgstr "مؤرشف"
+
+msgid "Pièces jointes"
+msgstr "المرفقات"
+
+msgid "Créer le plan d’approvisionnement"
+msgstr "إنشاء خطة التموين"
+
+msgid "Dupliquer de manière contrôlée"
+msgstr "نسخ مضبوط"
+
+msgid "Archiver"
+msgstr "أرشفة"
+
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "دفتر الشروط هذا مؤرشف ومتاح للقراءة فقط."
+
+msgid "Disponibilité réelle du stock"
+msgstr "التوفر الفعلي للمخزون"
+
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "من الاحتياجات النشطة غير مرتبطة بعد بالفهرس المشترك ولا يمكن التحقق منها آلياً."
+
+msgid "Disponibilité du stock pour le CDC"
+msgstr "توفر المخزون لدفتر الشروط"
+
+msgid "Besoin"
+msgstr "الاحتياج"
+
+msgid "Disponible non réservé"
+msgstr "المتاح غير المحجوز"
+
+msgid "Manque"
+msgstr "النقص"
+
+msgid "État"
+msgstr "الحالة"
+
+msgid "Insuffisant"
+msgstr "غير كافٍ"
+
+msgid "Absent"
+msgstr "غير متوفر"
+
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "لا يوجد احتياج مهيكل لمقارنته بالمخزون."

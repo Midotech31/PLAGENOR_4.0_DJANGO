@@ -9,6 +9,7 @@ import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from pypdf import PdfReader
 
@@ -18,12 +19,13 @@ from erp.cdc.consultation import FIELDS, validate_consultation
 from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
-from erp.models import (Article, CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot,
-                        CdcRevision, Unit, WorkItem)
-from erp.permissions import is_manager, require_manager
+from erp.models import (Article, CdcApproval, CdcClauseSelection, CdcCriterion, CdcDossier, CdcGeneration,
+                        CdcItem, CdcLot, CdcRequirement, CdcRevision, LocationClosure, Party, StockContainer,
+                        Unit, WorkItem)
+from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, snapshot
-from .stock import stock_quantity
+from .stock import stock_quantity, usable_filter
 from .work import _transition, create_work, require_work, work_allowed, work_scope
 
 
@@ -41,6 +43,8 @@ def _dossier(user, pk, *, edit=False):
     require_work(user, work, edit=edit)
     dossier = CdcDossier.objects.select_for_update().get(pk=pk)
     dossier.work = work
+    if edit and dossier.archived_at is not None:
+        raise ValidationError(_('Un cahier des charges archivé est en lecture seule.'))
     return dossier
 
 
@@ -48,18 +52,26 @@ def document_data(dossier):
     data = copy.deepcopy(dossier.data)
     data['reference'] = dossier.reference
     lots = []
-    for position, lot in enumerate(dossier.lots.prefetch_related('items').order_by('position'), 1):
+    for position, lot in enumerate(dossier.lots.filter(active=True).prefetch_related('items__requirements').order_by('position'), 1):
         items = []
         for item in lot.items.all():
             if item.active:
+                requirements = [row for row in item.requirements.all() if row.active]
+                requirement_text = '\n'.join('• ' + row.statement.strip() for row in sorted(
+                    requirements, key=lambda row: (row.position, row.code)) if row.statement.strip())
+                specifications = item.specifications.strip()
+                if requirement_text:
+                    specifications = (specifications + '\n' + requirement_text).strip()
                 items.append({'key': item.source_key, 'position': len(items) + 1,
-                    'designation': item.designation, 'specifications': item.specifications,
+                    'designation': item.designation, 'specifications': specifications,
                     'unit': item.unit_label, 'packaging': item.packaging,
                     'quantity': format(item.quantity, 'f'), 'details': item.details})
         lots.append({'id': str(lot.pk), 'number': position, 'name': lot.name,
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
     data.pop('procurement', None)
+    from .cdc_governance import apply_clause_selections
+    data = apply_clause_selections(dossier, data)
     validate_data(data, dossier.family)
     return data
 
@@ -69,6 +81,7 @@ def _estimates(dossier):
              'article_snapshot': item.article_snapshot, 'lot': str(item.lot_id), 'active': item.active,
              'quantity': str(item.quantity), 'purchase_unit': str(item.purchase_unit_id) if item.purchase_unit_id else None,
              'base_factor': str(item.base_factor) if item.base_factor is not None else None,
+             'supplier': str(item.supplier_id) if item.supplier_id else None,
              'price': str(item.estimated_price) if item.estimated_price is not None else None,
              'tax_rate': str(item.tax_rate) if item.tax_rate is not None else None,
              'currency': item.currency, 'source': item.price_source}
@@ -77,26 +90,29 @@ def _estimates(dossier):
 
 def _revision(user, dossier, reason=''):
     data, estimates = document_data(dossier), _estimates(dossier)
-    digest = hashlib.sha256(json.dumps({'document': data, 'estimates': estimates}, ensure_ascii=False,
+    from .cdc_governance import governance_snapshot
+    governance = governance_snapshot(dossier)
+    digest = hashlib.sha256(json.dumps({'document': data, 'estimates': estimates, 'governance': governance}, ensure_ascii=False,
         sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     dossier.revision_number += 1
     dossier.version += 1
     dossier.save()
     revision = CdcRevision.objects.create(dossier=dossier, number=dossier.revision_number, actor=user,
-        data=data, estimates=estimates, sha256=digest, reason=reason[:500])
+        data=data, estimates=estimates, governance=governance, sha256=digest, reason=reason[:500])
     audit(user, dossier, 'revision_created', reason=reason[:500])
     return revision
 
 
 @transaction.atomic
 def create_dossier(user, *, family, reference, title, assignee=None, due_on=None,
-                   priority='NORMAL', allow_costs=False, instructions=''):
+                   priority='NORMAL', location=None, category=None, allow_costs=False, instructions=''):
     require_manager(user)
     data = initial_data(family)
     data['reference'] = reference.strip()
     validate_data(data, family)
     work = create_work(user, kind=WorkItem.Kind.CDC, title=title, assignee=assignee,
-        due_on=due_on, priority=priority, allow_costs=allow_costs, instructions=instructions)
+        due_on=due_on, priority=priority, location=location, category=category,
+        allow_costs=allow_costs, instructions=instructions)
     dossier = CdcDossier(work=work, family=family, reference=reference.strip(), data=data)
     dossier.full_clean()
     dossier.save()
@@ -110,6 +126,114 @@ def create_dossier(user, *, family, reference, title, assignee=None, due_on=None
                 details=row['details'])
     _revision(user, dossier)
     return dossier
+
+
+@transaction.atomic
+def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, due_on=None,
+                      priority='NORMAL', allow_costs=False, instructions='', copy_estimates=False, reason=''):
+    require_manager(user)
+    source = _dossier(user, pk)
+    check_version(source, expected)
+    if not reason.strip():
+        raise ValidationError(_('Justifiez la duplication du cahier des charges.'))
+    duplicate = create_dossier(user, family=source.family, reference=reference, title=title,
+        assignee=assignee, due_on=due_on, priority=priority, location=source.work.location,
+        category=source.work.category, allow_costs=allow_costs, instructions=instructions)
+    CdcItem.objects.filter(lot__dossier=duplicate).delete()
+    duplicate.lots.all().delete()
+    duplicate.data = copy.deepcopy(source.data)
+    duplicate.data['reference'] = duplicate.reference
+    duplicate.data.setdefault('consultation', {})['confirmed'] = False
+    duplicate.save(update_fields=['data', 'updated_at'])
+    lot_map = {}
+    item_map = {}
+    for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
+        lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
+            name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
+        lot_map[original_lot.pk] = lot
+        for original in original_lot.items.filter(active=True).order_by('position', 'id'):
+            copied_item = CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
+                article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
+                designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
+                purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
+                quantity=original.quantity, details=original.details,
+                estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
+                tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
+                supplier=original.supplier if copy_estimates and allow_costs else None,
+                price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
+            item_map[original.pk] = copied_item
+            for requirement in original.requirements.filter(active=True).order_by('position', 'code'):
+                CdcRequirement.objects.create(item=copied_item, code=requirement.code, kind=requirement.kind,
+                    statement=requirement.statement, evidence=requirement.evidence, verification=requirement.verification,
+                    justification=requirement.justification, position=requirement.position, active=True)
+    requirement_map = {}
+    for source_item_id, copied_item in item_map.items():
+        for source_requirement in CdcRequirement.objects.filter(item_id=source_item_id, active=True):
+            requirement_map[source_requirement.pk] = copied_item.requirements.get(code=source_requirement.code)
+    for selection in source.clause_selections.select_related('clause', 'selected_version'):
+        CdcClauseSelection.objects.create(dossier=duplicate, clause=selection.clause,
+            selected_version=selection.selected_version, selected_by=user, reason=reason[:500])
+    for criterion in source.criteria.filter(active=True).order_by('position', 'code'):
+        target_lot = lot_map.get(criterion.lot_id) if criterion.lot_id else None
+        if criterion.lot_id and target_lot is None:
+            continue
+        target_requirement = requirement_map.get(criterion.requirement_id) if criterion.requirement_id else None
+        CdcCriterion.objects.create(dossier=duplicate,
+            lot=target_lot, requirement=target_requirement,
+            code=criterion.code, category=criterion.category, title=criterion.title,
+            description=criterion.description, expected_evidence=criterion.expected_evidence,
+            min_score=criterion.min_score, max_score=criterion.max_score, weight=criterion.weight,
+            threshold=criterion.threshold, formula=criterion.formula, rounding_rule=criterion.rounding_rule,
+            eliminatory=criterion.eliminatory, source=criterion.source, justification=criterion.justification,
+            position=criterion.position, active=criterion.active)
+    _revision(user, duplicate, reason)
+    audit(user, source, 'duplicated_to', reason=str(duplicate.pk))
+    audit(user, duplicate, 'duplicated_from', reason=str(source.pk))
+    return duplicate
+
+
+@transaction.atomic
+def archive_dossier(user, pk, *, expected, reason):
+    require_manager(user)
+    dossier = _dossier(user, pk)
+    check_version(dossier, expected)
+    if dossier.archived_at is not None:
+        raise ValidationError(_('Ce cahier des charges est déjà archivé.'))
+    if dossier.work.status not in (WorkItem.Status.APPROVED, WorkItem.Status.CANCELLED):
+        raise ValidationError(_('Seul un cahier des charges clôturé ou annulé peut être archivé.'))
+    if not reason.strip():
+        raise ValidationError(_('Une justification d’archivage est obligatoire.'))
+    dossier.archived_at, dossier.archived_by, dossier.archive_reason = timezone.now(), user, reason.strip()
+    dossier.version += 1
+    dossier.save(update_fields=['archived_at', 'archived_by', 'archive_reason', 'version', 'updated_at'])
+    audit(user, dossier, 'archived', reason=dossier.archive_reason)
+    return dossier
+
+
+def stock_status(user, dossier):
+    require_work(user, dossier.work)
+    if not is_manager(user) and not grants(user, Capability.VIEW_STOCK).exists():
+        return None
+    grouped, unlinked = {}, 0
+    for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True).select_related('article__base_unit'):
+        if item.article_id is None or item.base_factor is None:
+            unlinked += 1
+            continue
+        row = grouped.setdefault(item.article_id, {'article': item.article, 'required': Decimal(0)})
+        row['required'] += stock_quantity(item.quantity * item.base_factor)
+    rows = []
+    for row in grouped.values():
+        containers = operational_scope(StockContainer.objects.filter(lot__article=row['article']), user)
+        if dossier.work.location_id:
+            containers = containers.filter(location_id__in=LocationClosure.objects.filter(
+                ancestor_id=dossier.work.location_id).values('descendant_id'))
+        containers = containers.filter(usable_filter(timezone.localdate()))
+        available = sum((container.quantity - container.reserved for container in containers), Decimal(0))
+        shortage = max(Decimal(0), row['required'] - available)
+        state = 'AVAILABLE' if shortage == 0 else ('INSUFFICIENT' if available > 0 else 'ABSENT')
+        rows.append({**row, 'available': available, 'shortage': shortage, 'status': state})
+    rows.sort(key=lambda row: row['article'].code)
+    return {'rows': rows, 'unlinked': unlinked}
 
 
 @transaction.atomic
@@ -128,18 +252,21 @@ def save_consultation(user, pk, *, expected, values, reference=None, reason=''):
 
 
 @transaction.atomic
-def save_cdc_lot(user, pk, *, expected, name, name_ar, reason=''):
+def save_cdc_lot(user, pk, *, expected, name, name_ar, reason='', source_slot=None):
     lot = CdcLot.objects.get(pk=pk)
     dossier = _dossier(user, lot.dossier_id, edit=True)
     check_version(dossier, expected)
     lot.name, lot.name_ar, lot.version = name.strip(), name_ar.strip(), lot.version + 1
+    if source_slot is not None:
+        lot.source_slot = source_slot
     lot.full_clean()
     lot.save()
     return _revision(user, dossier, reason)
 
 
 @transaction.atomic
-def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purchase_unit=None, refresh_catalog=False, reason=''):
+def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purchase_unit=None,
+                  supplier=None, supplier_provided=False, refresh_catalog=False, reason=''):
     lot = CdcLot.objects.get(pk=lot_id)
     dossier = _dossier(user, lot.dossier_id, edit=True)
     check_version(dossier, expected)
@@ -164,6 +291,11 @@ def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purc
             values = {key: value for key, value in values.items() if key not in ('designation', 'specifications', 'packaging', 'unit_label')}
     elif purchase_unit is not None:
         raise ValidationError(_('Une unité structurée doit être associée à un article du catalogue.'))
+    if supplier_provided:
+        require_work(user, dossier.work, costs=True)
+        if supplier is not None:
+            supplier = Party.objects.get(pk=supplier.pk, active=True, is_supplier=True)
+        item.supplier = supplier
     for key, value in values.items():
         setattr(item, key, value)
     if item.quantity is not None:
@@ -188,6 +320,8 @@ def edit_cdc_paragraph(user, pk, *, expected, paragraph_id, value, reason):
     check_version(dossier, expected)
     if not reason.strip():
         raise ValidationError(_('Justifiez la modification de cette clause documentaire.'))
+    if CdcClauseSelection.objects.filter(dossier=dossier, clause__paragraph_id=paragraph_id).exists():
+        raise ValidationError(_('Ce paragraphe est piloté par la bibliothèque de clauses versionnées. Changez sa version depuis la bibliothèque.'))
     data = copy.deepcopy(dossier.data)
     data.setdefault('paragraphs', {})[paragraph_id] = value
     dossier.data = data
@@ -199,7 +333,8 @@ def submit_dossier(user, pk, *, expected, reason=''):
     dossier = _dossier(user, pk, edit=True)
     check_version(dossier, expected)
     data = document_data(dossier)
-    findings = controls(data)
+    from .cdc_governance import criteria_findings
+    findings = controls(data) + criteria_findings(dossier)
     errors = [finding for finding in findings if finding['severity'] == 'error']
     if errors or not data.get('consultation', {}).get('confirmed'):
         raise ValidationError(_('Corrigez les contrôles bloquants et confirmez les variables du dossier avant soumission.'))
@@ -212,6 +347,8 @@ def submit_dossier(user, pk, *, expected, reason=''):
 def generate_cdc(user, revision_id):
     revision = CdcRevision.objects.select_related('dossier__work').get(pk=revision_id)
     require_work(user, revision.dossier.work)
+    if revision.dossier.archived_at is not None:
+        raise ValidationError(_('Un cahier des charges archivé ne peut plus produire de nouvelle génération.'))
     if revision.generations.exists():
         return revision.generations.order_by('-created_at', '-id').first()
     data = copy.deepcopy(revision.data)
@@ -255,6 +392,14 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
     generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
+    governed = (dossier.criteria.filter(active=True).exists() or dossier.clause_selections.exists() or
+        CdcRequirement.objects.filter(item__lot__dossier=dossier, item__lot__active=True,
+            item__active=True, active=True).exists())
+    if governed:
+        from .cdc_governance import REVIEW_ORDER
+        decisions = generation.revision.review_decisions.filter(decision='APPROVED')
+        if set(decisions.values_list('stage', flat=True)) != set(REVIEW_ORDER):
+            raise ValidationError(_('Les revues technique, administrative/juridique et financière doivent être approuvées avant la validation finale.'))
     if generation.revision.number != dossier.revision_number:
         raise Conflict(_('Cette génération ne correspond plus à la dernière révision du dossier.'))
     if visual_review is not True or content_review is not True or reviewed_pages != generation.pages or not statement.strip():
@@ -271,7 +416,7 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
 def estimate_totals(user, dossier):
     require_work(user, dossier.work, costs=True)
     totals, missing = {}, 0
-    for item in CdcItem.objects.filter(lot__dossier=dossier, active=True):
+    for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True):
         if item.estimated_price is None or item.tax_rate is None:
             missing += 1
             continue

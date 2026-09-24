@@ -1,2 +1,16 @@
 {% extends 'erp/base.html' %}{% load i18n %}
-{% block erp_content %}<header class="erp-heading"><div><p class="erp-eyebrow">{{ dossier.reference }}</p><h1>{% trans 'Clauses et aperçu textuel' %}</h1><p>{% trans 'Les textes proviennent du modèle institutionnel. Cet aperçu textuel ne remplace pas la vérification du PDF.' %}</p></div><a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a></header><form method="get" class="erp-filters"><label>{% trans 'Rechercher dans les clauses' %}<input class="form-control" type="search" name="q" value="{{ q }}"></label><button class="btn btn-secondary">{% trans 'Rechercher' %}</button></form><section class="erp-panel">{% for block in page %}<article class="erp-clause"><p dir="auto">{{ block.text|linebreaksbr }}</p>{% if editable and block.editable %}<a href="{% url 'erp:cdc-paragraph' pk=dossier.pk %}?paragraph_id={{ block.id|urlencode }}">{% trans 'Modifier cette clause' %}</a>{% endif %}</article>{% empty %}<p>{% trans 'Aucun texte correspondant.' %}</p>{% endfor %}</section>{% include 'erp/pagination.html' %}{% endblock %}
+{% block erp_content %}
+<header class="erp-heading"><div><p class="erp-eyebrow">{{ dossier.reference }}</p><h1>{% trans 'Clauses et aperçu textuel' %}</h1><p>{% trans 'Les clauses peuvent rester propres au dossier ou être pilotées par une version canonique de la bibliothèque CDC.' %}</p></div><a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a></header>
+<form method="get" class="erp-filters"><label>{% trans 'Rechercher dans les clauses' %}<input class="form-control" type="search" name="q" value="{{ q }}"></label><button class="btn btn-secondary">{% trans 'Rechercher' %}</button></form>
+<section class="erp-panel">
+{% for block in page %}
+<article class="erp-clause">
+{% if block.library_managed %}<p class="erp-notice">{% trans 'Clause pilotée par la bibliothèque versionnée.' %} {% trans 'Version' %} {{ block.library_version }} · <a href="{% url 'erp:cdc-clause-select' pk=dossier.pk clause_id=block.library_clause_id %}">{% trans 'Changer de version' %}</a></p>{% endif %}
+<p dir="auto">{{ block.text|linebreaksbr }}</p>
+{% if editable and block.editable and not block.library_managed %}<a href="{% url 'erp:cdc-paragraph' pk=dossier.pk %}?paragraph_id={{ block.id|urlencode }}">{% trans 'Modifier pour ce dossier' %}</a>{% endif %}
+{% if editable and block.editable and not block.library_managed and block.available_clause_id %} · <a href="{% url 'erp:cdc-clause-select' pk=dossier.pk clause_id=block.available_clause_id %}">{% trans 'Utiliser la version canonique' %} {{ block.available_version }}</a>{% endif %}{% if manager and editable and block.editable %} · <a href="{% url 'erp:cdc-clause-publish' pk=dossier.pk %}?paragraph_id={{ block.id|urlencode }}">{% if block.library_managed or block.available_clause_id %}{% trans 'Créer une nouvelle version canonique' %}{% else %}{% trans 'Versionner dans la bibliothèque' %}{% endif %}</a>{% endif %}
+</article>
+{% empty %}<p>{% trans 'Aucun texte correspondant.' %}</p>{% endfor %}
+</section>
+{% include 'erp/pagination.html' %}
+{% endblock %}

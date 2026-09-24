@@ -42,6 +42,22 @@ class PostgreSQLOperationalTests(OperationFixtures, TransactionTestCase):
             return [future.result(timeout=45) for future in futures]
 
     @skipUnlessDBFeature('has_select_for_update')
+    def test_concurrent_cdc_workbook_confirmation_creates_one_revision(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from erp.services.cdc_exchange import export_workbook, preview_workbook, apply_workbook
+        dossier = create_dossier(self.ops, family='equipment', reference='73/SME/SDFM/SG/ESSBO/2026',
+            title='Confirmation Excel concurrente', assignee=self.operator)
+        preview = preview_workbook(self.ops, dossier.pk, expected=dossier.version,
+            upload=SimpleUploadedFile('lots.xlsx', export_workbook(self.ops, dossier)),
+            mode='merge', reason='Import confirmé simultanément')
+        results = self.race([lambda: apply_workbook(self.ops, preview.pk) for _ in range(2)])
+        self.assertEqual([result[0] for result in results], ['saved', 'saved'])
+        self.assertEqual(results[0][1], results[1][1])
+        dossier.refresh_from_db()
+        self.assertEqual(dossier.revision_number, 2)
+        self.assertEqual(dossier.revisions.count(), 2)
+
+    @skipUnlessDBFeature('has_select_for_update')
     def test_two_consumptions_cannot_overdraw_one_container(self):
         container, _, _ = self.receive(quantity=10)
         results = self.race([lambda: remove_stock(self.admin, container.pk, key=uuid.uuid4(),

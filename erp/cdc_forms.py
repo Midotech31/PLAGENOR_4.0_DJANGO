@@ -1,8 +1,11 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
-from .models import Article, CdcDossier, CdcGeneration, CdcItem, Unit, WorkItem
+from .models import (Article, CdcClauseVersion, CdcCriterion, CdcDossier, CdcGeneration,
+                     CdcItem, CdcRequirement, CdcReviewDecision, Party, Unit, WorkItem)
+from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
 
@@ -14,7 +17,7 @@ class CdcCreateForm(WorkForm):
         help_text=_('Structure institutionnelle : numéro/SME/SDFM/SG/ESSBO/année.'))
 
     class Meta(WorkForm.Meta):
-        fields = ['title', 'assignee', 'due_on', 'priority', 'instructions', 'allow_costs']
+        fields = ['title', 'assignee', 'due_on', 'priority', 'location', 'category', 'instructions', 'allow_costs']
 
 
 class ConsultationForm(OperationForm):
@@ -54,6 +57,8 @@ class ConsultationForm(OperationForm):
 
 
 class CdcLotForm(OperationForm):
+    source_slot = forms.IntegerField(label=_('Numéro du lot dans le modèle documentaire'), min_value=0, max_value=50, required=False,
+        help_text=_('Rattachez chaque lot à son emplacement dans le modèle. Zéro signifie non rattaché ; la génération restera bloquée.'))
     expected_version = forms.IntegerField(widget=forms.HiddenInput)
     name = forms.CharField(label=_('Intitulé du lot en français'), max_length=180)
     name_ar = forms.CharField(label=_('Intitulé du lot en arabe'), max_length=240, required=False,
@@ -69,7 +74,7 @@ class CdcItemForm(VersionedForm):
     class Meta:
         model = CdcItem
         fields = ['article', 'purchase_unit', 'designation', 'specifications', 'unit_label', 'packaging',
-                  'quantity', 'details', 'active', 'estimated_price', 'tax_rate', 'price_source', 'currency']
+                  'quantity', 'details', 'active', 'supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']
 
     def __init__(self, *args, dossier, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,15 +84,16 @@ class CdcItemForm(VersionedForm):
             articles = articles.filter(category_id=dossier.work.category_id)
         self.fields['article'].queryset = articles
         self.fields['purchase_unit'].queryset = Unit.objects.filter(active=True)
+        self.fields['supplier'].queryset = Party.objects.filter(active=True, is_supplier=True)
         for name in ('designation', 'unit_label'):
             self.fields[name].required = False
         if not work_allowed(self.user, dossier.work, costs=True):
-            for name in ('estimated_price', 'tax_rate', 'price_source', 'currency'):
+            for name in ('supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency'):
                 del self.fields[name]
         groups = [(_('Référentiel commun'), ['article', 'purchase_unit', 'refresh_catalog']),
                   (_('Besoin technique'), ['designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'])]
         if 'estimated_price' in self.fields:
-            groups.append((_('Estimation interne'), ['estimated_price', 'tax_rate', 'price_source', 'currency']))
+            groups.append((_('Estimation interne'), ['supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']))
         groups.append((_('Historique'), ['reason']))
         self.groups = [{'title': label, 'fields': [self[field] for field in fields]} for label, fields in groups]
 
@@ -125,3 +131,90 @@ class CdcParagraphForm(OperationForm):
     paragraph_id = forms.CharField(widget=forms.HiddenInput, max_length=160)
     value = forms.CharField(label=_('Texte de la clause'), max_length=100000, widget=forms.Textarea, required=False)
     reason = forms.CharField(label=_('Justification de la modification'), max_length=500, widget=forms.Textarea)
+
+
+class CdcDuplicateForm(OperationForm):
+    expected_version=forms.IntegerField(widget=forms.HiddenInput)
+    reference=forms.RegexField(label=_('Nouvelle référence'),max_length=90,regex=r'^[0-9]{1,4}/SME/SDFM/SG/ESSBO/[0-9]{4}$')
+    title=forms.CharField(label=_('Intitulé du nouveau dossier'),max_length=255)
+    assignee=forms.ModelChoiceField(label=_('Membre chargé de préparer le nouveau cahier des charges'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
+    due_on=forms.DateField(label=_('Échéance'),required=False,widget=forms.DateInput(attrs={'type':'date'}))
+    priority=forms.ChoiceField(label=_('Priorité'),choices=WorkItem.Priority.choices,initial=WorkItem.Priority.NORMAL)
+    instructions=forms.CharField(label=_('Consignes'),required=False,widget=forms.Textarea)
+    allow_costs=forms.BooleanField(label=_('Autoriser l’accès aux estimations financières'),required=False)
+    copy_estimates=forms.BooleanField(label=_('Reprendre explicitement les estimations internes'),required=False,help_text=_('Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes.'))
+    reason=forms.CharField(label=_('Justification de la duplication'),max_length=500,widget=forms.Textarea)
+
+class CdcArchiveForm(OperationForm):
+    expected_version=forms.IntegerField(widget=forms.HiddenInput)
+    reason=forms.CharField(label=_('Justification de l’archivage'),max_length=500,widget=forms.Textarea)
+
+class CdcProcurementForm(OperationForm):
+    expected_version=forms.IntegerField(widget=forms.HiddenInput)
+    plan_reference=forms.CharField(label=_('Référence du plan d’approvisionnement'),max_length=90)
+    year=forms.IntegerField(label=_('Année du plan'),min_value=2000,max_value=2100)
+    assignee=forms.ModelChoiceField(label=_('Responsable du plan'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
+    reason=forms.CharField(label=_('Justification / origine du besoin'),max_length=500,widget=forms.Textarea)
+
+
+class CdcCriterionForm(VersionedForm):
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, widget=forms.Textarea)
+
+    class Meta:
+        model = CdcCriterion
+        fields = ['lot', 'requirement', 'code', 'category', 'title', 'description', 'expected_evidence',
+                  'min_score', 'max_score', 'weight', 'threshold', 'formula',
+                  'rounding_rule', 'eliminatory', 'source', 'justification', 'position', 'active']
+
+    def __init__(self, *args, dossier, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].initial = dossier.version
+        self.fields['lot'].queryset = dossier.lots.filter(active=True).order_by('position')
+        self.fields['requirement'].queryset = CdcRequirement.objects.filter(
+            item__lot__dossier=dossier, item__lot__active=True, item__active=True, active=True
+        ).select_related('item', 'item__lot').order_by('item__lot__position', 'item__position', 'position')
+
+
+class CdcClausePublishForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    paragraph_id = forms.CharField(widget=forms.HiddenInput, max_length=160)
+    title = forms.CharField(label=_('Intitulé de la clause'), max_length=255)
+    category = forms.CharField(label=_('Catégorie'), max_length=80, required=False)
+    body = forms.CharField(label=_('Texte versionné'), max_length=100000, widget=forms.Textarea)
+    source = forms.CharField(label=_('Source / référence institutionnelle'), max_length=500)
+    mandatory = forms.BooleanField(label=_('Clause obligatoire'), required=False)
+    reason = forms.CharField(label=_('Justification'), max_length=500, widget=forms.Textarea)
+
+
+class CdcReviewForm(OperationForm):
+    stage = forms.ChoiceField(label=_('Étape de revue'), choices=CdcReviewDecision.Stage.choices)
+    decision = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Decision.choices)
+    comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
+
+
+class CdcClauseSelectForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    version = forms.ModelChoiceField(label=_('Version canonique'), queryset=CdcClauseVersion.objects.none())
+    reason = forms.CharField(label=_('Justification du changement de version'), max_length=500, widget=forms.Textarea)
+
+    def __init__(self, *args, clause, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['version'].queryset = clause.versions.order_by('-number')
+        self.fields['version'].label_from_instance = lambda value: str(_('Version %(number)s — %(source)s')) % {
+            'number': value.number, 'source': value.source}
+
+
+class CdcRequirementForm(VersionedForm):
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, widget=forms.Textarea)
+
+    class Meta:
+        model = CdcRequirement
+        fields = ['item', 'code', 'kind', 'statement', 'evidence', 'verification',
+                  'justification', 'position', 'active']
+
+    def __init__(self, *args, dossier, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].initial = dossier.version
+        self.fields['item'].queryset = CdcItem.objects.filter(
+            lot__dossier=dossier, lot__active=True, active=True
+        ).select_related('lot').order_by('lot__position', 'position')
