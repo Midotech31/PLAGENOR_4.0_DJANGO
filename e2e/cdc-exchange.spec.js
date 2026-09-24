@@ -81,3 +81,40 @@ test('CDC Excel roundtrip persists only after confirmation and supports revision
   expect((await page.goto('/erp/planning/')).status()).toBe(200);
   await audit(page);
 });
+
+
+test('CDC native lifecycle is integrated with PLAGENOR documents and controlled duplication', async ({page}, info) => {
+  test.setTimeout(90000);
+  expect((await page.request.post('/__e2e__/session/admin_ops/')).status()).toBe(204);
+  await page.goto('/erp/cdc/new/');
+  await page.locator('.topbar button[name=language][value=fr]').click();
+  await page.locator('[name=family]').selectOption('reagents');
+  const number = {chromium:8201,firefox:8202,'mobile-chromium':8203}[info.project.name];
+  await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
+  await page.locator('[name=title]').fill(`CDC native ${info.project.name}`);
+  await submit(page,'.erp-form button[type=submit]');
+  await expect(page.getByRole('link',{name:'Pièces jointes',exact:true})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Créer le plan d’approvisionnement',exact:true})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Dupliquer de manière contrôlée',exact:true})).toBeVisible();
+  await audit(page);
+
+  await page.getByRole('link',{name:'Pièces jointes',exact:true}).click();
+  await expect(page).toHaveURL(/\/erp\/resource-documents\/work\/[0-9a-f-]+\/$/);
+  await audit(page);
+  await page.goBack();
+
+  await page.getByRole('link',{name:'Dupliquer de manière contrôlée',exact:true}).click();
+  await page.locator('[name=reference]').fill(`${number + 100}/SME/SDFM/SG/ESSBO/2026`);
+  await page.locator('[name=title]').fill(`CDC native copy ${info.project.name}`);
+  await page.locator('[name=reason]').fill('Nouvelle opération institutionnelle distincte');
+  await submit(page,'.erp-form button[type=submit]');
+  await expect(page.locator('.erp-eyebrow')).toContainText(`${number + 100}/SME/SDFM/SG/ESSBO/2026`);
+
+  await page.locator('.topbar button[name=language][value=en]').click();
+  await expect(page.getByRole('link',{name:'Attachments',exact:true})).toBeVisible();
+  await audit(page);
+  await page.locator('.topbar button[name=language][value=ar]').click();
+  await expect(page.getByRole('link',{name:'المرفقات',exact:true})).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+  await audit(page);
+});
