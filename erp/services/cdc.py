@@ -245,6 +245,29 @@ def save_criterion(user, dossier_id, *, expected, values, pk=None, reason=''):
     return _revision(user, dossier, reason)
 
 
+
+
+@transaction.atomic
+def save_clause(user, *, values, pk=None, reason=''):
+    require_manager(user)
+    clause = CdcClause.objects.select_for_update().get(pk=pk) if pk else CdcClause()
+    before = snapshot(clause) if pk else {}
+    for key in ('code', 'name', 'name_en', 'name_ar', 'title', 'active'):
+        if key in values:
+            setattr(clause, key, values[key])
+    clause.code = clause.code.strip().upper()
+    clause.name = clause.name.strip()
+    clause.title = clause.title.strip()
+    if not clause.code or not clause.name or not clause.title:
+        raise ValidationError(_('Le code, la désignation et l’intitulé de la clause sont obligatoires.'))
+    if pk:
+        clause.version += 1
+    clause.full_clean()
+    clause.save()
+    audit(user, clause, 'clause_saved', before, reason[:500])
+    return clause
+
+
 @transaction.atomic
 def create_clause_revision(user, clause, *, text_fr, source_reference, text_en='', text_ar='',
                            activate=False):
