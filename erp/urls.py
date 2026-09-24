@@ -105,6 +105,7 @@ urlpatterns = [
     path('cdc/<uuid:pk>/clauses/<uuid:clause_id>/select/', cdc_views.cdc_clause_select, name='cdc-clause-select'),
     path('cdc/<uuid:pk>/paragraph/', cdc_views.cdc_paragraph, name='cdc-paragraph'),
     path('cdc/<uuid:pk>/criteria/', cdc_views.cdc_criteria, name='cdc-criteria'),
+    path('cdc/<uuid:pk>/criteria/export/', cdc_views.cdc_criteria_export, name='cdc-criteria-export'),
     path('cdc/<uuid:pk>/criteria/new/', cdc_views.cdc_criterion_edit, name='cdc-criterion-new'),
     path('cdc/<uuid:pk>/criteria/<uuid:criterion_id>/', cdc_views.cdc_criterion_edit, name='cdc-criterion-edit'),
     path('cdc/<uuid:pk>/review/', cdc_views.cdc_review, name='cdc-review'),
