@@ -185,4 +185,5 @@ class ProcurementCdcItemLink(ImmutableRecord):
             models.CheckConstraint(condition=Q(required_quantity__gt=0,required_quantity__lte=MAX_Q),name='erp_plan_cdc_required'),
             models.CheckConstraint(condition=Q(stock_covered_quantity__gte=0,stock_covered_quantity__lte=MAX_Q),name='erp_plan_cdc_covered'),
             models.CheckConstraint(condition=Q(shortage_quantity__gt=0,shortage_quantity__lte=MAX_Q),name='erp_plan_cdc_shortage'),
+            models.CheckConstraint(condition=Q(required_quantity=F('stock_covered_quantity')+F('shortage_quantity')),name='erp_plan_cdc_balance'),
         ]
