@@ -1723,3 +1723,166 @@ msgstr "نقل مادة أو نسخها"
 
 msgid "Déplacer ou dupliquer"
 msgstr "نقل أو نسخ"
+
+
+msgid "Un cahier des charges archivé est en lecture seule."
+msgstr "دفتر الشروط المؤرشف متاح للقراءة فقط."
+
+msgid "Justifiez la duplication du cahier des charges."
+msgstr "يرجى تبرير نسخ دفتر الشروط."
+
+msgid "Une justification d’archivage est obligatoire."
+msgstr "تبرير الأرشفة إلزامي."
+
+msgid "Ce cahier des charges est déjà archivé."
+msgstr "دفتر الشروط هذا مؤرشف بالفعل."
+
+msgid "Seul un cahier des charges clôturé ou annulé peut être archivé."
+msgstr "لا يمكن أرشفة دفتر الشروط إلا بعد إغلاقه أو إلغائه."
+
+msgid "Un cahier des charges archivé ne peut plus produire de nouvelle génération."
+msgstr "لا يمكن لدفتر شروط مؤرشف إنشاء نسخة وثائقية جديدة."
+
+msgid "Un cahier des charges archivé ne peut pas ouvrir un nouveau plan."
+msgstr "لا يمكن لدفتر شروط مؤرشف فتح خطة تموين جديدة."
+
+msgid "Justifiez la création du plan à partir du cahier des charges."
+msgstr "يرجى تبرير إنشاء خطة التموين انطلاقاً من دفتر الشروط."
+
+msgid "Rattachez tous les besoins actifs au catalogue commun avant de créer le plan."
+msgstr "اربط جميع الاحتياجات النشطة بالفهرس المشترك قبل إنشاء الخطة."
+
+msgid "Le stock disponible couvre déjà les besoins structurés de ce cahier des charges."
+msgstr "المخزون المتاح يغطي بالفعل الاحتياجات المهيكلة في دفتر الشروط هذا."
+
+msgid "Besoins CDC"
+msgstr "احتياجات دفتر الشروط"
+
+msgid "Justifiez le transfert des manques vers l’approvisionnement."
+msgstr "يرجى تبرير تحويل النواقص إلى التموين."
+
+msgid "Seule une activité engagée et encore planifiée peut créer un besoin d’approvisionnement."
+msgstr "لا يمكن إنشاء احتياج تموين إلا من نشاط معتمد وما زال مخططاً."
+
+msgid "La date de l’activité doit appartenir à la période du plan sélectionné."
+msgstr "يجب أن يقع تاريخ النشاط ضمن فترة الخطة المحددة."
+
+msgid "Le stock disponible couvre déjà tous les besoins de cette activité."
+msgstr "المخزون المتاح يغطي بالفعل جميع احتياجات هذا النشاط."
+
+msgid "Ce besoin est déjà pris en charge par un autre plan actif."
+msgstr "هذا الاحتياج مغطى بالفعل بخطة نشطة أخرى."
+
+msgid "Besoins analytiques"
+msgstr "احتياجات التحاليل"
+
+msgid "De nouveaux manques issus d’une activité analytique ont été ajoutés au plan."
+msgstr "أضيفت إلى الخطة نواقص جديدة ناتجة عن نشاط تحليلي."
+
+msgid "Nouvelle référence"
+msgstr "مرجع جديد"
+
+msgid "Intitulé du nouveau dossier"
+msgstr "عنوان الملف الجديد"
+
+msgid "Membre chargé de préparer le nouveau cahier des charges"
+msgstr "العضو المكلف بإعداد دفتر الشروط الجديد"
+
+msgid "Reprendre explicitement les estimations internes"
+msgstr "نسخ التقديرات الداخلية صراحةً"
+
+msgid "Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes."
+msgstr "افتراضياً لا تُنسخ الأسعار والضرائب لتجنب إعادة استخدام تقديرات قديمة."
+
+msgid "Justification de la duplication"
+msgstr "تبرير النسخ"
+
+msgid "Justification de l’archivage"
+msgstr "تبرير الأرشفة"
+
+msgid "Référence du plan d’approvisionnement"
+msgstr "مرجع خطة التموين"
+
+msgid "Année du plan"
+msgstr "سنة الخطة"
+
+msgid "Responsable du plan"
+msgstr "مسؤول الخطة"
+
+msgid "Justification / origine du besoin"
+msgstr "تبرير / مصدر الاحتياج"
+
+msgid "Justification du transfert des manques"
+msgstr "تبرير تحويل النواقص"
+
+msgid "%(count)s besoin(s) de stock ont été rattachés au plan d’approvisionnement."
+msgstr "تم ربط %(count)s من احتياجات المخزون بخطة التموين."
+
+msgid "Transférer les manques vers l’approvisionnement"
+msgstr "تحويل النواقص إلى التموين"
+
+msgid "Dupliquer ce cahier des charges"
+msgstr "نسخ دفتر الشروط هذا"
+
+msgid "Le cahier des charges est archivé et reste consultable en lecture seule."
+msgstr "تمت أرشفة دفتر الشروط ويظل متاحاً للقراءة فقط."
+
+msgid "Archiver ce cahier des charges"
+msgstr "أرشفة دفتر الشروط هذا"
+
+msgid "Créer un plan d’approvisionnement à partir du CDC"
+msgstr "إنشاء خطة تموين انطلاقاً من دفتر الشروط"
+
+msgid "État d’archivage"
+msgstr "حالة الأرشفة"
+
+msgid "Archivés"
+msgstr "مؤرشفة"
+
+msgid "Archivé"
+msgstr "مؤرشف"
+
+msgid "Pièces jointes"
+msgstr "المرفقات"
+
+msgid "Créer le plan d’approvisionnement"
+msgstr "إنشاء خطة التموين"
+
+msgid "Dupliquer de manière contrôlée"
+msgstr "نسخ مضبوط"
+
+msgid "Archiver"
+msgstr "أرشفة"
+
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "دفتر الشروط هذا مؤرشف ومتاح للقراءة فقط."
+
+msgid "Disponibilité réelle du stock"
+msgstr "التوفر الفعلي للمخزون"
+
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "من الاحتياجات النشطة غير مرتبطة بعد بالفهرس المشترك ولا يمكن التحقق منها آلياً."
+
+msgid "Disponibilité du stock pour le CDC"
+msgstr "توفر المخزون لدفتر الشروط"
+
+msgid "Besoin"
+msgstr "الاحتياج"
+
+msgid "Disponible non réservé"
+msgstr "المتاح غير المحجوز"
+
+msgid "Manque"
+msgstr "النقص"
+
+msgid "État"
+msgstr "الحالة"
+
+msgid "Insuffisant"
+msgstr "غير كافٍ"
+
+msgid "Absent"
+msgstr "غير متوفر"
+
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "لا يوجد احتياج مهيكل لمقارنته بالمخزون."
