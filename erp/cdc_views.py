@@ -19,7 +19,7 @@ from .models import (Capability, CdcClause, CdcClauseRevision, CdcClauseSelectio
     CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcRevision, ProcurementPlan, WorkItem)
 from .permissions import has_access, is_manager, permitted, require, require_manager
 from .services.cdc import (approve_dossier, archive_dossier, create_clause_revision, create_dossier,
-    document_data, dossier_findings, dossier_scope, duplicate_dossier, edit_cdc_paragraph, estimate_totals,
+    cdc_cost_allowed, document_data, dossier_findings, dossier_scope, duplicate_dossier, edit_cdc_paragraph, estimate_totals,
     generate_cdc, review_dossier, review_state, save_clause, save_cdc_item, save_cdc_lot,
     save_consultation, save_criterion, save_requirement, select_clause, stock_status,
     submit_dossier)
@@ -103,7 +103,7 @@ def cdc_detail(request, pk):
             return redirect('erp:cdc-detail', pk=pk)
     data = document_data(dossier)
     findings = dossier_findings(dossier)
-    cost_access = work_allowed(request.user, dossier.work, costs=True)
+    cost_access = cdc_cost_allowed(request.user, dossier)
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()
     can_review = any(permitted(request.user, capability, location=dossier.work.location,
