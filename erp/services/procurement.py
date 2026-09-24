@@ -315,6 +315,7 @@ def plan_to_cdc(user,pk,*,expected,reference,family,assignee=None):
         return plan.cdc
     from .cdc import _revision as cdc_revision, create_dossier
     dossier=create_dossier(user,family=family,reference=reference,title=plan.work.title,assignee=assignee,
+        location=plan.work.location,category=plan.work.category,
         allow_costs=plan.work.allow_costs,instructions=plan.work.instructions)
     CdcItem.objects.filter(lot__dossier=dossier).delete()
     dossier.lots.all().delete()
