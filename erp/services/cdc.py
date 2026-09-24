@@ -230,7 +230,7 @@ def save_cdc_lot(user, pk, *, expected, name, name_ar, reason='', source_slot=No
 
 @transaction.atomic
 def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purchase_unit=None,
-                  supplier=None, refresh_catalog=False, reason=''):
+                  supplier=None, supplier_provided=False, refresh_catalog=False, reason=''):
     lot = CdcLot.objects.get(pk=lot_id)
     dossier = _dossier(user, lot.dossier_id, edit=True)
     check_version(dossier, expected)
@@ -255,9 +255,11 @@ def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purc
             values = {key: value for key, value in values.items() if key not in ('designation', 'specifications', 'packaging', 'unit_label')}
     elif purchase_unit is not None:
         raise ValidationError(_('Une unité structurée doit être associée à un article du catalogue.'))
-    if supplier is not None:
-        supplier = Party.objects.get(pk=supplier.pk, active=True, is_supplier=True)
-    item.supplier = supplier
+    if supplier_provided:
+        require_work(user, dossier.work, costs=True)
+        if supplier is not None:
+            supplier = Party.objects.get(pk=supplier.pk, active=True, is_supplier=True)
+        item.supplier = supplier
     for key, value in values.items():
         setattr(item, key, value)
     if item.quantity is not None:
@@ -354,6 +356,11 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
     generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
+    if dossier.criteria.filter(active=True).exists() or dossier.clause_selections.exists():
+        from .cdc_governance import REVIEW_ORDER
+        decisions = generation.revision.review_decisions.filter(decision='APPROVED')
+        if set(decisions.values_list('stage', flat=True)) != set(REVIEW_ORDER):
+            raise ValidationError(_('Les revues technique, administrative/juridique et financière doivent être approuvées avant la validation finale.'))
     if generation.revision.number != dossier.revision_number:
         raise Conflict(_('Cette génération ne correspond plus à la dernière révision du dossier.'))
     if visual_review is not True or content_review is not True or reviewed_pages != generation.pages or not statement.strip():
