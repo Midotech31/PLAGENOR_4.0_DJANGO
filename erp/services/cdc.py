@@ -19,8 +19,9 @@ from erp.cdc.consultation import FIELDS, validate_consultation
 from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
-from erp.models import (Article, CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot,
-                        CdcRevision, LocationClosure, StockContainer, Unit, WorkItem)
+from erp.models import (Article, CdcApproval, CdcClauseSelection, CdcDossier, CdcGeneration,
+                        CdcItem, CdcLot, CdcRevision, LocationClosure, Party, StockContainer,
+                        Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, snapshot
@@ -63,6 +64,8 @@ def document_data(dossier):
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
     data.pop('procurement', None)
+    from .cdc_governance import apply_clause_selections
+    data = apply_clause_selections(dossier, data)
     validate_data(data, dossier.family)
     return data
 
@@ -72,6 +75,7 @@ def _estimates(dossier):
              'article_snapshot': item.article_snapshot, 'lot': str(item.lot_id), 'active': item.active,
              'quantity': str(item.quantity), 'purchase_unit': str(item.purchase_unit_id) if item.purchase_unit_id else None,
              'base_factor': str(item.base_factor) if item.base_factor is not None else None,
+             'supplier': str(item.supplier_id) if item.supplier_id else None,
              'price': str(item.estimated_price) if item.estimated_price is not None else None,
              'tax_rate': str(item.tax_rate) if item.tax_rate is not None else None,
              'currency': item.currency, 'source': item.price_source}
@@ -80,13 +84,15 @@ def _estimates(dossier):
 
 def _revision(user, dossier, reason=''):
     data, estimates = document_data(dossier), _estimates(dossier)
-    digest = hashlib.sha256(json.dumps({'document': data, 'estimates': estimates}, ensure_ascii=False,
+    from .cdc_governance import governance_snapshot
+    governance = governance_snapshot(dossier)
+    digest = hashlib.sha256(json.dumps({'document': data, 'estimates': estimates, 'governance': governance}, ensure_ascii=False,
         sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     dossier.revision_number += 1
     dossier.version += 1
     dossier.save()
     revision = CdcRevision.objects.create(dossier=dossier, number=dossier.revision_number, actor=user,
-        data=data, estimates=estimates, sha256=digest, reason=reason[:500])
+        data=data, estimates=estimates, governance=governance, sha256=digest, reason=reason[:500])
     audit(user, dossier, 'revision_created', reason=reason[:500])
     return revision
 
@@ -142,6 +148,7 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 quantity=original.quantity, details=original.details,
                 estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
+                supplier=original.supplier if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
     _revision(user, duplicate, reason)
     audit(user, source, 'duplicated_to', reason=str(duplicate.pk))
@@ -222,7 +229,8 @@ def save_cdc_lot(user, pk, *, expected, name, name_ar, reason='', source_slot=No
 
 
 @transaction.atomic
-def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purchase_unit=None, refresh_catalog=False, reason=''):
+def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purchase_unit=None,
+                  supplier=None, refresh_catalog=False, reason=''):
     lot = CdcLot.objects.get(pk=lot_id)
     dossier = _dossier(user, lot.dossier_id, edit=True)
     check_version(dossier, expected)
@@ -247,6 +255,9 @@ def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purc
             values = {key: value for key, value in values.items() if key not in ('designation', 'specifications', 'packaging', 'unit_label')}
     elif purchase_unit is not None:
         raise ValidationError(_('Une unité structurée doit être associée à un article du catalogue.'))
+    if supplier is not None:
+        supplier = Party.objects.get(pk=supplier.pk, active=True, is_supplier=True)
+    item.supplier = supplier
     for key, value in values.items():
         setattr(item, key, value)
     if item.quantity is not None:
@@ -282,7 +293,8 @@ def submit_dossier(user, pk, *, expected, reason=''):
     dossier = _dossier(user, pk, edit=True)
     check_version(dossier, expected)
     data = document_data(dossier)
-    findings = controls(data)
+    from .cdc_governance import criteria_findings
+    findings = controls(data) + criteria_findings(dossier)
     errors = [finding for finding in findings if finding['severity'] == 'error']
     if errors or not data.get('consultation', {}).get('confirmed'):
         raise ValidationError(_('Corrigez les contrôles bloquants et confirmez les variables du dossier avant soumission.'))
