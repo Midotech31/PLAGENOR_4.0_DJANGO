@@ -97,12 +97,12 @@ def cdc_detail(request, pk):
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()
     return render(request, 'erp/cdc_detail.html', {'dossier': dossier, 'work': dossier.work,
-        'lots': dossier.lots.annotate(item_count=Count('items', filter=Q(items__active=True))),
+        'lots': dossier.lots.filter(active=True).annotate(item_count=Count('items', filter=Q(items__active=True))),
         'form': form, 'findings': findings, 'generation': generation,
         'revisions': dossier.revisions.defer('data', 'estimates').order_by('-number')[:50],
         'editable': work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
-        'source_confirmed': data.get('consultation', {}).get('confirmed', False)},
+        'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False)},
         status=400 if request.method == 'POST' else 200)
 
 
@@ -142,7 +142,7 @@ def cdc_lot_edit(request, pk):
     lot = get_object_or_404(CdcLot.objects.select_related('dossier__work'), pk=pk, dossier__in=dossier_scope(request.user))
     require_work(request.user, lot.dossier.work, edit=True)
     form = forms.CdcLotForm(request.POST or None, initial={'expected_version': lot.dossier.version,
-        'name': lot.name, 'name_ar': lot.name_ar})
+        'name': lot.name, 'name_ar': lot.name_ar, 'source_slot': lot.source_slot})
     if request.method == 'POST' and form.is_valid():
         values = dict(form.cleaned_data)
         try:

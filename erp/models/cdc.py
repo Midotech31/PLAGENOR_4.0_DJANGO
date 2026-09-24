@@ -27,6 +27,7 @@ class CdcDossier(Record):
 
 
 class CdcLot(Record):
+    active = models.BooleanField(_('Lot retenu'), default=True)
     dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='lots')
     position = models.PositiveSmallIntegerField()
     name = models.CharField(_('Intitulé du lot en français'), max_length=180)
@@ -107,3 +108,15 @@ class CdcApproval(ImmutableRecord):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     statement = models.CharField(_('Justification de validation'), max_length=500)
     reviewed_pages = models.PositiveIntegerField()
+
+
+class CdcWorkbookPreview(Record):
+    dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='workbook_imports')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    base_version = models.PositiveIntegerField()
+    filename = models.CharField(max_length=180)
+    payload = models.JSONField()
+    import_prices = models.BooleanField(default=False)
+    reason = models.CharField(max_length=500)
+    expires_at = models.DateTimeField()
+    applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True)

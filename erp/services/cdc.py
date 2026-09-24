@@ -48,7 +48,7 @@ def document_data(dossier):
     data = copy.deepcopy(dossier.data)
     data['reference'] = dossier.reference
     lots = []
-    for position, lot in enumerate(dossier.lots.prefetch_related('items').order_by('position'), 1):
+    for position, lot in enumerate(dossier.lots.filter(active=True).prefetch_related('items').order_by('position'), 1):
         items = []
         for item in lot.items.all():
             if item.active:
@@ -128,11 +128,13 @@ def save_consultation(user, pk, *, expected, values, reference=None, reason=''):
 
 
 @transaction.atomic
-def save_cdc_lot(user, pk, *, expected, name, name_ar, reason=''):
+def save_cdc_lot(user, pk, *, expected, name, name_ar, reason='', source_slot=None):
     lot = CdcLot.objects.get(pk=pk)
     dossier = _dossier(user, lot.dossier_id, edit=True)
     check_version(dossier, expected)
     lot.name, lot.name_ar, lot.version = name.strip(), name_ar.strip(), lot.version + 1
+    if source_slot is not None:
+        lot.source_slot = source_slot
     lot.full_clean()
     lot.save()
     return _revision(user, dossier, reason)
@@ -271,7 +273,7 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
 def estimate_totals(user, dossier):
     require_work(user, dossier.work, costs=True)
     totals, missing = {}, 0
-    for item in CdcItem.objects.filter(lot__dossier=dossier, active=True):
+    for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True):
         if item.estimated_price is None or item.tax_rate is None:
             missing += 1
             continue

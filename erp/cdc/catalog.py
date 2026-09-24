@@ -10,7 +10,7 @@ FAMILIES={'equipment':'Équipements scientifiques','reagents':'Réactifs et cons
 DIGESTS={'equipment':'bb4ea598fe896b6b157ab706d03723236fc16820e093b6b541adb6c208dcf1dc',
 'reagents':'62825773e9b1206622136469527e62ffc557575e5b939760a15229c471deb208',
 'works':'5b8b04a806ea8add6d32d6bcec5c6432fba5bb6bfba3bbe2ded3663178f90647'}
-REF_PATTERN=re.compile(r'0[123]\s*/SME/(?:SDFM/)?SG/ESSBO/2026',re.I)
+REF_PATTERN=re.compile(r'(?<!\d)0[123]\s*/SME/(?:SDFM/)?SG/ESSBO/2026(?!\d)',re.I)
 
 @functools.lru_cache(maxsize=3)
 def document(family):

@@ -54,6 +54,8 @@ class ConsultationForm(OperationForm):
 
 
 class CdcLotForm(OperationForm):
+    source_slot = forms.IntegerField(label=_('Numéro du lot dans le modèle documentaire'), min_value=0, max_value=50, required=False,
+        help_text=_('Rattachez chaque lot à son emplacement dans le modèle. Zéro signifie non rattaché ; la génération restera bloquée.'))
     expected_version = forms.IntegerField(widget=forms.HiddenInput)
     name = forms.CharField(label=_('Intitulé du lot en français'), max_length=180)
     name_ar = forms.CharField(label=_('Intitulé du lot en arabe'), max_length=240, required=False,

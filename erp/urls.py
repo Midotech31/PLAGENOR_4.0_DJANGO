@@ -1,4 +1,5 @@
 from django.urls import path
+from . import cdc_exchange_views
 from . import identification, report_views, preparation_views, safety_views, alert_views, import_views, procurement_views, views, work_views, stock_views, inventory_views, cdc_views, biobank_views, planning_views, consumption_views
 
 app_name = 'erp'
@@ -83,6 +84,12 @@ urlpatterns = [
     path('biobank/incidents/<uuid:pk>/resolve/', biobank_views.incident_resolve, name='incident-resolve'),
     path('biobank/transfers/new/', biobank_views.mass_transfer, name='mass-transfer'),
     path('biobank/transfers/<uuid:pk>/', biobank_views.mass_transfer_detail, name='mass-transfer-detail'),
+    path('cdc/<uuid:pk>/excel/', cdc_exchange_views.workbook, name='cdc-workbook'),
+    path('cdc/<uuid:pk>/excel/download/', cdc_exchange_views.workbook_download, name='cdc-workbook-download'),
+    path('cdc/excel-preview/<uuid:pk>/', cdc_exchange_views.workbook_preview, name='cdc-workbook-preview'),
+    path('cdc/<uuid:pk>/lots/new/', cdc_exchange_views.lot_create, name='cdc-lot-create'),
+    path('cdc-lots/<uuid:pk>/retained/', cdc_exchange_views.lot_toggle, name='cdc-lot-toggle'),
+    path('cdc-revisions/<uuid:pk>/restore/', cdc_exchange_views.revision_restore, name='cdc-revision-restore'),
     path('cdc/', cdc_views.cdc_list, name='cdc-list'),
     path('cdc/new/', cdc_views.cdc_create, name='cdc-create'),
     path('cdc/<uuid:pk>/', cdc_views.cdc_detail, name='cdc-detail'),

@@ -9,7 +9,7 @@ from .stock import (InternalPreparation, StockContainer, StockEntry, StockLot, S
 
 from .inventory import InventoryCampaign, InventoryLine
 
-from .cdc import CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision
+from .cdc import CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview
 
 from .biobank import (BiologicalSample, PositionReservation, SampleEvent, StorageIncident, StoragePosition, TemperatureReading)
 
