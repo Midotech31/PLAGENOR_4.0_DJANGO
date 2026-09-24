@@ -251,10 +251,12 @@ def cdc_clauses(request, pk):
     from .cdc.schedule_adapter import managed_ids
     managed, tables = managed_ids(dossier.family)
     search = request.GET.get('q', '').casefold().strip()[:200]
-    selected_ids = set(dossier.clause_selections.values_list('clause__paragraph_id', flat=True))
+    selected = {row.clause.paragraph_id: row for row in dossier.clause_selections.select_related('clause', 'selected_version')}
     blocks = [{'id': row['id'], 'text': projected.get(row['id'], row['text']),
                'editable': not row['guard'] and row['id'] not in managed,
-               'library_managed': row['id'] in selected_ids}
+               'library_managed': row['id'] in selected,
+               'library_clause_id': selected[row['id']].clause_id if row['id'] in selected else None,
+               'library_version': selected[row['id']].selected_version.number if row['id'] in selected else None}
               for row in document(dossier.family).source_index if row['text'].strip()]
     if search:
         blocks = [block for block in blocks if search in block['text'].casefold()]
