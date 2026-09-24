@@ -4,8 +4,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
 from .models import (Article, CdcClause, CdcClauseRevision, CdcCriterion, CdcDossier, CdcGeneration,
-    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, Party, Unit, WorkItem)
-from .permissions import TEAM_ROLES
+    Capability, CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, Party, Unit, WorkItem)
+from .permissions import TEAM_ROLES, permitted
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
 
@@ -211,6 +211,18 @@ class CdcReviewForm(OperationForm):
     stage = forms.ChoiceField(label=_('Étape de revue'), choices=CdcReviewDecision.Stage.choices)
     outcome = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Outcome.choices)
     comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        capability = {
+            CdcReviewDecision.Stage.TECHNICAL: Capability.REVIEW_CDC_TECHNICAL,
+            CdcReviewDecision.Stage.ADMIN_LEGAL: Capability.REVIEW_CDC_ADMIN,
+            CdcReviewDecision.Stage.FINANCIAL: Capability.REVIEW_CDC_FINANCIAL,
+        }
+        self.fields['stage'].choices = [
+            (value, label) for value, label in CdcReviewDecision.Stage.choices
+            if permitted(user, capability[value])
+        ]
 
 
 class CdcClauseDefinitionForm(forms.ModelForm):
