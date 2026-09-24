@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
 from .models import (Article, CdcClause, CdcClauseRevision, CdcCriterion, CdcDossier, CdcGeneration,
-    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, CdcSection, Unit, WorkItem)
+    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, Unit, WorkItem)
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -155,17 +155,6 @@ class CdcProcurementForm(OperationForm):
     assignee=forms.ModelChoiceField(label=_('Responsable du plan'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
     reason=forms.CharField(label=_('Justification / origine du besoin'),max_length=500,widget=forms.Textarea)
 
-
-class CdcSectionForm(OperationForm):
-    expected_version = forms.IntegerField(widget=forms.HiddenInput)
-    key = forms.SlugField(label=_('Identifiant de section'), max_length=80)
-    title = forms.CharField(label=_('Intitulé'), max_length=200)
-    content = forms.CharField(label=_('Contenu'), required=False, widget=forms.Textarea)
-    position = forms.IntegerField(label=_('Position'), min_value=1, max_value=999)
-    active = forms.BooleanField(label=_('Inclure cette section'), required=False, initial=True)
-    required = forms.BooleanField(label=_('Section obligatoire'), required=False)
-    source = forms.CharField(label=_('Source / justification'), max_length=500, required=False, widget=forms.Textarea)
-    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, required=False, widget=forms.Textarea)
 
 
 class CdcRequirementForm(OperationForm):
