@@ -66,9 +66,18 @@ def _capability_scope(user):
     return condition
 
 
+CDC_REVIEW_VISIBLE_STATES = (
+    WorkItem.Status.SUBMITTED,
+    WorkItem.Status.CHANGES_REQUESTED,
+    WorkItem.Status.APPROVED,
+)
+
+
 def _cdc_read_allowed(user, work):
     if work_allowed(user, work):
         return True
+    if work.status not in CDC_REVIEW_VISIBLE_STATES:
+        return False
     return any(permitted(user, capability, location=work.location, category=work.category)
                for capability in CDC_READ_CAPABILITIES)
 
@@ -79,9 +88,10 @@ def dossier_scope(user):
         return qs
     own = Q(work__in=work_scope(user))
     review = _capability_scope(user)
+    review_state = Q(work__status__in=CDC_REVIEW_VISIBLE_STATES)
     if review is None:
-        return qs
-    return qs.filter(own | review).distinct()
+        return qs.filter(own | review_state).distinct()
+    return qs.filter(own | (review_state & review)).distinct()
 
 
 def _dossier(user, pk, *, edit=False):
