@@ -200,8 +200,9 @@ def cdc_item_edit(request, lot_id, pk=None):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def cdc_approve(request, pk):
-    require(request.user, Capability.APPROVE_CDC)
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    require(request.user, Capability.APPROVE_CDC,
+        location=dossier.work.location, category=dossier.work.category)
     form = forms.CdcApprovalForm(request.POST or None, dossier=dossier, initial={'expected_version': dossier.version})
     if request.method == 'POST' and form.is_valid():
         values = dict(form.cleaned_data)
@@ -415,16 +416,11 @@ def cdc_clause_select(request, dossier_id):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def cdc_review(request, pk):
-    allowed = (
-        permitted(request.user, Capability.REVIEW_CDC_TECHNICAL)
-        or permitted(request.user, Capability.REVIEW_CDC_ADMIN)
-        or permitted(request.user, Capability.REVIEW_CDC_FINANCIAL)
-    )
-    if not allowed:
-        raise PermissionDenied
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    form = forms.CdcReviewForm(request.POST or None, user=request.user,
+    form = forms.CdcReviewForm(request.POST or None, user=request.user, dossier=dossier,
         initial={'expected_version': dossier.version})
+    if not form.fields['stage'].choices:
+        raise PermissionDenied
     if request.method == 'POST' and form.is_valid():
         values = dict(form.cleaned_data)
         try:
