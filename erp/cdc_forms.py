@@ -212,7 +212,7 @@ class CdcReviewForm(OperationForm):
     outcome = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Outcome.choices)
     comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
 
-    def __init__(self, *args, user, **kwargs):
+    def __init__(self, *args, user, dossier, **kwargs):
         super().__init__(*args, **kwargs)
         capability = {
             CdcReviewDecision.Stage.TECHNICAL: Capability.REVIEW_CDC_TECHNICAL,
@@ -221,7 +221,7 @@ class CdcReviewForm(OperationForm):
         }
         self.fields['stage'].choices = [
             (value, label) for value, label in CdcReviewDecision.Stage.choices
-            if permitted(user, capability[value])
+            if permitted(user, capability[value], location=dossier.work.location, category=dossier.work.category)
         ]
 
 
