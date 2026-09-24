@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ('version', models.PositiveIntegerField(default=1, editable=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('code', models.CharField(max_length=32, unique=True, validators=[django.core.validators.RegexValidator('^[A-Z0-9][A-Z0-9._-]{0,31}
+                ('code', models.CharField(max_length=32, unique=True, validators=[django.core.validators.RegexValidator('^[A-Z0-9][A-Z0-9._-]{0,31}$')], verbose_name='Code interne')),
                 ('name', models.CharField(max_length=255, verbose_name='Désignation française')),
                 ('name_en', models.CharField(blank=True, max_length=255, verbose_name='Désignation anglaise')),
                 ('name_ar', models.CharField(blank=True, max_length=255, verbose_name='Désignation arabe')),
