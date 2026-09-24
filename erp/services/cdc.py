@@ -78,8 +78,15 @@ def _cdc_read_allowed(user, work):
         return True
     if work.status not in CDC_REVIEW_VISIBLE_STATES:
         return False
+    capabilities = [
+        Capability.REVIEW_CDC_TECHNICAL,
+        Capability.REVIEW_CDC_ADMIN,
+        Capability.APPROVE_CDC,
+    ]
+    if work.allow_costs:
+        capabilities.append(Capability.REVIEW_CDC_FINANCIAL)
     return any(permitted(user, capability, location=work.location, category=work.category)
-               for capability in CDC_READ_CAPABILITIES)
+               for capability in capabilities)
 
 
 def cdc_cost_allowed(user, dossier):
@@ -102,8 +109,19 @@ def dossier_scope(user):
     own = Q(work__in=work_scope(user))
     review = _capability_scope(user)
     review_state = Q(work__status__in=CDC_REVIEW_VISIBLE_STATES)
+    financial_only = (
+        grants(user, Capability.REVIEW_CDC_FINANCIAL).exists()
+        and not any(grants(user, capability).exists() for capability in (
+            Capability.REVIEW_CDC_TECHNICAL,
+            Capability.REVIEW_CDC_ADMIN,
+            Capability.APPROVE_CDC,
+        ))
+    )
     if review is None:
-        return qs.filter(own | review_state).distinct()
+        review_filter = review_state & (Q(work__allow_costs=True) if financial_only else Q())
+        return qs.filter(own | review_filter).distinct()
+    if financial_only:
+        review &= Q(work__allow_costs=True)
     return qs.filter(own | (review_state & review)).distinct()
 
 
@@ -405,6 +423,8 @@ def review_dossier(user, dossier_id, *, expected, stage, outcome, comment):
     if capability is None:
         raise ValidationError(_('Étape de revue CDC inconnue.'))
     dossier = _dossier(user, dossier_id)
+    if stage == CdcReviewDecision.Stage.FINANCIAL and not dossier.work.allow_costs:
+        raise ValidationError(_('La revue financière n’est pas applicable à ce cahier des charges.'))
     if not permitted(user, capability, location=dossier.work.location, category=dossier.work.category):
         raise PermissionDenied
     check_version(dossier, expected)
