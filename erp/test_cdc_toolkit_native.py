@@ -76,6 +76,7 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         detail = self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk]))
         self.assertEqual(detail.status_code, 200)
         self.assertNotContains(detail, 'Délégation et suivi')
+        self.assertNotContains(detail, 'Échanger les lots avec Excel')
         self.assertNotContains(detail, '1250,00')
         self.assertNotContains(detail, '1250.00')
         self.assertEqual(self.client.get(reverse('erp:cdc-governance', args=[self.dossier.pk])).status_code, 200)
