@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(model_name='cdcdossier', name='archived_at', field=models.DateTimeField(blank=True, editable=False, null=True)),
         migrations.AddField(model_name='cdcdossier', name='archived_by', field=models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL)),
         migrations.CreateModel(name='ProcurementRequirementLink', fields=[
-            ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
+            ('created_at', models.DateTimeField(auto_now_add=True)),
             ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
             ('shortage_quantity', models.DecimalField(decimal_places=6, max_digits=18)),
             ('purchase_quantity', models.DecimalField(decimal_places=6, max_digits=18)),
