@@ -9,11 +9,11 @@ from django.utils.translation import gettext as _
 from erp.cdc.catalog import document
 from erp.cdc.schedule_adapter import managed_ids
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
-                        CdcReviewDecision, CdcRevision)
+                        CdcReviewDecision, CdcRevision, WorkItem)
 from erp.permissions import is_manager, require_manager
 from notifications.models import Notification
 from .common import check_version
-from .work import require_work
+from .work import _transition, require_work
 
 
 REVIEW_ORDER = (
@@ -190,6 +190,8 @@ def review_revision(user, revision, *, stage, decision, comment):
         raise ValidationError(_('Un compte rendu de revue est obligatoire.'))
     result = CdcReviewDecision.objects.create(revision=revision, stage=stage,
         decision=decision, actor=user, comment=comment.strip())
+    if decision == CdcReviewDecision.Decision.CHANGES:
+        _transition(user, dossier.work, WorkItem.Status.CHANGES_REQUESTED, comment.strip())
     target = dossier.work.assignee if decision == CdcReviewDecision.Decision.CHANGES else dossier.work.created_by
     if target and target != user:
         Notification.objects.create(user=target, notification_type='STATUS_CHANGE',
