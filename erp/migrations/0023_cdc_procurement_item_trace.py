@@ -43,4 +43,8 @@ class Migration(migrations.Migration):
             model_name='procurementcdcitemlink',
             constraint=models.CheckConstraint(condition=models.Q(shortage_quantity__gt=0, shortage_quantity__lte=Decimal('999999999999.999999')), name='erp_plan_cdc_shortage'),
         ),
+        migrations.AddConstraint(
+            model_name='procurementcdcitemlink',
+            constraint=models.CheckConstraint(condition=models.Q(required_quantity=models.F('stock_covered_quantity') + models.F('shortage_quantity')), name='erp_plan_cdc_balance'),
+        ),
     ]
