@@ -7,8 +7,9 @@ from django.urls import reverse
 from erp.models import (CdcClause, CdcClauseRevision, CdcCriterion, CdcRequirement,
     CdcReviewDecision, WorkItem)
 from erp.services.cdc import (approve_dossier, create_clause_revision, create_dossier,
-    document_data, governance_findings, review_dossier, review_state, save_clause,
-    save_criterion, save_requirement, select_clause)
+    document_data, duplicate_dossier, governance_findings, review_dossier, review_state,
+    save_clause, save_criterion, save_requirement, select_clause)
+from erp.services.cdc_exchange import add_lot, arrange_item, restore_revision
 from erp.test_operations import OperationFixtures
 
 
@@ -256,3 +257,70 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
             'expected_version': self.dossier.version, 'stage': 'TECHNICAL',
             'outcome': 'APPROVED', 'comment': 'Revue technique HTTP'})
         self.assertEqual(response.status_code, 302)
+
+
+    def test_duplicate_dossier_preserves_governance_without_copying_prices(self):
+        save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+            values={'position': 1, 'kind': 'MANDATORY', 'statement': 'Exigence source',
+                'evidence': 'Certificat', 'verification_method': 'Contrôle',
+                'justification': '', 'active': True}, reason='Exigence')
+        self.refresh()
+        save_criterion(self.operator, self.dossier.pk, expected=self.dossier.version,
+            values={'lot': None, 'code': 'DUP', 'title': 'Critère source',
+                'method': 'BINARY', 'weight': Decimal('100'), 'threshold': None,
+                'eliminatory': False, 'evidence': 'Preuve', 'position': 1,
+                'active': True}, reason='Critère')
+        clause = self.clause()
+        active = create_clause_revision(self.ops, clause, text_fr='Clause stable',
+            source_reference='Source stable', activate=True)
+        self.refresh()
+        select_clause(self.operator, self.dossier.pk, expected=self.dossier.version,
+            revision=active, position=1, mandatory=True, reason='Clause')
+        self.refresh()
+        duplicate = duplicate_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
+            reference='93/SME/SDFM/SG/ESSBO/2026', title='Copie gouvernée',
+            assignee=self.operator, allow_costs=True, copy_estimates=False,
+            reason='Nouvelle consultation')
+        self.assertEqual(CdcRequirement.objects.filter(item__lot__dossier=duplicate, active=True).count(), 1)
+        self.assertEqual(duplicate.criteria.filter(active=True).count(), 1)
+        self.assertEqual(duplicate.clause_selections.filter(active=True).count(), 1)
+        self.assertEqual(document_data(duplicate)['criteria'][0]['code'], 'DUP')
+
+    def test_reused_lot_and_item_move_or_duplicate_keep_requirements(self):
+        save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+            values={'position': 1, 'kind': 'MANDATORY', 'statement': 'Exigence portable',
+                'evidence': 'Certificat', 'verification_method': 'Contrôle',
+                'justification': '', 'active': True}, reason='Exigence')
+        self.refresh()
+        reused = add_lot(self.operator, self.dossier.pk, expected=self.dossier.version,
+            name='Lot réutilisé', source=self.item.lot, reason='Réutilisation contrôlée')
+        copied = reused.items.get(active=True)
+        self.assertEqual(copied.requirements.get(active=True).statement, 'Exigence portable')
+
+        self.refresh()
+        duplicated = arrange_item(self.operator, copied.pk, expected=self.dossier.version,
+            destination=self.item.lot, action='duplicate', position=2,
+            reason='Même exigence dans un second lot')
+        self.assertEqual(duplicated.requirements.get(active=True).statement, 'Exigence portable')
+
+        self.refresh()
+        moved = arrange_item(self.operator, duplicated.pk, expected=self.dossier.version,
+            destination=reused, action='move', position=2, reason='Réorganisation')
+        self.assertEqual(moved.requirements.get(active=True).statement, 'Exigence portable')
+
+    def test_restore_revision_restores_requirements_criteria_and_clause_selection(self):
+        save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+            values={'position': 1, 'kind': 'MANDATORY', 'statement': 'Version un',
+                'evidence': 'Certificat', 'verification_method': 'Contrôle',
+                'justification': '', 'active': True}, reason='Version un')
+        source = self.dossier.revisions.order_by('-number').first()
+        self.refresh()
+        requirement = CdcRequirement.objects.get(item=self.item, position=1)
+        save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+            pk=requirement.pk, values={'statement': 'Version deux'}, reason='Version deux')
+        self.refresh()
+        restored = restore_revision(self.ops, source.pk, expected=self.dossier.version,
+            reason='Revenir à la version un')
+        requirement.refresh_from_db()
+        self.assertEqual(requirement.statement, 'Version un')
+        self.assertEqual(restored.data['requirements'][0]['statement'], 'Version un')
