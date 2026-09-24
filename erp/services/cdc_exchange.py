@@ -13,7 +13,8 @@ from django.utils.translation import gettext_lazy as _
 
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.lot_workbook import MAX_FILE, build_workbook, parse_workbook
-from erp.models import CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview
+from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
+                        CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview)
 from erp.permissions import require_manager
 from .cdc import _dossier, _revision, document_data, dossier_scope
 from .common import check_version
@@ -123,7 +124,8 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
             item.lot = lot
             item.source_key = 'new-' + str(uuid.uuid4())
             item.version = 1
-            # Reuse technical data only; estimates must be confirmed for the new lot.
+            # Reuse technical data only; estimates and supplier choice must be reconfirmed.
+            item.supplier = None
             item.estimated_price = item.tax_rate = None
             item.price_source = ''
             item.save()
@@ -146,6 +148,7 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     if action == 'move':
         CdcItem.objects.filter(pk=item.pk).update(active=False)
     else:
+        item.supplier = None
         item.estimated_price = item.tax_rate = None
         item.price_source = ''
     item.pk = None
@@ -208,9 +211,34 @@ def restore_revision(user, pk, *, expected, reason):
             item = CdcItem.objects.get(lot_id=lot['id'], source_key=row['key'])
             item.article_id, item.purchase_unit_id = value['article'], value['purchase_unit']
             item.article_snapshot, item.base_factor = value['article_snapshot'], value['base_factor']
+            item.supplier_id = value.get('supplier')
             item.estimated_price, item.tax_rate = value['price'], value['tax_rate']
             item.currency, item.price_source = value['currency'], value['source']
             item.save()
+    governance = source.governance or {}
+    clause_ids = []
+    for value in governance.get('clauses', []):
+        clause = CdcClause.objects.get(family=dossier.family, code=value['code'], paragraph_id=value['paragraph_id'])
+        version = CdcClauseVersion.objects.get(clause=clause, number=value['version'], sha256=value['sha256'])
+        CdcClauseSelection.objects.update_or_create(dossier=dossier, clause=clause, defaults={
+            'selected_version': version, 'selected_by': user, 'reason': reason[:500]})
+        clause_ids.append(clause.pk)
+    dossier.clause_selections.exclude(clause_id__in=clause_ids).delete()
+    criteria_codes = []
+    for value in governance.get('criteria', []):
+        lot = dossier.lots.filter(pk=value['lot']).first() if value.get('lot') else None
+        CdcCriterion.objects.update_or_create(dossier=dossier, code=value['code'], defaults={
+            'lot': lot, 'category': value['category'], 'title': value['title'],
+            'description': value['description'], 'expected_evidence': value['expected_evidence'],
+            'min_score': Decimal(value['min_score']) if value['min_score'] is not None else None,
+            'max_score': Decimal(value['max_score']) if value['max_score'] is not None else None,
+            'weight': Decimal(value['weight']),
+            'threshold': Decimal(value['threshold']) if value['threshold'] is not None else None,
+            'formula': value['formula'], 'rounding_rule': value['rounding_rule'],
+            'eliminatory': value['eliminatory'], 'source': value['source'],
+            'justification': value['justification'], 'position': value['position'], 'active': True})
+        criteria_codes.append(value['code'])
+    dossier.criteria.exclude(code__in=criteria_codes).update(active=False)
     dossier.data = copy.deepcopy(source.data)
     dossier.reference = source.data['reference']
     dossier.full_clean()
