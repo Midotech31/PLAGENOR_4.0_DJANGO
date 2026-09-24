@@ -1904,3 +1904,24 @@ msgstr "Unavailable"
 
 msgid "Aucun besoin structuré à comparer au stock."
 msgstr "No structured need to compare with stock."
+
+msgid "Fournisseur de référence"
+msgstr "Reference supplier"
+
+msgid "Sélectionnez un fournisseur actif du référentiel commun."
+msgstr "Select an active supplier from the shared reference catalog."
+
+msgid "La ventilation des besoins CDC ne correspond pas au déficit calculé."
+msgstr "The allocation of CDC requirements does not match the calculated shortage."
+
+msgid "Source CDC"
+msgstr "CDC source"
+
+msgid "requis"
+msgstr "required"
+
+msgid "couvert par stock"
+msgstr "covered by stock"
+
+msgid "à approvisionner"
+msgstr "to procure"
