@@ -35,7 +35,7 @@ def validate_data(data,family):
         raise DocumentError('Famille de document inconnue.')
     if not isinstance(data,dict) or type(data.get('format')) is not int or data.get('format')!=1 or data.get('family')!=family or data.get('source_sha256')!=DIGESTS[family]:
         raise DocumentError('Le dossier ne correspond pas au modèle attendu.')
-    if set(data)-{'format','family','source_sha256','reference','paragraphs','rows','omitted','notes','review_acknowledged','procurement','lot_catalog','institutional_policy','consultation','structured_sections','requirements','criteria','clauses'}:
+    if set(data)-{'format','family','source_sha256','reference','paragraphs','rows','omitted','notes','review_acknowledged','procurement','lot_catalog','institutional_policy','consultation','requirements','criteria','clauses'}:
         raise DocumentError('Le dossier contient des propriétés non reconnues.')
     validate_policy(data)
     if 'consultation' in data: validate_consultation(data['consultation'], family)
