@@ -221,7 +221,8 @@ class CdcReviewForm(OperationForm):
         }
         self.fields['stage'].choices = [
             (value, label) for value, label in CdcReviewDecision.Stage.choices
-            if permitted(user, capability[value], location=dossier.work.location, category=dossier.work.category)
+            if (value != CdcReviewDecision.Stage.FINANCIAL or dossier.work.allow_costs)
+            and permitted(user, capability[value], location=dossier.work.location, category=dossier.work.category)
         ]
 
 
