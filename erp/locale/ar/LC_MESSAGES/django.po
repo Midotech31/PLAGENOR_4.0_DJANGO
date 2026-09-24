@@ -1886,3 +1886,24 @@ msgstr "غير متوفر"
 
 msgid "Aucun besoin structuré à comparer au stock."
 msgstr "لا يوجد احتياج مهيكل لمقارنته بالمخزون."
+
+msgid "Fournisseur de référence"
+msgstr "المورد المرجعي"
+
+msgid "Sélectionnez un fournisseur actif du référentiel commun."
+msgstr "اختر مورداً نشطاً من المرجع المشترك."
+
+msgid "La ventilation des besoins CDC ne correspond pas au déficit calculé."
+msgstr "توزيع احتياجات دفتر الشروط لا يطابق العجز المحسوب."
+
+msgid "Source CDC"
+msgstr "مصدر دفتر الشروط"
+
+msgid "requis"
+msgstr "مطلوب"
+
+msgid "couvert par stock"
+msgstr "مغطى بالمخزون"
+
+msgid "à approvisionner"
+msgstr "للتوريد"
