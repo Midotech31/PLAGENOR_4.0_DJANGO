@@ -126,20 +126,6 @@ class CdcWorkbookPreview(Record):
     applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True)
 
 
-class CdcSection(Record):
-    dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='structured_sections')
-    key = models.CharField(_('Identifiant de section'), max_length=80)
-    title = models.CharField(_('Intitulé'), max_length=200)
-    content = models.TextField(_('Contenu'), blank=True)
-    position = models.PositiveSmallIntegerField(default=1)
-    active = models.BooleanField(_('Inclure cette section'), default=True)
-    required = models.BooleanField(_('Section obligatoire'), default=False)
-    source = models.CharField(_('Source / justification'), max_length=500, blank=True)
-
-    class Meta:
-        ordering = ['position', 'id']
-        constraints = [models.UniqueConstraint(fields=['dossier', 'key'], name='erp_cdc_section_key')]
-
 
 class CdcRequirement(Record):
     class Kind(models.TextChoices):
