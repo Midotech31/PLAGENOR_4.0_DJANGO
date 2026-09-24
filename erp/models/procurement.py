@@ -166,3 +166,23 @@ class PurchaseReceiptLink(ImmutableRecord):
     class Meta:
         constraints=[models.CheckConstraint(condition=Q(purchase_quantity__gt=0,purchase_quantity__lte=MAX_Q),name='erp_purchase_receipt_quantity'),
             models.CheckConstraint(condition=Q(actual_unit_price__gte=0,actual_unit_price__lte=MAX_PRICE),name='erp_purchase_receipt_price')]
+
+
+class ProcurementCdcItemLink(ImmutableRecord):
+    """Immutable trace from a structured CDC need to the canonical procurement line."""
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    line=models.ForeignKey(ProcurementLine,on_delete=models.PROTECT,related_name='cdc_item_links')
+    item=models.ForeignKey('erp.CdcItem',on_delete=models.PROTECT,related_name='procurement_links')
+    actor=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT)
+    required_quantity=models.DecimalField(max_digits=18,decimal_places=6)
+    stock_covered_quantity=models.DecimalField(max_digits=18,decimal_places=6,default=0)
+    shortage_quantity=models.DecimalField(max_digits=18,decimal_places=6)
+    reason=models.CharField(max_length=500)
+
+    class Meta:
+        constraints=[
+            models.UniqueConstraint(fields=['line','item'],name='erp_plan_cdc_item_unique'),
+            models.CheckConstraint(condition=Q(required_quantity__gt=0,required_quantity__lte=MAX_Q),name='erp_plan_cdc_required'),
+            models.CheckConstraint(condition=Q(stock_covered_quantity__gte=0,stock_covered_quantity__lte=MAX_Q),name='erp_plan_cdc_covered'),
+            models.CheckConstraint(condition=Q(shortage_quantity__gt=0,shortage_quantity__lte=MAX_Q),name='erp_plan_cdc_shortage'),
+        ]
