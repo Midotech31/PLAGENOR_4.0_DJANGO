@@ -130,6 +130,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
   await page.locator('[name=title]').fill(`CDC gouvernance ${info.project.name}`);
   await submit(page,'.erp-form button[type=submit]');
+  await expect(page).toHaveURL(/\/erp\/cdc\/[0-9a-f-]+\/$/);
   const dossierURL = page.url();
 
   await page.locator('.erp-card').first().click();
