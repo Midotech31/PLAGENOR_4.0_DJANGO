@@ -10,6 +10,7 @@ import io
 import zipfile
 import xml.etree.ElementTree as ET
 from defusedxml.ElementTree import fromstring as safe_fromstring
+from defusedxml.common import DefusedXmlException
 
 from .docengine import DocumentError
 
@@ -144,7 +145,7 @@ def append_governance_annex(payload, data, revision_number):
             with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as target:
                 for name in names:
                     target.writestr(name, changed if name == 'word/document.xml' else archive.read(name))
-    except (zipfile.BadZipFile, ET.ParseError) as exc:
+    except (zipfile.BadZipFile, ET.ParseError, DefusedXmlException) as exc:
         raise DocumentError('Document Word invalide pendant la génération de l’annexe CDC.') from exc
 
     return output.getvalue(), {'status': 'GENERATED', 'requirements': len(requirements),
