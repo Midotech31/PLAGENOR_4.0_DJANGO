@@ -40,14 +40,54 @@ CDC_REVIEW_CAPABILITY = {
 }
 
 
+CDC_READ_CAPABILITIES = (
+    Capability.REVIEW_CDC_TECHNICAL,
+    Capability.REVIEW_CDC_ADMIN,
+    Capability.REVIEW_CDC_FINANCIAL,
+    Capability.APPROVE_CDC,
+)
+
+
+def _capability_scope(user):
+    condition = Q(pk__in=[])
+    for capability in CDC_READ_CAPABILITIES:
+        for grant in grants(user, capability):
+            scope = Q()
+            if grant.category_id:
+                scope &= Q(work__category_id=grant.category_id)
+            if grant.location_id:
+                descendants = LocationClosure.objects.filter(
+                    ancestor_id=grant.location_id).values('descendant_id')
+                scope &= Q(work__location_id__in=descendants)
+            if not scope:
+                return Q()
+            condition |= scope
+    return condition
+
+
+def _cdc_read_allowed(user, work):
+    if work_allowed(user, work):
+        return True
+    return any(permitted(user, capability, location=work.location, category=work.category)
+               for capability in CDC_READ_CAPABILITIES)
+
+
 def dossier_scope(user):
-    return CdcDossier.objects.filter(work__in=work_scope(user)).select_related('work', 'work__assignee')
+    qs = CdcDossier.objects.select_related('work', 'work__assignee')
+    if is_manager(user):
+        return qs
+    own = Q(work__in=work_scope(user))
+    review = _capability_scope(user)
+    return qs.filter(own | review).distinct()
 
 
 def _dossier(user, pk, *, edit=False):
     identity = CdcDossier.objects.values('work_id').get(pk=pk)
     work = WorkItem.objects.select_for_update(no_key=True).get(pk=identity['work_id'])
-    require_work(user, work, edit=edit)
+    if edit:
+        require_work(user, work, edit=True)
+    elif not _cdc_read_allowed(user, work):
+        raise PermissionDenied
     dossier = CdcDossier.objects.select_for_update().get(pk=pk)
     dossier.work = work
     if edit and dossier.archived_at is not None:
@@ -338,9 +378,9 @@ def review_dossier(user, dossier_id, *, expected, stage, outcome, comment):
     capability = CDC_REVIEW_CAPABILITY.get(stage)
     if capability is None:
         raise ValidationError(_('Étape de revue CDC inconnue.'))
-    if not permitted(user, capability):
-        raise PermissionDenied
     dossier = _dossier(user, dossier_id)
+    if not permitted(user, capability, location=dossier.work.location, category=dossier.work.category):
+        raise PermissionDenied
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le cahier des charges doit être soumis avant sa revue.'))
@@ -692,8 +732,8 @@ def generate_cdc(user, revision_id):
 @transaction.atomic
 def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statement,
                     visual_review, content_review):
-    require(user, Capability.APPROVE_CDC)
     dossier = _dossier(user, pk)
+    require(user, Capability.APPROVE_CDC, location=dossier.work.location, category=dossier.work.category)
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
