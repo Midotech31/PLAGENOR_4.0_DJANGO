@@ -145,7 +145,8 @@ def document_data(dossier):
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
     data['requirements'] = [
-        {'item': str(requirement.item_id), 'item_key': requirement.item.source_key, 'lot': str(requirement.item.lot_id), 'position': requirement.position, 'kind': requirement.kind,
+        {'id': str(requirement.pk), 'item': str(requirement.item_id), 'item_key': requirement.item.source_key,
+         'lot': str(requirement.item.lot_id), 'position': requirement.position, 'kind': requirement.kind,
          'statement': requirement.statement, 'evidence': requirement.evidence,
          'verification_method': requirement.verification_method, 'justification': requirement.justification}
         for requirement in CdcRequirement.objects.filter(
@@ -541,7 +542,7 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
             name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
         lot_map[original_lot.pk] = lot
         for original in original_lot.items.filter(active=True).prefetch_related('requirements').order_by('position', 'id'):
-            cloned = CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
+            cloned = CdcItem.objects.create(lot=lot, source_key='new-' + str(uuid.uuid4()), position=lot.items.count() + 1,
                 article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
                 designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
                 purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
@@ -778,11 +779,11 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
-    if not review_state(dossier)['complete']:
-        raise ValidationError(_('Toutes les revues obligatoires de la révision courante doivent être approuvées avant validation finale.'))
     generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
     if generation.revision.number != dossier.revision_number:
         raise Conflict(_('Cette génération ne correspond plus à la dernière révision du dossier.'))
+    if not review_state(dossier)['complete']:
+        raise ValidationError(_('Toutes les revues obligatoires de la révision courante doivent être approuvées avant validation finale.'))
     if visual_review is not True or content_review is not True or reviewed_pages != generation.pages or not statement.strip():
         raise ValidationError(_('Confirmez la revue du contenu et de toutes les pages du PDF, avec une justification.'))
     approval = CdcApproval(dossier=dossier, generation=generation, actor=user,

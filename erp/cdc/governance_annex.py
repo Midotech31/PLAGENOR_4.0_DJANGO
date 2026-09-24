@@ -92,7 +92,7 @@ def append_governance_annex(payload, data, revision_number):
             if section is None:
                 raise DocumentError('Document Word incomplet : propriétés de section absentes.')
 
-            body.insert(body.index(section), _paragraph(page_break=True))
+            body.insert(list(body).index(section), _paragraph(page_break=True))
             _append_text(body, 'ANNEXE — EXIGENCES, CRITÈRES D’ÉVALUATION ET CLAUSES INSTITUTIONNELLES',
                 bold=True, size=28, after=120)
             _append_text(body, f'Référence : {data.get("reference", "")} · Révision PLAGENOR : {revision_number}',

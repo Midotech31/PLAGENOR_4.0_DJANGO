@@ -61,6 +61,7 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.refresh()
         restore_revision(self.ops, source_revision.pk, expected=self.dossier.version,
             reason='Restaurer la provenance fournisseur')
+        self.refresh()
         self.item.refresh_from_db()
         self.assertEqual(self.item.estimate_supplier_id, self.party.pk)
         self.assertEqual(self.item.estimated_price, Decimal('1250.00'))
@@ -364,7 +365,10 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.refresh()
         reused = add_lot(self.operator, self.dossier.pk, expected=self.dossier.version,
             name='Lot réutilisé', source=self.item.lot, reason='Réutilisation contrôlée')
-        copied = reused.items.get(active=True)
+        self.assertEqual(
+            reused.items.filter(active=True).count(),
+            self.item.lot.items.filter(active=True).count())
+        copied = reused.items.get(active=True, position=self.item.position)
         self.assertEqual(copied.requirements.get(active=True).statement, 'Exigence portable')
 
         self.refresh()

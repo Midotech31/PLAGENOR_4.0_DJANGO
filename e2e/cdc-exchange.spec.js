@@ -89,7 +89,7 @@ test('CDC native lifecycle is integrated with PLAGENOR documents and controlled 
   await page.goto('/erp/cdc/new/');
   await page.locator('.topbar button[name=language][value=fr]').click();
   await page.locator('[name=family]').selectOption('reagents');
-  const number = {chromium:8201,firefox:8202,'mobile-chromium':8203}[info.project.name];
+  const number = {chromium:8201,firefox:8202,'mobile-chromium':8203}[info.project.name] + info.retry * 10;
   await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
   await page.locator('[name=title]').fill(`CDC native ${info.project.name}`);
   await submit(page,'.erp-form button[type=submit]');
@@ -126,7 +126,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.goto('/erp/cdc/new/');
   await page.locator('.topbar button[name=language][value=fr]').click();
   await page.locator('[name=family]').selectOption('equipment');
-  const number = {chromium:8301,firefox:8302,'mobile-chromium':8303}[info.project.name];
+  const number = {chromium:8301,firefox:8302,'mobile-chromium':8303}[info.project.name] + info.retry * 10;
   await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
   await page.locator('[name=title]').fill(`CDC gouvernance ${info.project.name}`);
   await submit(page,'.erp-form button[type=submit]');

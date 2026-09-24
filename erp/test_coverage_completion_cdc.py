@@ -17,7 +17,7 @@ from pypdf import PdfWriter
 from erp.cdc import catalog, docengine, procurement
 from erp.cdc.consultation import FIELDS
 from erp.cdc.docengine import Document, DocumentError, NS, Node
-from erp.models import CdcGeneration
+from erp.models import CdcGeneration, CdcReviewDecision
 from erp.services.cdc import (
     approve_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc,
     save_cdc_item, save_cdc_lot, save_consultation, submit_dossier,
@@ -363,6 +363,17 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
                           values=values, reason='Variables confirmées')
         self.dossier.refresh_from_db()
 
+    def _approve_current_reviews(self):
+        revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        stages = [CdcReviewDecision.Stage.TECHNICAL, CdcReviewDecision.Stage.ADMIN_LEGAL]
+        if self.dossier.work.allow_costs:
+            stages.append(CdcReviewDecision.Stage.FINANCIAL)
+        for stage in stages:
+            CdcReviewDecision.objects.create(
+                dossier=self.dossier, revision=revision, stage=stage,
+                outcome=CdcReviewDecision.Outcome.APPROVED, actor=self.ops,
+                comment='Revue obligatoire validée pour le scénario de recette')
+
     def test_lot_item_paragraph_and_estimate_paths(self):
         revision = save_cdc_lot(self.operator, self.lot.pk, expected=self.dossier.version,
             name='Lot couverture', name_ar='حصة تغطية', reason='Renommage contrôlé')
@@ -463,6 +474,7 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
                 visual_review=True, content_review=True)
         submit_dossier(self.operator, self.dossier.pk, expected=self.dossier.version, reason='Préparé')
         self.dossier.refresh_from_db()
+        self._approve_current_reviews()
         with self.assertRaises(ValidationError):
             approve_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
                 generation_id=generation.pk, reviewed_pages=0, statement='',

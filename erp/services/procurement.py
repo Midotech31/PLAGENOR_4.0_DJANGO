@@ -439,7 +439,8 @@ def link_run_shortages(user,run_id,plan_id,*,expected_run,reason):
                 lot_name=str(_('Besoins analytiques')),_record_revision=False)
         if ProcurementRequirementLink.objects.filter(line=line,requirement=requirement).exists():
             continue
-        base_quantity,_=convert_quantity(requirement.article,shortage['quantity'],requirement.unit)
+        base_quantity, _conversion_factor = convert_quantity(
+            requirement.article, shortage['quantity'], requirement.unit)
         purchase=stock_quantity((base_quantity/line.purchase_factor).quantize(Decimal('0.000001'),rounding=ROUND_CEILING))
         created.append(ProcurementRequirementLink.objects.create(line=line,requirement=requirement,actor=user,
             shortage_quantity=base_quantity,purchase_quantity=purchase,reason=reason.strip()))
