@@ -779,7 +779,11 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
-    generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
+    try:
+        generation = CdcGeneration.objects.select_related('revision').get(
+            pk=generation_id, revision__dossier=dossier)
+    except CdcGeneration.DoesNotExist as error:
+        raise ValidationError(_('La génération sélectionnée est introuvable pour ce cahier des charges.')) from error
     if generation.revision.number != dossier.revision_number:
         raise Conflict(_('Cette génération ne correspond plus à la dernière révision du dossier.'))
     if not review_state(dossier)['complete']:
