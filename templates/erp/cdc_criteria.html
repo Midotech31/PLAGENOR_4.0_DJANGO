@@ -1,0 +1,30 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading">
+  <div>
+    <p class="erp-eyebrow">{{ dossier.reference }}</p>
+    <h1>{% trans 'Critères et grille d’évaluation' %}</h1>
+    <p>{% trans 'Critères structurés, pondérations et méthodes conservés avec chaque révision du CDC.' %}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a>
+</header>
+{% for finding in findings %}
+<article class="{% if finding.severity == 'error' %}erp-errors{% else %}erp-notice{% endif %}">
+  <strong>{% trans 'Contrôle' %}</strong><p>{{ finding.message }}</p>
+</article>
+{% endfor %}
+{% if editable %}<div class="erp-form-actions"><a class="btn btn-primary" href="{% url 'erp:cdc-criterion-new' pk=dossier.pk %}">{% trans 'Ajouter un critère' %}</a></div>{% endif %}
+<div class="erp-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Grille des critères' %}">
+<table class="erp-table">
+<thead><tr><th>{% trans 'Code' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Critère' %}</th><th>{% trans 'Lot' %}</th><th>{% trans 'Pondération' %}</th><th>{% trans 'Méthode' %}</th></tr></thead>
+<tbody>
+{% for criterion in criteria %}
+<tr>
+<td>{% if editable %}<a href="{% url 'erp:cdc-criterion-edit' pk=dossier.pk criterion_id=criterion.pk %}">{{ criterion.code }}</a>{% else %}{{ criterion.code }}{% endif %}</td>
+<td>{{ criterion.get_category_display }}</td><td>{{ criterion.title }}{% if criterion.eliminatory %}<small class="erp-muted">{% trans 'Éliminatoire' %}</small>{% endif %}</td>
+<td>{{ criterion.lot|default:'—' }}</td><td class="erp-numeric">{{ criterion.weight|floatformat:2 }} %</td>
+<td>{{ criterion.formula|default:criterion.max_score|default:'—' }}</td>
+</tr>
+{% empty %}<tr><td colspan="6">{% trans 'Aucun critère structuré. Les critères historiques présents uniquement dans le modèle restent visibles dans le document source.' %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}
