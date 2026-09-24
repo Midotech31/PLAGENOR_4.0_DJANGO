@@ -32,7 +32,8 @@ from notifications.models import Notification
 class CdcNativeIntegrationTests(OperationFixtures, TestCase):
     def structured_cdc(self, reference='71/SME/SDFM/SG/ESSBO/2026', amount=12):
         dossier = create_dossier(self.ops, family='reagents', reference=reference,
-            title='CDC natif', assignee=self.operator, allow_costs=True)
+            title='CDC natif', assignee=self.operator, location=self.freezer,
+            category=self.article.category, allow_costs=True)
         CdcItem.objects.filter(lot__dossier=dossier).update(active=False)
         dossier.refresh_from_db()
         lot = dossier.lots.first()
@@ -114,6 +115,8 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         line = plan.lines.get()
         self.assertEqual(line.article_id, self.article.pk)
         self.assertEqual(line.proposed_quantity, 7)
+        self.assertEqual(plan.work.location_id, self.freezer.pk)
+        self.assertEqual(plan.work.category_id, self.article.category_id)
         source = ProcurementCdcItemLink.objects.get(line=line)
         self.assertEqual(source.item.article_id, self.article.pk)
         self.assertEqual(source.required_quantity, 12)
@@ -153,7 +156,8 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
 
         plan = create_plan(self.ops, reference='CHAIN-PLAN',
             year=timezone.localdate().year, title='Approvisionnement chaîne',
-            assignee=self.operator, allow_costs=True)
+            assignee=self.operator, allow_costs=True, location=self.freezer,
+            category=self.article.category)
         with self.assertRaises(ValidationError):
             link_run_shortages(self.ops, run.pk, plan.pk,
                 expected_run=run.version, reason='')
@@ -189,6 +193,8 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             reference='73/SME/SDFM/SG/ESSBO/2026', family='reagents',
             assignee=self.operator)
         self.assertEqual(dossier.procurement_plan.pk, plan.pk)
+        self.assertEqual(dossier.work.location_id, self.freezer.pk)
+        self.assertEqual(dossier.work.category_id, self.article.category_id)
         plan.refresh_from_db()
 
         order = create_order(self.ops, plan.pk, expected=plan.version,
