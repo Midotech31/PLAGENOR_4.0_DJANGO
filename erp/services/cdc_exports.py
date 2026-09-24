@@ -42,7 +42,8 @@ def criteria_workbook(revision):
         cell.font = Font(bold=True)
     for row in revision.governance.get('requirements', []):
         requirements.append([
-            row.get('item_key', ''), row.get('lot', ''), row.get('code', ''), row.get('kind', ''),
+            row.get('item_label') or row.get('item_key', ''), row.get('lot_label') or row.get('lot', ''),
+            row.get('code', ''), row.get('kind', ''),
             row.get('statement', ''), row.get('evidence', ''), row.get('verification', ''),
             row.get('justification', ''),
         ])
