@@ -129,6 +129,33 @@ class CdcWorkbookPreview(Record):
     applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True)
 
 
+class CdcRequirement(Record):
+    class Kind(models.TextChoices):
+        MANDATORY = 'MANDATORY', _('Obligatoire')
+        MINIMUM = 'MINIMUM', _('Minimale')
+        DESIRABLE = 'DESIRABLE', _('Souhaitable')
+        SCORED = 'SCORED', _('Notée')
+        INFORMATIONAL = 'INFORMATIONAL', _('Informative')
+        ELIMINATORY = 'ELIMINATORY', _('Éliminatoire')
+
+    item = models.ForeignKey(CdcItem, on_delete=models.PROTECT, related_name='requirements')
+    code = models.CharField(max_length=64)
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    statement = models.TextField(_('Exigence'))
+    evidence = models.TextField(_('Preuve attendue'), blank=True)
+    verification = models.TextField(_('Méthode de vérification / réception'), blank=True)
+    justification = models.TextField(_('Justification'), blank=True)
+    position = models.PositiveSmallIntegerField(default=1)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['position', 'code']
+        constraints = [
+            models.UniqueConstraint(fields=['item', 'code'], name='erp_cdc_requirement_code'),
+        ]
+
+
+
 class CdcClause(Record):
     """Canonical reusable clause mapped to one verified paragraph in a source family."""
     family = models.CharField(max_length=12, choices=CdcDossier.Family.choices)
@@ -186,6 +213,7 @@ class CdcCriterion(Record):
 
     dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='criteria')
     lot = models.ForeignKey(CdcLot, on_delete=models.PROTECT, null=True, blank=True, related_name='criteria')
+    requirement = models.ForeignKey(CdcRequirement, on_delete=models.PROTECT, null=True, blank=True, related_name='criteria')
     code = models.CharField(max_length=64)
     category = models.CharField(max_length=16, choices=Category.choices)
     title = models.CharField(_('Intitulé'), max_length=255)
