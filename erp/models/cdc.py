@@ -63,6 +63,8 @@ class CdcItem(Record):
     packaging = models.TextField(_('Conditionnement'), blank=True)
     quantity = models.DecimalField(_('Quantité prévue'), max_digits=18, decimal_places=6, validators=[MinValueValidator(Decimal('0.000001'))])
     details = models.TextField(_('Précisions complémentaires'), blank=True)
+    estimate_supplier = models.ForeignKey('erp.Party', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='cdc_estimates', verbose_name=_('Fournisseur de référence'))
     estimated_price = models.DecimalField(_('Prix unitaire estimé hors taxes'), max_digits=18, decimal_places=2,
         null=True, blank=True, validators=[MinValueValidator(0)])
     tax_rate = models.DecimalField(_('Taux de taxe (%)'), max_digits=5, decimal_places=2,
