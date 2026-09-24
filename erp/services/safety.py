@@ -28,7 +28,14 @@ def require_target(user,kind,pk,*,write=False):
         require(user,Capability.RECEIVE_STOCK if write else Capability.VIEW_STOCK,
             category=obj.container.lot.article.category,location=obj.container.location)
     elif kind=='work':
-        require_work(user,obj,edit=write)
+        if write:
+            require_work(user,obj,edit=True)
+        elif not work_allowed(user,obj):
+            if obj.kind != WorkItem.Kind.CDC:
+                raise PermissionDenied
+            from .cdc import _cdc_read_allowed
+            if not _cdc_read_allowed(user,obj):
+                raise PermissionDenied
     elif kind=='sample':
         from .biobank import require_sample
         require_sample(user,obj,write=write)
@@ -40,8 +47,14 @@ def require_target(user,kind,pk,*,write=False):
 
 
 def target_cost_access(user,kind,obj):
-    if kind in ('work','order'):
-        return work_allowed(user,obj if kind=='work' else obj.plan.work,costs=True)
+    if kind=='work':
+        if work_allowed(user,obj,costs=True):
+            return True
+        return bool(obj.kind == WorkItem.Kind.CDC and obj.allow_costs and (
+            permitted(user,Capability.REVIEW_CDC_FINANCIAL,location=obj.location,category=obj.category)
+            or permitted(user,Capability.APPROVE_CDC,location=obj.location,category=obj.category)))
+    if kind=='order':
+        return work_allowed(user,obj.plan.work,costs=True)
     if kind=='article':
         return permitted(user,Capability.VIEW_COST,category=obj.category)
     if kind=='receipt':
