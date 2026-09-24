@@ -9,6 +9,7 @@ from __future__ import annotations
 import io
 import zipfile
 import xml.etree.ElementTree as ET
+from defusedxml.ElementTree import fromstring as safe_fromstring
 
 from .docengine import DocumentError
 
@@ -82,7 +83,7 @@ def append_governance_annex(payload, data, revision_number):
             names = archive.namelist()
             if 'word/document.xml' not in names:
                 raise DocumentError('Document Word incomplet : corps principal absent.')
-            root = ET.fromstring(archive.read('word/document.xml'))
+            root = safe_fromstring(archive.read('word/document.xml'))
             body = root.find(Q + 'body')
             if body is None:
                 raise DocumentError('Document Word incomplet : corps principal absent.')
