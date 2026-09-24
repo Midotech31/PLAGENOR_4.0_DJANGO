@@ -16,12 +16,12 @@ from . import cdc_forms as forms
 from .cdc.catalog import controls, document, effective_edits
 from .cdc.docengine import DocumentError
 from .models import (CdcClause, CdcClauseRevision, CdcClauseSelection, CdcCriterion, CdcDossier,
-    CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcRevision, CdcSection, ProcurementPlan, WorkItem)
+    CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcRevision, ProcurementPlan, WorkItem)
 from .permissions import has_access, is_manager, require_manager
 from .services.cdc import (approve_dossier, archive_dossier, create_clause_revision, create_dossier,
     document_data, dossier_findings, dossier_scope, duplicate_dossier, edit_cdc_paragraph, estimate_totals,
     generate_cdc, review_dossier, review_state, save_clause, save_cdc_item, save_cdc_lot,
-    save_consultation, save_criterion, save_requirement, save_section, select_clause, stock_status,
+    save_consultation, save_criterion, save_requirement, select_clause, stock_status,
     submit_dossier)
 from .services.work import require_work, work_allowed
 from .views import add_validation
@@ -115,8 +115,7 @@ def cdc_detail(request, pk):
         'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
         'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False),
         'review_state': review_state(dossier),
-        'governance_counts': {'sections': dossier.structured_sections.filter(active=True).count(),
-            'requirements': CdcRequirement.objects.filter(item__lot__dossier=dossier, active=True).count(),
+        'governance_counts': {'requirements': CdcRequirement.objects.filter(item__lot__dossier=dossier, active=True).count(),
             'criteria': dossier.criteria.filter(active=True).count(),
             'clauses': dossier.clause_selections.filter(active=True).count()}},
         status=400 if request.method == 'POST' else 200)
@@ -336,35 +335,12 @@ def cdc_governance(request, pk):
         'dossier': dossier, 'work': dossier.work,
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True),
         'manager': is_manager(request.user),
-        'sections': dossier.structured_sections.order_by('position', 'id'),
         'criteria': dossier.criteria.select_related('lot').order_by('lot_id', 'position', 'id'),
         'clause_selections': dossier.clause_selections.select_related('revision__clause').order_by('position', 'id'),
         'review_state': review_state(dossier), 'findings': dossier_findings(dossier),
     })
 
 
-@login_required
-@require_http_methods(['GET', 'POST'])
-def cdc_section_edit(request, dossier_id, pk=None):
-    dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
-    require_work(request.user, dossier.work, edit=True)
-    section = get_object_or_404(CdcSection, pk=pk, dossier=dossier) if pk else None
-    initial = {'expected_version': dossier.version, 'position': dossier.structured_sections.count() + 1,
-        'active': True}
-    if section:
-        initial.update({name: getattr(section, name) for name in
-            ('key', 'title', 'content', 'position', 'active', 'required', 'source')})
-    form = forms.CdcSectionForm(request.POST or None, initial=initial)
-    if request.method == 'POST' and form.is_valid():
-        values = dict(form.cleaned_data)
-        expected, reason = values.pop('expected_version'), values.pop('reason')
-        try:
-            save_section(request.user, dossier.pk, expected=expected, values=values, pk=pk, reason=reason)
-        except ERRORS as error:
-            _error(form, error)
-        else:
-            return redirect('erp:cdc-governance', pk=dossier.pk)
-    return _form_response(request, form, dossier, _('Section structurée du cahier des charges'))
 
 
 @login_required
