@@ -156,6 +156,7 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     rows = list(target.items.filter(active=True).exclude(pk=item.pk if action == 'move' else None).order_by('position', 'id'))
     if not 1 <= position <= len(rows) + 1:
         raise ValidationError(_('La position doit se situer parmi les articles retenus du lot.'))
+    source_item_id = item.pk
     if action == 'move':
         CdcItem.objects.filter(pk=item.pk).update(active=False)
     else:
@@ -169,6 +170,7 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     item.version = 1
     item.full_clean()
     item.save()
+    _copy_requirements(source_item_id, item)
     rows.insert(position - 1, item)
     for n, row in enumerate(rows, 1):
         row.position = n
