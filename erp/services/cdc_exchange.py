@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.lot_workbook import MAX_FILE, build_workbook, parse_workbook
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
-                        CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview)
+                        CdcItem, CdcLot, CdcRequirement, CdcRevision, CdcWorkbookPreview)
 from erp.permissions import require_manager
 from .cdc import _dossier, _revision, document_data, dossier_scope
 from .common import check_version
@@ -224,11 +224,30 @@ def restore_revision(user, pk, *, expected, reason):
             'selected_version': version, 'selected_by': user, 'reason': reason[:500]})
         clause_ids.append(clause.pk)
     dossier.clause_selections.exclude(clause_id__in=clause_ids).delete()
+    requirement_keys = []
+    restored_requirements = {}
+    for value in governance.get('requirements', []):
+        item = CdcItem.objects.get(lot_id=value['lot'], source_key=value['item_key'])
+        requirement, _ = CdcRequirement.objects.update_or_create(item=item, code=value['code'], defaults={
+            'kind': value['kind'], 'statement': value['statement'], 'evidence': value['evidence'],
+            'verification': value['verification'], 'justification': value['justification'],
+            'position': value['position'], 'active': True})
+        requirement_keys.append((item.pk, value['code']))
+        restored_requirements[(str(item.lot_id), item.source_key, value['code'])] = requirement
+    active_items = CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True)
+    CdcRequirement.objects.filter(item__in=active_items).exclude(
+        pk__in=[row.pk for row in restored_requirements.values()]).update(active=False)
     criteria_codes = []
     for value in governance.get('criteria', []):
         lot = dossier.lots.filter(pk=value['lot']).first() if value.get('lot') else None
+        requirement = None
+        if value.get('requirement_code'):
+            requirement = restored_requirements.get((
+                value.get('requirement_lot'), value.get('requirement_item_key'), value['requirement_code']))
+            if requirement is None:
+                raise ValidationError(_('La révision référence une exigence structurée introuvable.'))
         CdcCriterion.objects.update_or_create(dossier=dossier, code=value['code'], defaults={
-            'lot': lot, 'category': value['category'], 'title': value['title'],
+            'lot': lot, 'requirement': requirement, 'category': value['category'], 'title': value['title'],
             'description': value['description'], 'expected_evidence': value['expected_evidence'],
             'min_score': Decimal(value['min_score']) if value['min_score'] is not None else None,
             'max_score': Decimal(value['max_score']) if value['max_score'] is not None else None,
