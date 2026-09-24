@@ -57,7 +57,12 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.dossier.work.save(update_fields=['status'])
         self.grant(Capability.REVIEW_CDC_TECHNICAL, user=self.second)
         self.client.force_login(self.second)
-        self.assertEqual(self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk])).status_code, 200)
+        detail = self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertNotContains(detail, 'Délégation et suivi')
+        self.assertEqual(self.client.get(reverse('erp:cdc-governance', args=[self.dossier.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse('erp:resource-documents',
+            args=['work', self.dossier.work_id])).status_code, 200)
         self.assertEqual(self.client.get(reverse('erp:cdc-item-edit',
             args=[self.item.lot_id, self.item.pk])).status_code, 403)
         review = self.client.get(reverse('erp:cdc-review', args=[self.dossier.pk]))
