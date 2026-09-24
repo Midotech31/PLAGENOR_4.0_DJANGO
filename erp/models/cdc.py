@@ -87,6 +87,7 @@ class CdcRevision(ImmutableRecord):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     data = models.JSONField()
     estimates = models.JSONField(default=list)
+    governance = models.JSONField(default=dict)
     sha256 = models.CharField(max_length=64)
     reason = models.CharField(max_length=500, blank=True)
 
