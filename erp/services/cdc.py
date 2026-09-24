@@ -99,13 +99,14 @@ def _revision(user, dossier, reason=''):
 
 @transaction.atomic
 def create_dossier(user, *, family, reference, title, assignee=None, due_on=None,
-                   priority='NORMAL', allow_costs=False, instructions=''):
+                   priority='NORMAL', location=None, category=None, allow_costs=False, instructions=''):
     require_manager(user)
     data = initial_data(family)
     data['reference'] = reference.strip()
     validate_data(data, family)
     work = create_work(user, kind=WorkItem.Kind.CDC, title=title, assignee=assignee,
-        due_on=due_on, priority=priority, allow_costs=allow_costs, instructions=instructions)
+        due_on=due_on, priority=priority, location=location, category=category,
+        allow_costs=allow_costs, instructions=instructions)
     dossier = CdcDossier(work=work, family=family, reference=reference.strip(), data=data)
     dossier.full_clean()
     dossier.save()
@@ -130,7 +131,8 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     if not reason.strip():
         raise ValidationError(_('Justifiez la duplication du cahier des charges.'))
     duplicate = create_dossier(user, family=source.family, reference=reference, title=title,
-        assignee=assignee, due_on=due_on, priority=priority, allow_costs=allow_costs, instructions=instructions)
+        assignee=assignee, due_on=due_on, priority=priority, location=source.work.location,
+        category=source.work.category, allow_costs=allow_costs, instructions=instructions)
     CdcItem.objects.filter(lot__dossier=duplicate).delete()
     duplicate.lots.all().delete()
     duplicate.data = copy.deepcopy(source.data)
