@@ -19,7 +19,7 @@ from erp.cdc.consultation import FIELDS, validate_consultation
 from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
-from erp.models import (Article, CdcApproval, CdcClauseSelection, CdcDossier, CdcGeneration,
+from erp.models import (Article, CdcApproval, CdcClauseSelection, CdcCriterion, CdcDossier, CdcGeneration,
                         CdcItem, CdcLot, CdcRevision, LocationClosure, Party, StockContainer,
                         Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
@@ -139,9 +139,11 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     duplicate.data['reference'] = duplicate.reference
     duplicate.data.setdefault('consultation', {})['confirmed'] = False
     duplicate.save(update_fields=['data', 'updated_at'])
+    lot_map = {}
     for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
         lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
             name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
+        lot_map[original_lot.pk] = lot
         for original in original_lot.items.filter(active=True).order_by('position', 'id'):
             CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
                 article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
@@ -152,6 +154,18 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
                 supplier=original.supplier if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
+    for selection in source.clause_selections.select_related('clause', 'selected_version'):
+        CdcClauseSelection.objects.create(dossier=duplicate, clause=selection.clause,
+            selected_version=selection.selected_version, selected_by=user, reason=reason[:500])
+    for criterion in source.criteria.all().order_by('position', 'code'):
+        CdcCriterion.objects.create(dossier=duplicate,
+            lot=lot_map.get(criterion.lot_id) if criterion.lot_id else None,
+            code=criterion.code, category=criterion.category, title=criterion.title,
+            description=criterion.description, expected_evidence=criterion.expected_evidence,
+            min_score=criterion.min_score, max_score=criterion.max_score, weight=criterion.weight,
+            threshold=criterion.threshold, formula=criterion.formula, rounding_rule=criterion.rounding_rule,
+            eliminatory=criterion.eliminatory, source=criterion.source, justification=criterion.justification,
+            position=criterion.position, active=criterion.active)
     _revision(user, duplicate, reason)
     audit(user, source, 'duplicated_to', reason=str(duplicate.pk))
     audit(user, duplicate, 'duplicated_from', reason=str(source.pk))
