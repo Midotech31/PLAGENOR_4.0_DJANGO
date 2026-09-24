@@ -76,6 +76,8 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         detail = self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk]))
         self.assertEqual(detail.status_code, 200)
         self.assertNotContains(detail, 'Délégation et suivi')
+        self.assertNotContains(detail, '1250,00')
+        self.assertNotContains(detail, '1250.00')
         self.assertEqual(self.client.get(reverse('erp:cdc-governance', args=[self.dossier.pk])).status_code, 200)
         self.assertEqual(self.client.get(reverse('erp:resource-documents',
             args=['work', self.dossier.work_id])).status_code, 200)
@@ -91,6 +93,11 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(CdcReviewDecision.objects.filter(dossier=self.dossier,
             actor=self.second, stage=CdcReviewDecision.Stage.TECHNICAL).exists())
+
+        self.grant(Capability.REVIEW_CDC_FINANCIAL, user=self.second)
+        financial = self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk]))
+        self.assertEqual(financial.status_code, 200)
+        self.assertContains(financial, '1250')
 
         self.assertIn(self.client.get(reverse('erp:cdc-approve',
             args=[self.dossier.pk])).status_code, (403, 404))
