@@ -16,13 +16,13 @@ from . import cdc_forms as forms
 from .cdc.catalog import controls, document, effective_edits
 from .cdc.docengine import DocumentError
 from .models import (CdcClause, CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot,
-                     CdcRevision, ProcurementPlan, WorkItem)
+                     CdcRequirement, CdcRevision, ProcurementPlan, WorkItem)
 from .permissions import has_access, is_manager, require_manager
 from .services.cdc import (approve_dossier, archive_dossier, create_dossier, document_data, dossier_scope,
     duplicate_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc, save_cdc_item, save_cdc_lot,
     save_consultation, stock_status, submit_dossier)
 from .services.cdc_governance import (criteria_findings, publish_clause, review_revision,
-    review_summary, save_criterion, select_clause)
+    review_summary, save_criterion, save_requirement, select_clause)
 from .services.work import require_work, work_allowed
 from .views import add_validation
 
@@ -114,7 +114,10 @@ def cdc_detail(request, pk):
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
         'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
         'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False),
-        'criteria_count': dossier.criteria.filter(active=True).count(), 'review_summary': review_summary(dossier)},
+        'criteria_count': dossier.criteria.filter(active=True).count(),
+        'requirements_count': CdcRequirement.objects.filter(item__lot__dossier=dossier,
+            item__lot__active=True, item__active=True, active=True).count(),
+        'review_summary': review_summary(dossier)},
         status=400 if request.method == 'POST' else 200)
 
 
@@ -447,3 +450,37 @@ def cdc_criteria_export(request, pk):
     response['Cache-Control'] = 'private, no-store'
     response['X-Content-Type-Options'] = 'nosniff'
     return response
+
+
+@login_required
+@require_GET
+def cdc_requirements(request, pk):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    rows = CdcRequirement.objects.filter(item__lot__dossier=dossier).select_related(
+        'item', 'item__lot').order_by('item__lot__position', 'item__position', 'position', 'code')
+    return render(request, 'erp/cdc_requirements.html', {
+        'dossier': dossier, 'requirements': rows, 'findings': criteria_findings(dossier),
+        'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True),
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_requirement_edit(request, pk, requirement_id=None):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    require_work(request.user, dossier.work, edit=True)
+    requirement = (get_object_or_404(CdcRequirement.objects.select_related('item__lot'),
+        pk=requirement_id, item__lot__dossier=dossier) if requirement_id else CdcRequirement())
+    form = forms.CdcRequirementForm(request.POST or None, instance=requirement,
+        user=request.user, dossier=dossier)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        expected, reason = values.pop('expected_version'), values.pop('reason')
+        try:
+            save_requirement(request.user, dossier, expected=expected, values=values,
+                pk=requirement.pk if requirement_id else None, reason=reason)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-requirements', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Exigence technique structurée'))
