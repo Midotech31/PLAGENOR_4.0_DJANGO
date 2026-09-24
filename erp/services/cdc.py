@@ -22,7 +22,7 @@ from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
 from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcClauseSelection,
                         CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement,
-                        CdcReviewDecision, CdcRevision, LocationClosure, StockContainer,
+                        CdcReviewDecision, CdcRevision, LocationClosure, Party, StockContainer,
                         Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, permitted, require, require_manager
 from .catalog import convert_quantity
@@ -32,7 +32,7 @@ from .work import _transition, create_work, require_work, work_allowed, work_sco
 
 
 ITEM_FIELDS = {'designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'}
-ESTIMATE_FIELDS = {'estimated_price', 'tax_rate', 'price_source', 'currency'}
+ESTIMATE_FIELDS = {'estimate_supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency'}
 CDC_REVIEW_CAPABILITY = {
     CdcReviewDecision.Stage.TECHNICAL: Capability.REVIEW_CDC_TECHNICAL,
     CdcReviewDecision.Stage.ADMIN_LEGAL: Capability.REVIEW_CDC_ADMIN,
@@ -105,6 +105,8 @@ def _estimates(dossier):
              'article_snapshot': item.article_snapshot, 'lot': str(item.lot_id), 'active': item.active,
              'quantity': str(item.quantity), 'purchase_unit': str(item.purchase_unit_id) if item.purchase_unit_id else None,
              'base_factor': str(item.base_factor) if item.base_factor is not None else None,
+             'supplier': str(item.estimate_supplier_id) if item.estimate_supplier_id else None,
+             'supplier_snapshot': snapshot(item.estimate_supplier) if item.estimate_supplier_id else None,
              'price': str(item.estimated_price) if item.estimated_price is not None else None,
              'tax_rate': str(item.tax_rate) if item.tax_rate is not None else None,
              'currency': item.currency, 'source': item.price_source}
@@ -464,6 +466,7 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
                 purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
                 quantity=original.quantity, details=original.details,
+                estimate_supplier=original.estimate_supplier if copy_estimates and allow_costs else None,
                 estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
@@ -591,6 +594,10 @@ def save_cdc_item(user, lot_id, *, expected, values, pk=None, article=None, purc
     item.currency = item.currency.strip().upper()
     if len(item.currency) != 3 or not item.currency.isascii() or not item.currency.isalpha():
         raise ValidationError(_('Code de devise à trois lettres requis.'))
+    if item.estimate_supplier_id:
+        supplier = Party.objects.get(pk=item.estimate_supplier_id)
+        if not supplier.active or not supplier.is_supplier:
+            raise ValidationError(_('Sélectionnez un fournisseur actif du référentiel commun.'))
     if item.estimated_price is not None and not item.price_source.strip():
         raise ValidationError(_('Renseignez la source du prix estimatif.'))
     if item.article_id and item.unit_label != item.purchase_unit.name:
