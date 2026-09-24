@@ -64,11 +64,6 @@ def document_data(dossier):
         lots.append({'id': str(lot.pk), 'number': position, 'name': lot.name,
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
-    data['structured_sections'] = [
-        {'key': section.key, 'title': section.title, 'content': section.content,
-         'position': section.position, 'required': section.required, 'source': section.source}
-        for section in dossier.structured_sections.filter(active=True).order_by('position', 'id')
-    ]
     data['requirements'] = [
         {'item': str(requirement.item_id), 'position': requirement.position, 'kind': requirement.kind,
          'statement': requirement.statement, 'evidence': requirement.evidence,
@@ -166,12 +161,6 @@ def governance_findings(dossier):
                     'field': 'criteria' if lot_id is None else f'lot:{lot_id}',
                     'source': 'CDC Toolkit',
                     'message': str(_('Les pondérations actives doivent totaliser exactement 100 points par périmètre.'))})
-
-    for section in dossier.structured_sections.filter(active=True, required=True):
-        if not section.content.strip():
-            findings.append({'severity': 'error', 'code': 'required-section-empty',
-                'field': f'section:{section.pk}', 'source': 'CDC Toolkit',
-                'message': str(_('Une section obligatoire active ne peut pas être vide.'))})
 
     for selection in dossier.clause_selections.filter(active=True).select_related('revision'):
         if selection.revision.status != CdcClauseRevision.Status.ACTIVE:
