@@ -282,6 +282,8 @@ def edit_cdc_paragraph(user, pk, *, expected, paragraph_id, value, reason):
     check_version(dossier, expected)
     if not reason.strip():
         raise ValidationError(_('Justifiez la modification de cette clause documentaire.'))
+    if CdcClauseSelection.objects.filter(dossier=dossier, clause__paragraph_id=paragraph_id).exists():
+        raise ValidationError(_('Ce paragraphe est piloté par la bibliothèque de clauses versionnées. Changez sa version depuis la bibliothèque.'))
     data = copy.deepcopy(dossier.data)
     data.setdefault('paragraphs', {})[paragraph_id] = value
     dossier.data = data
