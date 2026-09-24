@@ -49,9 +49,21 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.refresh()
         self.item.refresh_from_db()
         self.assertEqual(self.item.estimate_supplier_id, self.party.pk)
-        estimate = self.dossier.revisions.order_by('-number').first().estimates[0]
+        source_revision = self.dossier.revisions.order_by('-number').first()
+        estimate = source_revision.estimates[0]
         self.assertEqual(estimate['supplier'], str(self.party.pk))
         self.assertEqual(estimate['supplier_snapshot']['code'], self.party.code)
+
+        self.refresh()
+        save_cdc_item(self.operator, self.item.lot_id, expected=self.dossier.version, pk=self.item.pk,
+            values={'estimate_supplier': None, 'estimated_price': None, 'tax_rate': None,
+                'price_source': '', 'currency': 'DZD'}, reason='Retrait temporaire de l’estimation')
+        self.refresh()
+        restore_revision(self.ops, source_revision.pk, expected=self.dossier.version,
+            reason='Restaurer la provenance fournisseur')
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estimate_supplier_id, self.party.pk)
+        self.assertEqual(self.item.estimated_price, Decimal('1250.00'))
 
         self.dossier.work.status = WorkItem.Status.SUBMITTED
         self.dossier.work.save(update_fields=['status'])
