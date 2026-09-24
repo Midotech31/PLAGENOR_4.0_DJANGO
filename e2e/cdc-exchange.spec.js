@@ -118,3 +118,90 @@ test('CDC native lifecycle is integrated with PLAGENOR documents and controlled 
   await expect(page.locator('html')).toHaveAttribute('dir','rtl');
   await audit(page);
 });
+
+
+test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', async ({page}, info) => {
+  test.setTimeout(120000);
+  expect((await page.request.post('/__e2e__/session/admin_ops/')).status()).toBe(204);
+  await page.goto('/erp/cdc/new/');
+  await page.locator('.topbar button[name=language][value=fr]').click();
+  await page.locator('[name=family]').selectOption('equipment');
+  const number = {chromium:8301,firefox:8302,'mobile-chromium':8303}[info.project.name];
+  await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
+  await page.locator('[name=title]').fill(`CDC gouvernance ${info.project.name}`);
+  await submit(page,'.erp-form button[type=submit]');
+  const dossierURL = page.url();
+
+  await page.locator('.erp-card').first().click();
+  const firstItem = page.locator('tbody tr').first();
+  await firstItem.locator('details summary').first().click();
+  await firstItem.getByRole('link',{name:'Ajouter une exigence',exact:true}).click();
+  await page.locator('[name=position]').fill('1');
+  await page.locator('[name=kind]').selectOption('ELIMINATORY');
+  await page.locator('[name=statement]').fill('Pureté minimale documentée');
+  await page.locator('[name=evidence]').fill('Certificat d’analyse');
+  await page.locator('[name=verification_method]').fill('Contrôle documentaire à la réception');
+  await page.locator('[name=justification]').fill('Critère critique pour la méthode analytique');
+  await page.locator('[name=active]').check();
+  await page.locator('[name=reason]').fill('Exigence validée par le responsable');
+  await submit(page,'.erp-form button[type=submit]');
+  await expect(page).toContainText('Pureté minimale documentée');
+
+  await page.goto(dossierURL);
+  await page.getByRole('link',{name:'Exigences, critères, clauses et revues',exact:true}).click();
+  await audit(page);
+  await page.getByRole('link',{name:'Ajouter un critère',exact:true}).click();
+  await page.locator('[name=code]').fill('TECH');
+  await page.locator('[name=title]').fill('Conformité technique');
+  await page.locator('[name=method]').selectOption('BINARY');
+  await page.locator('[name=weight]').fill('100');
+  await page.locator('[name=evidence]').fill('Mémoire technique');
+  await page.locator('[name=position]').fill('1');
+  await page.locator('[name=active]').check();
+  await page.locator('[name=reason]').fill('Grille d’évaluation validée');
+  await submit(page,'.erp-form button[type=submit]');
+  await expect(page).toContainText('Conformité technique');
+
+  await page.getByRole('link',{name:'Bibliothèque de clauses',exact:true}).click();
+  await page.getByRole('link',{name:'Nouvelle clause',exact:true}).click();
+  await page.locator('[name=code]').fill(`E2E.${number}`);
+  await page.locator('[name=name]').fill('Clause réception');
+  await page.locator('[name=name_en]').fill('Acceptance clause');
+  await page.locator('[name=name_ar]').fill('بند الاستلام');
+  await page.locator('[name=title]').fill('Réception et conformité');
+  await page.locator('[name=active]').check();
+  await page.locator('[name=reason]').fill('Référentiel E2E');
+  await submit(page,'button[type=submit]');
+  const row = page.locator('tbody tr').filter({hasText:`E2E.${number}`});
+  await row.getByRole('link',{name:'Nouvelle révision',exact:true}).click();
+  await page.locator('[name=text_fr]').fill('La conformité est vérifiée à la réception.');
+  await page.locator('[name=text_en]').fill('Compliance is checked on receipt.');
+  await page.locator('[name=text_ar]').fill('يتم التحقق من المطابقة عند الاستلام.');
+  await page.locator('[name=source_reference]').fill('Décision ESSBO E2E');
+  await page.locator('[name=activate]').check();
+  await submit(page,'button[type=submit]');
+
+  await page.goto(dossierURL);
+  await page.getByRole('link',{name:'Exigences, critères, clauses et revues',exact:true}).click();
+  await page.getByRole('link',{name:'Ajouter une clause validée',exact:true}).click();
+  const option = page.locator('[name=revision] option').filter({hasText:`E2E.${number}`});
+  await page.locator('[name=revision]').selectOption(await option.getAttribute('value'));
+  await page.locator('[name=position]').fill('1');
+  await page.locator('[name=mandatory]').check();
+  await page.locator('[name=active]').check();
+  await page.locator('[name=reason]').fill('Clause obligatoire pour ce dossier');
+  await submit(page,'button[type=submit]');
+  await expect(page).toContainText('Réception et conformité');
+
+  await page.reload();
+  await expect(page).toContainText('Conformité technique');
+  await expect(page).toContainText('Réception et conformité');
+  await audit(page);
+
+  for (const language of ['en','ar']) {
+    await page.locator(`.topbar button[name=language][value=${language}]`).click();
+    if (language === 'ar') await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+    await audit(page);
+  }
+  await page.screenshot({path:info.outputPath('cdc-toolkit-governance.png'),fullPage:true});
+});
