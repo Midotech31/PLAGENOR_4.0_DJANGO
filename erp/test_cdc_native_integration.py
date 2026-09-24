@@ -40,7 +40,8 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             values={'quantity': Decimal(amount), 'estimated_price': Decimal(10),
                     'tax_rate': Decimal(19), 'price_source': 'Observation validée',
                     'currency': 'DZD'},
-            article=self.article, purchase_unit=self.unit, reason='Article canonique')
+            article=self.article, purchase_unit=self.unit, supplier=self.party, supplier_provided=True,
+            reason='Article canonique')
         dossier.refresh_from_db()
         return dossier
 
@@ -114,6 +115,10 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         line = plan.lines.get()
         self.assertEqual(line.article_id, self.article.pk)
         self.assertEqual(line.proposed_quantity, 7)
+        self.assertEqual(line.supplier_id, self.party.pk)
+        self.assertEqual(line.estimated_price, 10)
+        self.assertEqual(line.tax_rate, 19)
+        self.assertEqual(line.price_source, 'Observation validée')
         self.assertEqual(plan_from_cdc(self.ops, dossier.pk, expected=dossier.version,
             plan_reference='IGNORED', year=timezone.localdate().year,
             reason='Idempotent').pk, plan.pk)
@@ -164,7 +169,7 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         decide_plan_line(self.operator, line.pk, expected=plan.version,
             values={'retained_quantity': 20, 'included': True,
                     'lot_name': 'Besoins analytiques', 'priority': 'CRITICAL',
-                    'estimated_price': 10, 'tax_rate': 19, 'currency': 'DZD',
+                    'supplier': self.party, 'estimated_price': 10, 'tax_rate': 19, 'currency': 'DZD',
                     'price_source': 'Devis', 'decision_reason': 'Manque confirmé'})
         plan.refresh_from_db()
         submit_plan(self.operator, plan.pk, expected=plan.version,
@@ -177,6 +182,7 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             reference='73/SME/SDFM/SG/ESSBO/2026', family='reagents',
             assignee=self.operator)
         self.assertEqual(dossier.procurement_plan.pk, plan.pk)
+        self.assertEqual(CdcItem.objects.get(lot__dossier=dossier, article=self.article).supplier_id, self.party.pk)
         plan.refresh_from_db()
 
         order = create_order(self.ops, plan.pk, expected=plan.version,
