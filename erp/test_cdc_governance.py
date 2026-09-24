@@ -13,7 +13,7 @@ from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCrit
                         CdcDossier, CdcItem, CdcRequirement, CdcReviewDecision, WorkItem)
 from erp.services.cdc import (create_dossier, document_data, duplicate_dossier,
     edit_cdc_paragraph, save_cdc_item)
-from erp.services.cdc_exchange import restore_revision
+from erp.services.cdc_exchange import add_lot, arrange_item, restore_revision
 from erp.services.cdc_governance import (apply_clause_selections, criteria_findings,
     governance_snapshot, publish_clause, review_revision, review_summary, save_criterion,
     save_requirement, select_clause)
@@ -344,3 +344,142 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(self.dossier.clause_selections.get().selected_version_id, version1.pk)
         self.assertEqual(self.dossier.criteria.get(code='TECH-01').weight, Decimal('100'))
         self.assertEqual(CdcItem.objects.get(pk=item.pk).supplier_id, self.party.pk)
+
+
+    def test_structured_requirements_validate_generate_snapshot_and_score_linkage(self):
+        with self.assertRaisesRegex(ValidationError, 'Justifiez'):
+            save_requirement(self.ops, self.dossier, expected=self.dossier.version,
+                values=self.requirement_values(), reason='')
+        with self.assertRaisesRegex(ValidationError, 'preuve attendue'):
+            save_requirement(self.ops, self.dossier, expected=self.dossier.version,
+                values=self.requirement_values(evidence=''), reason='Test incomplet')
+        with self.assertRaisesRegex(ValidationError, 'éliminatoire'):
+            save_requirement(self.ops, self.dossier, expected=self.dossier.version,
+                values=self.requirement_values(kind=CdcRequirement.Kind.ELIMINATORY,
+                    justification=''), reason='Test éliminatoire')
+        other = create_dossier(self.ops, family='equipment',
+            reference='85/SME/SDFM/SG/ESSBO/2026', title='Autre CDC')
+        with self.assertRaisesRegex(ValidationError, 'article actif'):
+            save_requirement(self.ops, self.dossier, expected=self.dossier.version,
+                values=self.requirement_values(item=other.lots.first().items.first()),
+                reason='Mauvais dossier')
+
+        requirement, revision = save_requirement(self.operator, self.dossier,
+            expected=self.dossier.version, values=self.requirement_values(),
+            reason='Exigence vérifiable')
+        self.refresh()
+        self.assertEqual(revision.governance['requirements'][0]['code'], 'REQ-01')
+        self.assertIn('Performance minimale vérifiable',
+            document_data(self.dossier)['lot_catalog']['lots'][0]['items'][0]['specifications'])
+        self.assertFalse(any(row['id'].startswith('REQUIREMENT_') for row in criteria_findings(self.dossier)))
+
+        scored_values = self.requirement_values(code='REQ-SCORE', kind=CdcRequirement.Kind.SCORED,
+            statement='Performance notée')
+        scored, _ = save_requirement(self.operator, self.dossier, expected=self.dossier.version,
+            values=scored_values, reason='Exigence notée')
+        self.refresh()
+        self.assertTrue(any(row['id'] == 'REQUIREMENT_SCORING' for row in criteria_findings(self.dossier)))
+        criterion_values = self.criterion_values(requirement=scored)
+        criterion, criterion_revision = save_criterion(self.operator, self.dossier,
+            expected=self.dossier.version, values=criterion_values, reason='Lien de notation')
+        self.refresh()
+        self.assertFalse(any(row['id'] == 'REQUIREMENT_SCORING' for row in criteria_findings(self.dossier)))
+        self.assertEqual(criterion_revision.governance['criteria'][0]['requirement_code'], 'REQ-SCORE')
+
+        updated, _ = save_requirement(self.operator, self.dossier, expected=self.dossier.version,
+            pk=requirement.pk, values=self.requirement_values(statement='Performance minimale révisée'),
+            reason='Clarification technique')
+        self.assertEqual(updated.version, 2)
+
+    def test_criteria_scope_and_requirement_scope_are_strict(self):
+        requirement, _ = save_requirement(self.operator, self.dossier,
+            expected=self.dossier.version, values=self.requirement_values(), reason='Exigence locale')
+        self.refresh()
+        _, _ = save_criterion(self.operator, self.dossier, expected=self.dossier.version,
+            values=self.criterion_values(requirement=requirement), reason='Critère local')
+        self.refresh()
+        global_values = self.criterion_values(lot=None, requirement=None, code='GLOBAL-01',
+            title='Critère global', weight=Decimal('100'))
+        _, _ = save_criterion(self.operator, self.dossier, expected=self.dossier.version,
+            values=global_values, reason='Critère global')
+        self.refresh()
+        self.assertTrue(any(row['id'] == 'CRITERIA_SCOPE_MIXED' for row in criteria_findings(self.dossier)))
+
+        second = create_dossier(self.ops, family='equipment',
+            reference='86/SME/SDFM/SG/ESSBO/2026', title='CDC hors périmètre')
+        foreign_req, _ = save_requirement(self.ops, second, expected=second.version,
+            values={**self.requirement_values(), 'item': second.lots.first().items.first(),
+                    'code': 'FOREIGN'}, reason='Exigence externe')
+        self.refresh()
+        with self.assertRaisesRegex(ValidationError, 'appartenir à ce cahier'):
+            save_criterion(self.operator, self.dossier, expected=self.dossier.version,
+                values=self.criterion_values(code='BAD-REQ', requirement=foreign_req),
+                reason='Lien invalide')
+
+    def test_requirements_follow_lot_reuse_item_duplication_and_controlled_dossier_duplication(self):
+        requirement, _ = save_requirement(self.operator, self.dossier,
+            expected=self.dossier.version, values=self.requirement_values(), reason='Exigence source')
+        self.refresh()
+        source_lot = self.dossier.lots.first()
+        reused = add_lot(self.operator, self.dossier.pk, expected=self.dossier.version,
+            name='Lot réutilisé', source=source_lot, reason='Réutilisation technique')
+        self.refresh()
+        reused_item = reused.items.filter(active=True).first()
+        self.assertEqual(reused_item.requirements.get().statement, requirement.statement)
+
+        duplicated_item = arrange_item(self.operator, source_lot.items.filter(active=True).first().pk,
+            expected=self.dossier.version, destination=reused, action='duplicate',
+            position=reused.items.filter(active=True).count() + 1, reason='Duplication contrôlée')
+        self.refresh()
+        self.assertEqual(duplicated_item.requirements.get().code, 'REQ-01')
+
+        duplicate = duplicate_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
+            reference='87/SME/SDFM/SG/ESSBO/2026', title='CDC copie exigences',
+            assignee=self.second, reason='Nouvelle procédure')
+        copied = CdcRequirement.objects.filter(item__lot__dossier=duplicate, code='REQ-01')
+        self.assertGreaterEqual(copied.count(), 1)
+        self.assertNotEqual(copied.first().item_id, requirement.item_id)
+
+    def test_requirement_revision_restore_restores_text_and_criterion_link(self):
+        requirement, source_revision = save_requirement(self.operator, self.dossier,
+            expected=self.dossier.version, values=self.requirement_values(), reason='Exigence initiale')
+        self.refresh()
+        criterion, source_revision = save_criterion(self.operator, self.dossier,
+            expected=self.dossier.version,
+            values=self.criterion_values(requirement=requirement), reason='Critère lié')
+        self.refresh()
+        original_revision = source_revision
+        save_requirement(self.operator, self.dossier, expected=self.dossier.version,
+            pk=requirement.pk, values=self.requirement_values(statement='Texte provisoire'),
+            reason='Modification provisoire')
+        self.refresh()
+        restored = restore_revision(self.ops, original_revision.pk, expected=self.dossier.version,
+            reason='Restauration gouvernance complète')
+        self.refresh()
+        restored_requirement = CdcRequirement.objects.get(item=requirement.item, code='REQ-01')
+        self.assertEqual(restored_requirement.statement, 'Performance minimale vérifiable')
+        self.assertEqual(self.dossier.criteria.get(code='TECH-01').requirement_id,
+            restored_requirement.pk)
+        self.assertEqual(restored.governance['requirements'][0]['statement'],
+            'Performance minimale vérifiable')
+
+    def test_requirement_http_and_export_surfaces_are_native(self):
+        self.client.force_login(self.operator)
+        list_url = reverse('erp:cdc-requirements', args=[self.dossier.pk])
+        self.assertEqual(self.client.get(list_url).status_code, 200)
+        create_url = reverse('erp:cdc-requirement-new', args=[self.dossier.pk])
+        self.assertEqual(self.client.get(create_url).status_code, 200)
+        payload = {key: (value.pk if hasattr(value, 'pk') else value)
+            for key, value in self.requirement_values().items()}
+        payload.update(expected_version=self.dossier.version, reason='Création HTTP')
+        response = self.client.post(create_url, payload)
+        self.assertEqual(response.status_code, 302)
+        self.refresh()
+        requirement = CdcRequirement.objects.get(item__lot__dossier=self.dossier, code='REQ-01')
+        edit_url = reverse('erp:cdc-requirement-edit', args=[self.dossier.pk, requirement.pk])
+        self.assertEqual(self.client.get(edit_url).status_code, 200)
+        export = self.client.get(reverse('erp:cdc-criteria-export', args=[self.dossier.pk]))
+        payload_xlsx = b''.join(export.streaming_content)
+        book = load_workbook(io.BytesIO(payload_xlsx), data_only=True)
+        self.assertEqual(book['Exigences']['C2'].value, 'REQ-01')
+        self.assertEqual(book['Exigences']['E2'].value, 'Performance minimale vérifiable')
