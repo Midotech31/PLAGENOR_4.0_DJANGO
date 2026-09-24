@@ -129,6 +129,7 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
         if source.dossier.family != dossier.family:
             raise ValidationError(_('Réutilisez un lot de la même famille documentaire.'))
         for item in source.items.filter(active=True):
+            source_item_id = item.pk
             item.pk = None
             item.lot = lot
             item.source_key = 'new-' + str(uuid.uuid4())
@@ -138,6 +139,7 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
             item.estimated_price = item.tax_rate = None
             item.price_source = ''
             item.save()
+            _copy_requirements(source_item_id, item)
     _revision(user, dossier, reason)
     return lot
 
