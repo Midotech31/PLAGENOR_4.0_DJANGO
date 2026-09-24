@@ -13,6 +13,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='cdcitem',
+            name='estimate_supplier',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT,
+                related_name='cdc_estimates', to='erp.party', verbose_name='Fournisseur de référence'),
+        ),
         migrations.CreateModel(
             name='ProcurementCdcItemLink',
             fields=[
