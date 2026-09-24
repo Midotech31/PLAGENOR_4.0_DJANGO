@@ -1699,3 +1699,27 @@ msgstr "تبادل الحصص عبر Excel"
 
 msgid "Équipements scientifiques"
 msgstr "التجهيزات العلمية"
+
+msgid "Sélectionnez un article retenu, un lot du dossier et une opération justifiée."
+msgstr "اختر مادة معتمدة وحصة من هذا الملف وعملية مبررة."
+
+msgid "La position doit se situer parmi les articles retenus du lot."
+msgstr "يجب أن يكون الموضع ضمن المواد المعتمدة في الحصة."
+
+msgid "Déplacer"
+msgstr "نقل"
+
+msgid "Dupliquer sans les prix"
+msgstr "نسخ دون الأسعار"
+
+msgid "Lot de destination"
+msgstr "الحصة المستهدفة"
+
+msgid "Position dans le lot"
+msgstr "الموضع في الحصة"
+
+msgid "Déplacer ou dupliquer un article"
+msgstr "نقل مادة أو نسخها"
+
+msgid "Déplacer ou dupliquer"
+msgstr "نقل أو نسخ"

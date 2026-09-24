@@ -13,9 +13,9 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .cdc.docengine import DocumentError
 from .cdc_forms import CdcLotForm
-from .models import CdcLot, CdcRevision, CdcWorkbookPreview
+from .models import CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview
 from .services.cdc import document_data, dossier_scope
-from .services.cdc_exchange import (add_lot, apply_workbook, export_workbook, preview_workbook,
+from .services.cdc_exchange import (add_lot, apply_workbook, arrange_item, export_workbook, preview_workbook,
                                    restore_revision, set_lot_active)
 from .services.work import require_work, work_allowed
 from .views import add_validation
@@ -40,6 +40,12 @@ class ConfirmForm(OperationForm):
     expected_version = forms.IntegerField(widget=forms.HiddenInput)
     reason = forms.CharField(label=_('Justification'), max_length=500)
     confirm = forms.BooleanField(label=_('Je confirme cette opération'))
+
+
+class ArrangeItemForm(ConfirmForm):
+    action = forms.ChoiceField(label=_('Opération'), choices=[('move', _('Déplacer')), ('duplicate', _('Dupliquer sans les prix'))])
+    destination = forms.ModelChoiceField(label=_('Lot de destination'), queryset=CdcLot.objects.none())
+    position = forms.IntegerField(label=_('Position dans le lot'), min_value=1)
 
 
 def _error(form, error):
@@ -140,6 +146,29 @@ def lot_create(request, pk):
         else:
             return redirect('erp:cdc-detail', pk=pk)
     return _form(request, form, dossier, _('Ajouter ou réutiliser un lot'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def item_arrange(request, pk):
+    item = get_object_or_404(CdcItem.objects.select_related('lot__dossier__work'), pk=pk,
+        lot__dossier__in=dossier_scope(request.user), active=True, lot__active=True)
+    dossier = item.lot.dossier
+    require_work(request.user, dossier.work, edit=True)
+    position = list(item.lot.items.filter(active=True).order_by('position', 'id').values_list('pk', flat=True)).index(item.pk) + 1
+    form = ArrangeItemForm(request.POST or None, initial={'expected_version': dossier.version,
+        'destination': item.lot_id, 'position': position, 'action': 'move'})
+    form.fields['destination'].queryset = dossier.lots.filter(active=True)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        values.pop('confirm')
+        try:
+            result = arrange_item(request.user, pk, expected=values.pop('expected_version'), **values)
+        except (ValidationError, DocumentError, IntegrityError) as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-lot', pk=result.lot_id)
+    return _form(request, form, dossier, _('Déplacer ou dupliquer un article'))
 
 
 @login_required

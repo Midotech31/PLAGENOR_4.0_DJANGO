@@ -4,6 +4,7 @@ from . import identification, report_views, preparation_views, safety_views, ale
 
 app_name = 'erp'
 urlpatterns = [
+    path('cdc-items/<uuid:pk>/arrange/', cdc_exchange_views.item_arrange, name='cdc-item-arrange'),
     path('', views.index, name='index'),
     path('identify/',identification.identify,name='identify'),
     path('identify/<slug:kind>/<uuid:pk>/',identification.identify_target,name='identify-target'),

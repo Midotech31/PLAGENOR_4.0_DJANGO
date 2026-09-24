@@ -1717,3 +1717,27 @@ msgstr "Exchange lots with Excel"
 
 msgid "Équipements scientifiques"
 msgstr "Scientific equipment"
+
+msgid "Sélectionnez un article retenu, un lot du dossier et une opération justifiée."
+msgstr "Select an active item, a lot in this dossier and a justified operation."
+
+msgid "La position doit se situer parmi les articles retenus du lot."
+msgstr "The position must be within the active items of the lot."
+
+msgid "Déplacer"
+msgstr "Move"
+
+msgid "Dupliquer sans les prix"
+msgstr "Duplicate without prices"
+
+msgid "Lot de destination"
+msgstr "Destination lot"
+
+msgid "Position dans le lot"
+msgstr "Position in the lot"
+
+msgid "Déplacer ou dupliquer un article"
+msgstr "Move or duplicate an item"
+
+msgid "Déplacer ou dupliquer"
+msgstr "Move or duplicate"

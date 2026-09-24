@@ -11,6 +11,7 @@ CDC Studio 1.2.3 et cahier des charges ERP du 20 septembre 2026.
 | Trois familles institutionnelles | ERP → Cahiers des charges → Créer : équipements, réactifs, travaux |
 | Variables propres au dossier | Informations : référence, objets FR/AR, exercice, financement, délais, horaires, retrait |
 | Lots et articles | Édition technique, rattachement au catalogue commun, quantités et unités explicites |
+| Édition des articles | Recherche, duplication technique, déplacement et réordonnancement, retrait/réintégration et révisions |
 | Lots réutilisables | Ajouter ou réutiliser un lot existant de même famille, avec nouvelles identités ; prix à reconfirmer |
 | Retrait et réintégration | Retrait logique, données et anciennes révisions conservées |
 | Échanges Excel | Classeur rempli/vide, feuille par lot, identité signée, aperçu persistant, confirmation atomique |
@@ -46,6 +47,7 @@ CDC Studio 1.2.3 et cahier des charges ERP du 20 septembre 2026.
 L’authentification locale, le lanceur EXE, les profils SQLite et le fonctionnement
 hors ligne de CDC Studio ne sont pas dupliqués dans ce serveur web. Les comptes,
 PostgreSQL, sauvegardes et conversions Linux sont ceux de PLAGENOR.
+Les formulaires web enregistrent explicitement les modifications validées ; ils ne reproduisent pas la sauvegarde à chaque frappe de certaines versions du client local.
 La reprise d’une révision documentaire n’est pas une restauration globale de base.
 
 Les modèles complets restent soumis à leurs correspondances documentaires :

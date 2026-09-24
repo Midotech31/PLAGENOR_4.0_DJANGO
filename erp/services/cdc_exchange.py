@@ -132,6 +132,38 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
 
 
 @transaction.atomic
+def arrange_item(user, pk, *, expected, destination, action, position, reason):
+    identity = CdcItem.objects.select_related('lot').get(pk=pk)
+    dossier = _dossier(user, identity.lot.dossier_id, edit=True)
+    check_version(dossier, expected)
+    item = CdcItem.objects.get(pk=pk)
+    target = dossier.lots.filter(pk=destination.pk, active=True).first()
+    if action not in ('move', 'duplicate') or not reason.strip() or target is None or not item.active or not item.lot.active:
+        raise ValidationError(_('Sélectionnez un article retenu, un lot du dossier et une opération justifiée.'))
+    rows = list(target.items.filter(active=True).exclude(pk=item.pk if action == 'move' else None).order_by('position', 'id'))
+    if not 1 <= position <= len(rows) + 1:
+        raise ValidationError(_('La position doit se situer parmi les articles retenus du lot.'))
+    if action == 'move':
+        CdcItem.objects.filter(pk=item.pk).update(active=False)
+    else:
+        item.estimated_price = item.tax_rate = None
+        item.price_source = ''
+    item.pk = None
+    item.lot = target
+    item.source_key = 'new-' + str(uuid.uuid4())
+    item.position = position
+    item.version = 1
+    item.full_clean()
+    item.save()
+    rows.insert(position - 1, item)
+    for n, row in enumerate(rows, 1):
+        row.position = n
+        row.save(update_fields=['position'])
+    _revision(user, dossier, reason)
+    return item
+
+
+@transaction.atomic
 def set_lot_active(user, pk, *, expected, active, reason):
     lot = CdcLot.objects.get(pk=pk)
     dossier = _dossier(user, lot.dossier_id, edit=True)

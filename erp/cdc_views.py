@@ -130,8 +130,13 @@ def cdc_consultation(request, pk):
 @require_GET
 def cdc_lot(request, pk):
     lot = get_object_or_404(CdcLot.objects.select_related('dossier__work'), pk=pk, dossier__in=dossier_scope(request.user))
+    search = request.GET.get('q', '').strip()[:200]
+    items = lot.items.select_related('article', 'purchase_unit').order_by('position', 'id')
+    if search:
+        items = items.filter(Q(designation__icontains=search) | Q(specifications__icontains=search) |
+            Q(details__icontains=search) | Q(article__code__icontains=search))
     return render(request, 'erp/cdc_lot.html', {'lot': lot, 'dossier': lot.dossier,
-        'page': Paginator(lot.items.select_related('article', 'purchase_unit').order_by('position', 'id'), 30).get_page(request.GET.get('page')),
+        'q': search, 'page': Paginator(items, 30).get_page(request.GET.get('page')),
         'editable': work_allowed(request.user, lot.dossier.work, edit=True),
         'cost_access': work_allowed(request.user, lot.dossier.work, costs=True)})
 

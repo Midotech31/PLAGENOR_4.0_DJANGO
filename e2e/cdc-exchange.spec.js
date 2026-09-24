@@ -51,7 +51,26 @@ test('CDC Excel roundtrip persists only after confirmation and supports revision
   await page.locator('[name=confirm]').check();
   await submit(page,'.erp-form button[type=submit]');
   await expect(page.locator('.erp-heading')).toContainText('Révision 3');
+  await page.locator('.erp-card').first().click();
+  await page.getByRole('link',{name:'Déplacer ou dupliquer',exact:true}).first().click();
+  await page.locator('[name=action]').selectOption('duplicate');
+  await page.locator('[name=position]').fill('1');
+  await page.locator('[name=reason]').fill('Besoin technique supplémentaire');
+  await page.locator('[name=confirm]').check();
+  await submit(page,'.erp-form button[type=submit]');
+  await page.getByRole('link',{name:'Déplacer ou dupliquer',exact:true}).first().click();
+  const target = await page.locator('[name=destination] option').last().getAttribute('value');
+  await page.locator('[name=destination]').selectOption(target);
+  await page.locator('[name=position]').fill('1');
+  await page.locator('[name=reason]').fill('Répartition dans le second lot');
+  await page.locator('[name=confirm]').check();
+  await submit(page,'.erp-form button[type=submit]');
+  await expect(page).toHaveURL(new RegExp(`/erp/cdc-lots/${target}/$`));
+  await page.locator('input[name=q]').fill('introuvable-unique');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.locator('tbody tr')).toHaveCount(0);
   await page.goto(dossierURL);
+  await expect(page.locator('.erp-heading')).toContainText('Révision 5');
   await page.getByRole('link',{name:'Échanger les lots avec Excel',exact:true}).click();
   for (const [language,title] of [['en','Lots and items — Excel'],['ar','الحصص والمواد — Excel']]) {
     await page.locator(`.topbar button[name=language][value=${language}]`).click();

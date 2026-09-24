@@ -261,3 +261,62 @@ class CdcWorkbookTests(OperationFixtures, TestCase):
         self.dossier.refresh_from_db()
         set_lot_active(self.ops, lot.pk, expected=self.dossier.version, active=True, reason='Réintégration')
         self.assertIn('DZD', estimate_totals(self.ops, self.dossier)['currencies'])
+
+    def test_item_search_duplicate_move_and_recovery_preserve_history(self):
+        from erp.services.cdc_exchange import arrange_item
+        self.client.force_login(self.ops)
+        url = reverse('erp:cdc-lot', args=[self.item.lot_id])
+        self.assertEqual(self.client.get(url, {'q': 'introuvable-unique'}).context['page'].paginator.count, 0)
+        self.assertGreater(self.client.get(url, {'q': self.item.designation[:12]}).context['page'].paginator.count, 0)
+        self.item.estimated_price = 20; self.item.tax_rate = 9; self.item.price_source = 'Devis'; self.item.save()
+        original_id = self.item.pk
+        target = self.dossier.lots.last()
+        duplicate = arrange_item(self.operator, self.item.pk, expected=self.dossier.version,
+            destination=target, action='duplicate', position=1, reason='Besoin supplémentaire')
+        self.assertIsNone(duplicate.estimated_price)
+        self.assertIsNone(duplicate.tax_rate)
+        self.assertNotEqual(duplicate.source_key, self.item.source_key)
+        self.item.refresh_from_db(); self.assertTrue(self.item.active)
+        self.dossier.refresh_from_db()
+        moved = arrange_item(self.operator, self.item.pk, expected=self.dossier.version,
+            destination=target, action='move', position=2, reason='Répartition des besoins')
+        self.item.refresh_from_db(); self.assertFalse(self.item.active)
+        self.assertEqual(moved.estimated_price, 20)
+        self.assertEqual(target.items.filter(active=True).order_by('position')[1], moved)
+        self.dossier.refresh_from_db()
+        restore_revision(self.ops, self.initial.pk, expected=self.dossier.version, reason='Annulation des réorganisations')
+        self.item.refresh_from_db(); moved.refresh_from_db(); duplicate.refresh_from_db()
+        self.assertEqual(self.item.pk, original_id)
+        self.assertTrue(self.item.active)
+        self.assertFalse(moved.active); self.assertFalse(duplicate.active)
+        self.assertEqual(self.dossier.revisions.count(), 4)
+
+    def test_item_arrangement_http_and_invalid_destinations_are_atomic(self):
+        from erp.services.cdc_exchange import arrange_item
+        self.client.force_login(self.operator)
+        url = reverse('erp:cdc-item-arrange', args=[self.item.pk])
+        self.assertEqual(self.client.get(url).status_code, 200)
+        self.assertEqual(self.client.post(url, {}).status_code, 400)
+        values = {'expected_version': 999, 'action': 'move', 'destination': self.item.lot_id,
+            'position': 2, 'reason': 'Réordonner', 'confirm': 'on'}
+        self.assertEqual(self.client.post(url, values).status_code, 400)
+        values['expected_version'] = self.dossier.version
+        self.assertEqual(self.client.post(url, values).status_code, 302)
+        self.item.refresh_from_db(); self.assertFalse(self.item.active)
+        self.dossier.refresh_from_db()
+        with self.assertRaises(ValidationError):
+            arrange_item(self.ops, self.item.pk, expected=self.dossier.version, destination=self.item.lot,
+                action='move', position=1, reason='Article retiré')
+        self.assertEqual(self.client.get(url).status_code, 404)
+        current = self.item.lot.items.filter(active=True).first()
+        for action, reason, position in [('invalid', 'Motif', 1), ('move', '', 1), ('move', 'Motif', 9999)]:
+            with self.assertRaises(ValidationError):
+                arrange_item(self.ops, current.pk, expected=self.dossier.version, destination=current.lot,
+                    action=action, position=position, reason=reason)
+        other = create_dossier(self.ops, family='equipment', reference='650/SME/SDFM/SG/ESSBO/2026', title='Autre périmètre')
+        with self.assertRaises(ValidationError):
+            arrange_item(self.ops, current.pk, expected=self.dossier.version, destination=other.lots.first(),
+                action='move', position=1, reason='Lot étranger')
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get(reverse('erp:cdc-item-arrange', args=[current.pk])).status_code, 404)
+        self.assertEqual(self.dossier.revisions.count(), 2)
