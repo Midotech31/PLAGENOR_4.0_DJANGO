@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 from erp.cdc.catalog import document
 from erp.cdc.schedule_adapter import managed_ids
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
-                        CdcReviewDecision, CdcRevision, WorkItem)
+                        CdcRequirement, CdcReviewDecision, CdcRevision, WorkItem)
 from erp.permissions import is_manager, require_manager
 from notifications.models import Notification
 from .common import audit, check_version
@@ -43,8 +43,15 @@ def governance_snapshot(dossier):
         'version': row.selected_version.number,
         'sha256': row.selected_version.sha256,
     } for row in dossier.clause_selections.select_related('clause', 'selected_version').order_by('clause__code')]
+    requirements = [{
+        'item': str(row.item_id), 'code': row.code, 'kind': row.kind,
+        'statement': row.statement, 'evidence': row.evidence, 'verification': row.verification,
+        'justification': row.justification, 'position': row.position,
+    } for row in CdcRequirement.objects.filter(item__lot__dossier=dossier, item__lot__active=True,
+        item__active=True, active=True).select_related('item').order_by('item__lot__position', 'item__position', 'position', 'code')]
     criteria = [{
         'code': row.code, 'lot': str(row.lot_id) if row.lot_id else None,
+        'requirement': str(row.requirement_id) if row.requirement_id else None,
         'category': row.category, 'title': row.title, 'description': row.description,
         'expected_evidence': row.expected_evidence,
         'min_score': str(row.min_score) if row.min_score is not None else None,
@@ -54,22 +61,42 @@ def governance_snapshot(dossier):
         'eliminatory': row.eliminatory, 'source': row.source,
         'justification': row.justification, 'position': row.position,
     } for row in dossier.criteria.filter(active=True).order_by('position', 'code')]
-    return {'clauses': clauses, 'criteria': criteria}
+    return {'clauses': clauses, 'requirements': requirements, 'criteria': criteria}
 
 
 def criteria_findings(dossier):
-    criteria = list(dossier.criteria.filter(active=True).select_related('lot'))
+    criteria = list(dossier.criteria.filter(active=True).select_related('lot', 'requirement__item__lot'))
+    requirements = list(CdcRequirement.objects.filter(item__lot__dossier=dossier,
+        item__lot__active=True, item__active=True, active=True).select_related('item__lot'))
     findings = []
-    weighted = [row for row in criteria if row.weight > 0]
-    if weighted:
-        total = sum((row.weight for row in weighted), Decimal('0'))
-        if total != Decimal('100'):
-            findings.append({'severity': 'error', 'id': 'CRITERIA_WEIGHT_TOTAL',
-                'message': _('La somme des pondérations actives doit être exactement égale à 100 %.')})
+    global_rows = [row for row in criteria if row.lot_id is None]
+    lot_rows = [row for row in criteria if row.lot_id is not None]
+    if global_rows and lot_rows:
+        findings.append({'severity': 'error', 'id': 'CRITERIA_SCOPE_MIXED',
+            'message': _('Une grille globale et des grilles par lot ne peuvent pas être mélangées.')})
+    groups = [('GLOBAL', global_rows)] if global_rows else []
+    if lot_rows:
+        for lot_id in sorted({row.lot_id for row in lot_rows}, key=str):
+            groups.append((str(lot_id), [row for row in lot_rows if row.lot_id == lot_id]))
+    for scope, rows in groups:
+        weighted = [row for row in rows if row.weight > 0]
+        if weighted:
+            total = sum((row.weight for row in weighted), Decimal('0'))
+            if total != Decimal('100'):
+                findings.append({'severity': 'error', 'id': 'CRITERIA_WEIGHT_TOTAL',
+                    'scope': scope,
+                    'message': _('La somme des pondérations actives doit être exactement égale à 100 % pour chaque grille.')})
     for row in criteria:
         if row.lot_id and row.lot.dossier_id != dossier.pk:
             findings.append({'severity': 'error', 'id': 'CRITERION_LOT_SCOPE',
                 'message': _('Un critère est rattaché à un lot extérieur au cahier des charges.')})
+        if row.requirement_id:
+            if row.requirement.item.lot.dossier_id != dossier.pk:
+                findings.append({'severity': 'error', 'id': 'CRITERION_REQUIREMENT_SCOPE',
+                    'message': _('Un critère référence une exigence extérieure au cahier des charges.')})
+            if row.lot_id and row.requirement.item.lot_id != row.lot_id:
+                findings.append({'severity': 'error', 'id': 'CRITERION_REQUIREMENT_LOT',
+                    'message': _('Le critère et son exigence doivent appartenir au même lot.')})
         if row.threshold is not None and row.max_score is not None and row.threshold > row.max_score:
             findings.append({'severity': 'error', 'id': 'CRITERION_THRESHOLD',
                 'message': _('Le seuil d’un critère dépasse sa note maximale.')})
@@ -79,7 +106,45 @@ def criteria_findings(dossier):
         if not row.source.strip():
             findings.append({'severity': 'error', 'id': 'CRITERION_SOURCE',
                 'message': _('Chaque critère doit conserver sa source ou sa justification institutionnelle.')})
+    for row in requirements:
+        if row.kind != CdcRequirement.Kind.INFORMATIONAL and (not row.evidence.strip() or not row.verification.strip()):
+            findings.append({'severity': 'error', 'id': 'REQUIREMENT_VERIFICATION',
+                'message': _('Chaque exigence non informative doit préciser la preuve attendue et sa méthode de vérification.')})
+        if row.kind == CdcRequirement.Kind.ELIMINATORY and not row.justification.strip():
+            findings.append({'severity': 'error', 'id': 'REQUIREMENT_ELIMINATORY_REASON',
+                'message': _('Une exigence éliminatoire doit être explicitement justifiée.')})
+        if row.kind == CdcRequirement.Kind.SCORED and not dossier.criteria.filter(active=True, requirement=row).exists():
+            findings.append({'severity': 'error', 'id': 'REQUIREMENT_SCORING',
+                'message': _('Une exigence notée doit être reliée à un critère d’évaluation structuré.')})
     return findings
+
+
+@transaction.atomic
+def save_requirement(user, dossier, *, expected, values, pk=None, reason=''):
+    require_work(user, dossier.work, edit=True)
+    check_version(dossier, expected)
+    if not reason.strip():
+        raise ValidationError(_('Justifiez la création ou la modification de l’exigence.'))
+    requirement = (CdcRequirement.objects.select_for_update().select_related('item__lot').get(
+        pk=pk, item__lot__dossier=dossier) if pk else CdcRequirement())
+    item = values.get('item')
+    if item is None or item.lot.dossier_id != dossier.pk or not item.active or not item.lot.active:
+        raise ValidationError(_('L’exigence doit être rattachée à un article actif de ce cahier des charges.'))
+    for key, value in values.items():
+        setattr(requirement, key, value)
+    if requirement.kind != CdcRequirement.Kind.INFORMATIONAL:
+        if not requirement.evidence.strip() or not requirement.verification.strip():
+            raise ValidationError(_('Une exigence non informative doit préciser la preuve attendue et sa méthode de vérification.'))
+    if requirement.kind == CdcRequirement.Kind.ELIMINATORY and not requirement.justification.strip():
+        raise ValidationError(_('Une exigence éliminatoire doit être justifiée.'))
+    requirement.full_clean()
+    if pk:
+        requirement.version += 1
+    requirement.save()
+    from .cdc import _revision
+    revision = _revision(user, dossier, reason)
+    audit(user, dossier, 'requirement_saved', reason=requirement.code + ' — ' + reason[:430])
+    return requirement, revision
 
 
 def _editable_paragraph(dossier, paragraph_id):
@@ -155,6 +220,12 @@ def save_criterion(user, dossier, *, expected, values, pk=None, reason=''):
     lot = values.get('lot')
     if lot is not None and lot.dossier_id != dossier.pk:
         raise ValidationError(_('Le lot du critère doit appartenir à ce cahier des charges.'))
+    requirement = values.get('requirement')
+    if requirement is not None:
+        if requirement.item.lot.dossier_id != dossier.pk or not requirement.active:
+            raise ValidationError(_('L’exigence du critère doit appartenir à ce cahier des charges.'))
+        if lot is not None and requirement.item.lot_id != lot.pk:
+            raise ValidationError(_('Le critère et son exigence doivent appartenir au même lot.'))
     for key, value in values.items():
         setattr(criterion, key, value)
     if criterion.threshold is not None and criterion.max_score is not None and criterion.threshold > criterion.max_score:
@@ -200,7 +271,9 @@ def review_revision(user, revision, *, stage, decision, comment):
         decision=decision, actor=user, comment=comment.strip())
     if decision == CdcReviewDecision.Decision.CHANGES:
         _transition(user, dossier.work, WorkItem.Status.CHANGES_REQUESTED, comment.strip())
-    target = dossier.work.assignee if decision == CdcReviewDecision.Decision.CHANGES else dossier.work.created_by
+        target = None
+    else:
+        target = dossier.work.created_by
     audit(user, dossier, 'cdc_review_' + stage.lower(), reason=result.get_decision_display() + ' — ' + comment[:450])
     if target and target != user:
         Notification.objects.create(user=target, notification_type='STATUS_CHANGE',
