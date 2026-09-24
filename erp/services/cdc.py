@@ -20,7 +20,7 @@ from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
 from erp.models import (Article, CdcApproval, CdcClauseSelection, CdcCriterion, CdcDossier, CdcGeneration,
-                        CdcItem, CdcLot, CdcRevision, LocationClosure, Party, StockContainer,
+                        CdcItem, CdcLot, CdcRequirement, CdcRevision, LocationClosure, Party, StockContainer,
                         Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
@@ -52,12 +52,18 @@ def document_data(dossier):
     data = copy.deepcopy(dossier.data)
     data['reference'] = dossier.reference
     lots = []
-    for position, lot in enumerate(dossier.lots.filter(active=True).prefetch_related('items').order_by('position'), 1):
+    for position, lot in enumerate(dossier.lots.filter(active=True).prefetch_related('items__requirements').order_by('position'), 1):
         items = []
         for item in lot.items.all():
             if item.active:
+                requirements = [row for row in item.requirements.all() if row.active]
+                requirement_text = '\n'.join('• ' + row.statement.strip() for row in sorted(
+                    requirements, key=lambda row: (row.position, row.code)) if row.statement.strip())
+                specifications = item.specifications.strip()
+                if requirement_text:
+                    specifications = (specifications + '\n' + requirement_text).strip()
                 items.append({'key': item.source_key, 'position': len(items) + 1,
-                    'designation': item.designation, 'specifications': item.specifications,
+                    'designation': item.designation, 'specifications': specifications,
                     'unit': item.unit_label, 'packaging': item.packaging,
                     'quantity': format(item.quantity, 'f'), 'details': item.details})
         lots.append({'id': str(lot.pk), 'number': position, 'name': lot.name,
@@ -140,12 +146,13 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     duplicate.data.setdefault('consultation', {})['confirmed'] = False
     duplicate.save(update_fields=['data', 'updated_at'])
     lot_map = {}
+    item_map = {}
     for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
         lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
             name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
         lot_map[original_lot.pk] = lot
         for original in original_lot.items.filter(active=True).order_by('position', 'id'):
-            CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
+            copied_item = CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
                 article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
                 designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
                 purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
@@ -154,6 +161,15 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
                 supplier=original.supplier if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
+            item_map[original.pk] = copied_item
+            for requirement in original.requirements.filter(active=True).order_by('position', 'code'):
+                CdcRequirement.objects.create(item=copied_item, code=requirement.code, kind=requirement.kind,
+                    statement=requirement.statement, evidence=requirement.evidence, verification=requirement.verification,
+                    justification=requirement.justification, position=requirement.position, active=True)
+    requirement_map = {}
+    for source_item_id, copied_item in item_map.items():
+        for source_requirement in CdcRequirement.objects.filter(item_id=source_item_id, active=True):
+            requirement_map[source_requirement.pk] = copied_item.requirements.get(code=source_requirement.code)
     for selection in source.clause_selections.select_related('clause', 'selected_version'):
         CdcClauseSelection.objects.create(dossier=duplicate, clause=selection.clause,
             selected_version=selection.selected_version, selected_by=user, reason=reason[:500])
@@ -161,8 +177,9 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
         target_lot = lot_map.get(criterion.lot_id) if criterion.lot_id else None
         if criterion.lot_id and target_lot is None:
             continue
+        target_requirement = requirement_map.get(criterion.requirement_id) if criterion.requirement_id else None
         CdcCriterion.objects.create(dossier=duplicate,
-            lot=target_lot,
+            lot=target_lot, requirement=target_requirement,
             code=criterion.code, category=criterion.category, title=criterion.title,
             description=criterion.description, expected_evidence=criterion.expected_evidence,
             min_score=criterion.min_score, max_score=criterion.max_score, weight=criterion.weight,
@@ -375,7 +392,10 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
     if dossier.work.status != WorkItem.Status.SUBMITTED:
         raise ValidationError(_('Le dossier doit être soumis avant sa validation finale.'))
     generation = CdcGeneration.objects.select_related('revision').get(pk=generation_id, revision__dossier=dossier)
-    if dossier.criteria.filter(active=True).exists() or dossier.clause_selections.exists():
+    governed = (dossier.criteria.filter(active=True).exists() or dossier.clause_selections.exists() or
+        CdcRequirement.objects.filter(item__lot__dossier=dossier, item__lot__active=True,
+            item__active=True, active=True).exists())
+    if governed:
         from .cdc_governance import REVIEW_ORDER
         decisions = generation.revision.review_decisions.filter(decision='APPROVED')
         if set(decisions.values_list('stage', flat=True)) != set(REVIEW_ORDER):
