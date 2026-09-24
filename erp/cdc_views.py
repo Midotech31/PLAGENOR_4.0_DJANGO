@@ -249,14 +249,16 @@ def cdc_clauses(request, pk):
     from .cdc.schedule_adapter import managed_ids
     managed, tables = managed_ids(dossier.family)
     search = request.GET.get('q', '').casefold().strip()[:200]
+    selected_ids = set(dossier.clause_selections.values_list('clause__paragraph_id', flat=True))
     blocks = [{'id': row['id'], 'text': projected.get(row['id'], row['text']),
-               'editable': not row['guard'] and row['id'] not in managed}
+               'editable': not row['guard'] and row['id'] not in managed,
+               'library_managed': row['id'] in selected_ids}
               for row in document(dossier.family).source_index if row['text'].strip()]
     if search:
         blocks = [block for block in blocks if search in block['text'].casefold()]
     return render(request, 'erp/cdc_clauses.html', {'dossier': dossier, 'q': request.GET.get('q', '')[:200],
         'page': Paginator(blocks, 40).get_page(request.GET.get('page')),
-        'editable': work_allowed(request.user, dossier.work, edit=True)})
+        'editable': work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user)})
 
 
 @login_required
