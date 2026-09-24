@@ -157,9 +157,12 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     for selection in source.clause_selections.select_related('clause', 'selected_version'):
         CdcClauseSelection.objects.create(dossier=duplicate, clause=selection.clause,
             selected_version=selection.selected_version, selected_by=user, reason=reason[:500])
-    for criterion in source.criteria.all().order_by('position', 'code'):
+    for criterion in source.criteria.filter(active=True).order_by('position', 'code'):
+        target_lot = lot_map.get(criterion.lot_id) if criterion.lot_id else None
+        if criterion.lot_id and target_lot is None:
+            continue
         CdcCriterion.objects.create(dossier=duplicate,
-            lot=lot_map.get(criterion.lot_id) if criterion.lot_id else None,
+            lot=target_lot,
             code=criterion.code, category=criterion.category, title=criterion.title,
             description=criterion.description, expected_evidence=criterion.expected_evidence,
             min_score=criterion.min_score, max_score=criterion.max_score, weight=criterion.weight,
