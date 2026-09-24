@@ -49,29 +49,20 @@ CDC_READ_CAPABILITIES = (
 )
 
 
-def _capability_scope(user):
+def _review_grant_filter(user, capability, *, financial=False):
     condition = Q(pk__in=[])
-    for capability in CDC_READ_CAPABILITIES:
-        for grant in grants(user, capability):
-            if not grant.category_id and not grant.location_id:
-                return None
-            scope = Q()
-            if grant.category_id:
-                scope &= Q(work__category_id=grant.category_id)
-            if grant.location_id:
-                descendants = LocationClosure.objects.filter(
-                    ancestor_id=grant.location_id).values('descendant_id')
-                scope &= Q(work__location_id__in=descendants)
-            condition |= scope
+    for grant in grants(user, capability):
+        scope = Q(work__status__in=CDC_REVIEW_VISIBLE_STATES)
+        if financial:
+            scope &= Q(work__allow_costs=True)
+        if grant.category_id:
+            scope &= Q(work__category_id=grant.category_id)
+        if grant.location_id:
+            descendants = LocationClosure.objects.filter(
+                ancestor_id=grant.location_id).values('descendant_id')
+            scope &= Q(work__location_id__in=descendants)
+        condition |= scope
     return condition
-
-
-CDC_REVIEW_VISIBLE_STATES = (
-    WorkItem.Status.SUBMITTED,
-    WorkItem.Status.CHANGES_REQUESTED,
-    WorkItem.Status.APPROVED,
-)
-
 
 def _cdc_read_allowed(user, work):
     if work_allowed(user, work):
@@ -107,22 +98,15 @@ def dossier_scope(user):
     if is_manager(user):
         return qs
     own = Q(work__in=work_scope(user))
-    review = _capability_scope(user)
-    review_state = Q(work__status__in=CDC_REVIEW_VISIBLE_STATES)
-    financial_only = (
-        grants(user, Capability.REVIEW_CDC_FINANCIAL).exists()
-        and not any(grants(user, capability).exists() for capability in (
-            Capability.REVIEW_CDC_TECHNICAL,
-            Capability.REVIEW_CDC_ADMIN,
-            Capability.APPROVE_CDC,
-        ))
-    )
-    if review is None:
-        review_filter = review_state & (Q(work__allow_costs=True) if financial_only else Q())
-        return qs.filter(own | review_filter).distinct()
-    if financial_only:
-        review &= Q(work__allow_costs=True)
-    return qs.filter(own | (review_state & review)).distinct()
+    review = Q(pk__in=[])
+    for capability in (
+        Capability.REVIEW_CDC_TECHNICAL,
+        Capability.REVIEW_CDC_ADMIN,
+        Capability.APPROVE_CDC,
+    ):
+        review |= _review_grant_filter(user, capability)
+    review |= _review_grant_filter(user, Capability.REVIEW_CDC_FINANCIAL, financial=True)
+    return qs.filter(own | review).distinct()
 
 
 def _dossier(user, pk, *, edit=False):
