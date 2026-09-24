@@ -44,7 +44,8 @@ def governance_snapshot(dossier):
         'sha256': row.selected_version.sha256,
     } for row in dossier.clause_selections.select_related('clause', 'selected_version').order_by('clause__code')]
     requirements = [{
-        'item': str(row.item_id), 'item_key': row.item.source_key, 'lot': str(row.item.lot_id),
+        'item': str(row.item_id), 'item_key': row.item.source_key, 'item_label': row.item.designation,
+        'lot': str(row.item.lot_id), 'lot_label': row.item.lot.name,
         'code': row.code, 'kind': row.kind,
         'statement': row.statement, 'evidence': row.evidence, 'verification': row.verification,
         'justification': row.justification, 'position': row.position,
