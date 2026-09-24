@@ -78,4 +78,6 @@ test('CDC Excel roundtrip persists only after confirmation and supports revision
     await audit(page);
   }
   await page.screenshot({path:info.outputPath('cdc-excel-ar.png'),fullPage:true});
+  expect((await page.goto('/erp/planning/')).status()).toBe(200);
+  await audit(page);
 });

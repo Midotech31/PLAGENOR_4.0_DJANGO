@@ -320,3 +320,29 @@ class CdcWorkbookTests(OperationFixtures, TestCase):
         self.client.force_login(self.outsider)
         self.assertEqual(self.client.get(reverse('erp:cdc-item-arrange', args=[current.pk])).status_code, 404)
         self.assertEqual(self.dossier.revisions.count(), 2)
+
+    def test_unassigned_dossiers_remain_visible_across_planning_and_stock_workflows(self):
+        import uuid
+        from django.utils.translation import override
+        from erp.services.inventory import create_inventory
+        from erp.services.procurement import create_plan
+        from erp.services.planning import create_activity
+        work = self.dossier.work; work.assignee = None; work.save()
+        self.receive('UNASSIGNED')
+        campaign = create_inventory(self.ops, title='Inventaire sans responsable')
+        plan = create_plan(self.ops, reference='UNASSIGNED', year=timezone.localdate().year, title='Plan sans responsable')
+        start = timezone.now() - timedelta(minutes=5)
+        schedule = create_activity(self.ops, key=uuid.uuid4(), kind='CONTROL', title='Contrôle sans responsable',
+            assignee=None, starts_at=start, ends_at=start+timedelta(hours=1))
+        self.client.force_login(self.ops)
+        routes = [('erp:planning', []), ('erp:work-list', []), ('erp:work-detail', [work.pk]),
+            ('erp:activity-detail', [work.pk]), ('erp:activity-detail', [schedule.work_id]),
+            ('erp:cdc-list', []), ('erp:inventory-list', []), ('erp:inventory-detail', [campaign.pk]),
+            ('erp:procurement-list', []), ('erp:procurement-detail', [plan.pk])]
+        for language in ('fr', 'en', 'ar'):
+            with override(language):
+                for name, args in routes:
+                    with self.subTest(language=language, page=name):
+                        self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200)
+        work.status = 'SUBMITTED'; work.submitted_at = timezone.now(); work.save()
+        self.assertContains(self.client.get(reverse('erp:planning')), 'Non affecté')
