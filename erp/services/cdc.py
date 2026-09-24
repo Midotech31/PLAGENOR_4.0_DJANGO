@@ -512,15 +512,17 @@ def create_dossier(user, *, family, reference, title, assignee=None, due_on=None
 
 @transaction.atomic
 def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, due_on=None,
-                      priority='NORMAL', allow_costs=False, instructions='', copy_estimates=False, reason=''):
+                      priority='NORMAL', location=None, category=None, allow_costs=False,
+                      instructions='', copy_estimates=False, reason=''):
     require_manager(user)
     source = _dossier(user, pk)
     check_version(source, expected)
     if not reason.strip():
         raise ValidationError(_('Justifiez la duplication du cahier des charges.'))
     duplicate = create_dossier(user, family=source.family, reference=reference, title=title,
-        assignee=assignee, due_on=due_on, priority=priority, location=source.work.location,
-        category=source.work.category, allow_costs=allow_costs, instructions=instructions)
+        assignee=assignee, due_on=due_on, priority=priority,
+        location=location or source.work.location, category=category or source.work.category,
+        allow_costs=allow_costs, instructions=instructions)
     CdcItem.objects.filter(lot__dossier=duplicate).delete()
     duplicate.lots.all().delete()
     duplicate.data = copy.deepcopy(source.data)
