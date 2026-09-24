@@ -65,9 +65,13 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(self.item.estimate_supplier_id, self.party.pk)
         self.assertEqual(self.item.estimated_price, Decimal('1250.00'))
 
+        self.grant(Capability.REVIEW_CDC_TECHNICAL, user=self.second)
+        self.client.force_login(self.second)
+        self.assertIn(self.client.get(reverse('erp:cdc-detail',
+            args=[self.dossier.pk])).status_code, (403, 404))
+
         self.dossier.work.status = WorkItem.Status.SUBMITTED
         self.dossier.work.save(update_fields=['status'])
-        self.grant(Capability.REVIEW_CDC_TECHNICAL, user=self.second)
         self.client.force_login(self.second)
         detail = self.client.get(reverse('erp:cdc-detail', args=[self.dossier.pk]))
         self.assertEqual(detail.status_code, 200)
