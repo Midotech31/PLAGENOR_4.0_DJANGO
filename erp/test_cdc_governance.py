@@ -1,4 +1,7 @@
 from decimal import Decimal
+import io
+
+from openpyxl import load_workbook
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase, override_settings
@@ -252,7 +255,21 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(self.client.post(publish_url, clause_payload).status_code, 302)
         self.refresh()
         self.assertTrue(self.dossier.clause_selections.exists())
-        self.assertContains(self.client.get(reverse('erp:cdc-clauses', args=[self.dossier.pk])), 'bibliothèque versionnée')
+        clauses_page = self.client.get(reverse('erp:cdc-clauses', args=[self.dossier.pk]))
+        self.assertContains(clauses_page, 'bibliothèque versionnée')
+        selection = self.dossier.clause_selections.select_related('clause', 'selected_version').get()
+        select_url = reverse('erp:cdc-clause-select', args=[self.dossier.pk, selection.clause_id])
+        self.assertEqual(self.client.get(select_url).status_code, 200)
+        self.assertEqual(self.client.post(select_url, {'expected_version': self.dossier.version,
+            'version': selection.selected_version_id, 'reason': 'Version confirmée'}).status_code, 302)
+        self.refresh()
+
+        export = self.client.get(reverse('erp:cdc-criteria-export', args=[self.dossier.pk]))
+        self.assertEqual(export.status_code, 200)
+        payload = b''.join(export.streaming_content)
+        book = load_workbook(io.BytesIO(payload), data_only=True)
+        self.assertEqual(book['Critères']['A2'].value, 'TECH-01')
+        self.assertEqual(book['Traçabilité']['B1'].value, self.dossier.reference)
 
         self.dossier.work.status = WorkItem.Status.SUBMITTED
         self.dossier.work.save(update_fields=['status'])
