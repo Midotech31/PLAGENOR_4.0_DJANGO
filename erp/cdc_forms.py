@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
-from .models import Article, CdcDossier, CdcGeneration, CdcItem, Unit, WorkItem
+from .models import Article, CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcReviewDecision, Party, Unit, WorkItem
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -73,7 +73,7 @@ class CdcItemForm(VersionedForm):
     class Meta:
         model = CdcItem
         fields = ['article', 'purchase_unit', 'designation', 'specifications', 'unit_label', 'packaging',
-                  'quantity', 'details', 'active', 'estimated_price', 'tax_rate', 'price_source', 'currency']
+                  'quantity', 'details', 'active', 'supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']
 
     def __init__(self, *args, dossier, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,15 +83,16 @@ class CdcItemForm(VersionedForm):
             articles = articles.filter(category_id=dossier.work.category_id)
         self.fields['article'].queryset = articles
         self.fields['purchase_unit'].queryset = Unit.objects.filter(active=True)
+        self.fields['supplier'].queryset = Party.objects.filter(active=True, is_supplier=True)
         for name in ('designation', 'unit_label'):
             self.fields[name].required = False
         if not work_allowed(self.user, dossier.work, costs=True):
-            for name in ('estimated_price', 'tax_rate', 'price_source', 'currency'):
+            for name in ('supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency'):
                 del self.fields[name]
         groups = [(_('Référentiel commun'), ['article', 'purchase_unit', 'refresh_catalog']),
                   (_('Besoin technique'), ['designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'])]
         if 'estimated_price' in self.fields:
-            groups.append((_('Estimation interne'), ['estimated_price', 'tax_rate', 'price_source', 'currency']))
+            groups.append((_('Estimation interne'), ['supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency']))
         groups.append((_('Historique'), ['reason']))
         self.groups = [{'title': label, 'fields': [self[field] for field in fields]} for label, fields in groups]
 
@@ -153,3 +154,35 @@ class CdcProcurementForm(OperationForm):
     year=forms.IntegerField(label=_('Année du plan'),min_value=2000,max_value=2100)
     assignee=forms.ModelChoiceField(label=_('Responsable du plan'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
     reason=forms.CharField(label=_('Justification / origine du besoin'),max_length=500,widget=forms.Textarea)
+
+
+class CdcCriterionForm(VersionedForm):
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, widget=forms.Textarea)
+
+    class Meta:
+        model = CdcCriterion
+        fields = ['lot', 'code', 'category', 'title', 'description', 'expected_evidence',
+                  'min_score', 'max_score', 'weight', 'threshold', 'formula',
+                  'rounding_rule', 'eliminatory', 'source', 'justification', 'position', 'active']
+
+    def __init__(self, *args, dossier, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expected_version'].initial = dossier.version
+        self.fields['lot'].queryset = dossier.lots.filter(active=True).order_by('position')
+
+
+class CdcClausePublishForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    paragraph_id = forms.CharField(widget=forms.HiddenInput, max_length=160)
+    title = forms.CharField(label=_('Intitulé de la clause'), max_length=255)
+    category = forms.CharField(label=_('Catégorie'), max_length=80, required=False)
+    body = forms.CharField(label=_('Texte versionné'), max_length=100000, widget=forms.Textarea)
+    source = forms.CharField(label=_('Source / référence institutionnelle'), max_length=500)
+    mandatory = forms.BooleanField(label=_('Clause obligatoire'), required=False)
+    reason = forms.CharField(label=_('Justification'), max_length=500, widget=forms.Textarea)
+
+
+class CdcReviewForm(OperationForm):
+    stage = forms.ChoiceField(label=_('Étape de revue'), choices=CdcReviewDecision.Stage.choices)
+    decision = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Decision.choices)
+    comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
