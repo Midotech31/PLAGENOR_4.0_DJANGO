@@ -22,7 +22,7 @@ from .services.cdc import (approve_dossier, archive_dossier, create_dossier, doc
     duplicate_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc, save_cdc_item, save_cdc_lot,
     save_consultation, stock_status, submit_dossier)
 from .services.cdc_governance import (criteria_findings, publish_clause, review_revision,
-    review_summary, save_criterion)
+    review_summary, save_criterion, select_clause)
 from .services.work import require_work, work_allowed
 from .views import add_validation
 
@@ -402,3 +402,27 @@ def cdc_review(request, pk):
             messages.success(request, _('La décision de revue a été enregistrée dans l’historique de cette révision.'))
             return redirect('erp:cdc-detail', pk=dossier.pk)
     return _form_response(request, form, dossier, _('Revue structurée du cahier des charges'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_clause_select(request, pk, clause_id):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    require_work(request.user, dossier.work, edit=True)
+    clause = get_object_or_404(CdcClause, pk=clause_id, family=dossier.family, active=True)
+    current = dossier.clause_selections.filter(clause=clause).select_related('selected_version').first()
+    form = forms.CdcClauseSelectForm(request.POST or None, clause=clause, initial={
+        'expected_version': dossier.version,
+        'version': current.selected_version_id if current else clause.current_version_id,
+    })
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        try:
+            select_clause(request.user, dossier, expected=values.pop('expected_version'),
+                clause=clause, version=values.pop('version'), reason=values.pop('reason'))
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            messages.success(request, _('La version de clause sélectionnée est figée dans une nouvelle révision du CDC.'))
+            return redirect('erp:cdc-clauses', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Choisir une version approuvée de la clause'))
