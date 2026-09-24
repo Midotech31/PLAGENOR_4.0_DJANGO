@@ -48,7 +48,7 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
     def analytical_run(self, *, committed=True, amount=30, planned_on=None, code='CHAIN-RUN'):
         service = Service.objects.create(code=code, name='Chaîne native')
         member, _ = MemberProfile.objects.get_or_create(user=self.operator)
-        request = Request.objects.create(service=service, requester=self.outsider,
+        request = Request.objects.create(display_id='E2E-' + code, service=service, requester=self.outsider,
             assigned_to=member, title='Demande chaîne', status='IN_PROGRESS',
             sample_table=[{'sample_code': code + '-S1'}])
         profile = save_profile(self.ops, {'code': code + '-P', 'name': 'Nomenclature chaîne',
@@ -97,7 +97,7 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
         with self.assertRaises(ValidationError):
             archive_dossier(self.ops, dossier.pk, expected=archived.version,
                 reason='Deuxième archivage')
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             save_cdc_item(self.ops, dossier.lots.first().pk, expected=archived.version,
                 values={'quantity': 1})
         with self.assertRaises(ValidationError):
