@@ -10,13 +10,13 @@ from django.urls import reverse
 from erp.cdc.catalog import document
 from erp.cdc.schedule_adapter import managed_ids
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
-                        CdcDossier, CdcReviewDecision, WorkItem)
+                        CdcDossier, CdcItem, CdcRequirement, CdcReviewDecision, WorkItem)
 from erp.services.cdc import (create_dossier, document_data, duplicate_dossier,
     edit_cdc_paragraph, save_cdc_item)
 from erp.services.cdc_exchange import restore_revision
 from erp.services.cdc_governance import (apply_clause_selections, criteria_findings,
     governance_snapshot, publish_clause, review_revision, review_summary, save_criterion,
-    select_clause)
+    save_requirement, select_clause)
 from erp.services.work import create_work
 from erp.test_operations import OperationFixtures
 from notifications.models import Notification
@@ -50,6 +50,20 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
             'weight': Decimal('100'), 'threshold': Decimal('10'),
             'formula': '', 'rounding_rule': 'Deux décimales', 'eliminatory': False,
             'source': 'Cahier des charges institutionnel', 'justification': 'Critère requis',
+            'position': 1, 'active': True,
+        }
+        values.update(changes)
+        return values
+
+
+    def requirement_values(self, **changes):
+        values = {
+            'item': self.dossier.lots.first().items.filter(active=True).first(),
+            'code': 'REQ-01', 'kind': CdcRequirement.Kind.MANDATORY,
+            'statement': 'Performance minimale vérifiable',
+            'evidence': 'Fiche technique du fabricant',
+            'verification': 'Contrôle documentaire à la réception',
+            'justification': 'Besoin technique de la plateforme',
             'position': 1, 'active': True,
         }
         values.update(changes)
