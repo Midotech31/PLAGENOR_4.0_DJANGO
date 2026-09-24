@@ -17,6 +17,7 @@ from documents.pdf_converter import convert_docx_to_pdf
 from erp.cdc.catalog import controls, generate_document, initial_data, validate_data
 from erp.cdc.consultation import FIELDS, validate_consultation
 from erp.cdc.docengine import DocumentError, sha
+from erp.cdc.governance_annex import append_governance_annex
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
 from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcClauseSelection,
@@ -591,6 +592,12 @@ def generate_cdc(user, revision_id):
     if any(finding['severity'] == 'error' for finding in findings):
         raise ValidationError(_('La génération est bloquée par des incohérences du dossier.'))
     payload, report = generate_document(data)
+    payload, annex = append_governance_annex(payload, data, revision.number)
+    report['governance_annex'] = annex
+    if annex['status'] == 'GENERATED':
+        if 'word/document.xml' not in report.get('changed_parts', []):
+            report.setdefault('changed_parts', []).append('word/document.xml')
+        report['output_sha256'] = sha(payload)
     payload, layout = normalize_word_layout(payload)
     with tempfile.TemporaryDirectory(prefix='plagenor-cdc-') as directory:
         source = Path(directory) / ('cdc-' + str(revision.pk) + '.docx')
