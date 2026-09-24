@@ -5,7 +5,7 @@
   <p>{% trans 'Exigences rattachées aux articles canoniques du CDC, avec preuve et méthode de vérification.' %}</p></div>
   <a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a>
 </header>
-{% for finding in findings %}{% if finding.id|slice:':11' == 'REQUIREMENT_' %}
+{% for finding in findings %}{% if finding.id|slice:':12' == 'REQUIREMENT_' %}
 <article class="{% if finding.severity == 'error' %}erp-errors{% else %}erp-notice{% endif %}"><strong>{% trans 'Contrôle' %}</strong><p>{{ finding.message }}</p></article>
 {% endif %}{% endfor %}
 {% if editable %}<div class="erp-form-actions"><a class="btn btn-primary" href="{% url 'erp:cdc-requirement-new' pk=dossier.pk %}">{% trans 'Ajouter une exigence' %}</a></div>{% endif %}
