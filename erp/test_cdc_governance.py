@@ -64,6 +64,9 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
             publish_clause(self.ops, self.dossier, expected=self.dossier.version,
                 paragraph_id=protected['id'], title='Clause', body=protected['text'],
                 source='Source', reason='Motif')
+        with self.assertRaisesRegex(ValidationError, 'vide'):
+            publish_clause(self.ops, self.dossier, expected=self.dossier.version,
+                paragraph_id=self.block['id'], title='Clause', body=' ', source='Source', reason='Motif')
         with self.assertRaises(PermissionDenied):
             publish_clause(self.operator, self.dossier, expected=self.dossier.version,
                 paragraph_id=self.block['id'], title='Clause', body=self.block['text'],
@@ -152,13 +155,16 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(revision.governance['criteria'][0]['weight'], '100.00')
         self.assertEqual(revision2.governance['criteria'][0]['weight'], '60.00')
 
-        criterion.max_score = None
+        criterion.max_score = Decimal('10')
         criterion.formula = ''
         criterion.source = ''
         criterion.threshold = Decimal('999')
         criterion.save()
         ids = {row['id'] for row in criteria_findings(self.dossier)}
-        self.assertTrue({'CRITERION_METHOD', 'CRITERION_SOURCE'} <= ids)
+        self.assertTrue({'CRITERION_THRESHOLD', 'CRITERION_SOURCE'} <= ids)
+        criterion.max_score = None
+        criterion.save(update_fields=['max_score'])
+        self.assertTrue(any(row['id'] == 'CRITERION_METHOD' for row in criteria_findings(self.dossier)))
 
     def test_review_sequence_permissions_notifications_and_correction_loop(self):
         revision = self.dossier.revisions.get(number=self.dossier.revision_number)
@@ -168,6 +174,8 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.dossier.work.save(update_fields=['status'])
         with self.assertRaisesRegex(ValidationError, 'Étape'):
             review_revision(self.ops, revision, stage='UNKNOWN', decision='APPROVED', comment='OK')
+        with self.assertRaisesRegex(ValidationError, 'Décision'):
+            review_revision(self.operator, revision, stage='TECHNICAL', decision='UNKNOWN', comment='OK')
         with self.assertRaisesRegex(ValidationError, 'compte rendu'):
             review_revision(self.operator, revision, stage='TECHNICAL', decision='APPROVED', comment='')
         with self.assertRaisesRegex(ValidationError, 'étapes précédentes'):
@@ -184,6 +192,9 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(self.dossier.work.status, WorkItem.Status.CHANGES_REQUESTED)
         self.assertTrue(Notification.objects.filter(user=self.operator, link_url=reverse('erp:cdc-detail', args=[self.dossier.pk])).exists())
         self.assertEqual(len(review_summary(self.dossier)), 3)
+        empty = create_dossier(self.ops, family='works', reference='83/SME/SDFM/SG/ESSBO/2026', title='Résumé vide')
+        empty.revisions.all().update(number=2)
+        self.assertEqual(review_summary(empty), [])
 
         stale = revision
         self.dossier.work.status = WorkItem.Status.IN_PROGRESS
