@@ -13,28 +13,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='CdcSection',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('version', models.PositiveIntegerField(default=1, editable=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('key', models.CharField(max_length=80, verbose_name='Identifiant de section')),
-                ('title', models.CharField(max_length=200, verbose_name='Intitulé')),
-                ('content', models.TextField(blank=True, verbose_name='Contenu')),
-                ('position', models.PositiveSmallIntegerField(default=1)),
-                ('active', models.BooleanField(default=True, verbose_name='Inclure cette section')),
-                ('required', models.BooleanField(default=False, verbose_name='Section obligatoire')),
-                ('source', models.CharField(blank=True, max_length=500, verbose_name='Source / justification')),
-                ('dossier', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='structured_sections', to='erp.cdcdossier')),
-            ],
-            options={'ordering': ['position', 'id']},
-        ),
-        migrations.AddConstraint(
-            model_name='cdcsection',
-            constraint=models.UniqueConstraint(fields=('dossier', 'key'), name='erp_cdc_section_key'),
-        ),
+
         migrations.CreateModel(
             name='CdcRequirement',
             fields=[
