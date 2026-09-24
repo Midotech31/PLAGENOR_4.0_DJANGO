@@ -1,0 +1,19 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading">
+  <div><p class="erp-eyebrow">{{ dossier.reference }}</p><h1>{% trans 'Exigences techniques structurées' %}</h1>
+  <p>{% trans 'Exigences rattachées aux articles canoniques du CDC, avec preuve et méthode de vérification.' %}</p></div>
+  <a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a>
+</header>
+{% for finding in findings %}{% if finding.id|slice:':11' == 'REQUIREMENT_' %}
+<article class="{% if finding.severity == 'error' %}erp-errors{% else %}erp-notice{% endif %}"><strong>{% trans 'Contrôle' %}</strong><p>{{ finding.message }}</p></article>
+{% endif %}{% endfor %}
+{% if editable %}<div class="erp-form-actions"><a class="btn btn-primary" href="{% url 'erp:cdc-requirement-new' pk=dossier.pk %}">{% trans 'Ajouter une exigence' %}</a></div>{% endif %}
+<div class="erp-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Exigences techniques' %}">
+<table class="erp-table"><thead><tr><th>{% trans 'Lot / article' %}</th><th>{% trans 'Code' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Exigence' %}</th><th>{% trans 'Preuve attendue' %}</th><th>{% trans 'Vérification' %}</th></tr></thead>
+<tbody>{% for requirement in requirements %}<tr>
+<td>{{ requirement.item.lot.name }} · {{ requirement.item.designation }}</td>
+<td>{% if editable %}<a href="{% url 'erp:cdc-requirement-edit' pk=dossier.pk requirement_id=requirement.pk %}">{{ requirement.code }}</a>{% else %}{{ requirement.code }}{% endif %}</td>
+<td>{{ requirement.get_kind_display }}</td><td>{{ requirement.statement }}</td><td>{{ requirement.evidence|default:'—' }}</td><td>{{ requirement.verification|default:'—' }}</td>
+</tr>{% empty %}<tr><td colspan="6">{% trans 'Aucune exigence technique structurée.' %}</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
