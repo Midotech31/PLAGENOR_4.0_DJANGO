@@ -44,14 +44,18 @@ def governance_snapshot(dossier):
         'sha256': row.selected_version.sha256,
     } for row in dossier.clause_selections.select_related('clause', 'selected_version').order_by('clause__code')]
     requirements = [{
-        'item': str(row.item_id), 'code': row.code, 'kind': row.kind,
+        'item': str(row.item_id), 'item_key': row.item.source_key, 'lot': str(row.item.lot_id),
+        'code': row.code, 'kind': row.kind,
         'statement': row.statement, 'evidence': row.evidence, 'verification': row.verification,
         'justification': row.justification, 'position': row.position,
     } for row in CdcRequirement.objects.filter(item__lot__dossier=dossier, item__lot__active=True,
-        item__active=True, active=True).select_related('item').order_by('item__lot__position', 'item__position', 'position', 'code')]
+        item__active=True, active=True).select_related('item__lot').order_by('item__lot__position', 'item__position', 'position', 'code')]
     criteria = [{
         'code': row.code, 'lot': str(row.lot_id) if row.lot_id else None,
         'requirement': str(row.requirement_id) if row.requirement_id else None,
+        'requirement_code': row.requirement.code if row.requirement_id else None,
+        'requirement_item_key': row.requirement.item.source_key if row.requirement_id else None,
+        'requirement_lot': str(row.requirement.item.lot_id) if row.requirement_id else None,
         'category': row.category, 'title': row.title, 'description': row.description,
         'expected_evidence': row.expected_evidence,
         'min_score': str(row.min_score) if row.min_score is not None else None,
@@ -60,7 +64,7 @@ def governance_snapshot(dossier):
         'formula': row.formula, 'rounding_rule': row.rounding_rule,
         'eliminatory': row.eliminatory, 'source': row.source,
         'justification': row.justification, 'position': row.position,
-    } for row in dossier.criteria.filter(active=True).order_by('position', 'code')]
+    } for row in dossier.criteria.filter(active=True).select_related('requirement__item__lot').order_by('position', 'code')]
     return {'clauses': clauses, 'requirements': requirements, 'criteria': criteria}
 
 
