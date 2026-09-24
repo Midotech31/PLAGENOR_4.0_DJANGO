@@ -65,12 +65,12 @@ def document_data(dossier):
                      'name_ar': lot.name_ar, 'source_slot': lot.source_slot, 'items': items})
     data['lot_catalog'] = {'schema': 1, 'lots': lots}
     data['requirements'] = [
-        {'item': str(requirement.item_id), 'position': requirement.position, 'kind': requirement.kind,
+        {'item': str(requirement.item_id), 'item_key': requirement.item.source_key, 'lot': str(requirement.item.lot_id), 'position': requirement.position, 'kind': requirement.kind,
          'statement': requirement.statement, 'evidence': requirement.evidence,
          'verification_method': requirement.verification_method, 'justification': requirement.justification}
         for requirement in CdcRequirement.objects.filter(
             item__lot__dossier=dossier, item__active=True, item__lot__active=True, active=True
-        ).order_by('item__lot__position', 'item__position', 'position', 'id')
+        ).select_related('item__lot').order_by('item__lot__position', 'item__position', 'position', 'id')
     ]
     data['criteria'] = [
         {'code': criterion.code, 'lot': str(criterion.lot_id) if criterion.lot_id else None,
@@ -81,7 +81,7 @@ def document_data(dossier):
         for criterion in dossier.criteria.filter(active=True).order_by('lot_id', 'position', 'id')
     ]
     data['clauses'] = [
-        {'code': selection.revision.clause.code, 'revision': selection.revision.number,
+        {'code': selection.revision.clause.code, 'revision': selection.revision.number, 'revision_id': str(selection.revision_id),
          'title': selection.revision.clause.title, 'text_fr': selection.revision.text_fr,
          'text_en': selection.revision.text_en, 'text_ar': selection.revision.text_ar,
          'source': selection.revision.source_reference, 'mandatory': selection.mandatory,
@@ -319,6 +319,48 @@ def review_state(dossier):
                             for stage in required)}
 
 
+
+
+def restore_governance_snapshot(user, dossier, data):
+    """Restore the current structured CDC state from one immutable revision snapshot."""
+    CdcRequirement.objects.filter(item__lot__dossier=dossier, active=True).update(active=False)
+    item_by_key = {item.source_key: item for item in CdcItem.objects.filter(
+        lot__dossier=dossier, lot__active=True, active=True).select_related('lot')}
+    for row in data.get('requirements', []):
+        item = item_by_key.get(row.get('item_key'))
+        if item is None:
+            continue
+        CdcRequirement.objects.update_or_create(item=item, position=row['position'], defaults={
+            'kind': row['kind'], 'statement': row['statement'], 'evidence': row.get('evidence', ''),
+            'verification_method': row.get('verification_method', ''), 'justification': row.get('justification', ''),
+            'active': True})
+
+    dossier.criteria.update(active=False)
+    active_lots = {str(lot.pk): lot for lot in dossier.lots.filter(active=True)}
+    for row in data.get('criteria', []):
+        lot = active_lots.get(row.get('lot')) if row.get('lot') else None
+        CdcCriterion.objects.update_or_create(dossier=dossier, code=row['code'], defaults={
+            'lot': lot, 'title': row['title'], 'method': row['method'], 'weight': Decimal(row['weight']),
+            'threshold': Decimal(row['threshold']) if row.get('threshold') is not None else None,
+            'eliminatory': bool(row.get('eliminatory')), 'evidence': row.get('evidence', ''),
+            'position': row.get('position', 1), 'active': True})
+
+    dossier.clause_selections.update(active=False)
+    for row in data.get('clauses', []):
+        revision = None
+        if row.get('revision_id'):
+            revision = CdcClauseRevision.objects.filter(pk=row['revision_id']).first()
+        if revision is None:
+            revision = CdcClauseRevision.objects.filter(
+                clause__code=row.get('code'), number=row.get('revision')).first()
+        if revision is None:
+            continue
+        CdcClauseSelection.objects.update_or_create(dossier=dossier, revision=revision, defaults={
+            'position': row.get('position', 1), 'mandatory': bool(row.get('mandatory')),
+            'note': '', 'active': True})
+    audit(user, dossier, 'cdc_governance_restored')
+
+
 @transaction.atomic
 def create_dossier(user, *, family, reference, title, assignee=None, due_on=None,
                    priority='NORMAL', allow_costs=False, instructions=''):
@@ -359,11 +401,14 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     duplicate.data['reference'] = duplicate.reference
     duplicate.data.setdefault('consultation', {})['confirmed'] = False
     duplicate.save(update_fields=['data', 'updated_at'])
+    lot_map = {}
+    item_map = {}
     for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
         lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
             name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
-        for original in original_lot.items.filter(active=True).order_by('position', 'id'):
-            CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
+        lot_map[original_lot.pk] = lot
+        for original in original_lot.items.filter(active=True).prefetch_related('requirements').order_by('position', 'id'):
+            cloned = CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
                 article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
                 designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
                 purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
@@ -371,6 +416,20 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
+            item_map[original.pk] = cloned
+            for requirement in original.requirements.filter(active=True):
+                CdcRequirement.objects.create(item=cloned, position=requirement.position, kind=requirement.kind,
+                    statement=requirement.statement, evidence=requirement.evidence,
+                    verification_method=requirement.verification_method, justification=requirement.justification,
+                    active=True)
+    for criterion in source.criteria.filter(active=True).order_by('position', 'id'):
+        CdcCriterion.objects.create(dossier=duplicate, lot=lot_map.get(criterion.lot_id),
+            code=criterion.code, title=criterion.title, method=criterion.method, weight=criterion.weight,
+            threshold=criterion.threshold, eliminatory=criterion.eliminatory, evidence=criterion.evidence,
+            position=criterion.position, active=True)
+    for selection in source.clause_selections.filter(active=True).select_related('revision'):
+        CdcClauseSelection.objects.create(dossier=duplicate, revision=selection.revision,
+            position=selection.position, mandatory=selection.mandatory, note=selection.note, active=True)
     _revision(user, duplicate, reason)
     audit(user, source, 'duplicated_to', reason=str(duplicate.pk))
     audit(user, duplicate, 'duplicated_from', reason=str(source.pk))
