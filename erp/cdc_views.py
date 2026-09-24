@@ -23,7 +23,7 @@ from .services.cdc import (approve_dossier, archive_dossier, create_clause_revis
     generate_cdc, review_dossier, review_state, save_clause, save_cdc_item, save_cdc_lot,
     save_consultation, save_criterion, save_requirement, select_clause, stock_status,
     submit_dossier)
-from .services.work import require_work, work_allowed
+from .services.work import require_work, work_allowed, work_scope
 from .views import add_validation
 
 
@@ -118,7 +118,8 @@ def cdc_detail(request, pk):
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
         'work_access': work_allowed(request.user, dossier.work), 'can_review': can_review, 'can_approve': can_approve,
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
-        'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
+        'stock_status': stock_status(request.user,dossier),
+        'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier, work__in=work_scope(request.user)).first(),
         'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False),
         'review_state': review_state(dossier),
         'governance_counts': {'requirements': CdcRequirement.objects.filter(item__lot__dossier=dossier, active=True).count(),
