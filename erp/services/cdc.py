@@ -121,48 +121,84 @@ def _revision(user, dossier, reason=''):
 
 
 
-def governance_findings(dossier):
-    """Return CDC Toolkit controls that complement the document-template controls."""
+def governance_snapshot_findings(data):
+    """Validate only the immutable CDC Toolkit payload stored in one revision."""
     findings = []
-    for requirement in CdcRequirement.objects.filter(
-            item__lot__dossier=dossier, item__lot__active=True, item__active=True, active=True):
-        if requirement.kind != CdcRequirement.Kind.INFORMATIONAL:
-            if not requirement.evidence.strip():
+    requirements = data.get('requirements', [])
+    criteria = data.get('criteria', [])
+    clauses = data.get('clauses', [])
+    if not all(isinstance(value, list) for value in (requirements, criteria, clauses)):
+        return [{'severity': 'error', 'code': 'governance-structure', 'field': 'governance',
+            'source': 'CDC Toolkit', 'message': str(_('Les données CDC structurées de la révision sont invalides.'))}]
+    if len(requirements) + len(criteria) + len(clauses) > 5000:
+        findings.append({'severity': 'error', 'code': 'governance-size', 'field': 'governance',
+            'source': 'CDC Toolkit', 'message': str(_('Les données CDC structurées dépassent la limite autorisée.'))})
+        return findings
+
+    allowed_kinds = {value for value, _ in CdcRequirement.Kind.choices}
+    for row in requirements:
+        if not isinstance(row, dict) or row.get('kind') not in allowed_kinds or not str(row.get('statement', '')).strip():
+            findings.append({'severity': 'error', 'code': 'requirement-structure', 'field': 'requirements',
+                'source': 'CDC Toolkit', 'message': str(_('Une exigence structurée de la révision est invalide.'))})
+            continue
+        if row['kind'] != CdcRequirement.Kind.INFORMATIONAL:
+            if not str(row.get('evidence', '')).strip():
                 findings.append({'severity': 'error', 'code': 'requirement-evidence',
-                    'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                    'field': 'requirements', 'source': 'CDC Toolkit',
                     'message': str(_('Une exigence non informative doit préciser la preuve attendue.'))})
-            if not requirement.verification_method.strip():
+            if not str(row.get('verification_method', '')).strip():
                 findings.append({'severity': 'error', 'code': 'requirement-verification',
-                    'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                    'field': 'requirements', 'source': 'CDC Toolkit',
                     'message': str(_('Une exigence non informative doit préciser sa méthode de vérification.'))})
-        if requirement.kind == CdcRequirement.Kind.ELIMINATORY and not requirement.justification.strip():
+        if row['kind'] == CdcRequirement.Kind.ELIMINATORY and not str(row.get('justification', '')).strip():
             findings.append({'severity': 'error', 'code': 'requirement-eliminatory-justification',
-                'field': f'requirement:{requirement.pk}', 'source': 'CDC Toolkit',
+                'field': 'requirements', 'source': 'CDC Toolkit',
                 'message': str(_('Une exigence éliminatoire doit être explicitement justifiée.'))})
 
-    active_criteria = list(dossier.criteria.filter(active=True).select_related('lot'))
-    if active_criteria:
-        global_rows = [row for row in active_criteria if row.lot_id is None]
-        lot_rows = [row for row in active_criteria if row.lot_id is not None]
-        if global_rows and lot_rows:
-            findings.append({'severity': 'error', 'code': 'criteria-scope-mixed', 'field': 'criteria',
+    allowed_methods = {value for value, _ in CdcCriterion.Method.choices}
+    scopes = {}
+    global_seen = lot_seen = False
+    for row in criteria:
+        try:
+            weight = Decimal(str(row['weight']))
+        except (KeyError, TypeError, ValueError, ArithmeticError):
+            weight = Decimal('-1')
+        if (not isinstance(row, dict) or not str(row.get('code', '')).strip()
+                or not str(row.get('title', '')).strip() or row.get('method') not in allowed_methods
+                or weight < 0 or weight > 100):
+            findings.append({'severity': 'error', 'code': 'criterion-structure', 'field': 'criteria',
+                'source': 'CDC Toolkit', 'message': str(_('Un critère structuré de la révision est invalide.'))})
+            continue
+        scope = row.get('lot')
+        global_seen = global_seen or scope is None
+        lot_seen = lot_seen or scope is not None
+        scopes[scope] = scopes.get(scope, Decimal(0)) + weight
+        if row.get('eliminatory') and not str(row.get('evidence', '')).strip():
+            findings.append({'severity': 'error', 'code': 'criterion-evidence', 'field': 'criteria',
                 'source': 'CDC Toolkit',
-                'message': str(_('Ne mélangez pas une grille globale avec des grilles par lot.'))})
-        scopes = {}
-        for row in active_criteria:
-            scopes.setdefault(row.lot_id, Decimal(0))
-            scopes[row.lot_id] += row.weight
-            if row.eliminatory and not row.evidence.strip():
-                findings.append({'severity': 'error', 'code': 'criterion-evidence',
-                    'field': f'criterion:{row.pk}', 'source': 'CDC Toolkit',
-                    'message': str(_('Un critère éliminatoire doit préciser le justificatif attendu.'))})
-        for lot_id, total in scopes.items():
-            if total != Decimal('100'):
-                findings.append({'severity': 'error', 'code': 'criteria-total',
-                    'field': 'criteria' if lot_id is None else f'lot:{lot_id}',
-                    'source': 'CDC Toolkit',
-                    'message': str(_('Les pondérations actives doivent totaliser exactement 100 points par périmètre.'))})
+                'message': str(_('Un critère éliminatoire doit préciser le justificatif attendu.'))})
+    if global_seen and lot_seen:
+        findings.append({'severity': 'error', 'code': 'criteria-scope-mixed', 'field': 'criteria',
+            'source': 'CDC Toolkit', 'message': str(_('Ne mélangez pas une grille globale avec des grilles par lot.'))})
+    for scope, total in scopes.items():
+        if total != Decimal('100'):
+            findings.append({'severity': 'error', 'code': 'criteria-total',
+                'field': 'criteria' if scope is None else f'lot:{scope}', 'source': 'CDC Toolkit',
+                'message': str(_('Les pondérations actives doivent totaliser exactement 100 points par périmètre.'))})
 
+    for row in clauses:
+        if (not isinstance(row, dict) or not str(row.get('code', '')).strip()
+                or not isinstance(row.get('revision'), int) or row['revision'] < 1
+                or not str(row.get('text_fr', '')).strip() or not str(row.get('source', '')).strip()):
+            findings.append({'severity': 'error', 'code': 'clause-structure', 'field': 'clauses',
+                'source': 'CDC Toolkit', 'message': str(_('Une clause versionnée de la révision est invalide.'))})
+    return findings
+
+
+def governance_findings(dossier):
+    """Validate the current dossier and current clause-governance state."""
+    data = document_data(dossier)
+    findings = governance_snapshot_findings(data)
     for selection in dossier.clause_selections.filter(active=True).select_related('revision'):
         if selection.revision.status != CdcClauseRevision.Status.ACTIVE:
             findings.append({'severity': 'error', 'code': 'clause-not-active',
@@ -170,9 +206,15 @@ def governance_findings(dossier):
                 'message': str(_('Une clause retenue doit pointer vers une révision validée et active.'))})
     return findings
 
-
 def dossier_findings(dossier):
-    return [*controls(document_data(dossier)), *governance_findings(dossier)]
+    data = document_data(dossier)
+    findings = [*controls(data), *governance_snapshot_findings(data)]
+    for selection in dossier.clause_selections.filter(active=True).select_related('revision'):
+        if selection.revision.status != CdcClauseRevision.Status.ACTIVE:
+            findings.append({'severity': 'error', 'code': 'clause-not-active',
+                'field': f'clause:{selection.pk}', 'source': 'CDC Toolkit',
+                'message': str(_('Une clause retenue doit pointer vers une révision validée et active.'))})
+    return findings
 
 
 @transaction.atomic
@@ -403,7 +445,6 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
     duplicate.data.setdefault('consultation', {})['confirmed'] = False
     duplicate.save(update_fields=['data', 'updated_at'])
     lot_map = {}
-    item_map = {}
     for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
         lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
             name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
@@ -417,7 +458,6 @@ def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, du
                 estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
                 tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
                 price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
-            item_map[original.pk] = cloned
             for requirement in original.requirements.filter(active=True):
                 CdcRequirement.objects.create(item=cloned, position=requirement.position, kind=requirement.kind,
                     statement=requirement.statement, evidence=requirement.evidence,
@@ -588,7 +628,7 @@ def generate_cdc(user, revision_id):
     if revision.generations.exists():
         return revision.generations.order_by('-created_at', '-id').first()
     data = copy.deepcopy(revision.data)
-    findings = dossier_findings(revision.dossier)
+    findings = [*controls(data), *governance_snapshot_findings(data)]
     if any(finding['severity'] == 'error' for finding in findings):
         raise ValidationError(_('La génération est bloquée par des incohérences du dossier.'))
     payload, report = generate_document(data)
@@ -599,6 +639,7 @@ def generate_cdc(user, revision_id):
             report.setdefault('changed_parts', []).append('word/document.xml')
         report['output_sha256'] = sha(payload)
     payload, layout = normalize_word_layout(payload)
+    report['output_sha256'] = sha(payload)
     with tempfile.TemporaryDirectory(prefix='plagenor-cdc-') as directory:
         source = Path(directory) / ('cdc-' + str(revision.pk) + '.docx')
         source.write_bytes(payload)
