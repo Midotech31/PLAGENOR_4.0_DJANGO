@@ -12,7 +12,7 @@ from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCrit
                         CdcReviewDecision, CdcRevision, WorkItem)
 from erp.permissions import is_manager, require_manager
 from notifications.models import Notification
-from .common import check_version
+from .common import audit, check_version
 from .work import _transition, require_work
 
 
@@ -123,7 +123,9 @@ def publish_clause(user, dossier, *, expected, paragraph_id, title, category='',
     CdcClauseSelection.objects.update_or_create(dossier=dossier, clause=clause,
         defaults={'selected_version': version, 'selected_by': user, 'reason': reason.strip()})
     from .cdc import _revision
-    return clause, version, _revision(user, dossier, reason)
+    revision = _revision(user, dossier, reason)
+    audit(user, dossier, 'clause_version_selected', reason=clause.code + ' v' + str(version.number) + ' — ' + reason[:400])
+    return clause, version, revision
 
 
 @transaction.atomic
@@ -138,7 +140,9 @@ def select_clause(user, dossier, *, expected, clause, version, reason):
     CdcClauseSelection.objects.update_or_create(dossier=dossier, clause=clause,
         defaults={'selected_version': version, 'selected_by': user, 'reason': reason.strip()})
     from .cdc import _revision
-    return _revision(user, dossier, reason)
+    revision = _revision(user, dossier, reason)
+    audit(user, dossier, 'clause_version_restored', reason=clause.code + ' v' + str(version.number) + ' — ' + reason[:400])
+    return revision
 
 
 @transaction.atomic
@@ -162,7 +166,9 @@ def save_criterion(user, dossier, *, expected, values, pk=None, reason=''):
         criterion.version += 1
     criterion.save()
     from .cdc import _revision
-    return criterion, _revision(user, dossier, reason)
+    revision = _revision(user, dossier, reason)
+    audit(user, dossier, 'criterion_saved', reason=criterion.code + ' — ' + reason[:430])
+    return criterion, revision
 
 
 @transaction.atomic
@@ -195,6 +201,7 @@ def review_revision(user, revision, *, stage, decision, comment):
     if decision == CdcReviewDecision.Decision.CHANGES:
         _transition(user, dossier.work, WorkItem.Status.CHANGES_REQUESTED, comment.strip())
     target = dossier.work.assignee if decision == CdcReviewDecision.Decision.CHANGES else dossier.work.created_by
+    audit(user, dossier, 'cdc_review_' + stage.lower(), reason=result.get_decision_display() + ' — ' + comment[:450])
     if target and target != user:
         Notification.objects.create(user=target, notification_type='STATUS_CHANGE',
             message=_('Revue CDC %(stage)s : %(decision)s') % {
