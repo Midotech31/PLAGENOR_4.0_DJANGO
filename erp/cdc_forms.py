@@ -16,7 +16,7 @@ class CdcCreateForm(WorkForm):
         help_text=_('Structure institutionnelle : numéro/SME/SDFM/SG/ESSBO/année.'))
 
     class Meta(WorkForm.Meta):
-        fields = ['title', 'assignee', 'due_on', 'priority', 'instructions', 'allow_costs']
+        fields = ['title', 'assignee', 'due_on', 'priority', 'location', 'category', 'instructions', 'allow_costs']
 
 
 class ConsultationForm(OperationForm):
