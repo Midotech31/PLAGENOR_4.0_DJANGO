@@ -15,11 +15,14 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from . import cdc_forms as forms
 from .cdc.catalog import controls, document, effective_edits
 from .cdc.docengine import DocumentError
-from .models import CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRevision, ProcurementPlan, WorkItem
+from .models import (CdcClause, CdcClauseRevision, CdcClauseSelection, CdcCriterion, CdcDossier,
+    CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcRevision, CdcSection, ProcurementPlan, WorkItem)
 from .permissions import has_access, is_manager, require_manager
-from .services.cdc import (approve_dossier, archive_dossier, create_dossier, document_data, dossier_scope,
-    duplicate_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc, save_cdc_item, save_cdc_lot,
-    save_consultation, stock_status, submit_dossier)
+from .services.cdc import (approve_dossier, archive_dossier, create_clause_revision, create_dossier,
+    document_data, dossier_findings, dossier_scope, duplicate_dossier, edit_cdc_paragraph, estimate_totals,
+    generate_cdc, review_dossier, review_state, save_clause, save_cdc_item, save_cdc_lot,
+    save_consultation, save_criterion, save_requirement, save_section, select_clause, stock_status,
+    submit_dossier)
 from .services.work import require_work, work_allowed
 from .views import add_validation
 
@@ -99,7 +102,7 @@ def cdc_detail(request, pk):
         else:
             return redirect('erp:cdc-detail', pk=pk)
     data = document_data(dossier)
-    findings = controls(data)
+    findings = dossier_findings(dossier)
     cost_access = work_allowed(request.user, dossier.work, costs=True)
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()
@@ -110,7 +113,12 @@ def cdc_detail(request, pk):
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True), 'manager': is_manager(request.user),
         'costs': estimate_totals(request.user, dossier) if cost_access else None,
         'stock_status': stock_status(request.user,dossier), 'procurement_plan': ProcurementPlan.objects.filter(cdc=dossier).first(),
-        'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False)},
+        'inactive_lots': dossier.lots.filter(active=False), 'source_confirmed': data.get('consultation', {}).get('confirmed', False),
+        'review_state': review_state(dossier),
+        'governance_counts': {'sections': dossier.structured_sections.filter(active=True).count(),
+            'requirements': CdcRequirement.objects.filter(item__lot__dossier=dossier, active=True).count(),
+            'criteria': dossier.criteria.filter(active=True).count(),
+            'clauses': dossier.clause_selections.filter(active=True).count()}},
         status=400 if request.method == 'POST' else 200)
 
 
@@ -317,3 +325,181 @@ def cdc_procurement(request,pk):
         except (ValidationError,IntegrityError) as error:_error(form,error)
         else:return redirect('erp:procurement-detail',pk=plan.pk)
     return _form_response(request,form,dossier,_('Créer un plan d’approvisionnement à partir du CDC'))
+
+
+@login_required
+@require_GET
+def cdc_governance(request, pk):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    require_work(request.user, dossier.work)
+    return render(request, 'erp/cdc_governance.html', {
+        'dossier': dossier, 'work': dossier.work,
+        'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True),
+        'manager': is_manager(request.user),
+        'sections': dossier.structured_sections.order_by('position', 'id'),
+        'criteria': dossier.criteria.select_related('lot').order_by('lot_id', 'position', 'id'),
+        'clause_selections': dossier.clause_selections.select_related('revision__clause').order_by('position', 'id'),
+        'review_state': review_state(dossier), 'findings': dossier_findings(dossier),
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_section_edit(request, dossier_id, pk=None):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
+    require_work(request.user, dossier.work, edit=True)
+    section = get_object_or_404(CdcSection, pk=pk, dossier=dossier) if pk else None
+    initial = {'expected_version': dossier.version, 'position': dossier.structured_sections.count() + 1,
+        'active': True}
+    if section:
+        initial.update({name: getattr(section, name) for name in
+            ('key', 'title', 'content', 'position', 'active', 'required', 'source')})
+    form = forms.CdcSectionForm(request.POST or None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        expected, reason = values.pop('expected_version'), values.pop('reason')
+        try:
+            save_section(request.user, dossier.pk, expected=expected, values=values, pk=pk, reason=reason)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-governance', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Section structurée du cahier des charges'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_requirement_edit(request, item_id, pk=None):
+    item = get_object_or_404(CdcItem.objects.select_related('lot__dossier__work'), pk=item_id,
+        lot__dossier__in=dossier_scope(request.user))
+    dossier = item.lot.dossier
+    require_work(request.user, dossier.work, edit=True)
+    requirement = get_object_or_404(CdcRequirement, pk=pk, item=item) if pk else None
+    initial = {'expected_version': dossier.version, 'position': item.requirements.count() + 1,
+        'kind': CdcRequirement.Kind.MANDATORY, 'active': True}
+    if requirement:
+        initial.update({name: getattr(requirement, name) for name in
+            ('position', 'kind', 'statement', 'evidence', 'verification_method', 'justification', 'active')})
+    form = forms.CdcRequirementForm(request.POST or None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        expected, reason = values.pop('expected_version'), values.pop('reason')
+        try:
+            save_requirement(request.user, item.pk, expected=expected, values=values, pk=pk, reason=reason)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-lot', pk=item.lot_id)
+    return _form_response(request, form, dossier, _('Exigence technique et preuve de conformité'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_criterion_edit(request, dossier_id, pk=None):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
+    require_work(request.user, dossier.work, edit=True)
+    criterion = get_object_or_404(CdcCriterion, pk=pk, dossier=dossier) if pk else None
+    initial = {'expected_version': dossier.version, 'position': dossier.criteria.count() + 1,
+        'method': CdcCriterion.Method.PROPORTIONAL, 'weight': 0, 'active': True}
+    if criterion:
+        initial.update({name: getattr(criterion, name) for name in
+            ('lot', 'code', 'title', 'method', 'weight', 'threshold', 'eliminatory', 'evidence', 'position', 'active')})
+    form = forms.CdcCriterionForm(request.POST or None, initial=initial, dossier=dossier)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        expected, reason = values.pop('expected_version'), values.pop('reason')
+        try:
+            save_criterion(request.user, dossier.pk, expected=expected, values=values, pk=pk, reason=reason)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-governance', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Critère et grille d’évaluation'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_clause_select(request, dossier_id):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
+    require_work(request.user, dossier.work, edit=True)
+    form = forms.CdcClauseSelectionForm(request.POST or None, initial={
+        'expected_version': dossier.version, 'position': dossier.clause_selections.count() + 1, 'active': True})
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        expected, reason, revision = values.pop('expected_version'), values.pop('reason'), values.pop('revision')
+        try:
+            select_clause(request.user, dossier.pk, expected=expected, revision=revision, reason=reason, **values)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-governance', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Ajouter une clause validée au dossier'))
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_review(request, pk):
+    require_manager(request.user)
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    form = forms.CdcReviewForm(request.POST or None, initial={'expected_version': dossier.version})
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        try:
+            review_dossier(request.user, dossier.pk, expected=values.pop('expected_version'), **values)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            messages.success(request, _('La décision de revue a été enregistrée dans l’historique de la révision.'))
+            return redirect('erp:cdc-governance', pk=dossier.pk)
+    return _form_response(request, form, dossier, _('Revue formelle du cahier des charges'))
+
+
+@login_required
+@require_GET
+def cdc_clause_library(request):
+    require_manager(request.user)
+    qs = CdcClause.objects.select_related('active_revision').order_by('code')
+    search = request.GET.get('q', '').strip()[:200]
+    if search:
+        qs = qs.filter(Q(code__icontains=search) | Q(title__icontains=search) | Q(name__icontains=search))
+    return render(request, 'erp/cdc_clause_library.html', {
+        'page': Paginator(qs, 40).get_page(request.GET.get('page')), 'q': search})
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_clause_edit(request, pk=None):
+    require_manager(request.user)
+    clause = get_object_or_404(CdcClause, pk=pk) if pk else None
+    form = forms.CdcClauseDefinitionForm(request.POST or None, instance=clause)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        reason = values.pop('reason')
+        try:
+            clause = save_clause(request.user, values=values, pk=pk, reason=reason)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            return redirect('erp:cdc-clause-library')
+    return render(request, 'erp/operation_form.html', {'form': form,
+        'title': _('Clause institutionnelle'), 'subtitle': _('Référentiel canonique partagé par les cahiers des charges.'),
+        'cancel_url': reverse('erp:cdc-clause-library')}, status=400 if request.method == 'POST' else 200)
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def cdc_clause_revision(request, pk):
+    require_manager(request.user)
+    clause = get_object_or_404(CdcClause, pk=pk)
+    form = forms.CdcClauseRevisionForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            create_clause_revision(request.user, clause, **form.cleaned_data)
+        except ERRORS as error:
+            _error(form, error)
+        else:
+            messages.success(request, _('La nouvelle révision de clause a été conservée.'))
+            return redirect('erp:cdc-clause-library')
+    return render(request, 'erp/operation_form.html', {'form': form,
+        'title': _('Nouvelle révision de clause'), 'subtitle': clause.title,
+        'cancel_url': reverse('erp:cdc-clause-library')}, status=400 if request.method == 'POST' else 200)
