@@ -145,7 +145,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=active]').check();
   await page.locator('[name=reason]').fill('Exigence validée par le responsable');
   await submit(page,'.erp-form button[type=submit]');
-  await expect(page).toContainText('Pureté minimale documentée');
+  await expect(page.locator('body')).toContainText('Pureté minimale documentée');
 
   await page.goto(dossierURL);
   await page.getByRole('link',{name:'Exigences, critères, clauses et revues',exact:true}).click();
@@ -160,7 +160,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=active]').check();
   await page.locator('[name=reason]').fill('Grille d’évaluation validée');
   await submit(page,'.erp-form button[type=submit]');
-  await expect(page).toContainText('Conformité technique');
+  await expect(page.locator('body')).toContainText('Conformité technique');
 
   await page.getByRole('link',{name:'Bibliothèque de clauses',exact:true}).click();
   await page.getByRole('link',{name:'Nouvelle clause',exact:true}).click();
@@ -191,7 +191,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=active]').check();
   await page.locator('[name=reason]').fill('Clause obligatoire pour ce dossier');
   await submit(page,'button[type=submit]');
-  await expect(page).toContainText('Réception et conformité');
+  await expect(page.locator('body')).toContainText('Réception et conformité');
 
   await page.reload();
   await expect(page).toContainText('Conformité technique');
