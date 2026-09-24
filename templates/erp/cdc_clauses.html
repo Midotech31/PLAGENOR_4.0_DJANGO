@@ -5,7 +5,7 @@
 <section class="erp-panel">
 {% for block in page %}
 <article class="erp-clause">
-{% if block.library_managed %}<p class="erp-notice">{% trans 'Clause pilotée par la bibliothèque versionnée.' %}</p>{% endif %}
+{% if block.library_managed %}<p class="erp-notice">{% trans 'Clause pilotée par la bibliothèque versionnée.' %} {% trans 'Version' %} {{ block.library_version }} · <a href="{% url 'erp:cdc-clause-select' pk=dossier.pk clause_id=block.library_clause_id %}">{% trans 'Changer de version' %}</a></p>{% endif %}
 <p dir="auto">{{ block.text|linebreaksbr }}</p>
 {% if editable and block.editable and not block.library_managed %}<a href="{% url 'erp:cdc-paragraph' pk=dossier.pk %}?paragraph_id={{ block.id|urlencode }}">{% trans 'Modifier pour ce dossier' %}</a>{% endif %}
 {% if manager and editable and block.editable %} · <a href="{% url 'erp:cdc-clause-publish' pk=dossier.pk %}?paragraph_id={{ block.id|urlencode }}">{% if block.library_managed %}{% trans 'Créer une nouvelle version canonique' %}{% else %}{% trans 'Versionner dans la bibliothèque' %}{% endif %}</a>{% endif %}
