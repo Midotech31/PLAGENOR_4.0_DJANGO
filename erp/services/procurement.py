@@ -332,8 +332,8 @@ def plan_to_cdc(user,pk,*,expected,reference,family,assignee=None):
             specifications=article.get('specifications',''),packaging=article.get('packaging',''),
             unit_label=article['purchase_unit_name'],purchase_unit_id=row['purchase_unit'],
             base_factor=Decimal(row['purchase_factor']),quantity=Decimal(row['retained_quantity']),
-            estimated_price=Decimal(row['estimated_price']),tax_rate=Decimal(row['tax_rate']),
-            price_source=row['price_source'],currency=row['currency'])
+            supplier_id=row.get('supplier'), estimated_price=Decimal(row['estimated_price']),
+            tax_rate=Decimal(row['tax_rate']), price_source=row['price_source'],currency=row['currency'])
     cdc_revision(user,dossier,str(_('Besoins repris du plan approuvé %(reference)s.')) % {'reference':plan.reference})
     plan.cdc=dossier
     plan.version+=1
@@ -364,17 +364,24 @@ def plan_from_cdc(user,dossier_id,*,expected,plan_reference,year,assignee=None,r
     plan=create_plan(user,reference=plan_reference,year=year,title=str(_('Approvisionnement — %(title)s'))%{'title':dossier.work.title},
         assignee=assignee,allow_costs=dossier.work.allow_costs,instructions=reason,category=dossier.work.category,
         location=dossier.work.location,due_on=dossier.work.due_on)
-    lot_names={}
+    lot_names={}; source_values={}
     for item in CdcItem.objects.filter(lot__dossier=dossier,lot__active=True,active=True,article__isnull=False).select_related('lot'):
         lot_names.setdefault(item.article_id,[])
         if item.lot.name not in lot_names[item.article_id]:
             lot_names[item.article_id].append(item.lot.name)
+        source_values.setdefault(item.article_id, []).append((item.supplier_id, item.estimated_price,
+            item.tax_rate, item.currency, item.price_source))
     for shortage in shortages:
         line=add_plan_article(user,plan.pk,expected=plan.version,article=shortage['article'],
             lot_name=' / '.join(lot_names.get(shortage['article'].pk,[]))[:180] or str(_('Besoins CDC')),_record_revision=False)
         purchase=(shortage['shortage']/line.purchase_factor).quantize(Decimal('0.000001'),rounding=ROUND_CEILING)
         line.proposed_quantity=stock_quantity(purchase)
-        line.save(update_fields=['proposed_quantity','updated_at'])
+        values=source_values.get(shortage['article'].pk, [])
+        if values and len(set(values)) == 1:
+            supplier,price,tax,currency,price_source=values[0]
+            line.supplier_id=supplier; line.estimated_price=price; line.tax_rate=tax
+            line.currency=currency; line.price_source=price_source
+        line.save(update_fields=['proposed_quantity','supplier','estimated_price','tax_rate','currency','price_source','updated_at'])
     plan.cdc=dossier
     plan.save(update_fields=['cdc','updated_at'])
     _revision(user,plan,reason)
