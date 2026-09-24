@@ -24,7 +24,7 @@ from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcC
                         CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement,
                         CdcReviewDecision, CdcRevision, LocationClosure, StockContainer,
                         Unit, WorkItem)
-from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
+from erp.permissions import Capability, grants, is_manager, operational_scope, permitted, require, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, snapshot
 from .stock import stock_quantity, usable_filter
@@ -33,6 +33,11 @@ from .work import _transition, create_work, require_work, work_allowed, work_sco
 
 ITEM_FIELDS = {'designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'}
 ESTIMATE_FIELDS = {'estimated_price', 'tax_rate', 'price_source', 'currency'}
+CDC_REVIEW_CAPABILITY = {
+    CdcReviewDecision.Stage.TECHNICAL: Capability.REVIEW_CDC_TECHNICAL,
+    CdcReviewDecision.Stage.ADMIN_LEGAL: Capability.REVIEW_CDC_ADMIN,
+    CdcReviewDecision.Stage.FINANCIAL: Capability.REVIEW_CDC_FINANCIAL,
+}
 
 
 def dossier_scope(user):
@@ -328,7 +333,11 @@ def select_clause(user, dossier_id, *, expected, revision, position=1, mandatory
 
 @transaction.atomic
 def review_dossier(user, dossier_id, *, expected, stage, outcome, comment):
-    require_manager(user)
+    capability = CDC_REVIEW_CAPABILITY.get(stage)
+    if capability is None:
+        raise ValidationError(_('Étape de revue CDC inconnue.'))
+    if not permitted(user, capability):
+        raise PermissionDenied
     dossier = _dossier(user, dossier_id)
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
@@ -676,7 +685,7 @@ def generate_cdc(user, revision_id):
 @transaction.atomic
 def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statement,
                     visual_review, content_review):
-    require_manager(user)
+    require(user, Capability.APPROVE_CDC)
     dossier = _dossier(user, pk)
     check_version(dossier, expected)
     if dossier.work.status != WorkItem.Status.SUBMITTED:
