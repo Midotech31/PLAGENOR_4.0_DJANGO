@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
-from .models import Article, CdcDossier, CdcGeneration, CdcItem, Unit, WorkItem
+from .models import (Article, CdcClause, CdcClauseRevision, CdcCriterion, CdcDossier, CdcGeneration,
+    CdcItem, CdcLot, CdcRequirement, CdcReviewDecision, CdcSection, Unit, WorkItem)
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -153,3 +154,86 @@ class CdcProcurementForm(OperationForm):
     year=forms.IntegerField(label=_('Année du plan'),min_value=2000,max_value=2100)
     assignee=forms.ModelChoiceField(label=_('Responsable du plan'),queryset=get_user_model().objects.filter(is_active=True,role__in=TEAM_ROLES),required=False)
     reason=forms.CharField(label=_('Justification / origine du besoin'),max_length=500,widget=forms.Textarea)
+
+
+class CdcSectionForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    key = forms.SlugField(label=_('Identifiant de section'), max_length=80)
+    title = forms.CharField(label=_('Intitulé'), max_length=200)
+    content = forms.CharField(label=_('Contenu'), required=False, widget=forms.Textarea)
+    position = forms.IntegerField(label=_('Position'), min_value=1, max_value=999)
+    active = forms.BooleanField(label=_('Inclure cette section'), required=False, initial=True)
+    required = forms.BooleanField(label=_('Section obligatoire'), required=False)
+    source = forms.CharField(label=_('Source / justification'), max_length=500, required=False, widget=forms.Textarea)
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, required=False, widget=forms.Textarea)
+
+
+class CdcRequirementForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    position = forms.IntegerField(label=_('Position'), min_value=1, max_value=999)
+    kind = forms.ChoiceField(label=_("Nature de l’exigence"), choices=CdcRequirement.Kind.choices)
+    statement = forms.CharField(label=_('Exigence'), widget=forms.Textarea)
+    evidence = forms.CharField(label=_('Preuve exigée'), required=False, widget=forms.Textarea)
+    verification_method = forms.CharField(label=_('Méthode de vérification / réception'), required=False, widget=forms.Textarea)
+    justification = forms.CharField(label=_('Justification'), required=False, widget=forms.Textarea)
+    active = forms.BooleanField(label=_('Retenir cette exigence'), required=False, initial=True)
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, required=False, widget=forms.Textarea)
+
+
+class CdcCriterionForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    lot = forms.ModelChoiceField(label=_('Lot'), queryset=CdcLot.objects.none(), required=False,
+        help_text=_('Laissez vide pour une grille globale. Ne mélangez pas grille globale et grilles par lot.'))
+    code = forms.CharField(label=_('Code'), max_length=40)
+    title = forms.CharField(label=_('Critère'), max_length=255)
+    method = forms.ChoiceField(label=_('Méthode'), choices=CdcCriterion.Method.choices)
+    weight = forms.DecimalField(label=_('Pondération (points)'), min_value=0, max_value=100, max_digits=5, decimal_places=2)
+    threshold = forms.DecimalField(label=_('Seuil éventuel'), required=False, max_digits=8, decimal_places=2)
+    eliminatory = forms.BooleanField(label=_('Critère éliminatoire'), required=False)
+    evidence = forms.CharField(label=_('Justificatif / preuve attendue'), required=False, widget=forms.Textarea)
+    position = forms.IntegerField(label=_('Position'), min_value=1, max_value=999)
+    active = forms.BooleanField(label=_('Retenir ce critère'), required=False, initial=True)
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, required=False, widget=forms.Textarea)
+
+    def __init__(self, *args, dossier, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['lot'].queryset = dossier.lots.filter(active=True).order_by('position')
+
+
+class CdcClauseSelectionForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    revision = forms.ModelChoiceField(label=_('Clause validée'), queryset=CdcClauseRevision.objects.none())
+    position = forms.IntegerField(label=_('Position'), min_value=1, max_value=999)
+    mandatory = forms.BooleanField(label=_('Clause obligatoire pour ce dossier'), required=False)
+    note = forms.CharField(label=_('Note interne'), max_length=500, required=False, widget=forms.Textarea)
+    active = forms.BooleanField(label=_('Retenir cette clause'), required=False, initial=True)
+    reason = forms.CharField(label=_('Justification de la sélection'), max_length=500, required=False, widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['revision'].queryset = CdcClauseRevision.objects.filter(
+            status=CdcClauseRevision.Status.ACTIVE, active_for__isnull=False).select_related('clause').order_by('clause__code')
+        self.fields['revision'].label_from_instance = lambda value: f'{value.clause.code} — {value.clause.title} — R{value.number}'
+
+
+class CdcReviewForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    stage = forms.ChoiceField(label=_('Étape de revue'), choices=CdcReviewDecision.Stage.choices)
+    outcome = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Outcome.choices)
+    comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
+
+
+class CdcClauseDefinitionForm(forms.ModelForm):
+    reason = forms.CharField(label=_('Justification de la modification'), max_length=500, required=False, widget=forms.Textarea)
+
+    class Meta:
+        model = CdcClause
+        fields = ['code', 'name', 'name_en', 'name_ar', 'title', 'active']
+
+
+class CdcClauseRevisionForm(forms.Form):
+    text_fr = forms.CharField(label=_('Texte français'), widget=forms.Textarea)
+    text_en = forms.CharField(label=_('Texte anglais'), required=False, widget=forms.Textarea)
+    text_ar = forms.CharField(label=_('Texte arabe'), required=False, widget=forms.Textarea(attrs={'dir': 'rtl'}))
+    source_reference = forms.CharField(label=_('Source / référence'), max_length=500, widget=forms.Textarea)
+    activate = forms.BooleanField(label=_('Valider et activer immédiatement cette révision'), required=False)
