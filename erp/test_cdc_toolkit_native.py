@@ -1,9 +1,14 @@
 from decimal import Decimal
+import io
+from unittest import mock
+import zipfile
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from erp.cdc.docengine import DocumentError
+from erp.cdc.governance_annex import append_governance_annex
 from erp.models import (CdcClause, CdcClauseRevision, CdcCriterion, CdcRequirement,
     CdcReviewDecision, WorkItem)
 from erp.services.cdc import (approve_dossier, create_clause_revision, create_dossier,
@@ -324,3 +329,77 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         requirement.refresh_from_db()
         self.assertEqual(requirement.statement, 'Version un')
         self.assertEqual(restored.data['requirements'][0]['statement'], 'Version un')
+
+
+    def _minimal_docx(self, body='<w:p/><w:sectPr/>'):
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+            f'<w:body>{body}</w:body></w:document>')
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('word/document.xml', xml.encode())
+        return out.getvalue()
+
+    def test_governance_annex_is_single_bounded_part_of_official_docx(self):
+        payload = self._minimal_docx()
+        untouched, report = append_governance_annex(payload, {'requirements': [], 'criteria': [],
+            'clauses': []}, 1)
+        self.assertEqual((untouched, report['status']), (payload, 'NOT_REQUIRED'))
+
+        data = {'reference': self.dossier.reference,
+            'lot_catalog': {'lots': [{'id': 'lot-1', 'name': 'Lot scientifique',
+                'items': [{'key': 'item-1', 'designation': 'Réactif A'}]}]},
+            'requirements': [{'item_key': 'item-1', 'kind': 'ELIMINATORY',
+                'statement': 'Pureté ≥ 99 %', 'evidence': 'Certificat',
+                'verification_method': 'Contrôle documentaire', 'justification': 'Critique'}],
+            'criteria': [{'code': 'TECH', 'lot': 'lot-1', 'title': 'Technique',
+                'method': 'BINARY', 'weight': '100.00', 'threshold': '50',
+                'eliminatory': True, 'evidence': 'Mémoire'}],
+            'clauses': [{'code': 'C-1', 'title': 'Garantie', 'revision': 2,
+                'mandatory': True, 'text_fr': 'Texte français', 'text_en': 'English text',
+                'text_ar': 'نص عربي', 'source': 'Décision ESSBO'}]}
+        rendered, report = append_governance_annex(payload, data, 7)
+        self.assertEqual(report, {'status': 'GENERATED', 'requirements': 1, 'criteria': 1, 'clauses': 1})
+        with zipfile.ZipFile(io.BytesIO(rendered)) as archive:
+            xml = archive.read('word/document.xml').decode()
+        for expected in ('ANNEXE', 'Pureté', 'Certificat', 'Contrôle documentaire', 'Critique',
+                         'TECH', 'ÉLIMINATOIRE', 'Garantie', 'Texte français', 'English text',
+                         'نص عربي', 'Décision ESSBO', 'Révision PLAGENOR : 7'):
+            self.assertIn(expected, xml)
+
+        fallback = {**data, 'requirements': [{**data['requirements'][0], 'item_key': 'absent'}]}
+        rendered, _ = append_governance_annex(payload, fallback, 8)
+        with zipfile.ZipFile(io.BytesIO(rendered)) as archive:
+            self.assertIn(b'Article', archive.read('word/document.xml'))
+
+    def test_governance_annex_rejects_bounds_and_malformed_docx(self):
+        payload = self._minimal_docx()
+        with mock.patch('erp.cdc.governance_annex.MAX_ROWS', 0), self.assertRaisesRegex(DocumentError, 'volumineuse'):
+            append_governance_annex(payload, {'requirements': [{}]}, 1)
+        with mock.patch('erp.cdc.governance_annex.MAX_TEXT', 1), self.assertRaisesRegex(DocumentError, 'volumineuse'):
+            append_governance_annex(payload, {'criteria': [{}]}, 1)
+        with self.assertRaisesRegex(DocumentError, 'invalide'):
+            append_governance_annex(b'not-a-zip', {'requirements': [{}]}, 1)
+
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, 'w') as archive:
+            archive.writestr('other.xml', b'<x/>')
+        with self.assertRaisesRegex(DocumentError, 'corps principal'):
+            append_governance_annex(out.getvalue(), {'requirements': [{}]}, 1)
+
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, 'w') as archive:
+            archive.writestr('word/document.xml',
+                b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
+        with self.assertRaisesRegex(DocumentError, 'corps principal'):
+            append_governance_annex(out.getvalue(), {'requirements': [{}]}, 1)
+
+        no_section = self._minimal_docx('<w:p/>')
+        with self.assertRaisesRegex(DocumentError, 'section'):
+            append_governance_annex(no_section, {'requirements': [{}]}, 1)
+
+        malformed = io.BytesIO()
+        with zipfile.ZipFile(malformed, 'w') as archive:
+            archive.writestr('word/document.xml', b'<broken')
+        with self.assertRaises(DocumentError):
+            append_governance_annex(malformed.getvalue(), {'requirements': [{}]}, 1)
