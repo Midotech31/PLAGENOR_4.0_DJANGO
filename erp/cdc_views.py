@@ -298,7 +298,7 @@ def cdc_paragraph(request, pk):
 @require_http_methods(['GET','POST'])
 def cdc_duplicate(request,pk):
     require_manager(request.user);dossier=get_object_or_404(dossier_scope(request.user),pk=pk)
-    initial={'expected_version':dossier.version,'title':dossier.work.title,'assignee':dossier.work.assignee,'due_on':dossier.work.due_on,'priority':dossier.work.priority,'instructions':dossier.work.instructions,'allow_costs':dossier.work.allow_costs}
+    initial={'expected_version':dossier.version,'title':dossier.work.title,'assignee':dossier.work.assignee,'due_on':dossier.work.due_on,'priority':dossier.work.priority,'location':dossier.work.location,'category':dossier.work.category,'instructions':dossier.work.instructions,'allow_costs':dossier.work.allow_costs}
     form=forms.CdcDuplicateForm(request.POST or None,initial=initial)
     if request.method=='POST' and form.is_valid():
         values=dict(form.cleaned_data)
