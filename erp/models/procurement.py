@@ -76,6 +76,22 @@ class ProcurementLine(Record):
             models.CheckConstraint(condition=Q(purchase_factor__gt=0,purchase_factor__lte=MAX_FACTOR),name='erp_plan_purchase_factor')]
 
 
+class ProcurementRequirementLink(ImmutableRecord):
+    """Immutable trace between a real analytical shortage and procurement."""
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    line=models.ForeignKey(ProcurementLine,on_delete=models.PROTECT,related_name='requirement_links')
+    requirement=models.ForeignKey('erp.RunRequirement',on_delete=models.PROTECT,related_name='procurement_links')
+    actor=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT)
+    shortage_quantity=models.DecimalField(max_digits=18,decimal_places=6)
+    purchase_quantity=models.DecimalField(max_digits=18,decimal_places=6)
+    reason=models.CharField(max_length=500)
+
+    class Meta:
+        constraints=[models.UniqueConstraint(fields=['line','requirement'],name='erp_plan_requirement_unique'),
+            models.CheckConstraint(condition=Q(shortage_quantity__gt=0,shortage_quantity__lte=MAX_Q),name='erp_plan_requirement_shortage'),
+            models.CheckConstraint(condition=Q(purchase_quantity__gt=0,purchase_quantity__lte=MAX_Q),name='erp_plan_requirement_purchase')]
+
+
 class ProcurementRevision(ImmutableRecord):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     plan=models.ForeignKey(ProcurementPlan,on_delete=models.PROTECT,related_name='revisions')

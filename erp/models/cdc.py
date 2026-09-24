@@ -21,6 +21,10 @@ class CdcDossier(Record):
     reference = models.CharField(_('Référence du dossier'), max_length=90, unique=True)
     data = models.JSONField(default=dict, editable=False)
     revision_number = models.PositiveIntegerField(default=0, editable=False)
+    archived_at = models.DateTimeField(null=True, blank=True, editable=False)
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+        editable=False, related_name='+')
+    archive_reason = models.CharField(max_length=500, blank=True, editable=False)
 
     def __str__(self):
         return self.reference
