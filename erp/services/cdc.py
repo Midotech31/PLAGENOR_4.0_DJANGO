@@ -9,6 +9,7 @@ import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from pypdf import PdfReader
 
@@ -19,11 +20,11 @@ from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
 from erp.models import (Article, CdcApproval, CdcDossier, CdcGeneration, CdcItem, CdcLot,
-                        CdcRevision, Unit, WorkItem)
-from erp.permissions import is_manager, require_manager
+                        CdcRevision, LocationClosure, StockContainer, Unit, WorkItem)
+from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, snapshot
-from .stock import stock_quantity
+from .stock import stock_quantity, usable_filter
 from .work import _transition, create_work, require_work, work_allowed, work_scope
 
 
@@ -41,6 +42,8 @@ def _dossier(user, pk, *, edit=False):
     require_work(user, work, edit=edit)
     dossier = CdcDossier.objects.select_for_update().get(pk=pk)
     dossier.work = work
+    if edit and dossier.archived_at is not None:
+        raise ValidationError(_('Un cahier des charges archivé est en lecture seule.'))
     return dossier
 
 
@@ -110,6 +113,84 @@ def create_dossier(user, *, family, reference, title, assignee=None, due_on=None
                 details=row['details'])
     _revision(user, dossier)
     return dossier
+
+
+@transaction.atomic
+def duplicate_dossier(user, pk, *, expected, reference, title, assignee=None, due_on=None,
+                      priority='NORMAL', allow_costs=False, instructions='', copy_estimates=False, reason=''):
+    require_manager(user)
+    source = _dossier(user, pk)
+    check_version(source, expected)
+    if not reason.strip():
+        raise ValidationError(_('Justifiez la duplication du cahier des charges.'))
+    duplicate = create_dossier(user, family=source.family, reference=reference, title=title,
+        assignee=assignee, due_on=due_on, priority=priority, allow_costs=allow_costs, instructions=instructions)
+    CdcItem.objects.filter(lot__dossier=duplicate).delete()
+    duplicate.lots.all().delete()
+    duplicate.data = copy.deepcopy(source.data)
+    duplicate.data['reference'] = duplicate.reference
+    duplicate.data.setdefault('consultation', {})['confirmed'] = False
+    duplicate.save(update_fields=['data', 'updated_at'])
+    for position, original_lot in enumerate(source.lots.filter(active=True).order_by('position', 'id'), 1):
+        lot = CdcLot.objects.create(dossier=duplicate, position=position, name=original_lot.name,
+            name_ar=original_lot.name_ar, source_slot=original_lot.source_slot)
+        for original in original_lot.items.filter(active=True).order_by('position', 'id'):
+            CdcItem.objects.create(lot=lot, source_key='clone-' + str(uuid.uuid4()), position=lot.items.count() + 1,
+                article=original.article, article_snapshot=copy.deepcopy(original.article_snapshot),
+                designation=original.designation, specifications=original.specifications, unit_label=original.unit_label,
+                purchase_unit=original.purchase_unit, base_factor=original.base_factor, packaging=original.packaging,
+                quantity=original.quantity, details=original.details,
+                estimated_price=original.estimated_price if copy_estimates and allow_costs else None,
+                tax_rate=original.tax_rate if copy_estimates and allow_costs else None,
+                price_source=original.price_source if copy_estimates and allow_costs else '', currency=original.currency)
+    _revision(user, duplicate, reason)
+    audit(user, source, 'duplicated_to', reason=str(duplicate.pk))
+    audit(user, duplicate, 'duplicated_from', reason=str(source.pk))
+    return duplicate
+
+
+@transaction.atomic
+def archive_dossier(user, pk, *, expected, reason):
+    require_manager(user)
+    dossier = _dossier(user, pk)
+    check_version(dossier, expected)
+    if dossier.archived_at is not None:
+        raise ValidationError(_('Ce cahier des charges est déjà archivé.'))
+    if dossier.work.status not in (WorkItem.Status.APPROVED, WorkItem.Status.CANCELLED):
+        raise ValidationError(_('Seul un cahier des charges clôturé ou annulé peut être archivé.'))
+    if not reason.strip():
+        raise ValidationError(_('Une justification d’archivage est obligatoire.'))
+    dossier.archived_at, dossier.archived_by, dossier.archive_reason = timezone.now(), user, reason.strip()
+    dossier.version += 1
+    dossier.save(update_fields=['archived_at', 'archived_by', 'archive_reason', 'version', 'updated_at'])
+    audit(user, dossier, 'archived', reason=dossier.archive_reason)
+    return dossier
+
+
+def stock_status(user, dossier):
+    require_work(user, dossier.work)
+    if not is_manager(user) and not grants(user, Capability.VIEW_STOCK).exists():
+        return None
+    grouped, unlinked = {}, 0
+    for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True).select_related('article__base_unit'):
+        if item.article_id is None or item.base_factor is None:
+            unlinked += 1
+            continue
+        row = grouped.setdefault(item.article_id, {'article': item.article, 'required': Decimal(0)})
+        row['required'] += stock_quantity(item.quantity * item.base_factor)
+    rows = []
+    for row in grouped.values():
+        containers = operational_scope(StockContainer.objects.filter(lot__article=row['article']), user)
+        if dossier.work.location_id:
+            containers = containers.filter(location_id__in=LocationClosure.objects.filter(
+                ancestor_id=dossier.work.location_id).values('descendant_id'))
+        containers = containers.filter(usable_filter(timezone.localdate()))
+        available = sum((container.quantity - container.reserved for container in containers), Decimal(0))
+        shortage = max(Decimal(0), row['required'] - available)
+        state = 'AVAILABLE' if shortage == 0 else ('INSUFFICIENT' if available > 0 else 'ABSENT')
+        rows.append({**row, 'available': available, 'shortage': shortage, 'status': state})
+    rows.sort(key=lambda row: row['article'].code)
+    return {'rows': rows, 'unlinked': unlinked}
 
 
 @transaction.atomic
@@ -214,6 +295,8 @@ def submit_dossier(user, pk, *, expected, reason=''):
 def generate_cdc(user, revision_id):
     revision = CdcRevision.objects.select_related('dossier__work').get(pk=revision_id)
     require_work(user, revision.dossier.work)
+    if revision.dossier.archived_at is not None:
+        raise ValidationError(_('Un cahier des charges archivé ne peut plus produire de nouvelle génération.'))
     if revision.generations.exists():
         return revision.generations.order_by('-created_at', '-id').first()
     data = copy.deepcopy(revision.data)
