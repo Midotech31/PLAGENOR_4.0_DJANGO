@@ -21,7 +21,7 @@ from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
 from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcClauseSelection,
                         CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement,
-                        CdcReviewDecision, CdcRevision, CdcSection, LocationClosure, StockContainer,
+                        CdcReviewDecision, CdcRevision, LocationClosure, StockContainer,
                         Unit, WorkItem)
 from erp.permissions import Capability, grants, is_manager, operational_scope, require_manager
 from .catalog import convert_quantity
@@ -172,22 +172,6 @@ def governance_findings(dossier):
 
 def dossier_findings(dossier):
     return [*controls(document_data(dossier)), *governance_findings(dossier)]
-
-
-@transaction.atomic
-def save_section(user, dossier_id, *, expected, values, pk=None, reason=''):
-    dossier = _dossier(user, dossier_id, edit=True)
-    check_version(dossier, expected)
-    section = CdcSection.objects.get(pk=pk, dossier=dossier) if pk else CdcSection(dossier=dossier)
-    for key in ('key', 'title', 'content', 'position', 'active', 'required', 'source'):
-        if key in values:
-            setattr(section, key, values[key])
-    if pk:
-        section.version += 1
-    section.full_clean()
-    section.save()
-    audit(user, dossier, 'cdc_section_saved', reason=reason[:500])
-    return _revision(user, dossier, reason)
 
 
 @transaction.atomic
