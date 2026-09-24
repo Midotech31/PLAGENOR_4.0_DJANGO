@@ -260,7 +260,7 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
     def test_review_change_request_and_final_approval_guard(self):
         self.dossier.work.status = WorkItem.Status.SUBMITTED
         self.dossier.work.save(update_fields=['status'])
-        with self.assertRaisesRegex(ValidationError, 'revues'):
+        with self.assertRaisesRegex(ValidationError, 'introuvable'):
             approve_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
                 generation_id=self.dossier.pk, reviewed_pages=1, statement='Validation',
                 visual_review=True, content_review=True)
