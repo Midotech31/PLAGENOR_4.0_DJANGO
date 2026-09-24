@@ -3,7 +3,7 @@
 set -o errexit
 
 pip install -r requirements.txt
-python manage.py compilemessages
+django-admin compilemessages
 python manage.py collectstatic --no-input
 python manage.py migrate
 # Seed reference data (idempotent: get_or_create) — services + CMS content.
