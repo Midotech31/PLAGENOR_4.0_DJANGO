@@ -183,11 +183,13 @@ def cdc_item_edit(request, lot_id, pk=None):
         values = dict(form.cleaned_data)
         expected = values.pop('expected_version')
         article, unit = values.pop('article'), values.pop('purchase_unit')
+        supplier_provided = 'supplier' in values
         supplier = values.pop('supplier', None)
         reason, refresh = values.pop('reason'), values.pop('refresh_catalog')
         try:
             save_cdc_item(request.user, lot.pk, expected=expected, pk=pk, values=values,
-                article=article, purchase_unit=unit, supplier=supplier, refresh_catalog=refresh, reason=reason)
+                article=article, purchase_unit=unit, supplier=supplier, supplier_provided=supplier_provided,
+                refresh_catalog=refresh, reason=reason)
         except ERRORS as error:
             _error(form, error)
         else:
