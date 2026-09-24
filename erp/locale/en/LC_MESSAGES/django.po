@@ -1741,3 +1741,166 @@ msgstr "Move or duplicate an item"
 
 msgid "Déplacer ou dupliquer"
 msgstr "Move or duplicate"
+
+
+msgid "Un cahier des charges archivé est en lecture seule."
+msgstr "An archived specification is read-only."
+
+msgid "Justifiez la duplication du cahier des charges."
+msgstr "Provide a justification for duplicating the specification."
+
+msgid "Une justification d’archivage est obligatoire."
+msgstr "An archive justification is required."
+
+msgid "Ce cahier des charges est déjà archivé."
+msgstr "This specification is already archived."
+
+msgid "Seul un cahier des charges clôturé ou annulé peut être archivé."
+msgstr "Only a completed or cancelled specification can be archived."
+
+msgid "Un cahier des charges archivé ne peut plus produire de nouvelle génération."
+msgstr "An archived specification cannot generate a new document version."
+
+msgid "Un cahier des charges archivé ne peut pas ouvrir un nouveau plan."
+msgstr "An archived specification cannot open a new procurement plan."
+
+msgid "Justifiez la création du plan à partir du cahier des charges."
+msgstr "Justify creating the procurement plan from the specification."
+
+msgid "Rattachez tous les besoins actifs au catalogue commun avant de créer le plan."
+msgstr "Link all active needs to the shared catalogue before creating the plan."
+
+msgid "Le stock disponible couvre déjà les besoins structurés de ce cahier des charges."
+msgstr "Available stock already covers the structured needs in this specification."
+
+msgid "Besoins CDC"
+msgstr "Specification needs"
+
+msgid "Justifiez le transfert des manques vers l’approvisionnement."
+msgstr "Justify transferring shortages to procurement."
+
+msgid "Seule une activité engagée et encore planifiée peut créer un besoin d’approvisionnement."
+msgstr "Only a committed activity that is still planned can create a procurement need."
+
+msgid "La date de l’activité doit appartenir à la période du plan sélectionné."
+msgstr "The activity date must fall within the selected plan period."
+
+msgid "Le stock disponible couvre déjà tous les besoins de cette activité."
+msgstr "Available stock already covers all needs for this activity."
+
+msgid "Ce besoin est déjà pris en charge par un autre plan actif."
+msgstr "This need is already covered by another active plan."
+
+msgid "Besoins analytiques"
+msgstr "Analytical needs"
+
+msgid "De nouveaux manques issus d’une activité analytique ont été ajoutés au plan."
+msgstr "New shortages from an analytical activity were added to the plan."
+
+msgid "Nouvelle référence"
+msgstr "New reference"
+
+msgid "Intitulé du nouveau dossier"
+msgstr "New file title"
+
+msgid "Membre chargé de préparer le nouveau cahier des charges"
+msgstr "Member responsible for preparing the new specification"
+
+msgid "Reprendre explicitement les estimations internes"
+msgstr "Explicitly copy internal estimates"
+
+msgid "Par défaut, les prix et taxes ne sont pas recopiés afin d’éviter de réutiliser des estimations obsolètes."
+msgstr "By default, prices and taxes are not copied to avoid reusing outdated estimates."
+
+msgid "Justification de la duplication"
+msgstr "Duplication justification"
+
+msgid "Justification de l’archivage"
+msgstr "Archive justification"
+
+msgid "Référence du plan d’approvisionnement"
+msgstr "Procurement plan reference"
+
+msgid "Année du plan"
+msgstr "Plan year"
+
+msgid "Responsable du plan"
+msgstr "Plan owner"
+
+msgid "Justification / origine du besoin"
+msgstr "Justification / origin of the need"
+
+msgid "Justification du transfert des manques"
+msgstr "Shortage transfer justification"
+
+msgid "%(count)s besoin(s) de stock ont été rattachés au plan d’approvisionnement."
+msgstr "%(count)s stock need(s) were linked to the procurement plan."
+
+msgid "Transférer les manques vers l’approvisionnement"
+msgstr "Transfer shortages to procurement"
+
+msgid "Dupliquer ce cahier des charges"
+msgstr "Duplicate this specification"
+
+msgid "Le cahier des charges est archivé et reste consultable en lecture seule."
+msgstr "The specification is archived and remains available read-only."
+
+msgid "Archiver ce cahier des charges"
+msgstr "Archive this specification"
+
+msgid "Créer un plan d’approvisionnement à partir du CDC"
+msgstr "Create a procurement plan from the specification"
+
+msgid "État d’archivage"
+msgstr "Archive status"
+
+msgid "Archivés"
+msgstr "Archived"
+
+msgid "Archivé"
+msgstr "Archived"
+
+msgid "Pièces jointes"
+msgstr "Attachments"
+
+msgid "Créer le plan d’approvisionnement"
+msgstr "Create procurement plan"
+
+msgid "Dupliquer de manière contrôlée"
+msgstr "Controlled duplication"
+
+msgid "Archiver"
+msgstr "Archive"
+
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "This specification is archived in read-only mode."
+
+msgid "Disponibilité réelle du stock"
+msgstr "Actual stock availability"
+
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "active need(s) are not yet linked to the shared catalogue and cannot be checked automatically."
+
+msgid "Disponibilité du stock pour le CDC"
+msgstr "Stock availability for the specification"
+
+msgid "Besoin"
+msgstr "Need"
+
+msgid "Disponible non réservé"
+msgstr "Available unreserved"
+
+msgid "Manque"
+msgstr "Shortage"
+
+msgid "État"
+msgstr "Status"
+
+msgid "Insuffisant"
+msgstr "Insufficient"
+
+msgid "Absent"
+msgstr "Unavailable"
+
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "No structured need to compare with stock."
