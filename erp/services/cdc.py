@@ -580,7 +580,8 @@ def archive_dossier(user, pk, *, expected, reason):
 
 
 def stock_status(user, dossier):
-    require_work(user, dossier.work)
+    if not _cdc_read_allowed(user, dossier.work):
+        raise PermissionDenied
     if not is_manager(user) and not grants(user, Capability.VIEW_STOCK).exists():
         return None
     grouped, unlinked = {}, 0
