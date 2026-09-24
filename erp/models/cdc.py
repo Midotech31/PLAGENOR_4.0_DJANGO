@@ -67,6 +67,8 @@ class CdcItem(Record):
         null=True, blank=True, validators=[MinValueValidator(0)])
     tax_rate = models.DecimalField(_('Taux de taxe (%)'), max_digits=5, decimal_places=2,
         null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    supplier = models.ForeignKey('erp.Party', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='cdc_items', verbose_name=_('Fournisseur pressenti'))
     price_source = models.CharField(_('Source de l’estimation'), max_length=500, blank=True)
     currency = models.CharField(_('Devise'), max_length=3, default='DZD')
 
@@ -124,3 +126,110 @@ class CdcWorkbookPreview(Record):
     reason = models.CharField(max_length=500)
     expires_at = models.DateTimeField()
     applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True)
+
+
+class CdcClause(Record):
+    """Canonical reusable clause mapped to one verified paragraph in a source family."""
+    family = models.CharField(max_length=12, choices=CdcDossier.Family.choices)
+    code = models.CharField(max_length=64)
+    paragraph_id = models.CharField(max_length=160)
+    title = models.CharField(_('Intitulé de la clause'), max_length=255)
+    category = models.CharField(_('Catégorie'), max_length=80, blank=True)
+    mandatory = models.BooleanField(_('Clause obligatoire'), default=False)
+    active = models.BooleanField(_('Active'), default=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    current_version = models.ForeignKey('erp.CdcClauseVersion', on_delete=models.PROTECT,
+        null=True, blank=True, editable=False, related_name='+')
+
+    class Meta:
+        ordering = ['family', 'code']
+        constraints = [
+            models.UniqueConstraint(fields=['family', 'code'], name='erp_cdc_clause_code'),
+            models.UniqueConstraint(fields=['family', 'paragraph_id'], name='erp_cdc_clause_paragraph'),
+        ]
+
+
+class CdcClauseVersion(ImmutableRecord):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    clause = models.ForeignKey(CdcClause, on_delete=models.PROTECT, related_name='versions')
+    number = models.PositiveIntegerField()
+    body = models.TextField(_('Texte approuvé'))
+    source = models.CharField(_('Source / justification'), max_length=500)
+    effective_on = models.DateField(_('Date d’effet'), null=True, blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    sha256 = models.CharField(max_length=64, editable=False)
+
+    class Meta:
+        ordering = ['-number']
+        constraints = [models.UniqueConstraint(fields=['clause', 'number'], name='erp_cdc_clause_version')]
+
+
+class CdcClauseSelection(Record):
+    dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='clause_selections')
+    clause = models.ForeignKey(CdcClause, on_delete=models.PROTECT, related_name='selections')
+    selected_version = models.ForeignKey(CdcClauseVersion, on_delete=models.PROTECT, related_name='selections')
+    selected_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    reason = models.CharField(_('Justification'), max_length=500)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['dossier', 'clause'], name='erp_cdc_clause_selection')]
+
+
+class CdcCriterion(Record):
+    class Category(models.TextChoices):
+        PARTICIPATION = 'PARTICIPATION', _('Condition de participation')
+        ADMIN = 'ADMIN', _('Conformité administrative')
+        TECHNICAL = 'TECHNICAL', _('Critère technique')
+        FINANCIAL = 'FINANCIAL', _('Critère financier')
+        ELIMINATORY = 'ELIMINATORY', _('Critère éliminatoire')
+
+    dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='criteria')
+    lot = models.ForeignKey(CdcLot, on_delete=models.PROTECT, null=True, blank=True, related_name='criteria')
+    code = models.CharField(max_length=64)
+    category = models.CharField(max_length=16, choices=Category.choices)
+    title = models.CharField(_('Intitulé'), max_length=255)
+    description = models.TextField(_('Description'), blank=True)
+    expected_evidence = models.TextField(_('Preuve attendue'), blank=True)
+    min_score = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    max_score = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    weight = models.DecimalField(_('Pondération (%)'), max_digits=6, decimal_places=2, default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)])
+    threshold = models.DecimalField(_('Seuil'), max_digits=10, decimal_places=2, null=True, blank=True)
+    formula = models.CharField(_('Formule / méthode'), max_length=500, blank=True)
+    rounding_rule = models.CharField(_('Règle d’arrondi'), max_length=120, blank=True)
+    eliminatory = models.BooleanField(_('Éliminatoire'), default=False)
+    source = models.CharField(_('Source'), max_length=500)
+    justification = models.CharField(_('Justification'), max_length=500, blank=True)
+    position = models.PositiveSmallIntegerField(default=1)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['position', 'code']
+        constraints = [
+            models.UniqueConstraint(fields=['dossier', 'code'], name='erp_cdc_criterion_code'),
+            models.CheckConstraint(condition=Q(weight__gte=0, weight__lte=100), name='erp_cdc_criterion_weight'),
+            models.CheckConstraint(condition=Q(min_score__isnull=True) | Q(max_score__isnull=True) |
+                Q(min_score__lte=models.F('max_score')), name='erp_cdc_criterion_score_order'),
+        ]
+
+
+class CdcReviewDecision(ImmutableRecord):
+    class Stage(models.TextChoices):
+        TECHNICAL = 'TECHNICAL', _('Revue technique')
+        ADMIN = 'ADMIN', _('Revue administrative et juridique')
+        FINANCIAL = 'FINANCIAL', _('Revue financière')
+
+    class Decision(models.TextChoices):
+        APPROVED = 'APPROVED', _('Approuvé')
+        CHANGES = 'CHANGES', _('Corrections demandées')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, related_name='review_decisions')
+    stage = models.CharField(max_length=16, choices=Stage.choices)
+    decision = models.CharField(max_length=12, choices=Decision.choices)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    comment = models.CharField(_('Compte rendu'), max_length=1000)
+
+    class Meta:
+        ordering = ['created_at']
+        constraints = [models.UniqueConstraint(fields=['revision', 'stage'], name='erp_cdc_review_stage')]
