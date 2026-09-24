@@ -23,6 +23,15 @@ from .work import require_work
 SALT = 'plagenor.cdc.workbook.v1'
 
 
+def _copy_requirements(source_item_id, target_item):
+    rows = CdcRequirement.objects.filter(item_id=source_item_id, active=True).order_by('position', 'code')
+    for requirement in rows:
+        CdcRequirement.objects.create(item=target_item, code=requirement.code, kind=requirement.kind,
+            statement=requirement.statement, evidence=requirement.evidence,
+            verification=requirement.verification, justification=requirement.justification,
+            position=requirement.position, active=True)
+
+
 def export_workbook(user, dossier, *, filled=True, prices=False):
     require_work(user, dossier.work, costs=prices)
     estimates = {}
