@@ -13,9 +13,9 @@ from django.utils.translation import gettext_lazy as _
 
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.lot_workbook import MAX_FILE, build_workbook, parse_workbook
-from erp.models import CdcItem, CdcLot, CdcRevision, CdcWorkbookPreview
+from erp.models import CdcItem, CdcLot, CdcRequirement, CdcRevision, CdcWorkbookPreview
 from erp.permissions import require_manager
-from .cdc import _dossier, _revision, document_data, dossier_scope
+from .cdc import _dossier, _revision, document_data, dossier_scope, restore_governance_snapshot
 from .common import check_version
 from .work import require_work
 
@@ -118,7 +118,8 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
             dossier__in=dossier_scope(user), active=True)
         if source.dossier.family != dossier.family:
             raise ValidationError(_('Réutilisez un lot de la même famille documentaire.'))
-        for item in source.items.filter(active=True):
+        for item in source.items.filter(active=True).prefetch_related('requirements'):
+            requirements = list(item.requirements.filter(active=True))
             item.pk = None
             item.lot = lot
             item.source_key = 'new-' + str(uuid.uuid4())
@@ -127,6 +128,11 @@ def add_lot(user, pk, *, expected, name, name_ar='', source=None, reason='', sou
             item.estimated_price = item.tax_rate = None
             item.price_source = ''
             item.save()
+            for requirement in requirements:
+                CdcRequirement.objects.create(item=item, position=requirement.position, kind=requirement.kind,
+                    statement=requirement.statement, evidence=requirement.evidence,
+                    verification_method=requirement.verification_method, justification=requirement.justification,
+                    active=True)
     _revision(user, dossier, reason)
     return lot
 
@@ -143,6 +149,7 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     rows = list(target.items.filter(active=True).exclude(pk=item.pk if action == 'move' else None).order_by('position', 'id'))
     if not 1 <= position <= len(rows) + 1:
         raise ValidationError(_('La position doit se situer parmi les articles retenus du lot.'))
+    requirements = list(item.requirements.filter(active=True))
     if action == 'move':
         CdcItem.objects.filter(pk=item.pk).update(active=False)
     else:
@@ -155,6 +162,11 @@ def arrange_item(user, pk, *, expected, destination, action, position, reason):
     item.version = 1
     item.full_clean()
     item.save()
+    for requirement in requirements:
+        CdcRequirement.objects.create(item=item, position=requirement.position, kind=requirement.kind,
+            statement=requirement.statement, evidence=requirement.evidence,
+            verification_method=requirement.verification_method, justification=requirement.justification,
+            active=True)
     rows.insert(position - 1, item)
     for n, row in enumerate(rows, 1):
         row.position = n
@@ -211,6 +223,7 @@ def restore_revision(user, pk, *, expected, reason):
             item.estimated_price, item.tax_rate = value['price'], value['tax_rate']
             item.currency, item.price_source = value['currency'], value['source']
             item.save()
+    restore_governance_snapshot(user, dossier, source.data)
     dossier.data = copy.deepcopy(source.data)
     dossier.reference = source.data['reference']
     dossier.full_clean()
