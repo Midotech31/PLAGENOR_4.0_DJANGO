@@ -48,6 +48,12 @@ CDC_READ_CAPABILITIES = (
     Capability.APPROVE_CDC,
 )
 
+CDC_REVIEW_VISIBLE_STATES = (
+    WorkItem.Status.SUBMITTED,
+    WorkItem.Status.CHANGES_REQUESTED,
+    WorkItem.Status.APPROVED,
+)
+
 
 def _review_grant_filter(user, capability, *, financial=False):
     condition = Q(pk__in=[])
