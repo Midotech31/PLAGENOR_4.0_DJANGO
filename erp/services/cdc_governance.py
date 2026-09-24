@@ -102,7 +102,7 @@ def publish_clause(user, dossier, *, expected, paragraph_id, title, category='',
     if not source.strip() or not reason.strip() or not title.strip():
         raise ValidationError(_('Le titre, la source et la justification sont obligatoires.'))
     row = _editable_paragraph(dossier, paragraph_id)
-    text = body.strip() or row['text'].strip()
+    text = body.strip()
     if not text:
         raise ValidationError(_('Une clause vide ne peut pas être publiée.'))
     code = hashlib.sha256((dossier.family + ':' + paragraph_id).encode()).hexdigest()[:24].upper()
@@ -175,6 +175,8 @@ def review_revision(user, revision, *, stage, decision, comment):
         raise ValidationError(_('Le cahier des charges doit être soumis avant les revues formelles.'))
     if stage not in REVIEW_ORDER:
         raise ValidationError(_('Étape de revue inconnue.'))
+    if decision not in CdcReviewDecision.Decision.values:
+        raise ValidationError(_('Décision de revue inconnue.'))
     if stage == CdcReviewDecision.Stage.TECHNICAL:
         if not (is_manager(user) or dossier.work.assignee_id == user.pk):
             raise PermissionDenied
