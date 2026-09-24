@@ -12,8 +12,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from erp.models import (AnalysisRun, Article, CdcDossier, CdcItem, CdcLot, ForecastObservation, LocationClosure,
-    ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine,
-    PurchaseReceiptLink, RunAllocation, RunRequirement, StockContainer, StockEntry, StockReceipt, WorkItem)
+    ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder,
+    PurchaseOrderLine, PurchaseReceiptLink, RunAllocation, RunRequirement, StockContainer, StockEntry, StockReceipt, WorkItem)
 from erp.permissions import Capability, permitted, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, lock_tree, snapshot
@@ -53,6 +53,11 @@ def _revision(user,plan,reason):
             'purchase_quantity':str(link.purchase_quantity),'run':link.requirement.run.code,
             'request':link.requirement.run.request.display_id} for link in row.requirement_links.select_related(
                 'requirement__run__request').order_by('created_at','id')]
+        value['cdc_sources']=[{'item':str(link.item_id),'dossier':str(link.item.lot.dossier_id),
+            'lot':link.item.lot.name,'designation':link.item.designation,
+            'required_quantity':str(link.required_quantity),'stock_covered_quantity':str(link.stock_covered_quantity),
+            'shortage_quantity':str(link.shortage_quantity)} for link in row.cdc_item_links.select_related(
+                'item__lot').order_by('created_at','id')]
         lines.append(value)
     data={'reference':plan.reference,'year':plan.year,'starts_on':str(plan.starts_on),'ends_on':str(plan.ends_on),'lines':lines}
     plan.version+=1
@@ -364,17 +369,37 @@ def plan_from_cdc(user,dossier_id,*,expected,plan_reference,year,assignee=None,r
     plan=create_plan(user,reference=plan_reference,year=year,title=str(_('Approvisionnement — %(title)s'))%{'title':dossier.work.title},
         assignee=assignee,allow_costs=dossier.work.allow_costs,instructions=reason,category=dossier.work.category,
         location=dossier.work.location,due_on=dossier.work.due_on)
+    cdc_items=list(CdcItem.objects.filter(lot__dossier=dossier,lot__active=True,active=True,article__isnull=False)
+        .select_related('lot','article').order_by('lot__position','position','id'))
     lot_names={}
-    for item in CdcItem.objects.filter(lot__dossier=dossier,lot__active=True,active=True,article__isnull=False).select_related('lot'):
+    by_article={}
+    for item in cdc_items:
         lot_names.setdefault(item.article_id,[])
+        by_article.setdefault(item.article_id,[]).append(item)
         if item.lot.name not in lot_names[item.article_id]:
             lot_names[item.article_id].append(item.lot.name)
     for shortage in shortages:
+        article_id=shortage['article'].pk
         line=add_plan_article(user,plan.pk,expected=plan.version,article=shortage['article'],
-            lot_name=' / '.join(lot_names.get(shortage['article'].pk,[]))[:180] or str(_('Besoins CDC')),_record_revision=False)
+            lot_name=' / '.join(lot_names.get(article_id,[]))[:180] or str(_('Besoins CDC')),_record_revision=False)
         purchase=(shortage['shortage']/line.purchase_factor).quantize(Decimal('0.000001'),rounding=ROUND_CEILING)
         line.proposed_quantity=stock_quantity(purchase)
         line.save(update_fields=['proposed_quantity','updated_at'])
+        remaining_available=stock_quantity(shortage['available'],zero=True)
+        linked_shortage=Decimal(0)
+        for item in by_article.get(article_id,[]):
+            required=stock_quantity(item.quantity*item.base_factor)
+            covered=min(required,remaining_available)
+            item_shortage=stock_quantity(required-covered,zero=True)
+            remaining_available=stock_quantity(max(Decimal(0),remaining_available-covered),zero=True)
+            if item_shortage<=0:
+                continue
+            ProcurementCdcItemLink.objects.create(line=line,item=item,actor=user,
+                required_quantity=required,stock_covered_quantity=covered,shortage_quantity=item_shortage,
+                reason=reason.strip())
+            linked_shortage+=item_shortage
+        if stock_quantity(linked_shortage)!=stock_quantity(shortage['shortage']):
+            raise ValidationError(_('La ventilation des besoins CDC ne correspond pas au déficit calculé.'))
     plan.cdc=dossier
     plan.save(update_fields=['cdc','updated_at'])
     _revision(user,plan,reason)
