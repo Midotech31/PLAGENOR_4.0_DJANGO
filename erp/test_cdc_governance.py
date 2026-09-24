@@ -7,11 +7,12 @@ from django.urls import reverse
 from erp.cdc.catalog import document
 from erp.cdc.schedule_adapter import managed_ids
 from erp.models import (CdcClause, CdcClauseSelection, CdcClauseVersion, CdcCriterion,
-                        CdcReviewDecision, WorkItem)
+                        CdcDossier, CdcReviewDecision, WorkItem)
 from erp.services.cdc import create_dossier, document_data, edit_cdc_paragraph, save_cdc_item
 from erp.services.cdc_governance import (apply_clause_selections, criteria_findings,
     governance_snapshot, publish_clause, review_revision, review_summary, save_criterion,
     select_clause)
+from erp.services.work import create_work
 from erp.test_operations import OperationFixtures
 from notifications.models import Notification
 
@@ -192,8 +193,9 @@ class CdcNativeGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(self.dossier.work.status, WorkItem.Status.CHANGES_REQUESTED)
         self.assertTrue(Notification.objects.filter(user=self.operator, link_url=reverse('erp:cdc-detail', args=[self.dossier.pk])).exists())
         self.assertEqual(len(review_summary(self.dossier)), 3)
-        empty = create_dossier(self.ops, family='works', reference='83/SME/SDFM/SG/ESSBO/2026', title='Résumé vide')
-        empty.revisions.all().update(number=2)
+        empty_work = create_work(self.ops, kind=WorkItem.Kind.CDC, title='Résumé vide')
+        empty = CdcDossier.objects.create(work=empty_work, family='works',
+            reference='83/SME/SDFM/SG/ESSBO/2026', data={})
         self.assertEqual(review_summary(empty), [])
 
         stale = revision
