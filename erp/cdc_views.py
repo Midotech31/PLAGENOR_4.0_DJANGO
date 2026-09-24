@@ -15,9 +15,9 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from . import cdc_forms as forms
 from .cdc.catalog import controls, document, effective_edits
 from .cdc.docengine import DocumentError
-from .models import (CdcClause, CdcClauseRevision, CdcClauseSelection, CdcCriterion, CdcDossier,
+from .models import (Capability, CdcClause, CdcClauseRevision, CdcClauseSelection, CdcCriterion, CdcDossier,
     CdcGeneration, CdcItem, CdcLot, CdcRequirement, CdcRevision, ProcurementPlan, WorkItem)
-from .permissions import has_access, is_manager, require_manager
+from .permissions import has_access, is_manager, permitted, require, require_manager
 from .services.cdc import (approve_dossier, archive_dossier, create_clause_revision, create_dossier,
     document_data, dossier_findings, dossier_scope, duplicate_dossier, edit_cdc_paragraph, estimate_totals,
     generate_cdc, review_dossier, review_state, save_clause, save_cdc_item, save_cdc_lot,
@@ -200,7 +200,7 @@ def cdc_item_edit(request, lot_id, pk=None):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def cdc_approve(request, pk):
-    require_manager(request.user)
+    require(request.user, Capability.APPROVE_CDC)
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
     form = forms.CdcApprovalForm(request.POST or None, dossier=dossier, initial={'expected_version': dossier.version})
     if request.method == 'POST' and form.is_valid():
@@ -415,9 +415,16 @@ def cdc_clause_select(request, dossier_id):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def cdc_review(request, pk):
-    require_manager(request.user)
+    allowed = (
+        permitted(request.user, Capability.REVIEW_CDC_TECHNICAL)
+        or permitted(request.user, Capability.REVIEW_CDC_ADMIN)
+        or permitted(request.user, Capability.REVIEW_CDC_FINANCIAL)
+    )
+    if not allowed:
+        raise PermissionDenied
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    form = forms.CdcReviewForm(request.POST or None, initial={'expected_version': dossier.version})
+    form = forms.CdcReviewForm(request.POST or None, user=request.user,
+        initial={'expected_version': dossier.version})
     if request.method == 'POST' and form.is_valid():
         values = dict(form.cleaned_data)
         try:
