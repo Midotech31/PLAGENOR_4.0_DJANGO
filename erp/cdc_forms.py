@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from .forms import VersionedForm
-from .models import Article, CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcReviewDecision, Party, Unit, WorkItem
+from .models import (Article, CdcClauseVersion, CdcCriterion, CdcDossier, CdcGeneration,
+                     CdcItem, CdcReviewDecision, Party, Unit, WorkItem)
 from .permissions import TEAM_ROLES
 from .services.work import work_allowed
 from .work_forms import OperationForm, WorkForm
@@ -186,3 +187,15 @@ class CdcReviewForm(OperationForm):
     stage = forms.ChoiceField(label=_('Étape de revue'), choices=CdcReviewDecision.Stage.choices)
     decision = forms.ChoiceField(label=_('Décision'), choices=CdcReviewDecision.Decision.choices)
     comment = forms.CharField(label=_('Compte rendu'), max_length=1000, widget=forms.Textarea)
+
+
+class CdcClauseSelectForm(OperationForm):
+    expected_version = forms.IntegerField(widget=forms.HiddenInput)
+    version = forms.ModelChoiceField(label=_('Version canonique'), queryset=CdcClauseVersion.objects.none())
+    reason = forms.CharField(label=_('Justification du changement de version'), max_length=500, widget=forms.Textarea)
+
+    def __init__(self, *args, clause, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['version'].queryset = clause.versions.order_by('-number')
+        self.fields['version'].label_from_instance = lambda value: str(_('Version %(number)s — %(source)s')) % {
+            'number': value.number, 'source': value.source}
