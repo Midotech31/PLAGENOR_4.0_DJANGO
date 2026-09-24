@@ -13,7 +13,7 @@
   <strong>{% trans 'Contrôle' %}</strong><p>{{ finding.message }}</p>
 </article>
 {% endfor %}
-{% if editable %}<div class="erp-form-actions"><a class="btn btn-primary" href="{% url 'erp:cdc-criterion-new' pk=dossier.pk %}">{% trans 'Ajouter un critère' %}</a></div>{% endif %}
+<div class="erp-form-actions">{% if editable %}<a class="btn btn-primary" href="{% url 'erp:cdc-criterion-new' pk=dossier.pk %}">{% trans 'Ajouter un critère' %}</a>{% endif %}<a class="btn btn-secondary" href="{% url 'erp:cdc-criteria-export' pk=dossier.pk %}">{% trans 'Exporter la grille Excel' %}</a></div>
 <div class="erp-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Grille des critères' %}">
 <table class="erp-table">
 <thead><tr><th>{% trans 'Code' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Critère' %}</th><th>{% trans 'Lot' %}</th><th>{% trans 'Pondération' %}</th><th>{% trans 'Méthode' %}</th></tr></thead>
