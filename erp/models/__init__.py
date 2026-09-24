@@ -19,7 +19,7 @@ from .consumption import (AnalysisRun, ConsumptionProfile, ConsumptionRule, RunA
 
 from .planning import ActivityDependency, ActivitySchedule, AvailabilityBlock, PlanningResource
 
-from .procurement import (ForecastObservation, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
+from .procurement import (ForecastObservation, ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
 
 from .imports import ImportBatch
 
