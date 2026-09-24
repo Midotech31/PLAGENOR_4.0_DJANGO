@@ -34,6 +34,22 @@ def criteria_workbook(revision):
     sheet.auto_filter.ref = sheet.dimensions
     for index, width in enumerate((16, 18, 30, 45, 36, 40, 12, 12, 16, 12, 35, 20, 14, 40, 40), 1):
         sheet.column_dimensions[get_column_letter(index)].width = width
+    requirements = workbook.create_sheet('Exigences')
+    requirement_headers = ('Article', 'Lot', 'Code', 'Type', 'Exigence', 'Preuve attendue',
+                           'Méthode de vérification', 'Justification')
+    requirements.append(list(requirement_headers))
+    for cell in requirements[1]:
+        cell.font = Font(bold=True)
+    for row in revision.governance.get('requirements', []):
+        requirements.append([
+            row.get('item_key', ''), row.get('lot', ''), row.get('code', ''), row.get('kind', ''),
+            row.get('statement', ''), row.get('evidence', ''), row.get('verification', ''),
+            row.get('justification', ''),
+        ])
+    requirements.freeze_panes = 'A2'
+    requirements.auto_filter.ref = requirements.dimensions
+    for index, width in enumerate((24, 36, 16, 18, 50, 40, 40, 40), 1):
+        requirements.column_dimensions[get_column_letter(index)].width = width
     info = workbook.create_sheet('Traçabilité')
     info.append(['Référence CDC', revision.dossier.reference])
     info.append(['Révision', revision.number])
