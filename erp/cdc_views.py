@@ -40,6 +40,12 @@ def _form_response(request, form, dossier, title):
         status=400 if request.method == 'POST' else 200)
 
 
+def _require_editable_dossier(user, dossier):
+    require_work(user, dossier.work, edit=True)
+    if dossier.archived_at is not None:
+        raise PermissionDenied
+
+
 @login_required
 @require_GET
 def cdc_list(request):
@@ -132,7 +138,7 @@ def cdc_detail(request, pk):
 @require_http_methods(['GET', 'POST'])
 def cdc_consultation(request, pk):
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     initial = {key: value for key, value in dossier.data['consultation'].items() if key != 'schema'}
     initial.update(expected_version=dossier.version, reference=dossier.reference)
     form = forms.ConsultationForm(request.POST or None, initial=initial)
@@ -159,7 +165,7 @@ def cdc_lot(request, pk):
             Q(details__icontains=search) | Q(article__code__icontains=search))
     return render(request, 'erp/cdc_lot.html', {'lot': lot, 'dossier': lot.dossier,
         'q': search, 'page': Paginator(items, 30).get_page(request.GET.get('page')),
-        'editable': work_allowed(request.user, lot.dossier.work, edit=True),
+        'editable': lot.dossier.archived_at is None and work_allowed(request.user, lot.dossier.work, edit=True),
         'cost_access': work_allowed(request.user, lot.dossier.work, costs=True)})
 
 
@@ -167,7 +173,7 @@ def cdc_lot(request, pk):
 @require_http_methods(['GET', 'POST'])
 def cdc_lot_edit(request, pk):
     lot = get_object_or_404(CdcLot.objects.select_related('dossier__work'), pk=pk, dossier__in=dossier_scope(request.user))
-    require_work(request.user, lot.dossier.work, edit=True)
+    _require_editable_dossier(request.user, lot.dossier)
     form = forms.CdcLotForm(request.POST or None, initial={'expected_version': lot.dossier.version,
         'name': lot.name, 'name_ar': lot.name_ar, 'source_slot': lot.source_slot})
     if request.method == 'POST' and form.is_valid():
@@ -186,7 +192,7 @@ def cdc_lot_edit(request, pk):
 def cdc_item_edit(request, lot_id, pk=None):
     lot = get_object_or_404(CdcLot.objects.select_related('dossier__work'), pk=lot_id, dossier__in=dossier_scope(request.user))
     dossier = lot.dossier
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     item = get_object_or_404(CdcItem, pk=pk, lot=lot) if pk else CdcItem(lot=lot)
     form = forms.CdcItemForm(request.POST or None, instance=item, user=request.user, dossier=dossier)
     if request.method == 'POST' and form.is_valid():
@@ -266,14 +272,14 @@ def cdc_clauses(request, pk):
         blocks = [block for block in blocks if search in block['text'].casefold()]
     return render(request, 'erp/cdc_clauses.html', {'dossier': dossier, 'q': request.GET.get('q', '')[:200],
         'page': Paginator(blocks, 40).get_page(request.GET.get('page')),
-        'editable': work_allowed(request.user, dossier.work, edit=True)})
+        'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True)})
 
 
 @login_required
 @require_http_methods(['GET', 'POST'])
 def cdc_paragraph(request, pk):
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     pid = request.POST.get('paragraph_id') if request.method == 'POST' else request.GET.get('paragraph_id')
     source = document(dossier.family)
     if pid not in source.paragraphs:
@@ -359,7 +365,7 @@ def cdc_requirement_edit(request, item_id, pk=None):
     item = get_object_or_404(CdcItem.objects.select_related('lot__dossier__work'), pk=item_id,
         lot__dossier__in=dossier_scope(request.user))
     dossier = item.lot.dossier
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     requirement = get_object_or_404(CdcRequirement, pk=pk, item=item) if pk else None
     initial = {'expected_version': dossier.version, 'position': item.requirements.count() + 1,
         'kind': CdcRequirement.Kind.MANDATORY, 'active': True}
@@ -383,7 +389,7 @@ def cdc_requirement_edit(request, item_id, pk=None):
 @require_http_methods(['GET', 'POST'])
 def cdc_criterion_edit(request, dossier_id, pk=None):
     dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     criterion = get_object_or_404(CdcCriterion, pk=pk, dossier=dossier) if pk else None
     initial = {'expected_version': dossier.version, 'position': dossier.criteria.count() + 1,
         'method': CdcCriterion.Method.PROPORTIONAL, 'weight': 0, 'active': True}
@@ -407,7 +413,7 @@ def cdc_criterion_edit(request, dossier_id, pk=None):
 @require_http_methods(['GET', 'POST'])
 def cdc_clause_select(request, dossier_id):
     dossier = get_object_or_404(dossier_scope(request.user), pk=dossier_id)
-    require_work(request.user, dossier.work, edit=True)
+    _require_editable_dossier(request.user, dossier)
     form = forms.CdcClauseSelectionForm(request.POST or None, initial={
         'expected_version': dossier.version, 'position': dossier.clause_selections.count() + 1, 'active': True})
     if request.method == 'POST' and form.is_valid():
