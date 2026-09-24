@@ -608,3 +608,11 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         state = review_state(dossier)
         self.assertEqual(state['required'], ['TECHNICAL', 'ADMIN_LEGAL'])
         self.assertTrue(state['complete'])
+        with self.assertRaisesRegex(ValidationError, 'pas applicable'):
+            review_dossier(self.ops, dossier.pk, expected=dossier.version,
+                stage='FINANCIAL', outcome='APPROVED', comment='Inutile')
+
+        self.grant(Capability.REVIEW_CDC_FINANCIAL, user=self.second)
+        self.client.force_login(self.second)
+        self.assertIn(self.client.get(reverse('erp:cdc-detail',
+            args=[dossier.pk])).status_code, (403, 404))
