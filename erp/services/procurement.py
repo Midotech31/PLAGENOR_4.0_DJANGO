@@ -423,7 +423,7 @@ def link_run_shortages(user,run_id,plan_id,*,expected_run,reason):
     for line in plan.lines.filter(pk__in=touched):
         linked=sum(line.requirement_links.values_list('purchase_quantity',flat=True),Decimal(0))
         line.proposed_quantity=max(line.proposed_quantity or Decimal(0),linked)
-        line.reviewed_at=line.reviewed_by=None,None
+        line.reviewed_at,line.reviewed_by=None,None
         line.version+=1
         line.save(update_fields=['proposed_quantity','reviewed_at','reviewed_by','version','updated_at'])
     _revision(user,plan,reason)
