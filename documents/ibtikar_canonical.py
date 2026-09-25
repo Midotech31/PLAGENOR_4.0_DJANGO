@@ -12,7 +12,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 from documents.document_design import (
-    PLAGENOR_THEME, add_callout, add_document_footer, add_document_title,
+    PLAGENOR_THEME, add_callout, add_document_footer, add_ibtikar_request_title,
     add_identity_header, add_section_heading, add_signature_grid,
     apply_document_style, set_cant_split, style_data_table, style_key_value_table,
 )
@@ -21,6 +21,8 @@ from documents.ibtikar_reference import reference_content
 
 TEXT = {
     'form': ('FICHE DE DEMANDE IBTIKAR', 'IBTIKAR REQUEST FORM', 'استمارة طلب إبتكار'),
+    'service_requested': ('Service demandé', 'Requested service', 'الخدمة المطلوبة'),
+    'general': ('INFORMATIONS GÉNÉRALES', 'GENERAL INFORMATION', 'معلومات عامة'),
     'requester': ('Demandeur et projet', 'Applicant and project', 'صاحب الطلب والمشروع'),
     'parameters': ('Paramètres de la prestation', 'Service parameters', 'معلمات الخدمة'),
     'samples': ('Échantillons / amorces', 'Samples / primers', 'العينات / البادئات'),
@@ -264,18 +266,22 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     doc = Document()
     apply_document_style(doc, PLAGENOR_THEME, dense=True)
     add_identity_header(doc, PLAGENOR_THEME, compact=True)
-    add_document_title(
+    add_ibtikar_request_title(
         doc, text('form', language),
-        subtitle=project['title'], code=project['service_code'],
+        service_label=text('service_requested', language),
+        service_title=project['title'], service_code=project['service_code'],
         theme=PLAGENOR_THEME,
     )
     if metadata.get('draft'):
         add_callout(doc, text('draft', language), theme=PLAGENOR_THEME, kind='warning')
+    add_section_heading(doc, f"1. {text('general', language)}", theme=PLAGENOR_THEME)
     _control_table(doc, project, metadata, language)
     if legacy:
         add_callout(doc, text('legacy', language), theme=PLAGENOR_THEME)
     if project.get('applicant'):
-        add_section_heading(doc, text('requester', language), theme=PLAGENOR_THEME)
+        add_section_heading(
+            doc, f"2. {text('requester', language).upper()}", theme=PLAGENOR_THEME,
+        )
         _kv_table(doc, project['applicant'], language)
     if project.get('parameters'):
         add_section_heading(doc, text('parameters', language), theme=PLAGENOR_THEME)
