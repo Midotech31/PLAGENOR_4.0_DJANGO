@@ -330,6 +330,81 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+    def test_http_error_paths_and_archived_edit_gate(self):
+        self.client.force_login(self.ops)
+
+        response = self.client.post(reverse('erp:cdc-duplicate', args=[self.dossier.pk]), {
+            'expected_version': self.dossier.version,
+            'reference': self.dossier.reference,
+            'title': 'Référence dupliquée', 'priority': 'NORMAL',
+            'reason': 'Collision volontaire'})
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('erp:cdc-archive', args=[self.dossier.pk]), {
+            'expected_version': self.dossier.version, 'reason': 'Trop tôt'})
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('erp:cdc-procurement', args=[self.dossier.pk]), {
+            'expected_version': self.dossier.version, 'plan_reference': 'HTTP-RAW',
+            'year': __import__('django.utils.timezone', fromlist=['localdate']).localdate().year,
+            'reason': 'Sans catalogue'})
+        self.assertEqual(response.status_code, 400)
+
+        self.client.force_login(self.operator)
+        response = self.client.post(reverse('erp:cdc-requirement-create', args=[self.item.pk]), {
+            'expected_version': self.dossier.version, 'position': 1, 'kind': 'ELIMINATORY',
+            'statement': 'Exigence bloquante', 'evidence': 'Certificat',
+            'verification_method': 'Contrôle', 'justification': '',
+            'active': 'on', 'reason': 'Test erreur'})
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('erp:cdc-criterion-create', args=[self.dossier.pk]), {
+            'expected_version': self.dossier.version, 'lot': '', 'code': 'BAD-E',
+            'title': 'Éliminatoire incomplet', 'method': 'BINARY', 'weight': '100',
+            'threshold': '', 'eliminatory': 'on', 'evidence': '',
+            'position': 1, 'active': 'on', 'reason': 'Test erreur'})
+        self.assertEqual(response.status_code, 400)
+
+        clause = self.clause()
+        active = create_clause_revision(self.ops, clause, text_fr='Clause active',
+            source_reference='Source active', activate=True)
+        with mock.patch('erp.cdc_views.select_clause', side_effect=ValidationError('Erreur clause')):
+            response = self.client.post(reverse('erp:cdc-clause-select', args=[self.dossier.pk]), {
+                'expected_version': self.dossier.version, 'revision': active.pk,
+                'position': 1, 'note': '', 'active': 'on', 'reason': 'Erreur simulée'})
+        self.assertEqual(response.status_code, 400)
+
+        self.dossier.work.status = WorkItem.Status.SUBMITTED
+        self.dossier.work.save(update_fields=['status'])
+        self.client.force_login(self.ops)
+        with mock.patch('erp.cdc_views.review_dossier', side_effect=ValidationError('Erreur revue')):
+            response = self.client.post(reverse('erp:cdc-review', args=[self.dossier.pk]), {
+                'expected_version': self.dossier.version, 'stage': 'TECHNICAL',
+                'outcome': 'APPROVED', 'comment': 'Revue'})
+        self.assertEqual(response.status_code, 400)
+
+        with mock.patch('erp.cdc_views.save_clause', side_effect=ValidationError('Erreur définition')):
+            response = self.client.post(reverse('erp:cdc-clause-create'), {
+                'code': 'ERR.CLAUSE', 'name': 'Erreur', 'name_en': '', 'name_ar': '',
+                'title': 'Erreur clause', 'active': 'on', 'reason': 'Test'})
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(self.client.get(reverse('erp:cdc-clause-revision', args=[clause.pk])).status_code, 200)
+        with mock.patch('erp.cdc_views.create_clause_revision',
+                        side_effect=ValidationError('Erreur révision')):
+            response = self.client.post(reverse('erp:cdc-clause-revision', args=[clause.pk]), {
+                'text_fr': 'Texte', 'text_en': '', 'text_ar': '',
+                'source_reference': 'Source', 'activate': 'on'})
+        self.assertEqual(response.status_code, 400)
+
+        self.dossier.work.status = WorkItem.Status.ASSIGNED
+        self.dossier.work.save(update_fields=['status'])
+        self.dossier.archived_at = __import__('django.utils.timezone', fromlist=['now']).now()
+        self.dossier.save(update_fields=['archived_at'])
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(reverse('erp:cdc-criterion-create',
+            args=[self.dossier.pk])).status_code, 403)
+
     def test_duplicate_dossier_preserves_governance_without_copying_prices(self):
         save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
             values={'position': 1, 'kind': 'MANDATORY', 'statement': 'Exigence source',
