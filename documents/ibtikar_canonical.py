@@ -5,16 +5,16 @@ import re
 import uuid
 
 from docx import Document
-from docx.enum.table import WD_ROW_HEIGHT_RULE
+from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 from documents.document_design import (
-    PLAGENOR_THEME, add_callout, add_document_footer, add_ibtikar_request_title,
-    add_identity_header, add_section_heading, add_signature_grid,
-    apply_document_style, set_cant_split, style_data_table, style_key_value_table,
+    PLAGENOR_THEME, add_callout, add_document_footer, add_ibtikar_master_header,
+    add_ibtikar_section_heading, add_invisible_header_drawing, add_section_heading, add_signature_grid,
+    apply_document_style, set_cant_split, style_data_table, style_ibtikar_key_value_table,
 )
 from documents.ibtikar_reference import reference_content
 
@@ -102,11 +102,19 @@ def _kv_table(doc, rows, language, *, dense=False, writable=False):
         return None
     table = doc.add_table(rows=0, cols=2)
     table.autofit = False
-    table.columns[0].width = Cm(6.1)
-    table.columns[1].width = Cm(11.0)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    tbl_pr = table._tbl.tblPr
+    tbl_ind = tbl_pr.find(qn('w:tblInd'))
+    if tbl_ind is None:
+        tbl_ind = OxmlElement('w:tblInd')
+        tbl_pr.append(tbl_ind)
+    tbl_ind.set(qn('w:w'), str(Cm(1.45).twips))
+    tbl_ind.set(qn('w:type'), 'dxa')
+    table.columns[0].width = Cm(5.15)
+    table.columns[1].width = Cm(12.30)
     for item in rows:
         cells = table.add_row().cells
-        cells[0].width, cells[1].width = Cm(6.1), Cm(11.0)
+        cells[0].width, cells[1].width = Cm(5.15), Cm(12.30)
         cells[0].text = str(item['label'])
         cells[1].text = _display(item)
         if writable:
@@ -114,7 +122,7 @@ def _kv_table(doc, rows, language, *, dense=False, writable=False):
             row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
             row.height = Cm(1.25 if item.get('field_type') == 'textarea' else 0.85)
         set_cant_split(table.rows[-1])
-    style_key_value_table(table, theme=PLAGENOR_THEME, dense=dense)
+    style_ibtikar_key_value_table(table, dense=dense)
     if language == 'ar':
         for row in table.rows:
             for cell in row.cells:
@@ -151,7 +159,7 @@ def _render_samples(doc, project, language):
     samples = project.get('samples') or []
     if not samples:
         return
-    add_section_heading(doc, text('samples', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('samples', language).upper(), theme=PLAGENOR_THEME)
     if project.get('read_count') is not None:
         p = doc.add_paragraph(f"{text('reads', language)} : {project['read_count']}")
         p.paragraph_format.space_after = Pt(5)
@@ -214,7 +222,7 @@ def _render_reference(doc, project, language):
         if notice not in source_paragraphs:
             blocks.append({'type': 'paragraph', 'text': notice})
     if blocks:
-        add_section_heading(doc, text('guidance', language), theme=PLAGENOR_THEME)
+        add_ibtikar_section_heading(doc, text('guidance', language).upper(), theme=PLAGENOR_THEME)
         for block in blocks:
             if block.get('type') == 'table':
                 rows = block.get('rows') or []
@@ -241,7 +249,7 @@ def _render_reference(doc, project, language):
 def _render_attachments(doc, rows, language):
     if not rows:
         return
-    add_section_heading(doc, text('attachments', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('attachments', language).upper(), theme=PLAGENOR_THEME)
     _kv_table(doc, rows, language, dense=True)
 
 
@@ -265,36 +273,54 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
                    signature_bytes=None, legacy=None):
     doc = Document()
     apply_document_style(doc, PLAGENOR_THEME, dense=True)
-    add_identity_header(doc, PLAGENOR_THEME, compact=True)
-    add_ibtikar_request_title(
-        doc, text('form', language),
+    for section in doc.sections:
+        section.top_margin = Cm(0.45)
+        section.left_margin = Cm(0.85)
+        section.right_margin = Cm(0.85)
+        section.bottom_margin = Cm(1.25)
+        section.header_distance = Cm(0.25)
+    normal = doc.styles['Normal']
+    normal.font.name = 'Times New Roman'
+    normal.font.size = Pt(10.2)
+    rpr = normal.element.get_or_add_rPr()
+    fonts = rpr.get_or_add_rFonts()
+    for key in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
+        fonts.set(qn(f'w:{key}'), 'Times New Roman')
+    add_invisible_header_drawing(doc)
+    add_ibtikar_master_header(
+        doc,
+        form_title=text('form', language),
         service_label=text('service_requested', language),
-        service_title=project['title'], service_code=project['service_code'],
-        theme=PLAGENOR_THEME,
+        service_title=project['title'],
+        service_code=project['service_code'],
     )
     if metadata.get('draft'):
         add_callout(doc, text('draft', language), theme=PLAGENOR_THEME, kind='warning')
-    add_section_heading(doc, f"1. {text('general', language)}", theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(
+        doc, f"1. {text('general', language)}", icon='general', theme=PLAGENOR_THEME,
+    )
     _control_table(doc, project, metadata, language)
     if legacy:
         add_callout(doc, text('legacy', language), theme=PLAGENOR_THEME)
     if project.get('applicant'):
-        add_section_heading(
-            doc, f"2. {text('requester', language).upper()}", theme=PLAGENOR_THEME,
+        add_ibtikar_section_heading(
+            doc, f"2. {text('requester', language).upper()}", icon='user',
+            theme=PLAGENOR_THEME,
         )
         _kv_table(doc, project['applicant'], language)
     if project.get('parameters'):
-        add_section_heading(doc, text('parameters', language), theme=PLAGENOR_THEME)
+        add_ibtikar_section_heading(doc, text('parameters', language).upper(), theme=PLAGENOR_THEME)
         _kv_table(doc, project['parameters'], language)
     _render_samples(doc, project, language)
     _render_attachments(doc, attachment_rows or [], language)
     ethics = _render_reference(doc, project, language)
-    add_section_heading(doc, text('ethics', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('ethics', language).upper(), theme=PLAGENOR_THEME)
     add_callout(doc, ethics, theme=PLAGENOR_THEME)
-    add_section_heading(doc, text('signature', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('signature', language).upper(), theme=PLAGENOR_THEME)
     _signature_image(doc, signature_bytes)
-    heading = add_section_heading(doc, text('staff', language), theme=PLAGENOR_THEME)
-    heading.paragraph_format.page_break_before = True
+    page_break = doc.add_paragraph()
+    page_break.paragraph_format.page_break_before = True
+    heading = add_ibtikar_section_heading(doc, text('staff', language).upper(), theme=PLAGENOR_THEME)
     doc.add_paragraph(text('staff_help', language))
     if metadata.get('operator_name'):
         p = doc.add_paragraph(f"{text('operator', language)} : {metadata['operator_name']}")

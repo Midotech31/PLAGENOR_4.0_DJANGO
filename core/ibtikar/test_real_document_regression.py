@@ -119,14 +119,17 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
             legacy=legacy["legacy_display"],
         )
         text = collect_text(document)
-        title_band = next(
-            table for table in document.tables
-            if "FICHE DE DEMANDE IBTIKAR" in " ".join(cell.text for cell in table.rows[0].cells)
-        )
-        self.assertEqual(len(title_band.rows[0].cells), 4)
-        self.assertIn("Service demandé", title_band.rows[0].cells[3].text)
-        self.assertIn(project["title"], title_band.rows[0].cells[3].text)
-        self.assertIn(project["service_code"], title_band.rows[0].cells[3].text)
+        descriptions = [
+            node.get("descr", "")
+            for node in document._element.xpath(".//wp:docPr")
+        ]
+        self.assertTrue(any(
+            "FICHE DE DEMANDE IBTIKAR" in descr
+            and "Service demandé" in descr
+            and project["title"] in descr
+            and project["service_code"] in descr
+            for descr in descriptions
+        ))
         self.assertIn("1. INFORMATIONS GÉNÉRALES", text)
         self.assertIn("2. DEMANDEUR ET PROJET", text)
 
@@ -209,5 +212,5 @@ class IbtikarDocumentCacheVersionTests(SimpleTestCase):
         ):
             query.return_value.only.return_value.first.return_value = None
             path = _cached_doc_path(request, "IBTIKAR_FORM")
-        self.assertIn("__canonical4_hybrid__", path.name)
-        self.assertNotIn("__canonical3__", path.name)
+        self.assertIn("__canonical5_master_design__", path.name)
+        self.assertNotIn("__canonical4_hybrid__", path.name)
