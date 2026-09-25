@@ -311,3 +311,67 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             reverse('erp:cdc-clause-select', args=[dossier.pk]),
         ):
             self.assertEqual(self.client.get(url).status_code, 403)
+
+
+    def test_run_procurement_http_and_remaining_procurement_guards(self):
+        from unittest import mock
+        from erp.models import CdcItem
+        from erp.services.procurement import ProcurementRequirementLink
+
+        request, run = self.analytical_run(code='HTTP-RUN', amount=50)
+        plan = create_plan(self.ops, reference='HTTP-RUN-PLAN',
+            year=timezone.localdate().year, title='Plan HTTP run',
+            category=self.article.category, location=self.freezer)
+        self.client.force_login(self.ops)
+        route = reverse('erp:run-procurement', args=[run.pk])
+        self.assertEqual(self.client.get(route).status_code, 200)
+        data = {'expected_version': run.version, 'plan': plan.pk, 'reason': 'Manque confirmé'}
+        with mock.patch('erp.services.procurement.link_run_shortages',
+                        side_effect=ValidationError('Échec contrôlé')):
+            self.assertEqual(self.client.post(route, data).status_code, 400)
+        with mock.patch('erp.services.procurement.link_run_shortages', return_value=(plan, 1)):
+            response = self.client.post(route, data)
+        self.assertEqual(response.status_code, 302)
+
+        archived = self.structured_cdc('79/SME/SDFM/SG/ESSBO/2026', amount=3)
+        archived.archived_at = timezone.now()
+        archived.save(update_fields=['archived_at'])
+        with self.assertRaisesRegex(ValidationError, 'archivé'):
+            plan_from_cdc(self.ops, archived.pk, expected=archived.version,
+                plan_reference='ARCHIVED-PLAN', year=timezone.localdate().year,
+                reason='Archivage')
+
+        split = self.structured_cdc('80/SME/SDFM/SG/ESSBO/2026', amount=4)
+        split.refresh_from_db()
+        lot = split.lots.first()
+        save_cdc_item(self.ops, lot.pk, expected=split.version,
+            values={'quantity': Decimal('6')}, article=self.article,
+            purchase_unit=self.unit, reason='Deuxième besoin')
+        split.refresh_from_db()
+        with mock.patch('erp.services.cdc.stock_status', return_value={
+            'unlinked': 0, 'rows': [{'article': self.article, 'required': Decimal('10'),
+                'available': Decimal('4'), 'shortage': Decimal('6'), 'status': 'INSUFFICIENT'}]}):
+            split_plan = plan_from_cdc(self.ops, split.pk, expected=split.version,
+                plan_reference='SPLIT-PLAN', year=timezone.localdate().year,
+                reason='Ventilation')
+        self.assertEqual(split_plan.lines.get().cdc_item_links.count(), 1)
+
+        mismatch = self.structured_cdc('81/SME/SDFM/SG/ESSBO/2026', amount=5)
+        with mock.patch('erp.services.cdc.stock_status', return_value={
+            'unlinked': 0, 'rows': [{'article': self.article, 'required': Decimal('5'),
+                'available': Decimal('0'), 'shortage': Decimal('4'), 'status': 'INSUFFICIENT'}]}):
+            with self.assertRaisesRegex(ValidationError, 'ventilation'):
+                plan_from_cdc(self.ops, mismatch.pk, expected=mismatch.version,
+                    plan_reference='MISMATCH-PLAN', year=timezone.localdate().year,
+                    reason='Incohérence contrôlée')
+
+        _, linked_run = self.analytical_run(code='DOUBLE-LINK', amount=60)
+        first_plan = create_plan(self.ops, reference='DOUBLE-FIRST',
+            year=timezone.localdate().year, title='Premier plan')
+        link_run_shortages(self.ops, linked_run.pk, first_plan.pk,
+            expected_run=linked_run.version, reason='Premier rattachement')
+        second_plan = create_plan(self.ops, reference='DOUBLE-SECOND',
+            year=timezone.localdate().year, title='Second plan')
+        with self.assertRaisesRegex(ValidationError, 'déjà pris en charge'):
+            link_run_shortages(self.ops, linked_run.pk, second_plan.pk,
+                expected_run=linked_run.version, reason='Second rattachement')
