@@ -126,7 +126,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.goto('/erp/cdc/new/');
   await page.locator('.topbar button[name=language][value=fr]').click();
   await page.locator('[name=family]').selectOption('equipment');
-  const number = {chromium:8301,firefox:8302,'mobile-chromium':8303}[info.project.name] + info.retry * 10;
+  const number = {chromium:8401,firefox:8402,'mobile-chromium':8403}[info.project.name] + info.retry * 10;
   await page.locator('[name=reference]').fill(`${number}/SME/SDFM/SG/ESSBO/2026`);
   await page.locator('[name=title]').fill(`CDC gouvernance ${info.project.name}`);
   await submit(page,'.erp-form button[type=submit]');
@@ -172,7 +172,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=title]').fill('Réception et conformité');
   await page.locator('[name=active]').check();
   await page.locator('[name=reason]').fill('Référentiel E2E');
-  await submit(page,'button[type=submit]');
+  await submit(page,'.erp-form button[type=submit]');
   const row = page.locator('tbody tr').filter({hasText:`E2E.${number}`});
   await row.getByRole('link',{name:'Nouvelle révision',exact:true}).click();
   await page.locator('[name=text_fr]').fill('La conformité est vérifiée à la réception.');
@@ -180,7 +180,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=text_ar]').fill('يتم التحقق من المطابقة عند الاستلام.');
   await page.locator('[name=source_reference]').fill('Décision ESSBO E2E');
   await page.locator('[name=activate]').check();
-  await submit(page,'button[type=submit]');
+  await submit(page,'.erp-form button[type=submit]');
 
   await page.goto(dossierURL);
   await page.getByRole('link',{name:'Exigences, critères, clauses et revues',exact:true}).click();
@@ -191,7 +191,7 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await page.locator('[name=mandatory]').check();
   await page.locator('[name=active]').check();
   await page.locator('[name=reason]').fill('Clause obligatoire pour ce dossier');
-  await submit(page,'button[type=submit]');
+  await submit(page,'.erp-form button[type=submit]');
   await expect(page.locator('body')).toContainText('Réception et conformité');
 
   await page.reload();
