@@ -399,7 +399,7 @@ def plan_from_cdc(user,dossier_id,*,expected,plan_reference,year,assignee=None,r
                 required_quantity=required,stock_covered_quantity=covered,shortage_quantity=item_shortage,
                 reason=reason.strip())
             linked_shortage+=item_shortage
-        if stock_quantity(linked_shortage)!=stock_quantity(shortage['shortage']):
+        if stock_quantity(linked_shortage, zero=True)!=stock_quantity(shortage['shortage']):
             raise ValidationError(_('La ventilation des besoins CDC ne correspond pas au déficit calculé.'))
     plan.cdc=dossier
     plan.save(update_fields=['cdc','updated_at'])
