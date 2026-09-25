@@ -4,9 +4,11 @@ import os
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
+from docx.enum.table import WD_TABLE_ALIGNMENT
 
 from core.ibtikar.legacy import _display_value, document_initial, legacy_initial
 from core.ibtikar.schema import get_schema, projection
+from documents.document_design import IBTIKAR_FONT
 from documents.ibtikar_canonical import build_document
 from documents.ibtikar_reference import reference_content
 from documents.views import _cached_doc_path
@@ -132,6 +134,31 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
         ))
         self.assertIn("1. INFORMATIONS GÉNÉRALES", text)
         self.assertIn("2. DEMANDEUR ET PROJET", text)
+        control_table = next(
+            table for table in document.tables
+            if table.rows and table.rows[0].cells[0].text == "Numéro de demande"
+        )
+        self.assertEqual(control_table.alignment, WD_TABLE_ALIGNMENT.CENTER)
+        self.assertEqual(
+            [round(cell.width.cm, 1) for cell in control_table.rows[0].cells],
+            [6.1, 11.7],
+        )
+        self.assertTrue(all(
+            run.font.name == IBTIKAR_FONT
+            for cell in control_table.rows[0].cells
+            for paragraph in cell.paragraphs
+            for run in paragraph.runs
+            if run.text
+        ))
+        signature_table = next(
+            table for table in document.tables
+            if table.rows
+            and "Signature de l’opérateur" in table.rows[0].cells[0].text
+            and len(table.rows[0].cells) == 3
+        )
+        self.assertEqual(signature_table.alignment, WD_TABLE_ALIGNMENT.CENTER)
+        signature_widths = [round(cell.width.cm, 2) for cell in signature_table.rows[0].cells]
+        self.assertLess(max(signature_widths) - min(signature_widths), 0.02)
 
         project_title = next(
             row for row in project["applicant"] if row["name"] == "project_title"

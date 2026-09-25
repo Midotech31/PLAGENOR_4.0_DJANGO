@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 from docx.document import Document as DocumentType
-from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT, WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -18,6 +18,9 @@ STATIC_IMAGES = Path(__file__).resolve().parent.parent / "static" / "images"
 IBTIKAR_SERVICE_BADGE = ASSETS / "ibtikar_service_badge.png"
 IBTIKAR_SECTION_GENERAL = ASSETS / "ibtikar_section_general.png"
 IBTIKAR_SECTION_USER = ASSETS / "ibtikar_section_user.png"
+IBTIKAR_FONT = "DejaVu Serif"
+IBTIKAR_CONTENT_INDENT_CM = 1.30
+IBTIKAR_CONTENT_WIDTH_CM = 17.80
 
 
 @dataclass(frozen=True)
@@ -129,10 +132,10 @@ def _font(run, *, size=10.5, bold=False, color="172033", name="Arial"):
 
 
 def _paragraph_text(paragraph, value, *, size=10.5, bold=False, color="172033",
-                    align=None, before=0, after=0):
+                    align=None, before=0, after=0, name="Arial"):
     paragraph.text = ""
     run = paragraph.add_run(str(value or ""))
-    _font(run, size=size, bold=bold, color=color)
+    _font(run, size=size, bold=bold, color=color, name=name)
     if align is not None:
         paragraph.alignment = align
     paragraph.paragraph_format.space_before = Pt(before)
@@ -142,14 +145,21 @@ def _paragraph_text(paragraph, value, *, size=10.5, bold=False, color="172033",
 
 
 def _pil_font(size: int, *, bold=False):
+    filename = "DejaVuSerif-Bold.ttf" if bold else "DejaVuSerif.ttf"
     candidates = [
+        Path("/usr/share/fonts/truetype/dejavu") / filename,
+        Path(r"C:\Windows\Fonts") / filename,
+        Path.home() / "AppData" / "Local" / "Programs" / "Python" / "Python311"
+        / "Lib" / "site-packages" / "matplotlib" / "mpl-data" / "fonts" / "ttf" / filename,
+        Path.home() / "AppData" / "Local" / "Programs" / "Python" / "Python312"
+        / "Lib" / "site-packages" / "matplotlib" / "mpl-data" / "fonts" / "ttf" / filename,
+    ]
+    candidates.extend([
         Path(r"C:\Windows\Fonts\georgiab.ttf" if bold else r"C:\Windows\Fonts\georgia.ttf"),
         Path(r"C:\Windows\Fonts\timesbd.ttf" if bold else r"C:\Windows\Fonts\times.ttf"),
         Path("/usr/share/fonts/truetype/liberation2/LiberationSerif-Bold.ttf" if bold
              else "/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf"),
-        Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" if bold
-             else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-    ]
+    ])
     for candidate in candidates:
         if candidate.exists():
             return ImageFont.truetype(str(candidate), size=size)
@@ -283,7 +293,7 @@ def add_ibtikar_section_heading(
     """IBTIKAR section strip matching the supplied master design."""
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
     table.columns[0].width = Cm(1.12)
     table.columns[1].width = Cm(17.78)
     icon_cell, title_cell = table.rows[0].cells
@@ -298,9 +308,9 @@ def add_ibtikar_section_heading(
     asset = IBTIKAR_SECTION_USER if icon == "user" else IBTIKAR_SECTION_GENERAL
     p.add_run().add_picture(str(asset), width=Cm(0.78))
     p = title_cell.paragraphs[0]
-    _paragraph_text(p, title, size=13.8, bold=True, color="123F75")
+    _paragraph_text(p, title, size=13.0, bold=True, color="123F75")
     for run in p.runs:
-        _font(run, size=13.8, bold=True, color="123F75", name="Times New Roman")
+        _font(run, size=13.0, bold=True, color="123F75", name=IBTIKAR_FONT)
     ppr = p._p.get_or_add_pPr()
     borders = OxmlElement("w:pBdr")
     bottom = OxmlElement("w:bottom")
@@ -313,12 +323,24 @@ def add_ibtikar_section_heading(
     return table
 
 
+def add_ibtikar_subheading(doc: DocumentType, title: str, *, theme=PLAGENOR_THEME):
+    """Compact DejaVu Serif subheading on the same axis as IBTIKAR content tables."""
+    p = doc.add_paragraph()
+    p.paragraph_format.keep_with_next = True
+    p.paragraph_format.left_indent = Cm(0)
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(3)
+    run = p.add_run(title)
+    _font(run, size=11.0, bold=True, color=theme.dark, name=IBTIKAR_FONT)
+    return p
+
+
 def style_ibtikar_key_value_table(table, *, dense=False) -> None:
     for row in table.rows:
         set_cant_split(row)
         for col, cell in enumerate(row.cells):
-            set_cell_margins(cell, top=48 if dense else 58, bottom=48 if dense else 58,
-                             start=115, end=115)
+            set_cell_margins(cell, top=65 if dense else 85, bottom=65 if dense else 85,
+                             start=105, end=105)
             set_cell_border(cell, bottom=("C9D9E9", 3), start=("D7E3EE", 2), end=("D7E3EE", 2))
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             if col == 0:
@@ -329,9 +351,52 @@ def style_ibtikar_key_value_table(table, *, dense=False) -> None:
                 p.paragraph_format.space_after = Pt(0)
                 p.paragraph_format.line_spacing = 1.0
                 for run in p.runs:
-                    _font(run, size=9.6 if dense else 10.2, bold=(col == 0),
+                    _font(run, size=9.0 if dense else 9.5, bold=(col == 0),
                           color="173A63" if col == 0 else "172033",
-                          name="Times New Roman")
+                          name=IBTIKAR_FONT)
+
+
+def align_ibtikar_content_table(table, widths_cm=None) -> None:
+    """Apply one deterministic content axis to every IBTIKAR body table."""
+    table.autofit = False
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    tbl_pr = table._tbl.tblPr
+    tbl_ind = tbl_pr.find(qn("w:tblInd"))
+    if tbl_ind is None:
+        tbl_ind = OxmlElement("w:tblInd")
+        tbl_pr.append(tbl_ind)
+    tbl_ind.set(qn("w:w"), "0")
+    tbl_ind.set(qn("w:type"), "dxa")
+    tbl_width = tbl_pr.find(qn("w:tblW"))
+    preferred_width = sum(widths_cm) if widths_cm else IBTIKAR_CONTENT_WIDTH_CM
+    tbl_width.set(qn("w:type"), "dxa")
+    tbl_width.set(qn("w:w"), str(Cm(preferred_width).twips))
+    if widths_cm:
+        for column, width in zip(table.columns, widths_cm):
+            column.width = Cm(width)
+        for row in table.rows:
+            for cell, width in zip(row.cells, widths_cm):
+                cell.width = Cm(width)
+
+
+def add_ibtikar_signature_grid(doc: DocumentType, labels, *, theme=PLAGENOR_THEME) -> None:
+    """Signature/visa grid aligned exactly with IBTIKAR body tables."""
+    table = doc.add_table(rows=1, cols=len(labels))
+    widths = [IBTIKAR_CONTENT_WIDTH_CM / max(len(labels), 1)] * max(len(labels), 1)
+    align_ibtikar_content_table(table, widths)
+    row = table.rows[0]
+    row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+    row.height = Cm(2.45)
+    for i, label in enumerate(labels):
+        cell = row.cells[i]
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.TOP
+        set_cell_fill(cell, "FAFBFC")
+        set_cell_border(cell, top=(theme.line, 3), bottom=(theme.line, 3),
+                        start=(theme.line, 3), end=(theme.line, 3))
+        set_cell_margins(cell, top=100, bottom=120, start=90, end=90)
+        _paragraph_text(cell.paragraphs[0], label, size=8.5, bold=True, color=theme.primary)
+        for run in cell.paragraphs[0].runs:
+            _font(run, size=8.5, bold=True, color=theme.primary, name=IBTIKAR_FONT)
 
 
 def apply_document_style(doc: DocumentType, theme: DocumentTheme = PLAGENOR_THEME, *, dense=False) -> None:
@@ -427,12 +492,13 @@ def add_document_title(doc: DocumentType, title: str, *, subtitle="", code="", t
         set_cell_margins(cell, top=50, bottom=80, start=0, end=0)
 
 
-def add_section_heading(doc: DocumentType, title: str, *, theme=PLAGENOR_THEME, level=1):
+def add_section_heading(doc: DocumentType, title: str, *, theme=PLAGENOR_THEME, level=1,
+                        font_name="Arial"):
     p = doc.add_paragraph(style=f"Heading {min(max(level,1),3)}")
     p.paragraph_format.keep_with_next = True
     r = p.add_run(title)
     _font(r, size=13 if level == 1 else 11.2, bold=True,
-          color=theme.primary if level == 1 else theme.dark)
+          color=theme.primary if level == 1 else theme.dark, name=font_name)
     if level == 1:
         ppr = p._p.get_or_add_pPr()
         borders = OxmlElement("w:pBdr")
@@ -463,7 +529,8 @@ def style_key_value_table(table, *, theme=PLAGENOR_THEME, label_width=None, dens
                           color=theme.primary if col == 0 else theme.dark)
 
 
-def style_data_table(table, *, theme=PLAGENOR_THEME, dense=False, numeric_cols=()) -> None:
+def style_data_table(table, *, theme=PLAGENOR_THEME, dense=False, numeric_cols=(),
+                     font_name="Arial") -> None:
     if not table.rows:
         return
     set_repeat_table_header(table.rows[0])
@@ -484,10 +551,11 @@ def style_data_table(table, *, theme=PLAGENOR_THEME, dense=False, numeric_cols=(
                 p.paragraph_format.line_spacing = 1.0
                 for run in p.runs:
                     _font(run, size=8.7 if dense else 9.2, bold=(ri == 0),
-                          color="FFFFFF" if ri == 0 else theme.dark)
+                          color="FFFFFF" if ri == 0 else theme.dark, name=font_name)
 
 
-def add_callout(doc: DocumentType, text: str, *, title="", theme=PLAGENOR_THEME, kind="info") -> None:
+def add_callout(doc: DocumentType, text: str, *, title="", theme=PLAGENOR_THEME, kind="info",
+                font_name="Arial"):
     table = doc.add_table(rows=1, cols=1)
     cell = table.cell(0, 0)
     fill = theme.soft if kind != "warning" else "FFF8E8"
@@ -499,11 +567,12 @@ def add_callout(doc: DocumentType, text: str, *, title="", theme=PLAGENOR_THEME,
     cell.text = ""
     if title:
         p = cell.paragraphs[0]
-        _paragraph_text(p, title, size=9.5, bold=True, color=accent, after=2)
+        _paragraph_text(p, title, size=9.5, bold=True, color=accent, after=2, name=font_name)
         p = cell.add_paragraph()
     else:
         p = cell.paragraphs[0]
-    _paragraph_text(p, text, size=9.2, color=theme.dark)
+    _paragraph_text(p, text, size=9.2, color=theme.dark, name=font_name)
+    return table
 
 
 def add_signature_grid(doc: DocumentType, labels, *, theme=PLAGENOR_THEME, min_height=1.65) -> None:
@@ -522,7 +591,8 @@ def add_signature_grid(doc: DocumentType, labels, *, theme=PLAGENOR_THEME, min_h
         p.paragraph_format.space_after = Pt(18 * min_height)
 
 
-def add_document_footer(doc: DocumentType, *, theme=PLAGENOR_THEME, reference="") -> None:
+def add_document_footer(doc: DocumentType, *, theme=PLAGENOR_THEME, reference="",
+                        font_name="Arial") -> None:
     for section in doc.sections:
         footer = section.footer
         for child in list(footer._element):
@@ -537,21 +607,21 @@ def add_document_footer(doc: DocumentType, *, theme=PLAGENOR_THEME, reference=""
         p = left.paragraphs[0]
         p.paragraph_format.space_after = Pt(0)
         run = p.add_run(theme.platform)
-        _font(run, size=7.5, color=theme.muted)
+        _font(run, size=7.5, color=theme.muted, name=font_name)
         if reference:
             run = p.add_run(f"  ·  {reference}")
-            _font(run, size=7.5, color=theme.muted)
+            _font(run, size=7.5, color=theme.muted, name=font_name)
         p = right.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         p.paragraph_format.space_after = Pt(0)
         label = p.add_run("Page ")
-        _font(label, size=7.5, color=theme.muted)
-        _add_field(p, "PAGE", theme)
+        _font(label, size=7.5, color=theme.muted, name=font_name)
+        _add_field(p, "PAGE", theme, font_name=font_name)
         sep = p.add_run(" / ")
-        _font(sep, size=7.5, color=theme.muted)
-        _add_field(p, "NUMPAGES", theme)
+        _font(sep, size=7.5, color=theme.muted, name=font_name)
+        _add_field(p, "NUMPAGES", theme, font_name=font_name)
 
-def _add_field(paragraph, code, theme):
+def _add_field(paragraph, code, theme, *, font_name="Arial"):
     field = OxmlElement("w:fldSimple")
     field.set(qn("w:instr"), code)
     r = OxmlElement("w:r")
@@ -559,6 +629,10 @@ def _add_field(paragraph, code, theme):
     color = OxmlElement("w:color")
     color.set(qn("w:val"), theme.muted)
     rpr.append(color)
+    fonts = OxmlElement("w:rFonts")
+    for key in ("ascii", "hAnsi", "cs", "eastAsia"):
+        fonts.set(qn(f"w:{key}"), font_name)
+    rpr.append(fonts)
     r.append(rpr)
     text = OxmlElement("w:t")
     text.text = "1"
