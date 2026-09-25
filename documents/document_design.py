@@ -19,7 +19,7 @@ IBTIKAR_SERVICE_BADGE = ASSETS / "ibtikar_service_badge.png"
 IBTIKAR_SECTION_GENERAL = ASSETS / "ibtikar_section_general.png"
 IBTIKAR_SECTION_USER = ASSETS / "ibtikar_section_user.png"
 IBTIKAR_FONT = "DejaVu Serif"
-IBTIKAR_CONTENT_INDENT_CM = 1.30
+IBTIKAR_CONTENT_INDENT_CM = 0.75
 IBTIKAR_CONTENT_WIDTH_CM = 17.80
 
 
@@ -293,7 +293,7 @@ def add_ibtikar_section_heading(
     """IBTIKAR section strip matching the supplied master design."""
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
-    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
     table.columns[0].width = Cm(1.12)
     table.columns[1].width = Cm(17.78)
     icon_cell, title_cell = table.rows[0].cells

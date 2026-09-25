@@ -251,6 +251,8 @@ def _render_reference(doc, project, language):
                 add_ibtikar_subheading(doc, value, theme=PLAGENOR_THEME)
             else:
                 p = doc.add_paragraph(value)
+                p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
+                p.paragraph_format.right_indent = Cm(0)
                 p.paragraph_format.space_after = Pt(3)
     return source.get('ethics') or text('ethics_body', language)
 
@@ -347,11 +349,11 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     page_break.paragraph_format.page_break_before = True
     heading = add_ibtikar_section_heading(doc, text('staff', language).upper(), theme=PLAGENOR_THEME)
     p = doc.add_paragraph(text('staff_help', language))
-    p.paragraph_format.left_indent = Cm(0)
+    p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
     if metadata.get('operator_name'):
         p = doc.add_paragraph(f"{text('operator', language)} : {metadata['operator_name']}")
         p.paragraph_format.keep_with_next = True
-        p.paragraph_format.left_indent = Cm(0)
+        p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
     staff_rows = project.get('staff') or []
     _kv_table(doc, staff_rows, language, writable=True)
     add_ibtikar_signature_grid(
