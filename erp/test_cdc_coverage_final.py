@@ -451,8 +451,8 @@ class CdcFinalCoverageTests(OperationFixtures, TestCase):
             'unlinked': 0,
             'rows': [{
                 'article': self.article,
-                'shortage': Decimal('1'),
-                'available': Decimal('0'),
+                'shortage': Decimal('1.000000'),
+                'available': Decimal('0.000000'),
             }],
         }), patch('erp.services.procurement.create_plan', return_value=fake_plan), \
              patch('erp.services.procurement.add_plan_article', return_value=fake_line):
