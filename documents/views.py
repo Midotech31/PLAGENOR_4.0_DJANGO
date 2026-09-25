@@ -139,7 +139,7 @@ def _cached_doc_path(req, template_type, suffix='.docx'):
     form = IbtikarSubmission.objects.filter(request=req).only('revision', 'schema_hash').first() if template_type == 'IBTIKAR_FORM' else None
     safe_id += '__' + (get_language() or 'fr')
     if template_type == 'IBTIKAR_FORM':
-        safe_id += '__canonical4_hybrid__' + (str(form.revision) + '__' + form.schema_hash[:12] if form else 'legacy')
+        safe_id += '__canonical5_master_design__' + (str(form.revision) + '__' + form.schema_hash[:12] if form else 'legacy')
     blocks_sig = _block_signature(req, template_type)
     fields_sig = _service_fields_signature(req)
     templates_sig = '0'
