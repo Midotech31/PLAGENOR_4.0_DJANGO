@@ -571,6 +571,17 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.assertEqual(requirement.statement, 'Après')
 
         self.refresh()
+        response = self.client.post(url, {'expected_version': self.dossier.version,
+            'position': 1, 'kind': 'MANDATORY', 'statement': 'Exigence retirée',
+            'evidence': 'Preuve', 'verification_method': 'Contrôle',
+            'justification': '', 'reason': 'Retirer sans effacer'})
+        self.assertEqual(response.status_code, 302)
+        self.refresh()
+        lot_page = self.client.get(reverse('erp:cdc-lot', args=[self.item.lot_id]))
+        self.assertContains(lot_page, 'Exigence retirée')
+        self.assertContains(lot_page, 'Non')
+
+        self.refresh()
         save_criterion(self.operator, self.dossier.pk, expected=self.dossier.version,
             values={'lot': None, 'code': 'EDIT', 'title': 'Avant', 'method': 'BINARY',
                 'weight': Decimal('100'), 'threshold': None, 'eliminatory': False,
@@ -621,3 +632,10 @@ class NativeCdcToolkitGovernanceTests(OperationFixtures, TestCase):
         self.client.force_login(self.second)
         self.assertIn(self.client.get(reverse('erp:cdc-detail',
             args=[dossier.pk])).status_code, (403, 404))
+
+        dossier.work.assignee = self.second
+        dossier.work.save(update_fields=['assignee'])
+        governance = self.client.get(reverse('erp:cdc-governance', args=[dossier.pk]))
+        self.assertEqual(governance.status_code, 200)
+        self.assertNotContains(governance, 'Enregistrer une revue')
+        self.assertEqual(self.client.get(reverse('erp:cdc-review', args=[dossier.pk])).status_code, 403)
