@@ -46,6 +46,14 @@ def _require_editable_dossier(user, dossier):
         raise PermissionDenied
 
 
+def _can_review_dossier(user, dossier):
+    capabilities = [Capability.REVIEW_CDC_TECHNICAL, Capability.REVIEW_CDC_ADMIN]
+    if dossier.work.allow_costs:
+        capabilities.append(Capability.REVIEW_CDC_FINANCIAL)
+    return any(permitted(user, capability, location=dossier.work.location,
+        category=dossier.work.category) for capability in capabilities)
+
+
 @login_required
 @require_GET
 def cdc_list(request):
@@ -112,9 +120,7 @@ def cdc_detail(request, pk):
     cost_access = cdc_cost_allowed(request.user, dossier)
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()
-    can_review = any(permitted(request.user, capability, location=dossier.work.location,
-        category=dossier.work.category) for capability in (
-            Capability.REVIEW_CDC_TECHNICAL, Capability.REVIEW_CDC_ADMIN, Capability.REVIEW_CDC_FINANCIAL))
+    can_review = _can_review_dossier(request.user, dossier)
     can_approve = permitted(request.user, Capability.APPROVE_CDC,
         location=dossier.work.location, category=dossier.work.category)
     return render(request, 'erp/cdc_detail.html', {'dossier': dossier, 'work': dossier.work,
@@ -344,9 +350,7 @@ def cdc_procurement(request,pk):
 @require_GET
 def cdc_governance(request, pk):
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
-    can_review = any(permitted(request.user, capability, location=dossier.work.location,
-        category=dossier.work.category) for capability in (
-            Capability.REVIEW_CDC_TECHNICAL, Capability.REVIEW_CDC_ADMIN, Capability.REVIEW_CDC_FINANCIAL))
+    can_review = _can_review_dossier(request.user, dossier)
     return render(request, 'erp/cdc_governance.html', {
         'dossier': dossier, 'work': dossier.work,
         'editable': dossier.archived_at is None and work_allowed(request.user, dossier.work, edit=True),
