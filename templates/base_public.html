@@ -3,7 +3,8 @@
 {% load cms %}
 {% load icons %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}"
+      data-password-toggle-label="{% trans 'Afficher/masquer le mot de passe' %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,6 +91,7 @@
 
     <script src="{% url 'javascript-catalog' %}"></script>
     {% include "includes/js_translations.html" %}
+    <script src="{% static 'js/password-visibility.js' %}?v=1"></script>
     <script src="{% static 'js/service-form.js' %}"></script>
     <script src="{% static 'js/app.js' %}?v=3"></script>
     <script src="{% static 'js/cost-calculator.js' %}?v=3"></script>
