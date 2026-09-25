@@ -195,8 +195,8 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await expect(page.locator('body')).toContainText('Réception et conformité');
 
   await page.reload();
-  await expect(page).toContainText('Conformité technique');
-  await expect(page).toContainText('Réception et conformité');
+  await expect(page.locator('body')).toContainText('Conformité technique');
+  await expect(page.locator('body')).toContainText('Réception et conformité');
   await audit(page);
 
   for (const language of ['en','ar']) {
