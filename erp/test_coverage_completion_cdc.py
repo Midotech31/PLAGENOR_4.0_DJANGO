@@ -582,7 +582,7 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
         CdcClauseSelection.objects.create(dossier=self.dossier, revision=draft,
             position=1, mandatory=False, active=True)
         self.assertIn('clause-not-active', {row['code'] for row in governance_findings(self.dossier)})
-        self.assertIn('clause-not-active', {row['code'] for row in dossier_findings(self.dossier)})
+        self.assertIn('clause-not-active', {row.get('code') for row in dossier_findings(self.dossier)})
 
         with self.assertRaisesRegex(ValidationError, 'inconnue'):
             review_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
