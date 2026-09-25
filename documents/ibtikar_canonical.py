@@ -12,15 +12,18 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 from documents.document_design import (
-    PLAGENOR_THEME, add_callout, add_document_footer, add_document_title,
+    PLAGENOR_THEME, add_callout, add_document_footer,
     add_identity_header, add_section_heading, add_signature_grid,
-    apply_document_style, set_cant_split, style_data_table, style_key_value_table,
+    apply_document_style, rgb, set_cant_split, set_cell_border, set_cell_fill,
+    set_cell_margins, style_data_table, style_key_value_table,
 )
 from documents.ibtikar_reference import reference_content
 
 
 TEXT = {
     'form': ('FICHE DE DEMANDE IBTIKAR', 'IBTIKAR REQUEST FORM', 'استمارة طلب إبتكار'),
+    'service_requested': ('Service demandé', 'Requested service', 'الخدمة المطلوبة'),
+    'general': ('1. INFORMATIONS GÉNÉRALES', '1. GENERAL INFORMATION', '1. معلومات عامة'),
     'requester': ('Demandeur et projet', 'Applicant and project', 'صاحب الطلب والمشروع'),
     'parameters': ('Paramètres de la prestation', 'Service parameters', 'معلمات الخدمة'),
     'samples': ('Échantillons / amorces', 'Samples / primers', 'العينات / البادئات'),
@@ -118,6 +121,70 @@ def _kv_table(doc, rows, language, *, dense=False, writable=False):
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
                     _direction(paragraph, True)
+    return table
+
+
+def _title_band(doc, project, language):
+    """Render the IBTIKAR title and requested service on the same visual line."""
+    table = doc.add_table(rows=1, cols=2)
+    table.autofit = False
+    left, right = table.rows[0].cells
+    left.width, right.width = Cm(9.2), Cm(8.0)
+
+    left.text = ''
+    p = left.paragraphs[0]
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.keep_with_next = True
+    run = p.add_run(text('form', language))
+    run.font.name = 'Arial'
+    run.font.size = Pt(16.5)
+    run.font.bold = True
+    run.font.color.rgb = rgb(PLAGENOR_THEME.primary)
+
+    right.text = ''
+    set_cell_fill(right, 'F1F5FA')
+    set_cell_border(right, start=(PLAGENOR_THEME.accent, 16),
+                    top=(PLAGENOR_THEME.line, 2), bottom=(PLAGENOR_THEME.line, 2),
+                    end=(PLAGENOR_THEME.line, 2))
+    label_p = right.paragraphs[0]
+    label_p.paragraph_format.space_before = Pt(0)
+    label_p.paragraph_format.space_after = Pt(1)
+    label = label_p.add_run(text('service_requested', language))
+    label.font.name = 'Arial'
+    label.font.size = Pt(9.0)
+    label.font.bold = True
+    label.font.color.rgb = rgb(PLAGENOR_THEME.primary)
+
+    service_p = right.add_paragraph()
+    service_p.paragraph_format.space_before = Pt(0)
+    service_p.paragraph_format.space_after = Pt(0)
+    service_p.paragraph_format.keep_with_next = True
+    service = service_p.add_run(str(project.get('title') or text('unknown', language)))
+    service.font.name = 'Arial'
+    service.font.size = Pt(15.0)
+    service.font.bold = True
+    service.font.color.rgb = rgb('1557A6')
+
+    code = str(project.get('service_code') or '').strip()
+    if code:
+        code_p = right.add_paragraph()
+        code_p.paragraph_format.space_before = Pt(1)
+        code_p.paragraph_format.space_after = Pt(0)
+        code_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        code_run = code_p.add_run(code)
+        code_run.font.name = 'Arial'
+        code_run.font.size = Pt(8.6)
+        code_run.font.bold = True
+        code_run.font.color.rgb = rgb(PLAGENOR_THEME.accent)
+
+    for cell in (left, right):
+        set_cell_margins(cell, top=70, bottom=80, start=0 if cell is left else 130, end=80)
+        set_cell_border(cell, bottom=(PLAGENOR_THEME.accent, 10))
+    if language == 'ar':
+        for cell in (left, right):
+            for paragraph in cell.paragraphs:
+                _direction(paragraph, True)
     return table
 
 
@@ -264,18 +331,20 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
     doc = Document()
     apply_document_style(doc, PLAGENOR_THEME, dense=True)
     add_identity_header(doc, PLAGENOR_THEME, compact=True)
-    add_document_title(
-        doc, text('form', language),
-        subtitle=project['title'], code=project['service_code'],
-        theme=PLAGENOR_THEME,
-    )
+    _title_band(doc, project, language)
     if metadata.get('draft'):
         add_callout(doc, text('draft', language), theme=PLAGENOR_THEME, kind='warning')
+    add_section_heading(doc, text('general', language), theme=PLAGENOR_THEME)
     _control_table(doc, project, metadata, language)
     if legacy:
         add_callout(doc, text('legacy', language), theme=PLAGENOR_THEME)
     if project.get('applicant'):
-        add_section_heading(doc, text('requester', language), theme=PLAGENOR_THEME)
+        requester_title = {
+            'fr': '2. DEMANDEUR ET PROJET',
+            'en': '2. APPLICANT AND PROJECT',
+            'ar': '2. صاحب الطلب والمشروع',
+        }.get(language, text('requester', language))
+        add_section_heading(doc, requester_title, theme=PLAGENOR_THEME)
         _kv_table(doc, project['applicant'], language)
     if project.get('parameters'):
         add_section_heading(doc, text('parameters', language), theme=PLAGENOR_THEME)
