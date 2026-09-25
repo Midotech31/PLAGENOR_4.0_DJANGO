@@ -101,7 +101,7 @@ class CdcFinalCoverageTests(OperationFixtures, TestCase):
         CdcClauseSelection.objects.create(
             dossier=self.dossier, revision=draft, position=1, mandatory=False, active=True)
         self.assertIn('clause-not-active', {row['code'] for row in governance_findings(self.dossier)})
-        self.assertIn('clause-not-active', {row['code'] for row in dossier_findings(self.dossier)})
+        self.assertIn('clause-not-active', {row.get('code') for row in dossier_findings(self.dossier)})
 
         active = create_clause_revision(
             self.ops, clause, text_fr='Texte actif', source_reference='Décision active', activate=True)
@@ -416,7 +416,8 @@ class CdcFinalCoverageTests(OperationFixtures, TestCase):
         with patch('erp.consumption_views.require_manager'), \
              patch('erp.consumption_views.get_object_or_404', return_value=run), \
              patch('erp.consumption_views.forms.RunProcurementForm', return_value=fake_form), \
-             patch('erp.services.procurement.link_run_shortages', return_value=(plan, 1)):
+             patch('erp.services.procurement.link_run_shortages', return_value=(plan, 1)), \
+             patch('erp.consumption_views.messages.success'):
             response = original(request, run.pk)
         self.assertEqual(response.status_code, 302)
 
