@@ -447,6 +447,8 @@ class CdcFinalCoverageTests(OperationFixtures, TestCase):
 
         fake_plan = Mock(pk=uuid.uuid4(), version=1)
         fake_line = Mock(purchase_factor=Decimal('1'), proposed_quantity=None)
+        empty_items = Mock()
+        empty_items.select_related.return_value.order_by.return_value = []
         with patch('erp.services.cdc.stock_status', return_value={
             'unlinked': 0,
             'rows': [{
@@ -454,7 +456,8 @@ class CdcFinalCoverageTests(OperationFixtures, TestCase):
                 'shortage': Decimal('1.000000'),
                 'available': Decimal('0.000000'),
             }],
-        }), patch('erp.services.procurement.create_plan', return_value=fake_plan), \
+        }), patch('erp.services.procurement.CdcItem.objects.filter', return_value=empty_items), \
+             patch('erp.services.procurement.create_plan', return_value=fake_plan), \
              patch('erp.services.procurement.add_plan_article', return_value=fake_line):
             with self.assertRaisesRegex(ValidationError, 'ventilation'):
                 plan_from_cdc(
