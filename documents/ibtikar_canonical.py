@@ -5,16 +5,19 @@ import re
 import uuid
 
 from docx import Document
-from docx.enum.table import WD_ROW_HEIGHT_RULE
+from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 from documents.document_design import (
-    PLAGENOR_THEME, add_callout, add_document_footer, add_ibtikar_request_title,
-    add_identity_header, add_section_heading, add_signature_grid,
-    apply_document_style, set_cant_split, style_data_table, style_key_value_table,
+    IBTIKAR_CONTENT_INDENT_CM, IBTIKAR_CONTENT_WIDTH_CM, IBTIKAR_FONT,
+    PLAGENOR_THEME, add_callout, add_document_footer, add_ibtikar_master_header,
+    add_ibtikar_section_heading, add_ibtikar_signature_grid, add_ibtikar_subheading,
+    add_invisible_header_drawing,
+    add_section_heading, align_ibtikar_content_table,
+    apply_document_style, set_cant_split, style_data_table, style_ibtikar_key_value_table,
 )
 from documents.ibtikar_reference import reference_content
 
@@ -102,11 +105,10 @@ def _kv_table(doc, rows, language, *, dense=False, writable=False):
         return None
     table = doc.add_table(rows=0, cols=2)
     table.autofit = False
-    table.columns[0].width = Cm(6.1)
-    table.columns[1].width = Cm(11.0)
+    align_ibtikar_content_table(table, [6.10, 11.70])
     for item in rows:
         cells = table.add_row().cells
-        cells[0].width, cells[1].width = Cm(6.1), Cm(11.0)
+        cells[0].width, cells[1].width = Cm(6.10), Cm(11.70)
         cells[0].text = str(item['label'])
         cells[1].text = _display(item)
         if writable:
@@ -114,7 +116,7 @@ def _kv_table(doc, rows, language, *, dense=False, writable=False):
             row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
             row.height = Cm(1.25 if item.get('field_type') == 'textarea' else 0.85)
         set_cant_split(table.rows[-1])
-    style_key_value_table(table, theme=PLAGENOR_THEME, dense=dense)
+    style_ibtikar_key_value_table(table, dense=dense)
     if language == 'ar':
         for row in table.rows:
             for cell in row.cells:
@@ -151,7 +153,7 @@ def _render_samples(doc, project, language):
     samples = project.get('samples') or []
     if not samples:
         return
-    add_section_heading(doc, text('samples', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('samples', language).upper(), theme=PLAGENOR_THEME)
     if project.get('read_count') is not None:
         p = doc.add_paragraph(f"{text('reads', language)} : {project['read_count']}")
         p.paragraph_format.space_after = Pt(5)
@@ -169,11 +171,17 @@ def _render_samples(doc, project, language):
             cells[0].text = f'{number:02d}'
             for index, name in enumerate(names, 1):
                 cells[index].text = str(values.get(name, '—'))
-        style_data_table(table, theme=PLAGENOR_THEME, dense=True)
+        usable = IBTIKAR_CONTENT_WIDTH_CM
+        first = 0.90
+        remaining = max(usable - first, 1.0)
+        widths = [first] + [remaining / max(len(names), 1)] * len(names)
+        align_ibtikar_content_table(table, widths)
+        style_data_table(table, theme=PLAGENOR_THEME, dense=True, font_name=IBTIKAR_FONT)
         return
     for number, rows in enumerate(samples, 1):
-        add_section_heading(doc, f"{text('sample', language)} {number:02d}",
-                            theme=PLAGENOR_THEME, level=2)
+        add_ibtikar_subheading(
+            doc, f"{text('sample', language)} {number:02d}", theme=PLAGENOR_THEME,
+        )
         _kv_table(doc, rows, language, dense=True)
 
 
@@ -194,7 +202,8 @@ def _render_reference(doc, project, language):
             'ar': 'تُحفظ المتطلبات التشغيلية أدناه بصياغتها الرسمية الأصلية باللغة الفرنسية.',
         }.get(language)
         if note:
-            add_callout(doc, note, theme=PLAGENOR_THEME)
+            table = add_callout(doc, note, theme=PLAGENOR_THEME, font_name=IBTIKAR_FONT)
+            align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
     guidance = list(source.get('guidance') or [])
     for notice in project.get('notices') or []:
         # EGTP-IMT already carries the complete official MALDI-TOF guidance
@@ -214,7 +223,7 @@ def _render_reference(doc, project, language):
         if notice not in source_paragraphs:
             blocks.append({'type': 'paragraph', 'text': notice})
     if blocks:
-        add_section_heading(doc, text('guidance', language), theme=PLAGENOR_THEME)
+        add_ibtikar_section_heading(doc, text('guidance', language).upper(), theme=PLAGENOR_THEME)
         for block in blocks:
             if block.get('type') == 'table':
                 rows = block.get('rows') or []
@@ -225,15 +234,25 @@ def _render_reference(doc, project, language):
                     cells = table.add_row().cells
                     for index, value in enumerate(row_values):
                         cells[index].text = str(value)
-                style_data_table(table, theme=PLAGENOR_THEME, dense=True)
+                col_count = max(len(row) for row in rows)
+                align_ibtikar_content_table(
+                    table, [IBTIKAR_CONTENT_WIDTH_CM / max(col_count, 1)] * col_count,
+                )
+                style_data_table(table, theme=PLAGENOR_THEME, dense=True, font_name=IBTIKAR_FONT)
                 continue
             value = block.get('text') or ''
             if value.lower().startswith(('très important', 'important')):
-                add_callout(doc, value, title='Important', theme=PLAGENOR_THEME, kind='warning')
+                table = add_callout(
+                    doc, value, title='Important', theme=PLAGENOR_THEME, kind='warning',
+                    font_name=IBTIKAR_FONT,
+                )
+                align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
             elif _looks_heading(value):
-                add_section_heading(doc, value, theme=PLAGENOR_THEME, level=2)
+                add_ibtikar_subheading(doc, value, theme=PLAGENOR_THEME)
             else:
                 p = doc.add_paragraph(value)
+                p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
+                p.paragraph_format.right_indent = Cm(0)
                 p.paragraph_format.space_after = Pt(3)
     return source.get('ethics') or text('ethics_body', language)
 
@@ -241,7 +260,7 @@ def _render_reference(doc, project, language):
 def _render_attachments(doc, rows, language):
     if not rows:
         return
-    add_section_heading(doc, text('attachments', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('attachments', language).upper(), theme=PLAGENOR_THEME)
     _kv_table(doc, rows, language, dense=True)
 
 
@@ -253,6 +272,7 @@ def _signature_image(doc, signature_bytes):
         except Exception:
             pass
     table = doc.add_table(rows=1, cols=1)
+    align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
     cell = table.cell(0, 0)
     cell.text = '\n\n'
     from documents.document_design import set_cell_border, set_cell_margins
@@ -265,52 +285,92 @@ def build_document(project, metadata, language='fr', attachment_rows=None,
                    signature_bytes=None, legacy=None):
     doc = Document()
     apply_document_style(doc, PLAGENOR_THEME, dense=True)
-    add_identity_header(doc, PLAGENOR_THEME, compact=True)
-    add_ibtikar_request_title(
-        doc, text('form', language),
+    for section in doc.sections:
+        section.top_margin = Cm(0.45)
+        section.left_margin = Cm(0.85)
+        section.right_margin = Cm(0.85)
+        section.bottom_margin = Cm(1.25)
+        section.header_distance = Cm(0.25)
+    normal = doc.styles['Normal']
+    normal.font.name = IBTIKAR_FONT
+    normal.font.size = Pt(9.5)
+    rpr = normal.element.get_or_add_rPr()
+    fonts = rpr.get_or_add_rFonts()
+    for key in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
+        fonts.set(qn(f'w:{key}'), IBTIKAR_FONT)
+    for style_name in ('Title', 'Heading 1', 'Heading 2', 'Heading 3'):
+        style = doc.styles[style_name]
+        style.font.name = IBTIKAR_FONT
+        style_rpr = style.element.get_or_add_rPr()
+        style_fonts = style_rpr.get_or_add_rFonts()
+        for key in ('ascii', 'hAnsi', 'cs', 'eastAsia'):
+            style_fonts.set(qn(f'w:{key}'), IBTIKAR_FONT)
+    add_invisible_header_drawing(doc)
+    add_ibtikar_master_header(
+        doc,
+        form_title=text('form', language),
         service_label=text('service_requested', language),
-        service_title=project['title'], service_code=project['service_code'],
-        theme=PLAGENOR_THEME,
+        service_title=project['title'],
+        service_code=project['service_code'],
     )
     if metadata.get('draft'):
-        add_callout(doc, text('draft', language), theme=PLAGENOR_THEME, kind='warning')
-    add_section_heading(doc, f"1. {text('general', language)}", theme=PLAGENOR_THEME)
+        table = add_callout(
+            doc, text('draft', language), theme=PLAGENOR_THEME, kind='warning',
+            font_name=IBTIKAR_FONT,
+        )
+        align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
+    add_ibtikar_section_heading(
+        doc, f"1. {text('general', language)}", icon='general', theme=PLAGENOR_THEME,
+    )
     _control_table(doc, project, metadata, language)
     if legacy:
-        add_callout(doc, text('legacy', language), theme=PLAGENOR_THEME)
+        table = add_callout(
+            doc, text('legacy', language), theme=PLAGENOR_THEME, font_name=IBTIKAR_FONT,
+        )
+        align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
     if project.get('applicant'):
-        add_section_heading(
-            doc, f"2. {text('requester', language).upper()}", theme=PLAGENOR_THEME,
+        add_ibtikar_section_heading(
+            doc, f"2. {text('requester', language).upper()}", icon='user',
+            theme=PLAGENOR_THEME,
         )
         _kv_table(doc, project['applicant'], language)
     if project.get('parameters'):
-        add_section_heading(doc, text('parameters', language), theme=PLAGENOR_THEME)
+        add_ibtikar_section_heading(doc, text('parameters', language).upper(), theme=PLAGENOR_THEME)
         _kv_table(doc, project['parameters'], language)
     _render_samples(doc, project, language)
     _render_attachments(doc, attachment_rows or [], language)
     ethics = _render_reference(doc, project, language)
-    add_section_heading(doc, text('ethics', language), theme=PLAGENOR_THEME)
-    add_callout(doc, ethics, theme=PLAGENOR_THEME)
-    add_section_heading(doc, text('signature', language), theme=PLAGENOR_THEME)
+    add_ibtikar_section_heading(doc, text('ethics', language).upper(), theme=PLAGENOR_THEME)
+    table = add_callout(doc, ethics, theme=PLAGENOR_THEME, font_name=IBTIKAR_FONT)
+    align_ibtikar_content_table(table, [IBTIKAR_CONTENT_WIDTH_CM])
+    add_ibtikar_section_heading(doc, text('signature', language).upper(), theme=PLAGENOR_THEME)
     _signature_image(doc, signature_bytes)
-    heading = add_section_heading(doc, text('staff', language), theme=PLAGENOR_THEME)
-    heading.paragraph_format.page_break_before = True
-    doc.add_paragraph(text('staff_help', language))
+    page_break = doc.add_paragraph()
+    page_break.paragraph_format.page_break_before = True
+    heading = add_ibtikar_section_heading(doc, text('staff', language).upper(), theme=PLAGENOR_THEME)
+    p = doc.add_paragraph(text('staff_help', language))
+    p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
     if metadata.get('operator_name'):
         p = doc.add_paragraph(f"{text('operator', language)} : {metadata['operator_name']}")
         p.paragraph_format.keep_with_next = True
+        p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
     staff_rows = project.get('staff') or []
     _kv_table(doc, staff_rows, language, writable=True)
-    add_signature_grid(
+    add_ibtikar_signature_grid(
         doc, [text('operator_signature', language), text('head', language), text('director', language)],
         theme=PLAGENOR_THEME,
     )
     p = doc.add_paragraph(text('unsigned', language))
     p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.left_indent = Cm(IBTIKAR_CONTENT_INDENT_CM)
     if legacy:
-        add_section_heading(doc, text('legacy', language), theme=PLAGENOR_THEME)
+        add_section_heading(
+            doc, text('legacy', language), theme=PLAGENOR_THEME, font_name=IBTIKAR_FONT,
+        )
         _kv_table(doc, legacy, language, dense=True)
-    add_document_footer(doc, theme=PLAGENOR_THEME, reference=metadata['number'])
+    add_document_footer(
+        doc, theme=PLAGENOR_THEME, reference=metadata['number'], font_name=IBTIKAR_FONT,
+    )
     _rtl_document(doc, language)
     return doc
 
