@@ -5,7 +5,7 @@ import uuid
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from erp.models import Article, StockContainer
+from erp.models import Article, StockContainer, StockReceipt
 from erp.services.bulk_imports import apply_import, preview_import
 from erp.test_operations import OperationFixtures
 
@@ -81,6 +81,6 @@ class RichInventoryImportTests(OperationFixtures, TestCase):
         self.assertEqual(container.lot.serial_number, 'SN-2026-001')
         self.assertEqual(container.lot.barcode, 'ASSET-2026-001')
         self.assertEqual(
-            container.receipt_set.get().control_notes,
+            StockReceipt.objects.get(container=container).control_notes,
             'Source exacte conservée pour rapprochement.',
         )
