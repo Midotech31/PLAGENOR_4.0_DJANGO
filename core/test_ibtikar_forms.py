@@ -427,3 +427,21 @@ class PersistenceContractTests(TestCase):
         text=document_text(Document(generate_ibtikar_form(obj.request)))
         self.assertIn('S001',text);self.assertIn('S012',text)
         self.assertEqual(len(obj.samples),12)
+
+
+    def test_ibtikar_print_layout_highlights_requested_service(self):
+        from documents.generators import generate_ibtikar_form
+        obj = self.submit('EGTP-PCR')
+        document = Document(generate_ibtikar_form(obj.request))
+        flattened = document_text(document)
+        self.assertIn('FICHE DE DEMANDE IBTIKAR', flattened)
+        self.assertIn('Service demandé', flattened)
+        self.assertIn('Amplification PCR', flattened)
+        self.assertIn('1. INFORMATIONS GÉNÉRALES', flattened)
+        self.assertIn('2. DEMANDEUR ET PROJET', flattened)
+        title_tables = [table for table in document.tables
+                        if 'FICHE DE DEMANDE IBTIKAR' in ' '.join(
+                            cell.text for row in table.rows for cell in row.cells)]
+        self.assertEqual(len(title_tables), 1)
+        self.assertIn('Amplification PCR', ' '.join(
+            cell.text for row in title_tables[0].rows for cell in row.cells))
