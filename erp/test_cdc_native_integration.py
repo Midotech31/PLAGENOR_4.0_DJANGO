@@ -254,13 +254,13 @@ class CdcNativeIntegrationTests(OperationFixtures, TestCase):
             link_run_shortages(self.ops, no_shortage.pk, plan.pk,
                 expected_run=no_shortage.version, reason='Test')
 
-        _, next_year = self.analytical_run(code='NEXT',
+        _, next_year = self.analytical_run(code='NEXT', amount=50,
             planned_on=timezone.localdate().replace(year=timezone.localdate().year + 1))
         with self.assertRaisesRegex(ValidationError, 'période'):
             link_run_shortages(self.ops, next_year.pk, plan.pk,
                 expected_run=next_year.version, reason='Test')
 
-        _, mismatch = self.analytical_run(code='MISMATCH')
+        _, mismatch = self.analytical_run(code='MISMATCH', amount=50)
         plan.work.category = self.other
         plan.work.save(update_fields=['category'])
         with self.assertRaises(PermissionDenied):
