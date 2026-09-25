@@ -91,7 +91,8 @@ def plan_detail(request,pk):
             return redirect('erp:procurement-detail',pk=pk)
     costs=work_allowed(request.user,plan.work,costs=True)
     return render(request,'erp/procurement_detail.html',{'plan':plan,'form':form,
-        'lines':plan.lines.select_related('article','purchase_unit','forecast'),
+        'lines':plan.lines.select_related('article','purchase_unit','forecast').prefetch_related(
+            'requirement_links__requirement__run__request','cdc_item_links__item__lot'),
         'totals':plan_totals(request.user,plan) if costs else None,'costs':costs,
         'manager':is_manager(request.user),'editable':work_allowed(request.user,plan.work,edit=True),
         'orders':plan.orders.select_related('supplier'),'revisions':plan.revisions.defer('data')[:50]},

@@ -1,8 +1,10 @@
 from django.urls import path
+from . import cdc_exchange_views
 from . import identification, report_views, preparation_views, safety_views, alert_views, import_views, procurement_views, views, work_views, stock_views, inventory_views, cdc_views, biobank_views, planning_views, consumption_views
 
 app_name = 'erp'
 urlpatterns = [
+    path('cdc-items/<uuid:pk>/arrange/', cdc_exchange_views.item_arrange, name='cdc-item-arrange'),
     path('', views.index, name='index'),
     path('identify/',identification.identify,name='identify'),
     path('identify/<slug:kind>/<uuid:pk>/',identification.identify_target,name='identify-target'),
@@ -61,6 +63,7 @@ urlpatterns = [
     path('runs/', consumption_views.run_list, name='run-list'),
     path('runs/request/<uuid:request_id>/new/', consumption_views.run_create, name='run-create'),
     path('runs/<uuid:pk>/', consumption_views.run_detail, name='run-detail'),
+    path('runs/<uuid:pk>/procurement/', consumption_views.run_procurement, name='run-procurement'),
     path('runs/<uuid:pk>/<slug:operation>/', consumption_views.run_operation, name='run-operation'),
     path('profiles/', consumption_views.profile_list, name='profile-list'),
     path('profiles/new/', consumption_views.profile_edit, name='profile-create'),
@@ -83,9 +86,28 @@ urlpatterns = [
     path('biobank/incidents/<uuid:pk>/resolve/', biobank_views.incident_resolve, name='incident-resolve'),
     path('biobank/transfers/new/', biobank_views.mass_transfer, name='mass-transfer'),
     path('biobank/transfers/<uuid:pk>/', biobank_views.mass_transfer_detail, name='mass-transfer-detail'),
+    path('cdc/<uuid:pk>/excel/', cdc_exchange_views.workbook, name='cdc-workbook'),
+    path('cdc/<uuid:pk>/excel/download/', cdc_exchange_views.workbook_download, name='cdc-workbook-download'),
+    path('cdc/excel-preview/<uuid:pk>/', cdc_exchange_views.workbook_preview, name='cdc-workbook-preview'),
+    path('cdc/<uuid:pk>/lots/new/', cdc_exchange_views.lot_create, name='cdc-lot-create'),
+    path('cdc-lots/<uuid:pk>/retained/', cdc_exchange_views.lot_toggle, name='cdc-lot-toggle'),
+    path('cdc-revisions/<uuid:pk>/restore/', cdc_exchange_views.revision_restore, name='cdc-revision-restore'),
+    path('cdc/clauses-library/', cdc_views.cdc_clause_library, name='cdc-clause-library'),
+    path('cdc/clauses-library/new/', cdc_views.cdc_clause_edit, name='cdc-clause-create'),
+    path('cdc/clauses-library/<uuid:pk>/edit/', cdc_views.cdc_clause_edit, name='cdc-clause-edit'),
+    path('cdc/clauses-library/<uuid:pk>/revision/', cdc_views.cdc_clause_revision, name='cdc-clause-revision'),
     path('cdc/', cdc_views.cdc_list, name='cdc-list'),
     path('cdc/new/', cdc_views.cdc_create, name='cdc-create'),
     path('cdc/<uuid:pk>/', cdc_views.cdc_detail, name='cdc-detail'),
+    path('cdc/<uuid:pk>/governance/', cdc_views.cdc_governance, name='cdc-governance'),
+    path('cdc/<uuid:dossier_id>/criteria/new/', cdc_views.cdc_criterion_edit, name='cdc-criterion-create'),
+    path('cdc/<uuid:dossier_id>/criteria/<uuid:pk>/', cdc_views.cdc_criterion_edit, name='cdc-criterion-edit'),
+    path('cdc/<uuid:dossier_id>/clauses/select/', cdc_views.cdc_clause_select, name='cdc-clause-select'),
+    path('cdc/<uuid:pk>/review/', cdc_views.cdc_review, name='cdc-review'),
+
+    path('cdc/<uuid:pk>/duplicate/', cdc_views.cdc_duplicate, name='cdc-duplicate'),
+    path('cdc/<uuid:pk>/archive/', cdc_views.cdc_archive, name='cdc-archive'),
+    path('cdc/<uuid:pk>/procurement/', cdc_views.cdc_procurement, name='cdc-procurement'),
     path('cdc/<uuid:pk>/information/', cdc_views.cdc_consultation, name='cdc-consultation'),
     path('cdc/<uuid:pk>/approve/', cdc_views.cdc_approve, name='cdc-approve'),
     path('cdc/<uuid:pk>/clauses/', cdc_views.cdc_clauses, name='cdc-clauses'),
@@ -94,6 +116,9 @@ urlpatterns = [
     path('cdc-lots/<uuid:pk>/edit/', cdc_views.cdc_lot_edit, name='cdc-lot-edit'),
     path('cdc-lots/<uuid:lot_id>/items/new/', cdc_views.cdc_item_edit, name='cdc-item-new'),
     path('cdc-lots/<uuid:lot_id>/items/<uuid:pk>/', cdc_views.cdc_item_edit, name='cdc-item-edit'),
+    path('cdc-items/<uuid:item_id>/requirements/new/', cdc_views.cdc_requirement_edit, name='cdc-requirement-create'),
+    path('cdc-items/<uuid:item_id>/requirements/<uuid:pk>/', cdc_views.cdc_requirement_edit, name='cdc-requirement-edit'),
+
     path('cdc-generations/<uuid:pk>/<slug:extension>/', cdc_views.cdc_download, name='cdc-download'),
     path('cdc-revisions/<uuid:pk>/', cdc_views.cdc_revision, name='cdc-revision'),
     path('stock/', stock_views.stock_list, name='stock-list'),

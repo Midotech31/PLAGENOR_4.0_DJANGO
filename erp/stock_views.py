@@ -43,7 +43,10 @@ def stock_list(request):
             Q(lot__manufacturer_lot__icontains=search) | Q(lot__article__name__icontains=search) |
             Q(lot__article__code__icontains=search) | Q(lot__article__cas__icontains=search) |
             Q(lot__article__manufacturer_reference__icontains=search) | Q(lot__barcode__icontains=search) |
-            Q(location__code__icontains=search))
+            Q(location__code__icontains=search) | Q(location__name__icontains=search) |
+            Q(lot__serial_number__icontains=search) | Q(lot__article__name_en__icontains=search) |
+            Q(lot__article__name_ar__icontains=search) | Q(lot__article__manufacturer__name__icontains=search) |
+            Q(stockreceipt__supplier__name__icontains=search)).distinct()
     state = request.GET.get('state', 'all')
     if state == 'usable':
         qs = qs.filter(usable_filter(), quantity__gt=F('reserved'))

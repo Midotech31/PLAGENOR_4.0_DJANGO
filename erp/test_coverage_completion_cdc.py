@@ -17,7 +17,7 @@ from pypdf import PdfWriter
 from erp.cdc import catalog, docengine, procurement
 from erp.cdc.consultation import FIELDS
 from erp.cdc.docengine import Document, DocumentError, NS, Node
-from erp.models import CdcGeneration
+from erp.models import CdcGeneration, CdcReviewDecision
 from erp.services.cdc import (
     approve_dossier, edit_cdc_paragraph, estimate_totals, generate_cdc,
     save_cdc_item, save_cdc_lot, save_consultation, submit_dossier,
@@ -363,6 +363,17 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
                           values=values, reason='Variables confirmées')
         self.dossier.refresh_from_db()
 
+    def _approve_current_reviews(self):
+        revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        stages = [CdcReviewDecision.Stage.TECHNICAL, CdcReviewDecision.Stage.ADMIN_LEGAL]
+        if self.dossier.work.allow_costs:
+            stages.append(CdcReviewDecision.Stage.FINANCIAL)
+        for stage in stages:
+            CdcReviewDecision.objects.create(
+                dossier=self.dossier, revision=revision, stage=stage,
+                outcome=CdcReviewDecision.Outcome.APPROVED, actor=self.ops,
+                comment='Revue obligatoire validée pour le scénario de recette')
+
     def test_lot_item_paragraph_and_estimate_paths(self):
         revision = save_cdc_lot(self.operator, self.lot.pk, expected=self.dossier.version,
             name='Lot couverture', name_ar='حصة تغطية', reason='Renommage contrôlé')
@@ -463,6 +474,7 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
                 visual_review=True, content_review=True)
         submit_dossier(self.operator, self.dossier.pk, expected=self.dossier.version, reason='Préparé')
         self.dossier.refresh_from_db()
+        self._approve_current_reviews()
         with self.assertRaises(ValidationError):
             approve_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
                 generation_id=generation.pk, reviewed_pages=0, statement='',
@@ -524,3 +536,123 @@ class CdcServiceCoverageTests(OperationFixtures, TestCase):
                 reviewed_pages=1, statement='Ancien PDF', visual_review=True, content_review=True)
         self.dossier.work.refresh_from_db()
         self.assertEqual(self.dossier.work.status, 'SUBMITTED')
+
+    def test_remaining_cdc_permission_governance_and_restore_branches(self):
+        from erp.models import CdcClauseSelection
+        from erp.permissions import Capability
+        from erp.services.cdc import (
+            _dossier, create_clause_revision, dossier_findings, dossier_scope,
+            governance_findings, restore_governance_snapshot, review_dossier,
+            save_clause, save_requirement, stock_status,
+        )
+
+        with self.assertRaises(PermissionDenied):
+            _dossier(self.outsider, self.dossier.pk)
+        with self.assertRaises(PermissionDenied):
+            stock_status(self.outsider, self.dossier)
+
+        scoped = __import__('erp.services.cdc', fromlist=['create_dossier']).create_dossier(
+            self.ops, family='equipment', reference='19/SME/SDFM/SG/ESSBO/2026',
+            title='CDC revue à portée', assignee=self.operator, location=self.freezer,
+            category=self.article.category)
+        scoped.work.status = 'SUBMITTED'
+        scoped.work.save(update_fields=['status'])
+        self.grant(Capability.REVIEW_CDC_TECHNICAL, user=self.second,
+            category=self.article.category, location=self.freezer)
+        self.assertTrue(dossier_scope(self.second).filter(pk=scoped.pk).exists())
+
+        self.dossier.archived_at = timezone.now()
+        self.dossier.save(update_fields=['archived_at'])
+        with self.assertRaises(ValidationError):
+            _dossier(self.operator, self.dossier.pk, edit=True)
+        self.dossier.archived_at = None
+        self.dossier.save(update_fields=['archived_at'])
+
+        with self.assertRaisesRegex(ValidationError, 'Justifiez'):
+            save_requirement(self.operator, self.item.pk, expected=self.dossier.version,
+                values={'position': 1, 'kind': 'ELIMINATORY', 'statement': 'Critique',
+                    'evidence': 'Certificat', 'verification_method': 'Contrôle',
+                    'justification': '', 'active': True})
+
+        clause = save_clause(self.ops, values={'code': 'COV.DRAFT', 'name': 'Clause couverture',
+            'name_en': '', 'name_ar': '', 'title': 'Clause en brouillon', 'active': True},
+            reason='Couverture')
+        draft = create_clause_revision(self.ops, clause, text_fr='Texte brouillon',
+            source_reference='Source', activate=False)
+        CdcClauseSelection.objects.create(dossier=self.dossier, revision=draft,
+            position=1, mandatory=False, active=True)
+        self.assertIn('clause-not-active', {row['code'] for row in governance_findings(self.dossier)})
+        self.assertIn('clause-not-active', {row.get('code') for row in dossier_findings(self.dossier)})
+
+        with self.assertRaisesRegex(ValidationError, 'inconnue'):
+            review_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
+                stage='UNKNOWN', outcome='APPROVED', comment='Test')
+        self.dossier.work.status = 'SUBMITTED'
+        self.dossier.work.save(update_fields=['status'])
+        with self.assertRaises(PermissionDenied):
+            review_dossier(self.operator, self.dossier.pk, expected=self.dossier.version,
+                stage='TECHNICAL', outcome='APPROVED', comment='Sans droit')
+        self.dossier.work.status = 'ASSIGNED'
+        self.dossier.work.save(update_fields=['status'])
+
+        active = create_clause_revision(self.ops, clause, text_fr='Texte actif',
+            source_reference='Source active', activate=True)
+        restore_governance_snapshot(self.ops, self.dossier, {
+            'requirements': [{'item_key': 'missing-item'}],
+            'criteria': [],
+            'clauses': [
+                {'code': clause.code, 'revision': active.number, 'position': 2, 'mandatory': True},
+                {'code': 'MISSING.CLAUSE', 'revision': 99, 'position': 3, 'mandatory': False},
+            ],
+        })
+        self.assertTrue(self.dossier.clause_selections.filter(revision=active, active=True).exists())
+
+        self.party.active = False
+        self.party.save(update_fields=['active'])
+        try:
+            with self.assertRaisesRegex(ValidationError, 'fournisseur actif'):
+                save_cdc_item(self.operator, self.lot.pk, expected=self.dossier.version,
+                    pk=self.item.pk, values={'estimate_supplier': self.party}, reason='Fournisseur inactif')
+        finally:
+            self.party.active = True
+            self.party.save(update_fields=['active'])
+
+    def test_governance_annex_report_and_missing_review_gate(self):
+        revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+
+        def converter(source):
+            return _pdf(source.with_suffix('.pdf'))
+
+        with patch('erp.services.cdc.controls', return_value=[]), \
+             patch('erp.services.cdc.governance_snapshot_findings', return_value=[]), \
+             patch('erp.services.cdc.generate_document', return_value=(b'DOCX', {
+                 'changed_parts': [], 'preserved_parts': {'word/document.xml': 'seed'}, 'changes': []})), \
+             patch('erp.services.cdc.append_governance_annex', return_value=(b'ANNEX', {
+                 'status': 'GENERATED', 'requirements': 1, 'criteria': 1, 'clauses': 1})), \
+             patch('erp.services.cdc.normalize_word_layout', return_value=(b'NORMALIZED', {'layout': True})), \
+             patch('erp.services.cdc.convert_docx_to_pdf', side_effect=converter):
+            generation = generate_cdc(self.operator, revision.pk)
+        report = generation.checks['source_report']
+        self.assertIn('word/document.xml', report['changed_parts'])
+        self.assertNotIn('word/document.xml', report['preserved_parts'])
+        self.assertEqual(report['changes'][-1]['kind'], 'cdc_governance_annex')
+
+        self._confirm_consultation()
+        current = self.dossier.revisions.get(number=self.dossier.revision_number)
+        current_generation = CdcGeneration.objects.create(revision=current, actor=self.ops,
+            docx=b'x', pdf=b'y', docx_sha256='a'*64, pdf_sha256='b'*64, pages=1, checks={})
+        submit_dossier(self.operator, self.dossier.pk, expected=self.dossier.version, reason='Soumission')
+        self.dossier.refresh_from_db()
+        with self.assertRaisesRegex(ValidationError, 'revues obligatoires'):
+            approve_dossier(self.ops, self.dossier.pk, expected=self.dossier.version,
+                generation_id=current_generation.pk, reviewed_pages=1, statement='Contrôle',
+                visual_review=True, content_review=True)
+
+    def test_non_cdc_work_document_read_requires_access(self):
+        from erp.services.safety import require_target
+        from erp.services.work import create_work
+
+        work = create_work(self.ops, kind='CONTROL', title='Contrôle documentaire',
+            assignee=self.operator)
+        with self.assertRaises(PermissionDenied):
+            require_target(self.outsider, 'work', work.pk)

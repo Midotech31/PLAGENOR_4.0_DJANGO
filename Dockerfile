@@ -16,6 +16,7 @@ RUN groupadd --gid 10001 plagenor \
     && useradd --uid 10001 --gid plagenor --create-home \
        --home-dir /home/plagenor --shell /usr/sbin/nologin plagenor
 COPY --chown=plagenor:plagenor . .
+RUN django-admin compilemessages
 
 RUN chmod 0755 /app/docker-entrypoint.sh \
     && mkdir -p /app/data /app/media /app/staticfiles \

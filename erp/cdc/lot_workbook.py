@@ -121,7 +121,7 @@ def build_workbook(data, dossier_id, revision, sign, filled=True, estimates=None
         for lot, binding in zip(catalog['lots'], meta['lots']):
             sheet = copy.deepcopy(master)
             cell(sheet, 'A1', f'Lot {lot["number"]:02d} — {lot["name"]}')
-            cell(sheet, 'A2', f'Référence {data["reference"]} · Révision {revision} · Les noms des lots se modifient dans CDC Studio.')
+            cell(sheet, 'A2', f'Référence {data["reference"]} · Révision {revision} · Les noms des lots se modifient dans PLAGENOR.')
             for col,header in zip('ABCDEFGHI',HEADERS):cell(sheet,f'{col}6',header)
             sheet_data = sheet.find(Q+'sheetData')
             model_row = copy.deepcopy(next(r for r in sheet_data if r.get('r') == '7'))

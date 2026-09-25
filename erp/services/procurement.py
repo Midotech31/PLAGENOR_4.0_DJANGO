@@ -1,5 +1,5 @@
 from datetime import date, datetime, time, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 import hashlib
 import json
 import uuid
@@ -11,9 +11,9 @@ from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from erp.models import (Article, CdcDossier, CdcItem, CdcLot, ForecastObservation, LocationClosure,
-    ProcurementLine, ProcurementPlan, ProcurementRevision, PurchaseOrder, PurchaseOrderLine,
-    PurchaseReceiptLink, RunAllocation, RunRequirement, StockContainer, StockEntry, StockReceipt, WorkItem)
+from erp.models import (AnalysisRun, Article, CdcDossier, CdcItem, CdcLot, ForecastObservation, LocationClosure,
+    ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder,
+    PurchaseOrderLine, PurchaseReceiptLink, RunAllocation, RunRequirement, StockContainer, StockEntry, StockReceipt, WorkItem)
 from erp.permissions import Capability, permitted, require_manager
 from .catalog import convert_quantity
 from .common import Conflict, audit, check_version, lock_tree, snapshot
@@ -46,8 +46,20 @@ def _digest(value):
 
 
 def _revision(user,plan,reason):
-    data={'reference':plan.reference,'year':plan.year,'starts_on':str(plan.starts_on),'ends_on':str(plan.ends_on),
-        'lines':[snapshot(row) for row in plan.lines.order_by('lot_name','article__code')]}
+    lines=[]
+    for row in plan.lines.order_by('lot_name','article__code'):
+        value=snapshot(row)
+        value['requirement_sources']=[{'requirement':str(link.requirement_id),'shortage_quantity':str(link.shortage_quantity),
+            'purchase_quantity':str(link.purchase_quantity),'run':link.requirement.run.code,
+            'request':link.requirement.run.request.display_id} for link in row.requirement_links.select_related(
+                'requirement__run__request').order_by('created_at','id')]
+        value['cdc_sources']=[{'item':str(link.item_id),'dossier':str(link.item.lot.dossier_id),
+            'lot':link.item.lot.name,'designation':link.item.designation,
+            'required_quantity':str(link.required_quantity),'stock_covered_quantity':str(link.stock_covered_quantity),
+            'shortage_quantity':str(link.shortage_quantity)} for link in row.cdc_item_links.select_related(
+                'item__lot').order_by('created_at','id')]
+        lines.append(value)
+    data={'reference':plan.reference,'year':plan.year,'starts_on':str(plan.starts_on),'ends_on':str(plan.ends_on),'lines':lines}
     plan.version+=1
     plan.revision_number+=1
     plan.save()
@@ -308,7 +320,8 @@ def plan_to_cdc(user,pk,*,expected,reference,family,assignee=None):
         return plan.cdc
     from .cdc import _revision as cdc_revision, create_dossier
     dossier=create_dossier(user,family=family,reference=reference,title=plan.work.title,assignee=assignee,
-        allow_costs=plan.work.allow_costs,instructions=plan.work.instructions)
+        due_on=plan.work.due_on,priority=plan.work.priority,location=plan.work.location,
+        category=plan.work.category,allow_costs=plan.work.allow_costs,instructions=plan.work.instructions)
     CdcItem.objects.filter(lot__dossier=dossier).delete()
     dossier.lots.all().delete()
     lots={}
@@ -333,3 +346,116 @@ def plan_to_cdc(user,pk,*,expected,reference,family,assignee=None):
     plan.save(update_fields=['cdc','version','updated_at'])
     audit(user,plan,'cdc_prepared')
     return dossier
+
+
+@transaction.atomic
+def plan_from_cdc(user,dossier_id,*,expected,plan_reference,year,assignee=None,reason):
+    require_manager(user)
+    dossier=CdcDossier.objects.select_for_update().select_related('work').get(pk=dossier_id)
+    check_version(dossier,expected)
+    existing=ProcurementPlan.objects.filter(cdc=dossier).first()
+    if existing:
+        return existing
+    if dossier.archived_at is not None:
+        raise ValidationError(_('Un cahier des charges archivé ne peut pas ouvrir un nouveau plan.'))
+    if not reason.strip():
+        raise ValidationError(_('Justifiez la création du plan à partir du cahier des charges.'))
+    from .cdc import stock_status
+    availability=stock_status(user,dossier)
+    if availability is None or availability['unlinked']:
+        raise ValidationError(_('Rattachez tous les besoins actifs au catalogue commun avant de créer le plan.'))
+    shortages=[row for row in availability['rows'] if row['shortage']>0]
+    if not shortages:
+        raise ValidationError(_('Le stock disponible couvre déjà les besoins structurés de ce cahier des charges.'))
+    plan=create_plan(user,reference=plan_reference,year=year,title=str(_('Approvisionnement — %(title)s'))%{'title':dossier.work.title},
+        assignee=assignee,allow_costs=dossier.work.allow_costs,instructions=reason,category=dossier.work.category,
+        location=dossier.work.location,due_on=dossier.work.due_on)
+    cdc_items=list(CdcItem.objects.filter(lot__dossier=dossier,lot__active=True,active=True,article__isnull=False)
+        .select_related('lot','article').order_by('lot__position','position','id'))
+    lot_names={}
+    by_article={}
+    for item in cdc_items:
+        lot_names.setdefault(item.article_id,[])
+        by_article.setdefault(item.article_id,[]).append(item)
+        if item.lot.name not in lot_names[item.article_id]:
+            lot_names[item.article_id].append(item.lot.name)
+    for shortage in shortages:
+        article_id=shortage['article'].pk
+        line=add_plan_article(user,plan.pk,expected=plan.version,article=shortage['article'],
+            lot_name=' / '.join(lot_names.get(article_id,[]))[:180] or str(_('Besoins CDC')),_record_revision=False)
+        purchase=(shortage['shortage']/line.purchase_factor).quantize(Decimal('0.000001'),rounding=ROUND_CEILING)
+        line.proposed_quantity=stock_quantity(purchase)
+        line.save(update_fields=['proposed_quantity','updated_at'])
+        remaining_available=stock_quantity(shortage['available'],zero=True)
+        linked_shortage=Decimal(0)
+        for item in by_article.get(article_id,[]):
+            required=stock_quantity(item.quantity*item.base_factor)
+            covered=min(required,remaining_available)
+            item_shortage=stock_quantity(required-covered,zero=True)
+            remaining_available=stock_quantity(max(Decimal(0),remaining_available-covered),zero=True)
+            if item_shortage<=0:
+                continue
+            ProcurementCdcItemLink.objects.create(line=line,item=item,actor=user,
+                required_quantity=required,stock_covered_quantity=covered,shortage_quantity=item_shortage,
+                reason=reason.strip())
+            linked_shortage+=item_shortage
+        if stock_quantity(linked_shortage, zero=True)!=stock_quantity(shortage['shortage']):
+            raise ValidationError(_('La ventilation des besoins CDC ne correspond pas au déficit calculé.'))
+    plan.cdc=dossier
+    plan.save(update_fields=['cdc','updated_at'])
+    _revision(user,plan,reason)
+    audit(user,dossier,'procurement_plan_created',reason=plan.reference)
+    return plan
+
+
+@transaction.atomic
+def link_run_shortages(user,run_id,plan_id,*,expected_run,reason):
+    require_manager(user)
+    if not reason.strip():
+        raise ValidationError(_('Justifiez le transfert des manques vers l’approvisionnement.'))
+    run=AnalysisRun.objects.select_for_update().select_related('request').get(pk=run_id)
+    check_version(run,expected_run)
+    if not run.committed or run.status not in ('PLANNED','RESERVED'):
+        raise ValidationError(_('Seule une activité engagée et encore planifiée peut créer un besoin d’approvisionnement.'))
+    plan=_plan(user,plan_id,edit=True)
+    if not plan.starts_on<=run.planned_on<=plan.ends_on:
+        raise ValidationError(_('La date de l’activité doit appartenir à la période du plan sélectionné.'))
+    from .consumption import reservation_proposal
+    shortages=reservation_proposal(user,run)['shortages']
+    if not shortages:
+        raise ValidationError(_('Le stock disponible couvre déjà tous les besoins de cette activité.'))
+    requirements={str(row.pk):row for row in run.requirements.select_related('article','unit')}
+    created=[]; touched=set()
+    for shortage in shortages:
+        requirement=requirements[shortage['requirement']]
+        if plan.work.category_id and requirement.article.category_id!=plan.work.category_id:
+            raise PermissionDenied
+        previous=ProcurementRequirementLink.objects.filter(requirement=requirement).select_related('line__plan__work').exclude(line__plan=plan).first()
+        if previous and previous.line.plan.work.status!=WorkItem.Status.CANCELLED:
+            raise ValidationError(_('Ce besoin est déjà pris en charge par un autre plan actif.'))
+        line=plan.lines.filter(article=requirement.article).first()
+        if line is None:
+            line=add_plan_article(user,plan.pk,expected=plan.version,article=requirement.article,
+                lot_name=str(_('Besoins analytiques')),_record_revision=False)
+        if ProcurementRequirementLink.objects.filter(line=line,requirement=requirement).exists():
+            continue
+        base_quantity, _conversion_factor = convert_quantity(
+            requirement.article, shortage['quantity'], requirement.unit)
+        purchase=stock_quantity((base_quantity/line.purchase_factor).quantize(Decimal('0.000001'),rounding=ROUND_CEILING))
+        created.append(ProcurementRequirementLink.objects.create(line=line,requirement=requirement,actor=user,
+            shortage_quantity=base_quantity,purchase_quantity=purchase,reason=reason.strip()))
+        touched.add(line.pk)
+    if not created:
+        return plan,0
+    for line in plan.lines.filter(pk__in=touched):
+        linked=sum(line.requirement_links.values_list('purchase_quantity',flat=True),Decimal(0))
+        line.proposed_quantity=max(line.proposed_quantity or Decimal(0),linked)
+        line.reviewed_at,line.reviewed_by=None,None
+        line.version+=1
+        line.save(update_fields=['proposed_quantity','reviewed_at','reviewed_by','version','updated_at'])
+    _revision(user,plan,reason)
+    audit(user,run,'shortages_linked_to_procurement',reason=plan.reference)
+    from .work import _notify
+    if plan.work.assignee_id:
+        _notify(plan.work,plan.work.assignee,_('De nouveaux manques issus d’une activité analytique ont été ajoutés au plan.'))
+    return plan,len(created)

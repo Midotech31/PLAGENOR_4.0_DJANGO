@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
@@ -61,9 +62,23 @@ def run_detail(request, pk):
     requirements = run.requirements.select_related('article', 'unit')
     actual = {row['requirement_id']: row['total'] for row in run.consumptions.values('requirement_id').annotate(total=Sum('quantity'))}
     return render(request, 'erp/run_detail.html', {'run': run, 'proposal': proposal, 'editable': writable and run.status in ('PLANNED', 'RESERVED'),
+        'manager': is_manager(request.user),
         'requirements': [{'row': row, 'actual': actual.get(row.pk)} for row in requirements],
         'allocations': RunAllocation.objects.filter(requirement__run=run).select_related('reservation__container', 'requirement__unit'),
         'inputs': run.inputs.select_related('sample'), 'consumptions': run.consumptions.select_related('container', 'movement__actor', 'requirement__unit')})
+
+
+@login_required
+@require_http_methods(['GET','POST'])
+def run_procurement(request,pk):
+    require_manager(request.user);run=get_object_or_404(run_scope(request.user),pk=pk)
+    form=forms.RunProcurementForm(request.POST or None,user=request.user,run=run)
+    if request.method=='POST' and form.is_valid():
+        from .services.procurement import link_run_shortages
+        try:plan,count=link_run_shortages(request.user,run.pk,form.cleaned_data['plan'].pk,expected_run=form.cleaned_data['expected_version'],reason=form.cleaned_data['reason'])
+        except (ValidationError,IntegrityError) as error:add_validation(form,error)
+        else:messages.success(request,_('%(count)s besoin(s) de stock ont été rattachés au plan d’approvisionnement.')%{'count':count});return redirect('erp:procurement-detail',pk=plan.pk)
+    return _form(request,form,_('Transférer les manques vers l’approvisionnement'),reverse('erp:run-detail',args=[pk]),run.code)
 
 
 @login_required

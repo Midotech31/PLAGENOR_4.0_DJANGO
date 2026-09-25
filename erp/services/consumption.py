@@ -182,7 +182,7 @@ def reservation_proposal(user, run):
             if needed == 0:
                 break
         if needed > 0:
-            shortages.append({'article': requirement.article.code, 'quantity': str(needed), 'unit': requirement.unit.code})
+            shortages.append({'requirement': str(requirement.pk), 'article': requirement.article.code, 'quantity': str(needed), 'unit': requirement.unit.code})
     return {'allocations': proposal, 'shortages': shortages}
 
 

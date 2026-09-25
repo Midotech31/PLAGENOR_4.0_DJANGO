@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from erp.cdc.consultation import FIELDS
-from erp.models import CdcDossier, CdcItem, CdcRevision, WorkItem
+from erp.models import CdcDossier, CdcItem, CdcReviewDecision, CdcRevision, WorkItem
 from erp.services.cdc import create_dossier, save_consultation
 from erp.test_operations import OperationFixtures
 from notifications.models import Notification
@@ -182,6 +182,13 @@ class CdcDelegationHttpTests(OperationFixtures, TestCase):
         self.assertEqual(self.client.post(detail, data).status_code, 400)
         data['action'] = 'submit'
         self.assertEqual(self.client.post(detail, data).status_code, 302)
+        self.dossier.refresh_from_db()
+        current_revision = self.dossier.revisions.get(number=self.dossier.revision_number)
+        for stage in (CdcReviewDecision.Stage.TECHNICAL, CdcReviewDecision.Stage.ADMIN_LEGAL):
+            CdcReviewDecision.objects.create(
+                dossier=self.dossier, revision=current_revision, stage=stage,
+                outcome=CdcReviewDecision.Outcome.APPROVED, actor=self.ops,
+                comment='Revue obligatoire validée pour la recette HTTP')
         approval = {'expected_version': self.dossier.version, 'generation': generation.pk,
             'reviewed_pages': generation.pages+1, 'statement': 'Revue simulée pour le test automatisé',
             'visual_review': 'on', 'content_review': 'on'}

@@ -42,6 +42,22 @@ class PostgreSQLOperationalTests(OperationFixtures, TransactionTestCase):
             return [future.result(timeout=45) for future in futures]
 
     @skipUnlessDBFeature('has_select_for_update')
+    def test_concurrent_cdc_workbook_confirmation_creates_one_revision(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from erp.services.cdc_exchange import export_workbook, preview_workbook, apply_workbook
+        dossier = create_dossier(self.ops, family='equipment', reference='73/SME/SDFM/SG/ESSBO/2026',
+            title='Confirmation Excel concurrente', assignee=self.operator)
+        preview = preview_workbook(self.ops, dossier.pk, expected=dossier.version,
+            upload=SimpleUploadedFile('lots.xlsx', export_workbook(self.ops, dossier)),
+            mode='merge', reason='Import confirmé simultanément')
+        results = self.race([lambda: apply_workbook(self.ops, preview.pk) for _ in range(2)])
+        self.assertEqual([result[0] for result in results], ['saved', 'saved'])
+        self.assertEqual(results[0][1], results[1][1])
+        dossier.refresh_from_db()
+        self.assertEqual(dossier.revision_number, 2)
+        self.assertEqual(dossier.revisions.count(), 2)
+
+    @skipUnlessDBFeature('has_select_for_update')
     def test_two_consumptions_cannot_overdraw_one_container(self):
         container, _, _ = self.receive(quantity=10)
         results = self.race([lambda: remove_stock(self.admin, container.pk, key=uuid.uuid4(),
@@ -96,6 +112,60 @@ class PostgreSQLOperationalTests(OperationFixtures, TransactionTestCase):
         container.refresh_from_db()
         self.assertEqual((container.quantity, container.reserved), (10, 0))
         self.assertEqual(reconcile_stock(self.admin), [])
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_new_cdc_and_procurement_history_is_sql_immutable(self):
+        from erp.models import CdcItem, CdcReviewDecision, ProcurementCdcItemLink
+        from erp.services.cdc import (create_clause_revision, review_dossier, save_clause,
+            save_cdc_item)
+        from erp.services.procurement import plan_from_cdc
+
+        dossier = create_dossier(self.ops, family='reagents',
+            reference='78/SME/SDFM/SG/ESSBO/2026', title='Historique CDC SQL',
+            assignee=self.operator)
+        CdcItem.objects.filter(lot__dossier=dossier).update(active=False)
+        dossier.refresh_from_db()
+        lot = dossier.lots.first()
+        save_cdc_item(self.ops, lot.pk, expected=dossier.version,
+            values={'quantity': Decimal('4')}, article=self.article,
+            purchase_unit=self.unit, reason='Besoin structuré')
+        dossier.refresh_from_db()
+
+        plan = plan_from_cdc(self.ops, dossier.pk, expected=dossier.version,
+            plan_reference='PG-CDC-HISTORY', year=timezone.localdate().year,
+            reason='Déficit confirmé')
+        provenance = ProcurementCdcItemLink.objects.get(line__plan=plan)
+
+        clause = save_clause(self.ops, values={'code':'PG.CLAUSE','name':'Clause PG',
+            'name_en':'','name_ar':'','title':'Clause PostgreSQL','active':True},
+            reason='Référentiel PostgreSQL')
+        clause_revision = create_clause_revision(self.ops, clause,
+            text_fr='Texte immuable', source_reference='Source PostgreSQL', activate=True)
+
+        dossier.work.status = 'SUBMITTED'
+        dossier.work.save(update_fields=['status'])
+        decision = review_dossier(self.ops, dossier.pk, expected=dossier.version,
+            stage=CdcReviewDecision.Stage.TECHNICAL,
+            outcome=CdcReviewDecision.Outcome.APPROVED, comment='Revue SQL')
+
+        statements = [
+            ('UPDATE erp_procurementcdcitemlink SET reason=%s WHERE id=%s',
+                ['tamper', provenance.pk]),
+            ('UPDATE erp_cdcclauserevision SET status=%s WHERE id=%s',
+                ['RETIRED', clause_revision.pk]),
+            ('DELETE FROM erp_cdcreviewdecision WHERE id=%s', [decision.pk]),
+        ]
+        for sql, args in statements:
+            with self.subTest(sql=sql), self.assertRaises(DatabaseError), transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, args)
+
+        provenance.refresh_from_db()
+        clause_revision.refresh_from_db()
+        self.assertEqual(provenance.reason, 'Déficit confirmé')
+        self.assertEqual(clause_revision.status, 'ACTIVE')
+        self.assertTrue(CdcReviewDecision.objects.filter(pk=decision.pk).exists())
+
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_sql_prevents_historical_cdc_revision_mutation(self):
