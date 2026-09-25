@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from docx.document import Document as DocumentType
-from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -13,6 +13,7 @@ from docx.shared import Cm, Pt, RGBColor
 
 ASSETS = Path(__file__).resolve().parent / "assets"
 STATIC_IMAGES = Path(__file__).resolve().parent.parent / "static" / "images"
+IBTIKAR_SERVICE_BADGE = ASSETS / "ibtikar_service_badge.png"
 
 
 @dataclass(frozen=True)
@@ -227,6 +228,60 @@ def add_document_title(doc: DocumentType, title: str, *, subtitle="", code="", t
     for cell in (left, right):
         set_cell_border(cell, bottom=(theme.accent, 14))
         set_cell_margins(cell, top=50, bottom=80, start=0, end=0)
+
+
+def add_ibtikar_request_title(
+    doc: DocumentType,
+    title: str,
+    *,
+    service_label: str,
+    service_title: str,
+    service_code: str,
+    theme=PLAGENOR_THEME,
+) -> None:
+    """IBTIKAR-only title band; leaves generic document styling untouched."""
+    table = doc.add_table(rows=1, cols=4)
+    table.autofit = False
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    title_cell, divider_cell, badge_cell, service_cell = table.rows[0].cells
+    widths = (Cm(9.75), Cm(0.18), Cm(1.55), Cm(5.70))
+    for cell, width in zip(table.rows[0].cells, widths):
+        cell.width = width
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
+    _paragraph_text(
+        title_cell.paragraphs[0], title, size=14.8, bold=True, color=theme.primary,
+    )
+    set_cell_margins(title_cell, top=110, bottom=110, start=0, end=130)
+
+    divider_cell.text = ""
+    set_cell_fill(divider_cell, theme.primary)
+    set_cell_margins(divider_cell, top=0, bottom=0, start=0, end=0)
+
+    badge_paragraph = badge_cell.paragraphs[0]
+    badge_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    badge_paragraph.paragraph_format.space_before = Pt(0)
+    badge_paragraph.paragraph_format.space_after = Pt(0)
+    badge_paragraph.add_run().add_picture(str(IBTIKAR_SERVICE_BADGE), width=Cm(1.30))
+    set_cell_margins(badge_cell, top=45, bottom=45, start=60, end=60)
+
+    set_cell_fill(service_cell, theme.soft)
+    _paragraph_text(
+        service_cell.paragraphs[0], service_label, size=8.8, bold=True,
+        color=theme.primary, after=1,
+    )
+    _paragraph_text(
+        service_cell.add_paragraph(), service_title, size=15.0, bold=True,
+        color=theme.accent, after=1,
+    )
+    _paragraph_text(
+        service_cell.add_paragraph(), service_code, size=8.5, bold=True,
+        color=theme.primary, align=WD_ALIGN_PARAGRAPH.RIGHT,
+    )
+    set_cell_margins(service_cell, top=65, bottom=65, start=150, end=120)
+
+    for cell in (title_cell, badge_cell, service_cell):
+        set_cell_border(cell, bottom=(theme.accent, 12))
 
 
 def add_section_heading(doc: DocumentType, title: str, *, theme=PLAGENOR_THEME, level=1):

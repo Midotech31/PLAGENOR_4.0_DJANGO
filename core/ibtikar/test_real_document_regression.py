@@ -119,6 +119,16 @@ class RealMALDIFormRegressionTests(SimpleTestCase):
             legacy=legacy["legacy_display"],
         )
         text = collect_text(document)
+        title_band = next(
+            table for table in document.tables
+            if "FICHE DE DEMANDE IBTIKAR" in " ".join(cell.text for cell in table.rows[0].cells)
+        )
+        self.assertEqual(len(title_band.rows[0].cells), 4)
+        self.assertIn("Service demandé", title_band.rows[0].cells[3].text)
+        self.assertIn(project["title"], title_band.rows[0].cells[3].text)
+        self.assertIn(project["service_code"], title_band.rows[0].cells[3].text)
+        self.assertIn("1. INFORMATIONS GÉNÉRALES", text)
+        self.assertIn("2. DEMANDEUR ET PROJET", text)
 
         project_title = next(
             row for row in project["applicant"] if row["name"] == "project_title"
