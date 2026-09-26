@@ -902,6 +902,7 @@ def _resource_matches_family(resource, family):
 def _find_existing_resource(code, serial, name, location, row):
     from erp.models import PlanningResource
 
+    family = _known_equipment_family(row)
     if serial:
         candidates = list(
             PlanningResource.objects.filter(
@@ -915,15 +916,24 @@ def _find_existing_resource(code, serial, name, location, row):
             ), ""
         if candidates:
             candidate = candidates[0]
-            if candidate.location_id == location.pk:
+            same_identity = (
+                _norm(candidate.name) == _norm(name)
+                or (family and _resource_matches_family(candidate, family))
+            )
+            if candidate.location_id == location.pk and same_identity:
                 return candidate, "", "serial"
+            if candidate.location_id == location.pk:
+                return None, (
+                    f"Le numéro de série {serial} existe déjà dans {location.code}, mais sur "
+                    f"« {candidate.name} » alors que la source indique « {name} ». "
+                    "La désignation est contradictoire ; rapprochement humain requis."
+                ), ""
             return None, (
                 f"Le numéro de série {serial} existe déjà sur « {candidate.name} » "
                 f"({candidate.location.code if candidate.location_id else 'sans emplacement'}), "
                 f"alors que la source courante indique « {name} » ({location.code})."
             ), ""
 
-    family = _known_equipment_family(row)
     if family:
         family_candidates = [
             resource for resource in PlanningResource.objects.filter(
