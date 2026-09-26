@@ -172,6 +172,10 @@ class InventoryBootstrapTests(TestCase):
                 "N": "1", "Produit": "Ethanol", "Quantité": "1L",
                 "Quantité reste": "1L", "Emplacement": "Salle 03", "__row__": 2,
             }],
+            consumables=[{
+                "N": "1", "Produit": "Tube", "Unité": "Boîte", "Quantité": "1",
+                "Emplacement": "Salle de stock", "__row__": 2,
+            }],
         )
         apply_inventory(self.user, manifest)
         from erp.models import Location
@@ -250,6 +254,19 @@ class InventoryBootstrapTests(TestCase):
             resolution=LegacyInventoryRecord.Resolution.REVIEW,
         )
         self.assertIn("numéro de série divergent", review.note)
+
+    def test_packaged_stock_without_source_location_is_reviewed_not_defaulted(self):
+        manifest = _manifest(consumables=[{
+            "N": "1", "Produit": "Tube", "Unité": "Boîte", "Quantité": "2",
+            "Emplacement": "", "__row__": 2,
+        }])
+        result = apply_inventory(self.user, manifest)
+        self.assertEqual(result["packaged_review"], 1)
+        self.assertEqual(StockContainer.objects.count(), 0)
+        review = LegacyInventoryRecord.objects.get(
+            resolution=LegacyInventoryRecord.Resolution.REVIEW
+        )
+        self.assertIn("aucun emplacement par défaut", review.note)
 
     def test_exact_serial_and_matching_identity_reuses_existing_resource(self):
         from erp.services.legacy_inventory import _ensure_bootstrap_references
