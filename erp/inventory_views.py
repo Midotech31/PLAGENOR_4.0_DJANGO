@@ -2,16 +2,19 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.db.models import Count, Q
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .models import InventoryCampaign, InventoryLine, WorkItem
+from .inventory_forms import LegacyInventoryReviewForm
+from .models import InventoryCampaign, InventoryLine, LegacyInventoryRecord, WorkItem
 from .permissions import is_manager, require_manager
 from .services.inventory import (approve_inventory, count_inventory, create_inventory,
                                  recount_inventory, submit_inventory)
+from .services.legacy_inventory import review_legacy_record
 from .services.work import require_work, work_allowed, work_scope
 from .stock_forms import CountForm, InventoryDecisionForm, InventoryForm
 from .views import add_validation
@@ -27,6 +30,115 @@ def inventory_list(request):
     return render(request, 'erp/inventory_list.html', {'page': Paginator(campaigns(request.user).order_by('-created_at'), 30).get_page(request.GET.get('page')),
         'manager': is_manager(request.user)})
 
+
+@login_required
+@require_GET
+def initial_inventory_trace(request):
+    require_manager(request.user)
+    records = LegacyInventoryRecord.objects.select_related('reviewed_by').all().order_by(
+        'resolution', 'review_status', 'kind', 'source_file', 'source_section', 'source_row'
+    )
+    kind = request.GET.get('kind', '').strip()
+    resolution = request.GET.get('resolution', '').strip()
+    review_status = request.GET.get('review_status', '').strip()
+    search = request.GET.get('q', '').strip()[:200]
+    if kind in LegacyInventoryRecord.Kind.values:
+        records = records.filter(kind=kind)
+    else:
+        kind = ''
+    if resolution in LegacyInventoryRecord.Resolution.values:
+        records = records.filter(resolution=resolution)
+    else:
+        resolution = ''
+    if review_status in LegacyInventoryRecord.ReviewStatus.values:
+        records = records.filter(
+            resolution=LegacyInventoryRecord.Resolution.REVIEW,
+            review_status=review_status,
+        )
+    else:
+        review_status = ''
+    if search:
+        records = records.filter(
+            Q(source_file__icontains=search)
+            | Q(source_section__icontains=search)
+            | Q(note__icontains=search)
+            | Q(review_note__icontains=search)
+        )
+    summary = {
+        row['resolution']: row['n']
+        for row in LegacyInventoryRecord.objects.values('resolution').annotate(n=Count('id'))
+    }
+    review_summary = {
+        row['review_status']: row['n']
+        for row in LegacyInventoryRecord.objects.filter(
+            resolution=LegacyInventoryRecord.Resolution.REVIEW
+        ).values('review_status').annotate(n=Count('id'))
+    }
+    return render(
+        request,
+        'erp/initial_inventory_trace.html',
+        {
+            'page': Paginator(records, 50).get_page(request.GET.get('page')),
+            'kind': kind,
+            'resolution': resolution,
+            'review_status': review_status,
+            'q': search,
+            'kinds': LegacyInventoryRecord.Kind.choices,
+            'resolutions': LegacyInventoryRecord.Resolution.choices,
+            'review_statuses': LegacyInventoryRecord.ReviewStatus.choices,
+            'summary': summary,
+            'review_summary': review_summary,
+        },
+    )
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def initial_inventory_review(request, pk):
+    require_manager(request.user)
+    record = get_object_or_404(
+        LegacyInventoryRecord.objects.select_related('reviewed_by'),
+        pk=pk,
+        resolution=LegacyInventoryRecord.Resolution.REVIEW,
+    )
+    initial = {
+        'expected_version': record.version,
+        'review_status': (
+            record.review_status
+            if record.review_status != LegacyInventoryRecord.ReviewStatus.OPEN
+            else LegacyInventoryRecord.ReviewStatus.CONFIRMED
+        ),
+        'review_note': record.review_note,
+    }
+    form = LegacyInventoryReviewForm(request.POST or None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        values = dict(form.cleaned_data)
+        try:
+            review_legacy_record(
+                request.user,
+                record.pk,
+                expected=values.pop('expected_version'),
+                **values,
+            )
+        except (ValidationError, IntegrityError) as error:
+            add_validation(form, error)
+        else:
+            return redirect('erp:initial-inventory-trace')
+    raw_rows = sorted(
+        ((key, value) for key, value in record.raw_data.items() if not key.startswith('__')),
+        key=lambda item: item[0].casefold(),
+    )
+    return render(
+        request,
+        'erp/initial_inventory_review.html',
+        {
+            'record': record,
+            'form': form,
+            'raw_rows': raw_rows,
+            'cancel_url': reverse('erp:initial-inventory-trace'),
+        },
+        status=400 if request.method == 'POST' else 200,
+    )
 
 @login_required
 @require_http_methods(['GET', 'POST'])
