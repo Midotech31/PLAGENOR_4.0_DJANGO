@@ -952,7 +952,19 @@ def _find_existing_resource(code, serial, name, location, row):
 
     by_code = PlanningResource.objects.filter(code=code).first()
     if by_code:
-        return by_code, "", "source_code"
+        source_marker = f"Source: {row.get('__source_file__')}; ligne {row.get('__source_row__')}"
+        compatible_serial = not serial or not by_code.serial_number or by_code.serial_number == serial
+        if (
+            by_code.kind == PlanningResource.Kind.EQUIPMENT
+            and by_code.location_id == location.pk
+            and compatible_serial
+            and source_marker in (by_code.instructions or "")
+        ):
+            return by_code, "", "source_code"
+        return None, (
+            f"Le code interne déterministe {code} existe déjà mais ne porte pas la même "
+            "provenance physique ; aucune fusion automatique."
+        ), ""
     # Generic name/location matching is intentionally forbidden: several
     # identical devices can legitimately coexist in one room.
     return None, "", ""
