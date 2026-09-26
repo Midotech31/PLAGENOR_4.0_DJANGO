@@ -665,19 +665,13 @@ def _ensure_location(user, code, name, kind, *, parent=None, notes="", require_s
 
 def _storage_location_codes(manifest):
     """Return only locations explicitly used for stock in the source files."""
-    codes = {"STOCK"}
-    for needle, blank_means_stock in (
-        ("Produit chimique", False),
-        ("Consommable", True),
-        ("Réact", True),
-    ):
+    codes = set()
+    for needle in ("Produit chimique", "Consommable", "Réact"):
         _, rows = _sheet(manifest, needle)
         for row in rows:
             code = _room_code(_field(row, "Emplacement", "EMPLACEMENT"))
             if code:
                 codes.add(code)
-            elif blank_means_stock:
-                codes.add("STOCK")
     return codes
 
 
@@ -689,7 +683,7 @@ def _ensure_locations(user, manifest, site_type, room_type, storage_room_type):
         site_type,
         notes="Racine des emplacements de la Plateforme Technologique en Génomique.",
     )
-    codes = {"STOCK"}
+    codes = set()
     for row in manifest.get("equipment_room_inventory", []):
         room = _text(row.get("__room__"))
         if room:
@@ -1335,14 +1329,18 @@ def _apply_packaged_rows(
             )
             report["zero_stock_rows"] += 1
             continue
-        location_code = _room_code(_field(row, "Emplacement", "EMPLACEMENT")) or "STOCK"
-        location = locations.get(location_code)
+        source_location = _field(row, "Emplacement", "EMPLACEMENT")
+        location_code = _room_code(source_location)
+        location = locations.get(location_code) if location_code else None
         if location is None:
             _record_legacy(
                 source_key=source_key, payload=payload,
                 resolution=LegacyInventoryRecord.Resolution.REVIEW,
                 entity=article,
-                note=f"Emplacement « {_field(row, 'Emplacement', 'EMPLACEMENT')} » non reconnu.",
+                note=(
+                    f"Emplacement « {source_location or 'non renseigné'} » non reconnu ; "
+                    "aucun emplacement par défaut n’a été inventé."
+                ),
             )
             report["packaged_review"] += 1
             continue
