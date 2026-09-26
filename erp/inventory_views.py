@@ -2,13 +2,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.db.models import Count, Q
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .models import InventoryCampaign, InventoryLine, WorkItem
+from .models import InventoryCampaign, InventoryLine, LegacyInventoryRecord, WorkItem
 from .permissions import is_manager, require_manager
 from .services.inventory import (approve_inventory, count_inventory, create_inventory,
                                  recount_inventory, submit_inventory)
@@ -26,6 +27,49 @@ def campaigns(user):
 def inventory_list(request):
     return render(request, 'erp/inventory_list.html', {'page': Paginator(campaigns(request.user).order_by('-created_at'), 30).get_page(request.GET.get('page')),
         'manager': is_manager(request.user)})
+
+
+@login_required
+@require_GET
+def initial_inventory_trace(request):
+    require_manager(request.user)
+    records = LegacyInventoryRecord.objects.all().order_by(
+        'resolution', 'kind', 'source_file', 'source_section', 'source_row'
+    )
+    kind = request.GET.get('kind', '').strip()
+    resolution = request.GET.get('resolution', '').strip()
+    search = request.GET.get('q', '').strip()[:200]
+    if kind in LegacyInventoryRecord.Kind.values:
+        records = records.filter(kind=kind)
+    else:
+        kind = ''
+    if resolution in LegacyInventoryRecord.Resolution.values:
+        records = records.filter(resolution=resolution)
+    else:
+        resolution = ''
+    if search:
+        records = records.filter(
+            Q(source_file__icontains=search)
+            | Q(source_section__icontains=search)
+            | Q(note__icontains=search)
+        )
+    summary = {
+        row['resolution']: row['n']
+        for row in LegacyInventoryRecord.objects.values('resolution').annotate(n=Count('id'))
+    }
+    return render(
+        request,
+        'erp/initial_inventory_trace.html',
+        {
+            'page': Paginator(records, 50).get_page(request.GET.get('page')),
+            'kind': kind,
+            'resolution': resolution,
+            'q': search,
+            'kinds': LegacyInventoryRecord.Kind.choices,
+            'resolutions': LegacyInventoryRecord.Resolution.choices,
+            'summary': summary,
+        },
+    )
 
 
 @login_required

@@ -131,6 +131,7 @@ urlpatterns = [
     path('reservations/<uuid:pk>/release/', stock_views.reservation_release, name='reservation-release'),
     path('movements/<uuid:pk>/reverse/', stock_views.movement_reverse, name='movement-reverse'),
     path('inventories/', inventory_views.inventory_list, name='inventory-list'),
+    path('inventories/source-trace/', inventory_views.initial_inventory_trace, name='initial-inventory-trace'),
     path('inventories/new/', inventory_views.inventory_create, name='inventory-create'),
     path('inventories/<uuid:pk>/', inventory_views.inventory_detail, name='inventory-detail'),
     path('inventory-lines/<uuid:pk>/count/', inventory_views.inventory_count, name='inventory-count'),
