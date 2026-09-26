@@ -51,7 +51,10 @@ def initial_inventory_trace(request):
     else:
         resolution = ''
     if review_status in LegacyInventoryRecord.ReviewStatus.values:
-        records = records.filter(review_status=review_status)
+        records = records.filter(
+            resolution=LegacyInventoryRecord.Resolution.REVIEW,
+            review_status=review_status,
+        )
     else:
         review_status = ''
     if search:
