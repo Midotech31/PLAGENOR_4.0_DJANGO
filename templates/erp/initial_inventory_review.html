@@ -1,0 +1,55 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading">
+  <div>
+    <p class="erp-eyebrow">{% trans 'Contrôle humain de la reprise' %}</p>
+    <h1>{% trans 'Examiner une ligne de l’inventaire initial' %}</h1>
+    <p>{{ record.get_kind_display }} — {{ record.source_file }}{% if record.source_row %}, {% trans 'ligne' %} {{ record.source_row }}{% endif %}</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ cancel_url }}">{% trans 'Retour à la traçabilité' %}</a>
+</header>
+
+<div class="erp-grid erp-grid-2">
+  <section class="erp-panel">
+    <h2>{% trans 'Donnée source originale — lecture seule' %}</h2>
+    <p class="text-muted">{% trans 'Cette donnée n’est jamais modifiée par la revue. Toute correction est reportée dans les objets opérationnels de PLAGENOR et documentée séparément.' %}</p>
+    <table class="erp-table">
+      <tbody>
+      {% for key,value in raw_rows %}
+        <tr><th style="width:34%;">{{ key }}</th><td>{{ value|default:'—' }}</td></tr>
+      {% empty %}
+        <tr><td>{% trans 'Aucune donnée source structurée.' %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="erp-panel">
+    <h2>{% trans 'État de la reprise' %}</h2>
+    <dl class="erp-definition-list">
+      <dt>{% trans 'Motif de contrôle' %}</dt><dd>{{ record.note|default:'—' }}</dd>
+      <dt>{% trans 'Objet PLAGENOR lié' %}</dt>
+      <dd>{% if record.entity_type %}<code>{{ record.entity_type }}</code> — {{ record.entity_id }}{% else %}—{% endif %}</dd>
+      <dt>{% trans 'État actuel de la revue' %}</dt><dd>{{ record.get_review_status_display }}</dd>
+      {% if record.reviewed_at %}
+      <dt>{% trans 'Dernière revue' %}</dt><dd>{{ record.reviewed_at|date:'d/m/Y H:i' }}{% if record.reviewed_by %} — {{ record.reviewed_by.get_full_name|default:record.reviewed_by.username }}{% endif %}</dd>
+      {% endif %}
+    </dl>
+    <form method="post" style="margin-top:16px;">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        {% if field.is_hidden %}{{ field }}{% else %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      <button class="btn btn-primary" type="submit">{% trans 'Enregistrer la conclusion de revue' %}</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
