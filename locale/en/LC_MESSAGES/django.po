@@ -7446,3 +7446,119 @@ msgstr "Internal administrative information"
 #~ msgstr ""
 #~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and can"
 #~ " convert your submission into a full account later."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Inventaire PLAGENOR 2026"
+msgstr "PLAGENOR 2026 inventory"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Traçabilité de la reprise des équipements, produits chimiques, consommables et réactifs."
+msgstr "Traceability of the initial equipment, chemical, consumable and reagent inventory migration."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes source"
+msgstr "Source rows"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Les lignes « À vérifier » restent volontairement non interprétées lorsqu’une quantité, une correspondance d’équipement ou une unité ne peut pas être établie sans hypothèse."
+msgstr "Rows marked “To review” are deliberately left uninterpreted when a quantity, equipment match, or unit cannot be established without assumptions."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Source institutionnelle intégrée"
+msgstr "Integrated institutional source"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Le classeur transmis contient %(workbook)s lignes d’inventaire et les 15 fiches de salle apportent %(rooms)s lignes détaillées, soit %(total)s lignes source conservées avec leur provenance."
+msgstr "The submitted workbook contains %(workbook)s inventory rows and the 15 room sheets provide %(rooms)s detailed rows, for a total of %(total)s source rows preserved with their provenance."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Rapprochements équipements"
+msgstr "Equipment reconciliations"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiches de salle à vérifier"
+msgstr "Room-sheet rows to review"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Stocks sans solde exact"
+msgstr "Stock rows without an exact balance"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Date du constat / reprise"
+msgstr "Inventory snapshot / migration date"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cette date documente le constat initial; elle n’est pas interprétée comme date d’achat ou de réception fournisseur."
+msgstr "This date documents the initial inventory snapshot; it is not interpreted as a purchase or supplier-receipt date."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Je confirme l’intégration de cet inventaire comme base initiale PLAGENOR 4.0."
+msgstr "I confirm the integration of this inventory as the initial PLAGENOR 4.0 baseline."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "L’intégration est idempotente : les désignations source sont conservées, les doublons ne sont pas recréés, les quantités ambiguës ne sont pas inventées et restent dans la file « À vérifier »."
+msgstr "The integration is idempotent: source designations are preserved, duplicates are not recreated, and ambiguous quantities are never invented and remain in the “To review” queue."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Intégrer l’inventaire initial"
+msgstr "Integrate the initial inventory"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La reprise initiale a déjà été appliquée. Une nouvelle exécution technique reste idempotente et ne duplique pas les mouvements initiaux."
+msgstr "The initial migration has already been applied. A technical rerun remains idempotent and does not duplicate initial stock movements."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes de reprise de l’inventaire"
+msgstr "Inventory migration rows"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Donnée source"
+msgstr "Source data"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cible PLAGENOR"
+msgstr "PLAGENOR target"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Aucune ligne importée."
+msgstr "No imported rows."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Confirmation de reprise invalide."
+msgstr "Invalid inventory-migration confirmation."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La date du constat d’inventaire est obligatoire."
+msgstr "The inventory snapshot date is required."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Reprise PLAGENOR 2026 appliquée de manière idempotente : %(equipment)s équipement(s), %(stock)s ligne(s) de stock initial, %(review)s ligne(s) conservée(s) pour vérification."
+msgstr "PLAGENOR 2026 migration applied idempotently: %(equipment)s equipment item(s), %(stock)s initial-stock row(s), %(review)s row(s) retained for review."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Doublon source conservé"
+msgstr "Source duplicate preserved"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Classeur inventaire"
+msgstr "Inventory workbook"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiche de salle"
+msgstr "Room inventory sheet"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Référence fabricant"
+msgstr "Manufacturer reference"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "État inventaire"
+msgstr "Inventory status"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Hors service"
+msgstr "Out of service"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Réformé"
+msgstr "Decommissioned"

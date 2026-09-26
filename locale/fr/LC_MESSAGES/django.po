@@ -7024,3 +7024,119 @@ msgstr "Fortement recommandée"
 
 msgid "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion."
 msgstr "La double authentification reste facultative pour tous les comptes. Son activation est fortement recommandée, notamment pour les comptes Administrateur, Admin Ops, Finance et les autres comptes membres. Une fois activée, un code à 6 chiffres généré par votre téléphone sera demandé à chaque connexion."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Inventaire PLAGENOR 2026"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Traçabilité de la reprise des équipements, produits chimiques, consommables et réactifs."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes source"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Les lignes « À vérifier » restent volontairement non interprétées lorsqu’une quantité, une correspondance d’équipement ou une unité ne peut pas être établie sans hypothèse."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Source institutionnelle intégrée"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Le classeur transmis contient %(workbook)s lignes d’inventaire et les 15 fiches de salle apportent %(rooms)s lignes détaillées, soit %(total)s lignes source conservées avec leur provenance."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Rapprochements équipements"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiches de salle à vérifier"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Stocks sans solde exact"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Date du constat / reprise"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cette date documente le constat initial; elle n’est pas interprétée comme date d’achat ou de réception fournisseur."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Je confirme l’intégration de cet inventaire comme base initiale PLAGENOR 4.0."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "L’intégration est idempotente : les désignations source sont conservées, les doublons ne sont pas recréés, les quantités ambiguës ne sont pas inventées et restent dans la file « À vérifier »."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Intégrer l’inventaire initial"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La reprise initiale a déjà été appliquée. Une nouvelle exécution technique reste idempotente et ne duplique pas les mouvements initiaux."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes de reprise de l’inventaire"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Donnée source"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cible PLAGENOR"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Aucune ligne importée."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Confirmation de reprise invalide."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La date du constat d’inventaire est obligatoire."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Reprise PLAGENOR 2026 appliquée de manière idempotente : %(equipment)s équipement(s), %(stock)s ligne(s) de stock initial, %(review)s ligne(s) conservée(s) pour vérification."
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Doublon source conservé"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Classeur inventaire"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiche de salle"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Référence fabricant"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "État inventaire"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Hors service"
+msgstr ""
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Réformé"
+msgstr ""

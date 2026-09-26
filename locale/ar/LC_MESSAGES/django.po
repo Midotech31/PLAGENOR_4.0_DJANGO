@@ -7367,3 +7367,119 @@ msgstr "معلومات إدارية داخلية"
 #~ msgstr ""
 #~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
 #~ "تحويل تقديمك إلى حساب كامل لاحقًا."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Inventaire PLAGENOR 2026"
+msgstr "جرد بلاجينور 2026"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Traçabilité de la reprise des équipements, produits chimiques, consommables et réactifs."
+msgstr "تتبّع ترحيل الجرد الأولي للمعدات والمواد الكيميائية والمواد الاستهلاكية والكواشف."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes source"
+msgstr "سطور المصدر"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Les lignes « À vérifier » restent volontairement non interprétées lorsqu’une quantité, une correspondance d’équipement ou une unité ne peut pas être établie sans hypothèse."
+msgstr "تُترك السطور الموسومة «للمراجعة» دون تفسير متعمدًا عندما يتعذر تحديد الكمية أو مطابقة الجهاز أو الوحدة دون افتراضات."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Source institutionnelle intégrée"
+msgstr "المصدر المؤسسي المدمج"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Le classeur transmis contient %(workbook)s lignes d’inventaire et les 15 fiches de salle apportent %(rooms)s lignes détaillées, soit %(total)s lignes source conservées avec leur provenance."
+msgstr "يحتوي المصنف المرسل على %(workbook)s سطر جرد، وتضيف 15 بطاقة قاعة %(rooms)s سطرًا تفصيليًا، أي ما مجموعه %(total)s سطر مصدر محفوظًا مع مصدره."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Rapprochements équipements"
+msgstr "مطابقات المعدات"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiches de salle à vérifier"
+msgstr "سطور بطاقات القاعات للمراجعة"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Stocks sans solde exact"
+msgstr "سطور مخزون دون رصيد دقيق"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Date du constat / reprise"
+msgstr "تاريخ المعاينة / الترحيل"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cette date documente le constat initial; elle n’est pas interprétée comme date d’achat ou de réception fournisseur."
+msgstr "يوثق هذا التاريخ المعاينة الأولية للجرد؛ ولا يُفسَّر كتاريخ شراء أو استلام من المورد."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Je confirme l’intégration de cet inventaire comme base initiale PLAGENOR 4.0."
+msgstr "أؤكد دمج هذا الجرد كقاعدة أولية لبلاجينور 4.0."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "L’intégration est idempotente : les désignations source sont conservées, les doublons ne sont pas recréés, les quantités ambiguës ne sont pas inventées et restent dans la file « À vérifier »."
+msgstr "الدمج قابل لإعادة التنفيذ دون تكرار: تُحفظ التسميات الأصلية، ولا تُنشأ الازدواجيات من جديد، ولا تُختلق الكميات الملتبسة بل تبقى في قائمة «للمراجعة»."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Intégrer l’inventaire initial"
+msgstr "دمج الجرد الأولي"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La reprise initiale a déjà été appliquée. Une nouvelle exécution technique reste idempotente et ne duplique pas les mouvements initiaux."
+msgstr "تم تطبيق الترحيل الأولي بالفعل. وتبقى إعادة التنفيذ التقنية قابلة للتكرار دون مضاعفة حركات المخزون الأولية."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Lignes de reprise de l’inventaire"
+msgstr "سطور ترحيل الجرد"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Donnée source"
+msgstr "بيانات المصدر"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Cible PLAGENOR"
+msgstr "الهدف في بلاجينور"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Aucune ligne importée."
+msgstr "لا توجد سطور مستوردة."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Confirmation de reprise invalide."
+msgstr "تأكيد ترحيل الجرد غير صالح."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "La date du constat d’inventaire est obligatoire."
+msgstr "تاريخ معاينة الجرد إلزامي."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Reprise PLAGENOR 2026 appliquée de manière idempotente : %(equipment)s équipement(s), %(stock)s ligne(s) de stock initial, %(review)s ligne(s) conservée(s) pour vérification."
+msgstr "تم تطبيق ترحيل جرد بلاجينور 2026 دون تكرار: %(equipment)s من المعدات، و%(stock)s من سطور المخزون الأولي، و%(review)s من السطور المحفوظة للمراجعة."
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Doublon source conservé"
+msgstr "تم حفظ ازدواجية المصدر"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Classeur inventaire"
+msgstr "مصنف الجرد"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Fiche de salle"
+msgstr "بطاقة جرد القاعة"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Référence fabricant"
+msgstr "مرجع الشركة المصنعة"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "État inventaire"
+msgstr "حالة الجرد"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Hors service"
+msgstr "خارج الخدمة"
+
+# PLAGENOR 2026 institutional inventory bootstrap
+msgid "Réformé"
+msgstr "مسحوب من الخدمة"

@@ -57,6 +57,8 @@ def conflicts(work, start, end, resource_ids, *, assignee=None):
     resources = PlanningResource.objects.filter(pk__in=resource_ids)
     if resources.count() != len(set(resource_ids)) or resources.filter(active=False).exists():
         issues.append(_('Une ressource sélectionnée est inconnue ou désactivée.'))
+    if resources.filter(kind=PlanningResource.Kind.EQUIPMENT).exclude(inventory_status='IN_SERVICE').exists():
+        issues.append(_('Un équipement sélectionné n’est pas déclaré en service dans l’inventaire.'))
     for resource in resources.select_related('location'):
         if resource.location_id and LocationClosure.objects.filter(descendant_id=resource.location_id, ancestor__active=False).exists():
             issues.append(_('Une ressource se trouve dans un emplacement désactivé.'))

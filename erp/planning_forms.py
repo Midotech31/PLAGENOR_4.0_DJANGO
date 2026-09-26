@@ -79,7 +79,11 @@ class ReadinessForm(OperationForm):
 class ResourceForm(VersionedForm):
     class Meta:
         model = PlanningResource
-        fields = ['code', 'name', 'name_en', 'name_ar', 'kind', 'location', 'serial_number', 'instructions', 'active']
+        fields = [
+            'code', 'name', 'name_en', 'name_ar', 'kind', 'location',
+            'model_name', 'manufacturer_reference', 'serial_number',
+            'inventory_status', 'instructions', 'active',
+        ]
 
 
 class UnavailabilityForm(OperationForm):

@@ -1,0 +1,88 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading">
+  <div>
+    <p class="erp-eyebrow">PLAGENOR 4.0</p>
+    <h1>{% trans "Inventaire PLAGENOR 2026" %}</h1>
+    <p>{% trans "Traçabilité de la reprise des équipements, produits chimiques, consommables et réactifs." %}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'erp:index' %}">{% trans "Retour ERP" %}</a>
+</header>
+<div class="erp-cards">
+  <section class="erp-card"><span class="erp-card-label">{% trans "Lignes source" %}</span><strong class="erp-card-count">{{ counts.total }}</strong></section>
+  <section class="erp-card"><span class="erp-card-label">{% trans "Équipements" %}</span><strong class="erp-card-count">{{ counts.equipment }}</strong></section>
+  <section class="erp-card"><span class="erp-card-label">{% trans "Stock" %}</span><strong class="erp-card-count">{{ counts.stock }}</strong></section>
+  <section class="erp-card"><span class="erp-card-label">{% trans "À vérifier" %}</span><strong class="erp-card-count">{{ counts.review }}</strong></section>
+</div>
+<div class="erp-notice">
+  {% trans "Les lignes « À vérifier » restent volontairement non interprétées lorsqu’une quantité, une correspondance d’équipement ou une unité ne peut pas être établie sans hypothèse." %}
+</div>
+<section class="erp-panel">
+  <h2>{% trans "Source institutionnelle intégrée" %}</h2>
+  <p>
+    {% blocktrans with workbook=preview.workbook_total rooms=preview.room_list_rows total=preview.source_total %}
+    Le classeur transmis contient {{ workbook }} lignes d’inventaire et les 15 fiches de salle apportent {{ rooms }} lignes détaillées, soit {{ total }} lignes source conservées avec leur provenance.
+    {% endblocktrans %}
+  </p>
+  <div class="erp-cards" style="margin-top:12px;">
+    <section class="erp-card"><span class="erp-card-label">{% trans "Rapprochements équipements" %}</span><strong class="erp-card-count">{{ preview.equipment_enrichments }}</strong></section>
+    <section class="erp-card"><span class="erp-card-label">{% trans "Fiches de salle à vérifier" %}</span><strong class="erp-card-count">{{ preview.room_rows_needing_review }}</strong></section>
+    <section class="erp-card"><span class="erp-card-label">{% trans "Stocks sans solde exact" %}</span><strong class="erp-card-count">{{ preview.stock_rows_without_exact_balance }}</strong></section>
+  </div>
+  {% if not counts.total %}
+  <form method="post" action="{% url 'erp:inventory-source-apply' %}" class="erp-form" style="margin-top:18px;">
+    {% csrf_token %}
+    <div class="erp-form-grid">
+      <label>
+        <span>{% trans "Date du constat / reprise" %}</span>
+        <input class="form-control" type="date" name="snapshot_date" value="2026-09-25" required>
+        <small>{% trans "Cette date documente le constat initial; elle n’est pas interprétée comme date d’achat ou de réception fournisseur." %}</small>
+      </label>
+      <label class="form-check" style="align-self:end;">
+        <input type="checkbox" name="confirm" value="PLAGENOR-2026" required>
+        {% trans "Je confirme l’intégration de cet inventaire comme base initiale PLAGENOR 4.0." %}
+      </label>
+    </div>
+    <p class="erp-muted">
+      {% trans "L’intégration est idempotente : les désignations source sont conservées, les doublons ne sont pas recréés, les quantités ambiguës ne sont pas inventées et restent dans la file « À vérifier »." %}
+    </p>
+    <button class="btn btn-primary" type="submit">{% trans "Intégrer l’inventaire initial" %}</button>
+  </form>
+  {% else %}
+  <p class="erp-muted" style="margin-top:14px;">
+    {% trans "La reprise initiale a déjà été appliquée. Une nouvelle exécution technique reste idempotente et ne duplique pas les mouvements initiaux." %}
+  </p>
+  {% endif %}
+</section>
+<form method="get" class="erp-filters">
+  <label>{% trans "Domaine" %}
+    <select class="form-control" name="domain"><option value="">{% trans "Tous" %}</option>{% for code,label in domains %}<option value="{{ code }}" {% if domain == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  </label>
+  <label>{% trans "État" %}
+    <select class="form-control" name="status"><option value="">{% trans "Tous" %}</option>{% for code,label in statuses %}<option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  </label>
+  <label>{% trans "Recherche" %}<input class="form-control" type="search" name="q" value="{{ q }}"></label>
+  <button class="btn btn-secondary">{% trans "Filtrer" %}</button>
+</form>
+<div class="erp-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Lignes de reprise de l’inventaire' %}">
+<table class="erp-table">
+<thead><tr>
+  <th>{% trans "Source" %}</th><th>{% trans "Domaine" %}</th><th>{% trans "Donnée source" %}</th>
+  <th>{% trans "État" %}</th><th>{% trans "Cible PLAGENOR" %}</th><th>{% trans "Note" %}</th>
+</tr></thead>
+<tbody>
+{% for row in page %}
+<tr>
+  <td><strong>{{ row.source_file }}</strong><br><small>{{ row.source_sheet }} · {% trans "ligne" %} {{ row.source_row }}</small></td>
+  <td>{{ row.get_domain_display }}</td>
+  <td><code>{{ row.raw_data.values|default:row.raw_data }}</code></td>
+  <td>{{ row.get_status_display }}</td>
+  <td>{% if row.target_id %}<code>{{ row.target_model }} · {{ row.target_id }}</code>{% else %}—{% endif %}</td>
+  <td>{{ row.notes|default:"—" }}</td>
+</tr>
+{% empty %}<tr><td colspan="6">{% trans "Aucune ligne importée." %}</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+{% if page.has_other_pages %}<nav class="erp-pagination">{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&domain={{ domain }}&status={{ status }}&q={{ q }}">{% trans "Précédent" %}</a>{% endif %}<span>{{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?page={{ page.next_page_number }}&domain={{ domain }}&status={{ status }}&q={{ q }}">{% trans "Suivant" %}</a>{% endif %}</nav>{% endif %}
+{% endblock %}
