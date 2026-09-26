@@ -50,7 +50,7 @@ def _equipment(name="Vortex", room="01", row=2, quantity="1", serial=""):
     }
 
 
-class LegacyInventoryPureCoverageTests(SimpleTestCase):
+class LegacyInventoryPureCoverageTests(TestCase):
     def test_zip_parser_skips_empty_tables_and_non_equipment_rows(self):
         out = io.BytesIO()
         with zipfile.ZipFile(out, "w") as archive:
