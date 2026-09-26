@@ -4,7 +4,7 @@
   <div>
     <p class="erp-eyebrow">{% trans 'Reprise contrôlée des données' %}</p>
     <h1>{% trans 'Traçabilité de l’inventaire initial PLAGENOR 2026' %}</h1>
-    <p>{% trans 'Chaque ligne source est conservée avec son état d’intégration. Les ambiguïtés restent à contrôler et ne sont jamais inventées.' %}</p>
+    <p>{% trans 'Chaque ligne source est conservée. Les ambiguïtés sont revues par un responsable sans jamais modifier la donnée d’origine.' %}</p>
   </div>
   <a class="btn btn-secondary" href="{% url 'erp:inventory-list' %}">{% trans 'Campagnes d’inventaire' %}</a>
 </header>
@@ -12,8 +12,8 @@
 <div class="erp-cards" style="margin-bottom:16px;">
   <div class="erp-card"><strong>{{ summary.IMPORTED|default:0 }}</strong><span>{% trans 'Importées' %}</span></div>
   <div class="erp-card"><strong>{{ summary.REUSED|default:0 }}</strong><span>{% trans 'Rattachées sans doublon' %}</span></div>
-  <div class="erp-card"><strong>{{ summary.REVIEW|default:0 }}</strong><span>{% trans 'À vérifier' %}</span></div>
-  <div class="erp-card"><strong>{{ summary.SKIPPED|default:0 }}</strong><span>{% trans 'Lignes de continuation préservées' %}</span></div>
+  <div class="erp-card"><strong>{{ review_summary.OPEN|default:0 }}</strong><span>{% trans 'Revues ouvertes' %}</span></div>
+  <div class="erp-card"><strong>{{ summary.SKIPPED|default:0 }}</strong><span>{% trans 'Lignes source conservées sans import' %}</span></div>
 </div>
 
 <form method="get" class="erp-filterbar">
@@ -23,8 +23,12 @@
     {% for value,label in kinds %}<option value="{{ value }}" {% if kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
   </select>
   <select name="resolution">
-    <option value="">{% trans 'Tous les états' %}</option>
+    <option value="">{% trans 'Tous les états d’intégration' %}</option>
     {% for value,label in resolutions %}<option value="{{ value }}" {% if resolution == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="review_status">
+    <option value="">{% trans 'Tous les états de revue' %}</option>
+    {% for value,label in review_statuses %}<option value="{{ value }}" {% if review_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
   </select>
   <button class="btn btn-primary" type="submit">{% trans 'Filtrer' %}</button>
 </form>
@@ -32,21 +36,29 @@
 <div class="table-responsive">
 <table class="erp-table">
   <thead><tr>
-    <th>{% trans 'Type' %}</th><th>{% trans 'État' %}</th><th>{% trans 'Source' %}</th>
-    <th>{% trans 'Ligne' %}</th><th>{% trans 'Observation de reprise' %}</th><th>{% trans 'Objet lié' %}</th>
+    <th>{% trans 'Type' %}</th><th>{% trans 'Intégration' %}</th><th>{% trans 'Revue humaine' %}</th>
+    <th>{% trans 'Source' %}</th><th>{% trans 'Ligne' %}</th><th>{% trans 'Observation' %}</th>
+    <th>{% trans 'Objet lié' %}</th><th>{% trans 'Action' %}</th>
   </tr></thead>
   <tbody>
   {% for record in page %}
     <tr>
       <td>{{ record.get_kind_display }}</td>
       <td><span class="badge">{{ record.get_resolution_display }}</span></td>
+      <td>
+        {% if record.resolution == 'REVIEW' %}
+          <span class="badge">{{ record.get_review_status_display }}</span>
+          {% if record.reviewed_at %}<br><small>{{ record.reviewed_at|date:'d/m/Y H:i' }}{% if record.reviewed_by %} — {{ record.reviewed_by.get_full_name|default:record.reviewed_by.username }}{% endif %}</small>{% endif %}
+        {% else %}—{% endif %}
+      </td>
       <td><strong>{{ record.source_file }}</strong><br><small>{{ record.source_section }}</small></td>
       <td>{{ record.source_row|default:'—' }}</td>
-      <td>{{ record.note|default:'—' }}</td>
+      <td>{{ record.note|default:'—' }}{% if record.review_note %}<hr><small>{{ record.review_note }}</small>{% endif %}</td>
       <td>{% if record.entity_type %}<code>{{ record.entity_type }}</code><br><small>{{ record.entity_id }}</small>{% else %}—{% endif %}</td>
+      <td>{% if record.resolution == 'REVIEW' %}<a class="btn btn-sm btn-secondary" href="{% url 'erp:initial-inventory-review' pk=record.pk %}">{% trans 'Examiner' %}</a>{% else %}—{% endif %}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="6">{% trans 'Aucune ligne ne correspond aux filtres.' %}</td></tr>
+    <tr><td colspan="8">{% trans 'Aucune ligne ne correspond aux filtres.' %}</td></tr>
   {% endfor %}
   </tbody>
 </table>
