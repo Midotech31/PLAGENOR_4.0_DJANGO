@@ -51,5 +51,5 @@ class LegacyInventoryRecord(Record):
         indexes = [
             models.Index(fields=['kind', 'resolution']),
             models.Index(fields=['entity_type', 'entity_id']),
-            models.Index(fields=['resolution', 'review_status']),
+            models.Index(fields=['resolution', 'review_status'], name='erp_legacyi_resolut_ef54f1_idx'),
         ]
