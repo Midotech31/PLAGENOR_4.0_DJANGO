@@ -10,15 +10,17 @@ from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from . import forms
 from .models import (AccessGrant, Article, ArticleConversion, AuditEvent, Capability,
-                     Category, Location, LocationClosure, LocationType, Party, Unit)
+                     Category, InventorySourceRecord, Location, LocationClosure, LocationType,
+                     Party, Unit)
 from .permissions import (catalog_scope, grants, has_access, is_manager, permitted,
                           require, require_manager, storage_scope)
 from .services.access import save_grant
 from .services.catalog import record_price, save_article, save_conversion, save_reference
+from .services.inventory_bootstrap import apply_inventory, summarize as summarize_inventory
 from .services.storage import save_location
 
 
@@ -111,6 +113,13 @@ def index(request):
         modules.insert(0, {'route': 'erp:sample-list', 'title': _('Échantillons et stockage froid'), 'count': biobank_scope(request.user).count(), 'detail': _('Aliquots, positions et chaîne de possession')})
     if is_manager(request.user) or grants(request.user, Capability.VIEW_STOCK).exists():
         modules.insert(0, {'route': 'erp:stock-list', 'title': _('Stocks et réceptions'), 'count': operational_scope(StockContainer.objects.all(), request.user).count(), 'detail': _('Lots, contenants, disponibilités et mouvements')})
+    if is_manager(request.user):
+        modules.insert(0, {
+            'route': 'erp:inventory-source',
+            'title': _('Inventaire PLAGENOR 2026'),
+            'count': InventorySourceRecord.objects.count(),
+            'detail': _('Source réelle, rapprochements et lignes à vérifier'),
+        })
     return render(request, 'erp/index.html', {'cards': cards, 'modules': modules, 'manager': is_manager(request.user)})
 
 
@@ -231,6 +240,79 @@ def audit_trail(request):
     events = AuditEvent.objects.select_related('actor').order_by('-id')
     page = Paginator(events, 30).get_page(request.GET.get('page'))
     return render(request, 'erp/audit.html', {'page': page})
+
+
+@login_required
+@require_GET
+def inventory_source(request):
+    require_manager(request.user)
+    qs = InventorySourceRecord.objects.all()
+    domain = request.GET.get('domain', '').strip()
+    status = request.GET.get('status', '').strip()
+    query = request.GET.get('q', '').strip()[:200]
+    if domain in InventorySourceRecord.Domain.values:
+        qs = qs.filter(domain=domain)
+    else:
+        domain = ''
+    if status in InventorySourceRecord.Status.values:
+        qs = qs.filter(status=status)
+    else:
+        status = ''
+    if query:
+        qs = qs.filter(
+            Q(source_file__icontains=query) | Q(source_sheet__icontains=query)
+            | Q(identity_key__icontains=query) | Q(notes__icontains=query)
+            | Q(normalized_data__product__icontains=query)
+            | Q(normalized_data__name__icontains=query)
+            | Q(normalized_data__equipment_name__icontains=query)
+            | Q(normalized_data__model__icontains=query)
+            | Q(normalized_data__serial_number__icontains=query)
+        )
+    counts = {
+        'total': InventorySourceRecord.objects.count(),
+        'review': InventorySourceRecord.objects.filter(status=InventorySourceRecord.Status.NEEDS_REVIEW).count(),
+        'equipment': InventorySourceRecord.objects.filter(domain=InventorySourceRecord.Domain.EQUIPMENT).count(),
+        'stock': InventorySourceRecord.objects.exclude(domain=InventorySourceRecord.Domain.EQUIPMENT).count(),
+    }
+    preview = summarize_inventory()
+    preview['workbook_total'] = sum(preview['raw_workbook_rows'].values())
+    preview['source_total'] = preview['workbook_total'] + preview['room_list_rows']
+    page = Paginator(qs, 50).get_page(request.GET.get('page'))
+    return render(request, 'erp/inventory_source.html', {
+        'page': page, 'counts': counts, 'domain': domain, 'status': status, 'q': query,
+        'domains': InventorySourceRecord.Domain.choices, 'statuses': InventorySourceRecord.Status.choices,
+        'preview': preview,
+    })
+
+
+@login_required
+@require_POST
+def inventory_source_apply(request):
+    require_manager(request.user)
+    if request.POST.get('confirm') != 'PLAGENOR-2026':
+        messages.error(request, _('Confirmation de reprise invalide.'))
+        return redirect('erp:inventory-source')
+    snapshot_date = request.POST.get('snapshot_date', '').strip()
+    if not snapshot_date:
+        messages.error(request, _('La date du constat d’inventaire est obligatoire.'))
+        return redirect('erp:inventory-source')
+    try:
+        stats = apply_inventory(request.user, snapshot_date)
+    except (ValidationError, ValueError) as exc:
+        messages.error(request, str(exc))
+        return redirect('erp:inventory-source')
+    imported = stats.get('stock_rows_imported', 0)
+    equipment = stats.get('equipment_created', 0) + stats.get('equipment_existing', 0)
+    review = stats.get('needs_review', 0) + stats.get('room_rows_review', 0)
+    messages.success(
+        request,
+        _(
+            'Reprise PLAGENOR 2026 appliquée de manière idempotente : '
+            '%(equipment)s équipement(s), %(stock)s ligne(s) de stock initial, '
+            '%(review)s ligne(s) conservée(s) pour vérification.'
+        ) % {'equipment': equipment, 'stock': imported, 'review': review},
+    )
+    return redirect('erp:inventory-source')
 
 
 @login_required

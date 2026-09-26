@@ -21,7 +21,7 @@ from .planning import ActivityDependency, ActivitySchedule, AvailabilityBlock, P
 
 from .procurement import (ForecastObservation, ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
 
-from .imports import ImportBatch
+from .imports import ImportBatch, InventorySourceRecord
 
 from .alerts import AlertAcknowledgement,AlertDigest,AlertPolicy
 

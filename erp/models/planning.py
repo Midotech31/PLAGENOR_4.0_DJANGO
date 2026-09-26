@@ -15,6 +15,20 @@ class PlanningResource(CodedRecord):
     kind = models.CharField(_('Type de ressource'), max_length=12, choices=Kind.choices)
     location = models.ForeignKey('erp.Location', on_delete=models.PROTECT, null=True, blank=True)
     serial_number = models.CharField(_('Numéro de série'), max_length=120, blank=True)
+    model_name = models.CharField(_('Modèle'), max_length=255, blank=True)
+    manufacturer_reference = models.CharField(_('Référence fabricant'), max_length=120, blank=True)
+    inventory_status = models.CharField(
+        _('État inventaire'), max_length=18,
+        choices=[
+            ('UNVERIFIED', _('À vérifier')),
+            ('IN_SERVICE', _('En service')),
+            ('MAINTENANCE', _('Maintenance')),
+            ('OUT_OF_SERVICE', _('Hors service')),
+            ('DECOMMISSIONED', _('Réformé')),
+        ],
+        default='IN_SERVICE',
+    )
+    source_snapshot = models.JSONField(default=dict, editable=False)
     instructions = models.TextField(_('Consignes de réservation'), blank=True)
 
     class Meta(CodedRecord.Meta):
