@@ -870,6 +870,15 @@ _KNOWN_EQUIPMENT_FAMILIES = {
     "BETA_2_8_LSCPLUS": (("beta", "2", "8", "lsc"),),
 }
 
+_EXCEL_EQUIPMENT_FAMILY_PATTERNS = {
+    "MISEQ": (("ngs",), ("séquenceur", "haut", "débit")),
+    "ABI3500": (("sanger", "genetic", "analyzer"),),
+    "MERMADE4": (("oligonucleotide", "synthesizer"),),
+    "BIOANALYZER2100": (("bioanalyzer",),),
+    "MALDI_SIRIUS_GP": (("maldi", "tof"),),
+    "BETA_2_8_LSCPLUS": (("lyophilisateur",),),
+}
+
 
 def _matches_equipment_family(text, family):
     return any(all(token in text for token in tokens)
@@ -884,6 +893,14 @@ def _known_equipment_family(row):
     ))))
     for family in _KNOWN_EQUIPMENT_FAMILIES:
         if _matches_equipment_family(source, family):
+            return family
+    return ""
+
+
+def _known_excel_equipment_family(row):
+    source = _norm(_field(row, "Equipement", "Equipment"))
+    for family, alternatives in _EXCEL_EQUIPMENT_FAMILY_PATTERNS.items():
+        if any(all(token in source for token in tokens) for tokens in alternatives):
             return family
     return ""
 
@@ -1107,13 +1124,22 @@ def _apply_detailed_equipment(user, manifest, locations, report):
 
 
 def _apply_excel_equipment_reconciliation(manifest, report):
-    from erp.models import LegacyInventoryRecord
+    from erp.models import LegacyInventoryRecord, PlanningResource
 
     _, excel_rows = _sheet(manifest, "Equipement")
     detailed_counter = Counter()
+    detailed_families = defaultdict(list)
     for row in manifest.get("equipment_room_inventory", []):
         quantity = _integer(_field(row, "Quantity")) or 0
         detailed_counter[_equipment_identity(row)] += quantity
+        family = _known_equipment_family(row)
+        if family:
+            detailed_families[family].append({
+                "room": f"ROOM{_text(row.get('__room__')).zfill(2)}",
+                "quantity": quantity,
+                "source": row.get("__source_file__"),
+                "row": row.get("__source_row__"),
+            })
     for row in excel_rows:
         source_key = _source_key("EQXLSX", row.get("__row__"))
         payload = _source_record_payload(
@@ -1126,8 +1152,50 @@ def _apply_excel_equipment_reconciliation(manifest, report):
         existing = _already_applied(source_key, payload["fingerprint"])
         if existing:
             continue
-        identity = _excel_equipment_identity(row)
         quantity = _integer(_field(row, "Nombre", "Quantité")) or 0
+        room = _room_code(_field(row, "Emplacement"))
+        family = _known_excel_equipment_family(row)
+        if family:
+            family_rows = detailed_families.get(family, [])
+            same_room = [item for item in family_rows if item["room"] == room]
+            if len(same_room) == 1 and same_room[0]["quantity"] == quantity:
+                resources = [
+                    resource for resource in PlanningResource.objects.filter(
+                        kind=PlanningResource.Kind.EQUIPMENT,
+                        location__code=room,
+                    )
+                    if _resource_matches_family(resource, family)
+                ]
+                if len(resources) == 1:
+                    _record_legacy(
+                        source_key=source_key,
+                        payload=payload,
+                        resolution=LegacyInventoryRecord.Resolution.REUSED,
+                        entity=resources[0],
+                        note=(
+                            f"Ligne Excel rapprochée de façon conservatrice de la famille {family}, "
+                            f"même salle {room} et même quantité {quantity}; aucune création supplémentaire."
+                        ),
+                    )
+                    report["equipment_excel_matched"] += 1
+                    continue
+            detailed_summary = ", ".join(
+                f"{item['room']}×{item['quantity']}" for item in family_rows
+            ) or "aucune ligne détaillée"
+            _record_legacy(
+                source_key=source_key,
+                payload=payload,
+                resolution=LegacyInventoryRecord.Resolution.REVIEW,
+                note=(
+                    f"Famille majeure {family} reconnue mais rapprochement non certain : "
+                    f"Excel={room or 'emplacement absent'}×{quantity}; "
+                    f"inventaire détaillé={detailed_summary}. Vérification humaine requise."
+                ),
+            )
+            report["equipment_excel_review"] += 1
+            continue
+
+        identity = _excel_equipment_identity(row)
         detailed_quantity = detailed_counter.get(identity, 0)
         if detailed_quantity and detailed_quantity == quantity:
             resolution = LegacyInventoryRecord.Resolution.REUSED
@@ -1146,7 +1214,6 @@ def _apply_excel_equipment_reconciliation(manifest, report):
         _record_legacy(
             source_key=source_key, payload=payload, resolution=resolution, note=note
         )
-
 
 def _stock_row_payload(manifest, section, row, kind):
     from erp.models import LegacyInventoryRecord
