@@ -12,7 +12,7 @@ import re
 import unicodedata
 import uuid
 import zipfile
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
