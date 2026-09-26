@@ -43,11 +43,11 @@ def _manifest(*, equipment=None, chemicals=None, consumables=None, reagents=None
     }
 
 
-def _equipment(name, room, row, *, quantity="1", serial=""):
+def _equipment(name, room, row, *, quantity="1", serial="", model="Model test", reference="REF"):
     return {
         "Equipment Name": name,
-        "Model": "Model test",
-        "Reference": "REF",
+        "Model": model,
+        "Reference": reference,
         "Quantity": quantity,
         "Serial Number (S/N)": serial,
         "__source_file__": f"Laboratory Inventory List {room}.docx",
@@ -113,6 +113,92 @@ class InventoryBootstrapTests(TestCase):
             ).count(),
             2,
         )
+
+    def test_only_source_documented_stock_rooms_are_storage_capable(self):
+        manifest = _manifest(
+            equipment=[_equipment("Vortex", "01", 3)],
+            chemicals=[{
+                "N": "1", "Produit": "Ethanol", "Quantité": "1L",
+                "Quantité reste": "1L", "Emplacement": "Salle 03", "__row__": 2,
+            }],
+        )
+        apply_inventory(self.user, manifest)
+        from erp.models import Location
+
+        self.assertFalse(Location.objects.get(code="ROOM01").kind.can_store)
+        self.assertTrue(Location.objects.get(code="ROOM03").kind.can_store)
+        self.assertTrue(Location.objects.get(code="STOCK").kind.can_store)
+
+    def test_known_instrument_family_reuses_unique_existing_resource_and_enriches_serial(self):
+        from erp.models import Location, LocationType
+        from erp.services.legacy_inventory import _ensure_bootstrap_references
+        from erp.services.planning import save_resource
+        from erp.services.storage import save_location
+
+        _, _, site_type, room_type, _ = _ensure_bootstrap_references(self.user)
+        root = save_location(self.user, {
+            "code": "PLAGENOR", "name": "PLAGENOR", "kind": site_type, "active": True,
+        })
+        room = save_location(self.user, {
+            "code": "ROOM11", "name": "Salle 11", "kind": room_type,
+            "parent": root, "active": True,
+        })
+        existing = save_resource(self.user, {
+            "code": "MISEQ-EXISTING", "name": "Illumina MiSeq",
+            "kind": PlanningResource.Kind.EQUIPMENT, "location": room,
+            "serial_number": "", "instructions": "Séquenceur NGS institutionnel",
+        })
+        source = _equipment(
+            "Next-Generation Sequencer- Illumina", "11", 2,
+            serial="20006903", model="MiSeqTM", reference="20020579",
+        )
+        result = apply_inventory(self.user, _manifest(equipment=[source]))
+        existing.refresh_from_db()
+        self.assertEqual(result["equipment_created"], 0)
+        self.assertEqual(result["equipment_reused"], 1)
+        self.assertEqual(result["equipment_canonical_reused"], 1)
+        self.assertEqual(existing.serial_number, "20006903")
+        self.assertEqual(
+            PlanningResource.objects.filter(kind=PlanningResource.Kind.EQUIPMENT).count(), 1
+        )
+        record = LegacyInventoryRecord.objects.get(
+            kind=LegacyInventoryRecord.Kind.EQUIPMENT,
+            resolution=LegacyInventoryRecord.Resolution.REUSED,
+        )
+        self.assertEqual(record.entity_id, existing.pk)
+        self.assertIn("canonical_family", record.note)
+
+    def test_known_instrument_family_with_conflicting_serial_is_not_duplicated(self):
+        from erp.services.legacy_inventory import _ensure_bootstrap_references
+        from erp.services.planning import save_resource
+        from erp.services.storage import save_location
+
+        _, _, site_type, room_type, _ = _ensure_bootstrap_references(self.user)
+        root = save_location(self.user, {
+            "code": "PLAGENOR", "name": "PLAGENOR", "kind": site_type, "active": True,
+        })
+        room = save_location(self.user, {
+            "code": "ROOM11", "name": "Salle 11", "kind": room_type,
+            "parent": root, "active": True,
+        })
+        save_resource(self.user, {
+            "code": "MISEQ-EXISTING", "name": "Illumina MiSeq",
+            "kind": PlanningResource.Kind.EQUIPMENT, "location": room,
+            "serial_number": "OTHER-SERIAL", "instructions": "",
+        })
+        source = _equipment(
+            "Next-Generation Sequencer- Illumina", "11", 2,
+            serial="20006903", model="MiSeqTM", reference="20020579",
+        )
+        result = apply_inventory(self.user, _manifest(equipment=[source]))
+        self.assertEqual(result["equipment_created"], 0)
+        self.assertEqual(result["equipment_review"], 1)
+        self.assertEqual(PlanningResource.objects.count(), 1)
+        review = LegacyInventoryRecord.objects.get(
+            kind=LegacyInventoryRecord.Kind.EQUIPMENT,
+            resolution=LegacyInventoryRecord.Resolution.REVIEW,
+        )
+        self.assertIn("numéro de série divergent", review.note)
 
     def test_conflicting_duplicate_serial_is_flagged_not_silently_merged(self):
         manifest = _manifest(equipment=[
@@ -205,6 +291,45 @@ class InventoryBootstrapTests(TestCase):
         self.client.force_login(client_user)
         self.assertEqual(self.client.get(url).status_code, 403)
 
+    def test_ambiguous_source_review_is_audited_without_mutating_original_data(self):
+        manifest = _manifest(chemicals=[{
+            "N": "1", "Produit": "Ethanol", "Quantité": "2,5L",
+            "Quantité reste": "2,5L (entamé)", "Emplacement": "Salle 03", "__row__": 2,
+        }])
+        apply_inventory(self.user, manifest)
+        record = LegacyInventoryRecord.objects.get(
+            resolution=LegacyInventoryRecord.Resolution.REVIEW
+        )
+        original_raw = deepcopy(record.raw_data)
+        original_fingerprint = record.fingerprint
+        original_version = record.version
+        self.client.force_login(self.user)
+        url = reverse("erp:initial-inventory-review", args=[record.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "2,5L (entamé)")
+        response = self.client.post(url, {
+            "expected_version": original_version,
+            "review_status": LegacyInventoryRecord.ReviewStatus.CORRECTED,
+            "review_note": "Quantité physique vérifiée puis correction reportée manuellement dans PLAGENOR.",
+        })
+        self.assertRedirects(response, reverse("erp:initial-inventory-trace"))
+        record.refresh_from_db()
+        self.assertEqual(record.raw_data, original_raw)
+        self.assertEqual(record.fingerprint, original_fingerprint)
+        self.assertEqual(record.review_status, LegacyInventoryRecord.ReviewStatus.CORRECTED)
+        self.assertEqual(record.reviewed_by, self.user)
+        self.assertIsNotNone(record.reviewed_at)
+        self.assertEqual(record.version, original_version + 1)
+        stale = self.client.post(url, {
+            "expected_version": original_version,
+            "review_status": LegacyInventoryRecord.ReviewStatus.CONFIRMED,
+            "review_note": "Tentative basée sur une version obsolète.",
+        })
+        self.assertEqual(stale.status_code, 400)
+        record.refresh_from_db()
+        self.assertEqual(record.review_status, LegacyInventoryRecord.ReviewStatus.CORRECTED)
+
     def test_real_snapshot_full_apply_is_idempotent_and_conservative(self):
         manifest = load_manifest_gz(SNAPSHOT)
         first = apply_inventory(self.user, deepcopy(manifest))
@@ -220,6 +345,11 @@ class InventoryBootstrapTests(TestCase):
             457,
         )
         self.assertEqual(StockContainer.objects.count(), 244)
+        from erp.models import Location
+        self.assertEqual(
+            set(Location.objects.filter(kind__can_store=True).values_list("code", flat=True)),
+            {"STOCK", "ROOM03", "ROOM08", "ROOM10", "ROOM11", "ROOM14", "ROOM15", "ROOM16"},
+        )
         self.assertEqual(
             StockMovement.objects.filter(kind=StockMovement.Kind.INITIAL).count(), 244
         )
