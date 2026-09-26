@@ -607,15 +607,21 @@ def _ensure_bootstrap_references(user):
     ):
         categories[code], _ = _ensure_reference(user, Category, code, {"name": name})
     site_type, _ = _ensure_reference(
-        user, LocationType, "PLGSITE", {"name": "Site PLAGENOR", "can_store": False, "cold_storage": False}
+        user, LocationType, "PLGSITE",
+        {"name": "Site PLAGENOR", "can_store": False, "cold_storage": False},
     )
     room_type, _ = _ensure_reference(
-        user, LocationType, "PLGROOM", {"name": "Salle PLAGENOR", "can_store": True, "cold_storage": False}
+        user, LocationType, "PLGROOM",
+        {"name": "Salle PLAGENOR", "can_store": False, "cold_storage": False},
     )
-    return units, categories, site_type, room_type
+    storage_room_type, _ = _ensure_reference(
+        user, LocationType, "PLGSTOREROOM",
+        {"name": "Zone de stockage PLAGENOR", "can_store": True, "cold_storage": False},
+    )
+    return units, categories, site_type, room_type, storage_room_type
 
 
-def _ensure_location(user, code, name, kind, *, parent=None, notes=""):
+def _ensure_location(user, code, name, kind, *, parent=None, notes="", require_storage=False):
     from erp.models import Location
     from erp.services.storage import save_location
 
@@ -623,7 +629,7 @@ def _ensure_location(user, code, name, kind, *, parent=None, notes=""):
     if existing:
         if not existing.active:
             raise ValidationError(f"L’emplacement {code} existe mais est désactivé.")
-        if code != "PLAGENOR" and not existing.kind.can_store:
+        if require_storage and not existing.kind.can_store:
             raise ValidationError(
                 f"L’emplacement existant {code} n’autorise pas le stockage ; vérification humaine requise."
             )
@@ -642,7 +648,25 @@ def _ensure_location(user, code, name, kind, *, parent=None, notes=""):
     return obj, True
 
 
-def _ensure_locations(user, manifest, site_type, room_type):
+def _storage_location_codes(manifest):
+    """Return only locations explicitly used for stock in the source files."""
+    codes = {"STOCK"}
+    for needle, blank_means_stock in (
+        ("Produit chimique", False),
+        ("Consommable", True),
+        ("Réact", True),
+    ):
+        _, rows = _sheet(manifest, needle)
+        for row in rows:
+            code = _room_code(_field(row, "Emplacement", "EMPLACEMENT"))
+            if code:
+                codes.add(code)
+            elif blank_means_stock:
+                codes.add("STOCK")
+    return codes
+
+
+def _ensure_locations(user, manifest, site_type, room_type, storage_room_type):
     root, _ = _ensure_location(
         user,
         "PLAGENOR",
@@ -657,22 +681,27 @@ def _ensure_locations(user, manifest, site_type, room_type):
             codes.add(f"ROOM{room.zfill(2)}")
     for sheet_rows in manifest.get("sheets", {}).values():
         for row in sheet_rows:
-            location = _field(row, "Emplacement", "EMPLACEMENT")
-            code = _room_code(location)
+            code = _room_code(_field(row, "Emplacement", "EMPLACEMENT"))
             if code:
                 codes.add(code)
+    storage_codes = _storage_location_codes(manifest)
     locations = {}
     for code in sorted(codes):
+        can_store = code in storage_codes
         locations[code], _ = _ensure_location(
             user,
             code,
             _room_label(code),
-            room_type,
+            storage_room_type if can_store else room_type,
             parent=root,
-            notes="Emplacement repris de l’inventaire physique PLAGENOR 2026.",
+            notes=(
+                "Zone explicitement utilisée pour le stockage dans l’inventaire physique PLAGENOR 2026."
+                if can_store else
+                "Salle physique reprise de l’inventaire PLAGENOR 2026 ; aucune autorisation de stockage déduite."
+            ),
+            require_storage=can_store,
         )
     return locations
-
 
 def _article_code(kind, identity):
     prefix = {"CHEMICAL": "CHEM", "CONSUMABLE": "CONS", "REAGENT": "REAG"}[kind]
@@ -823,41 +852,95 @@ def _equipment_instructions(row, quantity):
     return " | ".join(parts)
 
 
-def _find_existing_resource(code, serial, name, location):
+_KNOWN_EQUIPMENT_FAMILIES = {
+    "MISEQ": (("miseq",),),
+    "ABI3500": (("abi", "3500"), ("3500", "genetic", "analyzer")),
+    "MERMADE4": (("mermade", "4"),),
+    "BIOANALYZER2100": (("bioanalyzer", "2100"), ("2100", "bioanalyzer")),
+    "MALDI_SIRIUS_GP": (("maldi", "biotyper"), ("sirius", "gp")),
+    "BETA_2_8_LSCPLUS": (("beta", "2", "8", "lsc"),),
+}
+
+
+def _matches_equipment_family(text, family):
+    return any(all(token in text for token in tokens)
+               for tokens in _KNOWN_EQUIPMENT_FAMILIES[family])
+
+
+def _known_equipment_family(row):
+    source = _norm(" ".join(filter(None, (
+        _field(row, "Equipment Name"),
+        _field(row, "Model"),
+        _field(row, "Reference"),
+    ))))
+    for family in _KNOWN_EQUIPMENT_FAMILIES:
+        if _matches_equipment_family(source, family):
+            return family
+    return ""
+
+
+def _resource_matches_family(resource, family):
+    candidate = _norm(" ".join(filter(None, (resource.name, resource.instructions))))
+    return _matches_equipment_family(candidate, family)
+
+
+def _find_existing_resource(code, serial, name, location, row):
     from erp.models import PlanningResource
 
     if serial:
         candidates = list(
             PlanningResource.objects.filter(
                 kind=PlanningResource.Kind.EQUIPMENT, serial_number=serial
-            )
+            ).select_related("location")
         )
         if len(candidates) > 1:
             return None, (
                 f"Le numéro de série {serial} correspond déjà à plusieurs équipements ; "
                 "rapprochement humain requis."
-            )
+            ), ""
         if candidates:
             candidate = candidates[0]
-            if (
-                _norm(candidate.name) == _norm(name)
-                and candidate.location_id == location.pk
-            ):
-                return candidate, ""
+            if candidate.location_id == location.pk:
+                return candidate, "", "serial"
             return None, (
                 f"Le numéro de série {serial} existe déjà sur « {candidate.name} » "
                 f"({candidate.location.code if candidate.location_id else 'sans emplacement'}), "
                 f"alors que la source courante indique « {name} » ({location.code})."
+            ), ""
+
+    family = _known_equipment_family(row)
+    if family:
+        family_candidates = [
+            resource for resource in PlanningResource.objects.filter(
+                kind=PlanningResource.Kind.EQUIPMENT, location=location
             )
+            if _resource_matches_family(resource, family)
+        ]
+        if len(family_candidates) > 1:
+            return None, (
+                f"Plusieurs ressources existantes de la famille {family} sont présentes à "
+                f"{location.code} ; rapprochement humain requis."
+            ), ""
+        if family_candidates:
+            candidate = family_candidates[0]
+            if serial and candidate.serial_number and candidate.serial_number != serial:
+                return None, (
+                    f"Ressource {family} potentiellement identique mais numéro de série divergent : "
+                    f"PLAGENOR={candidate.serial_number}, source={serial}."
+                ), ""
+            if not serial:
+                return None, (
+                    f"Une ressource {family} existe déjà à {location.code}, mais la source ne fournit "
+                    "pas de numéro de série permettant un rapprochement automatique sûr."
+                ), ""
+            return candidate, "", "canonical_family"
+
     by_code = PlanningResource.objects.filter(code=code).first()
     if by_code:
-        return by_code, ""
-    # A designation + room is not a physical identity. Several identical
-    # devices can legitimately coexist in one room, especially when the
-    # historical sheet has no serial number. Reusing by name/location would
-    # collapse real physical units and falsify the inventory.
-    return None, ""
-
+        return by_code, "", "source_code"
+    # Generic name/location matching is intentionally forbidden: several
+    # identical devices can legitimately coexist in one room.
+    return None, "", ""
 
 def _apply_detailed_equipment(user, manifest, locations, report):
     from erp.models import LegacyInventoryRecord, PlanningResource
@@ -924,25 +1007,42 @@ def _apply_detailed_equipment(user, manifest, locations, report):
                 report["equipment_unchanged"] += 1
                 continue
             code = _equipment_code(row, instance, ordinal)
-            existing, serial_conflict = _find_existing_resource(code, serial, name, location)
-            if serial_conflict:
+            existing, duplicate_issue, matched_by = _find_existing_resource(
+                code, serial, name, location, row
+            )
+            if duplicate_issue:
                 _record_legacy(
                     source_key=source_key,
                     payload=payload,
                     resolution=LegacyInventoryRecord.Resolution.REVIEW,
                     note=(
                         "Aucune ressource supplémentaire n’a été créée afin d’éviter un doublon "
-                        "potentiel. " + serial_conflict
+                        "potentiel. " + duplicate_issue
                     ),
                 )
                 report["equipment_review"] += 1
                 continue
             if existing:
+                if matched_by == "canonical_family" and serial and not existing.serial_number:
+                    source_note = _equipment_instructions(row, quantity)
+                    instructions = existing.instructions or ""
+                    if source_note not in instructions:
+                        instructions = " | ".join(filter(None, (instructions, source_note)))
+                    existing = save_resource(
+                        user,
+                        {"serial_number": serial[:120], "instructions": instructions},
+                        pk=existing.pk,
+                        expected=existing.version,
+                    )
+                    report["equipment_canonical_reused"] += 1
                 _record_legacy(
                     source_key=source_key, payload=payload,
                     resolution=LegacyInventoryRecord.Resolution.REUSED,
                     entity=existing,
-                    note="Rattaché à une ressource équipement existante ; aucune duplication.",
+                    note=(
+                        "Rattaché à une ressource équipement existante ; aucune duplication. "
+                        f"Rapprochement: {matched_by or 'identité existante'}."
+                    ),
                 )
                 report["equipment_reused"] += 1
                 continue
@@ -1250,12 +1350,13 @@ def apply_inventory(user, manifest):
     if manifest.get("schema") != SCHEMA_VERSION:
         raise ValidationError("Version de manifeste d’inventaire non prise en charge.")
     require_manager(user)
-    units, categories, site_type, room_type = _ensure_bootstrap_references(user)
-    locations = _ensure_locations(user, manifest, site_type, room_type)
+    units, categories, site_type, room_type, storage_room_type = _ensure_bootstrap_references(user)
+    locations = _ensure_locations(user, manifest, site_type, room_type, storage_room_type)
     report = Counter(
         {
             "equipment_created": 0,
             "equipment_reused": 0,
+            "equipment_canonical_reused": 0,
             "equipment_unchanged": 0,
             "equipment_review": 0,
             "equipment_excel_matched": 0,
@@ -1293,3 +1394,38 @@ def apply_inventory(user, manifest):
         report=report,
     )
     return dict(report)
+
+
+@transaction.atomic
+def review_legacy_record(user, pk, *, expected, review_status, review_note):
+    """Record a human review without changing the immutable source payload."""
+    from django.utils import timezone
+    from erp.models import LegacyInventoryRecord
+    from erp.permissions import require_manager
+    from erp.services.common import audit, check_version, snapshot
+
+    require_manager(user)
+    record = LegacyInventoryRecord.objects.select_for_update().get(pk=pk)
+    check_version(record, expected)
+    if record.resolution != LegacyInventoryRecord.Resolution.REVIEW:
+        raise ValidationError("Seules les lignes marquées « À vérifier » peuvent être clôturées.")
+    allowed = {
+        LegacyInventoryRecord.ReviewStatus.CONFIRMED,
+        LegacyInventoryRecord.ReviewStatus.CORRECTED,
+        LegacyInventoryRecord.ReviewStatus.NOT_APPLICABLE,
+    }
+    if review_status not in allowed:
+        raise ValidationError("Choisissez une conclusion de revue valide.")
+    note = _text(review_note)
+    if len(note) < 5:
+        raise ValidationError("Documentez la vérification ou la correction effectuée.")
+    before = snapshot(record)
+    record.review_status = review_status
+    record.review_note = note
+    record.reviewed_by = user
+    record.reviewed_at = timezone.now()
+    record.version += 1
+    record.full_clean()
+    record.save()
+    audit(user, record, "legacy_inventory_reviewed", before, reason=note[:500])
+    return record
