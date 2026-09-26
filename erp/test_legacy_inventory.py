@@ -26,7 +26,7 @@ TEST_STORAGES = {
 }
 
 
-def _manifest(*, equipment=None, chemicals=None, consumables=None, reagents=None):
+def _manifest(*, equipment=None, excel_equipment=None, chemicals=None, consumables=None, reagents=None):
     return {
         "schema": 1,
         "source": {
@@ -35,7 +35,7 @@ def _manifest(*, equipment=None, chemicals=None, consumables=None, reagents=None
             "zip": {"name": "Inventaire - PLAGENOR.zip", "sha256": "test-zip"},
         },
         "sheets": {
-            "Equipement": [],
+            "Equipement": excel_equipment or [],
             "Produit chimique": chemicals or [],
             "Consommable": consumables or [],
             "Réactifs": reagents or [],
@@ -514,6 +514,47 @@ class InventoryBootstrapTests(TestCase):
         self.assertIn("doublon potentiel", review.note)
         self.assertIn("SER-1", review.note)
 
+    def test_major_equipment_excel_reconciliation_matches_exact_family_and_flags_room_conflict(self):
+        detailed = [
+            _equipment(
+                "Next-Generation Sequencer- Illumina", "11", 2,
+                serial="20006903", model="MiSeqTM", reference="20020579",
+            ),
+            _equipment(
+                "Bioanalyzer - Agilent Technologies", "13", 2,
+                serial="DEDAE02922", model="2100", reference="G2939-64050",
+            ),
+        ]
+        excel = [
+            {
+                "Num": "1", "Equipement": "Séquenceur haut débit de nouvelle génération (NGS)",
+                "Nombre": "1", "Emplacement": "Salle 11", "__row__": 2,
+            },
+            {
+                "Num": "2", "Equipement": "Bioanalyzer avec PC",
+                "Nombre": "1", "Emplacement": "Salle 12", "__row__": 3,
+            },
+        ]
+        result = apply_inventory(
+            self.user, _manifest(equipment=detailed, excel_equipment=excel)
+        )
+        self.assertEqual(result["equipment_excel_matched"], 1)
+        self.assertEqual(result["equipment_excel_review"], 1)
+        reused = LegacyInventoryRecord.objects.get(
+            source_section="Equipement",
+            source_row="2",
+        )
+        self.assertEqual(reused.resolution, LegacyInventoryRecord.Resolution.REUSED)
+        self.assertIn("MISEQ", reused.note)
+        review = LegacyInventoryRecord.objects.get(
+            source_section="Equipement",
+            source_row="3",
+        )
+        self.assertEqual(review.resolution, LegacyInventoryRecord.Resolution.REVIEW)
+        self.assertIn("BIOANALYZER2100", review.note)
+        self.assertIn("ROOM12", review.note)
+        self.assertIn("ROOM13", review.note)
+
     def test_same_chemical_name_mass_and_volume_are_not_falsely_merged(self):
         chemicals = [
             {
@@ -671,7 +712,8 @@ class InventoryBootstrapTests(TestCase):
         first = apply_inventory(self.user, deepcopy(manifest))
         self.assertEqual(first["equipment_created"], 457)
         self.assertEqual(first["equipment_review"], 7)
-        self.assertEqual(first["equipment_excel_review"], 156)
+        self.assertEqual(first["equipment_excel_matched"], 5)
+        self.assertEqual(first["equipment_excel_review"], 151)
         self.assertEqual(first["stock_created"], 244)
         self.assertEqual(first["chemical_review"], 9)
         self.assertEqual(first["zero_stock_rows"], 2)
