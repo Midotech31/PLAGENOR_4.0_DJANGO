@@ -16,6 +16,32 @@
   <div class="erp-card"><strong>{{ summary.SKIPPED|default:0 }}</strong><span>{% trans 'Lignes source conservées sans import' %}</span></div>
 </div>
 
+<section class="erp-panel" style="margin-bottom:16px;">
+  <div class="erp-panel-header">
+    <div>
+      <p class="erp-eyebrow">{% trans 'Localisation physique' %}</p>
+      <h2>{% trans 'Zones de stockage déduites uniquement des sources' %}</h2>
+      <p>{% trans 'La présence d’un équipement dans une salle ne suffit jamais à autoriser le stockage.' %}</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+    <div>
+      <strong>{% trans 'Stockage autorisé par l’inventaire source' %}</strong>
+      <p class="text-muted">{% trans 'Uniquement les salles explicitement utilisées pour des produits, réactifs ou consommables.' %}</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        {% for location in storage_locations %}<span class="badge">{{ location.code }} — {{ location.name }}</span>{% empty %}<span>—</span>{% endfor %}
+      </div>
+    </div>
+    <div>
+      <strong>{% trans 'Salles physiques sans stockage déduit' %}</strong>
+      <p class="text-muted">{% trans 'Ces salles existent dans l’inventaire des équipements mais ne sont pas proposées comme zones de stock.' %}</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        {% for location in physical_locations %}<span class="badge">{{ location.code }} — {{ location.name }}</span>{% empty %}<span>—</span>{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
 <form method="get" class="erp-filterbar">
   <input type="search" name="q" value="{{ q }}" placeholder="{% trans 'Source, section ou observation' %}">
   <select name="kind">
@@ -51,7 +77,19 @@
           {% if record.reviewed_at %}<br><small>{{ record.reviewed_at|date:'d/m/Y H:i' }}{% if record.reviewed_by %} — {{ record.reviewed_by.get_full_name|default:record.reviewed_by.username }}{% endif %}</small>{% endif %}
         {% else %}—{% endif %}
       </td>
-      <td><strong>{{ record.source_file }}</strong><br><small>{{ record.source_section }}</small></td>
+      <td>
+        <strong>{{ record.source_file }}</strong><br><small>{{ record.source_section }}</small>
+        {% if record.equipment_inventory_source %}
+          <div style="margin-top:6px;font-size:.82rem;line-height:1.35;">
+            <strong>{{ record.equipment_inventory_source.source_designation|default:'—' }}</strong><br>
+            {% trans 'Modèle' %}: {{ record.equipment_inventory_source.model|default:'—' }}<br>
+            {% trans 'Référence' %}: {{ record.equipment_inventory_source.reference|default:'—' }}<br>
+            {% trans 'Numéro de série' %}: {{ record.equipment_inventory_source.source_serial_number|default:'—' }}<br>
+            {% trans 'Quantité source' %}: {{ record.equipment_inventory_source.source_quantity }} ·
+            {% trans 'Salle' %}: {{ record.equipment_inventory_source.source_room|default:'—' }}
+          </div>
+        {% endif %}
+      </td>
       <td>{{ record.source_row|default:'—' }}</td>
       <td>{{ record.note|default:'—' }}{% if record.review_note %}<hr><small>{{ record.review_note }}</small>{% endif %}</td>
       <td>{% if record.entity_type %}<code>{{ record.entity_type }}</code><br><small>{{ record.entity_id }}</small>{% else %}—{% endif %}</td>

@@ -17,7 +17,10 @@ from .biobank import StorageTransfer
 
 from .consumption import (AnalysisRun, ConsumptionProfile, ConsumptionRule, RunAllocation, RunBiologyEvent, RunConsumption, RunInput, RunOperation, RunRequirement)
 
-from .planning import ActivityDependency, ActivitySchedule, AvailabilityBlock, PlanningResource
+from .planning import (
+    ActivityDependency, ActivitySchedule, AvailabilityBlock,
+    EquipmentInventorySource, PlanningResource,
+)
 
 from .procurement import (ForecastObservation, ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
 

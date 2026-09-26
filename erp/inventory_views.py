@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .inventory_forms import LegacyInventoryReviewForm
-from .models import InventoryCampaign, InventoryLine, LegacyInventoryRecord, WorkItem
+from .models import InventoryCampaign, InventoryLine, LegacyInventoryRecord, Location, WorkItem
 from .permissions import is_manager, require_manager
 from .services.inventory import (approve_inventory, count_inventory, create_inventory,
                                  recount_inventory, submit_inventory)
@@ -35,7 +35,9 @@ def inventory_list(request):
 @require_GET
 def initial_inventory_trace(request):
     require_manager(request.user)
-    records = LegacyInventoryRecord.objects.select_related('reviewed_by').all().order_by(
+    records = LegacyInventoryRecord.objects.select_related(
+        'reviewed_by', 'equipment_inventory_source__resource',
+    ).all().order_by(
         'resolution', 'review_status', 'kind', 'source_file', 'source_section', 'source_row'
     )
     kind = request.GET.get('kind', '').strip()
@@ -74,6 +76,12 @@ def initial_inventory_trace(request):
             resolution=LegacyInventoryRecord.Resolution.REVIEW
         ).values('review_status').annotate(n=Count('id'))
     }
+    storage_locations = Location.objects.filter(
+        parent__code='PLAGENOR', kind__code='PLGSTOREROOM', active=True,
+    ).order_by('code')
+    physical_locations = Location.objects.filter(
+        parent__code='PLAGENOR', kind__code='PLGROOM', active=True,
+    ).order_by('code')
     return render(
         request,
         'erp/initial_inventory_trace.html',
@@ -88,6 +96,8 @@ def initial_inventory_trace(request):
             'review_statuses': LegacyInventoryRecord.ReviewStatus.choices,
             'summary': summary,
             'review_summary': review_summary,
+            'storage_locations': storage_locations,
+            'physical_locations': physical_locations,
         },
     )
 

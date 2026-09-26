@@ -102,5 +102,18 @@ class Command(BaseCommand):
                 f"Équipement à vérifier : {len(equipment['review'])}; "
                 f"lignes Excel de rapprochement automatique : {equipment['matched_groups']}."
             )
+            duplicate_serials = equipment.get("duplicate_serials", [])
+            self.stdout.write(
+                f"Numéros de série présents sur plusieurs lignes source : {len(duplicate_serials)}."
+            )
+            locations = payload.get("locations", {})
+            self.stdout.write(
+                "Zones de stockage explicitement documentées : "
+                + ", ".join(locations.get("stock_enabled", []))
+            )
+            self.stdout.write(
+                "Salles physiques sans autorisation de stockage déduite : "
+                + ", ".join(locations.get("physical_only", []))
+            )
         else:
             self.stdout.write(json.dumps(payload["apply"], ensure_ascii=False, indent=2, default=str))

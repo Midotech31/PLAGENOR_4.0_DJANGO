@@ -421,11 +421,28 @@ def _merge_continuations(rows):
     return logical, continuations
 
 
+def _duplicate_source_serials(manifest):
+    occurrences = defaultdict(list)
+    for row in manifest.get("equipment_room_inventory", []):
+        for serial in _serials(_field(row, "Serial Number (S/N)", "Serial Number")):
+            occurrences[serial].append({
+                "source": row.get("__source_file__"),
+                "row": row.get("__source_row__"),
+                "room": _text(row.get("__room__")).zfill(2),
+                "name": _field(row, "Equipment Name"),
+            })
+    return {
+        serial: rows for serial, rows in occurrences.items()
+        if len(rows) > 1
+    }
+
+
 def _equipment_preview(manifest):
     detailed = manifest.get("equipment_room_inventory", [])
     declared_physical = 0
     planned_physical = 0
     detailed_counter = Counter()
+    duplicate_serials = _duplicate_source_serials(manifest)
     review = []
     for row in detailed:
         quantity = _integer(_field(row, "Quantity"))
@@ -462,6 +479,10 @@ def _equipment_preview(manifest):
              "excel": excel_counter[key], "detailed": detailed_counter[key]}
             for key in sorted(matched) if excel_counter[key] != detailed_counter[key]
         ],
+        "duplicate_serials": [
+            {"serial": serial, "occurrences": occurrences}
+            for serial, occurrences in sorted(duplicate_serials.items())
+        ],
         "review": review,
     }
 
@@ -487,6 +508,8 @@ def preview_inventory(manifest):
             chemical_zero += 1
         else:
             chemical_exact += 1
+    all_locations = _all_location_codes(manifest)
+    storage_locations = _storage_location_codes(manifest)
     return {
         "schema": manifest.get("schema"),
         "source": manifest.get("source"),
@@ -511,6 +534,11 @@ def preview_inventory(manifest):
             "source_rows": len(reagent_rows),
             "logical_rows": len(logical_reagents),
             "continuation_rows_merged": len(reagent_continuations),
+        },
+        "locations": {
+            "all": sorted(all_locations),
+            "stock_enabled": sorted(storage_locations),
+            "physical_only": sorted(all_locations - storage_locations),
         },
     }
 
@@ -663,6 +691,20 @@ def _ensure_location(user, code, name, kind, *, parent=None, notes="", require_s
     return obj, True
 
 
+def _all_location_codes(manifest):
+    codes = set()
+    for row in manifest.get("equipment_room_inventory", []):
+        room = _text(row.get("__room__"))
+        if room:
+            codes.add(f"ROOM{room.zfill(2)}")
+    for sheet_rows in manifest.get("sheets", {}).values():
+        for row in sheet_rows:
+            code = _room_code(_field(row, "Emplacement", "EMPLACEMENT"))
+            if code:
+                codes.add(code)
+    return codes
+
+
 def _storage_location_codes(manifest):
     """Return only locations explicitly used for stock in the source files."""
     codes = set()
@@ -683,16 +725,7 @@ def _ensure_locations(user, manifest, site_type, room_type, storage_room_type):
         site_type,
         notes="Racine des emplacements de la Plateforme Technologique en Génomique.",
     )
-    codes = set()
-    for row in manifest.get("equipment_room_inventory", []):
-        room = _text(row.get("__room__"))
-        if room:
-            codes.add(f"ROOM{room.zfill(2)}")
-    for sheet_rows in manifest.get("sheets", {}).values():
-        for row in sheet_rows:
-            code = _room_code(_field(row, "Emplacement", "EMPLACEMENT"))
-            if code:
-                codes.add(code)
+    codes = _all_location_codes(manifest)
     storage_codes = _storage_location_codes(manifest)
     locations = {}
     for code in sorted(codes):
@@ -861,6 +894,50 @@ def _equipment_instructions(row, quantity):
     return " | ".join(parts)
 
 
+def _ensure_equipment_inventory_source(resource, source_record, row, quantity, serial):
+    """Persist immutable, structured equipment metadata from the detailed source row."""
+    from erp.models import EquipmentInventorySource
+
+    values = {
+        "resource_id": resource.pk,
+        "source_record_id": source_record.pk,
+        "source_designation": _text(_field(row, "Equipment Name"))[:255],
+        "model": _text(_field(row, "Model"))[:255],
+        "reference": _text(_field(row, "Reference"))[:255],
+        "source_serial_number": _text(serial)[:120],
+        "source_quantity": quantity,
+        "source_file": _text(row.get("__source_file__", SOURCE_ZIP))[:255],
+        "source_row": _text(row.get("__source_row__"))[:64],
+        "source_room": _text(row.get("__room__"))[:32],
+        "source_fingerprint": source_record.fingerprint,
+    }
+    existing = EquipmentInventorySource.objects.filter(source_record=source_record).first()
+    if existing:
+        actual = {
+            "resource_id": existing.resource_id,
+            "source_record_id": existing.source_record_id,
+            "source_designation": existing.source_designation,
+            "model": existing.model,
+            "reference": existing.reference,
+            "source_serial_number": existing.source_serial_number,
+            "source_quantity": existing.source_quantity,
+            "source_file": existing.source_file,
+            "source_row": existing.source_row,
+            "source_room": existing.source_room,
+            "source_fingerprint": existing.source_fingerprint,
+        }
+        if actual != values:
+            raise ValidationError(
+                "Les métadonnées structurées de cet équipement ne correspondent plus "
+                "à la provenance initiale ; aucune mise à jour automatique n’a été faite."
+            )
+        return existing, False
+    evidence = EquipmentInventorySource(**values)
+    evidence.full_clean()
+    evidence.save()
+    return evidence, True
+
+
 _KNOWN_EQUIPMENT_FAMILIES = {
     "MISEQ": (("miseq",),),
     "ABI3500": (("abi", "3500"), ("3500", "genetic", "analyzer")),
@@ -994,6 +1071,7 @@ def _apply_detailed_equipment(user, manifest, locations, report):
     from erp.models import LegacyInventoryRecord, PlanningResource
     from erp.services.planning import save_resource
 
+    duplicate_serials = _duplicate_source_serials(manifest)
     for ordinal, row in enumerate(manifest.get("equipment_room_inventory", []), 1):
         quantity = _integer(_field(row, "Quantity"))
         row_source = row.get("__source_file__", SOURCE_ZIP)
@@ -1050,8 +1128,44 @@ def _apply_detailed_equipment(user, manifest, locations, report):
                 row_source, f"Salle {row.get('__room__')}", row_number,
                 LegacyInventoryRecord.Kind.EQUIPMENT, raw,
             )
+            if serial and serial in duplicate_serials:
+                previous = LegacyInventoryRecord.objects.filter(source_key=source_key).first()
+                if previous and previous.fingerprint != payload["fingerprint"]:
+                    raise ValidationError(
+                        f"Conflit de provenance pour {source_key} : la source a changé ; "
+                        "vérification humaine requise."
+                    )
+                if previous and previous.resolution in {
+                    LegacyInventoryRecord.Resolution.IMPORTED,
+                    LegacyInventoryRecord.Resolution.REUSED,
+                }:
+                    raise ValidationError(
+                        f"Le numéro de série {serial} est dupliqué dans la source alors que "
+                        f"{source_key} a déjà été intégré. Une revue humaine est requise avant toute reprise."
+                    )
+                _record_legacy(
+                    source_key=source_key,
+                    payload=payload,
+                    resolution=LegacyInventoryRecord.Resolution.REVIEW,
+                    note=(
+                        f"Numéro de série {serial} présent sur plusieurs lignes physiques de "
+                        "l’inventaire source ; aucune des occurrences concernées n’est créée "
+                        "automatiquement. Une revue humaine doit déterminer l’identité correcte."
+                    ),
+                )
+                report["equipment_review"] += 1
+                continue
             already = _already_applied(source_key, payload["fingerprint"])
             if already:
+                if (
+                    already.entity_type == "erp.planningresource"
+                    and already.entity_id
+                ):
+                    resource = PlanningResource.objects.filter(pk=already.entity_id).first()
+                    if resource is not None:
+                        _ensure_equipment_inventory_source(
+                            resource, already, row, quantity, serial
+                        )
                 report["equipment_unchanged"] += 1
                 continue
             code = _equipment_code(row, instance, ordinal)
@@ -1083,7 +1197,7 @@ def _apply_detailed_equipment(user, manifest, locations, report):
                         expected=existing.version,
                     )
                     report["equipment_canonical_reused"] += 1
-                _record_legacy(
+                source_record, _ = _record_legacy(
                     source_key=source_key, payload=payload,
                     resolution=LegacyInventoryRecord.Resolution.REUSED,
                     entity=existing,
@@ -1091,6 +1205,9 @@ def _apply_detailed_equipment(user, manifest, locations, report):
                         "Rattaché à une ressource équipement existante ; aucune duplication. "
                         f"Rapprochement: {matched_by or 'identité existante'}."
                     ),
+                )
+                _ensure_equipment_inventory_source(
+                    existing, source_record, row, quantity, serial
                 )
                 report["equipment_reused"] += 1
                 continue
@@ -1114,11 +1231,14 @@ def _apply_detailed_equipment(user, manifest, locations, report):
                 )
             if not serial:
                 note += " Numéro de série non renseigné dans la source."
-            _record_legacy(
+            source_record, _ = _record_legacy(
                 source_key=source_key, payload=payload,
                 resolution=LegacyInventoryRecord.Resolution.IMPORTED,
                 entity=resource,
                 note=note,
+            )
+            _ensure_equipment_inventory_source(
+                resource, source_record, row, quantity, serial
             )
             report["equipment_created"] += 1
 

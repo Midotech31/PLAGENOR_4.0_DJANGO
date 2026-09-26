@@ -7,7 +7,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from erp.models import (
-    Article, LegacyInventoryRecord, PlanningResource, StockContainer, StockMovement,
+    Article, EquipmentInventorySource, LegacyInventoryRecord, PlanningResource,
+    StockContainer, StockMovement,
 )
 from erp.services.legacy_inventory import (
     apply_inventory, load_manifest_gz, parse_exact_quantity, preview_inventory,
@@ -78,6 +79,23 @@ class InventorySourcePreviewTests(TestCase):
         self.assertEqual(preview["chemicals"]["review_balances"], 9)
         self.assertEqual(preview["consumables"]["logical_rows"], 81)
         self.assertEqual(preview["reagents"]["logical_rows"], 92)
+        self.assertEqual(
+            preview["locations"]["stock_enabled"],
+            ["ROOM03", "ROOM08", "ROOM10", "ROOM11", "ROOM14", "ROOM15", "ROOM16", "STOCK"],
+        )
+        self.assertEqual(
+            preview["locations"]["physical_only"],
+            ["ROOM01", "ROOM02", "ROOM04", "ROOM05", "ROOM06", "ROOM07", "ROOM09", "ROOM12", "ROOM13", "ROOM17"],
+        )
+        duplicate_serials = {
+            item["serial"]: item["occurrences"]
+            for item in preview["equipment"]["duplicate_serials"]
+        }
+        self.assertIn("33141-090", duplicate_serials)
+        self.assertEqual(
+            {(row["room"], row["row"]) for row in duplicate_serials["33141-090"]},
+            {("11", 3), ("14", 5)},
+        )
 
     def test_exact_quantity_parser_does_not_guess_opened_stock(self):
         self.assertEqual(parse_exact_quantity("2,5lx2")[:2], (5000, "ML"))
@@ -114,6 +132,31 @@ class InventoryBootstrapTests(TestCase):
             ).count(),
             2,
         )
+        self.assertEqual(EquipmentInventorySource.objects.count(), 2)
+        self.assertEqual(
+            set(EquipmentInventorySource.objects.values_list("source_quantity", flat=True)),
+            {2},
+        )
+
+    def test_equipment_source_metadata_is_structured_and_preserves_exact_source_values(self):
+        source = _equipment(
+            "Next-Generation Sequencer- Illumina", "11", 2,
+            serial="20006903", model="MiSeqTM", reference="20020579",
+        )
+        apply_inventory(self.user, _manifest(equipment=[source]))
+        evidence = EquipmentInventorySource.objects.select_related(
+            "resource", "source_record",
+        ).get()
+        self.assertEqual(evidence.source_designation, source["Equipment Name"])
+        self.assertEqual(evidence.model, "MiSeqTM")
+        self.assertEqual(evidence.reference, "20020579")
+        self.assertEqual(evidence.source_serial_number, "20006903")
+        self.assertEqual(evidence.source_quantity, 1)
+        self.assertEqual(evidence.source_file, "Laboratory Inventory List 11.docx")
+        self.assertEqual(evidence.source_row, "2")
+        self.assertEqual(evidence.source_room, "11")
+        self.assertEqual(evidence.resource.serial_number, "20006903")
+        self.assertEqual(evidence.source_fingerprint, evidence.source_record.fingerprint)
 
     def test_bootstrap_rejects_site_type_that_is_storage_capable(self):
         from erp.models import LocationType
@@ -503,16 +546,19 @@ class InventoryBootstrapTests(TestCase):
             _equipment("Water Bath", "02", 3, serial="SER-1"),
         ])
         result = apply_inventory(self.user, manifest)
-        self.assertEqual(result["equipment_created"], 1)
-        self.assertEqual(result["equipment_review"], 1)
+        self.assertEqual(result["equipment_created"], 0)
+        self.assertEqual(result["equipment_review"], 2)
         self.assertEqual(
-            PlanningResource.objects.filter(kind=PlanningResource.Kind.EQUIPMENT).count(), 1
+            PlanningResource.objects.filter(kind=PlanningResource.Kind.EQUIPMENT).count(), 0
         )
-        review = LegacyInventoryRecord.objects.get(
+        reviews = LegacyInventoryRecord.objects.filter(
             resolution=LegacyInventoryRecord.Resolution.REVIEW
         )
-        self.assertIn("doublon potentiel", review.note)
-        self.assertIn("SER-1", review.note)
+        self.assertEqual(reviews.count(), 2)
+        for review in reviews:
+            self.assertIn("plusieurs lignes physiques", review.note)
+            self.assertIn("SER-1", review.note)
+        self.assertEqual(EquipmentInventorySource.objects.count(), 0)
 
     def test_major_equipment_excel_reconciliation_matches_exact_family_and_flags_room_conflict(self):
         detailed = [
@@ -588,6 +634,7 @@ class InventoryBootstrapTests(TestCase):
             StockContainer.objects.count(),
             StockMovement.objects.count(),
             LegacyInventoryRecord.objects.count(),
+            EquipmentInventorySource.objects.count(),
         )
         second = apply_inventory(self.user, deepcopy(manifest))
         self.assertEqual(
@@ -597,6 +644,7 @@ class InventoryBootstrapTests(TestCase):
                 StockContainer.objects.count(),
                 StockMovement.objects.count(),
                 LegacyInventoryRecord.objects.count(),
+                EquipmentInventorySource.objects.count(),
             ),
             counts,
         )
@@ -622,6 +670,10 @@ class InventoryBootstrapTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Laboratory Inventory List 01.docx")
         self.assertContains(response, "Équipement")
+        self.assertContains(response, "Model test")
+        self.assertContains(response, "REF")
+        self.assertContains(response, "Stockage autorisé par l’inventaire source")
+        self.assertContains(response, "ROOM01 — Salle 01")
         filtered = self.client.get(url, {"review_status": "OPEN", "q": "Vortex"})
         self.assertEqual(filtered.status_code, 200)
 
@@ -710,18 +762,19 @@ class InventoryBootstrapTests(TestCase):
     def test_real_snapshot_full_apply_is_idempotent_and_conservative(self):
         manifest = load_manifest_gz(SNAPSHOT)
         first = apply_inventory(self.user, deepcopy(manifest))
-        self.assertEqual(first["equipment_created"], 457)
-        self.assertEqual(first["equipment_review"], 7)
-        self.assertEqual(first["equipment_excel_matched"], 5)
-        self.assertEqual(first["equipment_excel_review"], 151)
+        self.assertEqual(first["equipment_created"], 452)
+        self.assertEqual(first["equipment_review"], 12)
+        self.assertEqual(first["equipment_excel_matched"], 4)
+        self.assertEqual(first["equipment_excel_review"], 152)
         self.assertEqual(first["stock_created"], 244)
         self.assertEqual(first["chemical_review"], 9)
         self.assertEqual(first["zero_stock_rows"], 2)
         self.assertEqual(first["continuations_preserved"], 3)
         self.assertEqual(
             PlanningResource.objects.filter(kind=PlanningResource.Kind.EQUIPMENT).count(),
-            457,
+            452,
         )
+        self.assertEqual(EquipmentInventorySource.objects.count(), 452)
         self.assertEqual(StockContainer.objects.count(), 244)
         from erp.models import Location
         self.assertEqual(
@@ -737,9 +790,10 @@ class InventoryBootstrapTests(TestCase):
             StockContainer.objects.count(),
             StockMovement.objects.count(),
             LegacyInventoryRecord.objects.count(),
+            EquipmentInventorySource.objects.count(),
         )
         second = apply_inventory(self.user, deepcopy(manifest))
-        self.assertEqual(second["equipment_unchanged"], 457)
+        self.assertEqual(second["equipment_unchanged"], 452)
         self.assertEqual(second["stock_unchanged"], 246)
         self.assertEqual(
             (
@@ -748,6 +802,7 @@ class InventoryBootstrapTests(TestCase):
                 StockContainer.objects.count(),
                 StockMovement.objects.count(),
                 LegacyInventoryRecord.objects.count(),
+                EquipmentInventorySource.objects.count(),
             ),
             counts,
         )
