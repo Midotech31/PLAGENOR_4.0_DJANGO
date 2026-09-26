@@ -618,6 +618,21 @@ def _ensure_bootstrap_references(user):
         user, LocationType, "PLGSTOREROOM",
         {"name": "Zone de stockage PLAGENOR", "can_store": True, "cold_storage": False},
     )
+    if site_type.can_store:
+        raise ValidationError(
+            "Le type PLGSITE existe avec une autorisation de stockage incompatible ; "
+            "corrigez-le avant la reprise de l’inventaire."
+        )
+    if room_type.can_store:
+        raise ValidationError(
+            "Le type PLGROOM existe comme zone de stockage alors qu’il doit représenter "
+            "une salle physique générique. Vérification humaine requise avant import."
+        )
+    if not storage_room_type.can_store:
+        raise ValidationError(
+            "Le type PLGSTOREROOM existe sans autorisation de stockage ; "
+            "vérification humaine requise avant import."
+        )
     return units, categories, site_type, room_type, storage_room_type
 
 
