@@ -7263,6 +7263,48 @@ msgstr "متابعة"
 msgid "Informations administratives internes"
 msgstr "معلومات إدارية داخلية"
 
+msgid "Localisation physique"
+msgstr "الموقع الفيزيائي"
+
+msgid "Zones de stockage déduites uniquement des sources"
+msgstr "مناطق التخزين المستنتجة حصراً من بيانات المصدر"
+
+msgid ""
+"La présence d’un équipement dans une salle ne suffit jamais à autoriser le "
+"stockage."
+msgstr "وجود جهاز في قاعة لا يكفي أبداً لاعتبارها منطقة تخزين."
+
+msgid "Stockage autorisé par l’inventaire source"
+msgstr "التخزين الموثق في جرد المصدر"
+
+msgid ""
+"Uniquement les salles explicitement utilisées pour des produits, réactifs ou"
+" consommables."
+msgstr ""
+"فقط القاعات المستخدمة صراحةً في المصدر للمواد الكيميائية أو الكواشف أو "
+"المستهلكات."
+
+msgid "Salles physiques sans stockage déduit"
+msgstr "قاعات فيزيائية دون استنتاج صلاحية التخزين"
+
+msgid ""
+"Ces salles existent dans l’inventaire des équipements mais ne sont pas "
+"proposées comme zones de stock."
+msgstr ""
+"هذه القاعات موجودة في جرد التجهيزات لكنها لا تُقترح كمناطق لتخزين المخزون."
+
+msgid "Modèle"
+msgstr "النموذج"
+
+msgid "Numéro de série"
+msgstr "الرقم التسلسلي"
+
+msgid "Quantité source"
+msgstr "الكمية في المصدر"
+
+msgid "Salle"
+msgstr "القاعة"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "لطلبة وباحثي ESSBO."
 

@@ -20,7 +20,12 @@ from erp.test_operations import OperationFixtures
 class PlanningHttpContracts(OperationFixtures, TestCase):
     def setUp(self):
         self.client.force_login(self.ops)
-        self.start = timezone.now().replace(second=0, microsecond=0) + timedelta(days=1)
+        # Planning filters are defined in the configured local timezone.
+        # Build the fixture on that same clock so this contract stays stable
+        # around UTC/local midnight boundaries (e.g. UTC+1).
+        self.start = timezone.localtime(timezone.now()).replace(
+            second=0, microsecond=0
+        ) + timedelta(days=1)
         self.end = self.start + timedelta(hours=1)
         self.resource = save_resource(self.ops, {'code': 'HTTP-EQ', 'name': 'Instrument',
             'kind': 'EQUIPMENT', 'location': self.lab})

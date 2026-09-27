@@ -7335,6 +7335,49 @@ msgstr "Continue"
 msgid "Informations administratives internes"
 msgstr "Internal administrative information"
 
+msgid "Localisation physique"
+msgstr "Physical location"
+
+msgid "Zones de stockage déduites uniquement des sources"
+msgstr "Storage areas derived only from source records"
+
+msgid ""
+"La présence d’un équipement dans une salle ne suffit jamais à autoriser le "
+"stockage."
+msgstr ""
+"The presence of equipment in a room is never sufficient to authorize "
+"storage."
+
+msgid "Stockage autorisé par l’inventaire source"
+msgstr "Storage authorized by the source inventory"
+
+msgid ""
+"Uniquement les salles explicitement utilisées pour des produits, réactifs ou"
+" consommables."
+msgstr "Only rooms explicitly used for chemicals, reagents or consumables."
+
+msgid "Salles physiques sans stockage déduit"
+msgstr "Physical rooms with no inferred storage authorization"
+
+msgid ""
+"Ces salles existent dans l’inventaire des équipements mais ne sont pas "
+"proposées comme zones de stock."
+msgstr ""
+"These rooms exist in the equipment inventory but are not offered as stock "
+"storage areas."
+
+msgid "Modèle"
+msgstr "Model"
+
+msgid "Numéro de série"
+msgstr "Serial number"
+
+msgid "Quantité source"
+msgstr "Source quantity"
+
+msgid "Salle"
+msgstr "Room"
+
 #~ msgid "Pour les étudiants et chercheurs de l'ESSBO."
 #~ msgstr "For ESSBO students and researchers."
 

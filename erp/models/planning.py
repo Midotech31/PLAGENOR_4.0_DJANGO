@@ -1,9 +1,11 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 from django.utils.translation import gettext_lazy as _
 
-from .common import CodedRecord, Record
+from .common import CodedRecord, ImmutableRecord, Record
 
 
 class PlanningResource(CodedRecord):
@@ -20,6 +22,44 @@ class PlanningResource(CodedRecord):
     class Meta(CodedRecord.Meta):
         constraints = [models.UniqueConstraint(fields=['location'], condition=Q(kind='ROOM', location__isnull=False),
             name='erp_one_planning_room')]
+
+
+class EquipmentInventorySource(ImmutableRecord):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resource = models.ForeignKey(
+        PlanningResource,
+        on_delete=models.PROTECT,
+        related_name='inventory_sources',
+        limit_choices_to={'kind': PlanningResource.Kind.EQUIPMENT},
+        verbose_name=_('Équipement'),
+    )
+    source_record = models.OneToOneField(
+        'erp.LegacyInventoryRecord',
+        on_delete=models.PROTECT,
+        related_name='equipment_inventory_source',
+        verbose_name=_('Ligne source de l’inventaire'),
+    )
+    source_designation = models.CharField(_('Désignation source'), max_length=255, blank=True)
+    model = models.CharField(_('Modèle'), max_length=255, blank=True)
+    reference = models.CharField(_('Référence'), max_length=255, blank=True)
+    source_serial_number = models.CharField(_('Numéro de série source'), max_length=120, blank=True)
+    source_quantity = models.PositiveIntegerField(_('Quantité déclarée dans la source'))
+    source_file = models.CharField(_('Fichier source'), max_length=255)
+    source_row = models.CharField(_('Ligne source'), max_length=64, blank=True)
+    source_room = models.CharField(_('Salle source'), max_length=32, blank=True)
+    source_fingerprint = models.CharField(_('Empreinte source'), max_length=64)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['source_file', 'source_row']),
+            models.Index(fields=['source_room']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(source_quantity__gte=1),
+                name='erp_equipment_inventory_source_qty_positive',
+            ),
+        ]
 
 
 class ActivitySchedule(Record):
