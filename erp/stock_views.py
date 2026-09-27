@@ -63,6 +63,30 @@ def stock_list(request):
 
 
 @login_required
+@require_GET
+def equipment_list(request):
+    qs = stock_queryset(request.user).filter(lot__article__category__code='EQUIPMENT')
+    search = request.GET.get('q', '').strip()[:200]
+    if search:
+        qs = qs.filter(
+            Q(code__icontains=search) |
+            Q(lot__article__code__icontains=search) |
+            Q(lot__article__name__icontains=search) |
+            Q(lot__article__format__icontains=search) |
+            Q(lot__article__catalog_reference__icontains=search) |
+            Q(lot__serial_number__icontains=search) |
+            Q(location__code__icontains=search) |
+            Q(location__name__icontains=search)
+        ).distinct()
+    page = Paginator(qs.order_by('location__code', 'lot__article__name', 'code'), 40).get_page(request.GET.get('page'))
+    return render(request, 'erp/equipment_list.html', {
+        'page': page,
+        'q': search,
+        'manager': is_manager(request.user),
+    })
+
+
+@login_required
 @require_http_methods(['GET', 'POST'])
 def receipt_create(request):
     if not is_manager(request.user) and not grants(request.user, Capability.RECEIVE_STOCK).exists():

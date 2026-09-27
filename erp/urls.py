@@ -122,6 +122,7 @@ urlpatterns = [
     path('cdc-generations/<uuid:pk>/<slug:extension>/', cdc_views.cdc_download, name='cdc-download'),
     path('cdc-revisions/<uuid:pk>/', cdc_views.cdc_revision, name='cdc-revision'),
     path('stock/', stock_views.stock_list, name='stock-list'),
+    path('equipment/', stock_views.equipment_list, name='equipment-list'),
     path('receipts/new/', stock_views.receipt_create, name='receipt-create'),
     path('stock/ledger/', stock_views.ledger, name='ledger'),
     path('stock/reconcile/', stock_views.reconcile, name='reconcile'),

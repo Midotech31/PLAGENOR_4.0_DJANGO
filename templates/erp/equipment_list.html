@@ -1,0 +1,46 @@
+{% extends 'erp/base.html' %}{% load i18n %}
+{% block erp_content %}
+<header class="erp-heading">
+  <div>
+    <p class="erp-eyebrow">{% trans 'Inventaire des équipements' %}</p>
+    <h1>{% trans 'Équipements PLAGENOR' %}</h1>
+    <p>{% trans 'Actifs physiques gérés dans le même référentiel et le même journal de stock que les autres ressources.' %}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'erp:stock-list' %}">{% trans 'Voir tous les stocks' %}</a>
+</header>
+<form class="erp-filters" method="get">
+  <label>{% trans 'Rechercher un équipement' %}
+    <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="{% trans 'Désignation, modèle, référence, série ou salle' %}" autofocus>
+  </label>
+  <button class="btn btn-secondary">{% trans 'Rechercher' %}</button>
+</form>
+<div class="erp-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Inventaire des équipements' %}">
+<table class="erp-table">
+<thead><tr>
+  <th scope="col">{% trans 'Équipement' %}</th>
+  <th scope="col">{% trans 'Modèle' %}</th>
+  <th scope="col">{% trans 'Référence' %}</th>
+  <th scope="col">{% trans 'N° série' %}</th>
+  <th scope="col">{% trans 'Salle' %}</th>
+  <th scope="col">{% trans 'Quantité' %}</th>
+  <th scope="col">{% trans 'Contrôle' %}</th>
+</tr></thead>
+<tbody>
+{% for container in page %}
+<tr>
+  <td><a href="{% url 'erp:stock-detail' pk=container.pk %}">{{ container.lot.article }}</a><small class="erp-muted">{{ container.lot.article.code }} · {{ container.code }}</small></td>
+  <td>{{ container.lot.article.format|default:'—' }}</td>
+  <td>{{ container.lot.article.catalog_reference|default:'—' }}</td>
+  <td>{{ container.lot.serial_number|default:'—' }}</td>
+  <td>{{ container.location }}</td>
+  <td class="erp-numeric">{{ container.quantity|floatformat:'-6' }} {{ container.lot.article.base_unit }}</td>
+  <td>{{ container.get_status_display }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="7">{% trans 'Aucun équipement dans ce périmètre.' %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% include 'erp/pagination.html' %}
+{% endblock %}
