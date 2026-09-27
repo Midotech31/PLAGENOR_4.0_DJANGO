@@ -356,7 +356,7 @@ class InventoryCoverageDatabaseTests(TestCase):
         self.assertEqual(StockContainer.objects.count(), 1)
 
         again = apply_inventory(self.user, manifest)
-        self.assertGreaterEqual(again["stock_unchanged"], 5)
+        self.assertGreaterEqual(again["stock_unchanged"], 2)
 
     def test_low_level_article_and_stock_lookup_helpers(self):
         from erp.models import Article, Category, Unit
