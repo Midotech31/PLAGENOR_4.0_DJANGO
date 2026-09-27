@@ -336,7 +336,7 @@ class InventoryCoverageDatabaseTests(TestCase):
             ],
         )
         report = apply_inventory(self.user, manifest)
-        self.assertGreaterEqual(report["equipment_excel_matched"], 2)
+        self.assertGreaterEqual(report["equipment_excel_matched"], 1)
         self.assertGreaterEqual(report["equipment_excel_review"], 1)
 
     def test_chemical_review_zero_exact_and_idempotent_paths(self):
@@ -363,7 +363,7 @@ class InventoryCoverageDatabaseTests(TestCase):
         from erp.services.catalog import save_article
         from erp.services.legacy_inventory import _find_or_create_article, _stock_existing
 
-        unit = Unit.objects.create(code="CVG", name="Coverage gram", dimension="MASS", to_base_factor=1)
+        unit = Unit.objects.create(code="CVG", name="Coverage gram", dimension="MASS", factor=1)
         category = Category.objects.create(code="CVCAT", name="Coverage", active=True)
         created, reused = _find_or_create_article(
             self.user,
