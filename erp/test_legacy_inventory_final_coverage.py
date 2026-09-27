@@ -87,7 +87,7 @@ class LegacyInventoryFinalCoverageTests(TestCase):
         self.assertIn("ROOM01", issue)
         self.assertIn("ROOM02", issue)
 
-    def test_duplicate_serial_previous_record_conflicts_are_blocked(self):
+    def _duplicate_serial_case(self):
         row1 = _equipment(
             name="Hot Plate", room="01", row=3, quantity="1", serial="SER-DUP"
         )
@@ -107,7 +107,15 @@ class LegacyInventoryFinalCoverageTests(TestCase):
             LegacyInventoryRecord.Kind.EQUIPMENT,
             raw,
         )
-        previous = LegacyInventoryRecord.objects.create(
+        locations = {
+            "ROOM01": SimpleNamespace(pk=uuid.uuid4(), code="ROOM01"),
+            "ROOM02": SimpleNamespace(pk=uuid.uuid4(), code="ROOM02"),
+        }
+        return manifest, source_key, raw, payload, locations
+
+    def test_duplicate_serial_changed_provenance_is_blocked(self):
+        manifest, source_key, raw, payload, locations = self._duplicate_serial_case()
+        LegacyInventoryRecord.objects.create(
             source_key=source_key,
             source_file=payload["source_file"],
             source_section=payload["source_section"],
@@ -117,18 +125,23 @@ class LegacyInventoryFinalCoverageTests(TestCase):
             raw_data=raw,
             resolution=LegacyInventoryRecord.Resolution.REVIEW,
         )
-        locations = {
-            "ROOM01": SimpleNamespace(pk=uuid.uuid4(), code="ROOM01"),
-            "ROOM02": SimpleNamespace(pk=uuid.uuid4(), code="ROOM02"),
-        }
         with self.assertRaisesMessage(ValidationError, "Conflit de provenance"):
             legacy._apply_detailed_equipment(
                 self.user, manifest, locations, Counter()
             )
 
-        previous.fingerprint = payload["fingerprint"]
-        previous.resolution = LegacyInventoryRecord.Resolution.IMPORTED
-        previous.save(update_fields=["fingerprint", "resolution", "updated_at"])
+    def test_duplicate_serial_already_integrated_is_blocked(self):
+        manifest, source_key, raw, payload, locations = self._duplicate_serial_case()
+        LegacyInventoryRecord.objects.create(
+            source_key=source_key,
+            source_file=payload["source_file"],
+            source_section=payload["source_section"],
+            source_row=payload["source_row"],
+            kind=payload["kind"],
+            fingerprint=payload["fingerprint"],
+            raw_data=raw,
+            resolution=LegacyInventoryRecord.Resolution.IMPORTED,
+        )
         with self.assertRaisesMessage(ValidationError, "dupliqué dans la source"):
             legacy._apply_detailed_equipment(
                 self.user, manifest, locations, Counter()
