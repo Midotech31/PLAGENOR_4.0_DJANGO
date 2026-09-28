@@ -1,5 +1,45 @@
 const { test, expect } = require('@playwright/test');
 
+test('login password can always be shown and hidden without changing its value', async ({ page }) => {
+  await page.goto('/accounts/login/');
+  const password = page.locator('#id_password');
+  await password.fill('VisibilityCheck!2026');
+  const toggle = password.locator('xpath=..').locator('.password-toggle-btn');
+  await expect(toggle).toBeVisible();
+  await expect(password).toHaveAttribute('type', 'password');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await toggle.click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await expect(password).toHaveValue('VisibilityCheck!2026');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await toggle.click();
+  await expect(password).toHaveAttribute('type', 'password');
+  await expect(password).toHaveValue('VisibilityCheck!2026');
+});
+
+test('registration exposes independent show/hide controls for both password fields', async ({ page }) => {
+  await page.goto('/accounts/register/');
+  const first = page.locator('#id_password1');
+  const second = page.locator('#id_password2');
+  await first.fill('VisibilityCheck!2026');
+  await second.fill('VisibilityCheck!2026');
+  const firstToggle = first.locator('xpath=..').locator('.password-toggle-btn');
+  const secondToggle = second.locator('xpath=..').locator('.password-toggle-btn');
+  await expect(firstToggle).toBeVisible();
+  await expect(secondToggle).toBeVisible();
+  await firstToggle.click();
+  await expect(first).toHaveAttribute('type', 'text');
+  await expect(second).toHaveAttribute('type', 'password');
+  await secondToggle.click();
+  await expect(second).toHaveAttribute('type', 'text');
+  await firstToggle.click();
+  await secondToggle.click();
+  await expect(first).toHaveAttribute('type', 'password');
+  await expect(second).toHaveAttribute('type', 'password');
+  await expect(first).toHaveValue('VisibilityCheck!2026');
+  await expect(second).toHaveValue('VisibilityCheck!2026');
+});
+
 test('IBTIKAR signup requires complete details and preserves supervisor email', async ({ page }, testInfo) => {
   await page.goto('/accounts/register/');
   const academic = ['student_level', 'laboratory', 'supervisor', 'supervisor_email', 'ibtikar_id'];
