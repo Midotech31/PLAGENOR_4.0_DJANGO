@@ -275,7 +275,7 @@ def serve_media(request, path):
         path = canonical_media_path(path)
     except ValidationError:
         raise Http404("Fichier introuvable")
-    if path.startswith(('reports/', 'ibtikar_attachments/')):
+    if path.startswith(('reports/', 'ibtikar_attachments/', 'database_backups/')):
         raise Http404("Fichier introuvable")
     if not _may_access_media(request.user, path):
         raise Http404("Fichier introuvable")

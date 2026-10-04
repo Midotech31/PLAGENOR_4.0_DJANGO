@@ -8,6 +8,11 @@ python manage.py seed_services
 python manage.py seed_content
 python manage.py ensure_superuser
 
+if [ "${PLAGENOR_INVENTORY_BOOTSTRAP:-0}" = "1" ]; then
+  echo "PLAGENOR inventory bootstrap requested; running fail-closed production import."
+  python scripts/production_inventory_bootstrap.py
+fi
+
 exec gunicorn plagenor.wsgi:application \
   --workers "${WEB_CONCURRENCY:-3}" \
   --bind "0.0.0.0:${PORT:-8000}" \
