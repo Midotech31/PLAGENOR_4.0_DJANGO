@@ -10,7 +10,7 @@ python manage.py ensure_superuser
 
 if [ "${PLAGENOR_INVENTORY_BOOTSTRAP:-0}" = "1" ]; then
   echo "PLAGENOR inventory bootstrap requested; running fail-closed production import."
-  python scripts/production_inventory_bootstrap.py
+  python -m scripts.production_inventory_bootstrap
 fi
 
 exec gunicorn plagenor.wsgi:application \
