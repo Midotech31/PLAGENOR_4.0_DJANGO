@@ -9,8 +9,9 @@ python manage.py seed_content
 python manage.py ensure_superuser
 
 if [ "${PLAGENOR_INVENTORY_BOOTSTRAP:-0}" = "1" ]; then
-  echo "PLAGENOR inventory bootstrap requested; running fail-closed production import."
-  python -m scripts.production_inventory_bootstrap
+  echo "PLAGENOR inventory bootstrap requested; starting fail-closed production import in background."
+  python -m scripts.production_inventory_bootstrap &
+  echo "PLAGENOR inventory bootstrap background PID: $!"
 fi
 
 exec gunicorn plagenor.wsgi:application \
