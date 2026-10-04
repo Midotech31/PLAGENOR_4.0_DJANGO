@@ -125,10 +125,13 @@ def _database_counts():
     }
 
 
-def _server_version():
+def _database_identity():
     with connection.cursor() as cursor:
-        cursor.execute("SELECT current_setting('server_version_num')")
-        return str(cursor.fetchone()[0])
+        cursor.execute(
+            "SELECT current_database(), current_setting('server_version_num')"
+        )
+        database, version = cursor.fetchone()
+        return str(database), str(version)
 
 
 def _backup_database():
@@ -148,6 +151,11 @@ def _backup_database():
 
     timestamp = timezone.now().strftime("%Y%m%dT%H%M%SZ")
     pg_env = _database_environment(database_url)
+    application_database, server_version = _database_identity()
+    if pg_env["PGDATABASE"] != application_database:
+        raise RuntimeError(
+            "Backup database name does not match the active Django database."
+        )
     with tempfile.TemporaryDirectory(prefix="plagenor-db-backup-") as tmp:
         dump_path = Path(tmp) / "plagenor.dump"
         subprocess.run(
@@ -175,7 +183,11 @@ def _backup_database():
         plain = dump_path.read_bytes()
         if not plain:
             raise RuntimeError("PostgreSQL backup is empty.")
-        ciphertext = _backup_fernet().encrypt(plain)
+        plaintext_sha256 = hashlib.sha256(plain).hexdigest()
+        cipher = _backup_fernet()
+        ciphertext = cipher.encrypt(plain)
+        if cipher.decrypt(ciphertext) != plain:
+            raise RuntimeError("Encrypted backup round-trip verification failed.")
         digest = hashlib.sha256(ciphertext).hexdigest()
         object_name = (
             f"database_backups/plagenor-{timestamp}-"
@@ -189,9 +201,11 @@ def _backup_database():
             "created_at": timestamp,
             "cipher": "fernet-hkdf-sha256-v1",
             "ciphertext_sha256": digest,
+            "plaintext_sha256": plaintext_sha256,
             "plaintext_bytes": len(plain),
             "ciphertext_bytes": len(ciphertext),
-            "postgres_server_version": _server_version(),
+            "database_name": application_database,
+            "postgres_server_version": server_version,
             "render_commit": os.getenv("RENDER_GIT_COMMIT", ""),
             "backup_object": saved_name,
         }
