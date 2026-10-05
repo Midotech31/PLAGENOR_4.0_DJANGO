@@ -7600,3 +7600,25 @@ msgstr "المراجعات المحفوظة"
 msgid "Reprendre cette révision"
 msgstr "استرجاع هذه المراجعة"
 
+
+
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "Un article n’a pas de prix ou de taux de taxe confirmé."
+msgid_plural "%(count)s articles n’ont pas de prix ou de taux de taxe confirmé."
+msgstr[0] "لا توجد مواد دون سعر أو معدل ضريبة مؤكد."
+msgstr[1] "مادة واحدة دون سعر أو معدل ضريبة مؤكد."
+msgstr[2] "مادتان دون سعر أو معدل ضريبة مؤكد."
+msgstr[3] "%(count)s مواد دون سعر أو معدل ضريبة مؤكد."
+msgstr[4] "%(count)s مادة دون سعر أو معدل ضريبة مؤكد."
+msgstr[5] "%(count)s مادة دون سعر أو معدل ضريبة مؤكد."
+
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "%(requirements)s exigence(s), %(criteria)s critère(s) et %(clauses)s clause(s) structurés dans ce dossier. Les sections restent gérées par le moteur documentaire canonique."
+msgstr "يحتوي هذا الملف على %(requirements)s من المتطلبات و%(criteria)s من المعايير و%(clauses)s من البنود المهيكلة. وتظل الأقسام مُدارة بواسطة المحرك الوثائقي المرجعي."
+
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "PDF généré : %(pages)s pages."
+msgstr "ملف PDF مُنشأ: %(pages)s صفحة."
