@@ -7489,3 +7489,194 @@ msgstr "Room"
 #~ msgstr ""
 #~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and can"
 #~ " convert your submission into a full account later."
+
+
+# CDC detail translations (PLAGENOR 4.0)
+#: templates/erp/cdc_detail.html
+msgid "Délégation et suivi"
+msgstr "Delegation and tracking"
+
+#: templates/erp/cdc_detail.html
+msgid "Informations du dossier"
+msgstr "Dossier information"
+
+#: templates/erp/cdc_detail.html
+msgid "Clauses et aperçu textuel"
+msgstr "Clauses and text preview"
+
+#: templates/erp/cdc_detail.html
+msgid "Exigences, critères, clauses et revues"
+msgstr "Requirements, criteria, clauses and reviews"
+
+#: templates/erp/cdc_detail.html
+msgid "Pièces jointes"
+msgstr "Attachments"
+
+#: templates/erp/cdc_detail.html
+msgid "Plan d’approvisionnement"
+msgstr "Procurement plan"
+
+#: templates/erp/cdc_detail.html
+msgid "Créer le plan d’approvisionnement"
+msgstr "Create procurement plan"
+
+#: templates/erp/cdc_detail.html
+msgid "Dupliquer de manière contrôlée"
+msgstr "Controlled duplication"
+
+#: templates/erp/cdc_detail.html
+msgid "Examiner et valider définitivement"
+msgstr "Review and approve definitively"
+
+#: templates/erp/cdc_detail.html
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "This specification is archived as read-only."
+
+#: templates/erp/cdc_detail.html
+msgid "Les informations reprises du modèle doivent être vérifiées et confirmées pour ce dossier."
+msgstr "The information imported from the template must be reviewed and confirmed for this dossier."
+
+#: templates/erp/cdc_detail.html
+msgid "Lots et besoins techniques"
+msgstr "Lots and technical requirements"
+
+#: templates/erp/cdc_detail.html
+msgid "Échanger les lots avec Excel"
+msgstr "Exchange lots with Excel"
+
+#: templates/erp/cdc_detail.html
+msgid "Ajouter ou réutiliser un lot"
+msgstr "Add or reuse a lot"
+
+#: templates/erp/cdc_detail.html
+msgid "Lot"
+msgstr "Lot"
+
+#: templates/erp/cdc_detail.html
+msgid "articles retenus"
+msgstr "selected items"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité réelle du stock"
+msgstr "Actual stock availability"
+
+#: templates/erp/cdc_detail.html
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "active requirement(s) are not yet linked to the shared catalog and cannot be checked automatically."
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité du stock pour le CDC"
+msgstr "Stock availability for the specification"
+
+#: templates/erp/cdc_detail.html
+msgid "Article"
+msgstr "Item"
+
+#: templates/erp/cdc_detail.html
+msgid "Besoin"
+msgstr "Requirement"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponible non réservé"
+msgstr "Available unreserved"
+
+#: templates/erp/cdc_detail.html
+msgid "Manque"
+msgstr "Shortage"
+
+#: templates/erp/cdc_detail.html
+msgid "État"
+msgstr "Status"
+
+#: templates/erp/cdc_detail.html
+msgid "Insuffisant"
+msgstr "Insufficient"
+
+#: templates/erp/cdc_detail.html
+msgid "Absent"
+msgstr "Missing"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "No structured requirements to compare against stock."
+
+#: templates/erp/cdc_detail.html
+msgid "Estimation interne"
+msgstr "Internal estimate"
+
+#: templates/erp/cdc_detail.html
+msgid "Hors taxes"
+msgstr "Net of tax"
+
+#: templates/erp/cdc_detail.html
+msgid "Taxes"
+msgstr "Taxes"
+
+#: templates/erp/cdc_detail.html
+msgid "Ces estimations ne remplissent pas les prix réservés aux soumissionnaires dans le cahier des charges."
+msgstr "These estimates do not populate the prices reserved for bidders in the specification."
+
+#: templates/erp/cdc_detail.html
+msgid "CDC Toolkit intégré"
+msgstr "Integrated CDC Toolkit"
+
+#: templates/erp/cdc_detail.html
+msgid "Revues obligatoires complètes pour la révision courante."
+msgstr "Mandatory reviews completed for the current revision."
+
+#: templates/erp/cdc_detail.html
+msgid "Les revues obligatoires de la révision courante ne sont pas encore toutes approuvées."
+msgstr "Not all mandatory reviews for the current revision have been approved yet."
+
+#: templates/erp/cdc_detail.html
+msgid "Ouvrir la gouvernance CDC"
+msgstr "Open CDC governance"
+
+#: templates/erp/cdc_detail.html
+msgid "Contrôles documentaires"
+msgstr "Document checks"
+
+#: templates/erp/cdc_detail.html
+msgid "Contrôle bloquant"
+msgstr "Blocking check"
+
+#: templates/erp/cdc_detail.html
+msgid "Point à examiner"
+msgstr "Item to review"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun contrôle automatique bloquant. La revue du contenu et de la mise en page reste nécessaire."
+msgstr "No blocking automated checks. Content and layout review is still required."
+
+#: templates/erp/cdc_detail.html
+msgid "Document et soumission"
+msgstr "Document and submission"
+
+#: templates/erp/cdc_detail.html
+msgid "Examiner le PDF"
+msgstr "Review PDF"
+
+#: templates/erp/cdc_detail.html
+msgid "Télécharger le Word"
+msgstr "Download Word"
+
+#: templates/erp/cdc_detail.html
+msgid "Générer le Word et le PDF"
+msgstr "Generate Word and PDF"
+
+#: templates/erp/cdc_detail.html
+msgid "Soumettre pour validation"
+msgstr "Submit for approval"
+
+#: templates/erp/cdc_detail.html
+msgid "Réintégrer le lot"
+msgstr "Reinstate lot"
+
+#: templates/erp/cdc_detail.html
+msgid "Révisions conservées"
+msgstr "Preserved revisions"
+
+#: templates/erp/cdc_detail.html
+msgid "Reprendre cette révision"
+msgstr "Restore this revision"
+
