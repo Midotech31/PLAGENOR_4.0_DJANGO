@@ -7409,3 +7409,194 @@ msgstr "القاعة"
 #~ msgstr ""
 #~ "نعم. استخدم «تقديم كضيف». ستتلقّى رمز تتبّع عبر البريد الإلكتروني ويمكنك "
 #~ "تحويل تقديمك إلى حساب كامل لاحقًا."
+
+
+# CDC detail translations (PLAGENOR 4.0)
+#: templates/erp/cdc_detail.html
+msgid "Délégation et suivi"
+msgstr "التفويض والمتابعة"
+
+#: templates/erp/cdc_detail.html
+msgid "Informations du dossier"
+msgstr "معلومات الملف"
+
+#: templates/erp/cdc_detail.html
+msgid "Clauses et aperçu textuel"
+msgstr "البنود والمعاينة النصية"
+
+#: templates/erp/cdc_detail.html
+msgid "Exigences, critères, clauses et revues"
+msgstr "المتطلبات والمعايير والبنود والمراجعات"
+
+#: templates/erp/cdc_detail.html
+msgid "Pièces jointes"
+msgstr "المرفقات"
+
+#: templates/erp/cdc_detail.html
+msgid "Plan d’approvisionnement"
+msgstr "خطة التموين"
+
+#: templates/erp/cdc_detail.html
+msgid "Créer le plan d’approvisionnement"
+msgstr "إنشاء خطة التموين"
+
+#: templates/erp/cdc_detail.html
+msgid "Dupliquer de manière contrôlée"
+msgstr "إنشاء نسخة مضبوطة"
+
+#: templates/erp/cdc_detail.html
+msgid "Examiner et valider définitivement"
+msgstr "المراجعة والمصادقة النهائية"
+
+#: templates/erp/cdc_detail.html
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "دفتر الشروط هذا مؤرشف للقراءة فقط."
+
+#: templates/erp/cdc_detail.html
+msgid "Les informations reprises du modèle doivent être vérifiées et confirmées pour ce dossier."
+msgstr "يجب التحقق من المعلومات المسترجعة من النموذج وتأكيدها لهذا الملف."
+
+#: templates/erp/cdc_detail.html
+msgid "Lots et besoins techniques"
+msgstr "الحصص والاحتياجات التقنية"
+
+#: templates/erp/cdc_detail.html
+msgid "Échanger les lots avec Excel"
+msgstr "تبادل الحصص مع Excel"
+
+#: templates/erp/cdc_detail.html
+msgid "Ajouter ou réutiliser un lot"
+msgstr "إضافة حصة أو إعادة استخدامها"
+
+#: templates/erp/cdc_detail.html
+msgid "Lot"
+msgstr "حصة"
+
+#: templates/erp/cdc_detail.html
+msgid "articles retenus"
+msgstr "عناصر مختارة"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité réelle du stock"
+msgstr "التوفر الفعلي للمخزون"
+
+#: templates/erp/cdc_detail.html
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "من الاحتياجات النشطة غير مرتبطة بعد بالفهرس المشترك ولا يمكن التحقق منها آليًا."
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité du stock pour le CDC"
+msgstr "توفر المخزون لدفتر الشروط"
+
+#: templates/erp/cdc_detail.html
+msgid "Article"
+msgstr "المادة"
+
+#: templates/erp/cdc_detail.html
+msgid "Besoin"
+msgstr "الاحتياج"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponible non réservé"
+msgstr "المتاح غير المحجوز"
+
+#: templates/erp/cdc_detail.html
+msgid "Manque"
+msgstr "العجز"
+
+#: templates/erp/cdc_detail.html
+msgid "État"
+msgstr "الحالة"
+
+#: templates/erp/cdc_detail.html
+msgid "Insuffisant"
+msgstr "غير كافٍ"
+
+#: templates/erp/cdc_detail.html
+msgid "Absent"
+msgstr "غير متوفر"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "لا توجد احتياجات مهيكلة لمقارنتها بالمخزون."
+
+#: templates/erp/cdc_detail.html
+msgid "Estimation interne"
+msgstr "التقدير الداخلي"
+
+#: templates/erp/cdc_detail.html
+msgid "Hors taxes"
+msgstr "دون ضرائب"
+
+#: templates/erp/cdc_detail.html
+msgid "Taxes"
+msgstr "الضرائب"
+
+#: templates/erp/cdc_detail.html
+msgid "Ces estimations ne remplissent pas les prix réservés aux soumissionnaires dans le cahier des charges."
+msgstr "هذه التقديرات لا تملأ الأسعار المخصصة للمتعهدين في دفتر الشروط."
+
+#: templates/erp/cdc_detail.html
+msgid "CDC Toolkit intégré"
+msgstr "أداة CDC Toolkit المدمجة"
+
+#: templates/erp/cdc_detail.html
+msgid "Revues obligatoires complètes pour la révision courante."
+msgstr "اكتملت المراجعات الإلزامية للمراجعة الحالية."
+
+#: templates/erp/cdc_detail.html
+msgid "Les revues obligatoires de la révision courante ne sont pas encore toutes approuvées."
+msgstr "لم تتم الموافقة بعد على جميع المراجعات الإلزامية للمراجعة الحالية."
+
+#: templates/erp/cdc_detail.html
+msgid "Ouvrir la gouvernance CDC"
+msgstr "فتح حوكمة دفتر الشروط"
+
+#: templates/erp/cdc_detail.html
+msgid "Contrôles documentaires"
+msgstr "ضوابط الوثيقة"
+
+#: templates/erp/cdc_detail.html
+msgid "Contrôle bloquant"
+msgstr "فحص مانع"
+
+#: templates/erp/cdc_detail.html
+msgid "Point à examiner"
+msgstr "نقطة للمراجعة"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun contrôle automatique bloquant. La revue du contenu et de la mise en page reste nécessaire."
+msgstr "لا توجد فحوص آلية مانعة. تبقى مراجعة المحتوى والتنسيق ضرورية."
+
+#: templates/erp/cdc_detail.html
+msgid "Document et soumission"
+msgstr "الوثيقة والإيداع"
+
+#: templates/erp/cdc_detail.html
+msgid "Examiner le PDF"
+msgstr "مراجعة ملف PDF"
+
+#: templates/erp/cdc_detail.html
+msgid "Télécharger le Word"
+msgstr "تنزيل ملف Word"
+
+#: templates/erp/cdc_detail.html
+msgid "Générer le Word et le PDF"
+msgstr "إنشاء ملفي Word وPDF"
+
+#: templates/erp/cdc_detail.html
+msgid "Soumettre pour validation"
+msgstr "الإرسال للمصادقة"
+
+#: templates/erp/cdc_detail.html
+msgid "Réintégrer le lot"
+msgstr "إعادة إدراج الحصة"
+
+#: templates/erp/cdc_detail.html
+msgid "Révisions conservées"
+msgstr "المراجعات المحفوظة"
+
+#: templates/erp/cdc_detail.html
+msgid "Reprendre cette révision"
+msgstr "استرجاع هذه المراجعة"
+
