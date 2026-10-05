@@ -33,3 +33,31 @@ test('IBTIKAR signup requires complete details and preserves supervisor email', 
   await page.goto('/accounts/profile/');
   await expect(page.locator('main')).toContainText(fields.supervisor_email);
 });
+
+
+test('registration password fields expose accessible show/hide toggles', async ({ page }) => {
+  await page.goto('/accounts/register/');
+
+  for (const field of ['id_password1', 'id_password2']) {
+    const input = page.locator('#' + field);
+    const toggle = page.locator('[data-password-toggle="' + field + '"]');
+
+    await expect(input).toHaveAttribute('type', 'password');
+    await expect(input).toHaveAttribute('autocomplete', 'new-password');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-controls', field);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    const value = 'VisibleToggle!2026';
+    await input.fill(value);
+    await toggle.click();
+    await expect(input).toHaveAttribute('type', 'text');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(input).toHaveValue(value);
+
+    await toggle.click();
+    await expect(input).toHaveAttribute('type', 'password');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(input).toHaveValue(value);
+  }
+});

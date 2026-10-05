@@ -58,13 +58,13 @@
 
             <div class="form-group">
                 <label for="id_username">{% trans "Identifiant souhaité" %} *</label>
-                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
+                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" autocomplete="username" required>
                 {% if form.username.errors %}<div class="form-error">{{ form.username.errors.0 }}</div>{% endif %}
             </div>
 
             <div class="form-group">
                 <label for="id_email">{% trans "Email" %} *</label>
-                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" autocomplete="email" required>
                 {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
             </div>
 
@@ -178,12 +178,38 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_password1">{% trans "Mot de passe" %}</label>
-                    <input type="password" name="password1" id="id_password1" class="form-control" required>
+                    <div class="password-input-wrapper" style="position: relative;">
+                        <input type="password" name="password1" id="id_password1" class="form-control" autocomplete="new-password" required style="padding-inline-end: 44px;">
+                        <button type="button" class="password-toggle-btn" data-password-toggle="id_password1"
+                                aria-controls="id_password1" aria-pressed="false"
+                                aria-label="{% trans 'Afficher/masquer le mot de passe' %}"
+                                style="position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.8);border:none;cursor:pointer;padding:8px;color:#64748b;border-radius:4px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;z-index:10;">
+                            <svg class="password-eye-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="password-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
                     {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="form-group">
                     <label for="id_password2">{% trans "Confirmer le mot de passe" %}</label>
-                    <input type="password" name="password2" id="id_password2" class="form-control" required>
+                    <div class="password-input-wrapper" style="position: relative;">
+                        <input type="password" name="password2" id="id_password2" class="form-control" autocomplete="new-password" required style="padding-inline-end: 44px;">
+                        <button type="button" class="password-toggle-btn" data-password-toggle="id_password2"
+                                aria-controls="id_password2" aria-pressed="false"
+                                aria-label="{% trans 'Afficher/masquer le mot de passe' %}"
+                                style="position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.8);border:none;cursor:pointer;padding:8px;color:#64748b;border-radius:4px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;z-index:10;">
+                            <svg class="password-eye-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="password-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
                     {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors.0 }}</div>{% endif %}
                 </div>
             </div>
@@ -252,6 +278,20 @@
     }
     if (orgType) { orgType.addEventListener('change', toggleOrgOther); }
     toggleOrgOther();
+
+    document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var input = document.getElementById(this.getAttribute('data-password-toggle'));
+            if (!input) { return; }
+            var reveal = input.type === 'password';
+            input.type = reveal ? 'text' : 'password';
+            this.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+            var eyeOn = this.querySelector('.password-eye-on');
+            var eyeOff = this.querySelector('.password-eye-off');
+            if (eyeOn) { eyeOn.hidden = reveal; }
+            if (eyeOff) { eyeOff.hidden = !reveal; }
+        });
+    });
 
 })();
 </script>
