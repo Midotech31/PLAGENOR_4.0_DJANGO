@@ -7489,3 +7489,501 @@ msgstr "Room"
 #~ msgstr ""
 #~ "Yes. Use « Guest submission ». You receive a tracking code by e-mail and can"
 #~ " convert your submission into a full account later."
+
+# CDC i18n completeness audit — 2026-10-06
+#: templates/erp/cdc_clause_library.html templates/erp/cdc_detail.html
+msgid "CDC Toolkit intégré"
+msgstr "Integrated CDC Toolkit"
+
+#: templates/erp/cdc_clause_library.html templates/erp/cdc_governance.html
+msgid "Bibliothèque de clauses"
+msgstr "Clause library"
+
+#: templates/erp/cdc_clause_library.html
+msgid "Référentiel canonique versionné partagé par tous les cahiers des charges."
+msgstr "Versioned canonical repository shared by all specifications."
+
+#: templates/erp/cdc_clause_library.html
+msgid "Nouvelle clause"
+msgstr "New clause"
+
+#: templates/erp/cdc_clause_library.html templates/erp/cdc_governance.html
+msgid "Intitulé"
+msgstr "Title"
+
+#: templates/erp/cdc_clause_library.html
+msgid "Révision active"
+msgstr "Active revision"
+
+#: templates/erp/cdc_clause_library.html templates/erp/cdc_detail.html
+msgid "État"
+msgstr "Status"
+
+#: templates/erp/cdc_clause_library.html
+msgid "Nouvelle révision"
+msgstr "New revision"
+
+#: templates/erp/cdc_clause_library.html
+msgid "Aucune clause enregistrée."
+msgstr "No clause recorded."
+
+#: templates/erp/cdc_clauses.html templates/erp/cdc_detail.html
+msgid "Clauses et aperçu textuel"
+msgstr "Clauses and text preview"
+
+#: templates/erp/cdc_clauses.html
+msgid "Les textes proviennent du modèle institutionnel. Cet aperçu textuel ne remplace pas la vérification du PDF."
+msgstr "The texts come from the institutional template. This text preview does not replace PDF verification."
+
+#: templates/erp/cdc_clauses.html templates/erp/cdc_governance.html templates/erp/cdc_lot.html templates/erp/cdc_revision.html templates/erp/cdc_workbook.html
+msgid "Retour au dossier"
+msgstr "Back to dossier"
+
+#: templates/erp/cdc_clauses.html
+msgid "Rechercher dans les clauses"
+msgstr "Search clauses"
+
+#: templates/erp/cdc_clauses.html
+msgid "Modifier cette clause"
+msgstr "Edit this clause"
+
+#: templates/erp/cdc_clauses.html
+msgid "Aucun texte correspondant."
+msgstr "No matching text."
+
+#: templates/erp/cdc_detail.html
+msgid "Délégation et suivi"
+msgstr "Delegation and tracking"
+
+#: templates/erp/cdc_detail.html
+msgid "Informations du dossier"
+msgstr "Dossier information"
+
+#: templates/erp/cdc_detail.html
+msgid "Exigences, critères, clauses et revues"
+msgstr "Requirements, criteria, clauses and reviews"
+
+#: templates/erp/cdc_detail.html
+msgid "Pièces jointes"
+msgstr "Attachments"
+
+#: templates/erp/cdc_detail.html
+msgid "Plan d’approvisionnement"
+msgstr "Procurement plan"
+
+#: templates/erp/cdc_detail.html
+msgid "Créer le plan d’approvisionnement"
+msgstr "Create procurement plan"
+
+#: templates/erp/cdc_detail.html
+msgid "Dupliquer de manière contrôlée"
+msgstr "Duplicate with controls"
+
+#: templates/erp/cdc_detail.html
+msgid "Examiner et valider définitivement"
+msgstr "Review and approve definitively"
+
+#: templates/erp/cdc_detail.html
+msgid "Ce cahier des charges est archivé en lecture seule."
+msgstr "This specification is archived and read-only."
+
+#: templates/erp/cdc_detail.html
+msgid "Les informations reprises du modèle doivent être vérifiées et confirmées pour ce dossier."
+msgstr "Information taken from the template must be verified and confirmed for this dossier."
+
+#: templates/erp/cdc_detail.html
+msgid "Lots et besoins techniques"
+msgstr "Lots and technical requirements"
+
+#: templates/erp/cdc_detail.html
+msgid "Échanger les lots avec Excel"
+msgstr "Exchange lots with Excel"
+
+#: templates/erp/cdc_detail.html
+msgid "Ajouter ou réutiliser un lot"
+msgstr "Add or reuse a lot"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_lot.html
+msgid "Lot"
+msgstr "Lot"
+
+#: templates/erp/cdc_detail.html
+msgid "articles retenus"
+msgstr "selected items"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité réelle du stock"
+msgstr "Actual stock availability"
+
+#: templates/erp/cdc_detail.html
+msgid "besoin(s) actif(s) ne sont pas encore rattachés au catalogue commun et ne peuvent pas être vérifiés automatiquement."
+msgstr "active requirement(s) are not yet linked to the shared catalogue and cannot be checked automatically."
+
+#: templates/erp/cdc_detail.html
+msgid "Disponibilité du stock pour le CDC"
+msgstr "Stock availability for the CDC"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_lot.html
+msgid "Article"
+msgstr "Item"
+
+#: templates/erp/cdc_detail.html
+msgid "Besoin"
+msgstr "Requirement"
+
+#: templates/erp/cdc_detail.html
+msgid "Disponible non réservé"
+msgstr "Available unreserved"
+
+#: templates/erp/cdc_detail.html
+msgid "Manque"
+msgstr "Shortage"
+
+#: templates/erp/cdc_detail.html
+msgid "Insuffisant"
+msgstr "Insufficient"
+
+#: templates/erp/cdc_detail.html
+msgid "Absent"
+msgstr "Missing"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun besoin structuré à comparer au stock."
+msgstr "No structured requirement to compare with stock."
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_lot.html
+msgid "Estimation interne"
+msgstr "Internal estimate"
+
+#: templates/erp/cdc_detail.html
+msgid "Hors taxes"
+msgstr "Excl. tax"
+
+#: templates/erp/cdc_detail.html
+msgid "Taxes"
+msgstr "Taxes"
+
+#: templates/erp/cdc_detail.html
+msgid "Ces estimations ne remplissent pas les prix réservés aux soumissionnaires dans le cahier des charges."
+msgstr "These estimates do not populate the prices reserved for bidders in the specification."
+
+#: templates/erp/cdc_detail.html
+msgid "Revues obligatoires complètes pour la révision courante."
+msgstr "Required reviews are complete for the current revision."
+
+#: templates/erp/cdc_detail.html
+msgid "Les revues obligatoires de la révision courante ne sont pas encore toutes approuvées."
+msgstr "Required reviews for the current revision are not all approved yet."
+
+#: templates/erp/cdc_detail.html
+msgid "Ouvrir la gouvernance CDC"
+msgstr "Open CDC governance"
+
+#: templates/erp/cdc_detail.html
+msgid "Contrôles documentaires"
+msgstr "Document checks"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_governance.html
+msgid "Contrôle bloquant"
+msgstr "Blocking check"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_governance.html
+msgid "Point à examiner"
+msgstr "Point to review"
+
+#: templates/erp/cdc_detail.html
+msgid "Aucun contrôle automatique bloquant. La revue du contenu et de la mise en page reste nécessaire."
+msgstr "No blocking automated check. Content and layout review is still required."
+
+#: templates/erp/cdc_detail.html
+msgid "Document et soumission"
+msgstr "Document and submission"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_revision.html
+msgid "Examiner le PDF"
+msgstr "Review PDF"
+
+#: templates/erp/cdc_detail.html templates/erp/cdc_revision.html
+msgid "Télécharger le Word"
+msgstr "Download Word document"
+
+#: templates/erp/cdc_detail.html
+msgid "Générer le Word et le PDF"
+msgstr "Generate Word and PDF"
+
+#: templates/erp/cdc_detail.html
+msgid "Soumettre pour validation"
+msgstr "Submit for approval"
+
+#: templates/erp/cdc_detail.html
+msgid "Réintégrer le lot"
+msgstr "Reinstate lot"
+
+#: templates/erp/cdc_detail.html
+msgid "Révisions conservées"
+msgstr "Saved revisions"
+
+#: templates/erp/cdc_detail.html
+msgid "Reprendre cette révision"
+msgstr "Restore this revision"
+
+#: templates/erp/cdc_governance.html
+msgid "Gouvernance du cahier des charges"
+msgstr "Specification governance"
+
+#: templates/erp/cdc_governance.html
+msgid "Ajouter un critère"
+msgstr "Add criterion"
+
+#: templates/erp/cdc_governance.html
+msgid "Ajouter une clause validée"
+msgstr "Add approved clause"
+
+#: templates/erp/cdc_governance.html
+msgid "Enregistrer une revue"
+msgstr "Record review"
+
+#: templates/erp/cdc_governance.html
+msgid "Critères et évaluation"
+msgstr "Criteria and evaluation"
+
+#: templates/erp/cdc_governance.html
+msgid "Périmètre"
+msgstr "Scope"
+
+#: templates/erp/cdc_governance.html
+msgid "Critère"
+msgstr "Criterion"
+
+#: templates/erp/cdc_governance.html
+msgid "Méthode"
+msgstr "Method"
+
+#: templates/erp/cdc_governance.html templates/erp/cdc_lot.html
+msgid "Retenu"
+msgstr "Selected"
+
+#: templates/erp/cdc_governance.html
+msgid "éliminatoire"
+msgstr "disqualifying"
+
+#: templates/erp/cdc_governance.html
+msgid "Aucun critère structuré."
+msgstr "No structured criterion."
+
+#: templates/erp/cdc_governance.html
+msgid "Clauses institutionnelles sélectionnées"
+msgstr "Selected institutional clauses"
+
+#: templates/erp/cdc_governance.html
+msgid "Source"
+msgstr "Source"
+
+#: templates/erp/cdc_governance.html
+msgid "obligatoire"
+msgstr "required"
+
+#: templates/erp/cdc_governance.html
+msgid "Aucune clause du référentiel sélectionnée."
+msgstr "No repository clause selected."
+
+#: templates/erp/cdc_governance.html
+msgid "Revues de la révision courante"
+msgstr "Current revision reviews"
+
+#: templates/erp/cdc_governance.html
+msgid "Toutes les revues obligatoires sont approuvées."
+msgstr "All required reviews are approved."
+
+#: templates/erp/cdc_governance.html
+msgid "La validation finale reste bloquée tant que toutes les revues obligatoires de cette révision ne sont pas approuvées."
+msgstr "Final approval remains blocked until all required reviews for this revision are approved."
+
+#: templates/erp/cdc_governance.html
+msgid "Aucune revue enregistrée pour cette révision."
+msgstr "No review recorded for this revision."
+
+#: templates/erp/cdc_governance.html
+msgid "Contrôle qualité"
+msgstr "Quality control"
+
+#: templates/erp/cdc_governance.html
+msgid "Aucun contrôle bloquant détecté sur les données structurées."
+msgstr "No blocking check detected on structured data."
+
+#: templates/erp/cdc_list.html
+msgid "Approvisionnement institutionnel"
+msgstr "Institutional procurement"
+
+#: templates/erp/cdc_list.html
+msgid "Cahiers des charges"
+msgstr "Specifications"
+
+#: templates/erp/cdc_list.html
+msgid "Préparation déléguée, catalogue partagé et validation finale réservée à l’administration."
+msgstr "Delegated preparation, shared catalogue, and final approval reserved for administration."
+
+#: templates/erp/cdc_list.html
+msgid "Créer un dossier"
+msgstr "Create dossier"
+
+#: templates/erp/cdc_list.html
+msgid "État d’archivage"
+msgstr "Archive status"
+
+#: templates/erp/cdc_list.html
+msgid "Archivés"
+msgstr "Archived"
+
+#: templates/erp/cdc_list.html
+msgid "Non affecté"
+msgstr "Unassigned"
+
+#: templates/erp/cdc_list.html
+msgid "Aucun cahier des charges dans votre périmètre."
+msgstr "No specification in your scope."
+
+#: templates/erp/cdc_lot.html
+msgid "Retirer ou réintégrer ce lot"
+msgstr "Remove or reinstate this lot"
+
+#: templates/erp/cdc_lot.html
+msgid "Ajouter un article"
+msgstr "Add item"
+
+#: templates/erp/cdc_lot.html
+msgid "Modifier l’intitulé du lot"
+msgstr "Edit lot title"
+
+#: templates/erp/cdc_lot.html
+msgid "Articles du lot"
+msgstr "Lot items"
+
+#: templates/erp/cdc_lot.html
+msgid "Unité / conditionnement"
+msgstr "Unit / packaging"
+
+#: templates/erp/cdc_lot.html
+msgid "Action"
+msgstr "Action"
+
+#: templates/erp/cdc_lot.html
+msgid "Catalogue commun — fiche article, fournisseurs et prix"
+msgstr "Shared catalogue — item record, suppliers and prices"
+
+#: templates/erp/cdc_lot.html
+msgid "Exigences structurées"
+msgstr "Structured requirements"
+
+#: templates/erp/cdc_lot.html
+msgid "Aucune exigence structurée."
+msgstr "No structured requirement."
+
+#: templates/erp/cdc_lot.html
+msgid "Ajouter une exigence"
+msgstr "Add requirement"
+
+#: templates/erp/cdc_lot.html
+msgid "Spécifications"
+msgstr "Specifications"
+
+#: templates/erp/cdc_lot.html
+msgid "Taxe"
+msgstr "Tax"
+
+#: templates/erp/cdc_lot.html
+msgid "Déplacer ou dupliquer"
+msgstr "Move or duplicate"
+
+#: templates/erp/cdc_revision.html
+msgid "Révision historique"
+msgstr "Historical revision"
+
+#: templates/erp/cdc_revision.html
+msgid "Cette révision est conservée telle qu’enregistrée. Une modification du catalogue actuel ne modifie pas ces données."
+msgstr "This revision is preserved as recorded. Changes to the current catalogue do not alter these data."
+
+#: templates/erp/cdc_revision.html
+msgid "Objet"
+msgstr "Subject"
+
+#: templates/erp/cdc_workbook.html
+msgid "Lots et articles — Excel"
+msgstr "Lots and items — Excel"
+
+#: templates/erp/cdc_workbook.html
+msgid "Télécharger le classeur du dossier"
+msgstr "Download dossier workbook"
+
+#: templates/erp/cdc_workbook.html
+msgid "Une feuille par lot. Conservez les en-têtes et utilisez un export de la révision actuelle."
+msgstr "One sheet per lot. Keep the headers and use an export of the current revision."
+
+#: templates/erp/cdc_workbook.html
+msgid "Exporter les articles"
+msgstr "Export items"
+
+#: templates/erp/cdc_workbook.html
+msgid "Modèle vide"
+msgstr "Empty template"
+
+#: templates/erp/cdc_workbook.html
+msgid "Exporter avec les estimations DZD"
+msgstr "Export with DZD estimates"
+
+#: templates/erp/cdc_workbook.html
+msgid "Analyser un classeur modifié"
+msgstr "Analyze a modified workbook"
+
+#: templates/erp/cdc_workbook.html
+msgid "Aucune modification du dossier avant examen de l’aperçu et confirmation. Les prix des documents destinés aux soumissionnaires restent vierges."
+msgstr "No dossier change occurs before preview review and confirmation. Prices in bidder-facing documents remain blank."
+
+#: templates/erp/cdc_workbook.html
+msgid "Analyser et prévisualiser"
+msgstr "Analyze and preview"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Vérifier l’import Excel"
+msgstr "Review Excel import"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Retour sans appliquer"
+msgstr "Back without applying"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Ajouts"
+msgstr "Additions"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Modifications"
+msgstr "Changes"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Retraits"
+msgstr "Removals"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Inchangés"
+msgstr "Unchanged"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Avant"
+msgstr "Before"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Après"
+msgstr "After"
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Les estimations DZD renseignées seront importées. Une cellule de prix vide efface l’estimation correspondante. Les taux de taxe restent inchangés."
+msgstr "Entered DZD estimates will be imported. A blank price cell clears the corresponding estimate. Tax rates remain unchanged."
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Cet import a déjà été appliqué."
+msgstr "This import has already been applied."
+
+#: templates/erp/cdc_workbook_preview.html
+msgid "Confirmer et enregistrer la nouvelle révision"
+msgstr "Confirm and save the new revision"
+
