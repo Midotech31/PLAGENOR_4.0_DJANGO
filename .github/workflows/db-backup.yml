@@ -31,8 +31,8 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in $(seq 1 60); do
-            body="$(curl --silent --show-error --fail --connect-timeout 15               --max-time 30 "$PLAGENOR_READY_URL" || true)"
-            deployed="$(python -c 'import json,sys; try: print(json.load(sys.stdin).get("commit","")); except Exception: print("")' <<<"$body")"
+            body="$(curl --silent --show-error --fail --connect-timeout 15 --max-time 30 "$PLAGENOR_READY_URL" || true)"
+            deployed="$(python -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' <<<"$body" 2>/dev/null || true)"
             if [ "$deployed" = "$GITHUB_SHA" ]; then
               echo "Production is ready on commit $GITHUB_SHA"
               exit 0
@@ -50,11 +50,11 @@ jobs:
           set -euo pipefail
           umask 077
 
-          token_response="$(curl --silent --show-error --fail             -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN"             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=plagenor-production-backup")"
-          oidc_token="$(python -c 'import json,sys; print(json.load(sys.stdin)["value"])'             <<<"$token_response")"
+          token_response="$(curl --silent --show-error --fail -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=plagenor-production-backup")"
+          oidc_token="$(python -c 'import json,sys; print(json.load(sys.stdin)["value"])' <<<"$token_response")"
           test -n "$oidc_token"
 
-          curl --silent --show-error --fail-with-body             --connect-timeout 30 --max-time 900             --request POST             --header "Authorization: Bearer $oidc_token"             --header "Accept: application/json"             --output backup-metadata.json             "$BACKUP_ENDPOINT"
+          curl --silent --show-error --fail-with-body --connect-timeout 30 --max-time 900 --request POST --header "Authorization: Bearer $oidc_token" --header "Accept: application/json" --output backup-metadata.json "$BACKUP_ENDPOINT"
 
           python - <<'PY'
           import json
