@@ -4,11 +4,13 @@ from django.views.i18n import JavaScriptCatalog
 
 from dashboard.views import report as report_views
 from plagenor import health
+from plagenor.github_backup import github_database_backup
 
 urlpatterns = [
     # Health / readiness probes for uptime monitoring (no auth, no cache).
     path('healthz', health.healthz, name='healthz'),
     path('readyz', health.readyz, name='readyz'),
+    path('ops/github/database-backup/', github_database_backup, name='github_database_backup'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('erp/', include('erp.urls')),

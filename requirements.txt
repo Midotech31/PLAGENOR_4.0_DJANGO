@@ -18,3 +18,4 @@ pyotp==2.10.0
 cryptography==50.0.0
 pypdf==6.19.0
 defusedxml==0.7.1
+PyJWT==2.15.0
