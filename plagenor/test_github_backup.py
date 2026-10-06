@@ -46,6 +46,16 @@ class GithubBackupOidcPureTests(SimpleTestCase):
         claims["repository_id"] = "wrong"
         self.assertFalse(github_backup._authorized_claims(claims))
 
+    def test_push_from_main_backup_workflow_is_authorized(self):
+        claims = valid_claims()
+        claims["event_name"] = "push"
+        self.assertTrue(github_backup._authorized_claims(claims))
+
+    def test_unexpected_event_is_rejected(self):
+        claims = valid_claims()
+        claims["event_name"] = "pull_request"
+        self.assertFalse(github_backup._authorized_claims(claims))
+
     @patch("scripts.production_inventory_bootstrap._backup_database")
     def test_create_backup_uses_existing_encrypted_backup_implementation(self, backup):
         backup.return_value = {"status": "ok"}

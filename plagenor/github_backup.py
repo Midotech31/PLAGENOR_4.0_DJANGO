@@ -28,7 +28,7 @@ ALLOWED_WORKFLOW_REF = (
     "Midotech31/PLAGENOR_4.0_DJANGO/"
     ".github/workflows/db-backup.yml@refs/heads/main"
 )
-ALLOWED_EVENTS = {"schedule", "workflow_dispatch"}
+ALLOWED_EVENTS = {"push", "schedule", "workflow_dispatch"}
 EXPECTED_SUBJECT = (
     "repo:Midotech31/PLAGENOR_4.0_DJANGO:ref:refs/heads/main"
 )
