@@ -43,6 +43,8 @@ class GithubBackupOidcPureTests(SimpleTestCase):
     def test_authorized_claims_are_strict(self):
         claims = valid_claims()
         self.assertTrue(github_backup._authorized_claims(claims))
+        push_claims = dict(claims, event_name="push")
+        self.assertTrue(github_backup._authorized_claims(push_claims))
         claims["repository_id"] = "wrong"
         self.assertFalse(github_backup._authorized_claims(claims))
 
