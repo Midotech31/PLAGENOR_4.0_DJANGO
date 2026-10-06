@@ -1,6 +1,6 @@
 name: Database Backup
 
-# Weekly production backup (Mondays 03:00 UTC) + on-demand.
+# Weekly production backup (Mondays 03:00 UTC) + on-demand.\n# A push to main triggers a smoke backup only when the backup subsystem itself changes.
 #
 # GitHub stores NO production database credential and NO encryption key.
 # The job requests a short-lived GitHub OIDC token. PLAGENOR validates the
@@ -8,6 +8,14 @@ name: Database Backup
 # pg_dump inside the production container, validates it with pg_restore --list,
 # encrypts it, and persists it to private Supabase-backed storage.
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/db-backup.yml'
+      - 'plagenor/github_backup.py'
+      - 'scripts/production_inventory_bootstrap.py'
+      - 'requirements.txt'
   schedule:
     - cron: '0 3 * * 1'
   workflow_dispatch:
