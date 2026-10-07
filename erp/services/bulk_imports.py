@@ -187,7 +187,7 @@ def _catalog(user,item):
         raise Conflict(_('La présence de cet article a changé depuis l’aperçu.'))
     values={'code':data['code'],'name':data['name'],'category':_get(Category,data['category_code']),
         'base_unit':_get(Unit,data['base_unit_code'])}
-    for name in ('name_en','name_ar','manufacturer_reference','cas','packaging','specifications'):
+    for name in ('name_en','name_ar','manufacturer_reference','catalog_reference','cas','grade','format','packaging','specifications','storage_instructions'):
         if data.get(name):
             values[name]=data[name]
     for name in ('minimum_stock','safety_stock','reorder_point','target_stock','order_multiple','minimum_order_quantity'):
@@ -245,7 +245,9 @@ def _receipt(user,batch,item):
         'unit':_get(Unit,data['unit_code']),'received_on':_date(data['received_on']),'condition':data['condition'],
         'supplier':_get(Party,data.get('supplier_code',''),optional=True),'currency':data.get('currency') or 'DZD',
         'initial':batch.kind=='INITIAL','order_reference':data.get('order_reference',''),
-        'cold_chain_ok':_boolean(data.get('cold_chain_ok',''))}
+        'cold_chain_ok':_boolean(data.get('cold_chain_ok','')),
+        'serial_number':data.get('serial_number',''),'barcode':data.get('barcode',''),
+        'control_notes':data.get('control_notes','')}
     for field in ('expires_on','manufactured_on'):
         if data.get(field):
             values[field]=_date(data[field])

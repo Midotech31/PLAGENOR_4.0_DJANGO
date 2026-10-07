@@ -110,7 +110,9 @@ def index(request):
         from .services.biobank import biobank_scope
         modules.insert(0, {'route': 'erp:sample-list', 'title': _('Échantillons et stockage froid'), 'count': biobank_scope(request.user).count(), 'detail': _('Aliquots, positions et chaîne de possession')})
     if is_manager(request.user) or grants(request.user, Capability.VIEW_STOCK).exists():
-        modules.insert(0, {'route': 'erp:stock-list', 'title': _('Stocks et réceptions'), 'count': operational_scope(StockContainer.objects.all(), request.user).count(), 'detail': _('Lots, contenants, disponibilités et mouvements')})
+        stock_scope = operational_scope(StockContainer.objects.all(), request.user)
+        modules.insert(0, {'route': 'erp:equipment-list', 'title': _('Équipements'), 'count': stock_scope.filter(lot__article__category__code='EQUIPMENT').count(), 'detail': _('Actifs physiques, modèles, références, numéros de série et salles')})
+        modules.insert(0, {'route': 'erp:stock-list', 'title': _('Stocks et réceptions'), 'count': stock_scope.count(), 'detail': _('Lots, contenants, disponibilités et mouvements')})
     return render(request, 'erp/index.html', {'cards': cards, 'modules': modules, 'manager': is_manager(request.user)})
 
 
