@@ -1,5 +1,5 @@
 import copy
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 import hashlib
 import io
 import json
@@ -21,6 +21,7 @@ from erp.cdc.docengine import DocumentError, sha
 from erp.cdc.governance_annex import append_governance_annex
 from erp.cdc.lot_catalog import get_catalog, validate_catalog
 from erp.cdc.word_layout import normalize_word_layout
+from erp.cdc.financial import summarize
 from erp.models import (Article, CdcApproval, CdcClause, CdcClauseRevision, CdcClauseSelection,
                         CdcCriterion, CdcDossier, CdcGeneration, CdcItem, CdcLot, CdcRequirement,
                         CdcReviewDecision, CdcRevision, LocationClosure, Party, StockContainer,
@@ -176,7 +177,7 @@ def document_data(dossier):
 
 
 def _estimates(dossier):
-    return [{'id': str(item.pk), 'article': str(item.article_id) if item.article_id else None,
+    return [{'id': str(item.pk), 'source_key': item.source_key, 'article': str(item.article_id) if item.article_id else None,
              'article_snapshot': item.article_snapshot, 'lot': str(item.lot_id), 'active': item.active,
              'quantity': str(item.quantity), 'purchase_unit': str(item.purchase_unit_id) if item.purchase_unit_id else None,
              'base_factor': str(item.base_factor) if item.base_factor is not None else None,
@@ -185,7 +186,7 @@ def _estimates(dossier):
              'price': str(item.estimated_price) if item.estimated_price is not None else None,
              'tax_rate': str(item.tax_rate) if item.tax_rate is not None else None,
              'currency': item.currency, 'source': item.price_source}
-            for item in CdcItem.objects.filter(lot__dossier=dossier).order_by('lot__position', 'position', 'id')]
+            for item in CdcItem.objects.filter(lot__dossier=dossier).select_related('estimate_supplier').order_by('lot__position', 'position', 'id')]
 
 
 def _revision(user, dossier, reason=''):
@@ -288,8 +289,9 @@ def governance_findings(dossier):
                 'message': str(_('Une clause retenue doit pointer vers une révision validée et active.'))})
     return findings
 
-def dossier_findings(dossier):
-    data = document_data(dossier)
+def dossier_findings(dossier, *, data=None):
+    if data is None:
+        data = document_data(dossier)
     findings = [*controls(data), *governance_snapshot_findings(data)]
     for selection in dossier.clause_selections.filter(active=True).select_related('revision'):
         if selection.revision.status != CdcClauseRevision.Status.ACTIVE:
@@ -601,13 +603,16 @@ def stock_status(user, dossier):
         row = grouped.setdefault(item.article_id, {'article': item.article, 'required': Decimal(0)})
         row['required'] += stock_quantity(item.quantity * item.base_factor)
     rows = []
+    containers = operational_scope(StockContainer.objects.filter(lot__article_id__in=grouped), user)
+    if dossier.work.location_id:
+        containers = containers.filter(location_id__in=LocationClosure.objects.filter(
+            ancestor_id=dossier.work.location_id).values('descendant_id'))
+    available_by_article = {}
+    for article_id, quantity, reserved in containers.filter(usable_filter(timezone.localdate())).values_list(
+        'lot__article_id', 'quantity', 'reserved'):
+        available_by_article[article_id] = available_by_article.get(article_id, Decimal(0)) + quantity - reserved
     for row in grouped.values():
-        containers = operational_scope(StockContainer.objects.filter(lot__article=row['article']), user)
-        if dossier.work.location_id:
-            containers = containers.filter(location_id__in=LocationClosure.objects.filter(
-                ancestor_id=dossier.work.location_id).values('descendant_id'))
-        containers = containers.filter(usable_filter(timezone.localdate()))
-        available = sum((container.quantity - container.reserved for container in containers), Decimal(0))
+        available = available_by_article.get(row['article'].pk, Decimal(0))
         shortage = max(Decimal(0), row['required'] - available)
         state = 'AVAILABLE' if shortage == 0 else ('INSUFFICIENT' if available > 0 else 'ABSENT')
         rows.append({**row, 'available': available, 'shortage': shortage, 'status': state})
@@ -802,15 +807,8 @@ def approve_dossier(user, pk, *, expected, generation_id, reviewed_pages, statem
 def estimate_totals(user, dossier):
     if not cdc_cost_allowed(user, dossier):
         raise PermissionDenied
-    totals, missing = {}, 0
-    for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True):
-        if item.estimated_price is None or item.tax_rate is None:
-            missing += 1
-            continue
-        line = (item.quantity * item.estimated_price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        tax = (line * item.tax_rate / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        current = totals.setdefault(item.currency, {'net': Decimal(0), 'tax': Decimal(0), 'gross': Decimal(0)})
-        current['net'] += line
-        current['tax'] += tax
-        current['gross'] += line + tax
-    return {'currencies': totals, 'incomplete_lines': missing}
+    return summarize([{'id': str(item.pk), 'lot': str(item.lot_id), 'lot_name': item.lot.name,
+        'designation': item.designation, 'unit': item.unit_label, 'quantity': item.quantity,
+        'price': item.estimated_price, 'tax_rate': item.tax_rate, 'currency': item.currency,
+        'source': item.price_source}
+        for item in CdcItem.objects.filter(lot__dossier=dossier, lot__active=True, active=True).select_related('lot')])

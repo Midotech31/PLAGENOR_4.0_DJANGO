@@ -1907,3 +1907,298 @@ msgstr "مغطى بالمخزون"
 
 msgid "à approvisionner"
 msgstr "للتوريد"
+
+msgid "1. Créer et déléguer"
+msgstr "1. إنشاء الملف وتفويض المهمة"
+
+msgid "2. Confirmer les informations"
+msgstr "2. تأكيد المعلومات"
+
+msgid "3. Préparer les lots et articles"
+msgstr "3. إعداد الحصص والمواد"
+
+msgid "4. Estimer le budget"
+msgstr "4. تقدير الميزانية"
+
+msgid "5. Échanger avec Excel et joindre les pièces"
+msgstr "5. تبادل ملفات Excel وإرفاق الوثائق"
+
+msgid "6. Adapter le contenu documentaire"
+msgstr "6. تكييف محتوى الوثيقة"
+
+msgid "7. Générer, examiner et valider"
+msgstr "7. إنشاء الوثائق ومراجعتها والمصادقة عليها"
+
+msgid "8. Consulter l’historique et archiver"
+msgstr "8. الاطلاع على السجل والأرشفة"
+
+msgid "9. Résoudre un blocage"
+msgstr "9. معالجة سبب التعطيل"
+
+msgid "Ajouter une ligne au tableau"
+msgstr "إضافة سطر إلى الجدول"
+
+msgid "Articles incomplets"
+msgstr "مواد ببيانات غير مكتملة"
+
+msgid "Articles à réutiliser"
+msgstr "المواد المراد إعادة استخدامها"
+
+msgid "Associer les pièces utiles au dossier avec les permissions de PLAGENOR."
+msgstr "إرفاق الوثائق المفيدة بالملف وفق صلاحيات بلاجينور."
+
+msgid "Aucun résultat."
+msgstr "لا توجد نتائج."
+
+msgid "Catalogue et réutilisation"
+msgstr "الفهرس وإعادة الاستخدام"
+
+#, python-format
+msgid "Cellule %(number)s"
+msgstr "الخلية %(number)s"
+
+msgid "Cet aperçu a déjà été appliqué. Aucune seconde copie ne sera créée."
+msgstr "تم تطبيق هذه المعاينة بالفعل. لن تُنشأ نسخة إضافية."
+
+msgid "Cet aperçu a expiré. Sélectionnez à nouveau les articles."
+msgstr "انتهت صلاحية المعاينة. حدد المواد من جديد."
+
+msgid "Cette ligne structurelle ou gérée ne peut pas être dupliquée ici. Utilisez les lots, articles ou informations du dossier."
+msgstr "لا يمكن تكرار هذا السطر البنيوي أو المُدار هنا. استخدم استمارات الحصص أو المواد أو معلومات الملف."
+
+msgid "Chaînes du classeur trop volumineuses."
+msgstr "يتجاوز حجم النصوص في المصنف الحد المسموح."
+
+msgid "Choisissez un fichier XLSX de 20 Mo maximum."
+msgstr "اختر ملف XLSX لا يتجاوز حجمه 20 ميغابايت."
+
+msgid "Choisissez une révision historique, sélectionnez les articles, puis vérifiez les copies avant confirmation. Les données sources et les anciennes révisions restent conservées. Les prix doivent être reconfirmés dans le dossier de destination."
+msgstr "اختر مراجعة سابقة، وحدد المواد، ثم تحقق من النسخ قبل التأكيد. تُحفظ البيانات الأصلية والمراجعات السابقة. يجب تأكيد الأسعار من جديد في الملف المستهدف."
+
+msgid "Classeur financier du dossier"
+msgstr "المصنف المالي للملف"
+
+msgid "Confirmer et enregistrer"
+msgstr "تأكيد وحفظ"
+
+msgid "Confirmez explicitement la copie des articles sélectionnés."
+msgstr "أكد صراحة نسخ المواد المحددة."
+
+msgid "Conservez au moins un article à réutiliser."
+msgstr "احتفظ بمادة واحدة على الأقل لإعادة استخدامها."
+
+msgid "Consultez les clauses et tableaux. Modifiez uniquement les paragraphes autorisés et justifiez les changements. Les tableaux gérés par les lots et informations doivent être adaptés dans leurs fiches. Les ajouts de lignes simples conservent la structure du modèle ; une structure incompatible est bloquée."
+msgstr "راجع البنود والجداول. عدل الفقرات المسموح بها فقط وبرر التغييرات. تُعدل الجداول المُدارة بواسطة الحصص ومعلومات الملف في استماراتها. تحافظ إضافة الأسطر البسيطة على بنية النموذج، وتُمنع البنى غير المتوافقة."
+
+msgid "Des articles sont absents du classeur financier. Aucun retrait implicite n’est autorisé."
+msgstr "توجد مواد مفقودة في المصنف المالي. لا يُسمح بالحذف الضمني."
+
+msgid "Estimations"
+msgstr "التقديرات"
+
+msgid "Estimations et totaux financiers"
+msgstr "التقديرات والمجاميع المالية"
+
+msgid "Estimations par article"
+msgstr "التقديرات حسب المادة"
+
+msgid "Exporter le classeur financier"
+msgstr "تصدير المصنف المالي"
+
+msgid "Guide du cahier des charges"
+msgstr "دليل دفتر الشروط"
+
+msgid "Générez le Word et le PDF de la révision courante. Examinez le contenu et toutes les pages, puis soumettez le dossier. Les revues technique, administrative et financière requises précèdent la validation finale. Une révision modifiée nécessite une nouvelle génération et de nouvelles revues."
+msgstr "أنشئ ملفي Word وPDF للمراجعة الحالية. تحقق من المحتوى وجميع الصفحات، ثم أرسل الملف للمراجعة. تسبق المراجعات التقنية والإدارية والمالية المطلوبة المصادقة النهائية. يستلزم تعديل المراجعة إنشاء وثائق وإجراء مراجعات جديدة."
+
+msgid "Identifiant d’article inconnu ou dupliqué dans le classeur financier."
+msgstr "معرف مادة غير معروف أو مكرر في المصنف المالي."
+
+msgid "Identifiant interne"
+msgstr "المعرف الداخلي"
+
+msgid "Import général du CDC"
+msgstr "مركز استيراد دفتر الشروط"
+
+msgid "Importer le classeur financier"
+msgstr "استيراد المصنف المالي"
+
+msgid "Importer les besoins techniques et les quantités, avec mise à jour ou remplacement contrôlé. Les formats à neuf colonnes et l’ancien format à huit colonnes sont acceptés."
+msgstr "استورد الاحتياجات التقنية والكميات مع تحديث أو استبدال مراقب. يُقبل التنسيق ذو تسعة أعمدة والتنسيق السابق ذو ثمانية أعمدة."
+
+msgid "Importer les quantités, prix et taux depuis le classeur financier signé du dossier. Les montants HT, taxes et TTC sont recalculés."
+msgstr "استورد الكميات والأسعار والنسب من المصنف المالي الموقّع للملف. تُعاد حسابات المبالغ دون الرسوم والرسوم والمبالغ بجميع الرسوم."
+
+msgid "Insérer après la ligne du modèle"
+msgstr "الإدراج بعد سطر النموذج"
+
+msgid "Je confirme la copie indépendante des articles retenus"
+msgstr "أؤكد النسخ المستقل للمواد المختارة"
+
+msgid "Justifiez la modification du tableau documentaire."
+msgstr "برر تعديل جدول الوثيقة."
+
+msgid "Justifiez l’import et indiquez la source des prix."
+msgstr "برر الاستيراد وحدد مصدر الأسعار."
+
+msgid "La reprise d’une révision concerne un CDC. La restauration complète des sauvegardes relève de l’administration de la plateforme et doit être vérifiée dans un environnement isolé."
+msgstr "تخص استعادة المراجعة ملف دفتر شروط واحدًا. تتولى إدارة المنصة استعادة النسخ الاحتياطية الكاملة، ويجب التحقق منها في بيئة معزولة."
+
+msgid "La révision source ne correspond plus à cet aperçu."
+msgstr "لم تعد المراجعة المصدر مطابقة لهذه المعاينة."
+
+msgid "Le classeur financier contient une valeur incompatible avec Excel."
+msgstr "يحتوي المصنف المالي على قيمة غير متوافقة مع Excel."
+
+msgid "Le classeur financier est en DZD ; aucune conversion implicite n’est autorisée."
+msgstr "المصنف المالي بالدينار الجزائري؛ لا يُسمح بالتحويل الضمني للعملة."
+
+msgid "Le contenu de l’aperçu ne correspond plus à la sélection."
+msgstr "لم يعد محتوى المعاينة مطابقًا للاختيار."
+
+msgid "Le gestionnaire crée le dossier dans la famille appropriée et désigne son responsable. La délégation fixe les droits de modification et, séparément, l’accès aux estimations. Une réaffectation retire les droits de l’ancien responsable."
+msgstr "ينشئ المسؤول الملف ضمن الفئة المناسبة ويعين المكلف به. يحدد التفويض صلاحيات التعديل والوصول إلى التقديرات بشكل منفصل. تؤدي إعادة التكليف إلى سحب صلاحيات المسؤول السابق."
+
+msgid "Les anciennes révisions et générations sont conservées. Le gestionnaire peut reprendre une ancienne révision dans un dossier modifiable : cette action crée une nouvelle révision. L’archivage rend le dossier consultable en lecture seule."
+msgstr "تُحفظ المراجعات السابقة والوثائق المنشأة. يمكن للمسؤول استعادة مراجعة سابقة في ملف قابل للتعديل؛ وتنشئ العملية مراجعة جديدة. تبقى الملفات المؤرشفة متاحة للقراءة فقط."
+
+msgid "Les articles ont été copiés dans une nouvelle révision, sans les estimations historiques."
+msgstr "نُسخت المواد إلى مراجعة جديدة دون التقديرات المالية السابقة."
+
+msgid "Les estimations sont internes. Elles ne remplissent jamais les prix du cahier des charges réservés aux soumissionnaires. Les articles sans prix ou taux confirmé sont signalés comme incomplets."
+msgstr "التقديرات داخلية ولا تُدرج في خانات أسعار دفتر الشروط المخصصة للمتعهدين. تُميز المواد التي لم يُؤكد سعرها أو نسبتها الضريبية بأنها غير مكتملة."
+
+msgid "Les imports du catalogue, des emplacements et du stock sont gérés dans le référentiel commun, avec aperçu et confirmation."
+msgstr "تُدار عمليات استيراد الفهرس والمواقع والمخزون في المرجع المشترك، مع المعاينة والتأكيد."
+
+msgid "Les liens externes ne sont pas acceptés."
+msgstr "لا تُقبل الروابط الخارجية."
+
+msgid "Les lots, désignations et unités se modifient dans le dossier, pas dans ce classeur."
+msgstr "عدّل الحصص والتسميات والوحدات في الملف وليس في هذا المصنف."
+
+msgid "Les quantités, prix et taux du classeur financier seront importés. Les totaux sont recalculés. Une cellule de prix ou de taux vide efface cette valeur."
+msgstr "ستُستورد الكميات والأسعار والنسب من المصنف المالي، وتُعاد حسابات المجاميع. تؤدي خلية السعر أو النسبة الفارغة إلى مسح القيمة المقابلة."
+
+msgid "Les tableaux suivent le modèle institutionnel. Les informations, lots et articles se modifient dans leurs fiches. Les autres paragraphes autorisés et les lignes simples peuvent être adaptés avec justification, sans modifier le modèle original."
+msgstr "تتبع الجداول النموذج المؤسسي. تُعدل المعلومات والحصص والمواد في استماراتها. يمكن تكييف الفقرات الأخرى المسموح بها والأسطر البسيطة مع التبرير، دون تعديل النموذج الأصلي."
+
+msgid "Les utilisateurs autorisés renseignent les prix unitaires hors taxes, les taux et leurs sources. Le taux proposé pour un nouvel article est 19 % et doit être confirmé. Les totaux par article, lot et dossier utilisent les mêmes règles d’arrondi. Les estimations restent internes et ne remplissent jamais le Word destiné aux soumissionnaires."
+msgstr "يدخل المستخدمون المخولون الأسعار الوحدوية دون الرسوم والنسب ومصادرها. تُقترح نسبة 19 % للمادة الجديدة ويجب تأكيدها. تعتمد مجاميع المواد والحصص والملف قواعد التقريب نفسها. تبقى التقديرات داخلية ولا تُدرج في ملف Word الموجه للمتعهدين."
+
+msgid "Lignes ajoutées dans ce dossier"
+msgstr "الأسطر المضافة إلى هذا الملف"
+
+msgid "L’identité du classeur est invalide ou le dossier a changé. Téléchargez sa révision actuelle."
+msgstr "هوية المصنف غير صالحة أو تغيّر الملف. حمّل مراجعته الحالية."
+
+msgid "L’unité liée au catalogue doit être conservée dans la copie."
+msgstr "يجب الاحتفاظ بالوحدة المرتبطة بالفهرس في النسخة."
+
+msgid "Macros, connexions ou objets incorporés interdits."
+msgstr "وحدات الماكرو والاتصالات والكائنات المضمنة ممنوعة."
+
+msgid "Mode d’emploi"
+msgstr "تعليمات الاستخدام"
+
+msgid "Modifier le paragraphe"
+msgstr "تعديل الفقرة"
+
+msgid "Modifiez uniquement les quantités, prix unitaires et taux. Les totaux sont recalculés après import. Une cellule de prix ou de taux vide efface cette valeur."
+msgstr "عدّل الكميات والأسعار الوحدوية والنسب فقط. تُعاد حسابات المجاميع بعد الاستيراد. تؤدي خلية السعر أو النسبة الفارغة إلى مسح القيمة المقابلة."
+
+msgid "Ouvrir les estimations"
+msgstr "فتح التقديرات"
+
+msgid "Pour réutiliser des besoins historiques, choisissez une révision source, sélectionnez les articles et leur lot de destination, puis modifiez les copies dans l’aperçu. La confirmation crée une nouvelle révision sans modifier les originaux ni reprendre leurs prix."
+msgstr "لإعادة استخدام الاحتياجات السابقة، اختر المراجعة المصدر وحدد المواد وحصتها المستهدفة، ثم عدّل النسخ في المعاينة. ينشئ التأكيد مراجعة جديدة دون تعديل الأصول أو نسخ أسعارها."
+
+msgid "Préparation du dossier"
+msgstr "إعداد الملف"
+
+msgid "Prévisualiser la réutilisation"
+msgstr "معاينة إعادة الاستخدام"
+
+msgid "Rechercher dans les articles"
+msgstr "البحث في المواد"
+
+msgid "Renseignez les besoins, quantités, unités et spécifications. Rattachez les articles au catalogue commun pour vérifier le stock. Vérifiez l’intitulé arabe des lots et leur correspondance avec le modèle. Un lot retiré reste dans l’historique."
+msgstr "أدخل الاحتياجات والكميات والوحدات والمواصفات. اربط المواد بالفهرس المشترك للتحقق من المخزون. تحقق من التسميات العربية للحصص ومطابقتها للنموذج. تبقى الحصص المسحوبة محفوظة في السجل."
+
+msgid "Retirer une ligne ajoutée"
+msgstr "إزالة سطر مضاف"
+
+msgid "Référentiels et stock"
+msgstr "البيانات المرجعية والمخزون"
+
+msgid "Révision source"
+msgstr "المراجعة المصدر"
+
+msgid "Si le dossier a changé, rechargez la page et recommencez l’aperçu depuis la révision actuelle. Un aperçu expire après 24 heures. Si un droit a été retiré, contactez le gestionnaire. Si la conversion échoue, corrigez le problème signalé avant de considérer le document comme valide."
+msgstr "إذا تغيّر الملف، أعد تحميل الصفحة وابدأ المعاينة من المراجعة الحالية. تنتهي صلاحية المعاينات بعد 24 ساعة. اتصل بالمسؤول عند سحب صلاحية. إذا فشل التحويل، عالج المشكلة المبلغ عنها قبل اعتبار الوثيقة صالحة."
+
+msgid "Style numérique Excel invalide."
+msgstr "تنسيق رقمي غير صالح في Excel."
+
+msgid "Sélectionnez des articles distincts et justifiez leur réutilisation."
+msgstr "حدد مواد غير مكررة وبرر إعادة استخدامها."
+
+msgid "Sélectionnez une ligne ajoutée et justifiez son retrait."
+msgstr "حدد سطرًا مضافًا وبرر إزالته."
+
+msgid "Tableau"
+msgstr "جدول"
+
+msgid "Tableaux du modèle"
+msgstr "جداول النموذج"
+
+msgid "Totaux financiers après import"
+msgstr "المجاميع المالية بعد الاستيراد"
+
+msgid "Totaux par lot"
+msgstr "المجاميع حسب الحصة"
+
+msgid "Téléchargez le modèle de la révision actuelle. Chaque import passe par un aperçu puis une confirmation ; les anciennes révisions restent conservées."
+msgstr "حمّل نموذج المراجعة الحالية. تتطلب كل عملية استيراد معاينة ثم تأكيدًا، مع الاحتفاظ بالمراجعات السابقة."
+
+msgid "Un article sélectionné ne fait pas partie de cette révision."
+msgstr "إحدى المواد المحددة لا تنتمي إلى هذه المراجعة."
+
+msgid "Une quantité, un prix ou un taux ne peut pas être une date Excel."
+msgstr "لا يمكن أن تكون الكمية أو السعر أو النسبة تاريخًا في Excel."
+
+msgid "Utilisez le modèle téléchargé pour la révision actuelle. L’import technique conserve les articles absents en mode mise à jour ou les retire en mode remplacement. Le classeur financier modifie uniquement quantités, prix et taux. Examinez l’aperçu avant confirmation. Les formules, macros, liens externes et identifiants inconnus sont refusés."
+msgstr "استخدم النموذج المحمل للمراجعة الحالية. يحتفظ الاستيراد التقني بالمواد الغائبة في وضع التحديث أو يسحبها في وضع الاستبدال. يعدل المصنف المالي الكميات والأسعار والنسب فقط. راجع المعاينة قبل التأكيد. تُرفض الصيغ ووحدات الماكرو والروابط الخارجية والمعرفات غير المعروفة."
+
+msgid "Vous pouvez modifier ou écarter les copies ci-dessous. Aucune donnée métier ne change avant confirmation. Cet aperçu expire après 24 heures."
+msgstr "يمكنك تعديل النسخ أدناه أو استبعادها. لا تتغير بيانات العمل قبل التأكيد. تنتهي صلاحية هذه المعاينة بعد 24 ساعة."
+
+msgid "Vérifier les articles à réutiliser"
+msgstr "مراجعة المواد المراد إعادة استخدامها"
+
+msgid "Vérifiez la référence, les objets français et arabe, l’exercice, le financement, les délais et les horaires. Confirmez uniquement les informations vérifiées pour cette opération. Un contrôle bloquant doit être corrigé avant génération."
+msgstr "تحقق من المرجع والموضوعين الفرنسي والعربي والسنة المالية والتمويل والآجال والمواعيد. أكد المعلومات التي تم التحقق منها لهذه العملية فقط. يجب معالجة الملاحظات المانعة قبل إنشاء الوثائق."
+
+msgid "Écarter cet article de la copie"
+msgstr "استبعاد هذه المادة من النسخة"
+
+msgid "Tout sélectionner"
+msgstr "تحديد الكل"
+
+msgid "Tout désélectionner"
+msgstr "إلغاء تحديد الكل"
+
+msgid "Traitement en cours. Attendez le résultat avant de quitter cette page."
+msgstr "جاري المعالجة. انتظر النتيجة قبل مغادرة هذه الصفحة."
+
+msgid "Le lot de cet aperçu est introuvable ou a été retiré."
+msgstr "لم تُعثر على حصة هذه المعاينة أو تم سحبها."
+
+msgid "Le classeur financier est incomplet. Téléchargez un nouveau modèle."
+msgstr "المصنف المالي غير مكتمل. حمّل نموذجًا جديدًا."
+
+msgid "Les utilisateurs autorisés renseignent les prix unitaires hors taxes, les taux et leurs sources. Le taux proposé pour un nouvel article est 19 %% et doit être confirmé. Les totaux par article, lot et dossier utilisent les mêmes règles d’arrondi. Les estimations restent internes et ne remplissent jamais le Word destiné aux soumissionnaires."
+msgstr "يدخل المستخدمون المخولون الأسعار الوحدوية دون الرسوم والنسب ومصادرها. تُقترح نسبة 19 %% للمادة الجديدة ويجب تأكيدها. تعتمد مجاميع المواد والحصص والملف قواعد التقريب نفسها. تبقى التقديرات داخلية ولا تُدرج في ملف Word الموجه للمتعهدين."
+
+msgid "Taux de taxe (%%)"
+msgstr "نسبة الرسوم (%%)"

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import cdc_exchange_views
+from . import cdc_completion_views
 from . import identification, report_views, preparation_views, safety_views, alert_views, import_views, procurement_views, views, work_views, stock_views, inventory_views, cdc_views, biobank_views, planning_views, consumption_views
 
 app_name = 'erp'
@@ -86,6 +87,15 @@ urlpatterns = [
     path('biobank/incidents/<uuid:pk>/resolve/', biobank_views.incident_resolve, name='incident-resolve'),
     path('biobank/transfers/new/', biobank_views.mass_transfer, name='mass-transfer'),
     path('biobank/transfers/<uuid:pk>/', biobank_views.mass_transfer_detail, name='mass-transfer-detail'),
+    path('cdc/<uuid:pk>/catalogue/', cdc_completion_views.catalogue, name='cdc-catalogue'),
+    path('cdc/<uuid:pk>/tables/', cdc_completion_views.tables, name='cdc-tables'),
+    path('cdc/<uuid:pk>/tables/add/', cdc_completion_views.table_add, name='cdc-table-add'),
+    path('cdc/<uuid:pk>/tables/remove/<int:index>/', cdc_completion_views.table_remove, name='cdc-table-remove'),
+    path('cdc/<uuid:pk>/import/', cdc_completion_views.import_home, name='cdc-import-home'),
+    path('cdc/<uuid:pk>/guide/', cdc_completion_views.guide, name='cdc-guide'),
+    path('cdc/<uuid:pk>/finances/', cdc_completion_views.finance, name='cdc-finance'),
+    path('cdc/<uuid:pk>/finances/download/', cdc_completion_views.financial_download, name='cdc-financial-download'),
+    path('cdc/reuse-preview/<uuid:pk>/', cdc_completion_views.reuse_preview, name='cdc-reuse-preview'),
     path('cdc/<uuid:pk>/excel/', cdc_exchange_views.workbook, name='cdc-workbook'),
     path('cdc/<uuid:pk>/excel/download/', cdc_exchange_views.workbook_download, name='cdc-workbook-download'),
     path('cdc/excel-preview/<uuid:pk>/', cdc_exchange_views.workbook_preview, name='cdc-workbook-preview'),

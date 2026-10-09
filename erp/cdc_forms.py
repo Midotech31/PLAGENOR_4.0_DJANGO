@@ -90,6 +90,8 @@ class CdcItemForm(VersionedForm):
         if not work_allowed(self.user, dossier.work, costs=True):
             for name in ('estimate_supplier', 'estimated_price', 'tax_rate', 'price_source', 'currency'):
                 del self.fields[name]
+        if 'tax_rate' in self.fields and self.instance._state.adding:
+            self.initial['tax_rate'] = '19.00'
         groups = [(_('Référentiel commun'), ['article', 'purchase_unit', 'refresh_catalog']),
                   (_('Besoin technique'), ['designation', 'specifications', 'unit_label', 'packaging', 'quantity', 'details', 'active'])]
         if 'estimated_price' in self.fields:

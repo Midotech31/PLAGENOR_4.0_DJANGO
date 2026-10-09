@@ -1925,3 +1925,298 @@ msgstr "covered by stock"
 
 msgid "à approvisionner"
 msgstr "to procure"
+
+msgid "1. Créer et déléguer"
+msgstr "1. Create and delegate"
+
+msgid "2. Confirmer les informations"
+msgstr "2. Confirm the information"
+
+msgid "3. Préparer les lots et articles"
+msgstr "3. Prepare lots and items"
+
+msgid "4. Estimer le budget"
+msgstr "4. Estimate the budget"
+
+msgid "5. Échanger avec Excel et joindre les pièces"
+msgstr "5. Exchange Excel files and attach documents"
+
+msgid "6. Adapter le contenu documentaire"
+msgstr "6. Adapt document content"
+
+msgid "7. Générer, examiner et valider"
+msgstr "7. Generate, review and approve"
+
+msgid "8. Consulter l’historique et archiver"
+msgstr "8. View history and archive"
+
+msgid "9. Résoudre un blocage"
+msgstr "9. Resolve a blocking issue"
+
+msgid "Ajouter une ligne au tableau"
+msgstr "Add a table row"
+
+msgid "Articles incomplets"
+msgstr "Incomplete items"
+
+msgid "Articles à réutiliser"
+msgstr "Items to reuse"
+
+msgid "Associer les pièces utiles au dossier avec les permissions de PLAGENOR."
+msgstr "Attach supporting documents using PLAGENOR permissions."
+
+msgid "Aucun résultat."
+msgstr "No results."
+
+msgid "Catalogue et réutilisation"
+msgstr "Catalogue and reuse"
+
+#, python-format
+msgid "Cellule %(number)s"
+msgstr "Cell %(number)s"
+
+msgid "Cet aperçu a déjà été appliqué. Aucune seconde copie ne sera créée."
+msgstr "This preview has already been applied. No duplicate copy will be created."
+
+msgid "Cet aperçu a expiré. Sélectionnez à nouveau les articles."
+msgstr "This preview has expired. Select the items again."
+
+msgid "Cette ligne structurelle ou gérée ne peut pas être dupliquée ici. Utilisez les lots, articles ou informations du dossier."
+msgstr "This structural or managed row cannot be duplicated here. Use the dossier’s lots, items or information forms."
+
+msgid "Chaînes du classeur trop volumineuses."
+msgstr "Workbook text exceeds the size limit."
+
+msgid "Choisissez un fichier XLSX de 20 Mo maximum."
+msgstr "Choose an XLSX file no larger than 20 MB."
+
+msgid "Choisissez une révision historique, sélectionnez les articles, puis vérifiez les copies avant confirmation. Les données sources et les anciennes révisions restent conservées. Les prix doivent être reconfirmés dans le dossier de destination."
+msgstr "Choose a historical revision, select items, then check the copies before confirmation. Source data and earlier revisions are preserved. Prices must be confirmed again in the destination dossier."
+
+msgid "Classeur financier du dossier"
+msgstr "Dossier financial workbook"
+
+msgid "Confirmer et enregistrer"
+msgstr "Confirm and save"
+
+msgid "Confirmez explicitement la copie des articles sélectionnés."
+msgstr "Explicitly confirm copying the selected items."
+
+msgid "Conservez au moins un article à réutiliser."
+msgstr "Keep at least one item to reuse."
+
+msgid "Consultez les clauses et tableaux. Modifiez uniquement les paragraphes autorisés et justifiez les changements. Les tableaux gérés par les lots et informations doivent être adaptés dans leurs fiches. Les ajouts de lignes simples conservent la structure du modèle ; une structure incompatible est bloquée."
+msgstr "Review clauses and tables. Edit only permitted paragraphs and justify changes. Tables managed through lots or dossier information must be updated in those forms. Simple row additions preserve the template structure; incompatible structures are blocked."
+
+msgid "Des articles sont absents du classeur financier. Aucun retrait implicite n’est autorisé."
+msgstr "Items are missing from the financial workbook. Implicit removal is not permitted."
+
+msgid "Estimations"
+msgstr "Estimates"
+
+msgid "Estimations et totaux financiers"
+msgstr "Financial estimates and totals"
+
+msgid "Estimations par article"
+msgstr "Estimates by item"
+
+msgid "Exporter le classeur financier"
+msgstr "Export financial workbook"
+
+msgid "Guide du cahier des charges"
+msgstr "Terms of reference guide"
+
+msgid "Générez le Word et le PDF de la révision courante. Examinez le contenu et toutes les pages, puis soumettez le dossier. Les revues technique, administrative et financière requises précèdent la validation finale. Une révision modifiée nécessite une nouvelle génération et de nouvelles revues."
+msgstr "Generate Word and PDF files for the current revision. Check the content and every page, then submit the dossier. Required technical, administrative and financial reviews precede final approval. A changed revision requires new documents and new reviews."
+
+msgid "Identifiant d’article inconnu ou dupliqué dans le classeur financier."
+msgstr "Unknown or duplicate item identifier in the financial workbook."
+
+msgid "Identifiant interne"
+msgstr "Internal identifier"
+
+msgid "Import général du CDC"
+msgstr "CDC import centre"
+
+msgid "Importer le classeur financier"
+msgstr "Import financial workbook"
+
+msgid "Importer les besoins techniques et les quantités, avec mise à jour ou remplacement contrôlé. Les formats à neuf colonnes et l’ancien format à huit colonnes sont acceptés."
+msgstr "Import technical requirements and quantities using controlled update or replacement. Both the nine-column format and the legacy eight-column format are accepted."
+
+msgid "Importer les quantités, prix et taux depuis le classeur financier signé du dossier. Les montants HT, taxes et TTC sont recalculés."
+msgstr "Import quantities, prices and tax rates from the dossier’s signed financial workbook. Net amounts, taxes and gross totals are recalculated."
+
+msgid "Insérer après la ligne du modèle"
+msgstr "Insert after template row"
+
+msgid "Je confirme la copie indépendante des articles retenus"
+msgstr "I confirm independent copying of the retained items"
+
+msgid "Justifiez la modification du tableau documentaire."
+msgstr "Justify the document table change."
+
+msgid "Justifiez l’import et indiquez la source des prix."
+msgstr "Justify the import and specify the price source."
+
+msgid "La reprise d’une révision concerne un CDC. La restauration complète des sauvegardes relève de l’administration de la plateforme et doit être vérifiée dans un environnement isolé."
+msgstr "Restoring a revision concerns one CDC dossier. Full backup restoration is managed by platform administrators and must be verified in an isolated environment."
+
+msgid "La révision source ne correspond plus à cet aperçu."
+msgstr "The source revision no longer matches this preview."
+
+msgid "Le classeur financier contient une valeur incompatible avec Excel."
+msgstr "The financial workbook contains a value incompatible with Excel."
+
+msgid "Le classeur financier est en DZD ; aucune conversion implicite n’est autorisée."
+msgstr "The financial workbook uses DZD; implicit currency conversion is not permitted."
+
+msgid "Le contenu de l’aperçu ne correspond plus à la sélection."
+msgstr "The preview content no longer matches the selection."
+
+msgid "Le gestionnaire crée le dossier dans la famille appropriée et désigne son responsable. La délégation fixe les droits de modification et, séparément, l’accès aux estimations. Une réaffectation retire les droits de l’ancien responsable."
+msgstr "The manager creates a dossier in the appropriate family and assigns its owner. Delegation determines editing rights and, separately, access to estimates. Reassignment revokes the previous owner’s rights."
+
+msgid "Les anciennes révisions et générations sont conservées. Le gestionnaire peut reprendre une ancienne révision dans un dossier modifiable : cette action crée une nouvelle révision. L’archivage rend le dossier consultable en lecture seule."
+msgstr "Earlier revisions and generated documents are preserved. The manager can restore an earlier revision in an editable dossier; this creates a new revision. Archived dossiers remain available in read-only mode."
+
+msgid "Les articles ont été copiés dans une nouvelle révision, sans les estimations historiques."
+msgstr "Items were copied into a new revision without historical estimates."
+
+msgid "Les estimations sont internes. Elles ne remplissent jamais les prix du cahier des charges réservés aux soumissionnaires. Les articles sans prix ou taux confirmé sont signalés comme incomplets."
+msgstr "Estimates are internal and never populate the bidder price fields in the terms of reference. Items without a confirmed price or tax rate are marked incomplete."
+
+msgid "Les imports du catalogue, des emplacements et du stock sont gérés dans le référentiel commun, avec aperçu et confirmation."
+msgstr "Catalogue, location and stock imports use the shared reference data with preview and confirmation."
+
+msgid "Les liens externes ne sont pas acceptés."
+msgstr "External links are not accepted."
+
+msgid "Les lots, désignations et unités se modifient dans le dossier, pas dans ce classeur."
+msgstr "Edit lots, item names and units in the dossier rather than this workbook."
+
+msgid "Les quantités, prix et taux du classeur financier seront importés. Les totaux sont recalculés. Une cellule de prix ou de taux vide efface cette valeur."
+msgstr "Quantities, prices and tax rates will be imported from the financial workbook. Totals are recalculated. An empty price or rate cell clears that value."
+
+msgid "Les tableaux suivent le modèle institutionnel. Les informations, lots et articles se modifient dans leurs fiches. Les autres paragraphes autorisés et les lignes simples peuvent être adaptés avec justification, sans modifier le modèle original."
+msgstr "Tables follow the institutional template. Edit information, lots and items in their own forms. Other permitted paragraphs and simple rows may be adapted with justification, leaving the original template unchanged."
+
+msgid "Les utilisateurs autorisés renseignent les prix unitaires hors taxes, les taux et leurs sources. Le taux proposé pour un nouvel article est 19 % et doit être confirmé. Les totaux par article, lot et dossier utilisent les mêmes règles d’arrondi. Les estimations restent internes et ne remplissent jamais le Word destiné aux soumissionnaires."
+msgstr "Authorized users enter net unit prices, tax rates and their sources. A 19 % rate is proposed for a new item and must be confirmed. Item, lot and dossier totals use the same rounding rules. Estimates remain internal and never populate the Word document for bidders."
+
+msgid "Lignes ajoutées dans ce dossier"
+msgstr "Rows added to this dossier"
+
+msgid "L’identité du classeur est invalide ou le dossier a changé. Téléchargez sa révision actuelle."
+msgstr "The workbook identity is invalid or the dossier has changed. Download its current revision."
+
+msgid "L’unité liée au catalogue doit être conservée dans la copie."
+msgstr "The catalogue-linked unit must be retained in the copy."
+
+msgid "Macros, connexions ou objets incorporés interdits."
+msgstr "Macros, connections and embedded objects are prohibited."
+
+msgid "Mode d’emploi"
+msgstr "Instructions"
+
+msgid "Modifier le paragraphe"
+msgstr "Edit paragraph"
+
+msgid "Modifiez uniquement les quantités, prix unitaires et taux. Les totaux sont recalculés après import. Une cellule de prix ou de taux vide efface cette valeur."
+msgstr "Edit only quantities, unit prices and tax rates. Totals are recalculated after import. An empty price or rate cell clears that value."
+
+msgid "Ouvrir les estimations"
+msgstr "Open estimates"
+
+msgid "Pour réutiliser des besoins historiques, choisissez une révision source, sélectionnez les articles et leur lot de destination, puis modifiez les copies dans l’aperçu. La confirmation crée une nouvelle révision sans modifier les originaux ni reprendre leurs prix."
+msgstr "To reuse historical requirements, choose a source revision, select items and their destination lot, then edit the copies in the preview. Confirmation creates a new revision without changing the originals or copying their prices."
+
+msgid "Préparation du dossier"
+msgstr "Dossier preparation"
+
+msgid "Prévisualiser la réutilisation"
+msgstr "Preview reuse"
+
+msgid "Rechercher dans les articles"
+msgstr "Search items"
+
+msgid "Renseignez les besoins, quantités, unités et spécifications. Rattachez les articles au catalogue commun pour vérifier le stock. Vérifiez l’intitulé arabe des lots et leur correspondance avec le modèle. Un lot retiré reste dans l’historique."
+msgstr "Enter requirements, quantities, units and specifications. Link items to the shared catalogue to check stock. Verify Arabic lot names and their template mapping. Removed lots remain in history."
+
+msgid "Retirer une ligne ajoutée"
+msgstr "Remove an added row"
+
+msgid "Référentiels et stock"
+msgstr "Reference data and stock"
+
+msgid "Révision source"
+msgstr "Source revision"
+
+msgid "Si le dossier a changé, rechargez la page et recommencez l’aperçu depuis la révision actuelle. Un aperçu expire après 24 heures. Si un droit a été retiré, contactez le gestionnaire. Si la conversion échoue, corrigez le problème signalé avant de considérer le document comme valide."
+msgstr "If the dossier has changed, reload the page and restart the preview from the current revision. Previews expire after 24 hours. Contact the manager if access was revoked. If conversion fails, resolve the reported issue before considering the document valid."
+
+msgid "Style numérique Excel invalide."
+msgstr "Invalid Excel numeric style."
+
+msgid "Sélectionnez des articles distincts et justifiez leur réutilisation."
+msgstr "Select distinct items and justify their reuse."
+
+msgid "Sélectionnez une ligne ajoutée et justifiez son retrait."
+msgstr "Select an added row and justify its removal."
+
+msgid "Tableau"
+msgstr "Table"
+
+msgid "Tableaux du modèle"
+msgstr "Template tables"
+
+msgid "Totaux financiers après import"
+msgstr "Financial totals after import"
+
+msgid "Totaux par lot"
+msgstr "Totals by lot"
+
+msgid "Téléchargez le modèle de la révision actuelle. Chaque import passe par un aperçu puis une confirmation ; les anciennes révisions restent conservées."
+msgstr "Download the template for the current revision. Every import requires preview and confirmation; earlier revisions are preserved."
+
+msgid "Un article sélectionné ne fait pas partie de cette révision."
+msgstr "A selected item does not belong to this revision."
+
+msgid "Une quantité, un prix ou un taux ne peut pas être une date Excel."
+msgstr "A quantity, price or tax rate cannot be an Excel date."
+
+msgid "Utilisez le modèle téléchargé pour la révision actuelle. L’import technique conserve les articles absents en mode mise à jour ou les retire en mode remplacement. Le classeur financier modifie uniquement quantités, prix et taux. Examinez l’aperçu avant confirmation. Les formules, macros, liens externes et identifiants inconnus sont refusés."
+msgstr "Use the template downloaded for the current revision. Technical import preserves absent items in update mode or removes them in replacement mode. The financial workbook changes only quantities, prices and tax rates. Review the preview before confirming. Formulas, macros, external links and unknown identifiers are rejected."
+
+msgid "Vous pouvez modifier ou écarter les copies ci-dessous. Aucune donnée métier ne change avant confirmation. Cet aperçu expire après 24 heures."
+msgstr "You may edit or exclude the copies below. No business data changes before confirmation. This preview expires after 24 hours."
+
+msgid "Vérifier les articles à réutiliser"
+msgstr "Review items to reuse"
+
+msgid "Vérifiez la référence, les objets français et arabe, l’exercice, le financement, les délais et les horaires. Confirmez uniquement les informations vérifiées pour cette opération. Un contrôle bloquant doit être corrigé avant génération."
+msgstr "Verify the reference, French and Arabic subjects, budget year, funding, deadlines and times. Confirm only information verified for this operation. Resolve blocking findings before generating documents."
+
+msgid "Écarter cet article de la copie"
+msgstr "Exclude this item from the copy"
+
+msgid "Tout sélectionner"
+msgstr "Select all"
+
+msgid "Tout désélectionner"
+msgstr "Clear selection"
+
+msgid "Traitement en cours. Attendez le résultat avant de quitter cette page."
+msgstr "Processing. Wait for the result before leaving this page."
+
+msgid "Le lot de cet aperçu est introuvable ou a été retiré."
+msgstr "The preview lot could not be found or has been removed."
+
+msgid "Le classeur financier est incomplet. Téléchargez un nouveau modèle."
+msgstr "The financial workbook is incomplete. Download a new template."
+
+msgid "Les utilisateurs autorisés renseignent les prix unitaires hors taxes, les taux et leurs sources. Le taux proposé pour un nouvel article est 19 %% et doit être confirmé. Les totaux par article, lot et dossier utilisent les mêmes règles d’arrondi. Les estimations restent internes et ne remplissent jamais le Word destiné aux soumissionnaires."
+msgstr "Authorized users enter net unit prices, tax rates and their sources. A 19 %% rate is proposed for a new item and must be confirmed. Item, lot and dossier totals use the same rounding rules. Estimates remain internal and never populate the Word document for bidders."
+
+msgid "Taux de taxe (%%)"
+msgstr "Tax rate (%%)"
