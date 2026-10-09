@@ -99,6 +99,14 @@ class CdcItemForm(VersionedForm):
         groups.append((_('Historique'), ['reason']))
         self.groups = [{'title': label, 'fields': [self[field] for field in fields]} for label, fields in groups]
 
+    def clean(self):
+        values = super().clean()
+        # HTML textareas submit CRLF; the document catalog stores LF.
+        for name in ('designation', 'specifications', 'packaging', 'details'):
+            if name in values:
+                values[name] = values[name].replace('\r\n', '\n')
+        return values
+
     def _post_clean(self):
         if self.cleaned_data.get('article') is not None and self.cleaned_data.get('purchase_unit') is not None:
             article, unit = self.cleaned_data['article'], self.cleaned_data['purchase_unit']

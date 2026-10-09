@@ -33,9 +33,24 @@ test('CDC selective editable reuse and signed financial import are persistent an
     return page.url();
   }
   const source = await create(reference, `Source CDC ${info.project.name}`);
+  await page.getByRole('link',{name:/^Lot 1 /}).click();
+  await page.getByRole('link',{name:'Modifier',exact:true}).first().click();
+  for (const heading of ['Besoin technique','Estimation interne','Historique'])
+    await page.locator('details summary').filter({hasText:heading}).click();
+  await page.locator('[name=specifications]').fill('Première ligne technique\nDeuxième ligne عربية');
+  await page.locator('[name=packaging]').fill('Boîte synthétique\nEmballage secondaire');
+  await page.locator('[name=details]').fill('Contrôle synthétique\nÀ la réception');
+  await page.locator('[name=quantity]').fill('3');
+  await page.locator('[name=estimated_price]').fill('100');
+  await page.locator('[name=tax_rate]').fill('19');
+  await page.locator('[name=price_source]').fill('Devis synthétique');
+  await page.locator('[name=reason]').fill('Édition réelle de navigateur avec texte multiligne');
+  await submit(page,'.erp-form button[type=submit]');
+  await page.goto(source);
+  await expect(page.locator('.erp-heading')).toContainText('Révision 2');
   const target = await create(`${number+100}/SME/SDFM/SG/ESSBO/2026`, `Destination CDC ${info.project.name}`);
   await page.getByRole('link',{name:'Catalogue et réutilisation',exact:true}).click();
-  await page.locator('#id_filter_revision').selectOption({label:`${reference} — R1`});
+  await page.locator('#id_filter_revision').selectOption({label:`${reference} — R2`});
   await page.getByRole('button',{name:'Rechercher',exact:true}).click();
   await page.getByRole('button',{name:'Tout sélectionner',exact:true}).click();
   expect(await page.locator('[name=selections]:checked').count()).toBeGreaterThan(2);
@@ -56,7 +71,7 @@ test('CDC selective editable reuse and signed financial import are persistent an
   await submit(page,'button[type=submit]:has-text("Confirmer et enregistrer")');
   await expect(page.locator('.erp-heading')).toContainText('Révision 2');
   await page.goto(source);
-  await expect(page.locator('.erp-heading')).toContainText('Révision 1');
+  await expect(page.locator('.erp-heading')).toContainText('Révision 2');
   await page.goto(target);
   await page.getByRole('link',{name:'Estimations et totaux financiers',exact:true}).click();
   const finance = page.url();

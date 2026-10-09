@@ -102,6 +102,10 @@ Ils ne sont pas les deux dossiers réels conservés dans CDC Studio.
 Les imports et copies utilisent des écritures groupées ; les tests mesurent la
 croissance bornée des requêtes. Le stock conserve ses calculs Decimal exacts avec
 une lecture groupée des contenants, sans une requête par article.
+L’édition d’un article normalise les retours CRLF des zones de texte HTML en LF,
+sans supprimer les contrôles sur les autres séparateurs interdits. Une régression
+HTTP et le parcours de chaque navigateur vérifient l’enregistrement multiligne,
+les estimations et la conservation de la révision précédente.
 
 La CI impose cinq validations (SQLite, PostgreSQL, navigateurs, sécurité,
 conteneur), avec 100 % des instructions applicatives mesurées. Les preuves de

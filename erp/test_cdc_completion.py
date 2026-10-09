@@ -531,6 +531,35 @@ class CdcCompletionTests(OperationFixtures, TestCase):
         catalog['lots'][0]['id'] = str(uuid.uuid4())
         with self.assertRaises(ValidationError): _apply_catalog(self.target, catalog)
 
+    def test_browser_item_edit_preserves_multiline_text_and_rejects_other_separators(self):
+        item = self.lot.items.first()
+        original = self.target.revisions.first()
+        before = copy.deepcopy(original.data)
+        url = reverse('erp:cdc-item-edit', args=[self.lot.pk, item.pk])
+        response = self.client.get(url)
+        data = {name: response.context['form'][name].value() or ''
+                for name in response.context['form'].fields}
+        data.update(expected_version=self.target.version, active='on', quantity='3',
+            estimated_price='100', tax_rate='19', currency='DZD', price_source='Devis synthétique',
+            designation='Désignation française\r\nوصف عربي',
+            specifications='Première spécification\r\nDeuxième spécification',
+            packaging='Boîte\r\nEmballage secondaire', details='Ligne une\r\nLigne deux',
+            reason='Édition de navigateur avec retours à la ligne')
+        self.assertEqual(self.client.post(url, data).status_code, 302)
+        item.refresh_from_db(); self.target.refresh_from_db(); original.refresh_from_db()
+        for name in ('designation', 'specifications', 'packaging', 'details'):
+            self.assertEqual(getattr(item, name), data[name].replace('\r\n', '\n'))
+        self.assertEqual(financial_snapshot(self.target)[1]['currencies']['DZD']['gross'], Decimal('357.00'))
+        self.assertEqual(original.data, before)
+        version = self.target.version
+        for separator in ('\r', '\t'):
+            with self.subTest(separator=repr(separator)):
+                invalid = {**data, 'expected_version': version, 'specifications': 'Texte'+separator+'interdit'}
+                self.assertContains(self.client.post(url, invalid), 'séparateur de texte non autorisé', status_code=400)
+                self.target.refresh_from_db(); item.refresh_from_db()
+                self.assertEqual(self.target.version, version)
+                self.assertEqual(item.specifications, 'Première spécification\nDeuxième spécification')
+
     def test_works_selective_append_is_rejected_before_an_incompatible_revision_is_created(self):
         dossier = create_dossier(self.ops, family='works', reference='799/SME/SDFM/SG/ESSBO/2026',
             title='Postes travaux protégés', assignee=self.operator)
