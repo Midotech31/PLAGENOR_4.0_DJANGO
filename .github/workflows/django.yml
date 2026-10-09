@@ -224,6 +224,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y postgresql-client
+          python -m scripts.qualify_cdc_restore seed test-results/postgres/cdc-restore-manifest.json
           dump_file="$(mktemp --suffix=.dump)"
           trap 'rm -f "$dump_file"' EXIT
           pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges --file="$dump_file"
@@ -234,7 +235,18 @@ jobs:
             --no-owner --no-privileges "$dump_file"
           psql -h 127.0.0.1 -U plagenor -d plagenor_restore_ci \
             -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM django_migrations;' >/dev/null
+          DATABASE_URL=postgresql://plagenor:ci-only-password@127.0.0.1:5432/plagenor_restore_ci \
+            python -m scripts.qualify_cdc_restore verify test-results/postgres/cdc-restore-manifest.json
           dropdb -h 127.0.0.1 -U plagenor plagenor_restore_ci
+
+      - name: Upload synthetic CDC restore evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cdc-restore-evidence
+          path: test-results/postgres/cdc-restore-evidence.json
+          if-no-files-found: warn
+          retention-days: 14
 
   container:
     runs-on: ubuntu-latest

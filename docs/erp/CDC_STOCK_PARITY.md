@@ -106,6 +106,10 @@ une lecture groupée des contenants, sans une requête par article.
 La CI impose cinq validations (SQLite, PostgreSQL, navigateurs, sécurité,
 conteneur), avec 100 % des instructions applicatives mesurées. Les preuves de
 restauration PostgreSQL produites par cette CI concernent sa base synthétique.
+Le contrôle `scripts/qualify_cdc_restore.py` est limité aux deux bases locales
+nommées de la CI. Il compare les empreintes et effectifs des données CDC après
+`pg_restore`, puis confirme les aperçus restaurés et vérifie leur idempotence,
+les exigences copiées et les totaux financiers. Il refuse une base de production.
 Une restauration d’une sauvegarde réelle de production en environnement isolé
 et la recette connectée des dossiers institutionnels nécessitent leurs accès et
 leurs données ; elles doivent être consignées séparément avant de revendiquer
