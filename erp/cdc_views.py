@@ -117,7 +117,7 @@ def cdc_detail(request, pk):
         else:
             return redirect('erp:cdc-detail', pk=pk)
     data = document_data(dossier)
-    findings = dossier_findings(dossier)
+    findings = dossier_findings(dossier, data=data)
     cost_access = cdc_cost_allowed(request.user, dossier)
     generation = CdcGeneration.objects.filter(revision__dossier=dossier,
         revision__number=dossier.revision_number).defer('docx', 'pdf', 'checks').first()

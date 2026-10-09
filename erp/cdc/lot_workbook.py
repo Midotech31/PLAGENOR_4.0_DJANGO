@@ -209,13 +209,13 @@ def build_workbook(data, dossier_id, revision, sign, filled=True, estimates=None
     return out.getvalue()
 
 
-def read_cells(archive, path, strings):
+def read_cells(archive, path, strings, *, maximum_column='I', maximum_cells=8500):
     sheet = xml(archive.read(path))
     values, count = {}, 0
     for c in sheet.iter(Q+'c'):
         count += 1
         address = c.get('r', '')
-        if not re.fullmatch(r'[A-I][1-9]\d{0,3}', address) or count > 8500 or address in values:
+        if not re.fullmatch(r'[A-' + maximum_column + r'][1-9]\d{0,3}', address) or count > maximum_cells or address in values:
             raise DocumentError('Adresse ou nombre de cellules hors limites dans ' + path + '.')
         if c.find(Q+'f') is not None:
             raise DocumentError(f'{path}!{address} : les formules sont refusées ; collez leurs valeurs.')

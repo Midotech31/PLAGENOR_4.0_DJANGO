@@ -1,0 +1,14 @@
+{% extends 'erp/base.html' %}{% load i18n static %}
+{% block erp_content %}
+<header class="erp-heading"><div><h1>{% trans 'Vérifier les articles à réutiliser' %}</h1><p>{{ dossier.reference }} · {{ preview.target_lot.name }}</p><p>{{ preview.source_revision.dossier.reference }} · {% trans 'Révision' %} {{ preview.source_revision.number }}</p></div></header>
+{% if preview.applied_revision_id %}<p class="erp-notice">{% trans 'Cet aperçu a déjà été appliqué. Aucune seconde copie ne sera créée.' %}</p>{% else %}
+<p class="erp-notice">{% trans 'Vous pouvez modifier ou écarter les copies ci-dessous. Aucune donnée métier ne change avant confirmation. Cet aperçu expire après 24 heures.' %}</p>
+{% if error %}<p class="erp-errors" role="alert">{{ error }}</p>{% endif %}
+<form data-cdc-progress="{% trans 'Traitement en cours. Attendez le résultat avant de quitter cette page.' %}" method="post" class="erp-form">{% csrf_token %}{{ rows.management_form }}{{ rows.non_form_errors }}
+{% for form in rows %}<details class="erp-form-section" {% if forloop.first or form.errors %}open{% endif %}><summary>{{ forloop.counter }} · {{ form.designation.value }}</summary>{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field }}{{ field.errors }}{% endfor %}<div class="erp-form-grid">{% for field in form.visible_fields %}{% include 'erp/field.html' %}{% endfor %}</div></details>{% endfor %}
+<p><label><input type="checkbox" name="confirm" required> {% trans 'Je confirme la copie indépendante des articles retenus' %}</label></p>
+<button class="btn btn-primary" type="submit">{% trans 'Confirmer et enregistrer' %}</button></form>{% endif %}
+<a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a>
+{% endblock %}
+
+{% block extra_js %}{{ block.super }}<script src="{% static 'js/erp-cdc.js' %}" defer></script>{% endblock %}

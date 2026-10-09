@@ -128,6 +128,18 @@ class CdcWorkbookPreview(Record):
     applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True)
 
 
+class CdcReusePreview(Record):
+    dossier = models.ForeignKey(CdcDossier, on_delete=models.PROTECT, related_name='reuse_previews')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    source_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, related_name='+')
+    target_lot = models.ForeignKey(CdcLot, on_delete=models.PROTECT, related_name='+')
+    base_version = models.PositiveIntegerField()
+    payload = models.JSONField()
+    reason = models.CharField(max_length=500)
+    expires_at = models.DateTimeField()
+    applied_revision = models.ForeignKey(CdcRevision, on_delete=models.PROTECT, null=True, blank=True, related_name='+')
+
+
 
 class CdcRequirement(Record):
     class Kind(models.TextChoices):

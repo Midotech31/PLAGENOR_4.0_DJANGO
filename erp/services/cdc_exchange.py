@@ -52,14 +52,19 @@ def preview_workbook(user, pk, *, expected, upload, mode, import_prices=False, r
         expires_at=timezone.now() + timedelta(hours=24))
 
 
-def _apply_catalog(dossier, catalog, *, financial=None, reason='', restoring=False):
+def _apply_catalog(dossier, catalog, *, financial=None, taxes=None, reason='', restoring=False):
     """Preserve relational identities, links, historical snapshots and removed rows."""
     validate_catalog(catalog)
+    lots = {str(lot.pk): lot for lot in dossier.lots.filter(active=True)}
+    existing = {(str(item.lot_id), item.source_key): item for item in CdcItem.objects.filter(lot__dossier=dossier)}
+    retained, updated, created, lot_ids = set(), [], [], []
     for row in catalog['lots']:
-        lot = CdcLot.objects.get(pk=row['id'], dossier=dossier, active=True)
-        retained = set()
+        lot = lots.get(row['id'])
+        if lot is None:
+            raise ValidationError(_('Le lot de cet aperçu est introuvable ou a été retiré.'))
+        lot_ids.append(lot.pk)
         for value in row['items']:
-            item = lot.items.filter(source_key=value['key']).first()
+            item = existing.get((row['id'], value['key']))
             if item is None:
                 item = CdcItem(lot=lot, source_key=value['key'])
             if not restoring and item.article_id and value['unit'] != item.unit_label:
@@ -74,11 +79,18 @@ def _apply_catalog(dossier, catalog, *, financial=None, reason='', restoring=Fal
                     raise ValidationError(_('Les estimations Excel sont en DZD ; aucune conversion de devise implicite n’est autorisée.'))
                 item.estimated_price = financial[value['key']]
                 item.price_source = reason
-            item.full_clean()
+                if taxes is not None:
+                    item.tax_rate = taxes[value['key']]
+            item.full_clean(exclude=['lot', 'article', 'purchase_unit', 'estimate_supplier'],
+                validate_unique=False, validate_constraints=False)
             item.version += 1
-            item.save()
+            item.updated_at = timezone.now()
+            (created if item._state.adding else updated).append(item)
             retained.add(item.pk)
-        lot.items.exclude(pk__in=retained).update(active=False)
+    CdcItem.objects.bulk_create(created)
+    CdcItem.objects.bulk_update(updated, ['designation', 'specifications', 'packaging', 'details', 'position',
+        'unit_label', 'quantity', 'active', 'estimated_price', 'tax_rate', 'price_source', 'version', 'updated_at'])
+    CdcItem.objects.filter(lot_id__in=lot_ids).exclude(pk__in=retained).update(active=False)
 
 
 @transaction.atomic
@@ -96,7 +108,8 @@ def apply_workbook(user, pk):
         raise ValidationError(_('Cet aperçu a expiré. Analysez à nouveau votre fichier.'))
     check_version(dossier, preview.base_version)
     _apply_catalog(dossier, get_catalog(preview.payload['data']),
-        financial=preview.payload['financial'] if preview.import_prices else None, reason=preview.reason)
+        financial=preview.payload['financial'] if preview.import_prices else None,
+        taxes=preview.payload.get('taxes'), reason=preview.reason)
     revision = _revision(user, dossier, preview.reason)
     preview.applied_revision = revision
     preview.save(update_fields=['applied_revision', 'updated_at'])

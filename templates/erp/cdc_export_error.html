@@ -1,0 +1,1 @@
+{% extends 'erp/base.html' %}{% load i18n %}{% block erp_content %}<h1>{% trans 'Export Excel impossible' %}</h1><p class="erp-errors" role="alert">{{ error }}</p><a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a>{% endblock %}
