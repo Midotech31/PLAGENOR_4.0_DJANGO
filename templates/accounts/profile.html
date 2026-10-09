@@ -105,8 +105,14 @@
            {% trans "Votre compte est protégé par un code à usage unique à chaque connexion." %}</p>
         <form method="post" action="{% url 'accounts:two_factor_disable' %}" style="margin-top:12px;">
             {% csrf_token %}
-            <label>{% trans "Mot de passe actuel" %}<input type="password" name="password" required autocomplete="current-password"></label>
-            <label>{% trans "Code 2FA actuel" %}<input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}"></label>
+            <div class="form-group">
+                <label for="id_2fa_disable_password">{% trans "Mot de passe actuel" %}</label>
+                <input type="password" id="id_2fa_disable_password" name="password" class="form-control" required autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label for="id_2fa_disable_code">{% trans "Code 2FA actuel" %}</label>
+                <input type="text" id="id_2fa_disable_code" name="code" class="form-control" required inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}">
+            </div>
             <button type="submit" class="btn btn-sm btn-danger"
                     onclick="return confirm('{% trans "Désactiver la double authentification ?" %}')">
                 {% trans "Désactiver la 2FA" %}

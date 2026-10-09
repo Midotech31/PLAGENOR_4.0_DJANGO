@@ -14,8 +14,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  qualification:
+    # Preserve the context already required by the active main ruleset.
+    name: build (3.11)
+    needs: [sqlite, browser-accessibility, postgres, security, container]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every qualification job to succeed
+        env:
+          SQLITE_RESULT: ${{ needs.sqlite.result }}
+          BROWSER_RESULT: ${{ needs.browser-accessibility.result }}
+          POSTGRES_RESULT: ${{ needs.postgres.result }}
+          SECURITY_RESULT: ${{ needs.security.result }}
+          CONTAINER_RESULT: ${{ needs.container.result }}
+        run: |
+          python3 - <<'PY'
+          import os
+
+          results = {
+              name: os.environ[name + '_RESULT']
+              for name in ('SQLITE', 'BROWSER', 'POSTGRES', 'SECURITY', 'CONTAINER')
+          }
+          rejected = {name: result for name, result in results.items() if result != 'success'}
+          if rejected:
+              raise SystemExit('Qualification refused: ' + str(rejected))
+          print('All five qualification jobs succeeded.')
+          PY
+
   sqlite:
-    name: build (${{ matrix.python-version }})
+    name: Django tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
