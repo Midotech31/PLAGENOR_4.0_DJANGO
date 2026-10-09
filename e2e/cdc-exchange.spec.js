@@ -6,10 +6,10 @@ async function submit(page, selector) {
   const path = new URL(page.url()).pathname;
   const [response] = await Promise.all([
     page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === path),
+    page.waitForNavigation({waitUntil:'domcontentloaded'}),
     page.locator(selector).click(),
   ]);
   expect([302,303]).toContain(response.status());
-  await page.waitForLoadState('domcontentloaded');
 }
 async function audit(page) {
   const result = await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
