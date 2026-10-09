@@ -15,6 +15,8 @@ from .cdc import _dossier, _revision, document_data, dossier_scope
 from .common import check_version
 from .stock import stock_quantity
 
+WORKS_NOTICE = _('Le modèle Travaux conserve ses 249 postes structurés. Modifiez les postes existants ou dupliquez le dossier complet ; la copie sélective avec ajout d’articles est réservée aux équipements et réactifs.')
+
 
 def source_rows(user, revision_id, family):
     revision = CdcRevision.objects.select_related('dossier').defer('dossier__data').filter(pk=revision_id,
@@ -33,6 +35,8 @@ def source_rows(user, revision_id, family):
 @transaction.atomic
 def preview_reuse(user, pk, *, expected, source_revision, target_lot, selections, reason):
     dossier = _dossier(user, pk, edit=True)
+    if dossier.family == 'works':
+        raise ValidationError(WORKS_NOTICE)
     check_version(dossier, expected)
     revision, rows = source_rows(user, source_revision, dossier.family)
     target = CdcLot.objects.get(pk=target_lot, dossier=dossier, active=True)
@@ -51,6 +55,8 @@ def preview_reuse(user, pk, *, expected, source_revision, target_lot, selections
 def apply_reuse(user, pk, *, rows):
     identity = CdcReusePreview.objects.get(pk=pk)
     dossier = _dossier(user, identity.dossier_id, edit=True)
+    if dossier.family == 'works':
+        raise ValidationError(WORKS_NOTICE)
     preview = CdcReusePreview.objects.select_for_update().get(pk=pk)
     if preview.actor_id != user.pk:
         raise PermissionDenied

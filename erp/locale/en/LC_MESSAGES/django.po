@@ -2220,3 +2220,6 @@ msgstr "Authorized users enter net unit prices, tax rates and their sources. A 1
 
 msgid "Taux de taxe (%%)"
 msgstr "Tax rate (%%)"
+
+msgid "Le modèle Travaux conserve ses 249 postes structurés. Modifiez les postes existants ou dupliquez le dossier complet ; la copie sélective avec ajout d’articles est réservée aux équipements et réactifs."
+msgstr "The Works template retains its 249 structured items. Edit existing items or duplicate the full dossier; selective copying that adds items is available for equipment and reagents."

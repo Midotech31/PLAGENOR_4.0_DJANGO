@@ -2202,3 +2202,6 @@ msgstr "يدخل المستخدمون المخولون الأسعار الوحد
 
 msgid "Taux de taxe (%%)"
 msgstr "نسبة الرسوم (%%)"
+
+msgid "Le modèle Travaux conserve ses 249 postes structurés. Modifiez les postes existants ou dupliquez le dossier complet ; la copie sélective avec ajout d’articles est réservée aux équipements et réactifs."
+msgstr "يحافظ نموذج الأشغال على بنوده المنظمة البالغ عددها 249. عدّل البنود الموجودة أو انسخ الملف كاملًا؛ تتاح إعادة الاستخدام الانتقائية التي تضيف مواد للتجهيزات والكواشف."

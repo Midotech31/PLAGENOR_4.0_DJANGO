@@ -21,7 +21,7 @@ from .models import CdcReusePreview
 from .permissions import is_manager
 from .services.cdc import cdc_cost_allowed, document_data, dossier_scope
 from .services.cdc_finance import export_financial, financial_snapshot, preview_financial
-from .services.cdc_reuse import apply_reuse, preview_reuse, source_rows
+from .services.cdc_reuse import WORKS_NOTICE, apply_reuse, preview_reuse, source_rows
 from .services.cdc_tables import add_table_row, editable_table, remove_table_row
 from .services.work import require_work, work_allowed
 from .views import add_validation
@@ -32,6 +32,10 @@ from .views import add_validation
 def catalogue(request, pk):
     dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
     require_work(request.user, dossier.work, edit=True)
+    if dossier.family == 'works':
+        return render(request, 'erp/cdc_catalogue.html', {'dossier': dossier, 'limit': WORKS_NOTICE,
+            'manager': is_manager(request.user)},
+            status=400 if request.method == 'POST' else 200)
     revisions = reusable_revisions(request.user, dossier)
     filters = ReuseFilterForm(request.GET or None)
     filters.fields['source_revision'].queryset = revisions

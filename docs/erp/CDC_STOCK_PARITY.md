@@ -17,7 +17,7 @@ ne doit pas être utilisé pour PLAGENOR.
 | Lots et articles | Édition technique, rattachement au catalogue commun, quantités et unités explicites |
 | Édition des articles | Recherche, duplication technique, déplacement et réordonnancement, retrait/réintégration et révisions |
 | Lots réutilisables | Ajouter ou réutiliser un lot existant de même famille, avec nouvelles identités ; prix à reconfirmer |
-| Articles historiques sélectionnés | Catalogue et réutilisation : révision source autorisée, recherche, sélection multiple, aperçu éditable, exclusion et confirmation ; identités indépendantes, exigences reprises, estimations exclues |
+| Articles historiques sélectionnés | Équipements/réactifs : révision source autorisée, recherche, sélection multiple, aperçu éditable, exclusion et confirmation ; identités indépendantes, exigences reprises, estimations exclues. Travaux : postes existants modifiables et duplication complète du dossier, ajout sélectif refusé avant création d’une révision incompatible |
 | Retrait et réintégration | Retrait logique, données et anciennes révisions conservées |
 | Échanges Excel | Classeur rempli/vide, feuille par lot, identité signée, aperçu persistant, confirmation atomique |
 | Grille d’évaluation Excel | Gouvernance → Exporter la grille Excel : critères, exigences et traçabilité de la révision courante |

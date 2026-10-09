@@ -528,3 +528,23 @@ class CdcCompletionTests(OperationFixtures, TestCase):
         catalog = copy.deepcopy(document_data(self.target)['lot_catalog'])
         catalog['lots'][0]['id'] = str(uuid.uuid4())
         with self.assertRaises(ValidationError): _apply_catalog(self.target, catalog)
+
+    def test_works_selective_append_is_rejected_before_an_incompatible_revision_is_created(self):
+        dossier = create_dossier(self.ops, family='works', reference='799/SME/SDFM/SG/ESSBO/2026',
+            title='Postes travaux protégés', assignee=self.operator)
+        revision, rows = source_rows(self.ops, dossier.revisions.first().pk, dossier.family)
+        lot = dossier.lots.first()
+        with self.assertRaises(ValidationError):
+            preview_reuse(self.ops, dossier.pk, expected=dossier.version, source_revision=revision.pk,
+                target_lot=lot.pk, selections=[rows[0]['selection']], reason='Copie non admissible')
+        preview = CdcReusePreview.objects.create(dossier=dossier, actor=self.ops, source_revision=revision,
+            target_lot=lot, base_version=dossier.version, payload={'rows': rows[:1], 'source_sha256': revision.sha256},
+            reason='Contrôle des aperçus restaurés', expires_at=timezone.now()+timedelta(hours=1))
+        with self.assertRaises(ValidationError): apply_reuse(self.ops, preview.pk, rows=self.edits(preview))
+        url = reverse('erp:cdc-catalogue', args=[dossier.pk])
+        self.assertContains(self.client.get(url), '249 postes structurés')
+        self.assertEqual(self.client.post(url, {'source_revision': revision.pk}).status_code, 400)
+        self.client.force_login(self.operator)
+        self.assertNotContains(self.client.get(url), reverse('erp:cdc-duplicate', args=[dossier.pk]))
+        self.assertEqual(lot.items.count(), 249)
+        self.assertEqual(dossier.revisions.count(), 1)

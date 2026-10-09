@@ -1,11 +1,13 @@
 {% extends 'erp/base.html' %}{% load i18n static %}
 {% block erp_content %}
 <header class="erp-heading"><div><h1>{% trans 'Catalogue et réutilisation' %}</h1><p>{{ dossier.reference }}</p></div><a class="btn btn-secondary" href="{% url 'erp:cdc-detail' pk=dossier.pk %}">{% trans 'Retour au dossier' %}</a></header>
+{% if limit %}<p class="erp-notice">{{ limit }}</p>{% if manager %}<a class="btn btn-secondary" href="{% url 'erp:cdc-duplicate' pk=dossier.pk %}">{% trans 'Dupliquer de manière contrôlée' %}</a>{% endif %}{% else %}
 <p class="erp-notice">{% trans 'Choisissez une révision historique, sélectionnez les articles, puis vérifiez les copies avant confirmation. Les données sources et les anciennes révisions restent conservées. Les prix doivent être reconfirmés dans le dossier de destination.' %}</p>
 <form method="get" class="erp-form"><div class="erp-form-grid">{% for field in filters %}{% include 'erp/field.html' %}{% endfor %}</div><button class="btn btn-secondary" type="submit">{% trans 'Rechercher' %}</button></form>
 <form data-cdc-progress="{% trans 'Traitement en cours. Attendez le résultat avant de quitter cette page.' %}" method="post" class="erp-form">{% csrf_token %}{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field }}{{ field.errors }}{% endfor %}
 <div class="erp-form-actions"><button class="btn btn-secondary" type="button" data-cdc-select="all">{% trans 'Tout sélectionner' %}</button><button class="btn btn-secondary" type="button" data-cdc-select="none">{% trans 'Tout désélectionner' %}</button></div><div class="erp-form-grid">{% for field in form.visible_fields %}{% include 'erp/field.html' %}{% endfor %}</div>
 <button class="btn btn-primary" type="submit">{% trans 'Prévisualiser la réutilisation' %}</button></form>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}{{ block.super }}<script src="{% static 'js/erp-cdc.js' %}" defer></script>{% endblock %}
