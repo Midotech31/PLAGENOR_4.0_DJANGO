@@ -199,10 +199,27 @@ test('CDC Toolkit governance is native persistent and accessible in PLAGENOR', a
   await expect(page.locator('body')).toContainText('Réception et conformité');
   await audit(page);
 
-  for (const language of ['en','ar']) {
-    await page.locator(`.topbar button[name=language][value=${language}]`).click();
+  const exportLabels = {fr:'Exporter la grille Excel',en:'Export the Excel evaluation grid',ar:'تصدير شبكة التقييم إلى Excel'};
+  for (const language of ['fr','en','ar']) {
+    if (language !== 'fr') await page.locator(`.topbar button[name=language][value=${language}]`).click();
     if (language === 'ar') await expect(page.locator('html')).toHaveAttribute('dir','rtl');
     await audit(page);
+    const [grid] = await Promise.all([page.waitForEvent('download'),
+      page.getByRole('link',{name:exportLabels[language],exact:true}).click()]);
+    expect(grid.suggestedFilename()).toMatch(/^CDC-[0-9a-f-]+-R\d+-grille\.xlsx$/);
+    const gridFile = info.outputPath(`cdc-grid-${language}.xlsx`);
+    await grid.saveAs(gridFile);
+    execFileSync('python',['-c',`import sys
+from openpyxl import load_workbook
+b=load_workbook(sys.argv[1]);criteria,requirements,trace=b.worksheets
+assert criteria['A2'].value=='TECH'
+assert criteria['C2'].value=='Conformité technique'
+assert criteria['E2'].value==100 and criteria['E2'].data_type=='n'
+assert requirements['F2'].value=='Pureté minimale documentée'
+assert trace['B2'].value.startswith('${number}/SME/')
+assert all(bool(s.sheet_view.rightToLeft)==(sys.argv[2]=='ar') for s in b)
+assert all(c.data_type!='f' for s in b for row in s for c in row)
+`,gridFile,language]);
   }
   await page.screenshot({path:info.outputPath('cdc-toolkit-governance.png'),fullPage:true});
 });
