@@ -7987,3 +7987,20 @@ msgstr "This import has already been applied."
 msgid "Confirmer et enregistrer la nouvelle révision"
 msgstr "Confirm and save the new revision"
 
+# CDC dynamic/blocktrans completeness audit — 2026-10-06
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "Un article n’a pas de prix ou de taux de taxe confirmé."
+msgid_plural "%(count)s articles n’ont pas de prix ou de taux de taxe confirmé."
+msgstr[0] "One item has no confirmed price or tax rate."
+msgstr[1] "%(count)s items have no confirmed price or tax rate."
+
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "%(requirements)s exigence(s), %(criteria)s critère(s) et %(clauses)s clause(s) structurés dans ce dossier. Les sections restent gérées par le moteur documentaire canonique."
+msgstr "%(requirements)s requirement(s), %(criteria)s criterion/criteria and %(clauses)s clause(s) are structured in this dossier. Sections remain managed by the canonical document engine."
+
+#: templates/erp/cdc_detail.html
+#, python-format
+msgid "PDF généré : %(pages)s pages."
+msgstr "Generated PDF: %(pages)s pages."

@@ -2549,3 +2549,46 @@ img.emoji {
 }
 
 .pipeline:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
+
+/* Password visibility control: shared by login, registration and account-management forms. */
+.password-input-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+.password-input-wrapper > input {
+    width: 100%;
+    padding-inline-end: 2.85rem !important;
+}
+.password-toggle-btn {
+    position: absolute;
+    inset-inline-end: .25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: 0;
+    border-radius: .45rem;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    z-index: 2;
+}
+.password-toggle-btn:hover,
+.password-toggle-btn:focus-visible {
+    background: rgba(79, 70, 229, .08);
+    color: var(--primary, #4F46E5);
+}
+.password-toggle-btn svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
