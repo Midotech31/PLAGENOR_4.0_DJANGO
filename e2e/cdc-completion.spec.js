@@ -6,9 +6,9 @@ test.setTimeout(180000);
 async function submit(page, selector) {
   const path = new URL(page.url()).pathname;
   const [response] = await Promise.all([
-    page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === path),
-    page.waitForNavigation({waitUntil:'domcontentloaded'}),
-    page.locator(selector).click(),
+    page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === path, {timeout:30000}),
+    page.waitForNavigation({waitUntil:'domcontentloaded',timeout:30000}),
+    page.locator(selector).click({timeout:30000}),
   ]);
   expect([302,303]).toContain(response.status());
 }
@@ -25,7 +25,8 @@ test('CDC selective editable reuse and signed financial import are persistent an
   const reference = `${number}/SME/SDFM/SG/ESSBO/2026`;
   async function create(ref, title) {
     await page.goto('/erp/cdc/new/');
-    await page.locator('.topbar button[name=language][value=fr]').click();
+    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),
+      page.locator('.topbar button[name=language][value=fr]').click()]);
     await page.locator('[name=family]').selectOption('equipment');
     await page.locator('[name=reference]').fill(ref);
     await page.locator('[name=title]').fill(title);
@@ -33,6 +34,22 @@ test('CDC selective editable reuse and signed financial import are persistent an
     return page.url();
   }
   const source = await create(reference, `Source CDC ${info.project.name}`);
+  // Both native buttons must retain their action despite the busy indicator.
+  // A stale version deliberately prevents generation or a workflow transition.
+  for (const action of ['generate','submit']) {
+    await page.locator('form[data-cdc-progress] [name=expected_version]').evaluate(input => input.value = '99999');
+    const [response] = await Promise.all([
+      page.waitForResponse(r => r.request().method() === 'POST' && r.url() === source, {timeout:30000}),
+      page.waitForNavigation({waitUntil:'domcontentloaded',timeout:30000}),
+      page.locator(`button[name=action][value=${action}]`).click(),
+    ]);
+    expect(new URLSearchParams(response.request().postData()).get('action')).toBe(action);
+    expect(response.status()).toBe(400);
+    await expect(page.locator('body')).toContainText(action === 'generate'
+      ? 'Le dossier a été modifié' : 'Cet enregistrement a changé');
+    await expect(page.locator('body')).not.toContainText('Action inconnue');
+    await expect(page.locator('.erp-heading')).toContainText('Révision 1');
+  }
   await page.getByRole('link',{name:/^Lot 1 /}).click();
   await page.getByRole('link',{name:'Modifier',exact:true}).first().click();
   for (const heading of ['Besoin technique','Estimation interne','Historique'])
@@ -51,7 +68,8 @@ test('CDC selective editable reuse and signed financial import are persistent an
   const target = await create(`${number+100}/SME/SDFM/SG/ESSBO/2026`, `Destination CDC ${info.project.name}`);
   await page.getByRole('link',{name:'Catalogue et réutilisation',exact:true}).click();
   await page.locator('#id_filter_revision').selectOption({label:`${reference} — R2`});
-  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),
+    page.getByRole('button',{name:'Rechercher',exact:true}).click()]);
   await page.getByRole('button',{name:'Tout sélectionner',exact:true}).click();
   expect(await page.locator('[name=selections]:checked').count()).toBeGreaterThan(2);
   await page.getByRole('button',{name:'Tout désélectionner',exact:true}).click();

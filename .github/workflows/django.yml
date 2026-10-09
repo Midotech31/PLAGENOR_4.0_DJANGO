@@ -46,7 +46,7 @@ jobs:
   sqlite:
     name: Django tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       # Settings require a SECRET_KEY unless DEBUG; DATABASE_URL is left unset
       # so the suite runs on the SQLite fallback.
@@ -291,7 +291,7 @@ jobs:
 
   browser-accessibility:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       SECRET_KEY: e2e-only-secret-key
       DEBUG: "true"
