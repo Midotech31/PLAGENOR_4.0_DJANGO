@@ -7928,3 +7928,127 @@ msgstr "يتضمن هذا الملف %(requirements)s من المتطلبات و
 #, python-format
 msgid "PDF généré : %(pages)s pages."
 msgstr "تم إنشاء ملف PDF: %(pages)s صفحة."
+
+#: erp/services/cdc_exports.py
+msgid "Champ"
+msgstr "الحقل"
+
+#: erp/services/cdc_exports.py
+msgid "Clé de l’article"
+msgstr "مفتاح المادة"
+
+#: erp/services/cdc_exports.py
+msgid "Critère éliminatoire"
+msgstr "معيار إقصائي"
+
+#: erp/services/cdc_exports.py
+msgid "Critères"
+msgstr "المعايير"
+
+#: erp/services/cdc_exports.py
+msgid "Désignation"
+msgstr "التسمية"
+
+#: erp/services/cdc_exports.py
+msgid "Empreinte SHA-256"
+msgstr "بصمة SHA-256"
+
+#: erp/services/cdc_exports.py
+msgid "Exigence"
+msgstr "المتطلب"
+
+#: erp/services/cdc_exports.py
+msgid "Exigences"
+msgstr "المتطلبات"
+
+#: erp/services/cdc_exports.py
+msgid "Exporter la grille Excel"
+msgstr "تصدير شبكة التقييم إلى Excel"
+
+#: erp/services/cdc_exports.py
+msgid "Identifiant de l’exigence"
+msgstr "معرّف المتطلب"
+
+#: erp/services/cdc_exports.py
+msgid "Identifiant de révision"
+msgstr "معرّف المراجعة"
+
+#: erp/services/cdc_exports.py
+msgid "Justificatif / preuve attendue"
+msgstr "المستند الداعم / الدليل المتوقع"
+
+#: erp/services/cdc_exports.py
+msgid "Les données CDC structurées de la révision sont invalides."
+msgstr "البيانات المهيكلة لدفتر الشروط في هذه المراجعة غير صالحة."
+
+#: erp/services/cdc_exports.py
+msgid "L’intégrité de la révision CDC ne peut pas être confirmée."
+msgstr "تعذّر تأكيد سلامة مراجعة دفتر الشروط."
+
+#: erp/services/cdc_exports.py
+msgid "Méthode de vérification / réception"
+msgstr "طريقة التحقق / الاستلام"
+
+#: erp/services/cdc_exports.py
+msgid "Nature de l’exigence"
+msgstr "نوع المتطلب"
+
+#: erp/services/cdc_exports.py
+msgid "Pondération (points)"
+msgstr "الوزن (نقاط)"
+
+#: erp/services/cdc_exports.py
+msgid "Preuve exigée"
+msgstr "الدليل المطلوب"
+
+#: erp/services/cdc_exports.py
+msgid "Référence CDC"
+msgstr "مرجع دفتر الشروط"
+
+#: erp/services/cdc_exports.py
+msgid "Seuil éventuel"
+msgstr "العتبة الاختيارية"
+
+#: erp/services/cdc_exports.py
+msgid "Traçabilité"
+msgstr "التتبّع"
+
+#: erp/services/cdc_exports.py
+msgid "Un texte de la révision dépasse la capacité d’une cellule Excel."
+msgstr "يتجاوز نص في هذه المراجعة سعة خلية Excel."
+
+#: erp/services/cdc_exports.py
+msgid "Proportionnelle"
+msgstr "تناسبية"
+
+#: erp/services/cdc_exports.py
+msgid "Binaire"
+msgstr "ثنائية"
+
+#: erp/services/cdc_exports.py
+msgid "Prix inverse"
+msgstr "السعر العكسي"
+
+#: erp/services/cdc_exports.py
+msgid "Obligatoire"
+msgstr "إلزامي"
+
+#: erp/services/cdc_exports.py
+msgid "Minimum"
+msgstr "الحد الأدنى"
+
+#: erp/services/cdc_exports.py
+msgid "Souhaitable"
+msgstr "مفضّل"
+
+#: erp/services/cdc_exports.py
+msgid "Notée"
+msgstr "خاضع للتنقيط"
+
+#: erp/services/cdc_exports.py
+msgid "Informative"
+msgstr "معلوماتي"
+
+#: erp/services/cdc_exports.py
+msgid "Éliminatoire"
+msgstr "إقصائي"

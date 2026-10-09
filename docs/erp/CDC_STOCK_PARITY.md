@@ -15,6 +15,7 @@ CDC Studio 1.2.3 et cahier des charges ERP du 20 septembre 2026.
 | Lots réutilisables | Ajouter ou réutiliser un lot existant de même famille, avec nouvelles identités ; prix à reconfirmer |
 | Retrait et réintégration | Retrait logique, données et anciennes révisions conservées |
 | Échanges Excel | Classeur rempli/vide, feuille par lot, identité signée, aperçu persistant, confirmation atomique |
+| Grille d’évaluation Excel | Gouvernance → Exporter la grille Excel : critères, exigences et traçabilité de la révision courante |
 | Modes d’import | Mise à jour/ajout conserve les absents ; remplacement les désactive sans supprimer leur historique |
 | Estimations | Accès séparé, export DZD explicite, import facultatif, source obligatoire, pas de conversion implicite |
 | Historique | Révisions immuables ; reprise administrative créant une nouvelle révision |
@@ -42,6 +43,17 @@ CDC Studio 1.2.3 et cahier des charges ERP du 20 septembre 2026.
 - Liens catalogue, facteurs d’unité et snapshots sont préservés. Une unité structurée ne peut pas être remplacée librement dans Excel.
 - Les prix internes ne remplissent jamais les cases réservées aux soumissionnaires.
 
+La grille d’évaluation est un export de lecture distinct du classeur d’import des
+lots. Elle reprend les critères et exigences retenus, les libellés des lots et
+articles enregistrés dans la révision, ainsi que sa référence, son numéro, son
+identifiant et son empreinte SHA-256. Les estimations financières restent exclues,
+y compris pour un relecteur technique délégué. Les nombres restent numériques et
+les textes sont des cellules littérales, même lorsqu’ils commencent par `=`.
+Les en-têtes suivent la langue de l’interface ; les feuilles arabes utilisent la
+lecture de droite à gauche. Les libellés métier restent ceux de la révision.
+Un critère rattaché à un lot retiré conserve l’identifiant du lot lorsqu’aucun
+libellé n’est présent dans le catalogue de cette révision.
+
 ## Adaptations et limites explicites
 
 L’authentification locale, le lanceur EXE, les profils SQLite et le fonctionnement
@@ -64,7 +76,7 @@ pas une équivalence binaire certifiée ni une validation juridique automatique.
 
 ## Vérification
 
-Tests métier et HTTP : `erp/test_cdc_exchange.py` ; régressions existantes :
+Tests métier et HTTP : `erp/test_cdc_exchange.py`, `erp/test_cdc_exports.py` ; régressions existantes :
 `erp/test_cdc_workflow.py`, `erp/test_operations.py`, `erp/test_procurement.py`,
 `erp/test_imports.py`, `erp/test_consumption.py`, `erp/test_biobank.py`.
 Parcours navigateur bureau/mobile : `e2e/cdc-exchange.spec.js`.

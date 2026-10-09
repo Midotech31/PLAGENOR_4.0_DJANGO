@@ -8004,3 +8004,127 @@ msgstr "%(requirements)s requirement(s), %(criteria)s criterion/criteria and %(c
 #, python-format
 msgid "PDF généré : %(pages)s pages."
 msgstr "Generated PDF: %(pages)s pages."
+
+#: erp/services/cdc_exports.py
+msgid "Champ"
+msgstr "Field"
+
+#: erp/services/cdc_exports.py
+msgid "Clé de l’article"
+msgstr "Item key"
+
+#: erp/services/cdc_exports.py
+msgid "Critère éliminatoire"
+msgstr "Eliminatory criterion"
+
+#: erp/services/cdc_exports.py
+msgid "Critères"
+msgstr "Criteria"
+
+#: erp/services/cdc_exports.py
+msgid "Désignation"
+msgstr "Designation"
+
+#: erp/services/cdc_exports.py
+msgid "Empreinte SHA-256"
+msgstr "SHA-256 fingerprint"
+
+#: erp/services/cdc_exports.py
+msgid "Exigence"
+msgstr "Requirement"
+
+#: erp/services/cdc_exports.py
+msgid "Exigences"
+msgstr "Requirements"
+
+#: erp/services/cdc_exports.py
+msgid "Exporter la grille Excel"
+msgstr "Export the Excel evaluation grid"
+
+#: erp/services/cdc_exports.py
+msgid "Identifiant de l’exigence"
+msgstr "Requirement identifier"
+
+#: erp/services/cdc_exports.py
+msgid "Identifiant de révision"
+msgstr "Revision identifier"
+
+#: erp/services/cdc_exports.py
+msgid "Justificatif / preuve attendue"
+msgstr "Supporting document / expected evidence"
+
+#: erp/services/cdc_exports.py
+msgid "Les données CDC structurées de la révision sont invalides."
+msgstr "The structured CDC data in this revision is invalid."
+
+#: erp/services/cdc_exports.py
+msgid "L’intégrité de la révision CDC ne peut pas être confirmée."
+msgstr "The integrity of this CDC revision cannot be confirmed."
+
+#: erp/services/cdc_exports.py
+msgid "Méthode de vérification / réception"
+msgstr "Verification / acceptance method"
+
+#: erp/services/cdc_exports.py
+msgid "Nature de l’exigence"
+msgstr "Requirement type"
+
+#: erp/services/cdc_exports.py
+msgid "Pondération (points)"
+msgstr "Weight (points)"
+
+#: erp/services/cdc_exports.py
+msgid "Preuve exigée"
+msgstr "Required evidence"
+
+#: erp/services/cdc_exports.py
+msgid "Référence CDC"
+msgstr "CDC reference"
+
+#: erp/services/cdc_exports.py
+msgid "Seuil éventuel"
+msgstr "Optional threshold"
+
+#: erp/services/cdc_exports.py
+msgid "Traçabilité"
+msgstr "Traceability"
+
+#: erp/services/cdc_exports.py
+msgid "Un texte de la révision dépasse la capacité d’une cellule Excel."
+msgstr "Text in this revision exceeds the capacity of an Excel cell."
+
+#: erp/services/cdc_exports.py
+msgid "Proportionnelle"
+msgstr "Proportional"
+
+#: erp/services/cdc_exports.py
+msgid "Binaire"
+msgstr "Binary"
+
+#: erp/services/cdc_exports.py
+msgid "Prix inverse"
+msgstr "Inverse price"
+
+#: erp/services/cdc_exports.py
+msgid "Obligatoire"
+msgstr "Mandatory"
+
+#: erp/services/cdc_exports.py
+msgid "Minimum"
+msgstr "Minimum"
+
+#: erp/services/cdc_exports.py
+msgid "Souhaitable"
+msgstr "Preferred"
+
+#: erp/services/cdc_exports.py
+msgid "Notée"
+msgstr "Scored"
+
+#: erp/services/cdc_exports.py
+msgid "Informative"
+msgstr "Informational"
+
+#: erp/services/cdc_exports.py
+msgid "Éliminatoire"
+msgstr "Eliminatory"

@@ -24,6 +24,7 @@ from .services.cdc import (approve_dossier, archive_dossier, create_clause_revis
     save_consultation, save_criterion, save_requirement, select_clause, stock_status,
     submit_dossier)
 from .services.work import require_work, work_allowed, work_scope
+from .services.cdc_exports import criteria_workbook
 from .views import add_validation
 
 
@@ -359,6 +360,23 @@ def cdc_governance(request, pk):
         'clause_selections': dossier.clause_selections.select_related('revision__clause').order_by('position', 'id'),
         'review_state': review_state(dossier), 'findings': dossier_findings(dossier),
     })
+
+
+@login_required
+@require_GET
+def cdc_criteria_export(request, pk):
+    dossier = get_object_or_404(dossier_scope(request.user), pk=pk)
+    revision = get_object_or_404(CdcRevision, dossier=dossier, number=dossier.revision_number)
+    try:
+        payload = criteria_workbook(revision)
+    except ValidationError as error:
+        return HttpResponseBadRequest('; '.join(error.messages), content_type='text/plain; charset=utf-8')
+    response = FileResponse(io.BytesIO(payload), as_attachment=True,
+        filename=f'CDC-{dossier.pk}-R{revision.number}-grille.xlsx',
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 
