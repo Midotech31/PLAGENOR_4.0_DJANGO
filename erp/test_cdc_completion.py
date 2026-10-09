@@ -486,7 +486,9 @@ class CdcCompletionTests(OperationFixtures, TestCase):
             self.assertEqual(Decimal(revision.data['lot_catalog']['lots'][0]['items'][0]['quantity']), 3)
             payload, _ = generate_document(document_data(dossier))
             with ZipFile(io.BytesIO(payload)) as archive:
-                text = archive.read('word/document.xml').decode()
+                root = ET.fromstring(archive.read('word/document.xml'))
+                text = ''.join(node.text or '' for node in root.iter(
+                    '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t'))
                 for index in range(1, count+1): self.assertIn(f'Consommable synthétique {index:03d}', text)
                 self.assertNotIn('15.25', text)
                 self.assertNotIn('Jeu de données synthétique', text)
