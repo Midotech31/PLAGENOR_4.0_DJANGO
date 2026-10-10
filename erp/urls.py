@@ -5,6 +5,12 @@ from . import identification, report_views, preparation_views, safety_views, ale
 
 app_name = 'erp'
 urlpatterns = [
+    path('stock/dashboard/', stock_views.stock_dashboard, name='stock-dashboard'),
+    path('stock/export/', stock_views.stock_export, name='stock-export'),
+    path('stock/distributions/', stock_views.dispatch_list, name='dispatch-list'),
+    path('stock/distributions/new/', stock_views.dispatch_create, name='dispatch-create'),
+    path('stock/distributions/<uuid:pk>/', stock_views.dispatch_detail, name='dispatch-detail'),
+    path('stock/returns/<int:pk>/', stock_views.stock_return, name='stock-return'),
     path('cdc-items/<uuid:pk>/arrange/', cdc_exchange_views.item_arrange, name='cdc-item-arrange'),
     path('', views.index, name='index'),
     path('identify/',identification.identify,name='identify'),
@@ -31,6 +37,7 @@ urlpatterns = [
     path('alerts/<slug:signature>/',alert_views.alert_action,name='alert-action'),
 
     path('imports/',import_views.import_home,name='imports'),
+    path('imports/mapping/<uuid:pk>/',import_views.import_mapping,name='import-mapping'),
     path('imports/template/<slug:kind>/',import_views.template_download,name='import-template'),
     path('imports/<uuid:pk>/',import_views.import_detail,name='import-detail'),
     path('imports/<uuid:pk>/cancel/',import_views.import_cancel,name='import-cancel'),

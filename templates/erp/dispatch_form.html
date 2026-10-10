@@ -1,0 +1,7 @@
+{% extends 'erp/base.html' %}{% load i18n static %}{% block erp_content %}
+<header class="erp-heading"><h1>{% trans 'Distribuer des produits' %}</h1><a class="btn btn-secondary" href="{% url 'erp:stock-list' %}">{% trans 'Retour au stock' %}</a></header>
+<p>{% trans 'Une sortie définitive diminue le stock suivi. Un transfert interne conserve le total de l’établissement.' %}</p>
+<form method="post" class="erp-panel">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}{% include 'erp/field.html' %}{% endfor %}{{ lines.management_form }}{{ lines.non_form_errors }}
+<div id="dispatch-lines">{% for line in lines %}<fieldset class="erp-panel"><legend>{% trans 'Produit' %} {{ forloop.counter }}</legend>{{ line.non_field_errors }}{% for field in line %}{% include 'erp/field.html' %}{% endfor %}</fieldset>{% endfor %}</div>
+<template id="dispatch-empty"><fieldset class="erp-panel"><legend>{% trans 'Produit' %}</legend>{% for field in lines.empty_form %}{% include 'erp/field.html' %}{% endfor %}</fieldset></template>
+<div class="erp-form-actions"><button id="dispatch-add" class="btn btn-secondary" type="button">{% trans 'Ajouter un produit' %}</button><button class="btn btn-primary">{% trans 'Valider la distribution' %}</button></div></form><script src="{% static 'js/stock-dispatch.js' %}" defer></script>{% endblock %}

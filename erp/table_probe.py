@@ -29,7 +29,12 @@ def normalize(value):
 
 def csv_rows(data):
     text=data.decode('utf-8-sig')
-    dialect=csv.Sniffer().sniff(text[:4096],delimiters=',;'+chr(9))
+    try:
+        dialect=csv.Sniffer().sniff(text[:4096],delimiters=',;'+chr(9))
+    except csv.Error:
+        if any(value in text for value in (',', ';', chr(9))):
+            raise
+        dialect = csv.excel
     rows=[]
     for index,row in enumerate(csv.reader(io.StringIO(text),dialect=dialect)):
         if index>MAX_ROWS or len(row)>MAX_COLUMNS:

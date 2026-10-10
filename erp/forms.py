@@ -22,6 +22,8 @@ class VersionedForm(forms.ModelForm):
                 field.widget.attrs['class'] = 'form-control'
             if isinstance(field.widget, forms.Textarea):
                 field.widget.attrs['rows'] = 3
+            if isinstance(field.widget, forms.DateInput) and field.widget.input_type == 'date':
+                field.widget.format = '%Y-%m-%d'
 
     def clean_code(self):
         return self.cleaned_data['code'].strip().upper()
@@ -67,9 +69,9 @@ class ArticleForm(VersionedForm):
         for name in ('purchase_unit', 'consumption_unit', 'concentration_unit'):
             self.fields[name].queryset = Unit.objects.filter(active=True)
         groups = [
-            (_('Identification'), ['code', 'name', 'category', 'manufacturer', 'manufacturer_reference', 'catalog_reference', 'base_unit', 'criticality', 'active']),
+            (_('Identification'), ['code', 'name', 'category', 'manufacturer', 'brand', 'manufacturer_reference', 'catalog_reference', 'supplier_reference', 'base_unit', 'criticality', 'active']),
             (_('Informations scientifiques'), ['name_en', 'name_ar', 'cas', 'concentration_value', 'concentration_unit', 'grade', 'format', 'specifications']),
-            (_('Approvisionnement'), ['preferred_supplier', 'packaging', 'purchase_unit', 'consumption_unit', 'minimum_stock', 'safety_stock', 'reorder_point', 'target_stock', 'order_multiple', 'minimum_order_quantity', 'lead_time_days']),
+            (_('Approvisionnement'), ['preferred_supplier', 'packaging', 'pack_quantity', 'purchase_unit', 'consumption_unit', 'minimum_stock', 'safety_stock', 'reorder_point', 'target_stock', 'order_multiple', 'minimum_order_quantity', 'lead_time_days']),
             (_('Conservation'), ['shelf_life_days', 'after_open_days', 'temperature_min', 'temperature_max', 'light_sensitive', 'storage_instructions']),
         ]
         self.groups = [{'title': title, 'fields': [self[name] for name in names]} for title, names in groups]

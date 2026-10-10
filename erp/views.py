@@ -123,7 +123,7 @@ def record_list(request, section):
     if search and section != 'delegations':
         condition = Q(code__icontains=search) | Q(name__icontains=search) | Q(name_en__icontains=search) | Q(name_ar__icontains=search)
         if section == 'articles':
-            condition |= Q(manufacturer_reference__icontains=search) | Q(catalog_reference__icontains=search) | Q(cas__icontains=search)
+            condition |= Q(manufacturer_reference__icontains=search) | Q(catalog_reference__icontains=search) | Q(supplier_reference__icontains=search) | Q(cas__icontains=search)
         qs = qs.filter(condition)
     state = request.GET.get('state', 'active')
     if state in ('active', 'inactive'):

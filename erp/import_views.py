@@ -9,8 +9,8 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET,require_http_methods
 
-from .import_forms import ImportApplyForm,ImportCancelForm,ImportUploadForm
-from .models import ImportBatch
+from .import_forms import ImportApplyForm,ImportCancelForm,ImportUploadForm,ImportMappingForm
+from .models import ImportBatch,ImportMapping
 from .permissions import has_access,is_manager
 from .services.bulk_imports import apply_import,cancel_import,preview_import,require_batch
 from .services.procurement import plan_scope
@@ -32,9 +32,14 @@ def import_home(request):
     form=ImportUploadForm(request.POST or None,request.FILES or None,user=request.user)
     if request.method=='POST' and form.is_valid():
         values=dict(form.cleaned_data)
+        assisted = values.pop('assisted')
         uploaded=values.pop('file')
         data=uploaded.read(MAX_FILE+1)
         try:
+            if assisted:
+                from .services.import_mapping import stage_import
+                mapping = stage_import(request.user, filename=uploaded.name, data=data, **values)
+                return redirect('erp:import-mapping', pk=mapping.pk)
             batch=preview_import(request.user,filename=uploaded.name,data=data,**values)
         except (ValidationError,IntegrityError) as exc:
             add_validation(form,exc)
@@ -121,3 +126,28 @@ def import_report(request,pk):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Cache-Control']='private, no-store'
     return response
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def import_mapping(request, pk):
+    from .services.import_mapping import preview_mapping, require_mapping
+    mapping = get_object_or_404(ImportMapping, pk=pk, actor=request.user)
+    form = ImportMappingForm(request.POST or None, mapping=mapping)
+    try:
+        require_mapping(request.user, mapping)
+    except ValidationError as error:
+        add_validation(form, error)
+    else:
+        if request.method == 'POST' and form.is_valid():
+            choices = {name.removeprefix('column_'): int(index) for name, index in form.cleaned_data.items()
+                if name.startswith('column_') and index != ''}
+            try:
+                batch = preview_mapping(request.user, mapping.pk, choices=choices,
+                    clear_fields=form.cleaned_data.get('clear_fields', []))
+            except (ValidationError, IntegrityError) as error:
+                add_validation(form, error)
+            else:
+                return redirect('erp:import-detail', pk=batch.pk)
+    return render(request, 'erp/import_mapping.html', {'form': form, 'mapping': mapping,
+        'preview': mapping.matrix[:6]}, status=400 if form.errors else 200)

@@ -142,7 +142,10 @@ def _prepare(user,kind,rows,plan):
     seen=set()
     for item in rows:
         data=item['data']
-        missing=[str(LABELS[name]) for name,value in data.items() if name in SCHEMAS[kind]['required'] and not value]
+        required = SCHEMAS[kind]['required']
+        if kind == 'CATALOG' and Article.objects.filter(code=data.get('code', '').strip().upper()).exists():
+            required = ['code']
+        missing=[str(LABELS[name]) for name,value in data.items() if name in required and not value]
         if missing:
             item['preparation_error']=str(_('Champs obligatoires vides : %(fields)s')) % {'fields':', '.join(missing)}
         identifier=data.get('container_code') or data.get('code') or data.get('article_code') if kind in ('CATALOG','LOCATIONS','SAMPLES','INITIAL','RECEIPTS','PLAN') else _hash(data)
@@ -185,12 +188,16 @@ def _catalog(user,item):
     obj=Article.objects.filter(code=data['code'].strip().upper()).first()
     if (str(obj.pk) if obj else None)!=item.get('existing_id'):
         raise Conflict(_('La présence de cet article a changé depuis l’aperçu.'))
-    values={'code':data['code'],'name':data['name'],'category':_get(Category,data['category_code']),
-        'base_unit':_get(Unit,data['base_unit_code'])}
-    for name in ('name_en','name_ar','manufacturer_reference','cas','packaging','specifications'):
+    values={'code':data['code']}
+    if data.get('name') or obj is None:
+        values['name'] = data.get('name', '')
+    for field, model, key in (('category', Category, 'category_code'), ('base_unit', Unit, 'base_unit_code')):
+        if data.get(key) or obj is None:
+            values[field] = _get(model, data.get(key, ''))
+    for name in ('name_en','name_ar','manufacturer_reference','catalog_reference','supplier_reference','brand','cas','packaging','specifications'):
         if data.get(name):
             values[name]=data[name]
-    for name in ('minimum_stock','safety_stock','reorder_point','target_stock','order_multiple','minimum_order_quantity'):
+    for name in ('pack_quantity','minimum_stock','safety_stock','reorder_point','target_stock','order_multiple','minimum_order_quantity'):
         if data.get(name):
             values[name]=_decimal(data[name])
     for field,model,key in (('purchase_unit',Unit,'purchase_unit_code'),('manufacturer',Party,'manufacturer_code'),
@@ -201,6 +208,11 @@ def _catalog(user,item):
         values['lead_time_days']=_integer(data['lead_time_days'])
     if data.get('criticality'):
         values['criticality']=_criticality(data['criticality'])
+    fields = {'supplier_code': 'preferred_supplier', 'manufacturer_code': 'manufacturer', 'purchase_unit_code': 'purchase_unit'}
+    for name in item.get('clear_fields', []):
+        if name in SCHEMAS['CATALOG']['optional'] and not data.get(name):
+            field = Article._meta.get_field(fields.get(name, name))
+            values[field.name] = None if field.null else field.get_default()
     return save_article(user,values,pk=obj.pk if obj else None,expected=item.get('expected'))
 
 
@@ -245,6 +257,8 @@ def _receipt(user,batch,item):
         'unit':_get(Unit,data['unit_code']),'received_on':_date(data['received_on']),'condition':data['condition'],
         'supplier':_get(Party,data.get('supplier_code',''),optional=True),'currency':data.get('currency') or 'DZD',
         'initial':batch.kind=='INITIAL','order_reference':data.get('order_reference',''),
+        'delivery_reference': data.get('delivery_reference', ''), 'serial_number': data.get('serial_number', ''),
+        'barcode': data.get('barcode', ''),
         'cold_chain_ok':_boolean(data.get('cold_chain_ok',''))}
     for field in ('expires_on','manufactured_on'):
         if data.get(field):
@@ -403,16 +417,18 @@ def require_batch(user,batch):
 
 
 @transaction.atomic
-def preview_import(user,*,key,kind,filename,data,reason,plan=None):
+def preview_import(user,*,key,kind,filename,data,reason,plan=None,prepared_rows=None,source_sha256=None):
     require_kind(user,kind,plan)
     if not reason.strip() or len(reason)>500:
         raise ValidationError(_('Justifiez l’origine et le but de cet import.'))
     if plan is not None and kind!='PLAN':
         raise ValidationError(_('Un plan ne doit être associé qu’à un import de ses articles.'))
     key=_key(key)
-    rows=parse_table(kind,filename,data)
-    digest=hashlib.sha256(data).hexdigest()
+    rows=parse_table(kind,filename,data) if prepared_rows is None else prepared_rows
+    digest=hashlib.sha256(data).hexdigest() if source_sha256 is None else source_sha256
     creation_hash=_hash({'kind':kind,'file':digest,'plan':str(plan.pk) if plan else None,'reason':reason})
+    if prepared_rows is not None:
+        creation_hash = _hash({'source': creation_hash, 'mapped_rows': prepared_rows})
     lock_tree('import-creation')
     existing=ImportBatch.objects.filter(creation_key=key).first()
     if existing:

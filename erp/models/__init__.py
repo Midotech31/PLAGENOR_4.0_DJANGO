@@ -6,6 +6,7 @@ from .access import AccessGrant, Capability
 from .work import WorkComment, WorkItem
 
 from .stock import (InternalPreparation, StockContainer, StockEntry, StockLot, StockMovement, StockReceipt, StockReservation)
+from .stock import StockDispatch, StockDispatchLine, StockReturn
 
 from .inventory import InventoryCampaign, InventoryLine
 
@@ -25,6 +26,7 @@ from .planning import (
 from .procurement import (ForecastObservation, ProcurementCdcItemLink, ProcurementLine, ProcurementPlan, ProcurementRequirementLink, ProcurementRevision, PurchaseOrder, PurchaseOrderLine, PurchaseReceiptLink)
 
 from .imports import ImportBatch
+from .imports import ImportMapping
 from .legacy_inventory import LegacyInventoryRecord
 
 from .alerts import AlertAcknowledgement,AlertDigest,AlertPolicy
