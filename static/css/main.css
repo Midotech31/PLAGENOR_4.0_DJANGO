@@ -3,6 +3,9 @@
    Modern dashboard with dark sidebar, elevated cards, smooth animations
    ============================================================ */
 
+/* Hidden until the component has initialized, including during slow loading. */
+[x-cloak] { display: none !important; }
+
 /* --- Reset & Fonts --- */
 /* Self-hosted fonts (no external CDN).
    Files live in static/fonts/ and are served by WhiteNoise, so the UI
@@ -695,8 +698,10 @@ input, select, textarea { font-family: inherit; }
     50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0); }
 }
 
-/* Notification dropdown */
-.notif-dropdown {
+/* Topbar disclosures share the same positioning and visual treatment. */
+.topbar-menu { position: relative; }
+.notif-dropdown,
+.profile-dropdown {
     position: absolute;
     inset-inline-end: 0;
     top: calc(100% + 8px);
@@ -708,6 +713,7 @@ input, select, textarea { font-family: inherit; }
     z-index: 200;
     overflow: hidden;
 }
+.profile-dropdown { width: 220px; }
 
 /* Topbar user */
 .topbar-user {
@@ -2130,8 +2136,12 @@ a:has(.service-card):hover .service-card,
     .topbar-search { display: none; }
     .topbar-logout { display: none; }
     /* Keep dropdowns inside the viewport. */
+    .topbar-menu { position: static; }
     .notif-dropdown,
-    .profile-dropdown { width: min(320px, calc(100vw - 24px)); }
+    .profile-dropdown {
+        inset-inline-end: 12px;
+        width: min(320px, calc(100vw - 24px));
+    }
 
     /* No-zoom inputs: iOS Safari zooms when a focused field is < 16px.
        Bump form controls to 16px on touch widths. */

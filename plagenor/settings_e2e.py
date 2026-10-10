@@ -24,3 +24,6 @@ RATE_LIMIT_FAIL_CLOSED = False
 # Each Playwright project uses a distinct documentation-only proxy address so
 # the real per-IP login throttle stays enabled without coupling browser suites.
 TRUST_PROXY_HEADERS = True
+# Exercise the same enforced, no-eval policy as production. Report-only mode
+# previously hid runtime failures in Alpine's standard evaluator.
+CSP_REPORT_ONLY = False
