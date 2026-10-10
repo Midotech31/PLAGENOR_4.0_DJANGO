@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_CEILING
 
 from django.core.exceptions import ValidationError
 from django.db.models import BooleanField, Case, DateField, OuterRef, Subquery, Value, When
-from django.db.models.functions import Coalesce, TruncDate
+from django.db.models.functions import Coalesce, Least, TruncDate
 from django.utils import timezone
 
 from erp.models import Article, Capability, StockEntry, StockReceipt
@@ -18,7 +18,8 @@ def with_availability(queryset):
         'received_on', 'pk').values('received_on')[:1]
     return queryset.annotate(stock_usable=Case(When(usable_filter(), then=Value(True)),
         default=Value(False), output_field=BooleanField()),
-        stock_received_on=Coalesce('fifo_received_on', Subquery(receipts, output_field=DateField()), TruncDate('created_at')))
+        stock_received_on=Coalesce('fifo_received_on', Subquery(receipts, output_field=DateField()), TruncDate('created_at')),
+        stock_expiry=Coalesce(Least('use_by', 'lot__expires_on'), 'use_by', 'lot__expires_on'))
 
 
 def grouped_rows(queryset, view, identities):

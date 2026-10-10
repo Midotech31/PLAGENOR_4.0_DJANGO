@@ -88,7 +88,7 @@ test('Admin Ops receives, distributes two products, returns and aliquots through
     await page.locator('[name=status]').selectOption('AVAILABLE');
     await page.locator('[name=reason]').fill('Contrôle conforme');
     await save(page);
-    await expect(page.locator('.erp-card-count').first()).toContainText('10,125');
+    await expect(page.locator('.erp-card-count').first()).toHaveText(/10[.,]1250*/);
     await audit(page);
   }
   await page.goto(`/erp/stock/distributions/new/?container=${sources[0].id}`);
@@ -113,7 +113,7 @@ test('Admin Ops receives, distributes two products, returns and aliquots through
   await page.locator('[name=condition]').fill('Flacon intact');
   await page.locator('[name=reason]').fill('Reliquat retourné');
   await save(page);
-  await expect(page.locator('.erp-card-count').first()).toContainText('1,125');
+  await expect(page.locator('.erp-card-count').first()).toHaveText(/1[.,]1250*/);
   await expect(page.locator('.erp-card-count').nth(1)).toHaveText('0');
   await page.goto(sources[0].url);
   await expect(page.locator('.erp-card-count').first()).toHaveText('8');
@@ -139,6 +139,28 @@ test('Admin Ops receives, distributes two products, returns and aliquots through
   await page.screenshot({path:info.outputPath('stock-dashboard.png'),fullPage:true});
   await page.goto(dispatchUrl);
   await expect(page.locator('.erp-table tbody tr').filter({hasText:`${key}-C1`})).toContainText('1');
+  await page.goto('/erp/imports/');
+  await page.locator('[name=kind]').selectOption('CATALOG');
+  await page.locator('[name=assisted]').check();
+  await page.locator('[name=reason]').fill('Références du fournisseur confirmées');
+  await page.locator('[name=file]').setInputFiles({name:'references.csv',mimeType:'text/csv',
+    buffer:Buffer.from(`Identifiant;Nom;Categorie;Unite;Catalogue\n${key}-A1;;;;CAT-MAPPED-000123\n`)});
+  await save(page);
+  await expect(page).toHaveURL(/\/erp\/imports\/mapping\//);
+  await page.locator('[name=column_code]').selectOption('0');
+  await page.locator('[name=column_name]').selectOption('1');
+  await page.locator('[name=column_category_code]').selectOption('2');
+  await page.locator('[name=column_base_unit_code]').selectOption('3');
+  await page.locator('[name=column_catalog_reference]').selectOption('4');
+  await audit(page);
+  await save(page, '.erp-panel button.btn-primary');
+  await expect(page.locator('.erp-errors')).toHaveCount(0);
+  await page.locator('[name=confirmed]').check();
+  await save(page);
+  await page.goto(sources[0].url);
+  await expect(page.locator('.erp-panel').filter({hasText:'CAT-MAPPED-000123'})).toContainText(`SUP-000${key}-1`);
+  await expect(page.locator('.erp-heading h1')).toHaveText(`Reagent ${key} 1`);
+  await expect(page.locator('.erp-card-count').first()).toHaveText(/7[.,]8750*/);
 });
 
 for (const [language, direction] of [['fr','ltr'], ['en','ltr'], ['ar','rtl']]) {

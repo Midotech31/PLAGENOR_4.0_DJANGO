@@ -45,8 +45,9 @@ def stock_list(request):
     descending = request.GET.get('direction') == 'desc'
     if view == 'containers':
         sort = {'code': 'code', 'article': 'lot__article__code', 'quantity': 'quantity',
-            'expiry': 'use_by', 'location': 'location__code'}.get(request.GET.get('sort'), 'lot__article__code')
-        page = Paginator(with_availability(qs).order_by(('-' if descending else '') + sort, 'pk'), 30).get_page(request.GET.get('page'))
+            'expiry': 'stock_expiry', 'location': 'location__code'}.get(request.GET.get('sort'), 'lot__article__code')
+        order = F(sort).desc(nulls_last=True) if descending else F(sort).asc(nulls_last=True)
+        page = Paginator(with_availability(qs).order_by(order, 'pk'), 30).get_page(request.GET.get('page'))
         for container in page:
             container.stock_available = container.quantity - container.reserved if container.stock_usable else Decimal(0)
     else:
@@ -103,7 +104,7 @@ def receipt_create(request):
 @login_required
 @require_GET
 def stock_detail(request, pk):
-    container = get_object_or_404(stock_queryset(request.user), pk=pk)
+    container = get_object_or_404(with_availability(stock_queryset(request.user)), pk=pk)
     scope = {'category': container.lot.article.category, 'location': container.location}
     permissions = {key: permitted(request.user, capability, **scope) for key, capability in (
         ('consume', Capability.CONSUME_STOCK), ('control', Capability.CONTROL_STOCK),

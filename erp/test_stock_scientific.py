@@ -390,3 +390,126 @@ class ScientificStockTests(OperationFixtures, TestCase):
         self.assertEqual(self.client.get(reverse('erp:ledger'), {'from': 'invalid'}).status_code, 404)
         self.assertContains(self.client.get(reverse('erp:ledger'), {'container': source.pk}), source.code)
         self.assertContains(self.client.get(reverse('erp:ledger'), {'q': 'SUP-00123'}), source.code)
+
+    def test_mapping_guards_deduplication_and_empty_table_leave_business_data_untouched(self):
+        from erp.services.procurement import create_plan
+        from erp.services.table_intake import SCHEMAS
+        data = b'code;name;category_code;base_unit_code\nTIPS;;;\n'
+        values = dict(key=uuid.uuid4(), kind='CATALOG', filename='source.csv', data=data, reason='Fichier scientifique')
+        for changes in ({'reason': ''}, {'data': b''}, {'reason': 'x' * 501}):
+            with self.subTest(changes=changes), self.assertRaises(ValidationError):
+                stage_import(self.ops, **{**values, **changes})
+        plan = create_plan(self.ops, reference='SCI-MAPPING-PLAN', year=timezone.localdate().year + 1, title='Plan du test')
+        with self.assertRaises(ValidationError):
+            stage_import(self.ops, **{**values, 'plan': plan})
+        staged = stage_import(self.ops, **values)
+        self.assertEqual(stage_import(self.ops, **values).pk, staged.pk)
+        with self.assertRaises(Conflict):
+            stage_import(self.ops, **{**values, 'reason': 'Autre source'})
+        choices = dict(code=0, name=1, category_code=2, base_unit_code=3)
+        for mapping in ({**choices, 'unknown': 1}, {**choices, 'code': -1}, {**choices, 'code': '0'},
+                {**choices, 'code': 4}, {'code': 0}, {**choices, 'name': 0}):
+            with self.subTest(mapping=mapping), self.assertRaises(ValidationError):
+                preview_mapping(self.ops, staged.pk, choices=mapping)
+        with self.assertRaises(ValidationError):
+            preview_mapping(self.ops, staged.pk, choices=choices, clear_fields=['code'])
+        schema = SCHEMAS['INITIAL']['required']
+        headers = ';'.join(schema)
+        other = stage_import(self.ops, key=uuid.uuid4(), kind='INITIAL', filename='initial.csv',
+            data=(headers + '\n' + ';'.join('x' for _ in schema) + '\n').encode(), reason='Stock initial')
+        with self.assertRaises(ValidationError):
+            preview_mapping(self.ops, other.pk, choices={name: i for i, name in enumerate(schema)}, clear_fields=['brand'])
+        with self.assertRaises(ValidationError):
+            stage_import(self.ops, **{**values, 'key': uuid.uuid4(), 'data': b'code;name;category_code;base_unit_code\n;;;\n'})
+        empty = stage_import(self.ops, **{**values, 'key': uuid.uuid4()})
+        ImportMapping.objects.filter(pk=empty.pk).update(matrix=[['code', 'name', 'category_code', 'base_unit_code'], ['', '', '', '']])
+        with self.assertRaises(ValidationError):
+            preview_mapping(self.ops, empty.pk, choices=choices)
+        batch = preview_mapping(self.ops, staged.pk, choices=choices)
+        with self.assertRaises(Conflict):
+            preview_mapping(self.ops, staged.pk, choices=choices, clear_fields=['brand'])
+        self.assertFalse(StockMovement.objects.exists())
+        self.assertEqual(Article.objects.get(pk=self.article.pk).catalog_reference, 'CAT-000123')
+        self.assertTrue(batch.report['valid'])
+
+    def test_assisted_import_native_upload_mapping_confirmation_and_conflict(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        data = b'Identifiant;Nom;Categorie;Unite;Catalogue\nTIPS;;;;CAT-NATIVE\n'
+        values = dict(key=uuid.uuid4(), kind='CATALOG', reason='Reprise vérifiée', assisted='on',
+            file=SimpleUploadedFile('scientifique.csv', data, content_type='text/csv'))
+        response = self.client.post(reverse('erp:imports'), values)
+        self.assertEqual(response.status_code, 302)
+        staged = ImportMapping.objects.get()
+        url = reverse('erp:import-mapping', args=[staged.pk])
+        self.assertContains(self.client.get(url), 'scientifique.csv')
+        choices = dict(column_code='0', column_name='1', column_category_code='2', column_base_unit_code='3', column_catalog_reference='4')
+        self.assertEqual(self.client.post(url, choices).status_code, 302)
+        staged.refresh_from_db()
+        self.assertEqual(Article.objects.get(pk=self.article.pk).catalog_reference, 'CAT-000123')
+        self.assertEqual(self.client.post(url, {**choices, 'clear_fields': ['brand']}).status_code, 400)
+        response = self.client.post(reverse('erp:import-detail', args=[staged.batch_id]),
+            {'expected_version': staged.batch.version, 'confirmed': 'on'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Article.objects.get(pk=self.article.pk).catalog_reference, 'CAT-NATIVE')
+        self.assertEqual(Article.objects.get(pk=self.article.pk).supplier_reference, 'SUP-00123')
+
+    def test_expiry_filters_do_not_hide_unknown_dates_and_stock_reorder_excludes_reversed_demand(self):
+        expired, _, _ = self.receive('EXPIRY-PAST', accepted=False, expires_on=timezone.localdate() - timedelta(days=1))
+        soon, _, _ = self.receive('EXPIRY-SOON', expires_on=timezone.localdate() + timedelta(days=20), unit_price='4')
+        no_date, _, _ = self.receive('EXPIRY-NONE', expires_on=None, unit_price='3')
+        for value, obj in (('expired', expired), ('30', soon), ('none', no_date)):
+            response = self.client.get(reverse('erp:stock-list'), {'expiry': value})
+            self.assertContains(response, obj.code)
+            self.assertEqual(response.context['page'].paginator.count, 1)
+        self.article = save_article(self.ops, {'lead_time_days': 30, 'safety_stock': Decimal('1')},
+            pk=self.article.pk, expected=self.article.version)
+        movement = remove_stock(self.ops, no_date.pk, key=uuid.uuid4(), amount='1', unit=self.unit, reason='Analyse', expected=no_date.version)
+        no_date.refresh_from_db()
+        with self.assertRaises(Conflict):
+            remove_stock(self.ops, no_date.pk, key=uuid.uuid4(), amount='1', unit=self.unit, reason='Analyse', expected=1)
+        reverse_stock(self.ops, movement.pk, key=uuid.uuid4(), reason='Analyse annulée')
+        data = dashboard_data(self.ops, stock_queryset(self.ops))
+        row = next(row for row in data['products'] if row['article'].pk == self.article.pk)
+        self.assertEqual(row['consumed'], Decimal(0))
+        self.grant(Capability.VIEW_STOCK, location=self.freezer)
+        self.assertEqual(dashboard_data(self.operator, stock_queryset(self.operator))['costs'], {})
+
+    def test_single_column_csv_is_supported_and_malformed_delimited_csv_is_rejected(self):
+        from erp.table_probe import csv_rows
+        import csv
+        self.assertEqual(csv_rows(b'code\nTIPS\n'), [['code'], ['TIPS']])
+        with self.assertRaises(csv.Error):
+            csv_rows(b'a,b,c\n1,2\n3\n')
+
+    def test_currency_validation_and_native_inventory_form_remain_operational(self):
+        from erp.stock_forms import ReceiptForm, InventoryForm
+        for currency in ('D1Z', 'DZ', '€€€'):
+            self.assertIn('currency', ReceiptForm({'currency': currency}, user=self.ops).errors)
+        self.assertIn('blind', InventoryForm(user=self.ops).fields)
+
+    def test_legacy_expiry_is_used_for_fefo_sorting_and_exports(self):
+        early, _, _ = self.receive('LEGACY-EXPIRY', expires_on=timezone.localdate() + timedelta(days=5))
+        later, _, _ = self.receive('LATER-EXPIRY', expires_on=timezone.localdate() + timedelta(days=10))
+        unknown, _, _ = self.receive('UNKNOWN-EXPIRY', expires_on=None)
+        StockContainer.objects.filter(pk=early.pk).update(use_by=None)
+        self.assertEqual(fefo(self.ops, self.article).first().pk, early.pk)
+        response = self.client.get(reverse('erp:stock-list'), {'sort': 'expiry'})
+        self.assertEqual([obj.pk for obj in response.context['page']], [early.pk, later.pk, unknown.pk])
+        response = self.client.get(reverse('erp:stock-list'), {'sort': 'expiry', 'direction': 'desc'})
+        self.assertEqual([obj.pk for obj in response.context['page']], [later.pk, early.pk, unknown.pk])
+        response = self.client.get(reverse('erp:stock-export'), {'q': early.code})
+        self.assertEqual(load_workbook(io.BytesIO(response.content)).active['U2'].value,
+            early.lot.expires_on.isoformat())
+
+    def test_browser_database_names_are_isolated_and_reject_production_paths(self):
+        import importlib
+        from django.core.exceptions import ImproperlyConfigured
+        import plagenor.settings_e2e as isolated
+        try:
+            with patch.dict('os.environ', {'PLAGENOR_E2E_DATABASE_NAME': 'plagenor-e2e-Safe123.sqlite3'}):
+                self.assertEqual(importlib.reload(isolated).DATABASES['default']['NAME'].name, 'plagenor-e2e-Safe123.sqlite3')
+            for name in ('plagenor.sqlite3', '../plagenor-e2e.sqlite3'):
+                with patch.dict('os.environ', {'PLAGENOR_E2E_DATABASE_NAME': name}), self.assertRaises(ImproperlyConfigured):
+                    importlib.reload(isolated)
+        finally:
+            importlib.reload(isolated)

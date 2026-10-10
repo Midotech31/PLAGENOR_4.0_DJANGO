@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 import io
+from itertools import chain
 from pathlib import Path
 import tempfile
 
@@ -34,7 +35,7 @@ def stock_table(queryset, *, limit=100000):
             container.lot.code, container.lot.manufacturer_lot, container.lot.serial_number, container.code,
             str(container.location), container.quantity, container.reserved,
             container.quantity - container.reserved if container.stock_usable else Decimal(0), article.base_unit.code,
-            container.stock_received_on, container.opened_on, container.use_by, str(container.get_status_display())])
+            container.stock_received_on, container.opened_on, container.stock_expiry, str(container.get_status_display())])
     return headers, rows
 
 
@@ -72,13 +73,11 @@ def table_pdf(title, subtitle, headers, rows):
     doc.styles['Normal'].font.size = Pt(8)
     doc.add_heading(title, level=1)
     doc.add_paragraph(subtitle)
-    table = doc.add_table(rows=1, cols=len(headers))
+    table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
     table.style = 'Table Grid'
-    for cell, value in zip(table.rows[0].cells, headers):
-        cell.text = str(value)
-    for values in rows:
-        for cell, value in zip(table.add_row().cells, values):
-            cell.text = value.isoformat() if isinstance(value, date) else '' if value is None else str(value)
+    # Resolve the cell grid once; python-docx row.cells rebuilds the whole grid.
+    for cell, value in zip(table._cells, chain(headers, chain.from_iterable(rows))):
+        cell.text = value.isoformat() if isinstance(value, date) else '' if value is None else str(value)
     with tempfile.TemporaryDirectory(prefix='plagenor-stock-pdf-') as directory:
         source = Path(directory) / 'inventaire.docx'
         doc.save(source)

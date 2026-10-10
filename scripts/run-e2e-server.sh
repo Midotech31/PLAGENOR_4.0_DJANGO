@@ -5,7 +5,9 @@ export DJANGO_SETTINGS_MODULE=plagenor.settings_e2e
 export DEBUG=true
 export SECRET_KEY=e2e-only-secret-key
 
-db_path="data/plagenor-e2e.sqlite3"
+mkdir -p data
+db_path="$(mktemp data/plagenor-e2e-XXXXXXXX.sqlite3)"
+export PLAGENOR_E2E_DATABASE_NAME="${db_path#data/}"
 server_pid=""
 cleanup() {
   if [ -n "$server_pid" ]; then
