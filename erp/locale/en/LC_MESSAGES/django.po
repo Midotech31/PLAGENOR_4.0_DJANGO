@@ -2651,3 +2651,336 @@ msgstr "entries"
 
 msgid "Sortie définitive"
 msgstr "Final issue"
+
+# Native stock workflows and legacy interface labels
+
+msgid "Abandonner cet aperçu"
+msgstr "Discard this preview"
+
+msgid "Analyser un fichier"
+msgstr "Analyze a file"
+
+msgid ""
+"Analyser, corriger, examiner puis appliquer. Un fichier invalide ne produit "
+"aucune modification partielle."
+msgstr ""
+"Analyze, correct, review and apply. An invalid file never produces partial "
+"changes."
+
+msgid "Aperçu du fichier et erreurs"
+msgstr "File preview and errors"
+
+msgid "Aperçu valable jusqu’au"
+msgstr "Preview valid until"
+
+msgid "Appliquer l’import vérifié"
+msgstr "Apply the verified import"
+
+msgid "Article / contenant"
+msgstr "Product / container"
+
+msgid "Aucun import enregistré."
+msgstr "No imports recorded."
+
+msgid "Aucun mouvement enregistré."
+msgstr "No movements recorded."
+
+msgid ""
+"Aucune donnée métier n’a encore été modifiée. La confirmation applique "
+"toutes les lignes dans une seule transaction, après une nouvelle "
+"vérification des droits et des versions."
+msgstr ""
+"No operational data has been changed. Confirmation applies all rows in one "
+"transaction after checking permissions and versions again."
+
+msgid "Bloqué / expiré"
+msgstr "Blocked / expired"
+
+msgid "Cet aperçu a été abandonné."
+msgstr "This preview was discarded."
+
+msgid "Chaîne du froid respectée"
+msgstr "Cold chain maintained"
+
+msgid "Code du nouveau contenant en cas de division"
+msgstr "New container code for a partial transfer"
+
+msgid "Code interne du contenant"
+msgstr "Internal container code"
+
+msgid "Code interne du lot"
+msgstr "Internal lot code"
+
+msgid "Commande et traçabilité"
+msgstr "Order and traceability"
+
+msgid "Contre-passer"
+msgstr "Reverse"
+
+msgid "Contre-passer un mouvement"
+msgstr "Reverse a movement"
+
+msgid "Contrôle / rappel du lot"
+msgstr "Lot inspection / recall"
+
+msgid "Contrôler"
+msgstr "Inspect"
+
+msgid "Contrôler le contenant"
+msgstr "Inspect the container"
+
+msgid "Contrôler les soldes"
+msgstr "Check stock balances"
+
+msgid "Correction"
+msgstr "Correction"
+
+msgid "Date de commande"
+msgstr "Order date"
+
+msgid "Date de fabrication"
+msgstr "Manufacturing date"
+
+msgid "Date de réception"
+msgstr "Receipt date"
+
+msgid "Date d’ouverture"
+msgstr "Opening date"
+
+msgid "Demande PLAGENOR associée"
+msgstr "Linked PLAGENOR request"
+
+msgid "Destination"
+msgstr "Destination"
+
+msgid "Disponible pour utilisation"
+msgstr "Available for use"
+
+msgid "Documents de réception"
+msgstr "Receipt documents"
+
+msgid "Domaine"
+msgstr "Domain"
+
+msgid "Emplacement de réception"
+msgstr "Receiving location"
+
+msgid "Enregistrer l’ouverture"
+msgstr "Record opening"
+
+msgid "Enregistrer une sortie"
+msgstr "Record a stock outflow"
+
+msgid "Historique des imports"
+msgstr "Import history"
+
+msgid "Historique du contenant"
+msgstr "Container history"
+
+msgid "Identification et quantité"
+msgstr "Identification and quantity"
+
+msgid "Import appliqué le"
+msgstr "Import applied on"
+
+msgid "Imports contrôlés"
+msgstr "Validated imports"
+
+msgid "Inventaire et stock"
+msgstr "Inventory and stock"
+
+msgid "Inventaires physiques"
+msgstr "Physical stock counts"
+
+msgid "Journal des mouvements"
+msgstr "Movement ledger"
+
+msgid "Justification / compte rendu"
+msgstr "Reason / report"
+
+msgid "Justification du contrôle"
+msgstr "Inspection reason"
+
+msgid "Laissez vide pour déplacer le contenant entier, avec ses réservations."
+msgstr "Leave blank to move the entire container, including its reservations."
+
+msgid ""
+"Les écritures validées sont conservées. Une erreur se corrige par une "
+"opération traçable."
+msgstr ""
+"Validated entries are preserved. Errors are corrected through a traceable "
+"operation."
+
+msgid "Libérer"
+msgstr "Release"
+
+msgid "Libérer une réservation"
+msgstr "Release a reservation"
+
+msgid "Ligne"
+msgstr "Row"
+
+msgid "Lignes et contrôles"
+msgstr "Rows and checks"
+
+msgid ""
+"L’import est bloqué. Corrigez les lignes signalées puis déposez à nouveau le"
+" fichier."
+msgstr ""
+"The import is blocked. Correct the flagged rows and upload the file again."
+
+msgid "Masquer les quantités théoriques pendant le comptage"
+msgstr "Hide theoretical quantities during counting"
+
+msgid "Modèles de fichiers"
+msgstr "File templates"
+
+msgid "Motif / justification FEFO"
+msgstr "Reason / FEFO justification"
+
+msgid "Motif du transfert"
+msgstr "Transfer reason"
+
+msgid "Mouvement"
+msgstr "Movement"
+
+msgid "Mouvements du contenant"
+msgstr "Container movements"
+
+msgid "Non utilisable"
+msgstr "Unusable"
+
+msgid "Observation"
+msgstr "Observation"
+
+msgid "Observation de comptage"
+msgstr "Count observation"
+
+msgid "Observations du contrôle"
+msgstr "Inspection observations"
+
+msgid "Opérateur / motif"
+msgstr "Operator / reason"
+
+msgid "Ouvrir le contenant"
+msgstr "Open the container"
+
+msgid ""
+"Priorité FEFO : un autre contenant est proposé pour limiter les pertes par "
+"péremption."
+msgstr ""
+"FEFO priority: another container is suggested to reduce expiry losses."
+
+msgid "Préparer un réactif"
+msgstr "Prepare a reagent"
+
+msgid "Péremption fabricant"
+msgstr "Manufacturer expiry date"
+
+msgid "Quantité commandée dans l’unité de gestion"
+msgstr "Ordered quantity in the stock unit"
+
+msgid "Quantité physique comptée (unité de gestion)"
+msgstr "Counted physical quantity (stock unit)"
+
+msgid "Quantité reçue"
+msgstr "Received quantity"
+
+msgid "Quantité réservée"
+msgstr "Reserved quantity"
+
+msgid "Quantité sortie"
+msgstr "Outgoing quantity"
+
+msgid "Quantité transférée"
+msgstr "Transferred quantity"
+
+msgid "Rappeler / contrôler l’ensemble du lot"
+msgstr "Recall / inspect the entire lot"
+
+msgid "Rechercher ou scanner un code"
+msgstr "Search or scan a code"
+
+msgid "Reprise du stock physique initial"
+msgstr "Opening physical stock import"
+
+msgid "Reprise et échanges de données"
+msgstr "Initial import and data exchange"
+
+msgid "Retour aux imports"
+msgstr "Back to imports"
+
+msgid "Run / projet / justification"
+msgstr "Run / project / reason"
+
+msgid "Réception enregistrée. Le stock reste bloqué jusqu’au contrôle."
+msgstr "Receipt recorded. Stock remains blocked until inspection."
+
+msgid "Réception et contrôle"
+msgstr "Receipt and inspection"
+
+msgid "Réceptionner un lot"
+msgstr "Receive a lot"
+
+msgid "Réservation"
+msgstr "Reservation"
+
+msgid "Réservation à consommer"
+msgstr "Reservation to consume"
+
+msgid "Réservations ouvertes"
+msgstr "Open reservations"
+
+msgid "Réserver"
+msgstr "Reserve"
+
+msgid "Réserver du stock"
+msgstr "Reserve stock"
+
+msgid "Stocks et lots physiques"
+msgstr "Physical stock and lots"
+
+msgid "Tous les stocks"
+msgstr "All stock"
+
+msgid "Transférer"
+msgstr "Transfer"
+
+msgid "Transférer le stock"
+msgstr "Transfer stock"
+
+msgid "Type de mouvement"
+msgstr "Movement type"
+
+msgid "Télécharger le rapport Excel"
+msgstr "Download the Excel report"
+
+msgid "Unité de la quantité reçue"
+msgstr "Received quantity unit"
+
+msgid "Utilisable"
+msgstr "Usable"
+
+msgid "Valide"
+msgstr "Valid"
+
+msgid "Voir le protocole et les lots sources"
+msgstr "View the protocol and source lots"
+
+msgid "lignes"
+msgstr "rows"
+
+msgid "À corriger"
+msgstr "Needs correction"
+
+msgid "Épuisé"
+msgstr "Depleted"
+
+msgid "État contrôlé"
+msgstr "Inspected status"
+
+msgid "État des stocks"
+msgstr "Stock status"
+
+msgid "État à la réception"
+msgstr "Condition on receipt"
