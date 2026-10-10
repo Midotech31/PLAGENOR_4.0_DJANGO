@@ -97,7 +97,7 @@
 </div>
 
 <!-- Tab Navigation -->
-<div x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'overview' }">
+<div x-data="dashboardTabs('overview')">
     <div class="tab-list" style="margin-bottom: 24px; flex-wrap: wrap;">
         <button class="tab-item" :class="tab === 'overview' && 'active'" @click="tab = 'overview'">{% trans "Vue d'ensemble" %}</button>
         <button class="tab-item" :class="tab === 'users' && 'active'" @click="tab = 'users'" data-tab="users">{% trans "Utilisateurs" %}</button>
@@ -613,7 +613,7 @@
                         <tbody>
                         {% for row in content_rows %}
                         {% with rid=row.key|slugify %}
-                        <tr x-show="!filter || `{{ row.key|escapejs }} {{ row.fr|default:''|escapejs }} {{ row.en|default:''|escapejs }} {{ row.ar|default:''|escapejs }}`.toLowerCase().includes(filter.toLowerCase())">
+                        <tr data-search-text="{{ row.key }} {{ row.fr|default:'' }} {{ row.en|default:'' }} {{ row.ar|default:'' }}" x-show="!filter || $el.dataset.searchText.toLowerCase().includes(filter.toLowerCase())">
                             <td>
                                 <strong class="font-mono">{{ row.key }}</strong>
                                 {% if row.missing %}<br><span class="badge" style="background:#fef3c7; color:#92400e;" title="{% trans 'Langues manquantes' %}">⚠ {{ row.missing|join:", " }}</span>{% endif %}

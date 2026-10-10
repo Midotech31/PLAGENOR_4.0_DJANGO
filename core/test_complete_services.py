@@ -295,6 +295,7 @@ class CompleteServiceContracts(TestCase):
         config=importlib.import_module('plagenor.settings_e2e')
         self.assertIn('locmem',config.EMAIL_BACKEND)
         self.assertTrue(str(config.DATABASES['default']['NAME']).endswith('plagenor-e2e.sqlite3'))
+        self.assertFalse(config.CSP_REPORT_ONLY)
 
     def test_pricing_without_multiplier_and_conditional_tier_limits(self):
         from core.pricing import calculate_price,resolve_cost,calculate_cost_from_db,PricingConfigurationError
