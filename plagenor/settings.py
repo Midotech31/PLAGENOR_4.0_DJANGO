@@ -94,7 +94,7 @@ INSTALLED_APPS = [
     # the admin sees its registered translation options at class-definition
     # time. See https://django-modeltranslation.readthedocs.io
     'modeltranslation',
-    'django.contrib.admin',
+    'plagenor.admin_apps.PlagenorAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

@@ -2205,3 +2205,773 @@ msgstr "نسبة الرسوم (%%)"
 
 msgid "Le modèle Travaux conserve ses 249 postes structurés. Modifiez les postes existants ou dupliquez le dossier complet ; la copie sélective avec ajout d’articles est réservée aux équipements et réactifs."
 msgstr "يحافظ نموذج الأشغال على بنوده المنظمة البالغ عددها 249. عدّل البنود الموجودة أو انسخ الملف كاملًا؛ تتاح إعادة الاستخدام الانتقائية التي تضيف مواد للتجهيزات والكواشف."
+
+msgid "Actualiser"
+msgstr "تحديث"
+
+msgid "Ajouter un produit"
+msgstr "إضافة منتج"
+
+msgid "Aperçu du fichier"
+msgstr "معاينة الملف"
+
+msgid "Associez chaque colonne obligatoire une seule fois."
+msgstr "اربط كل عمود إلزامي مرة واحدة."
+
+msgid "Associez la référence fournisseur à un fournisseur préféré."
+msgstr "اربط مرجع المورد بالمورد المفضل."
+
+msgid "Au-dessus de la cible"
+msgstr "أعلى من المخزون المستهدف"
+
+msgid "Aucun stock dans ce périmètre."
+msgstr "لا يوجد مخزون ضمن هذا النطاق."
+
+msgid "Aucune distribution."
+msgstr "لا توجد عمليات توزيع."
+
+msgid "Bloqués"
+msgstr "محجوزة عن الاستخدام"
+
+msgid "Bon de distribution"
+msgstr "سند توزيع"
+
+msgid "Bon de livraison"
+msgstr "سند تسليم"
+
+msgid "Bons de distribution"
+msgstr "سندات التوزيع"
+
+msgid "Bénéficiaire"
+msgstr "المستفيد"
+
+msgid "Ce stock est bloqué, expiré ou non accepté."
+msgstr "هذا المخزون محجوز عن الاستخدام أو منتهي الصلاحية أو غير مقبول."
+
+msgid "Cet aperçu utilise déjà une autre correspondance."
+msgstr "تستخدم هذه المعاينة ربطًا آخر للأعمدة."
+
+msgid "Cet identifiant a déjà été utilisé pour une autre opération."
+msgstr "استُخدم هذا المعرف لعملية أخرى."
+
+msgid "Cet import a expiré. Déposez de nouveau le fichier."
+msgstr "انتهت صلاحية هذا الاستيراد. أودع الملف مجددًا."
+
+msgid "Cette clé de correspondance a déjà été utilisée pour un autre import."
+msgstr "استُخدم مفتاح الربط هذا لاستيراد آخر."
+
+msgid "Choisir la correspondance des colonnes"
+msgstr "اختيار ربط الأعمدة"
+
+msgid "Code article"
+msgstr "رمز المادة"
+
+msgid "Code contenant"
+msgstr "رمز الوعاء"
+
+msgid "Code du contenant après division interne"
+msgstr "رمز الوعاء بعد التقسيم الداخلي"
+
+msgid "Code fabricant / GS1"
+msgstr "رمز المصنع / GS1"
+
+msgid "Code interne du contenant retourné"
+msgstr "الرمز الداخلي للوعاء المرتجع"
+
+msgid "Code lot"
+msgstr "رمز الدفعة"
+
+msgid "Colonnes visibles"
+msgstr "الأعمدة المعروضة"
+
+msgid "Commande / marché"
+msgstr "الطلب / الصفقة"
+
+msgid "Consommé"
+msgstr "المستهلك"
+
+msgid "Contenant"
+msgstr "الوعاء"
+
+msgid "Contenant / référence / lot / emplacement / disponible"
+msgstr "الوعاء / المرجع / الدفعة / الموقع / المتاح"
+
+msgid "Contenants"
+msgstr "الأوعية"
+
+msgid "Contre-passez les retours actifs avant de corriger cette distribution."
+msgstr "اعكس المرتجعات السارية قبل تصحيح هذا التوزيع."
+
+msgid "Contrôle"
+msgstr "الفحص"
+
+msgid "Contrôle du contenant"
+msgstr "فحص الوعاء"
+
+msgid "Correspondance de colonne invalide."
+msgstr "ربط العمود غير صالح."
+
+msgid "Correspondance des colonnes"
+msgstr "ربط الأعمدة"
+
+msgid "Croissant"
+msgstr "تصاعدي"
+
+msgid "Créer une aliquote"
+msgstr "إنشاء جزء مقتطع"
+
+msgid "Dans les 30 jours"
+msgstr "خلال 30 يومًا"
+
+msgid "Date de distribution"
+msgstr "تاريخ التوزيع"
+
+msgid "Date de retour"
+msgstr "تاريخ الإرجاع"
+
+msgid "Date de réception initiale"
+msgstr "تاريخ الاستلام الأول"
+
+msgid "Date limite"
+msgstr "آخر تاريخ للاستخدام"
+
+msgid "Date limite d’utilisation"
+msgstr "آخر تاريخ للاستخدام"
+
+msgid "Destination du transfert interne"
+msgstr "وجهة النقل الداخلي"
+
+msgid "Disponibilité par emplacement"
+msgstr "المتاح حسب الموقع"
+
+msgid "Distribuer"
+msgstr "توزيع"
+
+msgid "Distribuer des produits"
+msgstr "توزيع المنتجات"
+
+msgid "Décroissant"
+msgstr "تنازلي"
+
+msgid "Effacer ces champs facultatifs si la cellule est vide"
+msgstr "مسح هذه الحقول الاختيارية عندما تكون الخلية فارغة"
+
+msgid "Emplacement"
+msgstr "الموقع"
+
+msgid "Emplacement du retour"
+msgstr "موقع الإرجاع"
+
+msgid "Expiré"
+msgstr "منتهي الصلاحية"
+
+msgid "Export Excel filtré"
+msgstr "تصدير النتائج المصفاة إلى Excel"
+
+msgid "Export PDF filtré"
+msgstr "تصدير النتائج المصفاة إلى PDF"
+
+msgid "Export indisponible"
+msgstr "التصدير غير متاح"
+
+msgid "Flux de la période"
+msgstr "حركات الفترة"
+
+msgid "Import Excel / CSV"
+msgstr "استيراد Excel / CSV"
+
+msgid "Justifiez l’import et choisissez un fichier de 10 Mo au maximum."
+msgstr "برر الاستيراد واختر ملفًا لا يتجاوز 10 ميغابايت."
+
+msgid ""
+"La conversion PDF n’a pas abouti. Réessayez ou utilisez l’export Excel."
+msgstr "فشل تحويل PDF. حاول مجددًا أو استخدم تصدير Excel."
+
+msgid "La distribution ne peut pas précéder la réception."
+msgstr "لا يمكن أن يسبق التوزيع الاستلام."
+
+msgid "La quantité d’une aliquote doit être inférieure au contenu d’origine."
+msgstr "يجب أن تكون كمية الجزء المقتطع أقل من المحتوى الأصلي."
+
+msgid "La quantité retournée dépasse le reliquat de la sortie définitive."
+msgstr "تتجاوز الكمية المرتجعة الرصيد المتبقي من الصرف النهائي."
+
+msgid "La recherche a échoué. Réessayez."
+msgstr "فشل البحث. حاول مجددًا."
+
+msgid "Laboratoire / bénéficiaire"
+msgstr "المخبر / المستفيد"
+
+msgid "Le tableau ne contient aucune ligne de données."
+msgstr "لا يحتوي الجدول على صفوف بيانات."
+
+msgid "Les flux utilisent la date d’enregistrement des mouvements."
+msgstr "تعتمد الحركات على تاريخ تسجيلها."
+
+msgid "Lot / contenant"
+msgstr "الدفعة / الوعاء"
+
+msgid "Lot fabricant"
+msgstr "دفعة المصنع"
+
+msgid "Lots"
+msgstr "الدفعات"
+
+msgid "Lots / emplacements"
+msgstr "الدفعات / المواقع"
+
+msgid "Marque"
+msgstr "العلامة التجارية"
+
+msgid "Mode"
+msgstr "النمط"
+
+msgid "Mode de distribution"
+msgstr "نمط التوزيع"
+
+msgid "Non importé"
+msgstr "غير مستورد"
+
+msgid "Opérateur"
+msgstr "المشغل"
+
+msgid "Ordre"
+msgstr "الترتيب"
+
+msgid "Origine"
+msgstr "المصدر"
+
+msgid "Ouverture"
+msgstr "الفتح"
+
+msgid "PLAGENOR 4.0 — Bon de distribution"
+msgstr "PLAGENOR 4.0 — سند توزيع"
+
+msgid "PLAGENOR 4.0 — Inventaire"
+msgstr "PLAGENOR 4.0 — الجرد"
+
+msgid "Physique"
+msgstr "الفعلي"
+
+msgid "Physique avant / après"
+msgstr "الفعلي قبل / بعد"
+
+msgid "Pilotage du stock"
+msgstr "لوحة متابعة المخزون"
+
+msgid "Prix"
+msgstr "السعر"
+
+msgid "Prix unitaire (unité de gestion)"
+msgstr "سعر الوحدة (وحدة التسيير)"
+
+msgid "Produit"
+msgstr "المنتج"
+
+msgid "Produit / référence"
+msgstr "المنتج / المرجع"
+
+msgid "Produits"
+msgstr "المنتجات"
+
+msgid "Produits distribués"
+msgstr "المنتجات الموزعة"
+
+msgid "Péremption"
+msgstr "انتهاء الصلاحية"
+
+msgid "Péremption proche"
+msgstr "قريبة انتهاء الصلاحية"
+
+msgid "Période en jours"
+msgstr "الفترة بالأيام"
+
+msgid "Quantité distribuée"
+msgstr "الكمية الموزعة"
+
+msgid "Quantité par conditionnement"
+msgstr "الكمية لكل عبوة"
+
+msgid "Quantité retournée"
+msgstr "الكمية المرتجعة"
+
+msgid "Quantités par unité"
+msgstr "الكميات حسب الوحدة"
+
+msgid "Rechercher un contenant"
+msgstr "البحث عن وعاء"
+
+msgid "Reliquat à rendre"
+msgstr "الكمية المتبقية للإرجاع"
+
+msgid "Renseignez la conversion vers l’unité d’achat."
+msgstr "حدد التحويل إلى وحدة الشراء."
+
+msgid "Renseignez le mode, le bénéficiaire et le motif de distribution."
+msgstr "حدد نمط التوزيع والمستفيد وسببه."
+
+msgid "Retour au stock"
+msgstr "العودة إلى المخزون"
+
+msgid "Ruptures"
+msgstr "نفاد المخزون"
+
+msgid "Réapprovisionnement et rotation"
+msgstr "تجديد المخزون ودورانه"
+
+msgid "Réduisez les filtres : cet export dépasse la limite de lignes."
+msgstr "ضيّق نطاق التصفية: يتجاوز هذا التصدير الحد الأقصى للصفوف."
+
+msgid "Référence catalogue, fournisseur, lot, contenant ou QR"
+msgstr "مرجع الكتالوج أو المورد أو الدفعة أو الوعاء أو QR"
+
+msgid "Référence fournisseur"
+msgstr "مرجع المورد"
+
+msgid "Références"
+msgstr "المراجع"
+
+msgid "Réservé"
+msgstr "المحجوز"
+
+msgid "Réservé avant / après"
+msgstr "المحجوز قبل / بعد"
+
+msgid "Sans péremption"
+msgstr "دون تاريخ انتهاء"
+
+msgid "Seuls les champs facultatifs du catalogue peuvent être effacés."
+msgstr "يمكن مسح حقول الكتالوج الاختيارية فقط."
+
+msgid "Sous le seuil"
+msgstr "أقل من الحد"
+
+msgid "Stock physique"
+msgstr "المخزون الفعلي"
+
+msgid "Stock réservé"
+msgstr "المخزون المحجوز"
+
+msgid "Suggestion"
+msgstr "الاقتراح"
+
+msgid "Sélectionnez chaque contenant une seule fois."
+msgstr "اختر كل وعاء مرة واحدة فقط."
+
+msgid "Tous les lots du produit"
+msgstr "جميع دفعات المنتج"
+
+msgid "Transfert interne"
+msgstr "نقل داخلي"
+
+msgid "Tri"
+msgstr "الفرز"
+
+msgid "Télécharger le PDF"
+msgstr "تنزيل PDF"
+
+msgid "Un bon de distribution contient entre une et cent lignes."
+msgstr "يحتوي سند التوزيع على صف واحد إلى مئة صف."
+
+msgid "Un contenant n’existe plus."
+msgstr "أحد الأوعية لم يعد موجودًا."
+
+msgid "Un plan ne doit être associé qu’à un import de ses articles."
+msgstr "يمكن ربط الخطة باستيراد موادها فقط."
+
+msgid ""
+"Une aliquote exige un contenant ouvert et utilisable et une quantité "
+"explicite."
+msgstr "يتطلب الاقتطاع وعاءً مفتوحًا وصالحًا للاستخدام وكمية محددة."
+
+msgid ""
+"Une destination suivie est obligatoire uniquement pour un transfert interne."
+msgstr "تُلزم وجهة خاضعة للمتابعة في النقل الداخلي فقط."
+
+msgid ""
+"Une sortie définitive diminue le stock suivi. Un transfert interne conserve "
+"le total de l’établissement."
+msgstr ""
+"يخفض الصرف النهائي المخزون المتابع. ويحافظ النقل الداخلي على إجمالي مخزون "
+"المؤسسة."
+
+msgid ""
+"Valeurs séparées par devise, selon le dernier prix documenté du lot et les "
+"droits de consultation."
+msgstr ""
+"القيم مفصولة حسب العملة وتستند إلى آخر سعر موثق للدفعة وصلاحيات الاطلاع."
+
+msgid "Valider la distribution"
+msgstr "تأكيد التوزيع"
+
+msgid "Valorisation indicative"
+msgstr "تقييم مالي تقديري"
+
+msgid "Vérifiez la date réelle de l’opération."
+msgstr "تحقق من التاريخ الفعلي للعملية."
+
+msgid "Vérifiez la date, l’état et le motif du retour."
+msgstr "تحقق من تاريخ الإرجاع وحالته وسببه."
+
+msgid "lots"
+msgstr "دفعات"
+
+msgid "lots sans prix consultable"
+msgstr "دفعات دون سعر متاح للاطلاع"
+
+msgid "État au retour"
+msgstr "الحالة عند الإرجاع"
+
+msgid "Étiquette QR"
+msgstr "ملصق QR"
+
+msgid "écritures"
+msgstr "قيود"
+
+msgid "Sortie définitive"
+msgstr "صرف نهائي"
+
+# Native stock workflows and legacy interface labels
+
+msgid "Abandonner cet aperçu"
+msgstr "إلغاء هذه المعاينة"
+
+msgid "Analyser un fichier"
+msgstr "تحليل ملف"
+
+msgid ""
+"Analyser, corriger, examiner puis appliquer. Un fichier invalide ne produit "
+"aucune modification partielle."
+msgstr ""
+"حلّل الملف وصحّحه وراجعه ثم طبّقه. لا يؤدي الملف غير الصالح إلى تعديلات "
+"جزئية."
+
+msgid "Aperçu du fichier et erreurs"
+msgstr "معاينة الملف والأخطاء"
+
+msgid "Aperçu valable jusqu’au"
+msgstr "المعاينة صالحة حتى"
+
+msgid "Appliquer l’import vérifié"
+msgstr "تطبيق الاستيراد المتحقق منه"
+
+msgid "Article / contenant"
+msgstr "المادة / الحاوية"
+
+msgid "Aucun import enregistré."
+msgstr "لا توجد عمليات استيراد مسجلة."
+
+msgid "Aucun mouvement enregistré."
+msgstr "لا توجد حركات مسجلة."
+
+msgid ""
+"Aucune donnée métier n’a encore été modifiée. La confirmation applique "
+"toutes les lignes dans une seule transaction, après une nouvelle "
+"vérification des droits et des versions."
+msgstr ""
+"لم تُعدّل أي بيانات تشغيلية بعد. يطبّق التأكيد جميع الصفوف في معاملة واحدة "
+"بعد إعادة التحقق من الصلاحيات والإصدارات."
+
+msgid "Bloqué / expiré"
+msgstr "محظور / منتهي الصلاحية"
+
+msgid "Cet aperçu a été abandonné."
+msgstr "أُلغيت هذه المعاينة."
+
+msgid "Chaîne du froid respectée"
+msgstr "سلسلة التبريد محفوظة"
+
+msgid "Code du nouveau contenant en cas de division"
+msgstr "رمز الحاوية الجديدة عند التقسيم"
+
+msgid "Code interne du contenant"
+msgstr "الرمز الداخلي للحاوية"
+
+msgid "Code interne du lot"
+msgstr "الرمز الداخلي للدفعة"
+
+msgid "Commande et traçabilité"
+msgstr "الطلب والتتبّع"
+
+msgid "Contre-passer"
+msgstr "عكس الحركة"
+
+msgid "Contre-passer un mouvement"
+msgstr "عكس حركة"
+
+msgid "Contrôle / rappel du lot"
+msgstr "فحص الدفعة / سحبها"
+
+msgid "Contrôler"
+msgstr "فحص"
+
+msgid "Contrôler le contenant"
+msgstr "فحص الحاوية"
+
+msgid "Contrôler les soldes"
+msgstr "التحقق من أرصدة المخزون"
+
+msgid "Correction"
+msgstr "تصحيح"
+
+msgid "Date de commande"
+msgstr "تاريخ الطلب"
+
+msgid "Date de fabrication"
+msgstr "تاريخ التصنيع"
+
+msgid "Date de réception"
+msgstr "تاريخ الاستلام"
+
+msgid "Date d’ouverture"
+msgstr "تاريخ الفتح"
+
+msgid "Demande PLAGENOR associée"
+msgstr "طلب PLAGENOR المرتبط"
+
+msgid "Destination"
+msgstr "الوجهة"
+
+msgid "Disponible pour utilisation"
+msgstr "متاح للاستخدام"
+
+msgid "Documents de réception"
+msgstr "وثائق الاستلام"
+
+msgid "Domaine"
+msgstr "المجال"
+
+msgid "Emplacement de réception"
+msgstr "موقع الاستلام"
+
+msgid "Enregistrer l’ouverture"
+msgstr "تسجيل الفتح"
+
+msgid "Enregistrer une sortie"
+msgstr "تسجيل إخراج من المخزون"
+
+msgid "Historique des imports"
+msgstr "سجل الاستيراد"
+
+msgid "Historique du contenant"
+msgstr "سجل الحاوية"
+
+msgid "Identification et quantité"
+msgstr "التعريف والكمية"
+
+msgid "Import appliqué le"
+msgstr "طُبّق الاستيراد في"
+
+msgid "Imports contrôlés"
+msgstr "عمليات الاستيراد المتحقق منها"
+
+msgid "Inventaire et stock"
+msgstr "الجرد والمخزون"
+
+msgid "Inventaires physiques"
+msgstr "الجرد الفعلي"
+
+msgid "Journal des mouvements"
+msgstr "سجل الحركات"
+
+msgid "Justification / compte rendu"
+msgstr "المبرر / التقرير"
+
+msgid "Justification du contrôle"
+msgstr "مبرر الفحص"
+
+msgid "Laissez vide pour déplacer le contenant entier, avec ses réservations."
+msgstr "اترك الحقل فارغاً لنقل الحاوية كاملة مع الكميات المحجوزة."
+
+msgid ""
+"Les écritures validées sont conservées. Une erreur se corrige par une "
+"opération traçable."
+msgstr "تُحفظ القيود المعتمدة. تُصحّح الأخطاء بعملية قابلة للتتبّع."
+
+msgid "Libérer"
+msgstr "تحرير"
+
+msgid "Libérer une réservation"
+msgstr "تحرير حجز"
+
+msgid "Ligne"
+msgstr "السطر"
+
+msgid "Lignes et contrôles"
+msgstr "الصفوف ونتائج التحقق"
+
+msgid ""
+"L’import est bloqué. Corrigez les lignes signalées puis déposez à nouveau le"
+" fichier."
+msgstr "الاستيراد محظور. صحّح الصفوف المحددة ثم ارفع الملف مجدداً."
+
+msgid "Masquer les quantités théoriques pendant le comptage"
+msgstr "إخفاء الكميات النظرية أثناء العد"
+
+msgid "Modèles de fichiers"
+msgstr "نماذج الملفات"
+
+msgid "Motif / justification FEFO"
+msgstr "السبب / مبرر أولوية انتهاء الصلاحية"
+
+msgid "Motif du transfert"
+msgstr "سبب النقل"
+
+msgid "Mouvement"
+msgstr "الحركة"
+
+msgid "Mouvements du contenant"
+msgstr "حركات الحاوية"
+
+msgid "Non utilisable"
+msgstr "غير قابل للاستخدام"
+
+msgid "Observation"
+msgstr "ملاحظة"
+
+msgid "Observation de comptage"
+msgstr "ملاحظة العد"
+
+msgid "Observations du contrôle"
+msgstr "ملاحظات الفحص"
+
+msgid "Opérateur / motif"
+msgstr "المنفذ / السبب"
+
+msgid "Ouvrir le contenant"
+msgstr "فتح الحاوية"
+
+msgid ""
+"Priorité FEFO : un autre contenant est proposé pour limiter les pertes par "
+"péremption."
+msgstr ""
+"أولوية انتهاء الصلاحية: تُقترح حاوية أخرى لتقليل خسائر انتهاء الصلاحية."
+
+msgid "Préparer un réactif"
+msgstr "تحضير كاشف"
+
+msgid "Péremption fabricant"
+msgstr "تاريخ انتهاء الصلاحية لدى المصنّع"
+
+msgid "Quantité commandée dans l’unité de gestion"
+msgstr "الكمية المطلوبة بوحدة إدارة المخزون"
+
+msgid "Quantité physique comptée (unité de gestion)"
+msgstr "الكمية الفعلية المعدودة (وحدة إدارة المخزون)"
+
+msgid "Quantité reçue"
+msgstr "الكمية المستلمة"
+
+msgid "Quantité réservée"
+msgstr "الكمية المحجوزة"
+
+msgid "Quantité sortie"
+msgstr "الكمية المُخرجة"
+
+msgid "Quantité transférée"
+msgstr "الكمية المنقولة"
+
+msgid "Rappeler / contrôler l’ensemble du lot"
+msgstr "سحب الدفعة كاملة / فحصها"
+
+msgid "Rechercher ou scanner un code"
+msgstr "البحث عن رمز أو مسحه"
+
+msgid "Reprise du stock physique initial"
+msgstr "استيراد المخزون الفعلي الافتتاحي"
+
+msgid "Reprise et échanges de données"
+msgstr "الاستيراد الأولي وتبادل البيانات"
+
+msgid "Retour aux imports"
+msgstr "العودة إلى الاستيراد"
+
+msgid "Run / projet / justification"
+msgstr "التشغيل / المشروع / المبرر"
+
+msgid "Réception enregistrée. Le stock reste bloqué jusqu’au contrôle."
+msgstr "سُجل الاستلام. يبقى المخزون محظوراً حتى الفحص."
+
+msgid "Réception et contrôle"
+msgstr "الاستلام والفحص"
+
+msgid "Réceptionner un lot"
+msgstr "استلام دفعة"
+
+msgid "Réservation"
+msgstr "الحجز"
+
+msgid "Réservation à consommer"
+msgstr "الحجز المراد استهلاكه"
+
+msgid "Réservations ouvertes"
+msgstr "الحجوزات المفتوحة"
+
+msgid "Réserver"
+msgstr "حجز"
+
+msgid "Réserver du stock"
+msgstr "حجز مخزون"
+
+msgid "Stocks et lots physiques"
+msgstr "المخزون الفعلي والدفعات"
+
+msgid "Tous les stocks"
+msgstr "جميع المخزونات"
+
+msgid "Transférer"
+msgstr "نقل"
+
+msgid "Transférer le stock"
+msgstr "نقل المخزون"
+
+msgid "Type de mouvement"
+msgstr "نوع الحركة"
+
+msgid "Télécharger le rapport Excel"
+msgstr "تنزيل تقرير Excel"
+
+msgid "Unité de la quantité reçue"
+msgstr "وحدة الكمية المستلمة"
+
+msgid "Utilisable"
+msgstr "قابل للاستخدام"
+
+msgid "Valide"
+msgstr "صالح"
+
+msgid "Voir le protocole et les lots sources"
+msgstr "عرض البروتوكول والدفعات المصدرية"
+
+msgid "lignes"
+msgstr "صفوف"
+
+msgid "À corriger"
+msgstr "يتطلب التصحيح"
+
+msgid "Épuisé"
+msgstr "نفد"
+
+msgid "État contrôlé"
+msgstr "الحالة بعد الفحص"
+
+msgid "État des stocks"
+msgstr "حالة المخزون"
+
+msgid "État à la réception"
+msgstr "الحالة عند الاستلام"
+
+msgid "En attente de contrôle"
+msgstr "بانتظار الفحص"
+
+msgid "Quarantaine"
+msgstr "الحجر"
+
+msgid "Accepté / disponible"
+msgstr "مقبول / متاح"
+
+msgid "Rappelé"
+msgstr "مسحوب"
+
+msgid "Détruit"
+msgstr "متلف"

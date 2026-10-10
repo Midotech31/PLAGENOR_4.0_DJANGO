@@ -38,3 +38,17 @@ class ImportBatch(Record):
     class Meta:
         ordering=['-created_at']
         indexes=[models.Index(fields=['actor','status','created_at'])]
+
+
+class ImportMapping(Record):
+    key = models.UUIDField(unique=True, editable=False)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    kind = models.CharField(max_length=16, choices=ImportBatch.Kind.choices)
+    plan = models.ForeignKey('erp.ProcurementPlan', on_delete=models.PROTECT, null=True, blank=True)
+    filename = models.CharField(max_length=180)
+    sha256 = models.CharField(max_length=64)
+    matrix = models.JSONField(default=list)
+    choices = models.JSONField(default=dict, blank=True)
+    reason = models.CharField(max_length=500)
+    expires_at = models.DateTimeField()
+    batch = models.OneToOneField(ImportBatch, on_delete=models.PROTECT, null=True, blank=True)

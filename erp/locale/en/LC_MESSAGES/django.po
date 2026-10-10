@@ -2223,3 +2223,779 @@ msgstr "Tax rate (%%)"
 
 msgid "Le modèle Travaux conserve ses 249 postes structurés. Modifiez les postes existants ou dupliquez le dossier complet ; la copie sélective avec ajout d’articles est réservée aux équipements et réactifs."
 msgstr "The Works template retains its 249 structured items. Edit existing items or duplicate the full dossier; selective copying that adds items is available for equipment and reagents."
+
+msgid "Actualiser"
+msgstr "Refresh"
+
+msgid "Ajouter un produit"
+msgstr "Add a product"
+
+msgid "Aperçu du fichier"
+msgstr "File preview"
+
+msgid "Associez chaque colonne obligatoire une seule fois."
+msgstr "Map each required column once."
+
+msgid "Associez la référence fournisseur à un fournisseur préféré."
+msgstr "Associate the supplier reference with a preferred supplier."
+
+msgid "Au-dessus de la cible"
+msgstr "Above target"
+
+msgid "Aucun stock dans ce périmètre."
+msgstr "No stock in this scope."
+
+msgid "Aucune distribution."
+msgstr "No distributions."
+
+msgid "Bloqués"
+msgstr "Blocked"
+
+msgid "Bon de distribution"
+msgstr "Distribution note"
+
+msgid "Bon de livraison"
+msgstr "Delivery note"
+
+msgid "Bons de distribution"
+msgstr "Distribution notes"
+
+msgid "Bénéficiaire"
+msgstr "Beneficiary"
+
+msgid "Ce stock est bloqué, expiré ou non accepté."
+msgstr "This stock is blocked, expired or unapproved."
+
+msgid "Cet aperçu utilise déjà une autre correspondance."
+msgstr "This preview already uses another column mapping."
+
+msgid "Cet identifiant a déjà été utilisé pour une autre opération."
+msgstr "This identifier has already been used for another operation."
+
+msgid "Cet import a expiré. Déposez de nouveau le fichier."
+msgstr "This import has expired. Upload the file again."
+
+msgid "Cette clé de correspondance a déjà été utilisée pour un autre import."
+msgstr "This mapping key has already been used for another import."
+
+msgid "Choisir la correspondance des colonnes"
+msgstr "Choose column mapping"
+
+msgid "Code article"
+msgstr "Product code"
+
+msgid "Code contenant"
+msgstr "Container code"
+
+msgid "Code du contenant après division interne"
+msgstr "Container code after internal split"
+
+msgid "Code fabricant / GS1"
+msgstr "Manufacturer / GS1 code"
+
+msgid "Code interne du contenant retourné"
+msgstr "Internal code of the returned container"
+
+msgid "Code lot"
+msgstr "Lot code"
+
+msgid "Colonnes visibles"
+msgstr "Visible columns"
+
+msgid "Commande / marché"
+msgstr "Order / contract"
+
+msgid "Consommé"
+msgstr "Consumed"
+
+msgid "Contenant"
+msgstr "Container"
+
+msgid "Contenant / référence / lot / emplacement / disponible"
+msgstr "Container / reference / lot / location / available"
+
+msgid "Contenants"
+msgstr "Containers"
+
+msgid "Contre-passez les retours actifs avant de corriger cette distribution."
+msgstr "Reverse active returns before correcting this distribution."
+
+msgid "Contrôle"
+msgstr "Inspection"
+
+msgid "Contrôle du contenant"
+msgstr "Container inspection"
+
+msgid "Correspondance de colonne invalide."
+msgstr "Invalid column mapping."
+
+msgid "Correspondance des colonnes"
+msgstr "Column mapping"
+
+msgid "Croissant"
+msgstr "Ascending"
+
+msgid "Créer une aliquote"
+msgstr "Create an aliquot"
+
+msgid "Dans les 30 jours"
+msgstr "Within 30 days"
+
+msgid "Date de distribution"
+msgstr "Distribution date"
+
+msgid "Date de retour"
+msgstr "Return date"
+
+msgid "Date de réception initiale"
+msgstr "Original receipt date"
+
+msgid "Date limite"
+msgstr "Use by"
+
+msgid "Date limite d’utilisation"
+msgstr "Use-by date"
+
+msgid "Destination du transfert interne"
+msgstr "Internal transfer destination"
+
+msgid "Disponibilité par emplacement"
+msgstr "Availability by location"
+
+msgid "Distribuer"
+msgstr "Distribute"
+
+msgid "Distribuer des produits"
+msgstr "Distribute products"
+
+msgid "Décroissant"
+msgstr "Descending"
+
+msgid "Effacer ces champs facultatifs si la cellule est vide"
+msgstr "Clear these optional fields when the cell is empty"
+
+msgid "Emplacement"
+msgstr "Location"
+
+msgid "Emplacement du retour"
+msgstr "Return location"
+
+msgid "Expiré"
+msgstr "Expired"
+
+msgid "Export Excel filtré"
+msgstr "Filtered Excel export"
+
+msgid "Export PDF filtré"
+msgstr "Filtered PDF export"
+
+msgid "Export indisponible"
+msgstr "Export unavailable"
+
+msgid "Flux de la période"
+msgstr "Period movements"
+
+msgid "Import Excel / CSV"
+msgstr "Excel / CSV import"
+
+msgid "Justifiez l’import et choisissez un fichier de 10 Mo au maximum."
+msgstr "Explain the import and choose a file no larger than 10 MB."
+
+msgid ""
+"La conversion PDF n’a pas abouti. Réessayez ou utilisez l’export Excel."
+msgstr "PDF conversion failed. Try again or use the Excel export."
+
+msgid "La distribution ne peut pas précéder la réception."
+msgstr "Distribution cannot precede receipt."
+
+msgid "La quantité d’une aliquote doit être inférieure au contenu d’origine."
+msgstr "An aliquot quantity must be smaller than the original contents."
+
+msgid "La quantité retournée dépasse le reliquat de la sortie définitive."
+msgstr ""
+"The return quantity exceeds the outstanding quantity of the final issue."
+
+msgid "La recherche a échoué. Réessayez."
+msgstr "Search failed. Try again."
+
+msgid "Laboratoire / bénéficiaire"
+msgstr "Laboratory / beneficiary"
+
+msgid "Le tableau ne contient aucune ligne de données."
+msgstr "The table contains no data rows."
+
+msgid "Les flux utilisent la date d’enregistrement des mouvements."
+msgstr "Movements use their recording date."
+
+msgid "Lot / contenant"
+msgstr "Lot / container"
+
+msgid "Lot fabricant"
+msgstr "Manufacturer lot"
+
+msgid "Lots"
+msgstr "Lots"
+
+msgid "Lots / emplacements"
+msgstr "Lots / locations"
+
+msgid "Marque"
+msgstr "Brand"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Mode de distribution"
+msgstr "Distribution mode"
+
+msgid "Non importé"
+msgstr "Not imported"
+
+msgid "Opérateur"
+msgstr "Operator"
+
+msgid "Ordre"
+msgstr "Order"
+
+msgid "Origine"
+msgstr "Origin"
+
+msgid "Ouverture"
+msgstr "Opening"
+
+msgid "PLAGENOR 4.0 — Bon de distribution"
+msgstr "PLAGENOR 4.0 — Distribution note"
+
+msgid "PLAGENOR 4.0 — Inventaire"
+msgstr "PLAGENOR 4.0 — Inventory"
+
+msgid "Physique"
+msgstr "Physical"
+
+msgid "Physique avant / après"
+msgstr "Physical before / after"
+
+msgid "Pilotage du stock"
+msgstr "Stock dashboard"
+
+msgid "Prix"
+msgstr "Price"
+
+msgid "Prix unitaire (unité de gestion)"
+msgstr "Unit price (stock unit)"
+
+msgid "Produit"
+msgstr "Product"
+
+msgid "Produit / référence"
+msgstr "Product / reference"
+
+msgid "Produits"
+msgstr "Products"
+
+msgid "Produits distribués"
+msgstr "Distributed products"
+
+msgid "Péremption"
+msgstr "Expiry"
+
+msgid "Péremption proche"
+msgstr "Expiring soon"
+
+msgid "Période en jours"
+msgstr "Period in days"
+
+msgid "Quantité distribuée"
+msgstr "Distributed quantity"
+
+msgid "Quantité par conditionnement"
+msgstr "Quantity per pack"
+
+msgid "Quantité retournée"
+msgstr "Returned quantity"
+
+msgid "Quantités par unité"
+msgstr "Quantities by unit"
+
+msgid "Rechercher un contenant"
+msgstr "Search for a container"
+
+msgid "Reliquat à rendre"
+msgstr "Outstanding return quantity"
+
+msgid "Renseignez la conversion vers l’unité d’achat."
+msgstr "Define the conversion to the purchase unit."
+
+msgid "Renseignez le mode, le bénéficiaire et le motif de distribution."
+msgstr "Specify the mode, beneficiary and distribution reason."
+
+msgid "Retour au stock"
+msgstr "Return to stock"
+
+msgid "Ruptures"
+msgstr "Out of stock"
+
+msgid "Réapprovisionnement et rotation"
+msgstr "Replenishment and turnover"
+
+msgid "Réduisez les filtres : cet export dépasse la limite de lignes."
+msgstr "Narrow the filters: this export exceeds the row limit."
+
+msgid "Référence catalogue, fournisseur, lot, contenant ou QR"
+msgstr "Catalogue, supplier, lot, container reference or QR"
+
+msgid "Référence fournisseur"
+msgstr "Supplier reference"
+
+msgid "Références"
+msgstr "References"
+
+msgid "Réservé"
+msgstr "Reserved"
+
+msgid "Réservé avant / après"
+msgstr "Reserved before / after"
+
+msgid "Sans péremption"
+msgstr "No expiry date"
+
+msgid "Seuls les champs facultatifs du catalogue peuvent être effacés."
+msgstr "Only optional catalogue fields can be cleared."
+
+msgid "Sous le seuil"
+msgstr "Below threshold"
+
+msgid "Stock physique"
+msgstr "Physical stock"
+
+msgid "Stock réservé"
+msgstr "Reserved stock"
+
+msgid "Suggestion"
+msgstr "Suggestion"
+
+msgid "Sélectionnez chaque contenant une seule fois."
+msgstr "Select each container only once."
+
+msgid "Tous les lots du produit"
+msgstr "All product lots"
+
+msgid "Transfert interne"
+msgstr "Internal transfer"
+
+msgid "Tri"
+msgstr "Sort"
+
+msgid "Télécharger le PDF"
+msgstr "Download PDF"
+
+msgid "Un bon de distribution contient entre une et cent lignes."
+msgstr "A distribution note contains between one and one hundred lines."
+
+msgid "Un contenant n’existe plus."
+msgstr "A container no longer exists."
+
+msgid "Un plan ne doit être associé qu’à un import de ses articles."
+msgstr "A plan can only be associated with an import of its items."
+
+msgid ""
+"Une aliquote exige un contenant ouvert et utilisable et une quantité "
+"explicite."
+msgstr ""
+"An aliquot requires an opened, usable container and an explicit quantity."
+
+msgid ""
+"Une destination suivie est obligatoire uniquement pour un transfert interne."
+msgstr "A tracked destination is required only for an internal transfer."
+
+msgid ""
+"Une sortie définitive diminue le stock suivi. Un transfert interne conserve "
+"le total de l’établissement."
+msgstr ""
+"A final issue reduces tracked stock. An internal transfer preserves the "
+"institution total."
+
+msgid ""
+"Valeurs séparées par devise, selon le dernier prix documenté du lot et les "
+"droits de consultation."
+msgstr ""
+"Values are separated by currency, using the last documented lot price and "
+"viewing permissions."
+
+msgid "Valider la distribution"
+msgstr "Confirm distribution"
+
+msgid "Valorisation indicative"
+msgstr "Indicative valuation"
+
+msgid "Vérifiez la date réelle de l’opération."
+msgstr "Check the actual operation date."
+
+msgid "Vérifiez la date, l’état et le motif du retour."
+msgstr "Check the return date, condition and reason."
+
+msgid "lots"
+msgstr "lots"
+
+msgid "lots sans prix consultable"
+msgstr "lots without a viewable price"
+
+msgid "État au retour"
+msgstr "Condition on return"
+
+msgid "Étiquette QR"
+msgstr "QR label"
+
+msgid "écritures"
+msgstr "entries"
+
+msgid "Sortie définitive"
+msgstr "Final issue"
+
+# Native stock workflows and legacy interface labels
+
+msgid "Abandonner cet aperçu"
+msgstr "Discard this preview"
+
+msgid "Analyser un fichier"
+msgstr "Analyze a file"
+
+msgid ""
+"Analyser, corriger, examiner puis appliquer. Un fichier invalide ne produit "
+"aucune modification partielle."
+msgstr ""
+"Analyze, correct, review and apply. An invalid file never produces partial "
+"changes."
+
+msgid "Aperçu du fichier et erreurs"
+msgstr "File preview and errors"
+
+msgid "Aperçu valable jusqu’au"
+msgstr "Preview valid until"
+
+msgid "Appliquer l’import vérifié"
+msgstr "Apply the verified import"
+
+msgid "Article / contenant"
+msgstr "Product / container"
+
+msgid "Aucun import enregistré."
+msgstr "No imports recorded."
+
+msgid "Aucun mouvement enregistré."
+msgstr "No movements recorded."
+
+msgid ""
+"Aucune donnée métier n’a encore été modifiée. La confirmation applique "
+"toutes les lignes dans une seule transaction, après une nouvelle "
+"vérification des droits et des versions."
+msgstr ""
+"No operational data has been changed. Confirmation applies all rows in one "
+"transaction after checking permissions and versions again."
+
+msgid "Bloqué / expiré"
+msgstr "Blocked / expired"
+
+msgid "Cet aperçu a été abandonné."
+msgstr "This preview was discarded."
+
+msgid "Chaîne du froid respectée"
+msgstr "Cold chain maintained"
+
+msgid "Code du nouveau contenant en cas de division"
+msgstr "New container code for a partial transfer"
+
+msgid "Code interne du contenant"
+msgstr "Internal container code"
+
+msgid "Code interne du lot"
+msgstr "Internal lot code"
+
+msgid "Commande et traçabilité"
+msgstr "Order and traceability"
+
+msgid "Contre-passer"
+msgstr "Reverse"
+
+msgid "Contre-passer un mouvement"
+msgstr "Reverse a movement"
+
+msgid "Contrôle / rappel du lot"
+msgstr "Lot inspection / recall"
+
+msgid "Contrôler"
+msgstr "Inspect"
+
+msgid "Contrôler le contenant"
+msgstr "Inspect the container"
+
+msgid "Contrôler les soldes"
+msgstr "Check stock balances"
+
+msgid "Correction"
+msgstr "Correction"
+
+msgid "Date de commande"
+msgstr "Order date"
+
+msgid "Date de fabrication"
+msgstr "Manufacturing date"
+
+msgid "Date de réception"
+msgstr "Receipt date"
+
+msgid "Date d’ouverture"
+msgstr "Opening date"
+
+msgid "Demande PLAGENOR associée"
+msgstr "Linked PLAGENOR request"
+
+msgid "Destination"
+msgstr "Destination"
+
+msgid "Disponible pour utilisation"
+msgstr "Available for use"
+
+msgid "Documents de réception"
+msgstr "Receipt documents"
+
+msgid "Domaine"
+msgstr "Domain"
+
+msgid "Emplacement de réception"
+msgstr "Receiving location"
+
+msgid "Enregistrer l’ouverture"
+msgstr "Record opening"
+
+msgid "Enregistrer une sortie"
+msgstr "Record a stock outflow"
+
+msgid "Historique des imports"
+msgstr "Import history"
+
+msgid "Historique du contenant"
+msgstr "Container history"
+
+msgid "Identification et quantité"
+msgstr "Identification and quantity"
+
+msgid "Import appliqué le"
+msgstr "Import applied on"
+
+msgid "Imports contrôlés"
+msgstr "Validated imports"
+
+msgid "Inventaire et stock"
+msgstr "Inventory and stock"
+
+msgid "Inventaires physiques"
+msgstr "Physical stock counts"
+
+msgid "Journal des mouvements"
+msgstr "Movement ledger"
+
+msgid "Justification / compte rendu"
+msgstr "Reason / report"
+
+msgid "Justification du contrôle"
+msgstr "Inspection reason"
+
+msgid "Laissez vide pour déplacer le contenant entier, avec ses réservations."
+msgstr "Leave blank to move the entire container, including its reservations."
+
+msgid ""
+"Les écritures validées sont conservées. Une erreur se corrige par une "
+"opération traçable."
+msgstr ""
+"Validated entries are preserved. Errors are corrected through a traceable "
+"operation."
+
+msgid "Libérer"
+msgstr "Release"
+
+msgid "Libérer une réservation"
+msgstr "Release a reservation"
+
+msgid "Ligne"
+msgstr "Row"
+
+msgid "Lignes et contrôles"
+msgstr "Rows and checks"
+
+msgid ""
+"L’import est bloqué. Corrigez les lignes signalées puis déposez à nouveau le"
+" fichier."
+msgstr ""
+"The import is blocked. Correct the flagged rows and upload the file again."
+
+msgid "Masquer les quantités théoriques pendant le comptage"
+msgstr "Hide theoretical quantities during counting"
+
+msgid "Modèles de fichiers"
+msgstr "File templates"
+
+msgid "Motif / justification FEFO"
+msgstr "Reason / FEFO justification"
+
+msgid "Motif du transfert"
+msgstr "Transfer reason"
+
+msgid "Mouvement"
+msgstr "Movement"
+
+msgid "Mouvements du contenant"
+msgstr "Container movements"
+
+msgid "Non utilisable"
+msgstr "Unusable"
+
+msgid "Observation"
+msgstr "Observation"
+
+msgid "Observation de comptage"
+msgstr "Count observation"
+
+msgid "Observations du contrôle"
+msgstr "Inspection observations"
+
+msgid "Opérateur / motif"
+msgstr "Operator / reason"
+
+msgid "Ouvrir le contenant"
+msgstr "Open the container"
+
+msgid ""
+"Priorité FEFO : un autre contenant est proposé pour limiter les pertes par "
+"péremption."
+msgstr ""
+"FEFO priority: another container is suggested to reduce expiry losses."
+
+msgid "Préparer un réactif"
+msgstr "Prepare a reagent"
+
+msgid "Péremption fabricant"
+msgstr "Manufacturer expiry date"
+
+msgid "Quantité commandée dans l’unité de gestion"
+msgstr "Ordered quantity in the stock unit"
+
+msgid "Quantité physique comptée (unité de gestion)"
+msgstr "Counted physical quantity (stock unit)"
+
+msgid "Quantité reçue"
+msgstr "Received quantity"
+
+msgid "Quantité réservée"
+msgstr "Reserved quantity"
+
+msgid "Quantité sortie"
+msgstr "Outgoing quantity"
+
+msgid "Quantité transférée"
+msgstr "Transferred quantity"
+
+msgid "Rappeler / contrôler l’ensemble du lot"
+msgstr "Recall / inspect the entire lot"
+
+msgid "Rechercher ou scanner un code"
+msgstr "Search or scan a code"
+
+msgid "Reprise du stock physique initial"
+msgstr "Opening physical stock import"
+
+msgid "Reprise et échanges de données"
+msgstr "Initial import and data exchange"
+
+msgid "Retour aux imports"
+msgstr "Back to imports"
+
+msgid "Run / projet / justification"
+msgstr "Run / project / reason"
+
+msgid "Réception enregistrée. Le stock reste bloqué jusqu’au contrôle."
+msgstr "Receipt recorded. Stock remains blocked until inspection."
+
+msgid "Réception et contrôle"
+msgstr "Receipt and inspection"
+
+msgid "Réceptionner un lot"
+msgstr "Receive a lot"
+
+msgid "Réservation"
+msgstr "Reservation"
+
+msgid "Réservation à consommer"
+msgstr "Reservation to consume"
+
+msgid "Réservations ouvertes"
+msgstr "Open reservations"
+
+msgid "Réserver"
+msgstr "Reserve"
+
+msgid "Réserver du stock"
+msgstr "Reserve stock"
+
+msgid "Stocks et lots physiques"
+msgstr "Physical stock and lots"
+
+msgid "Tous les stocks"
+msgstr "All stock"
+
+msgid "Transférer"
+msgstr "Transfer"
+
+msgid "Transférer le stock"
+msgstr "Transfer stock"
+
+msgid "Type de mouvement"
+msgstr "Movement type"
+
+msgid "Télécharger le rapport Excel"
+msgstr "Download the Excel report"
+
+msgid "Unité de la quantité reçue"
+msgstr "Received quantity unit"
+
+msgid "Utilisable"
+msgstr "Usable"
+
+msgid "Valide"
+msgstr "Valid"
+
+msgid "Voir le protocole et les lots sources"
+msgstr "View the protocol and source lots"
+
+msgid "lignes"
+msgstr "rows"
+
+msgid "À corriger"
+msgstr "Needs correction"
+
+msgid "Épuisé"
+msgstr "Depleted"
+
+msgid "État contrôlé"
+msgstr "Inspected status"
+
+msgid "État des stocks"
+msgstr "Stock status"
+
+msgid "État à la réception"
+msgstr "Condition on receipt"
+
+msgid "En attente de contrôle"
+msgstr "Awaiting inspection"
+
+msgid "Quarantaine"
+msgstr "Quarantine"
+
+msgid "Accepté / disponible"
+msgstr "Accepted / available"
+
+msgid "Rappelé"
+msgstr "Recalled"
+
+msgid "Détruit"
+msgstr "Destroyed"

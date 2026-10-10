@@ -18,6 +18,9 @@ MAX_ROWS=500
 MAX_COLUMNS=40
 
 LABELS={
+    'catalog_reference': _('Référence catalogue'), 'supplier_reference': _('Référence fournisseur'),
+    'brand': _('Marque'), 'pack_quantity': _('Quantité par conditionnement'),
+    'delivery_reference': _('Bon de livraison'), 'serial_number': _('Numéro de série'), 'barcode': _('Code fabricant / GS1'),
     'code':_('Code interne'),'name':_('Désignation française'),'name_en':_('Désignation anglaise'),
     'name_ar':_('Désignation arabe'),'category_code':_('Code catégorie'),'base_unit_code':_('Code unité de gestion'),
     'purchase_unit_code':_('Code unité d’achat'),'manufacturer_code':_('Code fabricant'),
@@ -47,13 +50,13 @@ LABELS={
 
 SCHEMAS={
     'CATALOG':{'required':['code','name','category_code','base_unit_code'],
-        'optional':['name_en','name_ar','purchase_unit_code','manufacturer_code','manufacturer_reference','supplier_code','cas',
+        'optional':['catalog_reference','supplier_reference','brand','pack_quantity','name_en','name_ar','purchase_unit_code','manufacturer_code','manufacturer_reference','supplier_code','cas',
             'packaging','specifications','minimum_stock','safety_stock','reorder_point','target_stock','order_multiple',
             'minimum_order_quantity','lead_time_days','criticality']},
     'INITIAL':{'required':['article_code','location_code','lot_code','manufacturer_lot','container_code','amount','unit_code','received_on','condition'],
         'optional':['expires_on','manufactured_on','supplier_code','cold_chain_ok','unit_price_base','currency','new_name','new_category_code','new_base_unit_code']},
     'RECEIPTS':{'required':['article_code','location_code','lot_code','manufacturer_lot','container_code','amount','unit_code','received_on','condition'],
-        'optional':['expires_on','manufactured_on','supplier_code','cold_chain_ok','unit_price_base','currency','order_reference']},
+        'optional':['expires_on','manufactured_on','supplier_code','cold_chain_ok','unit_price_base','currency','order_reference','delivery_reference','serial_number','barcode']},
     'LOCATIONS':{'required':['code','name','kind_code'],
         'optional':['parent_code','name_en','name_ar','grid_rows','grid_columns','capacity','temperature_target','temperature_min','temperature_max']},
     'SAMPLES':{'required':['code','location_code','amount','unit_code','received_on'],
@@ -92,6 +95,7 @@ def read_matrix(data,extension):
         raise ValidationError(_('Validation occupée. Réessayez dans quelques instants.'))
     try:
         environment={key:value for key,value in os.environ.items() if key.upper() in {'SYSTEMROOT','WINDIR','PATH','TEMP','TMP'}}
+        environment.update(OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1')
         result=subprocess.run([sys.executable,'-I',str(Path(__file__).resolve().parents[1]/'table_probe.py'),extension],
             input=data,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=8,env=environment,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

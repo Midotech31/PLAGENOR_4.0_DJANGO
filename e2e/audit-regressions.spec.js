@@ -5,6 +5,18 @@ async function noOverflow(page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
+test('system administration uses the application login and rejects operational accounts', async ({page}) => {
+  await page.goto('/admin/login/?next=https%3A%2F%2Fexample.invalid%2Fphish');
+  await expect(page).toHaveURL(/\/accounts\/login\/\?next=%2Fadmin%2F$/);
+  await expect(page.locator('form').filter({has: page.locator('[name="username"]')})).toBeVisible();
+  expect((await page.request.post('/__e2e__/session/admin_ops/')).status()).toBe(204);
+  expect((await page.request.get('/admin/login/')).status()).toBe(403);
+  expect((await page.request.get('/dashboard/home/')).status()).toBe(403);
+  await page.goto('/dashboard/ops/');
+  await expect(page.locator('main')).toBeVisible();
+  await noOverflow(page);
+});
+
 test('guest draft persists without invented contact data', async ({page}) => {
   await page.goto('/ibtikar/new/EGTP-CAN/');
   await page.locator('button[name="action"][value="draft"]').click();

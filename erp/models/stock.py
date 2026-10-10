@@ -45,6 +45,9 @@ class StockContainer(CodedRecord):
     opened_on = models.DateField(_('Date d’ouverture'), null=True, blank=True)
     opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='+')
     use_by = models.DateField(_('Date limite d’utilisation'), null=True, blank=True, editable=False, db_index=True)
+    source_container = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='derived_containers', editable=False)
+    fifo_received_on = models.DateField(_('Date de réception initiale'), null=True, blank=True, editable=False)
 
     class Meta(CodedRecord.Meta):
         constraints = [models.CheckConstraint(condition=Q(quantity__gte=0, quantity__lte=Decimal('999999999999.999999'), reserved__gte=0) & Q(reserved__lte=F('quantity')), name='erp_container_balance')]
@@ -104,6 +107,7 @@ class StockReceipt(ImmutableRecord):
     container = models.ForeignKey(StockContainer, on_delete=models.PROTECT)
     supplier = models.ForeignKey('erp.Party', on_delete=models.PROTECT, null=True, blank=True)
     order_reference = models.CharField(_('Commande / marché'), max_length=120, blank=True)
+    delivery_reference = models.CharField(_('Bon de livraison'), max_length=120, blank=True)
     ordered_on = models.DateField(_('Date de commande'), null=True, blank=True)
     received_on = models.DateField(_('Date de réception'))
     ordered_quantity = models.DecimalField(_('Quantité commandée (unité de gestion)'), max_digits=18, decimal_places=6, null=True, blank=True)
@@ -131,6 +135,51 @@ class StockReservation(Record):
 
     class Meta:
         constraints = [models.CheckConstraint(condition=Q(remaining__gte=0), name='erp_reservation_nonnegative')]
+
+
+class StockDispatch(ImmutableRecord):
+    class Mode(models.TextChoices):
+        EXIT = 'EXIT', _('Sortie définitive')
+        INTERNAL = 'INTERNAL', _('Transfert interne')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.UUIDField(unique=True)
+    payload_hash = models.CharField(max_length=64)
+    mode = models.CharField(_('Mode de distribution'), max_length=8, choices=Mode.choices)
+    beneficiary = models.CharField(_('Laboratoire / bénéficiaire'), max_length=255)
+    distributed_on = models.DateField(_('Date de distribution'))
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reason = models.CharField(_('Motif'), max_length=500)
+    destination = models.ForeignKey('erp.Location', on_delete=models.PROTECT, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        constraints = [models.CheckConstraint(condition=Q(mode='EXIT', destination__isnull=True) |
+            Q(mode='INTERNAL', destination__isnull=False), name='erp_dispatch_destination')]
+
+
+class StockDispatchLine(ImmutableRecord):
+    dispatch = models.ForeignKey(StockDispatch, on_delete=models.PROTECT, related_name='lines')
+    container = models.ForeignKey(StockContainer, on_delete=models.PROTECT, related_name='dispatch_lines')
+    movement = models.OneToOneField(StockMovement, on_delete=models.PROTECT, related_name='dispatch_line')
+    quantity = models.DecimalField(max_digits=18, decimal_places=6)
+    snapshot = models.JSONField(default=dict)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['dispatch', 'container'], name='erp_dispatch_container'),
+            models.CheckConstraint(condition=Q(quantity__gt=0), name='erp_dispatch_quantity')]
+
+
+class StockReturn(ImmutableRecord):
+    line = models.ForeignKey(StockDispatchLine, on_delete=models.PROTECT, related_name='returns')
+    movement = models.OneToOneField(StockMovement, on_delete=models.PROTECT, related_name='stock_return')
+    container = models.OneToOneField(StockContainer, on_delete=models.PROTECT, related_name='stock_return')
+    quantity = models.DecimalField(max_digits=18, decimal_places=6)
+    returned_on = models.DateField(_('Date de retour'))
+    condition = models.CharField(_('État au retour'), max_length=255)
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=Q(quantity__gt=0), name='erp_return_quantity')]
 
 
 class InternalPreparation(ImmutableRecord):

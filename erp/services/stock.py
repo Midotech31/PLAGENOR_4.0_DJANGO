@@ -6,7 +6,8 @@ import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import F, Q, Sum
+from django.db.models import DateField, F, Min, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce, Least, TruncDate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -98,7 +99,13 @@ def _post(movement, container, physical=Decimal(0), reserved=Decimal(0), *, loca
         quantity_delta=physical, reserved_delta=reserved,
         snapshot={'article': container.lot.article.code, 'designation': container.lot.article.name,
                   'unit': container.lot.article.base_unit.code, 'lot': container.lot.manufacturer_lot,
-                  'container': container.code, 'location': (location or container.location).code})
+                  'container': container.code, 'location': (location or container.location).code,
+                  'schema': 2, 'physical_before': str(container.quantity), 'physical_after': str(new_quantity),
+                  'reserved_before': str(container.reserved), 'reserved_after': str(new_reserved),
+                  'catalog_reference': container.lot.article.catalog_reference,
+                  'supplier_reference': container.lot.article.supplier_reference,
+                  'manufacturer_reference': container.lot.article.manufacturer_reference,
+                  'article_id': str(container.lot.article_id), 'lot_id': str(container.lot_id)})
     container.quantity, container.reserved = new_quantity, new_reserved
     container.version += 1
     container.save(update_fields=['quantity', 'reserved', 'version', 'updated_at'])
@@ -109,7 +116,7 @@ def receive_stock(user, *, key, article, location, manufacturer_lot, lot_code, c
                   amount, unit, received_on, supplier=None, order_reference='', ordered_on=None,
                   ordered_quantity=None, expires_on=None, manufactured_on=None, serial_number='',
                   condition='', cold_chain_ok=None, control_notes='', unit_price=None, currency='DZD',
-                  initial=False, barcode=''):
+                  initial=False, barcode='', delivery_reference=''):
     article = _article(article.pk)
     location = _location(location.pk)
     from .safety import enforce_storage
@@ -125,6 +132,8 @@ def receive_stock(user, *, key, article, location, manufacturer_lot, lot_code, c
         'expires_on': expires_on, 'manufactured_on': manufactured_on, 'serial_number': serial_number,
         'condition': condition, 'cold_chain_ok': cold_chain_ok, 'control_notes': control_notes,
         'unit_price': unit_price, 'currency': currency, 'barcode': barcode}
+    if delivery_reference:
+        payload['delivery_reference'] = delivery_reference
     move, created = _movement(user, key, StockMovement.Kind.INITIAL if initial else StockMovement.Kind.RECEIPT, payload)
     if not created:
         return move
@@ -147,13 +156,15 @@ def receive_stock(user, *, key, article, location, manufacturer_lot, lot_code, c
         lot.save()
         audit(user, lot, 'created')
     container = StockContainer(code=container_code.strip().upper(), name=lot.name, lot=lot, location=location,
-        use_by=lot.expires_on, status=StockLot.Status.QUARANTINE if cold_chain_ok is False else StockLot.Status.PENDING)
+        use_by=lot.expires_on, fifo_received_on=received_on,
+        status=StockLot.Status.QUARANTINE if cold_chain_ok is False else StockLot.Status.PENDING)
     container.full_clean()
     container.save()
     receipt = StockReceipt(movement=move, container=container, supplier=supplier, order_reference=order_reference,
         ordered_on=ordered_on, received_on=received_on, ordered_quantity=ordered_quantity,
         received_quantity=amount, condition=condition.strip(), cold_chain_ok=cold_chain_ok,
-        control_notes=control_notes, unit_price=unit_price, currency=currency)
+        control_notes=control_notes, unit_price=unit_price, currency=currency,
+        delivery_reference=delivery_reference)
     receipt.full_clean()
     receipt.save()
     _post(move, container, amount)
@@ -226,14 +237,26 @@ def open_container(user, pk, *, expected, opened_on, reason=''):
 
 
 def fefo(user, article):
+    receipts = StockReceipt.objects.filter(container_id=OuterRef('pk'), movement__reversal__isnull=True).order_by(
+        'received_on', 'pk').values('received_on')[:1]
     return operational_scope(StockContainer.objects.filter(lot__article=article), user).filter(
-        usable_filter(), quantity__gt=F('reserved')).select_related('lot', 'location', 'lot__article__base_unit').order_by(
-        F('use_by').asc(nulls_last=True), 'created_at', 'code')
+        usable_filter(), quantity__gt=F('reserved')).select_related('lot', 'location', 'lot__article__base_unit').annotate(
+        fifo_date=Coalesce('fifo_received_on', Subquery(receipts, output_field=DateField()), TruncDate('created_at')),
+        stock_expiry=Coalesce(Least('use_by', 'lot__expires_on'), 'use_by', 'lot__expires_on')).order_by(
+            F('stock_expiry').asc(nulls_last=True), 'fifo_date', 'created_at', 'code')
+
+
+def _fifo_received_on(container):
+    if container.fifo_received_on is not None:
+        return container.fifo_received_on
+    day = StockReceipt.objects.filter(container=container, movement__reversal__isnull=True).aggregate(
+        day=Min('received_on'))['day']
+    return day or timezone.localdate(container.created_at)
 
 
 @transaction.atomic
 def remove_stock(user, pk, *, key, amount, unit, kind=StockMovement.Kind.CONSUMPTION,
-                 reason='', request=None, reservation=None):
+                 reason='', request=None, reservation=None, expected=None):
     from .links import lock_request, require_request
     request = lock_request(user, request)
     container = _container(pk)
@@ -246,6 +269,8 @@ def remove_stock(user, pk, *, key, amount, unit, kind=StockMovement.Kind.CONSUMP
     move, created = _movement(user, key, kind, payload, request=request, reason=reason)
     if not created:
         return move
+    if expected is not None:
+        check_version(container, expected)
     if kind not in OUTFLOWS:
         raise ValidationError(_('Type de sortie non autorisé.'))
     reserved = Decimal(0)
@@ -259,7 +284,7 @@ def remove_stock(user, pk, *, key, amount, unit, kind=StockMovement.Kind.CONSUMP
         reservation.remaining -= amount
         reservation.version += 1
         reservation.save()
-    if kind == StockMovement.Kind.CONSUMPTION:
+    if kind in (StockMovement.Kind.CONSUMPTION, StockMovement.Kind.EXIT):
         if not is_usable(container):
             raise ValidationError(_('Ce stock est bloqué, expiré ou non accepté.'))
         suggested = fefo(user, container.lot.article).first()
@@ -320,7 +345,7 @@ def release_stock(user, reservation_id, *, key, reason):
 
 
 @transaction.atomic
-def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destination_code='', reason, expected=None):
+def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destination_code='', reason, expected=None, aliquot=False):
     container = _container(pk)
     require_container(user, Capability.TRANSFER_STOCK, container)
     destination = _location(destination.pk)
@@ -329,16 +354,22 @@ def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destin
     require(user, Capability.TRANSFER_STOCK, category=container.lot.article.category, location=destination)
     payload = {'container': container.pk, 'destination': destination.pk, 'amount': amount,
                'unit': unit.pk if unit else None, 'destination_code': destination_code, 'reason': reason}
+    if aliquot:
+        payload['aliquot'] = True
     move, created = _movement(user, key, StockMovement.Kind.TRANSFER, payload, reason=reason)
     if not created:
         return move
     if expected is not None:
         check_version(container,expected)
-    if destination.pk == container.location_id or not reason.strip() or container.quantity == 0:
+    if (destination.pk == container.location_id and not aliquot) or not reason.strip() or container.quantity == 0:
         raise ValidationError(_('Le transfert exige du stock, une nouvelle destination et un motif.'))
+    if aliquot and (amount is None or not container.opened_on or not is_usable(container)):
+        raise ValidationError(_('Une aliquote exige un contenant ouvert et utilisable et une quantité explicite.'))
     moving = container.quantity if amount is None else stock_quantity(convert_quantity(container.lot.article, amount, unit or container.lot.article.base_unit)[0])
     if moving > container.quantity:
         raise ValidationError(_('Quantité à transférer supérieure au stock physique.'))
+    if aliquot and moving == container.quantity:
+        raise ValidationError(_('La quantité d’une aliquote doit être inférieure au contenu d’origine.'))
     if moving == container.quantity:
         reserved = container.reserved
         _post(move, container, -moving, -reserved)
@@ -350,7 +381,8 @@ def transfer_stock(user, pk, *, key, destination, amount=None, unit=None, destin
             raise ValidationError(_('Attribuez un code au nouveau contenant issu de la division.'))
         target = StockContainer(code=destination_code.strip().upper(), name=container.name, lot=container.lot,
             location=destination, opened_on=container.opened_on, opened_by=container.opened_by,
-            stability_days=container.stability_days, use_by=container.use_by, status=container.status)
+            stability_days=container.stability_days, use_by=container.use_by, status=container.status,
+            source_container=container, fifo_received_on=_fifo_received_on(container))
         target.full_clean()
         target.save()
         _post(move, container, -moving)
@@ -384,6 +416,8 @@ def reverse_stock(user, pk, *, key, reason, _purchase_context=False):
         {'original': original.pk, 'reason': reason}, request=original.request, reason=reason, reverses=original)
     if not created:
         return move
+    if hasattr(original, 'dispatch_line') and original.dispatch_line.returns.filter(movement__reversal__isnull=True).exists():
+        raise ValidationError(_('Contre-passez les retours actifs avant de corriger cette distribution.'))
     if not reason.strip() or original.kind in (StockMovement.Kind.RESERVATION, StockMovement.Kind.RELEASE,
         StockMovement.Kind.INVENTORY, StockMovement.Kind.CORRECTION, StockMovement.Kind.PREPARATION):
         raise ValidationError(_('Cette écriture exige une procédure métier de correction dédiée.'))
@@ -407,7 +441,14 @@ def reverse_stock(user, pk, *, key, reason, _purchase_context=False):
 def reconcile_stock(user, *, queryset=None):
     require_manager(user)
     queryset = queryset if queryset is not None else StockContainer.objects.all()
-    rows = queryset.annotate(ledger_quantity=Sum('entries__quantity_delta'), ledger_reserved=Sum('entries__reserved_delta'))
+    # Read individual decimal values: SQLite SUM can introduce floating-point errors.
+    balances = {}
+    for pk, physical, reserved in StockEntry.objects.filter(container__in=queryset).values_list(
+            'container_id', 'quantity_delta', 'reserved_delta').iterator():
+        total = balances.setdefault(pk, [Decimal(0), Decimal(0)])
+        total[0] += physical
+        total[1] += reserved
     return [{'container': row.code, 'physical': row.quantity, 'reserved': row.reserved,
-             'ledger_physical': row.ledger_quantity or Decimal(0), 'ledger_reserved': row.ledger_reserved or Decimal(0)}
-            for row in rows if row.quantity != (row.ledger_quantity or 0) or row.reserved != (row.ledger_reserved or 0)]
+             'ledger_physical': balances.get(row.pk, [Decimal(0), Decimal(0)])[0],
+             'ledger_reserved': balances.get(row.pk, [Decimal(0), Decimal(0)])[1]}
+            for row in queryset if [row.quantity, row.reserved] != balances.get(row.pk, [Decimal(0), Decimal(0)])]

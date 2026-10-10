@@ -50,6 +50,9 @@ def save_article(user, values, *, pk=None, expected=None):
     assign(obj, values)
     require(user, Capability.EDIT_CATALOG, category=obj.category)
     obj.manufacturer_reference = obj.manufacturer_reference.strip()
+    obj.supplier_reference = obj.supplier_reference.strip()
+    if obj.supplier_reference and obj.preferred_supplier is None:
+        raise ValidationError(_('Associez la référence fournisseur à un fournisseur préféré.'))
     if not obj.base_unit.active or not obj.category.active:
         raise ValidationError(_('Sélectionnez une unité et une catégorie actives.'))
     if pk and str(obj.base_unit_id) != before['base_unit']:

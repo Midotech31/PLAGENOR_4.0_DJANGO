@@ -15,6 +15,8 @@ class OperationForm(forms.Form):
                 field.widget.attrs['class'] = 'form-control'
             if isinstance(field.widget, forms.Textarea):
                 field.widget.attrs['rows'] = 3
+            if isinstance(field.widget, forms.DateInput) and field.widget.input_type == 'date':
+                field.widget.format = '%Y-%m-%d'
 
 
 class WorkForm(VersionedForm):

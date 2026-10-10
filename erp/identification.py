@@ -87,7 +87,7 @@ def identify(request):
             if kind=='lot':
                 filters|=Q(manufacturer_lot__iexact=query)|Q(barcode__exact=query)
             if kind=='article':
-                filters|=Q(manufacturer_reference__iexact=query)|Q(cas__exact=query)
+                filters|=Q(manufacturer_reference__iexact=query)|Q(catalog_reference__iexact=query)|Q(supplier_reference__iexact=query)|Q(cas__exact=query)
             for obj in qs.filter(filters).order_by('code')[:100]:
                 results.append({'kind':TITLES[kind],'code':obj.code,'label':obj.code if kind=='sample' else str(obj),
                     'url':target_url(request.user,kind,obj),'label_url':reverse('erp:label',args=[kind,obj.pk])})

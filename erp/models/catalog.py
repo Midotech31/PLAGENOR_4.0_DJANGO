@@ -61,6 +61,10 @@ class Article(CodedRecord):
                                      null=True, blank=True, related_name='manufactured_articles')
     manufacturer_reference = models.CharField(_('Référence fabricant'), max_length=120, blank=True)
     catalog_reference = models.CharField(_('Référence catalogue'), max_length=120, blank=True, db_index=True)
+    supplier_reference = models.CharField(_('Référence fournisseur'), max_length=120, blank=True, db_index=True)
+    brand = models.CharField(_('Marque'), max_length=120, blank=True)
+    pack_quantity = models.DecimalField(_('Quantité par conditionnement'), max_digits=18,
+        decimal_places=6, null=True, blank=True, validators=[MinValueValidator(Decimal('0.000001'))])
     cas = models.CharField(_('Numéro CAS'), max_length=32, blank=True, db_index=True)
     concentration_value = models.DecimalField(_('Concentration'), max_digits=24, decimal_places=9, null=True, blank=True, validators=[MinValueValidator(0)])
     concentration_unit = models.ForeignKey(Unit, verbose_name=_('Unité de concentration'), on_delete=models.PROTECT, null=True, blank=True, related_name='+')
@@ -95,6 +99,8 @@ class Article(CodedRecord):
 
     class Meta(CodedRecord.Meta):
         constraints = [
+            models.CheckConstraint(condition=Q(pack_quantity__isnull=True) | Q(pack_quantity__gt=0,
+                pack_quantity__lte=Decimal('999999999999.999999')), name='erp_article_pack_positive'),
             models.CheckConstraint(condition=Q(concentration_value__isnull=True, concentration_unit__isnull=True) | Q(concentration_value__isnull=False, concentration_unit__isnull=False, concentration_value__gte=0, concentration_value__lte=Decimal('999999999999999.999999999')), name='erp_concentration_complete', violation_error_message=_('Renseignez ensemble la concentration et son unité.')),
             models.UniqueConstraint('manufacturer', Lower('manufacturer_reference'),
                                     condition=~Q(manufacturer_reference=''), name='erp_article_manufacturer_ref'),

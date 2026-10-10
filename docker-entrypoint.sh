@@ -2,7 +2,7 @@
 set -eu
 
 python manage.py collectstatic --no-input
-python manage.py migrate --noinput
+python -m scripts.production_stock_upgrade
 python manage.py migrate_totp_secrets
 python manage.py seed_services
 python manage.py seed_content

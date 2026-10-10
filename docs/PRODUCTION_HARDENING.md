@@ -29,6 +29,11 @@ recommended in the account security settings, especially for administrative
 and staff accounts. Losing or rotating `TOTP_ENCRYPTION_KEY` before
 re-enrolling users makes existing encrypted TOTP seeds unreadable.
 
+Django's `/admin/` requires an active staff account whose application role is
+`SUPER_ADMIN`. Technical `is_staff` / `is_superuser` flags alone cannot grant
+Admin Ops or another role access. Its login redirects to the application's
+login so enrolled TOTP, account lockout and IP throttling apply equally.
+
 Keep `CSP_REPORT_ONLY=false` after the validated baseline is deployed. The
 current policy is enforced in production while inline frontend code is migrated
 incrementally toward a nonce/hash policy. Password-reset links expire after
@@ -58,11 +63,12 @@ Before a production deploy:
 6. Smoke-test login, MFA, one request per channel, authorized document access,
    payment-proof review, and the three locales.
 
-If the scheduled `Database Backup` workflow fails at **Require backup
-secrets**, restore the repository secrets `DATABASE_URL` and
-`BACKUP_AGE_RECIPIENT`, then run the workflow manually. Do not consider backup
-coverage restored until the encrypted artifact is produced and a controlled
-restore drill succeeds.
+The Render Free service blocks outbound SMTP ports 25, 465 and 587 (see
+https://render.com/docs/free). Configured credentials and a passing readiness
+probe do not prove that mail can leave the service. Qualify a provider-supported
+transport or an appropriate compute plan before relying on password recovery
+and email notifications. A smoke message requires an explicitly authorized
+test recipient and confirmation of receipt.
 
 To roll back application code, deploy the last known-good commit from Render.
 Do not reverse a database migration until its data impact has been reviewed.
@@ -71,21 +77,33 @@ production cutover.
 
 ## Encrypted backups
 
-The `Database Backup` GitHub Action requires repository secrets
-`DATABASE_URL` and `BACKUP_AGE_RECIPIENT`. It creates a PostgreSQL custom dump,
-restores it into an isolated PostgreSQL 16 service, validates the Django
-migration ledger, encrypts the dump with `age`, deletes the plaintext temporary
-file, and uploads only the ciphertext plus its SHA-256 manifest with a 90-day
-retention.
+The current `Database Backup` Action runs weekly and on demand. GitHub holds
+no production database credential or encryption key. A short-lived GitHub OIDC
+token calls `/ops/github/database-backup/`; the application verifies signature,
+repository, main ref, workflow and event claims before creating the dump.
 
-Keep the matching age private key outside GitHub and Render in an approved
-password manager, with a second controlled recovery copy. Quarterly restore
-drills are required.
+The production container creates a PostgreSQL custom dump, checks its table of
+contents with `pg_restore --list`, encrypts it with Fernet using a key derived
+from the stable TOTP encryption key, and stores it under `database_backups/`
+in private persistent storage. It reads the object back and checks ciphertext
+and decrypted content digests. The Action retains only non-secret metadata
+for 90 days. This verifies backup creation and storage; it does not execute a
+production-data restore.
+
+Keep recovery access to `TOTP_ENCRYPTION_KEY` in the approved secret manager,
+with a second controlled recovery copy. Do not rotate or lose it without a
+recovery and re-encryption plan. Quarterly isolated restore drills remain
+required. Investigate failed OIDC authorization, production readiness,
+PostgreSQL tools and private storage before retrying a failed backup Action;
+do not add obsolete database/age secrets to GitHub.
 
 Restore drill:
 
-1. Download the encrypted artifact to a controlled workstation.
-2. Decrypt it locally: `age --decrypt -i <identity-file> -o backup.dump backup.dump.age`.
+1. Retrieve the encrypted object and its verified metadata from private storage
+   on a controlled workstation.
+2. Decrypt using the same Fernet/HKDF derivation defined in
+   `scripts.production_inventory_bootstrap._backup_fernet`, with the recovery
+   key supplied securely; never print keys or place them in command arguments.
 3. Validate it: `pg_restore --list backup.dump`.
 4. Create a new isolated PostgreSQL database.
 5. Restore with `pg_restore --no-owner --no-privileges --dbname <test-url> backup.dump`.
@@ -95,6 +113,16 @@ Restore drill:
 
 CI performs a synthetic PostgreSQL dump-and-restore on every pull request. That
 test validates mechanics; it does not replace a production-data recovery drill.
+
+The first scientific-stock upgrade runs through
+`scripts.production_stock_upgrade`. On existing Render/PostgreSQL data it
+requires the verified private backup, locks the historical ERP tables, compares
+all historical field values and row digests before/after additive migrations,
+and persists private aggregate evidence. A mismatch or backup failure rolls
+back the migration. Only after commit does it emit
+`scientific_stock_upgrade_verified`. Preserve this event and the matching
+`/readyz` commit in the release evidence; do not reverse the migrations to roll
+back application code without reviewing new stock history.
 
 ## Sensitive-history follow-up
 
