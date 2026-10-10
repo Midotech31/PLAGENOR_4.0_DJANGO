@@ -7102,3 +7102,7 @@ msgstr "Compte analyste actif, disponibilité, capacité et technique active cor
 #: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
 msgid "Gérer les compétences et la disponibilité"
 msgstr "Gérer les compétences et la disponibilité"
+
+#: templates/dashboard/admin_ops/request_detail.html
+msgid "Confirmer l’affectation"
+msgstr "Confirmer l’affectation"

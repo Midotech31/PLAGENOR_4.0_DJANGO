@@ -62,6 +62,21 @@ class AssignmentHTTPTests(TestCase):
         self.assertFalse(RequestHistory.objects.filter(request=self.req).exists())
         self.assertFalse(Notification.objects.filter(request=self.req).exists())
 
+    def test_legacy_prepared_assignment_can_be_confirmed_without_a_second_load_slot(self):
+        self.member.max_load = 1
+        self.member.save()
+        self.req.assigned_to = self.member
+        self.req.save()
+        page = self.client.get(self.detail)
+        self.assertTrue(page.context['has_eligible_candidates'])
+        self.assertContains(page, 'Confirmer l’affectation')
+        self.client.post(self.url, {'member_id': self.member.pk})
+        self.req.refresh_from_db()
+        self.member.refresh_from_db()
+        self.assertEqual(self.req.status, 'ASSIGNED')
+        self.assertEqual(self.member.current_load, 1)
+        self.assertEqual(RequestHistory.objects.filter(request=self.req).count(), 1)
+
     def test_unavailable_candidate_is_disabled_and_server_reports_the_exact_reason(self):
         self.member.available = False
         self.member.save()

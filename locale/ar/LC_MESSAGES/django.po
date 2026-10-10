@@ -8096,3 +8096,7 @@ msgstr "حساب محلل فعّال، والتوفر، والسعة، وتقن�
 #: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
 msgid "Gérer les compétences et la disponibilité"
 msgstr "إدارة الكفاءات والتوفر"
+
+#: templates/dashboard/admin_ops/request_detail.html
+msgid "Confirmer l’affectation"
+msgstr "تأكيد الإسناد"

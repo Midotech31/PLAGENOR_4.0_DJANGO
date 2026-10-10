@@ -56,7 +56,7 @@ def technique_matches_service(technique, service):
     return False
 
 
-def member_ineligibility_reasons(member_profile: MemberProfile, service=None) -> list:
+def member_ineligibility_reasons(member_profile: MemberProfile, service=None, current_request=None) -> list:
     """Explain every blocking criterion using the same rules as assignment."""
     reasons = []
     if not member_profile.user.is_active:
@@ -65,7 +65,10 @@ def member_ineligibility_reasons(member_profile: MemberProfile, service=None) ->
         reasons.append(_('Ce compte n’a pas le rôle analyste.'))
     if not member_profile.available:
         reasons.append(_('Analyste indisponible.'))
-    if member_profile.current_load >= (member_profile.max_load or DEFAULT_MAX_LOAD):
+    keeps_existing_slot = (current_request is not None
+                           and current_request.assigned_to_id == member_profile.pk
+                           and current_request.status not in LOAD_EXCLUDED_STATES)
+    if not keeps_existing_slot and member_profile.current_load >= (member_profile.max_load or DEFAULT_MAX_LOAD):
         reasons.append(_('Capacité atteinte (%(load)s/%(capacity)s).') % {
             'load': member_profile.current_load,
             'capacity': member_profile.max_load or DEFAULT_MAX_LOAD})
@@ -81,12 +84,12 @@ def member_is_eligible(member_profile: MemberProfile, service=None) -> bool:
     return not member_ineligibility_reasons(member_profile, service)
 
 
-def get_assignment_candidates(service=None, current_member_id=None, members=None):
+def get_assignment_candidates(service=None, current_member_id=None, members=None, current_request=None):
     """Include blocked candidates so operators can see what needs correcting."""
     if members is None:
         members = MemberProfile.objects.select_related('user').prefetch_related('techniques').order_by(
             'user__last_name', 'user__first_name', 'pk')
-    return [{'member': member, 'reasons': member_ineligibility_reasons(member, service)}
+    return [{'member': member, 'reasons': member_ineligibility_reasons(member, service, current_request)}
             for member in members if member.pk != current_member_id]
 
 

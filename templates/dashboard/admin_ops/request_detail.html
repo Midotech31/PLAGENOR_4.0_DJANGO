@@ -295,7 +295,7 @@
                             {% include 'dashboard/admin_ops/assignment_options.html' %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary" {% if not has_eligible_candidates %}disabled{% endif %}>{% trans "Assigner" %}</button>
+                    <button type="submit" class="btn btn-primary" {% if not has_eligible_candidates %}disabled{% endif %}>{% if req.assigned_to %}{% trans "Confirmer l’affectation" %}{% else %}{% trans "Assigner" %}{% endif %}</button>
                 </form>
                 {% endif %}
                 {% if can_assign or can_reassign_active %}

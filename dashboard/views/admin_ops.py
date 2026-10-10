@@ -82,7 +82,7 @@ def index(request):
     assignment_members = list(MemberProfile.objects.select_related('user').prefetch_related('techniques').order_by(
         'user__last_name', 'user__first_name', 'pk'))
     for req in assignable_requests:
-        req.assignment_candidates = get_assignment_candidates(req.service, req.assigned_to_id, assignment_members)
+        req.assignment_candidates = get_assignment_candidates(req.service, members=assignment_members, current_request=req)
 
     # Requests needing report review
     review_requests = Request.objects.filter(
@@ -218,7 +218,9 @@ def request_detail(request, pk):
         'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
     )
-    assignment_candidates = get_assignment_candidates(req.service, req.assigned_to_id)
+    can_initial_assign = req.status in ('IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED')
+    assignment_candidates = get_assignment_candidates(
+        req.service, None if can_initial_assign else req.assigned_to_id, current_request=req)
     context = {
         'req': req,
         'history': history,
@@ -229,8 +231,7 @@ def request_detail(request, pk):
         'available_members': MemberProfile.objects.filter(available=True).select_related('user'),
         'assignment_candidates': assignment_candidates,
         'has_eligible_candidates': any(not candidate['reasons'] for candidate in assignment_candidates),
-        'can_assign': req.status in ('IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED')
-            or (req.status == 'ASSIGNED' and req.assigned_to_id is None),
+        'can_assign': can_initial_assign or (req.status == 'ASSIGNED' and req.assigned_to_id is None),
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
         'can_reassign_active': req.status in REASSIGN_ACTIVE_STATES,
@@ -278,11 +279,12 @@ def assign_request(request, pk):
                 raise Http404
             previous = profiles.get(req.assigned_to_id)
             reason = (request.POST.get('reason', '') or '').strip()
-            if previous is not None and previous.pk == member.pk:
+            is_initial_assign = req.status in ('IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED')
+            if previous is not None and previous.pk == member.pk and not is_initial_assign:
                 messages.warning(request, "L'analyste sélectionné est déjà l'assigné de cette demande.")
                 return redirect_to_detail(request, req, 'dashboard:admin_ops')
 
-            reasons = member_ineligibility_reasons(member, req.service)
+            reasons = member_ineligibility_reasons(member, req.service, req)
             if reasons:
                 messages.error(request, _('Affectation impossible : %(reasons)s') % {'reasons': ' '.join(reasons)})
                 return redirect_to_detail(request, req, 'dashboard:admin_ops')
@@ -309,10 +311,6 @@ def assign_request(request, pk):
                 and previous.pk != member.pk
                 and req.status in REASSIGN_ACTIVE_STATES
             )
-            is_initial_assign = req.status in (
-                'IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED',
-            )
-
             if not (is_decline_rebound or is_active_reassignment or is_initial_assign):
                 messages.error(
                     request,

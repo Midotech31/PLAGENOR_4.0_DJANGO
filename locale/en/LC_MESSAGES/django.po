@@ -8172,3 +8172,7 @@ msgstr "An active analyst account, availability, capacity and an active techniqu
 #: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
 msgid "Gérer les compétences et la disponibilité"
 msgstr "Manage qualifications and availability"
+
+#: templates/dashboard/admin_ops/request_detail.html
+msgid "Confirmer l’affectation"
+msgstr "Confirm assignment"
