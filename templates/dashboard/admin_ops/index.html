@@ -206,7 +206,7 @@
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <select name="member_id" class="form-control" style="display:inline-block; width:100%; min-width:0; font-size:0.85rem;" required>
+                            <select name="member_id" aria-label="{% trans 'Assigner à' %} — {{ req.display_id }}" class="form-control" style="display:inline-block; width:100%; min-width:0; font-size:0.85rem;" required>
                                 <option value="">— {% trans "Assigner à" %} —</option>
                                 {% include 'dashboard/admin_ops/assignment_options.html' with assignment_candidates=req.assignment_candidates %}
                             </select>
@@ -577,7 +577,7 @@
                     </div>
                     <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" class="data-card-row mt-2" style="gap: 0.5rem;">
                         {% csrf_token %}
-                        <select name="member_id" class="form-control" style="width:100%; min-width:0; font-size:0.85rem;" required>
+                        <select name="member_id" aria-label="{% trans 'Assigner à' %} — {{ req.display_id }}" class="form-control" style="width:100%; min-width:0; font-size:0.85rem;" required>
                             <option value="">— {% trans "Assigner à" %} —</option>
                             {% include 'dashboard/admin_ops/assignment_options.html' with assignment_candidates=req.assignment_candidates %}
                         </select>
