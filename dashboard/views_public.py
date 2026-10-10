@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
 from django.db import transaction
+from django.views.decorators.http import require_POST
 
 from accounts.countries import COUNTRY_CHOICES
 from core.models import Service, Request
@@ -371,6 +372,7 @@ def guest_ibtikar_code(request, token):
     return redirect(f"{reverse('track')}?q={req.guest_token}")
 
 
+@require_POST
 def switch_language(request):
     """Switch language and redirect back. The `next` parameter is validated
     against the request host so this endpoint cannot be turned into an

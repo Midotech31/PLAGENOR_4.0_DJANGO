@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from dashboard.utils import redirect_back, redirect_to_detail, safe_int, safe_float
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Count, Sum, Q
+from django.db.models import Avg, Count, Sum, Q
 from django.utils import timezone
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
@@ -35,13 +35,20 @@ def admin_required(view_func):
 
 @admin_required
 def index(request):
-    total_requests = Request.objects.count()
-    pending_count = Request.objects.filter(
-        status__in=['SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED']
-    ).count()
-    ibtikar_count = Request.objects.filter(channel='IBTIKAR').count()
-    genoclab_count = Request.objects.filter(channel='GENOCLAB').count()
-    completed_count = Request.objects.filter(status='COMPLETED').count()
+    counts = Request.objects.aggregate(
+        total=Count('pk'),
+        pending=Count('pk', filter=Q(status__in=[
+            'SUBMITTED', 'VALIDATION_PEDAGOGIQUE', 'REPORT_UPLOADED',
+        ])),
+        ibtikar=Count('pk', filter=Q(channel='IBTIKAR')),
+        genoclab=Count('pk', filter=Q(channel='GENOCLAB')),
+        completed=Count('pk', filter=Q(status='COMPLETED')),
+    )
+    total_requests = counts['total']
+    pending_count = counts['pending']
+    ibtikar_count = counts['ibtikar']
+    genoclab_count = counts['genoclab']
+    completed_count = counts['completed']
 
     # Pending requests needing action (all non-terminal, non-assigned states)
     pending_requests = Request.objects.filter(
@@ -127,17 +134,21 @@ def index(request):
     genoclab_revenue = budget_data['genoclab']['total']
 
     # Ratings & Reviews overview
-    from django.db.models import Avg
     rated_requests = Request.objects.filter(service_rating__isnull=False)
-    avg_rating = rated_requests.aggregate(avg=Avg('service_rating'))['avg'] or 0
-    total_ratings = rated_requests.count()
+    rating_counts = rated_requests.aggregate(
+        avg=Avg('service_rating'), total=Count('pk'),
+        **{f'star_{star}': Count('pk', filter=Q(service_rating=star))
+           for star in range(1, 6)},
+    )
+    avg_rating = rating_counts['avg'] or 0
+    total_ratings = rating_counts['total']
     recent_reviews = rated_requests.select_related('requester', 'service').order_by('-rated_at')[:10]
 
     # Rating distribution with computed percentages
     rating_distribution = {}
     rating_percentages = {}
     for star in range(1, 6):
-        count = rated_requests.filter(service_rating=star).count()
+        count = rating_counts[f'star_{star}']
         rating_distribution[star] = count
         rating_percentages[star] = round((count / total_ratings * 100), 1) if total_ratings > 0 else 0
     
