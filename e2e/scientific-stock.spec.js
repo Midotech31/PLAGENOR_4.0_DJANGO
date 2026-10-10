@@ -163,10 +163,10 @@ test('Admin Ops receives, distributes two products, returns and aliquots through
   await expect(page.locator('.erp-card-count').first()).toHaveText(/7[.,]8750*/);
 });
 
-for (const [language, direction, title] of [
-  ['fr','ltr','Stocks et lots physiques'],
-  ['en','ltr','Physical stock and lots'],
-  ['ar','rtl','المخزون الفعلي والدفعات'],
+for (const [language, direction, title, accepted] of [
+  ['fr','ltr','Stocks et lots physiques','Accepté / disponible'],
+  ['en','ltr','Physical stock and lots','Accepted / available'],
+  ['ar','rtl','المخزون الفعلي والدفعات','مقبول / متاح'],
 ]) {
   test(`Scientific stock navigation is accessible in ${language}`, async ({page}, info) => {
     expect((await page.request.post('/__e2e__/session/admin_ops/')).status()).toBe(204);
@@ -174,6 +174,7 @@ for (const [language, direction, title] of [
     await page.locator(`.topbar button[name=language][value=${language}]`).click();
     await expect(page.locator('html')).toHaveAttribute('dir', direction);
     await expect(page.locator('.erp-heading h1')).toHaveText(title);
+    await expect(page.locator('.erp-table tbody tr').filter({hasText: accepted}).first()).toBeVisible();
     for (const path of ['/erp/stock/', '/erp/stock/dashboard/', '/erp/stock/distributions/', '/erp/stock/distributions/new/']) {
       await page.goto(path);
       await audit(page);

@@ -2984,3 +2984,18 @@ msgstr "Stock status"
 
 msgid "État à la réception"
 msgstr "Condition on receipt"
+
+msgid "En attente de contrôle"
+msgstr "Awaiting inspection"
+
+msgid "Quarantaine"
+msgstr "Quarantine"
+
+msgid "Accepté / disponible"
+msgstr "Accepted / available"
+
+msgid "Rappelé"
+msgstr "Recalled"
+
+msgid "Détruit"
+msgstr "Destroyed"

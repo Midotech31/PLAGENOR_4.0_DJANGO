@@ -2960,3 +2960,18 @@ msgstr "حالة المخزون"
 
 msgid "État à la réception"
 msgstr "الحالة عند الاستلام"
+
+msgid "En attente de contrôle"
+msgstr "بانتظار الفحص"
+
+msgid "Quarantaine"
+msgstr "الحجر"
+
+msgid "Accepté / disponible"
+msgstr "مقبول / متاح"
+
+msgid "Rappelé"
+msgstr "مسحوب"
+
+msgid "Détruit"
+msgstr "متلف"
