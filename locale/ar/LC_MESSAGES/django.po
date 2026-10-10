@@ -8052,3 +8052,51 @@ msgstr "معلوماتي"
 #: erp/services/cdc_exports.py
 msgid "Éliminatoire"
 msgstr "إقصائي"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte désactivé."
+msgstr "الحساب معطّل."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Ce compte n’a pas le rôle analyste."
+msgstr "هذا الحساب لا يحمل دور المحلل."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Analyste indisponible."
+msgstr "المحلل غير متاح."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Capacité atteinte (%(load)s/%(capacity)s)."
+msgstr "تم بلوغ السعة (%(load)s/%(capacity)s)."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucune technique active correspondant à ce service."
+msgstr "لا توجد تقنية فعّالة مطابقة لهذه الخدمة."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Affectation impossible : %(reasons)s"
+msgstr "يتعذر الإسناد: %(reasons)s"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Organisation de l’analyse"
+msgstr "تنظيم التحليل"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucun analyste éligible pour le moment."
+msgstr "لا يوجد محلل مؤهل متاح حاليًا."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Critères d’éligibilité des analystes"
+msgstr "معايير أهلية المحللين"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte analyste actif, disponibilité, capacité et technique active correspondant au service."
+msgstr "حساب محلل فعّال، والتوفر، والسعة، وتقنية فعّالة مطابقة للخدمة."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Gérer les compétences et la disponibilité"
+msgstr "إدارة الكفاءات والتوفر"
+
+#: templates/dashboard/admin_ops/request_detail.html
+msgid "Confirmer l’affectation"
+msgstr "تأكيد الإسناد"

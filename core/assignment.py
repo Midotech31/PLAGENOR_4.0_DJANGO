@@ -3,6 +3,11 @@
 
 from __future__ import annotations
 
+import re
+import unicodedata
+
+from django.utils.translation import gettext as _
+
 from accounts.models import MemberProfile
 from core.models import Request
 
@@ -17,24 +22,75 @@ ASSIGNMENT_WEIGHTS = {
 DEFAULT_MAX_LOAD = 5
 
 
+def _label_tokens(value):
+    """Compare whole words, ignoring accents and punctuation, never empty text."""
+    value = unicodedata.normalize('NFKD', value or '').casefold()
+    value = ''.join(char for char in value if not unicodedata.combining(char))
+    return tuple(re.findall(r'[^\W_]+', value))
+
+
+def _label_variants(obj):
+    # Explicit translated fields make qualification independent of UI language.
+    return {_label_tokens(getattr(obj, field, '')) for field in
+            ('name', 'name_fr', 'name_en', 'name_ar')} - {()}
+
+
+def _contains_phrase(label, phrase):
+    return bool(phrase) and any(
+        label[index:index + len(phrase)] == phrase
+        for index in range(len(label) - len(phrase) + 1))
+
+
+def technique_matches_service(technique, service):
+    """Match an active certification to a service code or complete name phrase."""
+    if not technique.active:
+        return False
+    code = _label_tokens(service.code)
+    service_names = _label_variants(service)
+    for label in _label_variants(technique):
+        if _contains_phrase(label, code):
+            return True
+        if any(_contains_phrase(name, label) or _contains_phrase(label, name)
+               for name in service_names):
+            return True
+    return False
+
+
+def member_ineligibility_reasons(member_profile: MemberProfile, service=None, current_request=None) -> list:
+    """Explain every blocking criterion using the same rules as assignment."""
+    reasons = []
+    if not member_profile.user.is_active:
+        reasons.append(_('Compte désactivé.'))
+    if member_profile.user.role != 'MEMBER':
+        reasons.append(_('Ce compte n’a pas le rôle analyste.'))
+    if not member_profile.available:
+        reasons.append(_('Analyste indisponible.'))
+    keeps_existing_slot = (current_request is not None
+                           and current_request.assigned_to_id == member_profile.pk
+                           and current_request.status not in LOAD_EXCLUDED_STATES)
+    if not keeps_existing_slot and member_profile.current_load >= (member_profile.max_load or DEFAULT_MAX_LOAD):
+        reasons.append(_('Capacité atteinte (%(load)s/%(capacity)s).') % {
+            'load': member_profile.current_load,
+            'capacity': member_profile.max_load or DEFAULT_MAX_LOAD})
+    if service is not None and not any(
+            technique_matches_service(technique, service)
+            for technique in member_profile.techniques.all()):
+        reasons.append(_('Aucune technique active correspondant à ce service.'))
+    return reasons
+
+
 def member_is_eligible(member_profile: MemberProfile, service=None) -> bool:
     """Return whether a member may be assigned, not merely how they rank."""
-    if (not member_profile.user.is_active
-            or member_profile.user.role != 'MEMBER'
-            or not member_profile.available
-            or member_profile.current_load >= (
-                member_profile.max_load or DEFAULT_MAX_LOAD)):
-        return False
-    if service is None:
-        return True
-    techniques = [name.casefold() for name in
-                  member_profile.techniques.values_list('name', flat=True)]
-    if not techniques:
-        return False
-    code = (getattr(service, 'code', '') or '').casefold()
-    name = (getattr(service, 'name', '') or '').casefold()
-    return any(code in technique or technique in code or name in technique
-               for technique in techniques)
+    return not member_ineligibility_reasons(member_profile, service)
+
+
+def get_assignment_candidates(service=None, current_member_id=None, members=None, current_request=None):
+    """Include blocked candidates so operators can see what needs correcting."""
+    if members is None:
+        members = MemberProfile.objects.select_related('user').prefetch_related('techniques').order_by(
+            'user__last_name', 'user__first_name', 'pk')
+    return [{'member': member, 'reasons': member_ineligibility_reasons(member, service, current_request)}
+            for member in members if member.pk != current_member_id]
 
 
 def compute_member_score(member_profile: MemberProfile, service=None) -> float:
@@ -46,16 +102,9 @@ def compute_member_score(member_profile: MemberProfile, service=None) -> float:
     # Skill score (0-100) — cross-reference member techniques with service
     skill_score = 50.0  # default if no service
     if service:
-        member_techniques = list(member_profile.techniques.values_list('name', flat=True))
+        member_techniques = [t for t in member_profile.techniques.all() if t.active]
         if member_techniques:
-            # Check if any technique matches service code or name
-            service_code = getattr(service, 'code', '')
-            service_name = getattr(service, 'name', '')
-            matched = any(
-                service_code.lower() in t.lower() or t.lower() in service_code.lower()
-                or service_name.lower() in t.lower()
-                for t in member_techniques
-            )
+            matched = any(technique_matches_service(t, service) for t in member_techniques)
             skill_score = 100.0 if matched else 30.0
         else:
             skill_score = 0.0

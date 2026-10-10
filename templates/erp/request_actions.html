@@ -1,1 +1,13 @@
-{% load i18n erp_permissions %}{% can_store_request request.user req as may_store %}{% can_operate_request request.user req as may_operate %}<div class="erp-form-actions">{% if may_store %}<a class="btn btn-outline" href="{% url 'erp:sample-sources' request_id=req.pk %}">{% trans 'Stocker les échantillons' %}</a>{% endif %}{% if may_operate %}<a class="btn btn-outline" href="{% url 'erp:run-create' request_id=req.pk %}">{% trans 'Planifier une série analytique' %}</a>{% endif %}{% if request.user.role == 'PLATFORM_ADMIN' or request.user.role == 'SUPER_ADMIN' %}<a class="btn btn-outline" href="{% url 'erp:activity-create' %}?request={{ req.pk }}">{% trans 'Planifier une étape' %}</a>{% endif %}</div>
+{% load i18n erp_permissions %}
+{% can_store_request request.user req as may_store %}
+{% can_operate_request request.user req as may_operate %}
+{% if may_store or may_operate or request.user.role == 'PLATFORM_ADMIN' or request.user.role == 'SUPER_ADMIN' %}
+<section class="card mb-4" aria-labelledby="request-operations-heading">
+    <div class="card-header"><h3 id="request-operations-heading">{% trans 'Organisation de l’analyse' %}</h3></div>
+    <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
+        {% if may_store %}<a class="btn btn-sm btn-outline" href="{% url 'erp:sample-sources' request_id=req.pk %}">{% trans 'Stocker les échantillons' %}</a>{% endif %}
+        {% if may_operate %}<a class="btn btn-sm btn-outline" href="{% url 'erp:run-create' request_id=req.pk %}">{% trans 'Planifier une série analytique' %}</a>{% endif %}
+        {% if request.user.role == 'PLATFORM_ADMIN' or request.user.role == 'SUPER_ADMIN' %}<a class="btn btn-sm btn-outline" href="{% url 'erp:activity-create' %}?request={{ req.pk }}">{% trans 'Planifier une étape' %}</a>{% endif %}
+    </div>
+</section>
+{% endif %}

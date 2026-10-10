@@ -323,7 +323,11 @@ class AssignmentEligibilityTests(TestCase):
 
     def test_nonmatching_technique_is_ineligible(self):
         self.technique.name = 'UNRELATED'
-        self.technique.save(update_fields=['name'])
+        # Qualification is language-independent: no translated name may keep
+        # the matching service code when this fixture represents another skill.
+        for language in ('fr', 'en', 'ar'):
+            setattr(self.technique, f'name_{language}', 'UNRELATED')
+        self.technique.save(update_fields=['name', 'name_fr', 'name_en', 'name_ar'])
         self.assertFalse(member_is_eligible(self.profile, self.service))
 
     def test_matching_member_score_rewards_skill_and_capacity(self):

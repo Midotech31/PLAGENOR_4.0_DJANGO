@@ -8128,3 +8128,51 @@ msgstr "Informational"
 #: erp/services/cdc_exports.py
 msgid "Éliminatoire"
 msgstr "Eliminatory"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte désactivé."
+msgstr "Account disabled."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Ce compte n’a pas le rôle analyste."
+msgstr "This account does not have the analyst role."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Analyste indisponible."
+msgstr "Analyst unavailable."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Capacité atteinte (%(load)s/%(capacity)s)."
+msgstr "Capacity reached (%(load)s/%(capacity)s)."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucune technique active correspondant à ce service."
+msgstr "No active technique matches this service."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Affectation impossible : %(reasons)s"
+msgstr "Assignment unavailable: %(reasons)s"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Organisation de l’analyse"
+msgstr "Analysis organisation"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucun analyste éligible pour le moment."
+msgstr "No eligible analyst is currently available."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Critères d’éligibilité des analystes"
+msgstr "Analyst eligibility criteria"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte analyste actif, disponibilité, capacité et technique active correspondant au service."
+msgstr "An active analyst account, availability, capacity and an active technique matching the service."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Gérer les compétences et la disponibilité"
+msgstr "Manage qualifications and availability"
+
+#: templates/dashboard/admin_ops/request_detail.html
+msgid "Confirmer l’affectation"
+msgstr "Confirm assignment"

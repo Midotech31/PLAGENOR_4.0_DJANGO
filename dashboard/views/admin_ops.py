@@ -6,12 +6,13 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Avg, Count, Sum, Q
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from accounts.models import MemberProfile, Cheer, PointsHistory
 from core.models import Request, RequestHistory, RequestComment, Invoice
 from core.workflow import get_allowed_transitions, transition
 from core.assignment import get_recommended_members
-from core.assignment import member_is_eligible
+from core.assignment import get_assignment_candidates, member_ineligibility_reasons
 from core.registry import get_service_def
 from core.pricing import calculate_price
 from core.exceptions import (
@@ -78,6 +79,10 @@ def index(request):
         Q(status__in=['IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED'])
         | Q(status='ASSIGNED', assigned_to__isnull=True)
     ).select_related('service', 'requester').order_by('-created_at')
+    assignment_members = list(MemberProfile.objects.select_related('user').prefetch_related('techniques').order_by(
+        'user__last_name', 'user__first_name', 'pk'))
+    for req in assignable_requests:
+        req.assignment_candidates = get_assignment_candidates(req.service, members=assignment_members, current_request=req)
 
     # Requests needing report review
     review_requests = Request.objects.filter(
@@ -194,7 +199,7 @@ def request_detail(request, pk):
     """Full request preview — shows all submitted data for review."""
     from core.models import Message
 
-    req = get_object_or_404(Request, pk=pk)
+    req = get_object_or_404(Request.objects.select_related('service', 'assigned_to__user'), pk=pk)
     history = req.history.select_related('actor').order_by('created_at')
     comments = req.comments.select_related('author').order_by('created_at')
     messages_list = Message.objects.filter(request=req).select_related('from_user', 'to_user').order_by('created_at')
@@ -213,6 +218,9 @@ def request_detail(request, pk):
         'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
         'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
     )
+    can_initial_assign = req.status in ('IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED')
+    assignment_candidates = get_assignment_candidates(
+        req.service, None if can_initial_assign else req.assigned_to_id, current_request=req)
     context = {
         'req': req,
         'history': history,
@@ -221,6 +229,9 @@ def request_detail(request, pk):
         'allowed_transitions': allowed,
         'yaml_def': yaml_def,
         'available_members': MemberProfile.objects.filter(available=True).select_related('user'),
+        'assignment_candidates': assignment_candidates,
+        'has_eligible_candidates': any(not candidate['reasons'] for candidate in assignment_candidates),
+        'can_assign': can_initial_assign or (req.status == 'ASSIGNED' and req.assigned_to_id is None),
         'status_choices': Request.STATUS_CHOICES,
         'now': timezone.now(),
         'can_reassign_active': req.status in REASSIGN_ACTIVE_STATES,
@@ -256,125 +267,128 @@ def assign_request(request, pk):
     if not member_id:
         messages.error(request, "Veuillez sélectionner un analyste.")
         return redirect_to_detail(request, req, 'dashboard:admin_ops')
-    member = get_object_or_404(MemberProfile, pk=member_id)
-    if not member_is_eligible(member, req.service):
-        messages.error(
-            request,
-            "Cet analyste n'est pas éligible: vérifiez son activation, sa "
-            "disponibilité, sa charge et ses techniques certifiées.")
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    previous = req.assigned_to  # may be None
-    reason = (request.POST.get('reason', '') or '').strip()
-    if previous is not None and previous.pk == member.pk:
-        messages.warning(request, "L'analyste sélectionné est déjà l'assigné de cette demande.")
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    # Reassignment paths
-    # ──────────────────
-    #   1) Decline-rebound:  status=ASSIGNED & assigned_to=None       (the
-    #      analyst declined; admin picks a replacement; no status edge).
-    #   2) Active reassignment: assigned_to is set on a request that is
-    #      still in the analyst's hands (ASSIGNED through ANALYSIS_FINISHED).
-    #      Used when the assignee is late / absent / off. We require a
-    #      non-empty reason for the audit trail, log_action, and notify
-    #      both the outgoing and incoming analyst.
-    #   3) Standard assignment: post-validation states that flow into the
-    #      analyst pipeline (IBTIKAR_CODE_SUBMITTED, ORDER_UPLOADED,
-    #      INVOICE_GENERATED). Drives the state machine transition.
-    REASSIGN_ACTIVE_STATES = (
-        'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
-        'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
-    )
-    is_decline_rebound = (req.status == 'ASSIGNED' and previous is None)
-    is_active_reassignment = (
-        previous is not None
-        and previous.pk != member.pk
-        and req.status in REASSIGN_ACTIVE_STATES
-    )
-    is_initial_assign = req.status in (
-        'IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED',
-    )
-
-    if not (is_decline_rebound or is_active_reassignment or is_initial_assign):
-        messages.error(
-            request,
-            f"La demande {req.display_id} n'est pas prête pour l'assignation "
-            f"(statut actuel: {req.get_status_display()})."
-        )
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    if is_active_reassignment and len(reason) < 5:
-        messages.error(
-            request,
-            "Une raison (retard, absence, congé, surcharge…) d'au moins "
-            "5 caractères est obligatoire pour réassigner une demande en cours.",
-        )
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    req.assigned_to = member
-    if is_active_reassignment:
-        # Reset assignment_accepted so the new analyst has to accept the
-        # task explicitly — they shouldn't inherit the previous one's
-        # acceptance flag.
-        req.assignment_accepted = False
-        req.assignment_accepted_at = None
-        req.save(update_fields=['assigned_to', 'assignment_accepted', 'assignment_accepted_at'])
-    else:
-        req.save(update_fields=['assigned_to'])
-
-    if is_decline_rebound:
-        RequestHistory.objects.create(
-            request=req, from_status='ASSIGNED', to_status='ASSIGNED',
-            actor=request.user, notes=f"Réassigné à {member.user.get_full_name()}",
-        )
-        Notification.objects.create(
-            user=member.user,
-            message=f"Nouvelle tâche assignée — {req.display_id}",
-            request=req, notification_type='ASSIGNMENT',
-        )
-        messages.success(request, f"Demande {req.display_id} réassignée à {member.user.get_full_name()}.")
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
-    if is_active_reassignment:
-        # No status edge — we stay in REASSIGN_ACTIVE_STATES. The audit
-        # entry uses status→status so the timeline still shows the event.
-        RequestHistory.objects.create(
-            request=req, from_status=req.status, to_status=req.status,
-            actor=request.user,
-            notes=(
-                f"Réassignée de {previous.user.get_full_name()} à "
-                f"{member.user.get_full_name()}. Raison : {reason}"
-            ),
-        )
-        # Outgoing analyst
-        Notification.objects.create(
-            user=previous.user,
-            message=(
-                f"{req.display_id} : la demande vous a été retirée et "
-                f"confiée à {member.user.get_full_name()}. Raison : {reason}"
-            ),
-            request=req, notification_type='ASSIGNMENT',
-        )
-        # Incoming analyst
-        Notification.objects.create(
-            user=member.user,
-            message=(
-                f"{req.display_id} : tâche réassignée à vous. "
-                f"Statut courant : {req.get_status_display()}. Raison : {reason}"
-            ),
-            request=req, notification_type='ASSIGNMENT',
-        )
-        messages.success(
-            request,
-            f"Demande {req.display_id} réassignée de {previous.user.get_full_name()} "
-            f"à {member.user.get_full_name()}.",
-        )
-        return redirect_to_detail(request, req, 'dashboard:admin_ops')
-
     try:
-        transition(req, 'ASSIGNED', request.user, notes=f"Assigné à {member.user.get_full_name()}")
-        messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
+        with transaction.atomic():
+            req = get_object_or_404(Request.objects.select_for_update(), pk=pk)
+            # Lock both assignees in a stable order for concurrent replacements.
+            profiles = {profile.pk: profile for profile in
+                        MemberProfile.objects.select_for_update(of=('self',)).select_related('user').filter(
+                            pk__in=[int(member_id), req.assigned_to_id]).order_by('pk')}
+            member = profiles.get(int(member_id))
+            if member is None:
+                raise Http404
+            previous = profiles.get(req.assigned_to_id)
+            reason = (request.POST.get('reason', '') or '').strip()
+            is_initial_assign = req.status in ('IBTIKAR_CODE_SUBMITTED', 'INVOICE_GENERATED')
+            if previous is not None and previous.pk == member.pk and not is_initial_assign:
+                messages.warning(request, "L'analyste sélectionné est déjà l'assigné de cette demande.")
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            reasons = member_ineligibility_reasons(member, req.service, req)
+            if reasons:
+                messages.error(request, _('Affectation impossible : %(reasons)s') % {'reasons': ' '.join(reasons)})
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            # Reassignment paths
+            # ──────────────────
+            #   1) Decline-rebound:  status=ASSIGNED & assigned_to=None       (the
+            #      analyst declined; admin picks a replacement; no status edge).
+            #   2) Active reassignment: assigned_to is set on a request that is
+            #      still in the analyst's hands (ASSIGNED through ANALYSIS_FINISHED).
+            #      Used when the assignee is late / absent / off. We require a
+            #      non-empty reason for the audit trail, log_action, and notify
+            #      both the outgoing and incoming analyst.
+            #   3) Standard assignment: post-validation states that flow into the
+            #      analyst pipeline (IBTIKAR_CODE_SUBMITTED, ORDER_UPLOADED,
+            #      INVOICE_GENERATED). Drives the state machine transition.
+            REASSIGN_ACTIVE_STATES = (
+                'ASSIGNED', 'APPOINTMENT_PROPOSED', 'APPOINTMENT_CONFIRMED',
+                'SAMPLE_RECEIVED', 'ANALYSIS_STARTED', 'ANALYSIS_FINISHED',
+            )
+            is_decline_rebound = (req.status == 'ASSIGNED' and previous is None)
+            is_active_reassignment = (
+                previous is not None
+                and previous.pk != member.pk
+                and req.status in REASSIGN_ACTIVE_STATES
+            )
+            if not (is_decline_rebound or is_active_reassignment or is_initial_assign):
+                messages.error(
+                    request,
+                    f"La demande {req.display_id} n'est pas prête pour l'assignation "
+                    f"(statut actuel: {req.get_status_display()})."
+                )
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            if is_active_reassignment and len(reason) < 5:
+                messages.error(
+                    request,
+                    "Une raison (retard, absence, congé, surcharge…) d'au moins "
+                    "5 caractères est obligatoire pour réassigner une demande en cours.",
+                )
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            req.assigned_to = member
+            if is_active_reassignment:
+                # Reset assignment_accepted so the new analyst has to accept the
+                # task explicitly — they shouldn't inherit the previous one's
+                # acceptance flag.
+                req.assignment_accepted = False
+                req.assignment_accepted_at = None
+                req.save(update_fields=['assigned_to', 'assignment_accepted', 'assignment_accepted_at'])
+            else:
+                req.save(update_fields=['assigned_to'])
+
+            if is_decline_rebound:
+                RequestHistory.objects.create(
+                    request=req, from_status='ASSIGNED', to_status='ASSIGNED',
+                    actor=request.user, notes=f"Réassigné à {member.user.get_full_name()}",
+                )
+                Notification.objects.create(
+                    user=member.user,
+                    message=f"Nouvelle tâche assignée — {req.display_id}",
+                    request=req, notification_type='ASSIGNMENT',
+                )
+                messages.success(request, f"Demande {req.display_id} réassignée à {member.user.get_full_name()}.")
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            if is_active_reassignment:
+                # No status edge — we stay in REASSIGN_ACTIVE_STATES. The audit
+                # entry uses status→status so the timeline still shows the event.
+                RequestHistory.objects.create(
+                    request=req, from_status=req.status, to_status=req.status,
+                    actor=request.user,
+                    notes=(
+                        f"Réassignée de {previous.user.get_full_name()} à "
+                        f"{member.user.get_full_name()}. Raison : {reason}"
+                    ),
+                )
+                # Outgoing analyst
+                Notification.objects.create(
+                    user=previous.user,
+                    message=(
+                        f"{req.display_id} : la demande vous a été retirée et "
+                        f"confiée à {member.user.get_full_name()}. Raison : {reason}"
+                    ),
+                    request=req, notification_type='ASSIGNMENT',
+                )
+                # Incoming analyst
+                Notification.objects.create(
+                    user=member.user,
+                    message=(
+                        f"{req.display_id} : tâche réassignée à vous. "
+                        f"Statut courant : {req.get_status_display()}. Raison : {reason}"
+                    ),
+                    request=req, notification_type='ASSIGNMENT',
+                )
+                messages.success(
+                    request,
+                    f"Demande {req.display_id} réassignée de {previous.user.get_full_name()} "
+                    f"à {member.user.get_full_name()}.",
+                )
+                return redirect_to_detail(request, req, 'dashboard:admin_ops')
+
+            transition(req, 'ASSIGNED', request.user, notes=f"Assigné à {member.user.get_full_name()}")
+            messages.success(request, f"Demande {req.display_id} assignée à {member.user.get_full_name()}.")
     except (InvalidTransitionError, AuthorizationError, ValueError) as e:
         messages.error(request, f"Erreur d'assignation: {e}")
     return redirect_to_detail(request, req, 'dashboard:admin_ops')
