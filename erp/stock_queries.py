@@ -27,6 +27,16 @@ def descendants(category):
     return found
 
 
+def category_ancestors(categories):
+    found = set(categories)
+    parents = dict(Category.objects.values_list('pk', 'parent_id'))
+    pending = found.copy()
+    while pending:
+        pending = {parents.get(pk) for pk in pending} - found - {None}
+        found.update(pending)
+    return found
+
+
 def filter_stock(queryset, values):
     search = values.get('q', '').strip()[:255]
     if search:

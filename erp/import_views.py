@@ -137,6 +137,7 @@ def import_mapping(request, pk):
     try:
         require_mapping(request.user, mapping)
     except ValidationError as error:
+        form.cleaned_data = {}
         add_validation(form, error)
     else:
         if request.method == 'POST' and form.is_valid():

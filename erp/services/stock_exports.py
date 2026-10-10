@@ -34,7 +34,7 @@ def stock_table(queryset, *, limit=100000):
             container.lot.code, container.lot.manufacturer_lot, container.lot.serial_number, container.code,
             str(container.location), container.quantity, container.reserved,
             container.quantity - container.reserved if container.stock_usable else Decimal(0), article.base_unit.code,
-            container.fifo_received_on, container.opened_on, container.use_by, str(container.get_status_display())])
+            container.stock_received_on, container.opened_on, container.use_by, str(container.get_status_display())])
     return headers, rows
 
 

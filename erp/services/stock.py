@@ -7,7 +7,7 @@ import uuid
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import DateField, F, Min, OuterRef, Q, Subquery
-from django.db.models.functions import Cast, Coalesce
+from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -242,7 +242,7 @@ def fefo(user, article):
     return operational_scope(StockContainer.objects.filter(lot__article=article), user).filter(
         usable_filter(), quantity__gt=F('reserved')).select_related('lot', 'location', 'lot__article__base_unit').annotate(
         fifo_date=Coalesce('fifo_received_on', Subquery(receipts, output_field=DateField()),
-            Cast('created_at', DateField()))).order_by(F('use_by').asc(nulls_last=True), 'fifo_date', 'created_at', 'code')
+            TruncDate('created_at'))).order_by(F('use_by').asc(nulls_last=True), 'fifo_date', 'created_at', 'code')
 
 
 def _fifo_received_on(container):

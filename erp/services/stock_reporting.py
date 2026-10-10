@@ -2,17 +2,23 @@
 from datetime import timedelta
 from decimal import Decimal, ROUND_CEILING
 
-from django.db.models import BooleanField, Case, Value, When
+from django.core.exceptions import ValidationError
+from django.db.models import BooleanField, Case, DateField, OuterRef, Subquery, Value, When
+from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 
-from erp.models import Capability, StockEntry, StockReceipt
-from erp.permissions import operational_scope, permitted
+from erp.models import Article, Capability, StockEntry, StockReceipt
+from erp.permissions import catalog_scope, operational_scope, permitted
+from .catalog import convert_quantity
 from .stock import usable_filter
 
 
 def with_availability(queryset):
+    receipts = StockReceipt.objects.filter(container_id=OuterRef('pk'), movement__reversal__isnull=True).order_by(
+        'received_on', 'pk').values('received_on')[:1]
     return queryset.annotate(stock_usable=Case(When(usable_filter(), then=Value(True)),
-        default=Value(False), output_field=BooleanField()))
+        default=Value(False), output_field=BooleanField()),
+        stock_received_on=Coalesce('fifo_received_on', Subquery(receipts, output_field=DateField()), TruncDate('created_at')))
 
 
 def grouped_rows(queryset, view, identities):
@@ -40,7 +46,7 @@ def grouped_rows(queryset, view, identities):
     return groups
 
 
-def dashboard_data(user, queryset, days=90):
+def dashboard_data(user, queryset, days=90, *, include_unstocked=True):
     today = timezone.localdate()
     products, units, locations = {}, {}, {}
     soon, blocked = 0, 0
@@ -68,17 +74,23 @@ def dashboard_data(user, queryset, days=90):
             blocked += not container.stock_usable
     entries = operational_scope(StockEntry.objects.filter(container__in=queryset,
         created_at__date__gte=today - timedelta(days=days - 1)), user,
-        category_field='container__lot__article__category_id').select_related('movement', 'container__lot__article__base_unit')
+        category_field='container__lot__article__category_id').select_related('movement__reversal', 'container__lot__article__base_unit')
     flows = {}
     for entry in entries.iterator():
         article = entry.container.lot.article
         key = (entry.movement.kind, article.base_unit.code)
-        row = flows.setdefault(key, {'kind': entry.movement.get_kind_display(), 'unit': key[1],
+        row = flows.setdefault(key, {'kind': entry.movement.get_kind_display(), 'kind_code': key[0], 'unit': key[1],
             'quantity': Decimal(0), 'count': 0})
         row['quantity'] += entry.quantity_delta
         row['count'] += 1
-        if entry.movement.kind == 'CONSUMPTION' and not hasattr(entry.movement, 'reversal'):
+        if entry.movement.kind in ('CONSUMPTION', 'EXIT') and not hasattr(entry.movement, 'reversal'):
             products[article.pk]['consumed'] += max(Decimal(0), -entry.quantity_delta)
+    if include_unstocked:
+        absent = catalog_scope(Article.objects.filter(active=True).exclude(pk__in=products), user,
+            capability=Capability.VIEW_STOCK).select_related('base_unit', 'purchase_unit', 'category')
+        for article in absent:
+            products[article.pk] = {'article': article, 'physical': Decimal(0), 'reserved': Decimal(0),
+                'available': Decimal(0), 'consumed': Decimal(0), 'suggested': Decimal(0)}
     for row in products.values():
         article = row['article']
         threshold = max(article.minimum_stock, article.reorder_point, article.safety_stock)
@@ -88,7 +100,16 @@ def dashboard_data(user, queryset, days=90):
         row['overstock'] = bool(article.target_stock and row['available'] > article.target_stock)
         if row['low']:
             need = max(Decimal(0), max(article.target_stock, threshold) - row['available'])
-            row['suggested'] = (need / article.order_multiple).to_integral_value(rounding=ROUND_CEILING) * article.order_multiple
+            row['purchase_unit'] = article.purchase_unit or article.base_unit
+            try:
+                factor = convert_quantity(article, 1, row['purchase_unit'])[1]
+            except ValidationError:
+                row['purchase_missing'] = True
+                row['suggested'] = need
+            else:
+                purchase = max(need / factor, article.minimum_order_quantity)
+                row['purchase_suggested'] = (purchase / article.order_multiple).to_integral_value(rounding=ROUND_CEILING) * article.order_multiple
+                row['suggested'] = row['purchase_suggested'] * factor
     costs, priced_lots, cost_permissions = {}, set(), {}
     receipts = StockReceipt.objects.filter(container__lot_id__in=lots,
         movement__reversal__isnull=True, unit_price__isnull=False).select_related('container__lot__article').order_by(
@@ -109,7 +130,7 @@ def dashboard_data(user, queryset, days=90):
         'references': len(products), 'lot_count': len(lots), 'soon': soon, 'blocked': blocked,
         'empty': sum(row['available'] == 0 for row in products.values()),
         'low': sum(row['low'] for row in products.values()), 'costs': costs,
-        'unpriced_lots': len(lots - priced_lots), 'days': days}
+        'unpriced_lots': len(lots - priced_lots), 'days': days, 'period_start': today - timedelta(days=days - 1)}
 
 
 def entry_balances(entries):

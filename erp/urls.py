@@ -9,6 +9,7 @@ urlpatterns = [
     path('stock/export/', stock_views.stock_export, name='stock-export'),
     path('stock/distributions/', stock_views.dispatch_list, name='dispatch-list'),
     path('stock/distributions/new/', stock_views.dispatch_create, name='dispatch-create'),
+    path('stock/distribution-sources/', stock_views.dispatch_sources, name='dispatch-sources'),
     path('stock/distributions/<uuid:pk>/', stock_views.dispatch_detail, name='dispatch-detail'),
     path('stock/returns/<int:pk>/', stock_views.stock_return, name='stock-return'),
     path('cdc-items/<uuid:pk>/arrange/', cdc_exchange_views.item_arrange, name='cdc-item-arrange'),

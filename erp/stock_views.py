@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import F, Q, Sum
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -14,13 +15,13 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from . import stock_forms as forms
 from .models import (Article, Capability, Category, Location, LocationType, Party, StockContainer,
-    StockDispatch, StockDispatchLine, StockEntry, StockLot, StockMovement, StockReservation)
+    LocationClosure, StockDispatch, StockDispatchLine, StockEntry, StockLot, StockMovement, StockReservation)
 from .permissions import grants, has_access, is_manager, operational_scope, permitted, require_manager
 from .services.stock import (control_container, control_lot, fefo, is_usable, open_container,
     receive_stock, reconcile_stock, release_stock, remove_stock, reserve_stock, reverse_stock,
     transfer_stock, usable_filter)
 from .views import add_validation
-from .stock_queries import filter_stock, identifier
+from .stock_queries import category_ancestors, filter_stock, identifier
 from .services.stock_reporting import dashboard_data, entry_balances, grouped_rows, with_availability
 
 
@@ -61,8 +62,9 @@ def stock_list(request):
     query.pop('page', None)
     query.pop('export', None)
     filter_options = [
-        {'key': 'category', 'label': _('Catégorie'), 'choices': Category.objects.filter(pk__in=base.values('lot__article__category_id'))},
-        {'key': 'location', 'label': _('Emplacement'), 'choices': Location.objects.filter(pk__in=base.values('location_id'))},
+        {'key': 'category', 'label': _('Catégorie'), 'choices': Category.objects.filter(pk__in=category_ancestors(base.values_list('lot__article__category_id', flat=True)))},
+        {'key': 'location', 'label': _('Emplacement'), 'choices': Location.objects.filter(pk__in=LocationClosure.objects.filter(
+            descendant_id__in=base.values('location_id')).values('ancestor_id'))},
         {'key': 'kind', 'label': _('Type d’emplacement'), 'choices': LocationType.objects.filter(pk__in=base.values('location__kind_id'))},
         {'key': 'manufacturer', 'label': _('Fabricant'), 'choices': Party.objects.filter(pk__in=base.values('lot__article__manufacturer_id'))},
         {'key': 'supplier', 'label': _('Fournisseur'), 'choices': Party.objects.filter(Q(pk__in=base.values('lot__article__preferred_supplier_id')) |
@@ -213,6 +215,15 @@ def ledger(request):
         qs = qs.filter(container_id=identifier(request.GET['container']))
     if request.GET.get('kind'):
         qs = qs.filter(movement__kind=request.GET['kind'])
+    for name, lookup in (('from', 'created_at__date__gte'), ('until', 'created_at__date__lte')):
+        if request.GET.get(name):
+            try:
+                day = date.fromisoformat(request.GET[name])
+            except ValueError:
+                raise Http404
+            qs = qs.filter(**{lookup: day})
+    if request.GET.get('article'):
+        qs = qs.filter(container__lot__article_id=identifier(request.GET['article']))
     page = Paginator(qs, 40).get_page(request.GET.get('page'))
     page.object_list = entry_balances(page.object_list)
     return render(request, 'erp/ledger.html', {'page': page,
@@ -255,7 +266,9 @@ def stock_dashboard(request):
         raise Http404
     if not 1 <= days <= 366:
         raise Http404
-    context = dashboard_data(request.user, qs, days)
+    include_unstocked = not any(request.GET.get(key) for key in ('q', 'article', 'lot', 'category',
+        'location', 'kind', 'manufacturer', 'supplier', 'expiry', 'state'))
+    context = dashboard_data(request.user, qs, days, include_unstocked=include_unstocked)
     context['filters'] = request.GET
     return render(request, 'erp/stock_dashboard.html', context)
 
@@ -309,6 +322,18 @@ def dispatch_create(request):
         else:
             return redirect('erp:dispatch-detail', pk=dispatch.pk)
     return render(request, 'erp/dispatch_form.html', {'form': form, 'lines': lines}, status=400 if request.method == 'POST' else 200)
+
+
+@login_required
+@require_GET
+def dispatch_sources(request):
+    qs = filter_stock(stock_queryset(request.user), request.GET).filter(usable_filter(), quantity__gt=F('reserved'))
+    rows = [{'id': str(obj.pk), 'label': forms.ContainerChoice(queryset=qs).label_from_instance(obj),
+        'version': obj.version, 'unit': str(obj.lot.article.base_unit_id)}
+        for obj in qs.order_by('lot__article__code', 'code')[:40]]
+    response = JsonResponse({'results': rows})
+    response['Cache-Control'] = 'private, no-store'
+    return response
 
 
 @login_required

@@ -3,7 +3,7 @@ from decimal import Decimal
 import uuid
 
 from django import forms
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -174,6 +174,15 @@ class DispatchForm(OperationForm):
         self.fields['destination'].queryset = location_choices(user, Capability.TRANSFER_STOCK)
 
 
+class ContainerSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if hasattr(value, 'instance'):
+            option['attrs'].update({'data-version': value.instance.version,
+                'data-unit': str(value.instance.lot.article.base_unit_id)})
+        return option
+
+
 class ContainerChoice(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return ' | '.join((obj.code, str(obj.lot.article), obj.lot.article.catalog_reference or '—',
@@ -181,7 +190,10 @@ class ContainerChoice(forms.ModelChoiceField):
 
 
 class DispatchLineForm(OperationForm):
-    container = ContainerChoice(label=_('Contenant / référence / lot / emplacement / disponible'), queryset=StockContainer.objects.none())
+    container_search = forms.CharField(label=_('Rechercher un contenant'), required=False,
+        widget=forms.TextInput(attrs={'type': 'search', 'class': 'form-control', 'data-container-search': 'true'}))
+    container = ContainerChoice(label=_('Contenant / référence / lot / emplacement / disponible'),
+        queryset=StockContainer.objects.none(), widget=ContainerSelect)
     expected = forms.IntegerField(widget=forms.HiddenInput, required=False)
     amount = forms.DecimalField(label=_('Quantité distribuée'), max_digits=18, decimal_places=6, min_value=Decimal('0.000001'))
     unit = forms.ModelChoiceField(label=_('Unité'), queryset=Unit.objects.filter(active=True))
@@ -189,7 +201,15 @@ class DispatchLineForm(OperationForm):
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['container'].queryset = operational_scope(StockContainer.objects.filter(quantity__gt=0), user).select_related(
+        from .services.stock import usable_filter
+        scoped = operational_scope(StockContainer.objects.filter(usable_filter(), quantity__gt=F('reserved')), user)
+        selected = self.data.get(self.add_prefix('container')) or self.initial.get('container')
+        try:
+            selected = uuid.UUID(str(getattr(selected, 'pk', selected)))
+        except (ValueError, TypeError, AttributeError):
+            selected = None
+        first = scoped.order_by('lot__article__code', 'code').values('pk')[:40]
+        self.fields['container'].queryset = scoped.filter(Q(pk__in=first) | Q(pk=selected)).select_related(
             'lot__article__base_unit', 'location').order_by('lot__article__code', 'code')
 
 

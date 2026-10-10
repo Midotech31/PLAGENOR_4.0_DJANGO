@@ -19,6 +19,71 @@ from erp.tests import fixtures
 
 
 class PostgreSQLOperationalTests(OperationFixtures, TransactionTestCase):
+    def distribution(self, container, **overrides):
+        from erp.services.distributions import distribute_stock
+        values = dict(key=uuid.uuid4(), mode='EXIT', beneficiary='Laboratoire PostgreSQL',
+            distributed_on=timezone.localdate(), reason='Distribution concurrente',
+            lines=[{'container': container, 'amount': '7', 'unit': self.unit, 'expected': container.version}])
+        return distribute_stock(self.ops, **{**values, **overrides})
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_competing_distributions_cannot_overdraw_a_container(self):
+        container, _, _ = self.receive(quantity='10.125')
+        results = self.race([lambda: self.distribution(container) for _ in range(2)])
+        self.assertCountEqual([value[0] for value in results], ['saved', 'rejected'])
+        container.refresh_from_db()
+        self.assertEqual(container.quantity, Decimal('3.125'))
+        self.assertEqual(StockMovement.objects.filter(kind='EXIT').count(), 1)
+        self.assertEqual(reconcile_stock(self.ops), [])
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_same_multi_item_dispatch_key_changes_balances_once(self):
+        from erp.models import StockDispatch
+        first, _, _ = self.receive('D1')
+        second, _, _ = self.receive('D2')
+        key = uuid.uuid4()
+        lines = [{'container': obj, 'amount': '2.125', 'unit': self.unit, 'expected': obj.version}
+            for obj in (first, second)]
+        result = self.race([lambda: self.distribution(first, key=key, lines=lines) for _ in range(2)])
+        self.assertEqual([value[0] for value in result], ['saved', 'saved'])
+        self.assertEqual(result[0][1], result[1][1])
+        self.assertEqual(StockDispatch.objects.count(), 1)
+        self.assertEqual(StockMovement.objects.filter(kind='EXIT').count(), 2)
+        self.assertEqual(sum(StockContainer.objects.values_list('quantity', flat=True)), Decimal('15.75'))
+        self.assertEqual(reconcile_stock(self.ops), [])
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_competing_returns_cannot_exceed_dispatched_quantity(self):
+        from erp.services.distributions import return_stock, returnable_quantity
+        container, _, _ = self.receive()
+        line = self.distribution(container).lines.get()
+        def restore(code):
+            return return_stock(self.ops, line.pk, key=uuid.uuid4(), amount='5', unit=self.unit,
+                destination=self.freezer, container_code=code, returned_on=timezone.localdate(),
+                condition='Intact', reason='Reliquat retourné')
+        result = self.race([lambda: restore('BACK-PG-A'), lambda: restore('BACK-PG-B')])
+        self.assertCountEqual([value[0] for value in result], ['saved', 'rejected'])
+        self.assertEqual(returnable_quantity(line), Decimal('2'))
+        self.assertEqual(sum(StockContainer.objects.values_list('quantity', flat=True)), Decimal('8'))
+        self.assertEqual(reconcile_stock(self.ops), [])
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_dispatch_and_return_history_reject_sql_mutation(self):
+        from erp.services.distributions import return_stock
+        container, _, _ = self.receive()
+        dispatch = self.distribution(container)
+        line = dispatch.lines.get()
+        returned = return_stock(self.ops, line.pk, key=uuid.uuid4(), amount='1.125', unit=self.unit,
+            destination=self.freezer, container_code='BACK-PG-SQL', returned_on=timezone.localdate(),
+            condition='Intact', reason='Retour documenté')
+        for table, obj in (('erp_stockdispatch', dispatch), ('erp_stockdispatchline', line), ('erp_stockreturn', returned)):
+            for operation in ('UPDATE', 'DELETE'):
+                sql = f'UPDATE {table} SET created_at=created_at WHERE id=%s' if operation == 'UPDATE' else f'DELETE FROM {table} WHERE id=%s'
+                with self.subTest(sql=sql), self.assertRaises(DatabaseError), transaction.atomic():
+                    with connection.cursor() as cursor:
+                        cursor.execute(sql, [obj.pk])
+        self.assertEqual(reconcile_stock(self.ops), [])
+
     def setUp(self):
         for name, value in fixtures().items():
             if name != 'User':
