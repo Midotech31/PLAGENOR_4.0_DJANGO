@@ -6,9 +6,6 @@
 {% block title %}{{ req.display_id }} — {% trans "Détail demande" %}{% endblock %}
 
 {% block content %}
-{% include 'erp/request_actions.html' %}
-{% if req.channel == 'IBTIKAR' %}<p><a class="btn btn-outline" href="{% url 'ibtikar:detail' req.pk %}">{% trans "Consulter le formulaire IBTIKAR et sa validation" %}</a></p>{% endif %}
-
 {% if request.user.role == 'PLATFORM_ADMIN' and req.channel == 'GENOCLAB' %}
 <form method="post" action="{% url 'dashboard:admin_assign_billing' req.pk %}" class="card card-body">
 {% csrf_token %}
@@ -247,7 +244,7 @@
         </div>
 
         <!-- Assignment -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="request-assignment">
             <div class="card-header"><h3>{% trans "Assignation" %}</h3></div>
             <div class="card-body">
                 {% if req.assigned_to %}
@@ -270,19 +267,15 @@
                             {% trans "Utilisez cette option en cas de retard, d'absence ou de surcharge de l'analyste actuel. L'ancien et le nouvel analyste seront notifiés." %}
                         </p>
                         <div class="form-group" style="margin-bottom:10px;">
-                            <label style="font-size:0.85rem; font-weight:600;">{% trans "Nouvel analyste" %}</label>
-                            <select name="member_id" class="form-control" required>
+                            <label for="reassignment-member" style="font-size:0.85rem; font-weight:600;">{% trans "Nouvel analyste" %}</label>
+                            <select id="reassignment-member" name="member_id" class="form-control" required style="width:100%; min-width:0;">
                                 <option value="">{% trans "Choisir un membre…" %}</option>
-                                {% for m in available_members %}
-                                    {% if m != req.assigned_to %}
-                                    <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
-                                    {% endif %}
-                                {% endfor %}
+                                {% include 'dashboard/admin_ops/assignment_options.html' %}
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:10px;">
-                            <label style="font-size:0.85rem; font-weight:600;">{% trans "Raison" %} <span style="color:#dc2626;">*</span></label>
-                            <input type="text" name="reason" class="form-control" required minlength="5" maxlength="200" placeholder="{% trans 'Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires' %}">
+                            <label for="reassignment-reason" style="font-size:0.85rem; font-weight:600;">{% trans "Raison" %} <span style="color:#dc2626;">*</span></label>
+                            <input id="reassignment-reason" type="text" name="reason" class="form-control" required minlength="5" maxlength="200" placeholder="{% trans 'Ex. : retard de l’analyste actuel sur d’autres dossiers prioritaires' %}">
                             <small class="text-muted">{% trans "Cette raison est consignée dans l'historique de la demande." %}</small>
                         </div>
                         <button type="submit" class="btn btn-primary">{% trans "Confirmer la réassignation" %}</button>
@@ -292,8 +285,36 @@
                 {% else %}
                 <div class="text-muted">{% trans "Non encore assigné." %}</div>
                 {% endif %}
+                {% if can_assign %}
+                <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="margin-top:12px;">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="assignment-member">{% trans "Assigner à" %}</label>
+                        <select id="assignment-member" name="member_id" class="form-control" required style="width:100%; min-width:0;">
+                            <option value="">— {% trans "Choisir un membre…" %} —</option>
+                            {% include 'dashboard/admin_ops/assignment_options.html' %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" {% if not has_eligible_candidates %}disabled{% endif %}>{% trans "Assigner" %}</button>
+                </form>
+                {% endif %}
+                {% if can_assign or can_reassign_active %}
+                    {% if not has_eligible_candidates %}<p class="text-muted">{% trans "Aucun analyste éligible pour le moment." %}</p>{% endif %}
+                    <details style="margin-top:12px;">
+                        <summary>{% trans "Critères d’éligibilité des analystes" %}</summary>
+                        <p class="text-sm">{% trans "Compte analyste actif, disponibilité, capacité et technique active correspondant au service." %}</p>
+                        <ul class="text-sm" style="padding-inline-start:20px; overflow-wrap:anywhere;">
+                        {% for candidate in assignment_candidates %}{% if candidate.reasons %}
+                            <li><strong>{{ candidate.member.user.get_full_name|default:candidate.member.user.username }}</strong> : {{ candidate.reasons|join:" " }}</li>
+                        {% endif %}{% endfor %}
+                        </ul>
+                        {% if request.user.role == 'SUPER_ADMIN' %}<a href="{% url 'dashboard:superadmin' %}?tab=members">{% trans "Gérer les compétences et la disponibilité" %}</a>{% endif %}
+                    </details>
+                {% endif %}
             </div>
         </div>
+
+        {% include 'erp/request_actions.html' %}
 
         <!-- Platform Note (IBTIKAR only) -->
         {% if req.channel == 'IBTIKAR' %}
@@ -453,6 +474,7 @@
             <div class="card-header"><h3>{% trans "Documents" %}</h3></div>
             <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
                 {% if req.channel == 'IBTIKAR' %}
+                <a href="{% url 'ibtikar:detail' req.pk %}" class="btn btn-sm btn-outline">{% trans "Consulter le formulaire IBTIKAR et sa validation" %}</a>
                 <a href="{% url 'documents:ibtikar_form' req.pk %}" class="btn btn-sm btn-outline">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     {% trans "Formulaire IBTIKAR" %}
@@ -606,6 +628,7 @@
 
             {# Transition buttons based on allowed transitions #}
             {% for t in allowed_transitions %}
+            {% if t != 'ASSIGNED' %}
             <form method="post" action="{% if t == 'INVOICE_GENERATED' %}{% url 'dashboard:admin_generate_invoice' req.pk %}{% else %}{% url 'dashboard:admin_transition' req.pk %}{% endif %}" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="to_status" value="{{ t }}">
@@ -629,21 +652,8 @@
                 <button type="submit" class="btn btn-sm btn-primary">{{ t }}</button>
                 {% endif %}
             </form>
-            {% endfor %}
-
-            {# Assignment form #}
-            {% if req.status == 'IBTIKAR_CODE_SUBMITTED' or req.status == 'INVOICE_GENERATED' %}
-            <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline-flex; gap:4px; align-items:center;">
-                {% csrf_token %}
-                <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>
-                    <option value="">— {% trans "Assigner à" %} —</option>
-                    {% for m in available_members %}
-                    <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
-            </form>
             {% endif %}
+            {% endfor %}
 
             {# GENOCLAB: Quote preparation button #}
             {% if req.channel == 'GENOCLAB' and req.status == 'REQUEST_CREATED' or req.status == 'QUOTE_DRAFT' and req.channel == 'GENOCLAB' %}

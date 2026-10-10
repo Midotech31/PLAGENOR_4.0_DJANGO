@@ -7058,3 +7058,47 @@ msgstr "Quantité source"
 
 msgid "Salle"
 msgstr "Salle"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte désactivé."
+msgstr "Compte désactivé."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Ce compte n’a pas le rôle analyste."
+msgstr "Ce compte n’a pas le rôle analyste."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Analyste indisponible."
+msgstr "Analyste indisponible."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Capacité atteinte (%(load)s/%(capacity)s)."
+msgstr "Capacité atteinte (%(load)s/%(capacity)s)."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucune technique active correspondant à ce service."
+msgstr "Aucune technique active correspondant à ce service."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Affectation impossible : %(reasons)s"
+msgstr "Affectation impossible : %(reasons)s"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Organisation de l’analyse"
+msgstr "Organisation de l’analyse"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Aucun analyste éligible pour le moment."
+msgstr "Aucun analyste éligible pour le moment."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Critères d’éligibilité des analystes"
+msgstr "Critères d’éligibilité des analystes"
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Compte analyste actif, disponibilité, capacité et technique active correspondant au service."
+msgstr "Compte analyste actif, disponibilité, capacité et technique active correspondant au service."
+
+#: core/assignment.py templates/dashboard/admin_ops/request_detail.html templates/erp/request_actions.html
+msgid "Gérer les compétences et la disponibilité"
+msgstr "Gérer les compétences et la disponibilité"

@@ -1,0 +1,3 @@
+{% for candidate in assignment_candidates %}
+<option value="{{ candidate.member.pk }}" {% if candidate.reasons %}disabled{% endif %}>{{ candidate.member.user.get_full_name|default:candidate.member.user.username }} ({{ candidate.member.current_load }}/{{ candidate.member.max_load }}){% if candidate.reasons %} — {{ candidate.reasons|join:" " }}{% endif %}</option>
+{% endfor %}

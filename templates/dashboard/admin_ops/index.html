@@ -206,11 +206,9 @@
                     <div class="data-card-row mt-2" style="gap: 0.5rem; flex-wrap: wrap;">
                         <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" style="display:inline;">
                             {% csrf_token %}
-                            <select name="member_id" class="form-control" style="display:inline-block; width:auto; font-size:0.85rem;" required>
+                            <select name="member_id" class="form-control" style="display:inline-block; width:100%; min-width:0; font-size:0.85rem;" required>
                                 <option value="">— {% trans "Assigner à" %} —</option>
-                                {% for m in available_members %}
-                                <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
-                                {% endfor %}
+                                {% include 'dashboard/admin_ops/assignment_options.html' with assignment_candidates=req.assignment_candidates %}
                             </select>
                             <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
                         </form>
@@ -579,11 +577,9 @@
                     </div>
                     <form method="post" action="{% url 'dashboard:admin_assign' req.pk %}" class="data-card-row mt-2" style="gap: 0.5rem;">
                         {% csrf_token %}
-                        <select name="member_id" class="form-control" style="width:auto; font-size:0.85rem;" required>
+                        <select name="member_id" class="form-control" style="width:100%; min-width:0; font-size:0.85rem;" required>
                             <option value="">— {% trans "Assigner à" %} —</option>
-                            {% for m in available_members %}
-                            <option value="{{ m.pk }}">{{ m.user.get_full_name }} ({{ m.current_load }}/{{ m.max_load }})</option>
-                            {% endfor %}
+                            {% include 'dashboard/admin_ops/assignment_options.html' with assignment_candidates=req.assignment_candidates %}
                         </select>
                         <button type="submit" class="btn btn-sm btn-primary">{% trans "Assigner" %}</button>
                     </form>
